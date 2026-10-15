@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { ChevronDown, Loader2, LogOut, Monitor, Moon, Sun, UserRound } from 'lucide-react';
+import { ChevronDown, Loader2, LogOut, Monitor, Moon, Sparkles, Sun, UserRound } from 'lucide-react';
 import { Button } from '@/components/shadcn/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '@/components/shadcn/dropdown-menu';
 import { Avatar, AvatarFallback, initials } from '@/components/shadcn/avatar';
@@ -17,9 +17,10 @@ const MODES = [
 
 /** The signed-in person: their avatar at the right of the top bar, opening
  *  who they are (name, role and working site), Appearance, Manage account and
- *  Sign out (V2Home-menu). Appearance lives here, with the account, not in the
+ *  What's new (the version and release notes) and Sign out (V2Home-menu). Appearance lives here, with the account, not in the
  *  navigation; Help sits in the rail, the phone bar's More and the deck bar.
- *  The pool deck reuses it without Manage account (docs/instructor.md). Role,
+ *  The pool deck reuses it without Manage account or What's new, its only desk links
+ *  (docs/instructor.md). Role,
  *  site and signing out come from the root layout through the frame context
  *  (useFrame), so no shell passes them. Appearance is menu radio items, not the ThemeToggle radio
  *  group, because a menu cancels Tab: arrows must reach every choice. They
@@ -27,7 +28,7 @@ const MODES = [
 export function AccountMenu({ name, showManageAccount = true }: { name: string; showManageAccount?: boolean }) {
   const [leaving, setLeaving] = useState(false);
   const { mode, setMode } = useThemeMode();
-  const { role, site, signOut } = useFrame();
+  const { role, site, version, signOut } = useFrame();
   const caption = [role, site].filter(Boolean).join(' · ');
   async function leave() {
     setLeaving(true);
@@ -59,6 +60,11 @@ export function AccountMenu({ name, showManageAccount = true }: { name: string; 
         </DropdownMenuGroup>
         <DropdownMenuGroup>
           {showManageAccount ? <DropdownMenuItem asChild className="tf-menu-item"><Link href="/account"><UserRound aria-hidden="true" />Manage account</Link></DropdownMenuItem> : null}
+          {showManageAccount ? (
+            <DropdownMenuItem asChild className="tf-menu-item">
+              <Link href="/whats-new"><Sparkles aria-hidden="true" />What&apos;s new{version ? <span className="ml-auto text-xs text-ui-muted-foreground">Version {version}</span> : null}</Link>
+            </DropdownMenuItem>
+          ) : null}
           <DropdownMenuItem className="tf-menu-item" onSelect={() => void leave()}><LogOut aria-hidden="true" />Sign out</DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>

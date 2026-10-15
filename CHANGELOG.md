@@ -1,8 +1,14 @@
 # What's new in Turnfin
 
-Patch notes for everyone who uses Turnfin at the swim school, the desk and the office. Newest first.
+Patch notes for everyone who uses Turnfin at the swim school, the desk and the office. Newest first. You can read them in Turnfin too: open your picture at the top right and choose **What's new**.
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
+
+## 1.16.0 · 15 October 2026 · What's new in Turnfin
+
+- A new page, **What's new**, lists every change to Turnfin in plain words, newest first, with the version and the date. Open your picture at the top right and choose **What's new**; the menu also shows which version you are on.
+- Everyone who signs in to Turnfin can open it.
+- A few older notes were reworded so they no longer use technical terms.
 
 ## 1.15.2 · 15 October 2026 · Refunds: a clearer refund request page
 
@@ -186,14 +192,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 Nothing changes in how you use Turnfin. Behind the scenes:
 
-- Unused code and settings were removed, so the app has less to load and less that can go wrong.
-- Each module now describes itself, its menu entry and its access levels in one place, which makes adding or changing a module safer.
-- Two font files nobody used are no longer installed, and old one-off scripts and out-of-date documents were removed.
+- Parts of Turnfin nobody used any more were taken out, so pages have less to load and there is less that can go wrong.
+- Each module now keeps its menu entry and its access levels in one place, so adding or changing a module is safer.
 
 ## 1.4.1 · 10 October 2026 · Tidier and more consistent
 
-- Menus, pickers, dialogs, grids and search fields now take their sizes from the same design settings, so they line up the same way everywhere. The outline around your picture does too.
-- Behind the scenes, each module was reorganised so one part can change without breaking another. Nothing moved on screen.
+- Menus, pickers, dialogs, lists and search boxes are now the same sizes everywhere, so they line up the same way on every page. The outline around your picture does too.
+- Behind the scenes, each module was tidied up so one part can change without breaking another. Nothing moved on screen.
 
 ## 1.4.0 · 9 October 2026 · Tasks in full, cancelled classes through Legend
 
@@ -201,7 +206,7 @@ Nothing changes in how you use Turnfin. Behind the scenes:
 - Today: search, filters by status and tag, a date picker, a completed meter and an "At a glance" summary.
 - Writing tasks: copy and archive, a designer with Content, Schedule, Assign and Report tabs, one-off, repeating, ad hoc and follow-up tasks, tasks timed to opening or closing, and a warning before you leave unsaved changes.
 - Sites: opening hours, time zone and closed dates for each site.
-- Reports: site scores, task reports, average score, a trend chart and CSV downloads.
+- Reports: site scores, task reports, average score, a trend chart and downloads to open in Excel.
 
 **Cancelled classes**
 - "Export for Legend" downloads the cancelled classes as a file ready for Legend's bulk update.
@@ -247,8 +252,8 @@ Nothing changes in how you use Turnfin. Behind the scenes:
 ## 1.2.0 · 7 October 2026 · Shared setup and a sharper rota
 
 - Admin: shared lists are set up once, by topic. People (staff, roles, departments), Places (sites, areas) and Work (activities, qualifications). Each site now has its own list of areas, such as its pools and rooms.
-- Rota: the day plan is grouped by the site's areas. Scroll to zoom in and drag to move along the day. The timeline now shows on laptops from 1024 pixels wide.
-- Analytics: a new Multiple enrolments report lists swimmers with more than one place (waitlist places included), for this site or all your sites, with member IDs, search and a CSV download.
+- Rota: the day plan is grouped by the site's areas. Scroll to zoom in and drag to move along the day. The timeline now shows on laptops as well as larger screens.
+- Analytics: a new Multiple enrolments report lists swimmers with more than one place (waitlist places included), for this site or all your sites, with member IDs, search and a download to open in Excel.
 
 ## 1.1.0 · 6 October 2026 · Purchasing, and the rota rebuilt
 
