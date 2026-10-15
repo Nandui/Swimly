@@ -15,9 +15,11 @@ export async function handleStaffRequest(request: Request, path: string[]) {
   return staffResponse(request, async () => {
     const route = path.join("/"), method = request.method;
     const training = /^training\/([A-Za-z0-9_-]+)(\/complete)?$/.exec(route);
+    const lesson = /^training\/([A-Za-z0-9_-]+)\/lessons\/([A-Za-z0-9_-]+)(\/complete)?$/.exec(route);
+    const trainingFile = /^training\/([A-Za-z0-9_-]+)\/files\/([A-Za-z0-9_-]+)$/.exec(route);
     const reading = /^reading\/([A-Za-z0-9_-]+)(\/acknowledge)?$/.exec(route);
     const review = /^hr\/reviews\/([A-Za-z0-9_-]+)\/acknowledge$/.exec(route);
-    const methods = training ? [training[2] ? "POST" : "GET"] : reading ? [reading[2] ? "POST" : "GET"] : review ? ["POST"] : ROUTES[route];
+    const methods = training ? [training[2] ? "POST" : "GET"] : lesson ? [lesson[3] ? "POST" : "GET"] : trainingFile ? ["GET"] : reading ? [reading[2] ? "POST" : "GET"] : review ? ["POST"] : ROUTES[route];
     if (!methods) notFound();
     if (!methods.includes(method)) throw new StaffApiError(405, "METHOD_NOT_ALLOWED", "This endpoint does not accept that method.", { Allow: methods.join(", ") });
     await rateLimit(`request-ip:${requestIp(request)}`, 600, 60);
@@ -37,6 +39,11 @@ export async function handleStaffRequest(request: Request, path: string[]) {
       const id = parseInput(idSchema, training[1]);
       return json(training[2] ? await records.completeTraining(request, identity, id) : await records.trainingItem(identity, id));
     }
+    if (lesson) {
+      const [id, lessonId] = [parseInput(idSchema, lesson[1]), parseInput(idSchema, lesson[2])];
+      return json(lesson[3] ? await records.completeTrainingLesson(identity, id, lessonId) : await records.trainingLesson(identity, id, lessonId));
+    }
+    if (trainingFile) return records.trainingFile(identity, parseInput(idSchema, trainingFile[1]), parseInput(idSchema, trainingFile[2]));
     if (route === "reading") return json(await records.reading(identity));
     if (reading) {
       const id = parseInput(idSchema, reading[1]);

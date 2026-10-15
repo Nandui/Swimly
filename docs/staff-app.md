@@ -81,8 +81,11 @@ turning it on.
 | GET, PATCH | `me` | Profile and own details. PATCH proposes phone, address or emergency contact changes; the record changes only after review on Work. One request is waiting at a time |
 | GET | `qualifications` | The newest certificate of each type, uploads and their status, and the qualification types |
 | POST | `qualifications/evidence` | Upload a PDF, PNG or JPEG (up to 5 MB, checked by file signature) for someone to check |
-| GET | `training`, `training/{id}` | Own training, with the course material |
-| POST | `training/{id}/complete` | `{ note }`. A practical course waits for a trainer; anything else completes and records any qualification it grants |
+| GET | `training`, `training/{id}` | Own training: progress through a course built from lessons, and its outline (`sections`); a course without lessons sends its text (`content`) |
+| GET | `training/{id}/lessons/{lessonId}` | One lesson of the person's own course version: its text, video link or file, and the lessons either side |
+| POST | `training/{id}/lessons/{lessonId}/complete` | Marks the lesson done. The first one fixes the course version the person takes |
+| GET | `training/{id}/files/{fileId}` | A PDF or image used in the person's own course version, as the file itself (not JSON) |
+| POST | `training/{id}/complete` | `{ note }`. Needs every lesson done first. A practical course waits for a trainer; anything else completes and records any qualification it grants |
 | GET | `reading`, `reading/{documentId}` | Assigned required reading only; the published body is Tiptap JSON |
 | POST | `reading/{documentId}/acknowledge` | `{ versionId }` |
 | GET | `shifts?days=28` | Own shifts, with any qualification warning |

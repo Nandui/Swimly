@@ -5,6 +5,7 @@ import { pageSession } from "@/lib/page-guards";
 import { TITLE_TEMPLATE } from "@/lib/app";
 import { trainingAccess, TrainingShell } from "@/modules/training/features/workspace";
 import '../workspace/module-workspace.css';
+import './lesson.css';
 
 export const metadata: Metadata = { title: { default: "Training", template: TITLE_TEMPLATE } };
 

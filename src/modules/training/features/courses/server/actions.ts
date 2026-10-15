@@ -15,18 +15,20 @@ import { refresh } from "@/modules/training/shared/writes";
 const courseSchema = z.object({
   title: z.string().trim().min(3, "Give the course a name.").max(120, "Keep the name under 120 characters."),
   summary: z.string().trim().max(300, "Keep the summary under 300 characters."),
-  content: z.string().trim().max(10000, "Keep the material under 10,000 characters."),
+  /** The old plain-text material. Courses are now built from lessons, so the dialog leaves it alone. */
+  content: z.string().trim().max(10000, "Keep the material under 10,000 characters.").optional(),
   requiresSignoff: z.boolean(),
   grantsTypeId: z.string().trim().max(64).transform((v) => v || null),
 });
 export type CourseInput = z.input<typeof courseSchema>;
 
-export async function saveCourse(id: string | null, input: CourseInput): Promise<ActionResult> {
+export async function saveCourse(id: string | null, input: CourseInput): Promise<{ ok: true; id: string } | Extract<ActionResult, { ok: false }>> {
   const who = await requireTrainingActor();
   if (!who.manage || !who.orgId) return fail("Building the catalogue needs the Training catalogue permission.");
   const parsed = courseSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const data = parsed.data;
+  let savedId = id ?? "";
   const result = await onUniqueViolation(() => prisma.$transaction(async (tx) => {
     if (data.grantsTypeId && !(await liveQualificationTypeById(data.grantsTypeId, who.orgId!, tx))) {
       return fail("That qualification is no longer offered.");
@@ -38,12 +40,14 @@ export async function saveCourse(id: string | null, input: CourseInput): Promise
       await logAudit({ actorId: who.id, actorName: who.name, action: "update", entity: "TrainingCourse", entityId: id, summary: `Updated the course ${data.title}` }, tx);
     } else {
       const created = await tx.trainingCourse.create({ data: { ...data, orgId: who.orgId!, createdById: who.id } });
+      savedId = created.id;
       await logAudit({ actorId: who.id, actorName: who.name, action: "create", entity: "TrainingCourse", entityId: created.id, summary: `Added the course ${data.title}` }, tx);
     }
     return ok();
   }), "There is already a course with that name.", "title");
-  if (result.ok) refresh("/training/courses");
-  return result;
+  if (!result.ok) return result;
+  refresh("/training/courses", `/training/courses/${savedId}`);
+  return { ok: true, id: savedId };
 }
 
 export async function setCourseArchived(id: string, archived: boolean): Promise<ActionResult> {

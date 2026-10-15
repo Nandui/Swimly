@@ -18,11 +18,110 @@ model TrainingCourse {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  organisation Organisation         @relation(fields: [orgId], references: [id], onDelete: Restrict)
-  grantsType   QualificationType?   @relation(fields: [grantsTypeId], references: [id], onDelete: SetNull)
+  /// The version learners get when assigned (e-learning, phase 1). Null until
+  /// the course is first published: such a course shows `content` as before.
+  publishedVersionId String?
+
+  organisation Organisation            @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  grantsType   QualificationType?      @relation(fields: [grantsTypeId], references: [id], onDelete: SetNull)
   assignments  TrainingAssignment[]
+  sections     TrainingSection[]
+  versions     TrainingCourseVersion[]
+  files        TrainingFile[]
 
   @@unique([orgId, title])
+}
+
+/// The course draft's outline (e-learning, phase 1): sections in order, each
+/// holding lessons. Learners never see the draft; they get a published
+/// TrainingCourseVersion.
+model TrainingSection {
+  id        String   @id @default(cuid())
+  courseId  String
+  title     String
+  position  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  course  TrainingCourse   @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  lessons TrainingLesson[]
+
+  @@index([courseId, position])
+  @@map("training_sections")
+}
+
+/// One lesson in a draft: READING (rich text, Tiptap JSON), VIDEO (a link,
+/// with notes) or FILE (an uploaded PDF or image, with notes).
+model TrainingLesson {
+  id        String   @id @default(cuid())
+  sectionId String
+  position  Int
+  kind      String   @default("READING")
+  title     String
+  /// Tiptap document JSON: the lesson text, or the notes under a video or file.
+  body      Json?
+  videoUrl  String   @default("")
+  fileId    String?
+  minutes   Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  section TrainingSection @relation(fields: [sectionId], references: [id], onDelete: Restrict)
+
+  @@index([sectionId, position])
+  @@map("training_lessons")
+}
+
+/// A published course, frozen: the outline and every lesson as they were.
+/// Assignments point at the version they were given, so records show exactly
+/// what each person was taught. Never edited or deleted.
+model TrainingCourseVersion {
+  id              String   @id @default(cuid())
+  courseId        String
+  number          Int
+  /// { sections: [{ id, title, lessons: [{ id, kind, title, body, videoUrl, fileId, minutes }] }] }
+  outline         Json
+  lessonCount     Int
+  publishedById   String?
+  publishedByName String
+  publishedAt     DateTime @default(now())
+
+  course TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Restrict)
+
+  @@unique([courseId, number])
+  @@map("training_course_versions")
+}
+
+/// An image or PDF used in a course's lessons, kept in the database like
+/// incident photos. Never deleted: a published version may still use it.
+model TrainingFile {
+  id          String   @id @default(cuid())
+  courseId    String
+  name        String
+  mime        String
+  size        Int
+  bytes       Bytes
+  addedById   String?
+  addedByName String
+  createdAt   DateTime @default(now())
+
+  course TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Restrict)
+
+  @@index([courseId])
+  @@map("training_files")
+}
+
+/// A lesson a learner has finished, on their assignment's version.
+model TrainingLessonProgress {
+  id           String   @id @default(cuid())
+  assignmentId String
+  lessonId     String
+  completedAt  DateTime @default(now())
+
+  assignment TrainingAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, lessonId])
+  @@map("training_lesson_progress")
 }
 
 /// One person's training on one course. ASSIGNED → (SUBMITTED, awaiting a
@@ -47,12 +146,17 @@ model TrainingAssignment {
   qualificationId String?
   cancelledAt     DateTime?
   cancelReason    String    @default("")
+  /// The published version this person takes (e-learning). Null when the
+  /// course had no published version at the time: the learner gets the
+  /// current version the first time they open it, or the old text if none.
+  versionId       String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  organisation Organisation   @relation(fields: [orgId], references: [id], onDelete: Restrict)
-  course       TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Restrict)
-  user         User           @relation("TrainingLearner", fields: [userId], references: [id], onDelete: Cascade)
+  organisation Organisation             @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  course       TrainingCourse           @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  user         User                     @relation("TrainingLearner", fields: [userId], references: [id], onDelete: Cascade)
+  progress     TrainingLessonProgress[]
 
   @@index([userId, status])
   @@index([orgId, status])

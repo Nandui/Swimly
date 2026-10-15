@@ -16,7 +16,9 @@ export const trainingModule: ModuleManifest = {
     reach: "sites",
     levels: [
       { key: "trainer", label: "Trainer", help: "Sign off practical training for people at their sites.", permissions: ["training.records.read", "training.signoff"] },
-      { key: "manage", label: "Manage", help: "Create courses, assign them and check certificates.", permissions: ["training.manage", "training.assign", "qualifications.manage"] },
+      // Author (owner request, 15 October 2026): builds courses without assigning them.
+      { key: "author", label: "Author", help: "Also build courses: write lessons, add videos and files, preview and publish them.", permissions: ["training.manage"] },
+      { key: "manage", label: "Manage", help: "Also assign courses to the people they cover and check certificates.", permissions: ["training.assign", "qualifications.manage"] },
     ],
   },
 };

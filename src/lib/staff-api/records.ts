@@ -6,7 +6,7 @@ import { acknowledgeReviewFor, hrConfigured, logOwnHrRead, mySharedHr } from "@/
 import { myQualifications } from "@/lib/people/mine";
 import { myDays } from "@/modules/rota";
 import { docsReading } from "@/modules/docs";
-import { completeTrainingFor, myTraining } from "@/modules/training";
+import { completeLessonFor, completeTrainingFor, myCourse, myCourseFile, myLesson, myTraining, trainingFileResponse } from "@/modules/training";
 import { StaffApiError, notFound } from "@/lib/staff-api/errors";
 import { idSchema, parseInput, readBody } from "@/lib/staff-api/http";
 import { rateLimit } from "@/lib/staff-api/security";
@@ -140,6 +140,8 @@ const trainingDto = (row: TrainingRow) => ({
   id: row.id, title: row.course.title, summary: row.course.summary, state: row.state, requiresSignoff: row.course.requiresSignoff,
   grants: row.course.grantsType?.name ?? null, dueOn: date(row.dueOn), assignedBy: row.assignedByName, assignedAt: row.assignedAt.toISOString(),
   completedAt: row.completedAt?.toISOString() ?? null, signedOffBy: row.signedOffByName, trainerNote: row.signoffNote,
+  // A course built from lessons: how far through, and the lesson to continue with.
+  progress: row.progress && { done: row.progress.done, total: row.progress.total, nextLessonId: row.progress.nextLessonId },
 });
 
 export async function training(identity: StaffIdentity) {
@@ -149,7 +151,37 @@ export async function training(identity: StaffIdentity) {
 export async function trainingItem(identity: StaffIdentity, id: string) {
   const row = (await myTraining(identity.user.id)).find((r) => r.id === id);
   if (!row) notFound();
-  return { ...trainingDto(row), content: row.course.content };
+  const course = await myCourse(identity.user.id, id);
+  // A course with lessons sends its outline; one without sends its old text.
+  return { ...trainingDto(row), content: course ? "" : row.course.content, sections: course?.sections ?? null };
+}
+
+/** One lesson of the person's own course: its text, video or file, and the
+ *  lessons either side. Built field by field; never another person's. */
+export async function trainingLesson(identity: StaffIdentity, id: string, lessonId: string) {
+  const lesson = await myLesson(identity.user.id, id, lessonId);
+  if (!lesson) notFound();
+  return {
+    id: lesson.id, kind: lesson.kind, title: lesson.title, body: lesson.body, minutes: lesson.minutes, video: lesson.video,
+    file: lesson.file && { id: lesson.file.id, name: lesson.file.name, mime: lesson.file.mime, size: lesson.file.size },
+    section: lesson.section, index: lesson.index, total: lesson.total, prev: lesson.prev, next: lesson.next, done: lesson.done, open: lesson.open,
+  };
+}
+
+export async function completeTrainingLesson(identity: StaffIdentity, id: string, lessonId: string) {
+  const result = await completeLessonFor({ id: identity.user.id, name: identity.user.name }, id, lessonId);
+  if (!result.ok) {
+    if (result.error.includes("not assigned to you") || result.error.includes("not in your course")) notFound();
+    throw failed(result.error);
+  }
+  return trainingLesson(identity, id, lessonId);
+}
+
+/** A PDF or image from the person's own course version, sent as the file itself. */
+export async function trainingFile(identity: StaffIdentity, id: string, fileId: string) {
+  const file = await myCourseFile(identity.user.id, id, fileId);
+  if (!file) notFound();
+  return trainingFileResponse(file);
 }
 
 export async function completeTraining(request: Request, identity: StaffIdentity, id: string) {

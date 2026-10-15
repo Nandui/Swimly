@@ -30,11 +30,15 @@ export async function listCourses(options: { archived?: boolean } = {}) {
   const rows = await prisma.trainingCourse.findMany({
     where: { orgId: who.orgId ?? undefined, archivedAt: options.archived ? { not: null } : null },
     orderBy: { title: "asc" },
-    select: { id: true, title: true, summary: true, content: true, requiresSignoff: true, archivedAt: true, grantsTypeId: true },
+    select: { id: true, title: true, summary: true, content: true, requiresSignoff: true, archivedAt: true, grantsTypeId: true, publishedVersionId: true },
   });
+  const versions = new Map((await prisma.trainingCourseVersion.findMany({
+    where: { id: { in: rows.map((r) => r.publishedVersionId).filter((id): id is string => !!id) } }, select: { id: true, number: true, lessonCount: true },
+  })).map((v) => [v.id, v]));
   const courses = (await withQualificationTypes(rows, "grantsTypeId", "grantsType"))
-    .map(({ id, title, summary, content, requiresSignoff, archivedAt, grantsType }) => ({
+    .map(({ id, title, summary, content, requiresSignoff, archivedAt, grantsType, publishedVersionId }) => ({
       id, title, summary, content, requiresSignoff, archivedAt, grantsType: grantsType && { id: grantsType.id, name: grantsType.name, validityMonths: grantsType.validityMonths },
+      published: publishedVersionId ? versions.get(publishedVersionId) ?? null : null,
     }));
   return { who, courses };
 }
