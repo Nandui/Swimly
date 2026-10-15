@@ -11,6 +11,7 @@ const order: OrderEmailInput = {
     { name: "Training suit", code: "TS-1", unit: "", brand: "Speedo", size: "30", colour: "Navy", quantity: 3 },
   ],
   sender: { name: "Sample Person", email: "sample@example.invalid" },
+  replyTo: { name: "Sample Requester", email: "requester@example.invalid" },
 };
 
 test("the email carries the order without prices, and says where invoices go", () => {
@@ -24,6 +25,7 @@ test("the email carries the order without prices, and says where invoices go", (
   assert.ok(!/€|VAT|price/i.test(m.text + m.html), "no prices or totals");
   assert.match(m.text, /INVOICES: Please submit all invoices for this order to invoices@leisureworldcork\.com, quoting PO-BT-00007\./);
   assert.ok(m.html.includes("mailto:invoices@leisureworldcork.com"));
+  assert.match(m.text, /it goes to Sample Requester\./, "replies go to whoever raised the order");
   assert.ok(m.html.includes("Chlorine &#38; tablets") && m.html.includes("&#60;please&#62;"));
   assert.ok(!m.html.includes("<please>") && !m.html.includes("Test email"));
   assert.ok(m.html.includes('src="cid:leisureworld-logo@turnfin"'), "the logo is carried inside the email");

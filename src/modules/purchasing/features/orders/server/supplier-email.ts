@@ -15,7 +15,7 @@ export async function orderEmailContext(id: string, who: PurchasingActor) {
   const found = await prisma.purchaseOrder.findFirst({
     where: { id, orgId: who.orgId ?? undefined },
     select: {
-      id: true, number: true, status: true, siteId: true, supplierId: true, requestedById: true, neededBy: true, decidedAt: true, note: true,
+      id: true, number: true, status: true, siteId: true, supplierId: true, requestedById: true, requestedByName: true, neededBy: true, decidedAt: true, note: true,
       supplier: { select: { name: true, contactName: true, email: true, accountNumber: true } },
       lines: { orderBy: [{ name: "asc" }, { id: "asc" }], select: { name: true, code: true, unit: true, brand: true, size: true, colour: true, quantity: true } },
       emails: { orderBy: { createdAt: "desc" }, select: { id: true, kind: true, toAddress: true, ccAddress: true, sentByName: true, status: true, error: true, createdAt: true } },
@@ -27,15 +27,21 @@ export async function orderEmailContext(id: string, who: PurchasingActor) {
   const covers = (s: typeof read) => s.kind === "all" || s.siteIds.has(order.siteId);
   const mine = order.requestedById === who.id;
   if (!covers(read) && !mine) return null;
-  const [organisation, me, emailsOn, copyTo] = await Promise.all([organisationName(who.orgId), staffContact(who.id, who.orgId), supplierEmailsOn(who.orgId), supplierEmailCopy(who.orgId)]);
+  const [organisation, me, requester, emailsOn, copyTo] = await Promise.all([
+    organisationName(who.orgId), staffContact(who.id, who.orgId), mine ? null : staffContact(order.requestedById, who.orgId), supplierEmailsOn(who.orgId), supplierEmailCopy(who.orgId),
+  ]);
   const sender = { name: who.name, email: me?.email ?? "" };
+  // Replies go to whoever raised the order (owner request, 15 October 2026), or to the
+  // sender when that person has no email address any more.
+  const raisedBy = mine ? sender : { name: requester?.name ?? order.requestedByName, email: requester?.email ?? "" };
+  const replyTo = raisedBy.email.trim() ? raisedBy : sender;
   const input: OrderEmailInput | null = order.number ? {
     number: order.number, organisation, site: order.site.name, supplier: order.supplier,
     neededBy: order.neededBy ? formatDate(order.neededBy) : null, approvedOn: order.decidedAt ? formatDate(order.decidedAt) : null,
-    note: order.note, lines: order.lines, sender,
+    note: order.note, lines: order.lines, sender, replyTo,
   } : null;
   return {
-    order, emailsOn, copyTo, sender, input,
+    order, emailsOn, copyTo, sender, replyTo, input,
     mayEmail: order.status === "approved" && order.number !== null && (mine || who.manage || covers(request)),
     // The preview shows the logo from Turnfin itself; the sent email carries it inside.
     preview: input ? orderEmail(input, false, "/purchasing/email-logo") : null,

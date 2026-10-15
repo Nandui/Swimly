@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: "Email purchase order" };
  *  first; it goes to the supplier only once whoever manages Purchasing has turned emails
  *  to suppliers on (docs/purchasing.md). */
 export default async function EmailOrderPage({ params }: { params: Promise<{ id: string }> }) {
-  const { who, order: o, emailsOn, copyTo, sender, preview, input, mayEmail } = await orderEmailPage((await params).id);
+  const { who, order: o, emailsOn, copyTo, sender, replyTo, preview, input, mayEmail } = await orderEmailPage((await params).id);
   if (!preview || !input) notFound();
   const supplierEmail = o.supplier.email.trim();
   const sentBefore = lastSentToSupplier(o.emails);
@@ -22,7 +22,7 @@ export default async function EmailOrderPage({ params }: { params: Promise<{ id:
         description={`To ${o.supplier.name}. Check the email, send yourself a test, then send it.`}
         actions={mayEmail ? <span className="flex flex-wrap gap-2">
           {sender.email ? <SendTest id={o.id} to={sender.email} /> : null}
-          {emailsOn && supplierEmail ? <SendToSupplier id={o.id} number={input.number} supplier={o.supplier.name} to={supplierEmail} copyTo={copyTo} replyTo={sender.email} sentBefore={sentBefore} /> : null}
+          {emailsOn && supplierEmail ? <SendToSupplier id={o.id} number={input.number} supplier={o.supplier.name} to={supplierEmail} copyTo={copyTo} replyTo={replyTo.email} sentBefore={sentBefore} /> : null}
         </span> : null} />
 
       <div className="space-y-3">
@@ -37,7 +37,7 @@ export default async function EmailOrderPage({ params }: { params: Promise<{ id:
             description={who.manage ? "Add it on the supplier's page." : "Whoever manages Purchasing adds it on the supplier's page."}
             actions={who.manage ? <Button asChild variant="outline" className="min-h-11"><Link href={`/purchasing/suppliers/${o.supplierId}`}>Open the supplier</Link></Button> : null} />
         ) : null}
-        {!sender.email ? <Notice tone="warning" title="Your account has no email address" description="A test can't reach you, and the supplier's replies would have nowhere to go. Ask an administrator to add one." /> : null}
+        {!sender.email ? <Notice tone="warning" title="Your account has no email address" description={replyTo.email ? "A test can't reach you. Ask an administrator to add one." : "A test can't reach you, and the supplier's replies would have nowhere to go. Ask an administrator to add one."} /> : null}
       </div>
 
       <section aria-labelledby="po-email" className="pc-panel flex flex-col gap-4">
@@ -45,7 +45,7 @@ export default async function EmailOrderPage({ params }: { params: Promise<{ id:
         <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-[auto_minmax(0,1fr)]">
           <dt className="text-ui-muted-foreground">To</dt><dd className="font-medium break-words">{supplierEmail || "No address yet"}</dd>
           <dt className="text-ui-muted-foreground">Copy to</dt><dd className="font-medium break-words">{copyTo || "Nobody"}<span className="font-normal text-ui-muted-foreground"> (not on tests)</span></dd>
-          <dt className="text-ui-muted-foreground">Replies go to</dt><dd className="font-medium break-words">{sender.email ? `${sender.name}, ${sender.email}` : "Nobody: your account has no email address"}</dd>
+          <dt className="text-ui-muted-foreground">Replies go to</dt><dd className="font-medium break-words">{replyTo.email ? `${replyTo.name}, ${replyTo.email}` : "Nobody: no email address for whoever raised the order or for you"}{replyTo.email && replyTo.email !== sender.email ? <span className="font-normal text-ui-muted-foreground"> (raised the order)</span> : null}</dd>
           <dt className="text-ui-muted-foreground">Subject</dt><dd className="font-medium break-words">{preview.subject}</dd>
         </dl>
         <EmailPreview html={preview.html} title={`The email of ${input.number}`} />

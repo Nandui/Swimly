@@ -24,6 +24,11 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - When someone has used all their attempts, a trainer can give them **another attempt** from their training page, where their scores now show too.
 - Under **Final exam** in the course builder you can see how many people passed and which questions people get wrong most, which often means a lesson needs to explain something better.
 
+## 1.17.7 · 15 October 2026 · Purchasing: replies to whoever raised the order, and several copies
+
+- When a supplier replies to a purchase order email, the reply now goes to the person who raised the order, even if someone else sent it.
+- **Copy to** under Suppliers now takes up to five email addresses, separated by commas. Everyone listed gets a copy of every order emailed to a supplier.
+
 ## 1.17.6 · 15 October 2026 · Purchasing: the unit beside the quantity
 
 - In the email to suppliers, each product's unit now sits next to its quantity, for example **8 × cylinder(s)**, so the supplier reads them together.

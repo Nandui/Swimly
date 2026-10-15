@@ -9,7 +9,7 @@ export async function supplierEmailsOn(orgId: string | null): Promise<boolean> {
   return (await prisma.purchasingSettings.findUnique({ where: { orgId }, select: { supplierEmailsOn: true } }))?.supplierEmailsOn ?? false;
 }
 
-/** The address copied (CC) on every email to a supplier; empty for none. */
+/** The addresses copied (CC) on every email to a supplier, as stored ("a@x, b@y"); empty for none. */
 export async function supplierEmailCopy(orgId: string | null): Promise<string> {
   if (!orgId) return "";
   return (await prisma.purchasingSettings.findUnique({ where: { orgId }, select: { copyTo: true } }))?.copyTo ?? "";
