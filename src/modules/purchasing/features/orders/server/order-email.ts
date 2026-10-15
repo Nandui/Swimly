@@ -73,12 +73,12 @@ export function orderEmail(o: OrderEmailInput, test = false, logoSrc = `cid:${PO
     `<tr><td class="po-fact-k" style="padding:12px 16px 12px 0;${first ? "" : HAIRLINE + ";"}${SMALL};${MUTED};white-space:nowrap;vertical-align:top;width:120px">${escape(k)}</td>` +
     `<td class="po-fact-v" style="padding:12px 0;${first ? "" : HAIRLINE + ";"}${BODY};${INK};font-weight:600;vertical-align:top">${escape(v)}</td></tr>`;
   const line = (l: OrderEmailInput["lines"][number], i: number) => {
-    const meta = [lineDetails(l), l.code ? `Code ${l.code}` : "", l.unit || "Each"].filter(Boolean).join(" · ");
+    const meta = [lineDetails(l), l.code ? `Code ${l.code}` : ""].filter(Boolean).join(" · ");
     return `<tr><td style="padding:16px 12px 16px 0;${i ? HAIRLINE + ";" : ""}vertical-align:top">` +
       `<p style="margin:0;${BODY};${INK};font-weight:600">${escape(l.name)}</p>` +
-      `<p style="margin:2px 0 0;${SMALL};${MUTED}">${escape(meta)}</p></td>` +
+      (meta ? `<p style="margin:2px 0 0;${SMALL};${MUTED}">${escape(meta)}</p>` : "") + `</td>` +
       `<td align="right" style="padding:16px 0;${i ? HAIRLINE + ";" : ""}vertical-align:top;white-space:nowrap">` +
-      `<span style="display:inline-block;min-width:24px;padding:4px 12px;border-radius:999px;background-color:#eef3fb;color:${NAVY};font-size:15px;line-height:22px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums">${l.quantity}</span></td></tr>`;
+      `<span style="display:inline-block;min-width:24px;padding:4px 12px;border-radius:999px;background-color:#eef3fb;color:${NAVY};font-size:15px;line-height:22px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums">${l.quantity}${l.unit ? ` <span style="font-weight:500">× ${escape(l.unit)}</span>` : ""}</span></td></tr>`;
   };
   const p = (v: string, style = "") => `<p style="margin:0 0 16px;${BODY};${INK};${style}">${escape(v)}</p>`;
   const eyebrow = (v: string, colour = FAINT) => `<p style="margin:0 0 8px;${EYEBROW};${colour}">${escape(v)}</p>`;

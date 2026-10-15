@@ -12,6 +12,11 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - Answers save as people go, so nothing is lost if their phone locks. Passing the exam finishes the course, or sends it to a trainer for sign-off if it is a practical course. After a pass they see every answer explained; after a fail they see which parts of the course to go over again.
 - When someone has used all their attempts, a trainer can give them **another attempt** from their training page, where their scores now show too.
 - Under **Final exam** in the course builder you can see how many people passed and which questions people get wrong most, which often means a lesson needs to explain something better.
+
+## 1.17.6 · 15 October 2026 · Purchasing: the unit beside the quantity
+
+- In the email to suppliers, each product's unit now sits next to its quantity, for example **8 × cylinder(s)**, so the supplier reads them together.
+
 ## 1.17.5 · 15 October 2026 · Purchasing: a better-looking email to suppliers
 
 - The purchase order email now has the LeisureWorld logo at the top, with the order number in large type underneath.
