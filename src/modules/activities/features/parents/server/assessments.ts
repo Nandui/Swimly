@@ -8,7 +8,7 @@ import { readSharedCurriculum, type SharedCurriculum } from "@/modules/activitie
 import { HOLDS_A_PLACE } from "@/modules/activities/shared/assessments/constants";
 import { ageRangeError } from "@/modules/activities/shared/assessments/age";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
-import { parentAudit, withParent, type ParentIdentity } from "@/modules/activities/shared/parents/auth";
+import { parentAudit, profileMissing, withParent, type ParentIdentity } from "@/modules/activities/shared/parents/auth";
 import { childScope, requireChild } from "@/modules/activities/shared/parents/children";
 import { ParentApiError, notFound } from "@/modules/activities/shared/parents/errors";
 import { dateSchema, idSchema, parseInput, readBody } from "@/modules/activities/shared/parents/http";
@@ -105,7 +105,7 @@ export type ParentBookingInput = z.infer<typeof bookingSchema>;
 /** Run under withParent's lock. The assessment lock is also taken by every
  * staff booking/session edit, so both apps compete for the same seats. */
 export async function reserveAssessment(tx: Prisma.TransactionClient, parent: ParentAccount, input: ParentBookingInput, key: string) {
-  if (!parent.name) throw new ParentApiError(409, "PROFILE_REQUIRED", "Add your name before booking an assessment.");
+  if (profileMissing(parent)) throw new ParentApiError(409, "PROFILE_REQUIRED", "Add your name and phone number before booking an assessment.");
   const requestHash = createHash("sha256").update(JSON.stringify(input)).digest("hex");
   const replay = await tx.parentBookingRequest.findUnique({ where: { parentId_key: { parentId: parent.id, key } }, include: { booking: { select: { id: true, studentId: true, sessionId: true, status: true } } } });
   if (replay) {

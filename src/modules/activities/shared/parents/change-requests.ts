@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import type { ParentAccount, ParentChangeRequest, Prisma } from "@/generated/prisma/client";
-import { parentAudit, withParent, type ParentIdentity } from "@/modules/activities/shared/parents/auth";
+import { parentAudit, profileMissing, withParent, type ParentIdentity } from "@/modules/activities/shared/parents/auth";
 import { requireChild } from "@/modules/activities/shared/parents/children";
 import { parseInput, readBody } from "@/modules/activities/shared/parents/http";
 import { ParentApiError } from "@/modules/activities/shared/parents/errors";
@@ -58,7 +58,7 @@ export async function createChangeRequest(request: Request, identity: ParentIden
   await rateLimit(`change-request:${identity.account.id}`, 20, 3600);
   return withParent(identity, async (tx, parent) => {
     await requireChild(tx, parent, childId);
-    if (!parent.name) throw new ParentApiError(400, "PROFILE_REQUIRED", "Add your own name in Your account before sending a change.");
+    if (profileMissing(parent)) throw new ParentApiError(400, "PROFILE_REQUIRED", "Add your name and phone number in Your account before sending a change.");
     const { message, ...fields } = input;
     const proposed = Object.fromEntries(CHANGEABLE_FIELDS.filter((f) => fields[f] !== undefined).map((f) => [f, fields[f] as string]));
     const requestHash = hash(JSON.stringify([childId, proposed, message]));

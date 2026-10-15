@@ -4,6 +4,11 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.15.1 · 15 October 2026 · Parents app: phone number required
+
+- Parents must now give a phone number (at least 7 digits) with their name in the parents app. Families who signed up without one are asked for it the next time they book an assessment, ask to link a child or send a change, so nobody is locked out.
+- A child's date of birth was already required when a parent books an assessment or asks to link a child, and still is.
+
 ## 1.15.0 · 15 October 2026 · Academy joins Short courses, and the course booking site
 
 - **The Academy is now part of Short courses.** One menu entry instead of two: the lifeguard and swim teacher courses are under Short courses > **Academy**, with **To call** and the **Academy list** beside them. Old Academy links and bookmarks still work. Nothing about the courses, candidates or records changes.

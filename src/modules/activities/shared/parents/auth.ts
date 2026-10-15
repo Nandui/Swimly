@@ -96,8 +96,20 @@ export async function withParent<T>(identity: ParentIdentity, run: (tx: Prisma.T
   }, { timeout: 15_000 });
 }
 
+/** A phone number the desk can ring: digits with optional +, spaces, dashes,
+ * dots and brackets, and at least seven digits. */
+export const phoneSchema = z.string().trim().max(40)
+  .regex(/^\+?[0-9 ().-]+$/, "Enter a phone number using digits, spaces and an optional +.")
+  .refine(value => value.replace(/\D/g, "").length >= 7, "Enter a phone number with at least 7 digits.");
+
+/** Name and phone are both required before a parent books, links or proposes
+ * changes. Older accounts without a phone are asked for it, not locked out. */
+export function profileMissing(parent: Pick<ParentAccount, "name" | "phone">) {
+  return !parent.name || !parent.phone?.trim();
+}
+
 export async function updateProfile(request: Request, identity: ParentIdentity) {
-  const data = await readBody(request, z.object({ name: z.string().trim().min(2).max(100), phone: z.string().trim().max(40).nullable().optional() }).strict());
+  const data = await readBody(request, z.object({ name: z.string().trim().min(2).max(100), phone: phoneSchema }).strict());
   return withParent(identity, async (tx, parent) => {
     const updated = await tx.parentAccount.update({ where: { id: parent.id }, data });
     await parentAudit(tx, parent, "update", "ParentAccount", parent.id, "Updated parent contact details");
