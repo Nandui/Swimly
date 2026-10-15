@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { liveSitesOf, rolesByIds, staffRoleIdOf, withRoles, withSiteStatus } from "@/lib/directory";
 import { sitesFor } from "@/lib/policy/session";
 import { requirePurchasingActor, type PurchasingActor } from "@/modules/purchasing/shared/access";
+import { orderEmailContext } from "@/modules/purchasing/features/orders/server/supplier-email";
 import { EDITABLE, approverRoles, mayApprove, type PoStatus } from "@/modules/purchasing/shared/rules";
 
 /** Purchasing's reads (docs/purchasing.md). Orders are limited to the sites
@@ -57,11 +58,12 @@ export async function purchaseOrder(id: string) {
       ...ORDER_ROW, note: true, decisionNote: true, cancelledAt: true, updatedAt: true,
       supplier: { select: { name: true, accountNumber: true, contactName: true, email: true, phone: true } },
       lines: { orderBy: { name: "asc" }, select: { id: true, productId: true, name: true, code: true, unit: true, unitPriceCents: true, quantity: true } },
+      emails: { orderBy: { createdAt: "desc" }, select: { id: true, kind: true, toAddress: true, ccAddress: true, sentByName: true, status: true, error: true, createdAt: true } },
     },
   });
   if (!found) notFound();
   const [order] = await withOrderSites([found]);
-  const sites = await sitesFor("purchasing.read");
+  const [sites, requestSites] = await Promise.all([sitesFor("purchasing.read"), sitesFor("purchasing.request")]);
   // Your own drafts are yours wherever they are; everything else follows your sites.
   if (!covers(sites, order.siteId) && order.requestedById !== who.id) notFound();
   if (order.status === "draft" && order.requestedById !== who.id && !who.manage) notFound();
@@ -76,7 +78,18 @@ export async function purchaseOrder(id: string) {
     canApprove: status === "pending" && can(order),
     canEdit: mine && EDITABLE.includes(status),
     canCancel: (mine || who.manage) && ["draft", "pending", "rejected"].includes(status),
+    // The same people orderEmailContext lets send it.
+    canEmail: status === "approved" && order.number !== null && (mine || who.manage || covers(requestSites, order.siteId)),
   };
+}
+
+/** The email page of an approved order: the preview, whether emails to suppliers are
+ *  on, and every email sent so far. A 404 for an order this person cannot see. */
+export async function orderEmailPage(id: string) {
+  const who = await requirePurchasingActor();
+  const ctx = await orderEmailContext(id, who);
+  if (!ctx) notFound();
+  return { who, ...ctx };
 }
 
 /** What a new order (or a change to one) can be made of: the sites this person

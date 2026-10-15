@@ -1,4 +1,4 @@
-import { Ban, CircleCheck, CircleDashed, CircleX, Clock3 } from "lucide-react";
+import { Ban, CircleCheck, CircleDashed, CircleX, Clock3, FlaskConical, MailCheck, MailX, Power, PowerOff } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 
 /** Purchasing's rules, pure so they are tested on their own (docs/purchasing.md). */
@@ -15,6 +15,17 @@ export type PoStatus = keyof typeof PO_STATUS_META;
 /** A supplier or product taken off the approved list. */
 export const APPROVAL_LIST_META = {
   removed: { label: "Not approved", color: "gray", icon: Ban },
+} as const satisfies Record<string, StatusMeta>;
+/** An email of an approved order: to the supplier, a test to the sender, or one that failed. */
+export const PO_EMAIL_META = {
+  supplier: { label: "Sent to supplier", color: "green", icon: MailCheck },
+  test: { label: "Test to sender", color: "blue", icon: FlaskConical },
+  failed: { label: "Not sent", color: "red", icon: MailX },
+} as const satisfies Record<string, StatusMeta>;
+/** Whether approved orders may be emailed to suppliers. */
+export const SUPPLIER_EMAILS_META = {
+  on: { label: "On", color: "green", icon: Power },
+  off: { label: "Off, tests only", color: "gray", icon: PowerOff },
 } as const satisfies Record<string, StatusMeta>;
 /** The requester can still change an order in these. */
 export const EDITABLE: readonly PoStatus[] = ["draft", "rejected"];

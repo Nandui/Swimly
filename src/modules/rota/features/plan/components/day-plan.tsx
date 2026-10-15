@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Coffee, MapPin, Plus, TriangleAlert } from "lucide-react";
@@ -244,7 +244,7 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
     const density = densityOf(pos.px);
     const onIt = row.blocks.filter((b) => b.kind === "on" && !isOff(b) && b.start < c.end && c.start < b.end).map((b) => firstName(b.name));
     const short = c.have < c.want;
-    const label = `${row.label}, ${clock(c.start)} to ${clock(c.end)}: ${c.have} of ${c.want} ${c.want === 1 ? "person" : "people"}${onIt.length ? ` (${[...new Set(onIt)].join(", ")})` : ""}${short && canChange && !row.group.href ? ". Choose someone" : ""}`;
+    const label = `${row.label}, ${clock(c.start)} to ${clock(c.end)}: ${c.have} of ${c.want} staff${onIt.length ? ` (${[...new Set(onIt)].join(", ")})` : ""}${short && canChange && !row.group.href ? ". Choose someone" : ""}`;
     const words = density === "icon" ? <span className="pc-block-title tabular-nums">{c.have}/{c.want}</span> : (
       <span className="pc-block-body">
         <span className="pc-block-title tabular-nums">{c.have}/{c.want}{short ? ` · needs ${c.want - c.have}` : ""}</span>
@@ -257,15 +257,22 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
       const id = `${row.group.key}|${c.gap.start}|${c.gap.place ?? refs.join(",")}`;
       return <Button key={key} type="button" variant="link" {...common} aria-label={label} aria-pressed={selected === id} onClick={() => openGap(row.group, c.gap!, refs)}>{words}</Button>;
     }
+    if (canChange && row.need && ourNeeds.has(row.need.id)) return changeActivity(row.need, <Button key={key} type="button" variant="link" {...common} aria-label={`${label}. Change the activity`}>{words}</Button>, key);
     return <span key={key} {...common} role="img" aria-label={label}>{words}</span>;
   };
+
+  /** Open one of this department's activities to change its time, area or how many staff, or
+   *  take it off the day, from wherever it shows on the timeline. */
+  const changeActivity = (need: DayNeed, trigger: ReactNode, key?: string) => (
+    <NeedDialog key={key} siteId={siteId} date={date} live={live} types={types} areas={areaList} need={need} trigger={trigger} />
+  );
 
   /** The label of a row of what needs people: what it is, where, and how many. */
   const rowLabel = (row: NeedRow) => {
     const g = row.group;
     const Icon = activityIcon(g.icon);
     const lent = theirs(g);
-    const count = row.kind === "activity" ? `${row.need?.places ?? 1} at once` : row.kind === "booking" ? g.name : row.kind === "classes" ? `${row.blocks.length} ${row.blocks.length === 1 ? "class" : "classes"}`
+    const count = row.kind === "activity" ? `${row.need?.places ?? 1} staff` : row.kind === "booking" ? g.name : row.kind === "classes" ? `${row.blocks.length} ${row.blocks.length === 1 ? "class" : "classes"}`
       : `Planned in ${g.plannedIn ?? "another module"}`;
     const line = [whereOf(g, row.need), count, g.requiredName ? qualificationShort(g.requiredName) : null].filter(Boolean).join(" · ");
     const body = <>
@@ -275,11 +282,16 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
     </>;
     const ours = row.need && ourNeeds.has(row.need.id);
     if (canChange && ours) {
-      return <NeedDialog siteId={siteId} date={date} live={live} types={types} areas={areaList} need={row.need!}
-        trigger={<Button type="button" variant="ghost" className="rota-tl-label h-auto items-stretch whitespace-normal" aria-label={`${row.label}, ${line}. Change it`}>{body}</Button>} />;
+      return changeActivity(row.need!, <Button type="button" variant="ghost" className="rota-tl-label h-auto items-stretch whitespace-normal" aria-label={`${row.label}, ${line}. Change the activity`}>{body}</Button>);
     }
     if (g.href) return <Button asChild variant="ghost" className="rota-tl-label h-auto items-stretch whitespace-normal"><Link href={g.href} aria-label={`${row.label}, ${line}. Open it`}>{body}</Link></Button>;
     return <div className="rota-tl-label">{body}</div>;
+  };
+
+  /** The way into a block's activity, from the dialog of someone on it. */
+  const changeOf = (b: Block) => {
+    const need = needOf(b);
+    return need ? changeActivity(need, <Button type="button" variant="ghost">Change the activity</Button>) : undefined;
   };
 
   /** What a person is on, on their row: its activity, booking or class, and the department when
@@ -311,7 +323,7 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
     if (b.classRef) return <Button key={key} type="button" variant="link" className="pc-block" {...common} aria-label={`${label}. Change who teaches`} onClick={() => openGap(g, b, b.refs)}>{words}</Button>;
     return b.assignmentId ? (
       <AssignmentDialog key={key} live={live} assignment={{ id: b.assignmentId, needId: b.needId!, place: b.place!, userId: b.userId!, name: b.name ?? "", start: b.start, end: b.end, what: `${g.name} in ${g.place}` }}
-        trigger={<Button type="button" variant="link" className="pc-block" {...common} aria-label={`${label}. Change their time or take them off`}>{words}</Button>} />
+        change={changeOf(b)} trigger={<Button type="button" variant="link" className="pc-block" {...common} aria-label={`${label}. Change their time or take them off`}>{words}</Button>} />
     ) : <span key={key} className="pc-block" {...common} role="img" aria-label={label}>{words}</span>;
   };
 
@@ -457,10 +469,17 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
             </div>
             {z.groups.map((g) => {
               const Icon = activityIcon(g.icon);
+              const head = <><Icon aria-hidden="true" /><span className="rota-tl-act-name">{g.name}</span><span className="rota-tl-act-meta">{activityLine(g)}</span></>;
               const list = g.lanes.flatMap((lane) => (g.fromClasses ? merged(lane) : single(lane))).sort((a, b) => a.start - b.start);
               return (
                 <div key={g.key} className="flex flex-col gap-2">
-                  <span className="rota-tl-act-head"><Icon aria-hidden="true" /><span className="rota-tl-act-name">{g.name}</span><span className="rota-tl-act-meta">{activityLine(g)}</span></span>
+                  {canChange && g.needs.length === 1 && ourNeeds.has(g.needs[0].id)
+                    ? changeActivity(g.needs[0], <Button type="button" variant="ghost" className="rota-tl-act-head ui-motion-press" aria-label={`${g.name}, ${activityLine(g)}. Change the activity`}>{head}</Button>)
+                    : <span className="rota-tl-act-head">{head}</span>}
+                  {canChange && g.needs.length > 1 ? (
+                    <span className="flex flex-wrap gap-2">{g.needs.filter((n) => ourNeeds.has(n.id)).map((n) => changeActivity(n,
+                      <Button type="button" variant="outline" className="tabular-nums" aria-label={`Change ${g.name}, ${clock(n.startMinutes)} to ${clock(n.endMinutes)}`}>Change {clock(n.startMinutes)}–{clock(n.endMinutes)}</Button>, n.id))}</span>
+                  ) : null}
                   <ul className="pc-rows">
                     {list.map((b, i) => {
                       const off = isOff(b);
@@ -474,7 +493,7 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
                       }
                       return <li key={i}>{b.assignmentId ? (
                         <AssignmentDialog live={live} assignment={{ id: b.assignmentId, needId: b.needId!, place: b.place!, userId: b.userId!, name: b.name ?? "", start: b.start, end: b.end, what: `${g.name} in ${g.place}` }}
-                          trigger={<Button type="button" variant="outline" className={ROW} aria-label={`${b.name}, ${what}`}>{text}{trail}</Button>} />
+                          change={changeOf(b)} trigger={<Button type="button" variant="outline" className={ROW} aria-label={`${b.name}, ${what}`}>{text}{trail}</Button>} />
                       ) : <div className="pc-row">{text}</div>}</li>;
                     })}
                   </ul>

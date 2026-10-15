@@ -4,13 +4,28 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.13.0 · 15 October 2026 · Training: build courses from lessons
+## 1.14.0 · 15 October 2026 · Training: build courses from lessons
 
 - **Training > Courses** now opens each course in a **builder**. A course is made of **sections**, and each section of **lessons**: **Reading** (text with headings, lists, key points, tables and images), **Video** (a YouTube or Vimeo link plays inside the lesson; other links open in a new tab) or **File** (a PDF or photo to open), each with notes.
 - **Preview** shows the course exactly as staff will see it. **Publish** makes it live as a numbered version. Changes after that stay in the draft until you publish again; people part-way through keep the version they started, so their record shows what they were taught, and anyone who hasn't started gets the new one.
 - A new course opens straight in the builder. A course from before keeps its text: **Use the current text as lesson 1** turns it into the first lesson. Until you publish lessons, staff see it as before.
 - In **Turnfin Me**, staff take a course one lesson per screen, with a progress bar and **Done, next lesson**. It remembers where they got to: Home shows **Continue** on the course they were in. They finish the course, or ask for sign-off, once every lesson is done.
 - Training has a new level, **Author**, between Trainer and Manage: build and publish courses without assigning them. Roles with Manage can still do everything they could. Give the level under **Admin > Roles**.
+
+## 1.13.0 · 15 October 2026 · Purchasing: email approved orders to suppliers
+
+- An approved purchase order has a new **Email to supplier** button. It opens the email exactly as the supplier will get it: the order number, our account number, where to deliver, the products and quantities, and the note. It shows no prices; the supplier invoices at the agreed prices. A clear **Invoices** note asks them to send every invoice for the order to invoices@leisureworldcork.com, quoting the order number. The supplier's replies come to you.
+- One address can get a copy (CC) of every order emailed to a supplier. Set it under **Purchasing > Suppliers > Emails to suppliers**. Tests are not copied.
+- **Send test to me** sends that same email to your own address only, marked as a test, so you can check it first.
+- Emailing suppliers starts **off**. Someone with Purchasing **Manage** turns it on under **Purchasing > Suppliers > Emails to suppliers**, and only after a test has been sent. Until then nothing can go to a supplier.
+- Whoever raised the order, anyone who raises orders at its site, and whoever manages Purchasing can email it. Every email, sent or failed, is listed on the order and in the activity log.
+- The supplier's email address is the one on their supplier page.
+
+## 1.12.5 · 15 October 2026 · Rota: change an activity from the timeline
+
+- An activity on the **Plan** asked for "People at once", which read like how many swimmers or customers it takes. It now says **How many staff**, and a booking's form says the same.
+- Once an activity was on the timeline, the only way back into it was its name on the left, which did not look like something to press. Now pressing a covered stretch of the activity, or **Change the activity** in the box for someone on it, opens it again: change its times, its area, how many staff it needs, or remove it. On a phone, press the activity's name in the list.
+- Days that have come still ask for a reason, as before. Nothing changes in the rota itself.
 
 ## 1.12.4 · 15 October 2026 · New sites show in every module
 

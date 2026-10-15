@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { allRoles, withRoles } from "@/lib/directory";
 import { prisma } from "@/lib/prisma";
 import { requirePurchasingActor } from "@/modules/purchasing/shared/access";
+import { supplierEmailSetting } from "@/modules/purchasing/shared/settings";
 
 /** Purchasing's supplier reads (docs/purchasing.md): suppliers and products belong to the organisation. */
 
@@ -10,7 +11,7 @@ import { requirePurchasingActor } from "@/modules/purchasing/shared/access";
 export async function suppliersPage() {
   const who = await requirePurchasingActor();
   const orgId = who.orgId ?? undefined;
-  const [suppliers, rules, roles] = await Promise.all([
+  const [suppliers, rules, roles, emails] = await Promise.all([
     prisma.supplier.findMany({
       where: { orgId }, orderBy: [{ archivedAt: "asc" }, { name: "asc" }],
       select: { id: true, name: true, accountNumber: true, contactName: true, email: true, phone: true, note: true, archivedAt: true,
@@ -18,8 +19,9 @@ export async function suppliersPage() {
     }),
     prisma.purchaseApprovalRule.findMany({ where: { orgId }, orderBy: [{ limitCents: { sort: "asc", nulls: "last" } }], select: { id: true, supplierId: true, roleId: true, limitCents: true } }).then((rows) => withRoles(rows, "roleId", "role")),
     allRoles(),
+    supplierEmailSetting(who.orgId),
   ]);
-  return { who, suppliers, rules, roles };
+  return { who, suppliers, rules, roles, emails };
 }
 
 /** One supplier: details, approved products (archived last) and its own approvers. */
