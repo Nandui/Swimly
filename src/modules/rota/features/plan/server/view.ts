@@ -1,5 +1,5 @@
 /** The stretch of the day the timeline shows (owner request, 6 October 2026: drag empty space to
- *  move, scroll to zoom). Minutes from midnight. Pure, so the limits are tested (view.test.ts). */
+ *  move; 15 October 2026: zoom with buttons, never on scroll). Minutes from midnight. Pure, so the limits are tested (view.test.ts). */
 
 export type View = { from: number; to: number };
 
