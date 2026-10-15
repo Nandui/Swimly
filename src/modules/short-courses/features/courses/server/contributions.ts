@@ -40,7 +40,7 @@ export async function renameShortCoursePlaces({ siteId, from, to }: AreaRename, 
 }
 
 /** Short courses on the home page: registers to take today on the courses someone instructs,
- *  waiting lists with a place free, and courses starting in the next fortnight at their sites. */
+ *  places booked online to phone about, waiting lists with a place free, and courses starting in the next fortnight at their sites. */
 export async function shortCourseHomeItems(viewer: HomeViewer): Promise<HomeItem[]> {
   const held = expandPermissions(viewer.anywhere, { superadmin: viewer.isSuperadmin });
   if (!held.has("short-courses.read")) return [];
@@ -48,14 +48,18 @@ export async function shortCourseHomeItems(viewer: HomeViewer): Promise<HomeItem
   const soon = new Date(`${on}T00:00:00Z`); soon.setUTCDate(soon.getUTCDate() + 14);
   const sites = await sitesFor("short-courses.read");
   const inSites = sites.kind === "all" ? {} : { siteId: { in: [...sites.siteIds] } };
-  const [registers, starting, open] = await Promise.all([
+  const [registers, starting, open, phone] = await Promise.all([
     held.has("short-courses.run") ? prisma.shortCourseSession.count({ where: { date: parseDateOnly(on), registerAt: null, course: { cancelledAt: null, instructorId: viewer.id } } }) : 0,
     prisma.shortCourse.count({ where: { ...inSites, cancelledAt: null, status: "planned", sessions: { some: { date: { gte: parseDateOnly(on), lte: soon } } }, NOT: { sessions: { some: { date: { lt: parseDateOnly(on) } } } } } }),
     prisma.shortCourse.findMany({ where: { ...inSites, cancelledAt: null, status: "planned", participants: { some: { status: "waiting" } } },
       select: { capacity: true, _count: { select: { participants: { where: { status: "booked" } } } } } }),
+    prisma.shortCourseParticipant.findMany({ where: { source: "online", status: "booked", payment: "owed", callBy: { not: null }, course: { ...inSites, cancelledAt: null, status: "planned" } },
+      select: { callBy: true } }),
   ]);
+  const overdue = phone.filter((p) => p.callBy! <= new Date()).length;
   const freeForWaiting = open.filter((c) => c._count.participants < c.capacity).length;
   const items: HomeItem[] = [];
+  if (phone.length) items.push({ label: "Short course places booked online to phone about", hint: overdue ? `${overdue} past 72 hours` : "Take payment within 72 hours", href: "/short-courses", count: phone.length, attention: true });
   if (registers) items.push({ label: "Short course registers to take today", href: "/short-courses", count: registers, attention: true });
   if (freeForWaiting) items.push({ label: "Short courses with a place for the waiting list", hint: "Offer it to the first person waiting", href: "/short-courses", count: freeForWaiting, attention: true });
   if (starting) items.push({ label: "Short courses starting in the next two weeks", href: "/short-courses", count: starting });

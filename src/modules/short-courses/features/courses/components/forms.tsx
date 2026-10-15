@@ -20,7 +20,7 @@ import { amount, PersonSelect, text, THEME, useRefresh, type Option, type Person
 
 /* ---------- Courses ---------- */
 
-export type CourseEdit = { id: string; siteId: string; typeId: string; capacity: number; priceCents: number; instructorId: string; note: string };
+export type CourseEdit = { id: string; siteId: string; typeId: string; capacity: number; priceCents: number; instructorId: string; note: string; bookOnline: boolean };
 type TypeOption = Option & { weeks: number; sessionMinutes: number };
 type SiteOptions = { siteId: string; people: Person[]; areas: string[] };
 
@@ -57,7 +57,7 @@ export function CourseDialog({ course, sites, types, perSite, today, trigger }: 
       submit={async (fd) => {
         const result = await saveCourse(course?.id ?? null, {
           siteId, typeId, capacity: Number(fd.get("capacity") || 0), price: text(fd, "price"), instructorId: text(fd, "instructorId"), note: text(fd, "note"),
-          firstDay: text(fd, "firstDay"), weeks: Number(weeks || 0), start, end, place: text(fd, "place"),
+          bookOnline: fd.get("bookOnline") === "on", firstDay: text(fd, "firstDay"), weeks: Number(weeks || 0), start, end, place: text(fd, "place"),
         });
         if (result.ok && !course && result.id) router.push(`/short-courses/${result.id}`);
         else if (result.ok) router.refresh();
@@ -86,6 +86,13 @@ export function CourseDialog({ course, sites, types, perSite, today, trigger }: 
         <Field label="Price (€)" htmlFor={`${fid}-price`} hint="For the whole course."><Input id={`${fid}-price`} name="price" inputMode="decimal" defaultValue={course ? amount(course.priceCents) : ""} placeholder="90" className="min-h-11" /></Field>
       </div>
       <Field label="Note" htmlFor={`${fid}-note`} optional><Textarea id={`${fid}-note`} name="note" maxLength={500} defaultValue={course?.note} /></Field>
+      <div className="flex items-start gap-3">
+        <Checkbox id={`${fid}-online`} name="bookOnline" defaultChecked={course?.bookOnline ?? false} className="mt-0.5" />
+        <div className="grid gap-1">
+          <Label htmlFor={`${fid}-online`}>Open for online booking</Label>
+          <p className="text-sm text-ui-muted-foreground">The public can hold a place on the booking site until the first session, or join the waiting list when it is full. We phone within 72 hours to take payment.</p>
+        </div>
+      </div>
     </FormDialog>
   );
 }

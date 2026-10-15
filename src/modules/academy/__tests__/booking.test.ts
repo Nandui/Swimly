@@ -18,7 +18,7 @@ const origin = "https://academy.example.test";
 const originalEnv = { ...process.env };
 const sent: { email: string; code: string }[] = [];
 const held: { email: string; reference: string }[] = [];
-let site = "", onlineCourse = "", staffOnlyCourse = "", startedCourse = "";
+let site = "", onlineCourse = "", staffOnlyCourse = "", startedCourse = "", shortCourse = "";
 const state = { permissions: ["academy.read"] as string[] };
 class Denied extends Error {}
 
@@ -58,6 +58,11 @@ before(async () => {
   onlineCourse = (await course(true, 30)).id;
   staffOnlyCourse = (await course(false, 30)).id;
   startedCourse = (await course(true, 0)).id;
+  const scType = await db.shortCourseType.create({ data: { orgId: ORG, name: "Synthetic Couch to 5k", area: "gym", description: "Walk to run in six weeks.", healthForm: true } });
+  shortCourse = (await db.shortCourse.create({ data: {
+    orgId: ORG, siteId: site, typeId: scType.id, capacity: 1, priceCents: 6000, instructorId: "tutor", bookOnline: true, createdByName: "Test",
+    sessions: { create: [{ date: plusDays(40), startMinutes: 1080, endMinutes: 1140, place: "Gym floor" }, { date: plusDays(47), startMinutes: 1080, endMinutes: 1140, place: "Gym floor" }] },
+  } })).id;
   const d = {
     "@/lib/prisma": { prisma: db },
     "@/lib/clubs/current": { currentClubId: async () => site, currentClubIdIfAny: async () => site },
@@ -66,7 +71,15 @@ before(async () => {
       sendHeld: async (email: string, details: { reference: string }) => { held.push({ email, reference: details.reference }); },
     },
   };
-  router = serverModule("src/modules/academy/features/booking/server/router.ts", d);
+  // One copy of the public-API kit, so every source's errors are the router's PublicApiError, and
+  // the course seam holding both modules' sources (src/modules/contributions.ts).
+  const kit = serverModule("src/lib/public-api/http.ts", {});
+  const withKit = { ...d, "@/lib/public-api/http": kit, "server-only": {} };
+  const sources = [
+    serverModule<{ academyPublicCourses: unknown }>("src/modules/academy/features/booking/server/source.ts", withKit).academyPublicCourses,
+    serverModule<{ shortCoursePublicCourses: unknown }>("src/modules/short-courses/features/booking/server/source.ts", withKit).shortCoursePublicCourses,
+  ];
+  router = serverModule("src/modules/academy/features/booking/server/router.ts", { ...withKit, "@/modules/contributions": { publicCourseSources: async () => sources } });
   const session = () => ({ user: { id: "desk", name: "Desk B", orgId: ORG, isSuperadmin: false, roleName: "Role", permissions: state.permissions, primaryPermissions: state.permissions,
     screens: ["academy"], primaryScreens: ["academy"], grants: [], authMethod: "password", authAt: Date.now() } });
   const staff = {
@@ -104,7 +117,7 @@ test("the booking site sees only courses put online that have not started, and n
   const res = await call("courses");
   const text = await res.clone().text();
   const { courses } = await res.json();
-  assert.deepEqual(courses.map((c: { id: string }) => c.id), [onlineCourse], "not the staff-only course, not the one that started today");
+  assert.deepEqual(courses.map((c: { id: string }) => c.id), [onlineCourse, shortCourse], "not the staff-only course, not the one that started today; short courses too");
   assert.equal(courses[0].placesLeft, 2);
   assert.equal(courses[0].price, "€395.00");
   assert.deepEqual(courses[0].checks, ["Swim test"], "age is said as the minimum age instead");
@@ -149,6 +162,7 @@ test("a place is held within the places and the minimum age, owed, with 72 hours
   assert.equal((await full.json()).error.code, "FULL");
   const { courses } = await (await call("courses")).json();
   assert.equal(courses[0].placesLeft, 0, "still listed, as full");
+  assert.equal((await call("bookings", "POST", booking({ name: "Candidate C", waitingList: true }), third)).status, 409, "Academy courses have no waiting list online");
 });
 
 test("staff see who to phone, soonest first, and every Academy level can log a call", async () => {
@@ -173,4 +187,46 @@ test("staff see who to phone, soonest first, and every Academy level can log a c
   const audit = await fixture.prisma.auditLog.findMany({ where: { entity: "AcademyCall" } });
   assert.equal(audit.length, 3);
   assert.ok(audit.every((r) => r.module === "Academy" && r.actorName === "Desk B"));
+});
+
+test("a short course: a place held online, then its waiting list once full", async () => {
+  const { course } = await (await call(`courses/${shortCourse}`)).json();
+  assert.deepEqual([course.source, course.group, course.categoryLabel, course.checks, course.askDateOfBirth, course.waitingList, course.price],
+    ["short-courses", "course", "Gym", ["Health form"], false, true, "€60.00"]);
+  const token = await checkEmail("runner.a@example.test");
+  const res = await call("bookings", "POST", { courseId: shortCourse, name: "Runner A", phone: "087 111 1111", callTimes: ["evening"] }, token);
+  assert.equal(res.status, 201, "no date of birth needed without a minimum age");
+  const body = await res.json();
+  assert.equal(body.outcome, "held");
+  assert.match(body.reference, /^SC-[A-Z2-9]{5}$/);
+  const row = await fixture.prisma.shortCourseParticipant.findFirstOrThrow({ where: { reference: body.reference } });
+  assert.deepEqual([row.source, row.status, row.payment, row.callTimes], ["online", "booked", "owed", ["evening"]]);
+  assert.equal(row.callBy!.getTime() - row.createdAt.getTime(), 72 * 3_600_000);
+  assert.equal(held.at(-1)!.reference, body.reference);
+
+  const other = await checkEmail("runner.b@example.test");
+  const full = await call("bookings", "POST", { courseId: shortCourse, name: "Runner B", phone: "087 222 2222" }, other);
+  assert.equal((await full.json()).error.code, "FULL");
+  const wait = await call("bookings", "POST", { courseId: shortCourse, name: "Runner B", phone: "087 222 2222", waitingList: true }, other);
+  assert.equal(wait.status, 201);
+  const waiting = await wait.json();
+  assert.deepEqual([waiting.outcome, waiting.callBy], ["waiting", null]);
+  assert.equal((await fixture.prisma.shortCourseParticipant.findFirstOrThrow({ where: { reference: waiting.reference } })).status, "waiting");
+  assert.equal((await call("bookings", "POST", { courseId: shortCourse, name: "Runner B", phone: "087 222 2222", waitingList: true }, other)).status, 409, "once on the list");
+});
+
+test("a customer sees only their own bookings, from every module, and signing out ends the token", async () => {
+  assert.equal((await call("me/bookings")).status, 401);
+  await fixture.prisma.shortCourseParticipant.create({ data: { courseId: shortCourse, name: "Candidate A", email: "Candidate.A@example.test", status: "waiting", createdByName: "Desk B" } });
+  const token = await checkEmail("candidate.a@example.test");
+  const res = await call("me/bookings", "GET", undefined, token);
+  const text = await res.clone().text();
+  const { email, bookings } = await res.json();
+  assert.equal(email, "candidate.a@example.test");
+  assert.deepEqual(bookings.map((b: { source: string; state: string }) => `${b.source}:${b.state}`), ["short-courses:waiting", "academy:booked"],
+    "the desk's entry under their email too; the Academy place has a deposit, so it is booked");
+  assert.equal(bookings[1].owedCents, 29500);
+  assert.doesNotMatch(text, /Tutor Secret Name|Candidate B|Runner/, "no staff or other customers");
+  assert.equal((await call("auth/logout", "POST", {}, token)).status, 200);
+  assert.equal((await call("me/bookings", "GET", undefined, token)).status, 401);
 });

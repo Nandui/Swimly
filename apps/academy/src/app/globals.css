@@ -31,6 +31,9 @@
   /* The single do-first item on a page. */
   --pc-yellow: light-dark(#fde9a8, #4a3b10);
   --pc-on-yellow: light-dark(#3a2a00, #fbe7a8);
+  /* The home page's pool-water band: the fin's blue, deepening to the deep end. */
+  --pc-water: linear-gradient(135deg, light-dark(#1d5fd1, #1a3f86) 0%, light-dark(#0f3f94, #0f2550) 100%);
+  --pc-on-water: light-dark(#ffffff, #eaf1ff);
   --pc-shadow-card: none;
   --pc-shadow-overlay: 0 16px 40px -12px light-dark(rgb(15 27 45 / 0.35), rgb(0 0 0 / 0.6)), 0 0 0 1px var(--pc-line);
   --pc-ease: cubic-bezier(0.2, 0, 0, 1);
@@ -96,13 +99,23 @@ a { color: var(--pc-primary); }
 .pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 .tabular { font-variant-numeric: tabular-nums; }
 
-/* Frame: the site's name on the canvas, then one 720px column. No menus: a course list and a
-   booking flow. */
+/* Frame: the site's name and the account link on the canvas, then the page. Lists and a course use
+   the wide 1120px column; forms and bookings a 720px one. */
 .frame { min-height: 100dvh; display: flex; flex-direction: column; }
-.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; max-width: 720px; margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) 16px 0; min-height: 60px; }
-.brand-name { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 700; color: var(--pc-ink); text-decoration: none; }
-.page { flex: 1; width: 100%; max-width: 720px; margin: 0 auto; padding: 16px 16px calc(48px + env(safe-area-inset-bottom)); }
-.footer { width: 100%; max-width: 720px; margin: 0 auto; padding: 0 16px calc(24px + env(safe-area-inset-bottom)); }
+.skip-link { position: absolute; left: 16px; top: -100px; z-index: 10; padding: 10px 16px; border-radius: var(--pc-radius-control); background: var(--pc-surface); color: var(--pc-ink); font-weight: 600; }
+.skip-link:focus-visible { top: 12px; }
+.topbar { width: 100%; padding: max(12px, env(safe-area-inset-top)) 16px 0; }
+.topbar-inner { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1120px; min-height: 64px; margin: 0 auto; }
+.brand-name { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 700; color: var(--pc-ink); text-decoration: none; letter-spacing: -0.01em; }
+.topnav { display: flex; align-items: center; gap: 4px; }
+.topnav-link { display: inline-flex; align-items: center; min-height: var(--pc-control-height); padding: 0 var(--pc-control-pad); border-radius: var(--pc-radius-control); color: var(--pc-ink); font-weight: 600; text-decoration: none; }
+.topnav-link:hover { background: var(--pc-hover); }
+@media (max-width: 479px) { .topnav > .topnav-link { display: none; } }
+.page { flex: 1; width: 100%; max-width: 752px; margin: 0 auto; padding: 16px 16px calc(48px + env(safe-area-inset-bottom)); }
+.page.wide { max-width: 1152px; }
+.page > .stack { gap: 24px; }
+.footer { width: 100%; max-width: 1152px; margin: 0 auto; padding: 0 16px calc(24px + env(safe-area-inset-bottom)); }
+.lead { font-size: 16px; line-height: 24px; color: var(--pc-ink-muted); max-width: 60ch; }
 
 .turnfin-app .pc-panel { display: flex; flex-direction: column; gap: 16px; min-width: 0; padding: 24px; border-radius: var(--pc-radius-panel); background: var(--pc-surface); }
 .turnfin-app .pc-panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; min-height: 44px; }
@@ -139,6 +152,12 @@ a { color: var(--pc-primary); }
 .button.ghost { background: transparent; color: var(--pc-primary); }
 .button.ghost:not(:disabled):hover { background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
 .button.block { align-self: flex-start; }
+.button.large { min-height: 52px; padding: 0 24px; font-size: 16px; }
+.button.stretch { width: 100%; }
+.button:not(:disabled):active { transform: translateY(1px); }
+/* A text button inside a sentence: "Not you?" */
+.link-button { display: inline-flex; align-items: center; gap: 4px; min-height: 24px; padding: 0; border: 0; background: none; color: var(--pc-primary); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.link-button svg { width: 14px; height: 14px; }
 .button svg { width: 16px; height: 16px; }
 /* A back link: a ghost button pulled out so its chevron lines up with the page edge. */
 .back-link { align-self: flex-start; margin-inline-start: -12px; }
@@ -192,18 +211,73 @@ label.pc-row > input[type='checkbox'] { flex: none; width: 20px; height: 20px; m
 .chip[aria-pressed='true'], .chip:has(input:checked) { border-color: var(--pc-primary); background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
 .chip:has(input:focus-visible) { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
 .chip input { width: 18px; height: 18px; margin: 0; accent-color: var(--pc-primary); }
+/* Home: the offer and how booking works, side by side from tablets up. */
+.hero { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 24px; align-items: stretch; padding: 40px; border-radius: var(--pc-radius-panel); background: var(--pc-water); color: var(--pc-on-water); }
+.hero-copy { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 16px; }
+.turnfin-app .hero h1 { font-size: 44px; line-height: 50px; font-weight: 700; letter-spacing: -0.02em; color: inherit; max-width: 16ch; }
+.hero .lead { color: inherit; opacity: 0.88; }
+.hero .button { background: var(--pc-surface); color: var(--pc-ink); }
+.hero .button:not(:disabled):hover { background: var(--pc-surface-sunken); }
+.how { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 8px; list-style: none; border-radius: var(--pc-radius-card); background: var(--pc-surface); color: var(--pc-ink); }
+.how li { display: flex; align-items: flex-start; gap: 12px; padding: 12px; }
+.how li > span:last-child { display: flex; flex-direction: column; gap: 2px; }
+.how-icon { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); }
+.how-icon svg { width: 20px; height: 20px; }
+@media (max-width: 899px) {
+  .hero { grid-template-columns: minmax(0, 1fr); padding: 24px; }
+  .turnfin-app .hero h1 { font-size: 32px; line-height: 38px; }
+}
+@media (max-width: 479px) { .hero { padding: 20px; margin-inline: -4px; } }
+.section-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; }
+.turnfin-app .section-head h2, .turnfin-app .page > .stack > section > h2 { font-size: 22px; line-height: 28px; }
+.filters { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+.chip svg { width: 16px; height: 16px; }
+
 /* A course on the list: the whole card is the link. */
-.course-card { display: flex; flex-direction: column; gap: 8px; padding: 16px; border-radius: var(--pc-radius-card); background: var(--pc-surface); color: var(--pc-ink); text-decoration: none; }
+.course-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; }
+.course-grid > li { display: flex; }
+.course-card { display: flex; flex: 1; flex-direction: column; gap: 12px; padding: 20px; border-radius: var(--pc-radius-panel); background: var(--pc-surface); color: var(--pc-ink); text-decoration: none; transition: background-color 160ms var(--pc-ease), transform 160ms var(--pc-ease); }
 a.course-card:hover { background: var(--pc-hover); }
-.course-card .title { font-size: 16px; line-height: 22px; font-weight: 700; }
-.course-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+a.course-card:active { transform: scale(0.99); }
+a.course-card:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.course-card .title { font-size: 18px; line-height: 24px; font-weight: 700; letter-spacing: -0.01em; }
+.course-top { display: flex; align-items: center; gap: 10px; }
+.course-icon { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); }
+.course-icon svg { width: 18px; height: 18px; }
+.clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.course-facts { display: flex; flex-direction: column; gap: 8px; }
+.course-facts > span, .booking-meta > span { display: flex; align-items: flex-start; gap: 8px; }
+.course-facts svg, .booking-meta svg { width: 16px; height: 16px; margin-top: 2px; color: var(--pc-ink-muted); }
+.course-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--pc-line); }
+.price { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 700; font-variant-numeric: tabular-nums; }
+.price.large { font-size: var(--pc-text-figure); line-height: var(--pc-leading-figure); }
+.placeholder-card { height: 240px; border-radius: var(--pc-radius-panel); background: var(--pc-surface-sunken); }
+@media (prefers-reduced-motion: reduce) { .course-card, .button { transition: none; } a.course-card:active, .button:not(:disabled):active { transform: none; } }
+
+/* A course: what it is on the left, booking on the right (it stays in view on wide screens). */
+.course-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 400px); grid-template-areas: "info book" "dates book"; gap: 24px; align-items: start; }
+.course-info { grid-area: info; }
+.course-dates { grid-area: dates; }
+.book-panel { grid-area: book; position: sticky; top: 16px; }
+/* On phones and tablets the booking comes straight after what the course is; the dates after it. */
+@media (max-width: 899px) {
+  .course-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "info" "book" "dates"; }
+  .book-panel { position: static; }
+}
+.dates { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.dates li { display: flex; flex-direction: column; padding: 12px 16px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); }
+.signed-in { overflow-wrap: anywhere; }
+.stack-sm > .tag { align-self: flex-start; }
+.code-input { letter-spacing: 0.3em; font-size: 20px; }
+.narrow { max-width: 480px; }
+.page-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.booking-row .pc-row-body { gap: 6px; }
+.booking-meta { display: flex; flex-wrap: wrap; gap: 4px 16px; }
 .summary { display: flex; flex-direction: column; margin: 0; }
 .summary div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; }
 .summary div + div { border-top: 1px solid var(--pc-line); }
 .summary dt { color: var(--pc-ink-muted); }
 .summary dd { margin: 0; font-weight: 600; text-align: right; overflow-wrap: anywhere; }
-.cards { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.course-card .button { margin-top: 4px; }
 /* Loading: sunken cards the shape of the list that is coming. */
 .placeholder-row { height: 96px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); }
 .stack > .tag { align-self: flex-start; }

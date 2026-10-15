@@ -45,6 +45,9 @@ model ShortCourse {
   /// The staff member who takes it. Its sessions show on their Rota.
   instructorId  String
   note          String    @default("")
+  /// Shown on the public booking site (academy.leisureworldcork.com), where people hold a place
+  /// or join the waiting list online (phase 2, 15 October 2026).
+  bookOnline    Boolean   @default(false)
   createdById   String?
   createdByName String
   createdAt     DateTime  @default(now())
@@ -101,8 +104,15 @@ model ShortCourseParticipant {
   /// The day their health form came in, when the course asks for one.
   healthFormOn  DateTime? @db.Date
   note          String    @default("")
-  /// staff (added in Turnfin); online arrives in phase 2.
+  /// staff (added in Turnfin) | online (held a place or joined the waiting list on the booking site)
   source        String    @default("staff")
+  /// The booking reference given online: "SC-4K8PZ".
+  reference     String?   @unique
+  /// Online: another number to try, and when they would like a call (morning, afternoon, evening).
+  phone2        String    @default("")
+  callTimes     String[]  @default([])
+  /// Online: phone them for payment by this time (72 hours after they held the place).
+  callBy        DateTime?
   createdById   String?
   createdByName String
   createdAt     DateTime  @default(now())
@@ -112,6 +122,7 @@ model ShortCourseParticipant {
   attendance ShortCourseAttendance[]
 
   @@index([courseId, status])
+  @@index([source, payment, status])
   @@map("short_courses_participants")
 }
 

@@ -1,9 +1,11 @@
 import { z } from "zod";
 import { sendGoogleEmail, type GoogleEmailConfig } from "@/lib/email/google";
 import { emailSender } from "@/lib/email/sender";
+import type { PublicHold } from "@/lib/public-booking";
 import { unavailable } from "@/modules/academy/features/booking/server/http";
 
-/** Email for the booking site: the code that checks an address, and "your place is held".
+/** Email for the booking site: the code that checks an address, and "your place is held" (or
+ *  "you are on the waiting list") for a course from any module.
  *  Sent through Core's sender (src/lib/email/sender.ts); ACADEMY_EMAIL_NAME names it
  *  ("LeisureWorld Academy"). Outside production,
  *  ACADEMY_EMAIL_DEV_LOG=true prints them to the server console instead, for the sandbox. */
@@ -52,7 +54,7 @@ ${content}
 
 function codeEmail(code: string) {
   const digits = code.replace(/\D/g, "");
-  const lead = "Use this code to book your place:";
+  const lead = "Use this code to sign in and book:";
   const keep = "It expires in 10 minutes. Nobody will ever ask you for this code.";
   const ignore = "If you did not ask for it, you can ignore this email.";
   return {
@@ -64,19 +66,26 @@ function codeEmail(code: string) {
   };
 }
 
-export type HeldDetails = { name: string; course: string; site: string; starts: string; reference: string; phone: string; callBy: string; price: string };
+export type HeldDetails = PublicHold & { name: string };
 
-/** "Your place is held": what they booked, the reference, and that we will phone to take payment. */
+/** "Your place is held": what they booked, the reference, and that we will phone to take payment.
+ *  Or, for a full course, that they are on its waiting list and we will phone when a place frees. */
 function heldEmail(d: HeldDetails) {
-  const lines = [
+  const lines = d.outcome === "waiting" ? [
     `Hello ${d.name},`,
-    `Your place on ${d.course} at ${d.site}, starting ${d.starts}, is held.`,
-    `We will phone you on ${d.phone} by ${d.callBy} to take payment of ${d.price}. Your place is confirmed once you have paid.`,
+    `You are on the waiting list for ${d.course.name} at ${d.course.site}, starting ${d.course.starts}.`,
+    `If a place comes up, we will phone you on ${d.phone} to offer it and take payment of ${d.price}.`,
+    "You can see your bookings any time on our booking site. To change your number, reply to this email.",
+  ] : [
+    `Hello ${d.name},`,
+    `Your place on ${d.course.name} at ${d.course.site}, starting ${d.course.starts}, is held.`,
+    `We will phone you on ${d.phone} by ${d.callByLabel} to take payment of ${d.price}. Your place is confirmed once you have paid.`,
     "If we can't reach you within 72 hours, we may give the place to someone else. To change your number, reply to this email.",
   ];
+  const title = d.outcome === "waiting" ? "You are on the waiting list" : "Your place is held";
   return {
     text: `${lines.join("\r\n\r\n")}\r\n\r\nReference: ${d.reference}`,
-    html: page("Your place is held", `${lines.slice(0, 3).map((l) => `<p class="ac-ink" style="margin:0 0 16px;${BODY};${INK}">${escape(l)}</p>`).join("\n")}
+    html: page(title, `${lines.slice(0, 3).map((l) => `<p class="ac-ink" style="margin:0 0 16px;${BODY};${INK}">${escape(l)}</p>`).join("\n")}
 <p class="ac-ink" style="margin:0 0 16px;${BODY};${INK}">Reference: <strong style="font-variant-numeric:tabular-nums">${escape(d.reference)}</strong></p>
 <p class="ac-muted" style="margin:0;${BODY};${MUTED}">${escape(lines[3])}</p>`),
   };
@@ -99,7 +108,7 @@ export async function sendHeld(email: string, details: HeldDetails) {
   try {
     safeAddress(email);
     if (devLog()) { console.log(`[academy] place held email for ${email}: ${details.reference}`); return; }
-    await sendGoogleEmail(email, `Your place is held: ${details.course}`, heldEmail(details), emailConfig());
+    await sendGoogleEmail(email, `${details.outcome === "waiting" ? "On the waiting list" : "Your place is held"}: ${details.course.name}`, heldEmail(details), emailConfig());
   } catch {
     console.error("Academy: the place-held email was not sent", { reference: details.reference });
   }
