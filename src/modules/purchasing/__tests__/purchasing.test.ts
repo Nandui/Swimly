@@ -18,7 +18,7 @@ const ORG = "org_leisureworld";
 type GrantRow = { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string };
 const state = { id: "mia", permissions: [] as string[], grants: [] as GrantRow[] };
 /** Emails are never sent from tests: the transport is this double, which records them. */
-const outbox: { to: string; subject: string; text: string; replyTo?: string; cc?: string }[] = [];
+const outbox: { to: string; subject: string; text: string; replyTo?: string; cc?: string; logo?: string }[] = [];
 const mail = { down: false };
 let bishopstown = "", churchfield = "";
 
@@ -53,9 +53,10 @@ before(async () => {
     "@/lib/clubs/current": { currentClubId: async () => bishopstown, currentClubIdIfAny: async () => bishopstown },
     "next/cache": { revalidatePath() {} },
     "@/lib/email/sender": { emailSender: (name: string) => ({ clientId: "c", clientSecret: "s", refreshToken: "r", sender: "no-reply@example.invalid", fromHeader: name }) },
-    "@/lib/email/google": { sendGoogleEmail: async (to: string, subject: string, content: { text: string; replyTo?: string; cc?: string }) => {
+    "@/lib/email/google": { sendGoogleEmail: async (to: string, subject: string, content: { text: string; html?: string; replyTo?: string; cc?: string; inlineImages?: { cid: string; content: Buffer }[] }) => {
       if (mail.down) throw new Error("Email submission failed.");
-      outbox.push({ to, subject, text: content.text, replyTo: content.replyTo, cc: content.cc });
+      const logo = content.inlineImages?.[0];
+      outbox.push({ to, subject, text: content.text, replyTo: content.replyTo, cc: content.cc, logo: logo && logo.content.length > 0 && content.html?.includes(`cid:${logo.cid}`) ? logo.cid : undefined });
     } },
     "next/navigation": { notFound: () => { throw new NotFound("not found"); } },
     "server-only": {},
@@ -162,6 +163,7 @@ test("an approved order is emailed: tests to yourself first, the supplier only o
   assert.match(outbox[0].subject, new RegExp(`^Test: Purchase order ${firstNumber()}`));
   assert.match(outbox[0].text, /Chlorine tablets/);
   assert.equal(outbox[0].replyTo, "mia@example.invalid");
+  assert.equal(outbox[0].logo, "leisureworld-logo@turnfin", "the logo travels inside the email");
 
   // Someone who only sees the site cannot send it; an order not yet approved cannot be sent.
   as("dan", [], [at(bishopstown, ["purchasing.read"])]);

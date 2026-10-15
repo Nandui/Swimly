@@ -7,13 +7,14 @@ import { AuthorizationError } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { staffRoleIdOf, withSiteStatus } from "@/lib/directory";
 import { sendGoogleEmail } from "@/lib/email/google";
+import { emailLogo } from "@/lib/email/logo";
 import { emailSender } from "@/lib/email/sender";
 import { isDateOnly, parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requireCapFor, sitesFor } from "@/lib/policy/session";
 import { requirePurchasingActor } from "@/modules/purchasing/shared/access";
 import { revalidatePurchasing as revalidate, text } from "@/modules/purchasing/shared/forms";
-import { orderEmail } from "@/modules/purchasing/features/orders/server/order-email";
+import { orderEmail, PO_EMAIL_LOGO_CID } from "@/modules/purchasing/features/orders/server/order-email";
 import { orderEmailContext } from "@/modules/purchasing/features/orders/server/supplier-email";
 import { EDITABLE, MONTHS, approverRoles, euro, mayApprove, orderTotal, poNumber, variantProblem, type PoStatus } from "@/modules/purchasing/shared/rules";
 
@@ -192,7 +193,8 @@ export async function emailOrder(id: string, kind: "test" | "supplier"): Promise
   let error = "";
   try {
     if (!config) throw new Error(NOT_SET_UP);
-    await sendGoogleEmail(to, message.subject, { text: message.text, html: message.html, cc, replyTo: replyTo.success ? replyTo.data : undefined }, config);
+    const logo = { cid: PO_EMAIL_LOGO_CID, filename: "leisureworld.png", contentType: "image/png" as const, content: await emailLogo() };
+    await sendGoogleEmail(to, message.subject, { text: message.text, html: message.html, inlineImages: [logo], cc, replyTo: replyTo.success ? replyTo.data : undefined }, config);
   } catch (failure) {
     error = failure instanceof Error && failure.message === NOT_SET_UP ? NOT_SET_UP : "The email service did not accept it.";
   }

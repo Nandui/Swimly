@@ -26,6 +26,8 @@ test("the email carries the order without prices, and says where invoices go", (
   assert.ok(m.html.includes("mailto:invoices@leisureworldcork.com"));
   assert.ok(m.html.includes("Chlorine &#38; tablets") && m.html.includes("&#60;please&#62;"));
   assert.ok(!m.html.includes("<please>") && !m.html.includes("Test email"));
+  assert.ok(m.html.includes('src="cid:leisureworld-logo@turnfin"'), "the logo is carried inside the email");
+  assert.ok(orderEmail(order, false, "/purchasing/email-logo").html.includes('src="/purchasing/email-logo"'), "the preview shows it from Turnfin");
 });
 
 test("a test is the same email, saying who it would have gone to", () => {
