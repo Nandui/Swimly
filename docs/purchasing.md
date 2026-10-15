@@ -66,6 +66,10 @@ with a way to test the emails before a real one goes out.
   named "<organisation> Purchasing", to the supplier's `email`, with **Reply-To** whoever
   raised the order (owner request, 15 October 2026), or the sender when that person has no
   email address.
+- **Deliver to** is the site's name (with the organisation in front only when the name
+  does not already carry it) and its postal address from Admin > Sites (`Club.address`,
+  read through `siteAddress` in `src/lib/directory.ts`; owner request, 15 October 2026).
+  The order page shows the same address.
 - **Look** (owner request, 15 October 2026): the white LeisureWorld logo on a navy band with
   the order number, a panel of the order's details, the products with their quantities, the
   note, the Invoices box and the sender, in tables and inline styles that mail clients render.
@@ -74,7 +78,8 @@ with a way to test the emails before a real one goes out.
   instead, because a browser cannot show `cid:` images.
 - **Copy to**: up to five addresses set under Suppliers (`PurchasingSettings.copyTo`, stored
   as "a@x, b@y", Manage) get a CC of every email to a supplier, visible to the supplier;
-  tests are not copied (owner requests, 15 October 2026). Each email
+  tests are not copied (owner requests, 15 October 2026). Whoever raised the order is
+  always copied too, ahead of that list. Each email
   keeps who was copied (`PurchaseOrderEmail.ccAddress`).
 - **Send test to me** sends the same email to the sender's own address only, with "Test:" in
   the subject and a line on top naming the supplier's address.

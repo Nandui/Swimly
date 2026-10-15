@@ -3,7 +3,7 @@ import test from "node:test";
 import { orderEmail, type OrderEmailInput } from "./order-email";
 
 const order: OrderEmailInput = {
-  number: "PO-BT-00007", organisation: "Sample Leisure", site: "Bishopstown",
+  number: "PO-BT-00007", organisation: "Sample Leisure", site: "Bishopstown", address: "1 Sample Road\nCork T12 AB34",
   supplier: { name: "Sample <Chemicals>", contactName: "", email: "orders@example.invalid", accountNumber: "LW-1" },
   neededBy: "20 Oct 2026", approvedOn: "15 Oct 2026", note: "Back door, <please>",
   lines: [
@@ -21,7 +21,9 @@ test("the email carries the order without prices, and says where invoices go", (
   assert.match(m.text, /2 × Chlorine & tablets \(code CT-25\), 25 kg drum\r\n/);
   assert.match(m.text, /3 × Training suit, Speedo · Size 30 · Navy \(code TS-1\), each\r\n/);
   assert.ok(m.html.includes("Speedo · Size 30 · Navy"), "the brand, size and colour are on the line");
-  assert.match(m.text, /Deliver to: Sample Leisure Bishopstown/);
+  assert.match(m.text, /Deliver to: Sample Leisure Bishopstown, 1 Sample Road, Cork T12 AB34\r\n/);
+  assert.ok(m.html.includes("Sample Leisure Bishopstown<br>1 Sample Road<br>Cork T12 AB34"), "the address, line by line");
+  assert.match(orderEmail({ ...order, site: "Sample Leisure Bishopstown", address: "" }).text, /Deliver to: Sample Leisure Bishopstown\r\n/, "the organisation is not repeated when the site name has it");
   assert.ok(!/€|VAT|price/i.test(m.text + m.html), "no prices or totals");
   assert.match(m.text, /INVOICES: Please submit all invoices for this order to invoices@leisureworldcork\.com, quoting PO-BT-00007\./);
   assert.ok(m.html.includes("mailto:invoices@leisureworldcork.com"));

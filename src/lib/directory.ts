@@ -241,6 +241,11 @@ export async function siteName(id: string, db?: Db): Promise<string> {
 
 /** An organisation's name, for what goes outside Turnfin (a purchase order emailed to a
  *  supplier); empty when there is none. */
+/** A site's postal address, one line per line; empty when none is set. */
+export async function siteAddress(id: string): Promise<string> {
+  return (await (await client()).club.findUnique({ where: { id }, select: { address: true } }))?.address ?? "";
+}
+
 export async function organisationName(id: string | null): Promise<string> {
   if (!id) return "";
   const { prisma } = await import("@/lib/prisma");

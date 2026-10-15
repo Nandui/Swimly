@@ -57,6 +57,12 @@ const clubSchema = z.object({
     .refine((v) => v === "" || /^[A-Z]{2,4}$/.test(v), "Use two to four letters for the short code, for example BT.")
     .transform((v) => v || null)
     .default(""),
+  /** The postal address, one line per line; suppliers deliver purchase orders here. */
+  address: z
+    .string()
+    .max(400, "Keep the address under 400 characters.")
+    .transform((v) => v.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).join("\n"))
+    .default(""),
 });
 
 export type ClubInput = z.input<typeof clubSchema>;
@@ -72,7 +78,7 @@ export async function createClub(input: ClubInput): Promise<ActionResult> {
 
   const parsed = clubSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
-  const { name, code } = parsed.data;
+  const { name, code, address } = parsed.data;
   const orgId = await organisationOf(session.user.id);
   if (!orgId) return fail("Your account has no organisation.");
 
@@ -84,7 +90,7 @@ export async function createClub(input: ClubInput): Promise<ActionResult> {
   const created = await onUniqueViolation(
     () => prisma.$transaction(async (tx) => {
       const created = await tx.club.create({
-        data: { name, code, orgId, sortOrder: (last?.sortOrder ?? -1) + 1 },
+        data: { name, code, address, orgId, sortOrder: (last?.sortOrder ?? -1) + 1 },
         select: { id: true, name: true },
       });
 
@@ -113,24 +119,24 @@ export async function updateClub(id: string, input: ClubInput): Promise<ActionRe
 
   const parsed = clubSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
-  const { name, code } = parsed.data;
+  const { name, code, address } = parsed.data;
 
   const existing = await prisma.club.findUnique({
     where: { id },
-    select: { id: true, name: true, code: true, orgId: true },
+    select: { id: true, name: true, code: true, address: true, orgId: true },
   });
   if (!existing) return fail("That site no longer exists.");
   // Sites added before 1.12.4 were saved without an organisation; saving one
   // gives it the administrator's, so the modules list it.
   const orgId = existing.orgId ?? await organisationOf(session.user.id);
   const joins = !existing.orgId && orgId !== null;
-  if (existing.name === name && existing.code === code && !joins) return ok();
+  if (existing.name === name && existing.code === code && existing.address === address && !joins) return ok();
 
   const updated = await onUniqueViolation(
     () => prisma.$transaction(async (tx) => {
       const updated = await tx.club.update({
         where: { id },
-        data: { name, code, ...(joins ? { orgId } : {}) },
+        data: { name, code, address, ...(joins ? { orgId } : {}) },
         select: { id: true, name: true },
       });
 
@@ -141,7 +147,9 @@ export async function updateClub(id: string, input: ClubInput): Promise<ActionRe
         entity: "Club",
         entityId: id,
         clubId: id,
-        summary: existing.name === updated.name && existing.code === code
+        summary: existing.name === updated.name && existing.code === code && existing.address !== address
+          ? `${address ? "Set" : "Cleared"} ${updated.name}'s address${address ? `: ${address.replace(/\n/g, ", ")}` : ""}`
+          : existing.name === updated.name && existing.code === code
           ? `Added ${updated.name} to the organisation`
           : existing.name === updated.name
           ? `Set ${updated.name}'s short code to ${code ?? "none"}`

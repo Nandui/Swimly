@@ -1,7 +1,7 @@
 import "server-only";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { liveSitesOf, rolesByIds, staffRoleIdOf, withRoles, withSiteStatus } from "@/lib/directory";
+import { liveSitesOf, rolesByIds, siteAddress, staffRoleIdOf, withRoles, withSiteStatus } from "@/lib/directory";
 import { sitesFor } from "@/lib/policy/session";
 import { requirePurchasingActor, type PurchasingActor } from "@/modules/purchasing/shared/access";
 import { orderEmailContext } from "@/modules/purchasing/features/orders/server/supplier-email";
@@ -63,7 +63,7 @@ export async function purchaseOrder(id: string) {
   });
   if (!found) notFound();
   const [order] = await withOrderSites([found]);
-  const [sites, requestSites] = await Promise.all([sitesFor("purchasing.read"), sitesFor("purchasing.request")]);
+  const [sites, requestSites, address] = await Promise.all([sitesFor("purchasing.read"), sitesFor("purchasing.request"), siteAddress(order.siteId)]);
   // Your own drafts are yours wherever they are; everything else follows your sites.
   if (!covers(sites, order.siteId) && order.requestedById !== who.id) notFound();
   if (order.status === "draft" && order.requestedById !== who.id && !who.manage) notFound();
@@ -73,7 +73,7 @@ export async function purchaseOrder(id: string) {
   const mine = order.requestedById === who.id;
   const status = order.status as PoStatus;
   return {
-    who, order: { ...order, status },
+    who, order: { ...order, status, address },
     approverRoles: roles,
     canApprove: status === "pending" && can(order),
     canEdit: mine && EDITABLE.includes(status),

@@ -31,6 +31,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - Answers save as people go, so nothing is lost if their phone locks. Passing the exam finishes the course, or sends it to a trainer for sign-off if it is a practical course. After a pass they see every answer explained; after a fail they see which parts of the course to go over again.
 - When someone has used all their attempts, a trainer can give them **another attempt** from their training page, where their scores now show too.
 - Under **Final exam** in the course builder you can see how many people passed and which questions people get wrong most, which often means a lesson needs to explain something better.
+## 1.17.9 · 15 October 2026 · Sites have an address, and supplier emails use it
+
+- Each site now has an **Address** under Admin, Sites. Open a site with the pencil, type its address with the Eircode, and choose Save changes.
+- Purchase orders and the emails to suppliers show that address under **Deliver to**, so suppliers know exactly where to deliver.
+- The site's name is no longer repeated in the email when it already includes LeisureWorld.
+
+## 1.17.8 · 15 October 2026 · Purchasing: the person who raised the order is copied
+
+- Every purchase order emailed to a supplier now also goes as a copy to the person who raised the order, as well as to everyone listed under **Copy to**.
 
 ## 1.17.7 · 15 October 2026 · Purchasing: replies to whoever raised the order, and several copies
 
