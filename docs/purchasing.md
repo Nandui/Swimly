@@ -65,6 +65,12 @@ with a way to test the emails before a real one goes out.
   invoices@leisureworldcork.com, quoting the order number (`INVOICE_ADDRESS`). It goes from Core's mailbox (`src/lib/email/sender.ts`)
   named "<organisation> Purchasing", to the supplier's `email`, with **Reply-To** the
   sender's own address.
+- **Look** (owner request, 15 October 2026): the white LeisureWorld logo on a navy band with
+  the order number, a panel of the order's details, the products with their quantities, the
+  note, the Invoices box and the sender, in tables and inline styles that mail clients render.
+  The logo (`assets/email`, read by `src/lib/email/logo.ts`) travels inside the email as an
+  inline image (`PO_EMAIL_LOGO_CID`); the preview page shows it from `/purchasing/email-logo`
+  instead, because a browser cannot show `cid:` images.
 - **Copy to**: one address set under Suppliers (`PurchasingSettings.copyTo`, Manage) gets a
   CC of every email to a supplier, visible to the supplier; tests are not copied (owner
   request, 15 October 2026: the operations manager is copied on all of them). Each email

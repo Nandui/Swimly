@@ -4,6 +4,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.17.5 · 15 October 2026 · Purchasing: a better-looking email to suppliers
+
+- The purchase order email now has the LeisureWorld logo at the top, with the order number in large type underneath.
+- The order's details, the products and their quantities, the note and the **Invoices** box are laid out more clearly, and it reads well on a phone.
+- Nothing else changes: there are still no prices, and **Send test to me** shows exactly the same email.
+
 ## 1.17.4 · 15 October 2026 · Purchasing: new order numbers
 
 - Purchase orders approved from now on get a number made of the site's short code, the month and a running number, for example **BT-OCT-0042**.
