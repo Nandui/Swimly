@@ -4,6 +4,11 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.13.1 · 15 October 2026 · Purchasing: administrators approve their own orders
+
+- An administrator (Admin: **Manage**, or a superadmin) can now approve a purchase order they raised themselves, as long as their role may approve that much from that supplier. The activity log says it was their own order.
+- Everyone else still needs someone else to approve their orders.
+
 ## 1.13.0 · 15 October 2026 · Purchasing: email approved orders to suppliers
 
 - An approved purchase order has a new **Email to supplier** button. It opens the email exactly as the supplier will get it: the order number, our account number, where to deliver, the products and quantities, and the note. It shows no prices; the supplier invoices at the agreed prices. A clear **Invoices** note asks them to send every invoice for the order to invoices@leisureworldcork.com, quoting the order number. The supplier's replies come to you.

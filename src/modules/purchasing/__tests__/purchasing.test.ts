@@ -199,3 +199,16 @@ test("an approved order is emailed: tests to yourself first, the supplier only o
   as("mia", ["purchasing.request"]);
   assert.equal((await actions.setSupplierEmails(true)).ok, false, "only Manage turns it on");
 });
+
+test("an administrator may approve their own order; nobody else may", async () => {
+  const supplier = await fixture.prisma.supplier.findFirstOrThrow({ where: { name: "Sample Chemicals" }, include: { products: true } });
+  const order = { siteId: bishopstown, supplierId: supplier.id, neededBy: "", note: "", lines: [{ productId: supplier.products[0].id, quantity: 1 }] };
+  as("mia", [], [at(bishopstown, ["purchasing.request"])]);
+  const own = await actions.saveOrder(null, order, true);
+  assert.equal((await actions.decideOrder(own.id!, "approve", "")).ok, false, "not an administrator");
+  as("mia", ["staff.manage", "roles.manage", "purchasing.read", "purchasing.request"]);
+  assert.equal((await data.purchaseOrder(own.id!)).canApprove, true);
+  assert.equal((await actions.decideOrder(own.id!, "approve", "")).ok, true, "an administrator, within their role's limit");
+  const log = await fixture.prisma.auditLog.findFirstOrThrow({ where: { entity: "PurchaseOrder", entityId: own.id!, action: "approve" } });
+  assert.match(log.summary, /their own order/);
+});

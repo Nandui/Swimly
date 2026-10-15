@@ -46,7 +46,7 @@ export default async function SuppliersPage() {
         <div className="pc-panel-head">
           <div className="flex flex-col gap-1">
             <h2 id="sup-general">Approvers for every supplier</h2>
-            <p className="pc-row-hint">Who may approve orders from a supplier that has no approvers of its own, and up to how much. Nobody approves their own order.</p>
+            <p className="pc-row-hint">Who may approve orders from a supplier that has no approvers of its own, and up to how much. Nobody approves their own order, except administrators.</p>
           </div>
         </div>
         {general.length === 0 ? <EmptyState compact title="No general approvers yet" hint="Orders can only go to suppliers with approvers of their own." /> : (
