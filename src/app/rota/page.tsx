@@ -113,7 +113,9 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
                     <span className="rota-wide-only"><AddShiftSheet siteId={site.id} departmentId={department.id} date={date} dateLabel={dateLabel} live={live} /></span>
                     {data.types.length ? <NeedDialog siteId={site.id} date={date} live={live} types={data.types} areas={data.areas} /> : null}
                   </div>
-                ) : <p className="rota-quiet">{live ? "This day has come: the duty manager changes it from Today." : "You can see this plan. Planning it needs the Plan level for this department."}</p>}
+                ) : <p className="rota-quiet">{data.blocked === "come" ? "This day has come: the duty manager changes it from Today."
+                  : data.blocked === "member" ? `You plan only the departments you belong to, and ${department.name} is not one of yours. An administrator ticks it under Departments on your profile in HR, People.`
+                  : "You can see this plan. Planning it needs the Plan level for Rota in your role."}</p>}
               </div>
             </section>
           </div>

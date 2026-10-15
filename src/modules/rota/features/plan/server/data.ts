@@ -2,7 +2,7 @@ import "server-only";
 import { contractMinutesByIds, departmentIdsOf, departmentsForSite } from "@/lib/directory";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { canChange } from "@/modules/rota/shared/access";
+import { changeBlocked } from "@/modules/rota/shared/access";
 import { addDaysIso, mondayOf } from "@/modules/rota/shared/constants";
 import { ANY_DEPARTMENT, buildDay, type Day } from "@/modules/rota/shared/day";
 import { type RotaSite, loadDays, pickSite } from "@/modules/rota/shared/data";
@@ -63,7 +63,9 @@ export async function planWeek(input: { site?: string; week?: string; dept?: str
     /** Every department's activities that day, for lending and "show other departments". */
     allGroups: full.groups,
     hours,
-    canChange: !!department && canChange(at, date, now, department.id, mine),
+    canChange: !!department && !changeBlocked(at, date, now, department.id, mine),
+    /** Why this day can't be changed here, for the Plan to say so. */
+    blocked: department ? changeBlocked(at, date, now, department.id, mine) : null,
     canShare: !!department && (site.run || (site.plan && mine.has(department.id))),
     types: types.filter((t) => !t.archived && t.departmentId === department?.id && !t.fromClasses),
     /** Every department's activities at this site, to put someone on any of them for part of
