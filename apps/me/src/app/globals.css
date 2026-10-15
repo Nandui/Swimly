@@ -356,3 +356,18 @@ label.pc-row > input[type='checkbox'] { flex: none; width: 20px; height: 20px; m
 
 @media (prefers-reduced-motion: reduce) { .course-progress::-webkit-progress-value { transition: none; }
   .reveal-toggle > svg, .flip-card, .flashcard { transition: none; } }
+
+/* A certificate for finished training (e-learning phase 4): on screen as a card, on paper alone. */
+.certificate { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px 24px 28px; border: 1px solid var(--pc-line-strong); border-radius: var(--pc-radius-card); background: var(--pc-surface); text-align: center; overflow: hidden; }
+.certificate::before { content: ''; position: absolute; inset: 0 0 auto; height: 8px; background: var(--pc-primary); }
+.certificate-seal { display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; margin-bottom: 8px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); }
+.certificate-seal svg { width: 32px; height: 32px; }
+.certificate-name { font-size: var(--pc-text-display, 32px); line-height: 1.15; letter-spacing: -0.01em; text-wrap: balance; }
+.certificate-course { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 700; text-wrap: balance; }
+.certificate-code { margin-top: 16px; padding: 8px 16px; border-radius: 999px; background: var(--pc-surface-sunken); letter-spacing: 0.04em; }
+@media print {
+  .no-print, .topbar, .tf-bottom { display: none !important; }
+  body { background: #fff; }
+  .page { padding: 0; }
+  .certificate { border: 2px solid #000; min-height: 90vh; justify-content: center; }
+}

@@ -163,6 +163,47 @@ builder". Plan v3 in the "Turnfin E-learning Plan" artifact; phase 3 is the buil
   assignment is older and who has nothing open on the course, within the publisher's assign scope,
   with an optional due date; each is audited.
 
+## Compliance autopilot (e-learning, phase 4)
+
+A **training rule** says who must take a course and how often, so nobody assigns
+the same course by hand. One rule per course (`training_rules`), owned by
+Training. Pages: **Rules** (`/training/rules`), **Matrix** (`/training/matrix`)
+and **Check a certificate** (`/training/check`).
+
+- **Who**: positions, roles, departments and sites, each "any" when empty. A
+  person matches when they match every list that has something in it. Someone
+  with no sites works everywhere, so a site rule covers them. Leavers are skipped.
+- **When**: days to finish (1 to 365) and, optionally, take it again every N
+  months (1 to 120), assigned a set number of days before it runs out (0 to 180).
+  A renewal is due on the renewal date, or the usual days to finish if that has
+  already passed.
+- **The run** (`features/compliance/server/engine.ts`): every morning at 05:30
+  UTC from the Vercel cron (`/api/cron/training`, `CRON_SECRET`), and straight
+  after a rule is saved, restarted or "Run all rules now". For each person it
+  covers with nothing open on the course, it assigns when they never finished it
+  or are due again. One transaction per rule with a row lock on the course, so two
+  runs never assign twice. Assignments carry `ruleId`, no assigner and the name
+  "Turnfin (training rule)", with an audit row each. A course with nothing
+  published waits.
+- **Excused**: cancelling an assignment the rule made excuses that person until
+  the course is next due (or until they finish it). Cancelling a hand-assigned
+  one excuses nothing. Pausing a rule stops new assignments and keeps the old;
+  removing one deletes only the rule.
+- **Who may change rules**: Assign training everywhere (the Manage level, not
+  limited to some sites), because a rule reaches everyone it covers. Anyone with
+  Training access reads them.
+- **Matrix**: people the viewer's `training.records.read` covers against every
+  course with a rule that covers them: done, due again soon (60 days), to do,
+  overdue, awaiting sign-off, out of date, not assigned yet or excused, with
+  "in date" counts per course and person. Filters by site, department and course;
+  **Download for Excel** sends the same as a CSV (cells that look like formulas
+  are quoted).
+- **Certificates**: finished training has a certificate in Turnfin Me with a
+  12-character code (`XXXX-XXXX-XXXX`, no 0/O/1/I/L), made the first time it is
+  shown and never changed (`TrainingAssignment.certificateCode`). **Check a
+  certificate** finds the person, course, date and who signed it off; it shows
+  nothing else about them.
+
 ## Expiring qualifications
 
 `/training/expiring` lists qualifications that have expired or expire within 60

@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.20.0 · 15 October 2026 · Training: rules that assign courses for you, a training matrix and certificates
+
+- **Training rules** say who must take a course and how often: for example every lifeguard at Bishopstown, or everyone in Aquatics, once a year. Turnfin assigns it to them every morning, including new starters as soon as they get a matching position, role, department or site, and anyone due to take it again.
+- Refreshers are assigned a set number of days before they run out, so there is time to do them.
+- Cancelling training a rule assigned excuses that person until it is next due. You can pause a rule, change it, or run all rules straight away.
+- The new **Matrix** shows everyone you look after against every course they need: done, due again soon, overdue, out of date or excused, with how many are in date. Filter by site, department or course, and download it for Excel.
+- Staff get a **certificate** in Turnfin Me for every course they finish, with a code they can print or save. Use **Check a certificate** in Training to confirm a code is real.
+
 ## 1.19.0 · 15 October 2026 · Training: richer lessons and a faster course builder
 
 - Four new kinds of lesson. A **Scenario** puts staff in a situation and lets them choose what to do, scene by scene, until they reach the best outcome. **Flashcards** go round until every card is known. A **Checklist** is ticked off on the phone, for walk-rounds and equipment checks. **Audio** plays a recording, with the words underneath for anyone who can't listen.

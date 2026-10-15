@@ -43,7 +43,7 @@ const workArea = (id, ...extra) => [`src/modules/${id}/**`, `src/app/${id}/**`, 
 const workModules = {
   docs: workArea("docs", "src/app/api/docs/**"),
   refunds: workArea("refunds", "src/app/api/refunds/**"),
-  training: workArea("training"),
+  training: workArea("training", "src/app/api/cron/training/**"),
   hr: workArea("hr"),
   rota: workArea("rota"),
   purchasing: workArea("purchasing"),

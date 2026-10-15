@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { BookOpen, ChevronLeft, ChevronRight, CircleCheck, FileText, GitBranch, GraduationCap, Headphones, Layers, ListChecks, ListTodo, PlayCircle, Send } from "lucide-react";
+import { Award, BookOpen, ChevronLeft, ChevronRight, CircleCheck, FileText, GitBranch, GraduationCap, Headphones, Layers, ListChecks, ListTodo, PlayCircle, Send } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { CourseImage, type ExamInfo } from "@/components/question";
 import { LoadError, Loading, Notice, Tag, useLoad } from "@/components/ui";
@@ -106,6 +106,7 @@ export default function TrainingDetailPage() {
             {open && data.whatsNew ? <Notice title={`What’s new in version ${data.whatsNew.number}`}>{data.whatsNew.note}</Notice> : null}
             {data.state === "submitted" ? <Notice title="Waiting for sign-off" live={justDone}>A trainer will watch you do it and sign it off.</Notice> : null}
             {data.state === "completed" ? <Notice title={`Completed ${date(data.completedAt)}`} live={justDone}>{data.signedOffBy ? `Signed off by ${data.signedOffBy}.${data.trainerNote ? ` ${data.trainerNote}` : ""}` : "Well done."}</Notice> : null}
+            {data.state === "completed" ? <Link href={`/training/${data.id}/certificate`} className="button outline block"><Award aria-hidden="true" />Your certificate</Link> : null}
             {open && data.trainerNote ? <Notice title={`Not signed off yet${data.signedOffBy ? ` by ${data.signedOffBy}` : ""}`} tone="warning">{data.trainerNote}</Notice> : null}
 
             {data.sections && data.progress ? (

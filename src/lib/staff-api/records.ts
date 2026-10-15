@@ -7,7 +7,7 @@ import { myQualifications } from "@/lib/people/mine";
 import { myDays } from "@/modules/rota";
 import { docsReading } from "@/modules/docs";
 import {
-  checkQuizAnswer, completeLessonFor, completeTrainingFor, myCourse, myCourseFile, myExam, myExamPaper, myExamResult, myLesson, myTraining,
+  checkQuizAnswer, completeLessonFor, completeTrainingFor, myCertificate, myCourse, myCourseFile, myExam, myExamPaper, myExamResult, myLesson, myTraining,
   saveExamAnswer, startExam, submitExam, trainingFileResponse,
 } from "@/modules/training";
 import { StaffApiError, notFound } from "@/lib/staff-api/errors";
@@ -268,6 +268,13 @@ export async function completeTrainingLesson(identity: StaffIdentity, id: string
 }
 
 /** A PDF or image from the person's own course version, sent as the file itself. */
+/** A finished course's certificate, with the code a trainer checks it by. */
+export async function trainingCertificate(identity: StaffIdentity, id: string) {
+  const certificate = await myCertificate(me(identity), id);
+  if (!certificate) notFound();
+  return certificate;
+}
+
 export async function trainingFile(identity: StaffIdentity, id: string, fileId: string) {
   const file = await myCourseFile(identity.user.id, id, fileId);
   if (!file) notFound();

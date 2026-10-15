@@ -427,3 +427,16 @@ export async function activeStaffAtSite(orgId: string | null, siteId: string, db
     orderBy: { name: "asc" }, select: { id: true, name: true, jobTitle: true },
   });
 }
+
+/** Active staff in an organisation with what places them: role, live departments, sites and
+ *  position (Training's compliance rules and matrix). No personal details. */
+export type PlacedStaff = StaffRef & { roleId: string | null; departmentIds: string[]; siteIds: string[]; positionId: string | null };
+export async function activePlacedStaff(orgId: string | null, people: SubjectFilter = { kind: "all" }, db?: Db & DepartmentDb): Promise<PlacedStaff[]> {
+  const rows = await (await client(db)).user.findMany({
+    where: { orgId: orgId ?? undefined, isActive: true, ...(people.kind === "all" ? {} : { id: { in: [...people.userIds] } }) },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, staffRoleId: true, siteIds: true, positionId: true, departments: { select: { departmentId: true, department: { select: { archivedAt: true } } } } },
+  });
+  return rows.map((u) => ({ id: u.id, name: u.name, roleId: u.staffRoleId, siteIds: u.siteIds, positionId: u.positionId,
+    departmentIds: u.departments.filter((d) => !d.department.archivedAt).map((d) => d.departmentId) }));
+}

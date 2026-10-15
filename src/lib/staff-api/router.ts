@@ -18,10 +18,11 @@ export async function handleStaffRequest(request: Request, path: string[]) {
     const lesson = /^training\/([A-Za-z0-9_-]+)\/lessons\/([A-Za-z0-9_-]+)(\/complete|\/check)?$/.exec(route);
     const exam = /^training\/([A-Za-z0-9_-]+)\/exam(?:\/(start|answers|submit|attempts\/([1-9][0-9]{0,2})))?$/.exec(route);
     const trainingFile = /^training\/([A-Za-z0-9_-]+)\/files\/([A-Za-z0-9_-]+)$/.exec(route);
+    const certificate = /^training\/([A-Za-z0-9_-]+)\/certificate$/.exec(route);
     const reading = /^reading\/([A-Za-z0-9_-]+)(\/acknowledge)?$/.exec(route);
     const review = /^hr\/reviews\/([A-Za-z0-9_-]+)\/acknowledge$/.exec(route);
     const methods = training ? [training[2] ? "POST" : "GET"] : lesson ? [lesson[3] ? "POST" : "GET"]
-      : exam ? [!exam[2] || exam[3] ? "GET" : exam[2] === "answers" ? "PUT" : "POST"] : trainingFile ? ["GET"] : reading ? [reading[2] ? "POST" : "GET"] : review ? ["POST"] : ROUTES[route];
+      : exam ? [!exam[2] || exam[3] ? "GET" : exam[2] === "answers" ? "PUT" : "POST"] : trainingFile || certificate ? ["GET"] : reading ? [reading[2] ? "POST" : "GET"] : review ? ["POST"] : ROUTES[route];
     if (!methods) notFound();
     if (!methods.includes(method)) throw new StaffApiError(405, "METHOD_NOT_ALLOWED", "This endpoint does not accept that method.", { Allow: methods.join(", ") });
     await rateLimit(`request-ip:${requestIp(request)}`, 600, 60);
@@ -54,6 +55,7 @@ export async function handleStaffRequest(request: Request, path: string[]) {
       if (exam[2] === "submit") return json(await records.submitTrainingExam(request, identity, id));
       return json(await records.trainingExam(identity, id));
     }
+    if (certificate) return json(await records.trainingCertificate(identity, parseInput(idSchema, certificate[1])));
     if (trainingFile) return records.trainingFile(identity, parseInput(idSchema, trainingFile[1]), parseInput(idSchema, trainingFile[2]));
     if (route === "reading") return json(await records.reading(identity));
     if (reading) {

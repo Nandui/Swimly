@@ -38,6 +38,7 @@ model TrainingCourse {
   files        TrainingFile[]
   questions    TrainingQuestion[]
   comments     TrainingReviewComment[]
+  rule         TrainingRule?
 
   @@unique([orgId, title])
 }
@@ -244,6 +245,10 @@ model TrainingAssignment {
   versionId         String?
   /// Exam attempts a trainer gave on top of the exam's own allowance.
   examExtraAttempts Int       @default(0)
+  /// The rule that assigned it (phase 4), null when a person assigned it.
+  ruleId            String?
+  /// Checks the certificate of finished training; made the first time it is shown.
+  certificateCode   String?   @unique
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -256,4 +261,34 @@ model TrainingAssignment {
   @@index([userId, status])
   @@index([orgId, status])
   @@index([courseId])
+}
+
+/// Who must take a course and how often (e-learning phase 4, compliance
+/// autopilot). One rule a course. Empty lists mean everyone; within a list any
+/// one matches; across lists all must. Applied daily and when saved.
+model TrainingRule {
+  id            String    @id @default(cuid())
+  orgId         String
+  courseId      String    @unique
+  roleIds       String[]  @default([])
+  departmentIds String[]  @default([])
+  siteIds       String[]  @default([])
+  positionIds   String[]  @default([])
+  /// Days people get to finish it once it is assigned.
+  dueDays       Int       @default(30)
+  /// Months after finishing that it is due again; null for once only.
+  renewMonths   Int?
+  /// How many days before it is due again that it is assigned.
+  renewLeadDays Int       @default(30)
+  pausedAt      DateTime?
+  createdById   String?
+  createdByName String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastRunAt     DateTime?
+
+  course TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Restrict)
+
+  @@index([orgId])
+  @@map("training_rules")
 }

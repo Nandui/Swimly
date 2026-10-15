@@ -91,6 +91,7 @@ turning it on.
 | POST | `training/{id}/exam/submit` | `{ attemptId }`. Marks it on the server; a pass finishes the course |
 | GET | `training/{id}/exam/attempts/{n}` | One handed-in attempt: the score; after a fail the sections to go over again, after a pass every question with the right answer and why |
 | GET | `training/{id}/files/{fileId}` | A PDF, image, recording or the cover used in the person's own course version, as the file itself (not JSON) |
+| GET | `training/{id}/certificate` | The certificate for the person's own finished training: name, course, date, who signed it off, the qualification it records, the version and its lasting code. 404 until finished |
 | POST | `training/{id}/complete` | `{ note }`. Needs every lesson done first, and the final exam passed when the course has one. A practical course waits for a trainer; anything else completes and records any qualification it grants |
 | GET | `reading`, `reading/{documentId}` | Assigned required reading only; the published body is Tiptap JSON |
 | POST | `reading/{documentId}/acknowledge` | `{ versionId }` |
