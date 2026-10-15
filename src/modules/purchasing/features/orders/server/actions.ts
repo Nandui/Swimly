@@ -18,7 +18,8 @@ import { EDITABLE, approverRoles, euro, mayApprove, orderTotal, poNumber, type P
 
 /** Purchasing's order writes (docs/purchasing.md). Raising an order needs
  *  `purchasing.request` at its site; approving needs a role the rules name for
- *  that supplier and amount, and never your own order. Every write is audited. */
+ *  that supplier and amount, and never your own order unless you are an administrator.
+ *  Every write is audited. */
 
 /* Orders. */
 
@@ -81,7 +82,8 @@ export async function saveOrder(id: string | null, input: OrderInput, submit: bo
 
 /** Approve (giving it the site's next number) or reject (with the reason) an
  *  order waiting for approval. Needs a role the rules name for that supplier
- *  and amount, the order's site in reach, and never your own order. */
+ *  and amount, the order's site in reach, and never your own order unless you are an
+ *  administrator (owner decision, 15 October 2026). */
 export async function decideOrder(id: string, decision: "approve" | "reject", note: string): Promise<ActionResult> {
   const who = await requirePurchasingActor();
   const reason = note.trim().slice(0, 1000);
@@ -92,7 +94,8 @@ export async function decideOrder(id: string, decision: "approve" | "reject", no
   }).then(async (row) => row && (await withSiteStatus([row], "siteId", "site"))[0]);
   if (!order) return fail("That order no longer exists.");
   if (order.status !== "pending") return fail("That order is not waiting for approval any more.");
-  if (order.requestedById === who.id) return fail("Someone else has to approve your own order.");
+  const own = order.requestedById === who.id;
+  if (own && !who.admin) return fail("Someone else has to approve your own order.");
   const sites = await sitesFor("purchasing.read");
   if (sites.kind !== "all" && !sites.siteIds.has(order.siteId)) return fail("That order is for a site your role does not cover.");
   if (!who.superadmin) {
@@ -115,7 +118,7 @@ export async function decideOrder(id: string, decision: "approve" | "reject", no
       await tx.purchaseOrder.update({ where: { id }, data: { number } });
     }
     await logAudit({ actorId: who.id, actorName: who.name, action: decision === "approve" ? "approve" : "reject", entity: "PurchaseOrder", entityId: id, clubId: order.siteId,
-      summary: decision === "approve" ? `Approved ${number}: ${order.supplier.name}, ${euro(order.totalCents)}` : `Rejected an order from ${order.supplier.name}, ${euro(order.totalCents)}: ${reason}` }, tx);
+      summary: decision === "approve" ? `Approved ${number}${own ? " (their own order)" : ""}: ${order.supplier.name}, ${euro(order.totalCents)}` : `Rejected ${own ? "their own order" : "an order"} from ${order.supplier.name}, ${euro(order.totalCents)}: ${reason}` }, tx);
     return ok();
   });
   if (result.ok) revalidate(id);

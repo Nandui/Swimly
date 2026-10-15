@@ -32,7 +32,8 @@ supplier (`PurchaseApprovalRule`). A supplier's own rules replace the general on
 order can be approved by anyone whose role has a rule for its supplier with a limit at or
 above its total, who sees its site (`purchasing.read` there), and who did not raise it
 (`mayApprove`, `approverRoles` in `src/modules/purchasing/shared/rules.ts`). A superadmin may approve
-any amount, never their own. Approvers need at least Purchasing: View to open the module.
+any amount. Administrators (Admin: Manage, and superadmins) may also approve their own
+orders (owner decision, 15 October 2026); everyone else needs someone else to approve. Approvers need at least Purchasing: View to open the module.
 
 ## Numbers
 

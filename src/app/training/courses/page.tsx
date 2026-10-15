@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { GraduationCap } from "lucide-react";
+import Link from "next/link";
+import { GraduationCap, Hammer } from "lucide-react";
+import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
@@ -21,7 +23,7 @@ export default async function TrainingCoursesPage({ searchParams }: { searchPara
     <>
       <PageHeader
         title="Courses"
-        description={archived ? "Courses that can no longer be assigned. Training already done on them is kept." : "What people can be assigned. Practical courses need a trainer’s sign-off."}
+        description={archived ? "Courses that can no longer be assigned. Training already done on them is kept." : "Build each course from lessons, publish it, then assign it. Staff take it in Turnfin Me."}
         actions={
           <>
             <SegmentedLinks label="Courses" items={[
@@ -43,15 +45,18 @@ export default async function TrainingCoursesPage({ searchParams }: { searchPara
               <li key={course.id} className="pc-row">
                 <span className="pc-tile-icon"><GraduationCap aria-hidden="true" /></span>
                 <div className="pc-row-body">
-                  <h2 className="pc-row-title text-[length:var(--pc-text-body)] leading-[var(--pc-leading-body)]">{course.title}</h2>
+                  <h2 className="pc-row-title text-[length:var(--pc-text-body)] leading-[var(--pc-leading-body)]">
+                    <Link href={`/training/courses/${course.id}`} className="hover:underline focus-visible:underline">{course.title}</Link>
+                  </h2>
                   <p className="pc-row-hint">
-                    {[course.summary.trim().replace(/\.$/, "") || null, course.requiresSignoff ? "Trainer sign-off" : "Self-completed", course.grantsType ? `records ${course.grantsType.name}${course.grantsType.validityMonths ? `, valid ${course.grantsType.validityMonths} months` : ""}` : null].filter(Boolean).join(" · ")}
+                    {[course.summary.trim().replace(/\.$/, "") || null, course.published ? `Version ${course.published.number}, ${course.published.lessonCount} ${course.published.lessonCount === 1 ? "lesson" : "lessons"}` : "Not published as lessons yet",
+                      course.requiresSignoff ? "Trainer sign-off" : "Self-completed", course.grantsType ? `records ${course.grantsType.name}${course.grantsType.validityMonths ? `, valid ${course.grantsType.validityMonths} months` : ""}` : null].filter(Boolean).join(" · ")}
                   </p>
                 </div>
                 <div className="pc-row-trail">
                   {course.archivedAt ? <Tag meta={ARCHIVAL_STATUS_META.archived} /> : null}
                   {who.assign && !archived && people.length > 0 ? <AssignTraining courses={[course]} people={people} courseId={course.id} label="Assign" variant="outline" rowFor={course.title} /> : null}
-                  {who.manage && !archived ? <CourseDialog course={course} qualificationTypes={types} /> : null}
+                  <Button asChild variant="outline" className="min-h-11"><Link href={`/training/courses/${course.id}`} aria-label={`${who.manage ? "Build" : "Open"} ${course.title}`}><Hammer aria-hidden="true" /><span className="pc-only-wide">{who.manage ? "Build" : "Open"}</span></Link></Button>
                   {who.manage ? <ArchiveCourse id={course.id} title={course.title} archived={!!course.archivedAt} /> : null}
                 </div>
               </li>
