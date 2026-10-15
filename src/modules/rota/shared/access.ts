@@ -27,6 +27,15 @@ export async function requireRotaActor() {
 /** May this person change this day of this department's plan? Run changes any day; Plan only
  *  the days after today, and only for a department they belong to. */
 export function canChange(at: { plan: boolean; run: boolean }, date: string, today: string, departmentId: string, memberOf: ReadonlySet<string>) {
-  if (at.run) return true;
-  return at.plan && date > today && memberOf.has(departmentId);
+  return !changeBlocked(at, date, today, departmentId, memberOf);
+}
+
+/** Why `canChange` says no, so the Plan can say it plainly: no Plan level at this site, a day
+ *  that has come, or a department the person does not belong to. Null when they may. */
+export function changeBlocked(at: { plan: boolean; run: boolean }, date: string, today: string, departmentId: string, memberOf: ReadonlySet<string>) {
+  if (at.run) return null;
+  if (!at.plan) return "level" as const;
+  if (date <= today) return "come" as const;
+  if (!memberOf.has(departmentId)) return "member" as const;
+  return null;
 }

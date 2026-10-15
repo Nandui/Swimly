@@ -4,11 +4,16 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.17.2 · 15 October 2026 · Purchasing: new order numbers
+## 1.17.4 · 15 October 2026 · Purchasing: new order numbers
 
 - Purchase orders approved from now on get a number made of the site's short code, the month and a running number, for example **BT-OCT-0042**.
 - The month is the one the order is approved in. The running number counts across every site and never starts again, so no two orders share it.
 - Orders approved before today keep the numbers they already have, so suppliers and invoices that quote them still match.
+
+## 1.17.3 · 15 October 2026 · Rota: the Plan says why you can't change a day
+
+- When **Add staff** and **Add activity** are not on a day of the rota **Plan**, the Plan now says exactly why: your role has no Plan level for the rota, the day has come (the duty manager changes it from Today), or the department is not one of yours.
+- If it says the department is not one of yours, an administrator ticks it under **Departments** on your profile in HR, People.
 
 ## 1.17.1 · 15 October 2026 · Rota: zoom buttons on the Plan
 
