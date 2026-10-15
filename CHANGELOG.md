@@ -4,6 +4,10 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.17.6 · 15 October 2026 · Purchasing: the unit beside the quantity
+
+- In the email to suppliers, each product's unit now sits next to its quantity, for example **8 × cylinder(s)**, so the supplier reads them together.
+
 ## 1.17.5 · 15 October 2026 · Purchasing: a better-looking email to suppliers
 
 - The purchase order email now has the LeisureWorld logo at the top, with the order number in large type underneath.
