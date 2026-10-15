@@ -1,4 +1,3 @@
-import { academyModule } from "@/modules/academy/manifest";
 import { poolDeckModule, swimSchoolModule } from "@/modules/activities/manifest";
 import { docsModule } from "@/modules/docs/manifest";
 import { hrModule } from "@/modules/hr/manifest";
@@ -18,7 +17,6 @@ import { trainingModule } from "@/modules/training/manifest";
  *  module.ts, is loaded by src/modules/server.ts. */
 export const modules = [
   swimSchoolModule,
-  academyModule,
   shortCoursesModule,
   refundsModule,
   poolDeckModule,

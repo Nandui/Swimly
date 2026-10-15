@@ -135,8 +135,7 @@ export const SCREENS = [
   { key: "purchasing", label: "Purchasing", path: "/purchasing", description: "A separate workspace for purchase orders: approved suppliers and products, approval by role and amount, and numbered orders per site.", requires: "purchasing.read" },
   { key: "incidents", label: "Incidents", path: "/incidents", description: "A separate workspace for accidents, incidents and near misses: reported in two minutes, triaged by a duty manager, serious ones signed off.", requires: "incidents.reports.create" },
   { key: "tasks", label: "Tasks", path: "/tasks", description: "A separate workspace for each site's daily checks and logs: tasks from templates on a schedule, readings with acceptable ranges, approval, follow-up actions and scores.", requires: "tasks.complete" },
-  { key: "academy", label: "Academy", path: "/academy", description: "A separate workspace for the lifeguard and swim teacher courses we deliver: candidates, payment, pre-course checks, registers and results.", requires: "academy.read" },
-  { key: "short-courses", label: "Short courses", path: "/short-courses", description: "A separate workspace for six and eight week courses at the pool, the gym or the studio: places, payment, waiting lists and registers.", requires: "short-courses.read" },
+  { key: "short-courses", label: "Short courses", path: "/short-courses", description: "A separate workspace for six and eight week courses at the pool, the gym or the studio, and the Academy's lifeguard and swim teacher courses: places, payment, waiting lists, registers and results.", requires: "short-courses.read" },
   { key: "stock", label: "Stock", path: "/stock", description: "A separate workspace for stock taking: count what is on the shelf at each site on a phone or tablet, keep the product list and compare two counts.", requires: "stock.read" },
   { key: "hr", label: "HR", path: "/hr", description: "A separate, restricted workspace for HR notes and performance reviews of the people a role covers. Staff read what is shared with them in Turnfin Me.", requires: "hr.records.read" },
   { key: "docs", label: "Docs", path: "/docs", description: "A separate workspace for documents, independent approvals and required reading.", requires: "docs.read" },
@@ -181,7 +180,7 @@ export const ACTIVITIES_SCREENS = [
   "analytics", "duty", "cancellations", "calendar", "instructor", "students", "courses",
   "together", "assessments", "awaiting-enrolment", "legend-agreements", "programmes",
 ] as const satisfies readonly ScreenKey[];
-export const WORK_MODULE_SCREENS = ["docs", "refunds", "training", "hr", "rota", "purchasing", "stock", "academy", "short-courses", "tasks", "incidents"] as const satisfies readonly ScreenKey[];
+export const WORK_MODULE_SCREENS = ["docs", "refunds", "training", "hr", "rota", "purchasing", "stock", "short-courses", "tasks", "incidents"] as const satisfies readonly ScreenKey[];
 
 const CORE = new Set<string>(CORE_SCREENS);
 const AQUATICS = new Set<string>(ACTIVITIES_SCREENS);

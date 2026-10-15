@@ -25,7 +25,7 @@ export default async function CoreHome() {
     { show: canSee(session, "cancellations") && can(session, "curriculum.manage"), href: "/cancellations/prices", label: "Swim school billing prices", icon: Euro, description: "Each Legend agreement price's monthly price, for putting members back after a cancellation" },
     { show: canSee(session, "training") && can(session, "training.manage"), href: "/training/courses", label: "Training courses", icon: GraduationCap, description: "The courses staff are assigned and complete" },
     { show: canSee(session, "purchasing"), href: "/purchasing/suppliers", label: "Purchasing suppliers", icon: Truck, description: "Approved suppliers, their products and who approves" },
-    { show: canSee(session, "academy"), href: "/academy/types", label: "Academy courses", icon: Award, description: "The lifeguard and swim teacher courses we deliver" },
+    { show: canSee(session, "short-courses"), href: "/short-courses/academy/types", label: "Academy courses", icon: Award, description: "The lifeguard and swim teacher courses we deliver" },
     { show: canSee(session, "tasks") && can(session, "tasks.manage"), href: "/tasks/templates", label: "Task templates", icon: ClipboardCheck, description: "What each site's daily checks ask for, for whom and when" },
     { show: canSee(session, "docs") && can(session, "docs.manage"), href: "/docs/admin", label: "Docs settings", icon: Files, description: "Document teams, templates and the risk matrix" },
   ].flatMap(({ show, ...m }) => (show ? [m] : []));

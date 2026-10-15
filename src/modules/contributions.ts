@@ -1,5 +1,4 @@
 import "server-only";
-import type { PublicCourseSource } from "@/lib/public-booking";
 
 /** What a module adds to Core's own screens, without Core importing the module.
  *
@@ -288,25 +287,4 @@ export async function renameAreaEverywhere(change: AreaRename, tx?: unknown) {
   let changed = 0;
   for (const handler of areaRenameHandlers) changed += await handler.rename(change, tx);
   return changed;
-}
-
-// ---------------------------------------------------------------------------
-// Courses for the public booking site
-// ---------------------------------------------------------------------------
-
-/** Modules that sell courses to the public (the Academy, Short courses) register a source here
- *  (types in src/lib/public-booking.ts). The booking site's API lists them all, holds places on
- *  them and shows a customer their own bookings, without one module importing another. */
-const publicCourseSourceList: PublicCourseSource[] = [];
-
-export function registerPublicCourses(source: PublicCourseSource) {
-  const at = publicCourseSourceList.findIndex((s) => s.id === source.id);
-  if (at >= 0) publicCourseSourceList[at] = source;
-  else publicCourseSourceList.push(source);
-}
-
-/** Every registered source, once every module has loaded. */
-export async function publicCourseSources(): Promise<readonly PublicCourseSource[]> {
-  await modulesLoaded();
-  return publicCourseSourceList;
 }

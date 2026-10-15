@@ -1,9 +1,9 @@
 # Short courses
 
 Owner decision, 13 October 2026: a module for fixed-length courses the public book a place on,
-"like 6 weeks, 8 weeks", at the pool, the gym or anywhere else. It sits beside the Academy (which
-runs qualification courses with checks, results and certificates) and the swim school (weekly
-classes with no end date). The plan Fernando approved is the Artifact "Turnfin Short Courses
+"like 6 weeks, 8 weeks", at the pool, the gym or anywhere else. Since 15 October 2026 it also
+holds the Academy's qualification courses, with their checks, results and certificates
+(docs/academy.md, ADR 0011); the swim school (weekly classes with no end date) stays separate. The plan Fernando approved is the Artifact "Turnfin Short Courses
 Plan" (https://claude.ai/artifact/XweXdCdj2EJG1V3os7DcFm); ADR 0009 records the decision.
 
 Phase 1 (1.9.0) runs courses from the desk. Phase 2 (1.15.0) adds online booking on the public
@@ -117,7 +117,7 @@ with a place free for the waiting list, and courses starting in the next two wee
 ## Files
 
 - Schema: `prisma/schema/short-courses.prisma`, migrations `20261103120000_short_courses` and `20261108120000_short_courses_online` (additive).
-- `src/modules/short-courses/`: `shared/` (`rules.ts`, pure; `access.ts`; `server.ts` and `reads.ts`; the dialogs' `components/form-kit.tsx`), and the features `courses`, `course-types`, `booking` (its public course source) and `workspace`. See its README.md.
+- `src/modules/short-courses/`: `shared/` (`rules.ts`, pure; `access.ts`; `server.ts` and `reads.ts`; the dialogs' `components/form-kit.tsx`; `public-booking.ts`, the booking site's shape), and the features `courses`, `course-types`, `booking` (the booking site's API and both kinds of course on it) and `workspace`, plus the Academy's (docs/academy.md). See its README.md.
 - UI: `src/app/short-courses/` (courses, a course, the course list, the starter page).
 - Tests: `rules.test.ts` and `__tests__/short-courses.test.ts` (end to end on an isolated database).
 - Sandbox: Couch to 5k at Hillview two weeks in, with two people waiting for a free place; Adult swim lessons at Riverside starting in ten days, open online, with one invented place held online and overdue for a call.

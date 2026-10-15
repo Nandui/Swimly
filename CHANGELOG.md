@@ -4,8 +4,10 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.15.0 · 15 October 2026 · The course booking site: every course, sign-in and My bookings
+## 1.15.0 · 15 October 2026 · Academy joins Short courses, and the course booking site
 
+- **The Academy is now part of Short courses.** One menu entry instead of two: the lifeguard and swim teacher courses are under Short courses > **Academy**, with **To call** and the **Academy list** beside them. Old Academy links and bookmarks still work. Nothing about the courses, candidates or records changes.
+- **Roles:** each role now has one Short courses level. Where a role had different levels for the Academy and Short courses, it keeps the higher of the two, so nobody loses access. Check Admin > Roles if someone should have less. The Instructor level is now called **Instructor or tutor**.
 - The public booking site, academy.leisureworldcork.com, now shows **Short courses** as well as the Academy's lifeguard and swim teacher courses, on one list. Customers filter by kind of course (qualifications, pool, gym, studio) and by centre.
 - Customers **sign in** with a code sent to their email, with no password, and stay signed in on that device for a week. **My bookings** shows everything booked under their email, online or at reception: the next session, what is left to pay, waiting lists and past courses.
 - Booking still holds the place and we phone within 72 hours to take payment. Nothing is paid online.

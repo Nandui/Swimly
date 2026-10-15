@@ -6,7 +6,11 @@ staff. Staff enter candidates and record payment taken elsewhere. Each course tr
 and registers, the pre-course checks and the certificates. Tutors are our staff, and their
 sessions show on the Rota.
 
-## The model (`prisma/schema/academy.prisma`)
+Since 15 October 2026 the Academy is part of the **Short courses** module (owner decision; ADR
+0011): one menu entry, one level per role, its pages under `/short-courses/academy`. Its tables,
+permissions and rules are unchanged; old `/academy` links redirect.
+
+## The model (`prisma/schema/short-courses.academy.prisma`)
 
 | Concept | Table | What it is |
 | --- | --- | --- |
@@ -18,18 +22,23 @@ sessions show on the Rota.
 | Call | `AcademyCall` | A phone call to someone who held a place online: paid (amount and till receipt), no answer, asked us to call back, or not going ahead; who called and when. |
 | Email check | `AcademyEmailCheck` | The booking site's email code, then a one-hour token. Only hashes are kept. |
 
-The rules are in `src/modules/academy/shared/rules.ts` and are pure. `readiness` gives each check (age is
+The rules are in `src/modules/short-courses/shared/academy-rules.ts` and are pure. `readiness` gives each check (age is
 read from the date of birth on the first day) and the hours attended against the minimum. A
 candidate is ready when every check is done and the hours are met. `expiryFrom` dates a pass:
 the certificate's own expiry, else the qualification's validity from the result day.
 
-## Levels (`src/modules/academy/manifest.ts`), at the sites a role covers
+## Levels (Short courses, `src/modules/short-courses/manifest.ts`), at the sites a role covers
+
+Each Short courses level also gives the Academy permission of the same rank:
 
 - **View** (`academy.read`): see the courses.
-- **Tutor** (`academy.run`): add candidates and payment, record checks, take registers, record results.
+- **Instructor or tutor** (`academy.run`): add candidates and payment, record checks, take registers, record results.
 - **Manage** (`academy.manage`): keep the course list, and put courses on with their sessions, tutor and price.
 
-Every write checks the course's site (`mayFor`) and is audited under "Academy".
+A role's old Academy level still counts as a Short courses level, and the higher of the two wins
+(`formerly` in the manifest, owner choice "Higher of the two"), until the role is next saved.
+
+Every write checks the course's site (`mayFor`) and is audited under "Short courses" (older rows say "Academy").
 
 ## A pass puts the qualification on the staff record
 
@@ -43,7 +52,7 @@ course only.
 ## On the Rota
 
 The Academy reports each session of a course that is not cancelled through the commitments
-seam (`academy.sessions` in `src/modules/academy/features/courses/server/contributions.ts`, registered in `module.ts`). It reports once for the tutor
+seam (`academy.sessions` in `src/modules/short-courses/features/academy-courses/server/contributions.ts`, registered in `module.ts`). It reports once for the tutor
 and once for the assessor, when that is someone else. The Rota draws these as a read-only
 activity in the session's area on every department's plan (`DayBooked`, `ANY_DEPARTMENT` in
 `src/modules/rota/shared/day.ts`), linked back to the course. The time counts in the tutor's shift and
@@ -77,7 +86,7 @@ with filters by kind and centre. Customers sign in with an email code and see **
 - **My bookings.** Every place under the signed-in email at every module, whoever entered it, for
   courses that ended within the last year: waiting for payment, booked, waiting lists, then
   finished, withdrawn or cancelled, with the next session, what is left to pay and the result.
-- **To call** (`/academy/calls`). Everyone who held a place online and still owes, at the sites
+- **To call** (`/short-courses/academy/calls`). Everyone who held a place online and still owes, at the sites
   the person covers, soonest deadline first: overdue in red, due within a day in amber
   (`ACADEMY_CALL_DUE_META`, from `callDue`). Every Academy level (View, Tutor, Manage) sees the
   list and logs calls (owner decision, 8 October 2026). Each row and the course page have **Log a
@@ -87,14 +96,13 @@ with filters by kind and centre. Customers sign in with an email code and see **
 - **Overdue** places stay held until someone records a call. Nothing is cancelled automatically.
 - The home card shows how many are waiting to be phoned, flagged when any are past 72 hours.
 
-### How the site gets every module's courses
+### How the site gets both kinds of course
 
-The API belongs to the Academy's `booking` feature: email codes, tokens, rate limits, emails and
-the routes. Courses come from **public course sources** registered in `src/modules/contributions.ts`
-(`registerPublicCourses`), shaped by `src/lib/public-booking.ts`: each lists its courses open
-online, finds one, holds a place in its own tables and reports a customer's bookings. The Academy
-registers `academyPublicCourses` (`features/booking/server/source.ts`) and Short courses
-`shortCoursePublicCourses`. Course ids are unique across tables, so `courses/{id}` asks each source.
+The API is Short courses' `booking` feature: email codes, tokens, rate limits, emails and the
+routes. Courses come from two **sources** shaped by `shared/public-booking.ts`: Academy courses
+(`features/booking/server/academy.ts`) and short courses (`courses.ts`). Each lists its courses
+open online, finds one, holds a place in its own tables and reports a customer's bookings. Course
+ids are unique across tables, so `courses/{id}` asks each source.
 
 ### The booking API (`/api/academy/v1`)
 
@@ -139,10 +147,10 @@ next two weeks at their sites.
 
 ## Files
 
-- Schema: `prisma/schema/academy.prisma`, migrations `20261023120000_academy` and `20261024120000_academy_online_booking` (additive)
-- `src/modules/academy/`: `shared/` (`rules.ts`, pure; `access.ts`; `server.ts` and `reads.ts` helpers; the dialogs' `form-kit.tsx`), and the features `courses`, `course-types`, `calls`, `booking` and `workspace`, each with its `components/` and `server/` (`data.ts`, `actions.ts`). See its README.md
-- UI: `src/app/academy/` (courses, a course, the course list, to call), each feature's `components/`
-- Online booking: `src/modules/academy/features/booking/server/` (`http.ts`, `api.ts`, `email.ts`, `router.ts`, `source.ts`), the seam in `src/lib/public-booking.ts`,
+- Schema: `prisma/schema/short-courses.academy.prisma`, migrations `20261023120000_academy` and `20261024120000_academy_online_booking` (additive)
+- `src/modules/short-courses/`: `shared/` (`academy-rules.ts`, pure; `academy-access.ts`; `academy-server.ts`; with the module's `reads.ts` and `components/form-kit.tsx`), and the features `academy-courses`, `academy-types` and `academy-calls`, each with its `components/` and `server/` (`data.ts`, `actions.ts`). See its README.md
+- UI: `src/app/short-courses/academy/` (courses, a course, the course list, to call), each feature's `components/`
+- Online booking: `src/modules/short-courses/features/booking/server/` (`http.ts`, `api.ts`, `email.ts`, `router.ts`, `academy.ts`, `courses.ts`), the shape in `shared/public-booking.ts`,
   `src/app/api/academy/v1/[[...path]]/route.ts`, and the site in `apps/academy`
 - Tests: `rules.test.ts`, `academy.test.ts`, `booking.test.ts` (the booking API and the call
   list end to end), and the booked-session case in `src/modules/rota/shared/day.test.ts`

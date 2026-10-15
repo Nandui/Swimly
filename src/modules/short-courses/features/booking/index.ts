@@ -1,3 +1,4 @@
-/** Online booking (phase 2): Short courses on the public booking site, through the public
- *  course seam (src/modules/contributions.ts). Entry for module.ts. */
-export { shortCourseOnline, shortCoursePublicCourses } from "@/modules/short-courses/features/booking/server/source";
+/** Online booking for the public booking site (apps/academy, docs/academy.md): its API (Academy
+ *  courses and short courses open online, email codes, held places, a customer's bookings). Entry
+ *  for its API route. */
+export { handleAcademyRequest } from "@/modules/short-courses/features/booking/server/router";

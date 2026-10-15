@@ -5,7 +5,7 @@ import { activeStaffAtSite, liveSitesOf, withSites, withStaff } from "@/lib/dire
 import { today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { mayFor, sitesFor } from "@/lib/policy/session";
-import { callDue } from "@/lib/public-booking";
+import { callDue } from "@/modules/short-courses/shared/public-booking";
 import { areaNames } from "@/lib/setup/data";
 import { requireShortCoursesActor } from "@/modules/short-courses/shared/access";
 import { inSites, iso } from "@/modules/short-courses/shared/reads";
