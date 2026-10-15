@@ -43,3 +43,12 @@ test("saving a site added without an organisation adds it, with an audit row", a
   const audit = await db.auditLog.findFirst({ where: { entity: "Club", entityId: orphan.id } });
   assert.equal(audit?.summary, "Added Example Lakeside to the organisation");
 });
+
+test("a site keeps its postal address, tidied line by line, with an audit row", async () => {
+  const db = fixture.prisma;
+  const site = await db.club.findFirstOrThrow({ where: { name: "Example Riverside" } });
+  assert.deepEqual(await clubs.updateClub(site.id, { name: "Example Riverside", code: "ER", address: " 1 Sample Road \r\n\r\nCork T12 AB34 " }), { ok: true });
+  assert.equal((await db.club.findUniqueOrThrow({ where: { id: site.id } })).address, "1 Sample Road\nCork T12 AB34");
+  const audit = await db.auditLog.findFirst({ where: { entity: "Club", entityId: site.id }, orderBy: { createdAt: "desc" } });
+  assert.equal(audit?.summary, "Set Example Riverside's address: 1 Sample Road, Cork T12 AB34");
+});

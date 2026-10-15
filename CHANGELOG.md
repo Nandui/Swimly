@@ -4,6 +4,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.17.9 · 15 October 2026 · Sites have an address, and supplier emails use it
+
+- Each site now has an **Address** under Admin, Sites. Open a site with the pencil, type its address with the Eircode, and choose Save changes.
+- Purchase orders and the emails to suppliers show that address under **Deliver to**, so suppliers know exactly where to deliver.
+- The site's name is no longer repeated in the email when it already includes LeisureWorld.
+
 ## 1.17.8 · 15 October 2026 · Purchasing: the person who raised the order is copied
 
 - Every purchase order emailed to a supplier now also goes as a copy to the person who raised the order, as well as to everyone listed under **Copy to**.

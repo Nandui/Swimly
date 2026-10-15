@@ -66,6 +66,10 @@ with a way to test the emails before a real one goes out.
   named "<organisation> Purchasing", to the supplier's `email`, with **Reply-To** whoever
   raised the order (owner request, 15 October 2026), or the sender when that person has no
   email address.
+- **Deliver to** is the site's name (with the organisation in front only when the name
+  does not already carry it) and its postal address from Admin > Sites (`Club.address`,
+  read through `siteAddress` in `src/lib/directory.ts`; owner request, 15 October 2026).
+  The order page shows the same address.
 - **Look** (owner request, 15 October 2026): the white LeisureWorld logo on a navy band with
   the order number, a panel of the order's details, the products with their quantities, the
   note, the Invoices box and the sender, in tables and inline styles that mail clients render.

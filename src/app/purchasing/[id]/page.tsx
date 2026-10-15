@@ -50,6 +50,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           <div className="space-y-1">
             <h2 className="text-xs font-semibold tracking-wide text-ui-muted-foreground uppercase">Deliver to</h2>
             <p className="font-semibold">{o.site.name}</p>
+            {o.address ? <p className="text-sm whitespace-pre-line">{o.address}</p> : null}
             {o.neededBy ? <p className="text-sm">Needed by {formatDate(o.neededBy)}</p> : null}
           </div>
           <div className="space-y-1">
