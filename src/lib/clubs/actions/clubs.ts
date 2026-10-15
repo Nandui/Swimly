@@ -61,12 +61,20 @@ const clubSchema = z.object({
 
 export type ClubInput = z.input<typeof clubSchema>;
 
+/** The organisation a new site joins: the administrator's own. Every module lists
+ *  the organisation's sites, so a site without one shows only in the swim school. */
+async function organisationOf(userId: string) {
+  return (await prisma.user.findUnique({ where: { id: userId }, select: { orgId: true } }))?.orgId ?? null;
+}
+
 export async function createClub(input: ClubInput): Promise<ActionResult> {
   const session = await requirePermission("clubs.manage");
 
   const parsed = clubSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const { name, code } = parsed.data;
+  const orgId = await organisationOf(session.user.id);
+  if (!orgId) return fail("Your account has no organisation.");
 
   const last = await prisma.club.findFirst({
     orderBy: { sortOrder: "desc" },
@@ -76,7 +84,7 @@ export async function createClub(input: ClubInput): Promise<ActionResult> {
   const created = await onUniqueViolation(
     () => prisma.$transaction(async (tx) => {
       const created = await tx.club.create({
-        data: { name, code, sortOrder: (last?.sortOrder ?? -1) + 1 },
+        data: { name, code, orgId, sortOrder: (last?.sortOrder ?? -1) + 1 },
         select: { id: true, name: true },
       });
 
@@ -109,16 +117,20 @@ export async function updateClub(id: string, input: ClubInput): Promise<ActionRe
 
   const existing = await prisma.club.findUnique({
     where: { id },
-    select: { id: true, name: true, code: true },
+    select: { id: true, name: true, code: true, orgId: true },
   });
   if (!existing) return fail("That site no longer exists.");
-  if (existing.name === name && existing.code === code) return ok();
+  // Sites added before 1.12.4 were saved without an organisation; saving one
+  // gives it the administrator's, so the modules list it.
+  const orgId = existing.orgId ?? await organisationOf(session.user.id);
+  const joins = !existing.orgId && orgId !== null;
+  if (existing.name === name && existing.code === code && !joins) return ok();
 
   const updated = await onUniqueViolation(
     () => prisma.$transaction(async (tx) => {
       const updated = await tx.club.update({
         where: { id },
-        data: { name, code },
+        data: { name, code, ...(joins ? { orgId } : {}) },
         select: { id: true, name: true },
       });
 
@@ -129,7 +141,9 @@ export async function updateClub(id: string, input: ClubInput): Promise<ActionRe
         entity: "Club",
         entityId: id,
         clubId: id,
-        summary: existing.name === updated.name
+        summary: existing.name === updated.name && existing.code === code
+          ? `Added ${updated.name} to the organisation`
+          : existing.name === updated.name
           ? `Set ${updated.name}'s short code to ${code ?? "none"}`
           : `Renamed club ${existing.name} → ${updated.name}${existing.code !== code ? `, short code ${code ?? "none"}` : ""}`,
       }, tx);

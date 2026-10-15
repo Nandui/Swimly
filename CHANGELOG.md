@@ -4,6 +4,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.12.4 · 15 October 2026 · New sites show in every module
+
+- A site added under **Admin > Sites** showed in the site picker and the swim school, but not in Incidents, Rota, Tasks, Training, Short courses, Stock, Purchasing or the Academy, or when choosing the sites a person works at. It was saved without belonging to LeisureWorld, and those lists only show LeisureWorld's sites.
+- New sites now belong to LeisureWorld straight away.
+- A site added before this fix says so on **Admin > Sites**. Open it with the pencil and choose **Save changes**, without changing anything, and it shows everywhere.
+
 ## 1.12.3 · 14 October 2026 · Rota: put staff on any activity
 
 - On the **Plan**, the time in someone's shift with nothing given to it (**No activity**) used to offer only the activities already added to that day that still needed someone. Activities on the list that were not on the day yet, or were already full, never showed.
