@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import type { ParentAccessRequest, ParentAccount, Prisma } from "@/generated/prisma/client";
-import { parentAudit, withParent, type ParentIdentity } from "@/modules/activities/shared/parents/auth";
+import { parentAudit, profileMissing, withParent, type ParentIdentity } from "@/modules/activities/shared/parents/auth";
 import { dateSchema, parseInput, readBody } from "@/modules/activities/shared/parents/http";
 import { ParentApiError } from "@/modules/activities/shared/parents/errors";
 import { rateLimit } from "@/modules/activities/shared/parents/security";
@@ -36,7 +36,7 @@ export async function createAccessRequest(request: Request, identity: ParentIden
   const input = await readBody(request, accessRequestSchema);
   await rateLimit(`access-request:${identity.account.id}`, 30, 3600);
   return withParent(identity, async (tx, parent) => {
-    if (!parent.name) throw new ParentApiError(400, "PROFILE_REQUIRED", "Add your own name in Your account before sending a request.");
+    if (profileMissing(parent)) throw new ParentApiError(400, "PROFILE_REQUIRED", "Add your name and phone number in Your account before sending a request.");
     const requestHash = hash(JSON.stringify(input));
     const replay = await tx.parentAccessRequest.findUnique({ where: { parentId_key: { parentId: parent.id, key } } });
     if (replay) {

@@ -82,9 +82,13 @@ test("parent sign-in verifies email, hashes secrets, consumes the code once and 
   const challenge = await fixture.prisma.parentSignInChallenge.findUniqueOrThrow({ where: { id: result.challengeId } });
   assert.notEqual(challenge.codeHash, result.code);
   assert.equal((await call("auth/verify-code", "POST", { challengeId: result.challengeId, code: result.code }, "")).status, 401);
+  assert.equal((await call("me", "PATCH", { name: "Synthetic Parent" })).status, 400);
+  assert.equal((await call("me", "PATCH", { name: "Synthetic Parent", phone: null })).status, 400);
+  assert.equal((await call("me", "PATCH", { name: "Synthetic Parent", phone: "12345" })).status, 400);
+  assert.equal((await call("me", "PATCH", { name: "Synthetic Parent", phone: "call me" })).status, 400);
   assert.equal((await call("me", "PATCH", { name: "Synthetic Parent", phone: "000000000" })).status, 200);
   otherToken = (await signIn("other@example.test")).accessToken;
-  await call("me", "PATCH", { name: "Other Synthetic Parent" }, otherToken);
+  await call("me", "PATCH", { name: "Other Synthetic Parent", phone: "+353 21 000 0000" }, otherToken);
   assert.ok(emailCalls >= 2);
 });
 
@@ -327,9 +331,11 @@ test("Dublin midnight publication handles both daylight-saving changes", async (
 
 test("existing-family requests remain private until staff approve; retries, declines and revocation are safe", async () => {
   const token = (await signIn("requester@example.test")).accessToken;
-  await call("me", "PATCH", { name: "Requesting Parent" }, token);
   const body = { firstName: "Taylor", lastName: "Example", dateOfBirth: "2018-04-06", context: "Churchfield, Tuesday lessons" };
   const key = { "Idempotency-Key": "synthetic-request-0001" };
+  // An account with no name or phone is asked to complete it first.
+  assert.equal((await call("access-requests", "POST", body, token, key)).status, 400);
+  await call("me", "PATCH", { name: "Requesting Parent", phone: "(021) 000-0000" }, token);
   assert.equal((await call("access-requests", "POST", body, "", key)).status, 401);
   assert.equal((await call("access-requests", "POST", { ...body, dateOfBirth: "2018-02-30" }, token, key)).status, 400);
   assert.equal((await call("access-requests", "POST", { ...body, studentId: "guess" }, token, key)).status, 400);

@@ -91,9 +91,13 @@ in the app. See [staff controls](parent-staff-controls.md) for approval checks.
 3. A successful response contains `accessToken`, `tokenType: "Bearer"`,
    `expiresAt` and `parent: {id,email,name,phone}`. Keep the token secret. It lasts
    seven days. There is no refresh token; request a new code after expiry.
-4. If name is missing, `PATCH /me` with `{"name":"Synthetic Parent","phone":null}`
-   before booking. Name is required; phone is optional. This updates the parent
-   account, not contact fields on previously registered swimmers.
+4. If name or phone is missing, `PATCH /me` with
+   `{"name":"Synthetic Parent","phone":"000 000 0000"}` before booking. Both are
+   required (owner decision, 15 October 2026); the phone needs at least 7 digits
+   and may use spaces, brackets, dashes, dots and a leading +. Booking, link
+   requests and change requests return `PROFILE_REQUIRED` until both are saved,
+   so older accounts without a phone are asked for it, not locked out. This
+   updates the parent account, not contact fields on previously registered swimmers.
 5. `POST /auth/logout` revokes this token. A staff account suspension revokes
    every token; reactivation cannot revive them.
 
