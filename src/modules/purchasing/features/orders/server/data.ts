@@ -58,7 +58,7 @@ export async function purchaseOrder(id: string) {
       ...ORDER_ROW, note: true, decisionNote: true, cancelledAt: true, updatedAt: true,
       supplier: { select: { name: true, accountNumber: true, contactName: true, email: true, phone: true } },
       lines: { orderBy: { name: "asc" }, select: { id: true, productId: true, name: true, code: true, unit: true, unitPriceCents: true, quantity: true } },
-      emails: { orderBy: { createdAt: "desc" }, select: { id: true, kind: true, toAddress: true, sentByName: true, status: true, error: true, createdAt: true } },
+      emails: { orderBy: { createdAt: "desc" }, select: { id: true, kind: true, toAddress: true, ccAddress: true, sentByName: true, status: true, error: true, createdAt: true } },
     },
   });
   if (!found) notFound();

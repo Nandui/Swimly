@@ -163,20 +163,23 @@ export async function emailOrder(id: string, kind: "test" | "supplier"): Promise
     if (!address.success) return fail(`${supplier.name} has no valid email address. Add one on the supplier's page.`);
     to = address.data;
   }
+  // Supplier emails copy whoever Suppliers names (owner request, 15 October 2026); tests go to the sender only.
+  const copy = emailAddress.safeParse(ctx.copyTo);
+  const cc = kind === "supplier" && copy.success && copy.data.toLowerCase() !== to.toLowerCase() ? copy.data : undefined;
   const message = orderEmail(ctx.input, kind === "test");
   const config = emailSender(`${ctx.input.organisation} Purchasing`.trim());
   let error = "";
   try {
     if (!config) throw new Error(NOT_SET_UP);
-    await sendGoogleEmail(to, message.subject, { text: message.text, html: message.html, replyTo: replyTo.success ? replyTo.data : undefined }, config);
+    await sendGoogleEmail(to, message.subject, { text: message.text, html: message.html, cc, replyTo: replyTo.success ? replyTo.data : undefined }, config);
   } catch (failure) {
     error = failure instanceof Error && failure.message === NOT_SET_UP ? NOT_SET_UP : "The email service did not accept it.";
   }
   const what = kind === "test" ? `a test of ${ctx.input.number} to themselves` : `${ctx.input.number} to ${supplier.name}`;
   await prisma.$transaction(async (tx) => {
-    await tx.purchaseOrderEmail.create({ data: { orderId: id, kind, toAddress: to, sentById: who.id, sentByName: who.name, status: error ? "failed" : "sent", error } });
+    await tx.purchaseOrderEmail.create({ data: { orderId: id, kind, toAddress: to, ccAddress: cc ?? "", sentById: who.id, sentByName: who.name, status: error ? "failed" : "sent", error } });
     await logAudit({ actorId: who.id, actorName: who.name, action: "email", entity: "PurchaseOrder", entityId: id, clubId: ctx.order.siteId,
-      summary: error ? `Could not email ${what} (${to}): ${error}` : `Emailed ${what} (${to})` }, tx);
+      summary: `${error ? "Could not email" : "Emailed"} ${what} (${to}${cc ? `, copy to ${cc}` : ""})${error ? `: ${error}` : ""}` }, tx);
   });
   revalidate(id);
   if (!error) return ok();

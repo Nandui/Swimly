@@ -14,7 +14,7 @@ const ORG = "org_leisureworld";
 type GrantRow = { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string };
 const state = { id: "mia", permissions: [] as string[], grants: [] as GrantRow[] };
 /** Emails are never sent from tests: the transport is this double, which records them. */
-const outbox: { to: string; subject: string; text: string; replyTo?: string }[] = [];
+const outbox: { to: string; subject: string; text: string; replyTo?: string; cc?: string }[] = [];
 const mail = { down: false };
 let bishopstown = "", churchfield = "";
 
@@ -49,9 +49,9 @@ before(async () => {
     "@/lib/clubs/current": { currentClubId: async () => bishopstown, currentClubIdIfAny: async () => bishopstown },
     "next/cache": { revalidatePath() {} },
     "@/lib/email/sender": { emailSender: (name: string) => ({ clientId: "c", clientSecret: "s", refreshToken: "r", sender: "no-reply@example.invalid", fromHeader: name }) },
-    "@/lib/email/google": { sendGoogleEmail: async (to: string, subject: string, content: { text: string; replyTo?: string }) => {
+    "@/lib/email/google": { sendGoogleEmail: async (to: string, subject: string, content: { text: string; replyTo?: string; cc?: string }) => {
       if (mail.down) throw new Error("Email submission failed.");
-      outbox.push({ to, subject, text: content.text, replyTo: content.replyTo });
+      outbox.push({ to, subject, text: content.text, replyTo: content.replyTo, cc: content.cc });
     } },
     "next/navigation": { notFound: () => { throw new NotFound("not found"); } },
     "server-only": {},
@@ -170,11 +170,16 @@ test("an approved order is emailed: tests to yourself first, the supplier only o
   // Turned on by Manage after the test; the supplier needs an address.
   as("gina", ["purchasing.manage"]);
   assert.equal((await actions.setSupplierEmails(true)).ok, true);
+  assert.equal((await actions.setSupplierEmailCopy("not an address")).ok, false);
+  assert.equal((await actions.setSupplierEmailCopy("gina@example.invalid")).ok, true);
   as("mia", [], [at(bishopstown, ["purchasing.request"])]);
+  assert.equal((await actions.setSupplierEmailCopy("")).ok, false, "only Manage");
   assert.equal((await actions.emailOrder(first.id, "supplier")).ok, false, "no address yet");
   await db.supplier.update({ where: { id: supplier.id }, data: { email: "orders@example.invalid", contactName: "Sam" } });
   assert.equal((await actions.emailOrder(first.id, "supplier")).ok, true);
   assert.equal(outbox.at(-1)!.to, "orders@example.invalid");
+  assert.equal(outbox.at(-1)!.cc, "gina@example.invalid", "copied on every email to a supplier");
+  assert.equal(outbox[0].cc, undefined, "tests are not copied");
   assert.match(outbox.at(-1)!.subject, /^Purchase order PO-BT-00001/);
   assert.match(outbox.at(-1)!.text, /^Hello Sam,/);
 
@@ -183,7 +188,7 @@ test("an approved order is emailed: tests to yourself first, the supplier only o
   assert.equal((await actions.emailOrder(first.id, "supplier")).ok, false);
   mail.down = false;
   const kept = await db.purchaseOrderEmail.findMany({ where: { orderId: first.id }, orderBy: { createdAt: "asc" } });
-  assert.deepEqual(kept.map((e) => [e.kind, e.status]), [["test", "sent"], ["supplier", "sent"], ["supplier", "failed"]]);
+  assert.deepEqual(kept.map((e) => [e.kind, e.status, e.ccAddress]), [["test", "sent", ""], ["supplier", "sent", "gina@example.invalid"], ["supplier", "failed", "gina@example.invalid"]]);
   assert.equal((await db.auditLog.count({ where: { entity: "PurchaseOrder", entityId: first.id, action: "email" } })), 3);
 
   // Off again: nothing more goes to the supplier.

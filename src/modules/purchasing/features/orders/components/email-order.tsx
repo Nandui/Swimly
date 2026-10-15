@@ -43,14 +43,14 @@ export function SendTest({ id, to }: { id: string; to: string }) {
 }
 
 /** Send the order to the supplier. Only offered once emails to suppliers are on. */
-export function SendToSupplier({ id, number, supplier, to, replyTo, sentBefore }: { id: string; number: string; supplier: string; to: string; replyTo: string; sentBefore: string | null }) {
+export function SendToSupplier({ id, number, supplier, to, copyTo, replyTo, sentBefore }: { id: string; number: string; supplier: string; to: string; copyTo: string; replyTo: string; sentBefore: string | null }) {
   const router = useRouter();
   return (
     <ConfirmAction
       trigger={<Button className="min-h-11"><Send aria-hidden="true" />{sentBefore ? "Send again" : "Send to supplier"}</Button>}
       title={`Send ${number} to ${supplier}?`}
       description={<>
-        It goes to {to}{replyTo ? <>, and their replies come to you at {replyTo}</> : null}.
+        It goes to {to}{copyTo ? <>, with a copy to {copyTo}</> : null}{replyTo ? <>, and their replies come to you at {replyTo}</> : null}.
         {sentBefore ? <> It was already sent {sentBefore}, so they will get it twice.</> : null}
       </>}
       confirmLabel={sentBefore ? "Send it again" : "Send to supplier"}

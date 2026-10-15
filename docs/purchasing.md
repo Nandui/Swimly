@@ -56,6 +56,10 @@ with a way to test the emails before a real one goes out.
   invoices@leisureworldcork.com, quoting the order number (`INVOICE_ADDRESS`). It goes from Core's mailbox (`src/lib/email/sender.ts`)
   named "<organisation> Purchasing", to the supplier's `email`, with **Reply-To** the
   sender's own address.
+- **Copy to**: one address set under Suppliers (`PurchasingSettings.copyTo`, Manage) gets a
+  CC of every email to a supplier, visible to the supplier; tests are not copied (owner
+  request, 15 October 2026: the operations manager is copied on all of them). Each email
+  keeps who was copied (`PurchaseOrderEmail.ccAddress`).
 - **Send test to me** sends the same email to the sender's own address only, with "Test:" in
   the subject and a line on top naming the supplier's address.
 - **Emails to suppliers** (`PurchasingSettings.supplierEmailsOn`, per organisation) start
@@ -81,7 +85,7 @@ unit and price as ordered, so changing a price never changes past orders.
 
 ## Files
 
-- Schema: `prisma/schema/purchasing.prisma`, `prisma/migrations/20261018120000_purchasing`, `prisma/migrations/20261106120000_purchase_order_emails`
+- Schema: `prisma/schema/purchasing.prisma`, `prisma/migrations/20261018120000_purchasing`, `prisma/migrations/20261106120000_purchase_order_emails`, `prisma/migrations/20261107120000_purchasing_email_copy`
 - `src/modules/purchasing/`: `shared/` (`rules.ts`, pure; `access.ts`; `forms.ts`), `features/orders` and `features/suppliers` (each with `server/data.ts` and `server/actions.ts`; the home card is `features/orders/server/home.ts`, registered in `module.ts`), `features/workspace` (the frame). See its README.md
 - UI: `src/app/purchasing/` and each feature's `components/`
 - Tests: `rules.test.ts`, `order-email.test.ts`, `purchasing.test.ts` (end to end on an isolated database, with the email transport replaced so nothing is sent)

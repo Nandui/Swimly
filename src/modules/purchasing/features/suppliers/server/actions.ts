@@ -143,6 +143,26 @@ export async function removeApprovalRule(id: string): Promise<ActionResult> {
 
 /* Emails to suppliers. */
 
+/** Who gets a copy (CC) of every email to a supplier: one address, or none. */
+export async function setSupplierEmailCopy(address: string): Promise<ActionResult> {
+  const who = await manager();
+  if (!who) return fail("Changing who is copied needs Purchasing: Manage.");
+  const parsed = z.string().trim().max(254).refine((v) => v === "" || z.string().email().safeParse(v).success, "Use an email address like name@example.com, or leave it empty.").safeParse(address);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const copyTo = parsed.data;
+  await prisma.$transaction(async (tx) => {
+    await tx.purchasingSettings.upsert({
+      where: { orgId: who.orgId! },
+      create: { orgId: who.orgId!, copyTo, changedById: who.id, changedByName: who.name },
+      update: { copyTo, changedById: who.id, changedByName: who.name },
+    });
+    await logAudit({ actorId: who.id, actorName: who.name, action: "update", entity: "PurchasingSettings", entityId: who.orgId!,
+      summary: copyTo ? `Copied ${copyTo} on every email to a supplier` : "Stopped copying anyone on emails to suppliers" }, tx);
+  });
+  revalidate();
+  return ok();
+}
+
 /** Turn emailing approved orders to suppliers on or off for the organisation. It can only
  *  be turned on once someone has sent themselves a test (owner request, 15 October 2026). */
 export async function setSupplierEmails(on: boolean): Promise<ActionResult> {
