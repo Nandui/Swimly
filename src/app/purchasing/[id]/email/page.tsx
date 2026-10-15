@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: "Email purchase order" };
  *  first; it goes to the supplier only once whoever manages Purchasing has turned emails
  *  to suppliers on (docs/purchasing.md). */
 export default async function EmailOrderPage({ params }: { params: Promise<{ id: string }> }) {
-  const { who, order: o, emailsOn, copyTo, sender, replyTo, preview, input, mayEmail } = await orderEmailPage((await params).id);
+  const { who, order: o, emailsOn, supplierCopies, sender, replyTo, preview, input, mayEmail } = await orderEmailPage((await params).id);
   if (!preview || !input) notFound();
   const supplierEmail = o.supplier.email.trim();
   const sentBefore = lastSentToSupplier(o.emails);
@@ -22,7 +22,7 @@ export default async function EmailOrderPage({ params }: { params: Promise<{ id:
         description={`To ${o.supplier.name}. Check the email, send yourself a test, then send it.`}
         actions={mayEmail ? <span className="flex flex-wrap gap-2">
           {sender.email ? <SendTest id={o.id} to={sender.email} /> : null}
-          {emailsOn && supplierEmail ? <SendToSupplier id={o.id} number={input.number} supplier={o.supplier.name} to={supplierEmail} copyTo={copyTo} replyTo={replyTo.email} sentBefore={sentBefore} /> : null}
+          {emailsOn && supplierEmail ? <SendToSupplier id={o.id} number={input.number} supplier={o.supplier.name} to={supplierEmail} copyTo={supplierCopies.filter((a) => a.toLowerCase() !== supplierEmail.toLowerCase()).join(", ")} replyTo={replyTo.email} sentBefore={sentBefore} /> : null}
         </span> : null} />
 
       <div className="space-y-3">
@@ -44,7 +44,7 @@ export default async function EmailOrderPage({ params }: { params: Promise<{ id:
         <div className="pc-panel-head"><h2 id="po-email">The email</h2></div>
         <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-[auto_minmax(0,1fr)]">
           <dt className="text-ui-muted-foreground">To</dt><dd className="font-medium break-words">{supplierEmail || "No address yet"}</dd>
-          <dt className="text-ui-muted-foreground">Copy to</dt><dd className="font-medium break-words">{copyTo || "Nobody"}<span className="font-normal text-ui-muted-foreground"> (not on tests)</span></dd>
+          <dt className="text-ui-muted-foreground">Copy to</dt><dd className="font-medium break-words">{supplierCopies.join(", ") || "Nobody"}<span className="font-normal text-ui-muted-foreground"> (not on tests)</span></dd>
           <dt className="text-ui-muted-foreground">Replies go to</dt><dd className="font-medium break-words">{replyTo.email ? `${replyTo.name}, ${replyTo.email}` : "Nobody: no email address for whoever raised the order or for you"}{replyTo.email && replyTo.email !== sender.email ? <span className="font-normal text-ui-muted-foreground"> (raised the order)</span> : null}</dd>
           <dt className="text-ui-muted-foreground">Subject</dt><dd className="font-medium break-words">{preview.subject}</dd>
         </dl>
