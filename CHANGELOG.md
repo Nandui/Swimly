@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.15.2 · 15 October 2026 · Refunds: a clearer refund request page
+
+- A refund request now opens like a case file. At the top, the amount asked for in large figures, who it is for, and a progress line showing how far it has got: logged, with finance, approved (or declined or withdrawn) and paid. Under it, what was approved, the payment and who in finance is handling it.
+- **Next action** sits beside the claim, and on phones straight after it, instead of at the bottom of the page.
+- The details are grouped the way finance checks them: the customer, the original payment, then what was bought and why they want a refund.
+- The history reads as a timeline, with each note in its own bubble.
+- Nothing about what you can do on a request, or who can do it, has changed.
+
 ## 1.15.1 · 15 October 2026 · Parents app: phone number required
 
 - Parents must now give a phone number (at least 7 digits) with their name in the parents app. Families who signed up without one are asked for it the next time they book an assessment, ask to link a child or send a change, so nobody is locked out.
