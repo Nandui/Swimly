@@ -21,7 +21,7 @@ assignment says over whom.
 
 | Key | Lets you | Scope |
 | --- | --- | --- |
-| `training.manage` | Build the catalogue: create, edit, retire courses and choose the qualification each grants. Includes reading records. | Catalogue is organisation data |
+| `training.manage` | Build courses: sections, lessons and files, preview and publish; create, retire and set the qualification each grants. Includes reading records. | Catalogue is organisation data |
 | `training.assign` | Assign courses with a due date, and cancel assignments. Includes reading records. | The people the assignment covers |
 | `training.records.read` | See training and qualifications. | The people the assignment covers |
 | `training.signoff` | Sign off practical training, or send it back with what to practise. Never your own. Includes reading records. | The people the assignment covers |
@@ -47,6 +47,39 @@ Statuses and their icons come from `TRAINING_STATUS_META` (and certificates from
 `CERTIFICATE_STATUS_META`), shown with `<Tag meta={…} />`; "Overdue" is derived from the
 due date.
 
+## Courses built from lessons (e-learning, phase 1)
+
+*Owner request, 15 October 2026: "a fully blown e-learning platform". The phased plan is the
+"Turnfin E-learning Plan" artifact; phase 1 is the builder and the player. Exams (phase 2),
+automatic assigning, renewals and certificates (phase 3) come next.*
+
+Levels: **Trainer** (sign off), **Author** (also build and publish courses: `training.manage`),
+**Manage** (also assign and check certificates). Levels are cumulative, so roles that had Manage
+keep everything.
+
+- **Draft.** A course has sections (`training_sections`) of lessons (`training_lessons`). A
+  lesson is **Reading** (Tiptap JSON), **Video** (an https link; YouTube and Vimeo play inside
+  the lesson through their privacy players, anything else opens in a new tab) or **File** (a PDF
+  or image), each with optional notes and minutes. Lesson text is cleaned on save (`cleanDoc` in
+  `shared/lessons.ts`): only headings, lists, key points, tables, links (http, https, mailto) and
+  images that are the course's own files survive. Files (`training_files`, PDF, JPEG, PNG or WebP
+  up to 4 MB, checked by their first bytes) are kept in the database and never deleted.
+- **Publish** freezes the draft into the next `training_course_versions` row (the whole outline as
+  JSON) and points the course at it. Nothing in a version is edited afterwards. Publishing needs at
+  least one lesson, no empty sections, text in every Reading lesson, a link in every Video and a
+  file in every File lesson.
+- **Which version a learner gets.** An open assignment follows the latest published version until
+  the learner finishes their first lesson; that fixes `TrainingAssignment.versionId`. So people who
+  haven't started get the new version, and people part-way through keep theirs. Training that was
+  submitted or completed before lessons existed stays on the old text.
+- **Taking it** (Turnfin Me): one lesson per screen, Back and **Done, next lesson**; each finished
+  lesson is a `training_lesson_progress` row, audited. The course page shows progress and Continue;
+  Home shows Continue for a course part-way through. Finishing the course (or asking for sign-off)
+  needs every lesson done, then follows the steps above.
+- **Old courses.** A course with no published version shows its plain text as before. **Use the
+  current text as lesson 1** in the builder turns it into a Reading lesson in the draft.
+- **Preview** (`/training/courses/{id}/preview`) plays the draft in Work and records nothing.
+
 ## Expiring qualifications
 
 `/training/expiring` lists qualifications that have expired or expire within 60
@@ -58,9 +91,9 @@ does not block.
 
 ## Files
 
-- Schema: `TrainingCourse`, `TrainingAssignment` (`prisma/migrations/20260930120000_training`)
-- Shape: `src/modules/training/` has `shared/` (`access.ts`, `constants.ts`, `data.ts`, `grant.ts`, `writes.ts`) and the features `courses`, `assignments`, `sign-off`, `certificates`, `expiring`, `me`, `person-file` and `workspace`; see its README.md
+- Schema: `TrainingCourse`, `TrainingAssignment` (`prisma/migrations/20260930120000_training`); sections, lessons, versions, files and progress (`prisma/migrations/20261106120000_training_elearning`)
+- Shape: `src/modules/training/` has `shared/` (`access.ts`, `constants.ts`, `data.ts`, `grant.ts`, `writes.ts`) and the features `courses`, `builder`, `assignments`, `sign-off`, `certificates`, `expiring`, `me`, `person-file` and `workspace`; see its README.md
 - Actions: each feature's `server/actions.ts` (every change audited in its transaction)
 - Self-service: `features/me` (`mine.ts`, `self.ts`, `reminders.ts`), reached by the staff API through `index.ts`; description in `manifest.ts`
-- Pages: `src/app/training/` (workspace); the learner side is Turnfin Me (`apps/me`)
-- Tests: `src/modules/training/__tests__/training.test.ts`
+- Pages: `src/app/training/` (workspace; the builder is `courses/[id]`, files `files/`); the learner side is Turnfin Me (`apps/me`, `training/[id]` and `training/[id]/[lesson]`)
+- Tests: `src/modules/training/__tests__/training.test.ts`, `elearning.test.ts`

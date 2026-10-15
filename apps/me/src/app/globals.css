@@ -252,3 +252,22 @@ label.pc-row > input[type='checkbox'] { flex: none; width: 20px; height: 20px; m
 .doc > ol > li::before { content: counter(s); grid-row: 1 / span 99; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; margin-top: 1px; border-radius: 999px; background: var(--pc-primary); color: var(--pc-on-primary); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
 .doc > ol > li > * { grid-column: 2; }
 .doc > ol > li > * + * { margin-top: 8px; }
+
+/* Courses built from lessons (Training e-learning). One lesson per screen, the course's
+   progress as a bar, Back and Next at the end within thumb reach. */
+.course-hero { gap: 20px; }
+.course-progress { appearance: none; width: 100%; height: 8px; border: 0; border-radius: 999px; background: var(--pc-surface-sunken); overflow: hidden; }
+.course-progress::-webkit-progress-bar { background: var(--pc-surface-sunken); border-radius: 999px; }
+.course-progress::-webkit-progress-value { background: var(--pc-primary); border-radius: 999px; transition: width 300ms var(--pc-ease); }
+.course-progress::-moz-progress-bar { background: var(--pc-primary); border-radius: 999px; }
+.lesson-row[data-done] .pc-tile-icon { background: var(--pc-success-soft); color: var(--pc-success); }
+.lesson-video { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: var(--pc-radius-card); overflow: hidden; background: var(--pc-surface-sunken); }
+.lesson-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.lesson-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.lesson-nav .button:last-child { flex: 1 1 auto; max-width: 320px; margin-left: auto; }
+.lesson-file-image, .doc.lesson img { display: block; max-width: 100%; height: auto; border-radius: var(--pc-radius-card); }
+.lesson-image-placeholder { display: block; width: 100%; aspect-ratio: 4 / 3; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); }
+.doc.lesson h2 { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); }
+.doc.lesson blockquote { padding: 12px 16px; border: 0; border-radius: var(--pc-radius-card); background: var(--pc-primary-soft); color: var(--pc-primary-ink); font-weight: 500; }
+.doc.lesson a { color: var(--pc-primary); text-underline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .course-progress::-webkit-progress-value { transition: none; } }

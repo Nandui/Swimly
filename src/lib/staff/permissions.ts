@@ -145,8 +145,8 @@ export const PERMISSIONS = [
   {
     key: "training.manage",
     group: "Training",
-    label: "Build the training catalogue",
-    description: "Create, edit and retire training courses, and choose which qualification a course gives. Assigning and signing off are separate.",
+    label: "Build training courses",
+    description: "Create courses from lessons (text, videos and files), preview and publish them, retire them, and choose which qualification a course gives. Assigning and signing off are separate.",
   },
   {
     key: "training.assign",
