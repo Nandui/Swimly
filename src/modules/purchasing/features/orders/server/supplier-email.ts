@@ -15,9 +15,9 @@ export async function orderEmailContext(id: string, who: PurchasingActor) {
   const found = await prisma.purchaseOrder.findFirst({
     where: { id, orgId: who.orgId ?? undefined },
     select: {
-      id: true, number: true, status: true, siteId: true, supplierId: true, requestedById: true, neededBy: true, decidedAt: true, note: true, totalCents: true,
+      id: true, number: true, status: true, siteId: true, supplierId: true, requestedById: true, neededBy: true, decidedAt: true, note: true,
       supplier: { select: { name: true, contactName: true, email: true, accountNumber: true } },
-      lines: { orderBy: { name: "asc" }, select: { name: true, code: true, unit: true, unitPriceCents: true, quantity: true } },
+      lines: { orderBy: { name: "asc" }, select: { name: true, code: true, unit: true, quantity: true } },
       emails: { orderBy: { createdAt: "desc" }, select: { id: true, kind: true, toAddress: true, sentByName: true, status: true, error: true, createdAt: true } },
     },
   });
@@ -32,7 +32,7 @@ export async function orderEmailContext(id: string, who: PurchasingActor) {
   const input: OrderEmailInput | null = order.number ? {
     number: order.number, organisation, site: order.site.name, supplier: order.supplier,
     neededBy: order.neededBy ? formatDate(order.neededBy) : null, approvedOn: order.decidedAt ? formatDate(order.decidedAt) : null,
-    note: order.note, totalCents: order.totalCents, lines: order.lines, sender,
+    note: order.note, lines: order.lines, sender,
   } : null;
   return {
     order, emailsOn, sender, input,

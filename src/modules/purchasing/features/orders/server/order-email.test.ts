@@ -5,18 +5,20 @@ import { orderEmail, type OrderEmailInput } from "./order-email";
 const order: OrderEmailInput = {
   number: "PO-BT-00007", organisation: "Sample Leisure", site: "Bishopstown",
   supplier: { name: "Sample <Chemicals>", contactName: "", email: "orders@example.invalid", accountNumber: "LW-1" },
-  neededBy: "20 Oct 2026", approvedOn: "15 Oct 2026", note: "Back door, <please>", totalCents: 24000,
-  lines: [{ name: "Chlorine & tablets", code: "CT-25", unit: "25 kg drum", unitPriceCents: 12000, quantity: 2 }],
+  neededBy: "20 Oct 2026", approvedOn: "15 Oct 2026", note: "Back door, <please>",
+  lines: [{ name: "Chlorine & tablets", code: "CT-25", unit: "25 kg drum", quantity: 2 }],
   sender: { name: "Sample Person", email: "sample@example.invalid" },
 };
 
-test("the email carries the order, and the HTML escapes what people typed", () => {
+test("the email carries the order without prices, and says where invoices go", () => {
   const m = orderEmail(order);
   assert.equal(m.subject, "Purchase order PO-BT-00007 from Sample Leisure");
   assert.match(m.text, /^Hello Sample <Chemicals>,/);
-  assert.match(m.text, /2 × Chlorine & tablets \(code CT-25\), 25 kg drum, at €120\.00: €240\.00/);
+  assert.match(m.text, /2 × Chlorine & tablets \(code CT-25\), 25 kg drum\r\n/);
   assert.match(m.text, /Deliver to: Sample Leisure Bishopstown/);
-  assert.match(m.text, /Total before VAT: €240\.00/);
+  assert.ok(!/€|VAT|price/i.test(m.text + m.html), "no prices or totals");
+  assert.match(m.text, /INVOICES: Please submit all invoices for this order to invoices@leisureworldcork\.com, quoting PO-BT-00007\./);
+  assert.ok(m.html.includes("mailto:invoices@leisureworldcork.com"));
   assert.ok(m.html.includes("Chlorine &#38; tablets") && m.html.includes("&#60;please&#62;"));
   assert.ok(!m.html.includes("<please>") && !m.html.includes("Test email"));
 });

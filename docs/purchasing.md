@@ -49,8 +49,11 @@ Owner request, 15 October 2026: after approval, send the order straight to the s
 with a way to test the emails before a real one goes out.
 
 - The email (`features/orders/server/order-email.ts`, pure) has the order number, our
-  account number, where to deliver, when it is needed, the lines, the total before VAT and
-  the note, in plain text and HTML. It goes from Core's mailbox (`src/lib/email/sender.ts`)
+  account number, where to deliver, when it is needed, the products, codes, units and
+  quantities, and the note, in plain text and HTML. It carries **no prices or totals**: the
+  supplier invoices at the agreed prices (owner decision, 15 October 2026). A highlighted
+  **Invoices** box asks for every invoice for the order to go to
+  invoices@leisureworldcork.com, quoting the order number (`INVOICE_ADDRESS`). It goes from Core's mailbox (`src/lib/email/sender.ts`)
   named "<organisation> Purchasing", to the supplier's `email`, with **Reply-To** the
   sender's own address.
 - **Send test to me** sends the same email to the sender's own address only, with "Test:" in

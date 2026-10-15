@@ -6,7 +6,7 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 ## 1.13.0 · 15 October 2026 · Purchasing: email approved orders to suppliers
 
-- An approved purchase order has a new **Email to supplier** button. It opens the email exactly as the supplier will get it: the order number, our account number, where to deliver, the products, quantities and prices, the total and the note. The supplier's replies come to you.
+- An approved purchase order has a new **Email to supplier** button. It opens the email exactly as the supplier will get it: the order number, our account number, where to deliver, the products and quantities, and the note. It shows no prices; the supplier invoices at the agreed prices. A clear **Invoices** note asks them to send every invoice for the order to invoices@leisureworldcork.com, quoting the order number. The supplier's replies come to you.
 - **Send test to me** sends that same email to your own address only, marked as a test, so you can check it first.
 - Emailing suppliers starts **off**. Someone with Purchasing **Manage** turns it on under **Purchasing > Suppliers > Emails to suppliers**, and only after a test has been sent. Until then nothing can go to a supplier.
 - Whoever raised the order, anyone who raises orders at its site, and whoever manages Purchasing can email it. Every email, sent or failed, is listed on the order and in the activity log.

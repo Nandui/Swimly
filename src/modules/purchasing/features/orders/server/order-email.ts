@@ -1,7 +1,6 @@
-import { euro } from "@/modules/purchasing/shared/rules";
-
 /** The approved purchase order as the supplier receives it by email (docs/purchasing.md):
- *  plain text and HTML with the same words. A test is the same email with one line on
+ *  plain text and HTML with the same words. No prices: the supplier invoices at the agreed
+ *  prices, and the invoice goes to accounts (owner decision, 15 October 2026). A test is the same email with one line on
  *  top saying who it would have gone to, and "Test" in the subject. Pure, so the preview
  *  page, the send and the tests all build exactly the same message. */
 
@@ -13,10 +12,12 @@ export type OrderEmailInput = {
   neededBy: string | null;
   approvedOn: string | null;
   note: string;
-  totalCents: number;
-  lines: { name: string; code: string; unit: string; unitPriceCents: number; quantity: number }[];
+  lines: { name: string; code: string; unit: string; quantity: number }[];
   sender: { name: string; email: string };
 };
+
+/** Where suppliers send invoices for every purchase order (owner decision, 15 October 2026). */
+export const INVOICE_ADDRESS = "invoices@leisureworldcork.com";
 
 const escape = (value: string) => value.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const oneLine = (value: string) => value.replace(/[\r\n]+/g, " ").trim();
@@ -38,17 +39,17 @@ export function orderEmail(o: OrderEmailInput, test = false) {
     ...(o.neededBy ? [["Needed by", o.neededBy] as [string, string]] : []),
     ...(o.approvedOn ? [["Approved", o.approvedOn] as [string, string]] : []),
   ];
-  const quote = `Please quote ${o.number} on your delivery note and invoice. Reply to this email with any questions; it goes to ${o.sender.name}.`;
+  const invoices = `Please submit all invoices for this order to ${INVOICE_ADDRESS}, quoting ${o.number}.`;
+  const quote = `Please quote ${o.number} on your delivery note. Reply to this email with any questions about the order; it goes to ${o.sender.name}.`;
   const banner = `Test email. This is exactly what ${o.supplier.name} will receive at ${o.supplier.email || "their email address (none saved yet)"}. It was sent only to you.`;
-  const total = euro(o.totalCents);
 
   const text = [
     ...(test ? [banner, ""] : []),
     greeting, "", lead, "",
     ...facts.map(([k, v]) => `${k}: ${v}`), "",
-    ...o.lines.map((l) => `${l.quantity} × ${l.name}${l.code ? ` (code ${l.code})` : ""}, ${l.unit || "each"}, at ${euro(l.unitPriceCents)}: ${euro(l.unitPriceCents * l.quantity)}`),
-    "", `Total before VAT: ${total}`,
+    ...o.lines.map((l) => `${l.quantity} × ${l.name}${l.code ? ` (code ${l.code})` : ""}, ${l.unit || "each"}`),
     ...(o.note ? ["", `Note: ${o.note}`] : []),
+    "", `INVOICES: ${invoices}`,
     "", quote, "", o.sender.name, from,
   ].join("\r\n");
 
@@ -84,14 +85,17 @@ ${p(lead)}
 ${facts.map(([k, v]) => `<tr><td style="padding:2px 16px 2px 0;${BODY};${MUTED};white-space:nowrap">${escape(k)}</td><td style="padding:2px 0;${BODY};${INK};font-weight:600">${escape(v)}</td></tr>`).join("\n")}
 </table>
 <table class="po-lines" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 16px;border-collapse:collapse">
-<thead><tr>${head("Product")}${head("Code")}${head("Unit")}${head("Qty", true)}${head("Price", true)}${head("Line", true)}</tr></thead>
+<thead><tr>${head("Product")}${head("Code")}${head("Unit")}${head("Qty", true)}</tr></thead>
 <tbody>
-${o.lines.map((l) => `<tr>${cell(l.name, false, true)}${cell(l.code || "–")}${cell(l.unit || "Each")}${cell(String(l.quantity), true, true)}${cell(euro(l.unitPriceCents), true)}${cell(euro(l.unitPriceCents * l.quantity), true, true)}</tr>`).join("\n")}
+${o.lines.map((l) => `<tr>${cell(l.name, false, true)}${cell(l.code || "–")}${cell(l.unit || "Each")}${cell(String(l.quantity), true, true)}</tr>`).join("\n")}
 </tbody>
-<tfoot><tr><td colspan="5" style="padding:12px 6px 0;${BODY};${INK};font-weight:600;text-align:right">Total before VAT</td><td style="padding:12px 6px 0;font-size:16px;line-height:22px;${INK};font-weight:700;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums">${escape(total)}</td></tr></tfoot>
 </table>
 ${o.note ? `<p style="margin:16px 0 4px;font-size:12px;line-height:16px;font-weight:600;${MUTED}">Note</p>${p(o.note, "white-space:pre-line")}` : ""}
-<p style="margin:24px 0 16px;${BODY};${MUTED}">${escape(quote)}</p>
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:24px 0 16px"><tr><td style="padding:16px;border-radius:12px;background-color:#e8f0fe;border:1px solid #b9cdf7">
+<p style="margin:0 0 4px;font-size:12px;line-height:16px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#1a4fbf">Invoices</p>
+<p style="margin:0;${BODY};${INK}">Please submit all invoices for this order to <a href="mailto:${INVOICE_ADDRESS}" style="color:#1a4fbf;font-weight:700">${INVOICE_ADDRESS}</a>, quoting <strong>${escape(o.number)}</strong>.</p>
+</td></tr></table>
+<p style="margin:0 0 16px;${BODY};${MUTED}">${escape(quote)}</p>
 <p style="margin:0;${BODY};${INK}">${escape(o.sender.name)}<br>${escape(from)}</p>
 </td></tr></table>
 </td></tr></table>
