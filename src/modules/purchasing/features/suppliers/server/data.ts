@@ -31,7 +31,7 @@ export async function supplierPage(id: string) {
     where: { id, orgId: who.orgId ?? undefined },
     select: {
       id: true, name: true, accountNumber: true, contactName: true, email: true, phone: true, note: true, archivedAt: true,
-      products: { orderBy: [{ archivedAt: "asc" }, { name: "asc" }], select: { id: true, name: true, code: true, unit: true, priceCents: true, archivedAt: true } },
+      products: { orderBy: [{ archivedAt: "asc" }, { name: "asc" }], select: { id: true, name: true, code: true, unit: true, brand: true, sizes: true, colours: true, priceCents: true, archivedAt: true } },
       rules: { orderBy: [{ limitCents: { sort: "asc", nulls: "last" } }], select: { id: true, roleId: true, limitCents: true } },
     },
   });

@@ -7,4 +7,4 @@ export { OrderForm } from "@/modules/purchasing/features/orders/components/order
 export { PoStatusTag } from "@/modules/purchasing/features/orders/components/status";
 export { orderEmailPage, orderForm, purchaseOrder, purchasingHome, type OrderRow } from "@/modules/purchasing/features/orders/server/data";
 export { purchasingHomeItems } from "@/modules/purchasing/features/orders/server/home";
-export { euro, PO_EMAIL_META, type PoStatus } from "@/modules/purchasing/shared/rules";
+export { euro, lineDetails, PO_EMAIL_META, type PoStatus } from "@/modules/purchasing/shared/rules";

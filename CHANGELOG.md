@@ -4,11 +4,17 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.16.1 · 15 October 2026 · Purchasing: new order numbers
+## 1.17.1 · 15 October 2026 · Purchasing: new order numbers
 
 - Purchase orders approved from now on get a number made of the site's short code, the month and a running number, for example **BT-OCT-0042**.
 - The month is the one the order is approved in. The running number counts across every site and never starts again, so no two orders share it.
 - Orders approved before today keep the numbers they already have, so suppliers and invoices that quote them still match.
+
+## 1.17.0 · 15 October 2026 · Purchasing: brand, sizes and colours for retail products
+
+- Approved products can now have a **brand**, the **sizes** they come in and the **colours** they come in, for suppliers who sell us retail stock such as swimwear and caps. Type the sizes and colours with commas, for example "S, M, L". Leave them empty for everything else; nothing changes for those products.
+- When you raise an order, a product with sizes or colours gets **a line for each one**: pick the size and colour, press **Add line**, then type the quantity. So 4 in size 28 Navy and 6 in size 30 Navy are two lines on the same order.
+- The order, the printout and the email to the supplier show the brand, size and colour under each product.
 
 ## 1.16.0 · 15 October 2026 · What's new in Turnfin
 

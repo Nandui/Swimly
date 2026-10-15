@@ -57,7 +57,7 @@ export async function purchaseOrder(id: string) {
     select: {
       ...ORDER_ROW, note: true, decisionNote: true, cancelledAt: true, updatedAt: true,
       supplier: { select: { name: true, accountNumber: true, contactName: true, email: true, phone: true } },
-      lines: { orderBy: { name: "asc" }, select: { id: true, productId: true, name: true, code: true, unit: true, unitPriceCents: true, quantity: true } },
+      lines: { orderBy: [{ name: "asc" }, { id: "asc" }], select: { id: true, productId: true, name: true, code: true, unit: true, brand: true, size: true, colour: true, unitPriceCents: true, quantity: true } },
       emails: { orderBy: { createdAt: "desc" }, select: { id: true, kind: true, toAddress: true, ccAddress: true, sentByName: true, status: true, error: true, createdAt: true } },
     },
   });
@@ -103,13 +103,13 @@ export async function orderForm(orderId?: string) {
   const suppliers = await prisma.supplier.findMany({
     where: { orgId: who.orgId ?? undefined, archivedAt: null, products: { some: { archivedAt: null } } },
     orderBy: { name: "asc" },
-    select: { id: true, name: true, products: { where: { archivedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true, code: true, unit: true, priceCents: true } } },
+    select: { id: true, name: true, products: { where: { archivedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true, code: true, unit: true, brand: true, sizes: true, colours: true, priceCents: true } } },
   });
   const { rules } = await approvalContext(who);
   const roles = [...(await rolesByIds(rules.map((r) => r.roleId))).values()];
   const existing = orderId ? await prisma.purchaseOrder.findFirst({
     where: { id: orderId, requestedById: who.id, status: { in: [...EDITABLE] } },
-    select: { id: true, siteId: true, supplierId: true, neededBy: true, note: true, status: true, decisionNote: true, lines: { select: { productId: true, quantity: true } } },
+    select: { id: true, siteId: true, supplierId: true, neededBy: true, note: true, status: true, decisionNote: true, lines: { orderBy: { id: "asc" }, select: { productId: true, size: true, colour: true, quantity: true } } },
   }) : null;
   if (orderId && !existing) notFound();
   return {

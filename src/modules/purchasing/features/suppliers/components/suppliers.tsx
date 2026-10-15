@@ -14,7 +14,7 @@ import { toast } from "@/components/ui/toast";
 
 const THEME = "turnfin-docs turnfin-module turnfin-purchasing";
 type Supplier = { id: string; name: string; accountNumber: string; contactName: string; email: string; phone: string; note: string };
-type Product = { id: string; name: string; code: string; unit: string; priceCents: number };
+type Product = { id: string; name: string; code: string; unit: string; brand: string; sizes: string[]; colours: string[]; priceCents: number };
 const value = (f: FormData, k: string) => String(f.get(k) ?? "");
 
 /** Approve a supplier to order from, or change its details. */
@@ -73,13 +73,22 @@ export function ProductDialog({ supplierId, product }: { supplierId: string; pro
       description="Orders use the agreed price at the time they are raised; changing it never changes past orders."
       submitLabel={product ? "Save" : "Add product"}
       successMessage={product ? "Product saved" : "Product added"}
-      submit={(f) => saveProduct(supplierId, product?.id ?? null, { name: value(f, "name"), code: value(f, "code"), unit: value(f, "unit"), price: value(f, "price") })}
+      submit={(f) => saveProduct(supplierId, product?.id ?? null, { name: value(f, "name"), code: value(f, "code"), unit: value(f, "unit"), brand: value(f, "brand"), sizes: value(f, "sizes"), colours: value(f, "colours"), price: value(f, "price") })}
     >
       <Field label="Product" htmlFor={`${id}-name`}><Input id={`${id}-name`} name="name" required minLength={2} maxLength={120} defaultValue={product?.name} className="min-h-11" /></Field>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Supplier's code (optional)" htmlFor={`${id}-code`}><Input id={`${id}-code`} name="code" maxLength={60} defaultValue={product?.code} className="min-h-11" /></Field>
         <Field label="Unit (optional)" htmlFor={`${id}-unit`} hint="For example Box of 12."><Input id={`${id}-unit`} name="unit" maxLength={60} defaultValue={product?.unit} className="min-h-11" /></Field>
       </div>
+      <fieldset className="space-y-4">
+        <legend className="mb-1 text-sm font-semibold">For retail products (optional)</legend>
+        <p className="text-sm text-ui-muted-foreground">Leave these empty for anything without a brand, sizes or colours. Whoever raises an order picks one size and one colour for each line.</p>
+        <Field label="Brand" htmlFor={`${id}-brand`}><Input id={`${id}-brand`} name="brand" maxLength={60} defaultValue={product?.brand} className="min-h-11" /></Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Sizes" htmlFor={`${id}-sizes`} hint="Separate with commas, for example S, M, L."><Input id={`${id}-sizes`} name="sizes" maxLength={600} defaultValue={product?.sizes.join(", ")} className="min-h-11" /></Field>
+          <Field label="Colours" htmlFor={`${id}-colours`} hint="Separate with commas, for example Navy, Black."><Input id={`${id}-colours`} name="colours" maxLength={600} defaultValue={product?.colours.join(", ")} className="min-h-11" /></Field>
+        </div>
+      </fieldset>
       <Field label="Agreed price per unit, before VAT (€)" htmlFor={`${id}-price`}><Input id={`${id}-price`} name="price" required inputMode="decimal" defaultValue={product ? (product.priceCents / 100).toFixed(2) : ""} placeholder="12.50" className="min-h-11 w-40 tabular-nums" /></Field>
     </FormDialog>
   );

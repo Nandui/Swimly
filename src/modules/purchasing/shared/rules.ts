@@ -79,3 +79,31 @@ export function approverRoles(rules: readonly ApprovalRule[], supplierId: string
     .map((r) => r.roleId)
     .filter((id, i, all) => all.indexOf(id) === i);
 }
+
+/* Retail details (owner request, 15 October 2026): a product's brand and the sizes and
+   colours it comes in; each order line picks one size and one colour. */
+
+/** "S, M, L" typed by a person, as the list of options: trimmed, no blanks, no repeats
+ *  (ignoring case), in the order typed. */
+export function optionsOf(value: string): string[] {
+  const seen = new Set<string>();
+  return value.split(/[,\n]/).map((v) => v.trim().replace(/\s+/g, " ")).filter((v) => {
+    const key = v.toLowerCase();
+    if (!v || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+/** A line's brand, size and colour as one short phrase: "Speedo · Size M · Navy". */
+export function lineDetails(l: { brand?: string; size?: string; colour?: string }) {
+  return [l.brand, l.size ? `Size ${l.size}` : "", l.colour].filter(Boolean).join(" · ");
+}
+
+/** Whether a line's size and colour are ones the product comes in: one of each list,
+ *  and none when it has no list. Returns what is wrong, or null. */
+export function variantProblem(p: { name: string; sizes: readonly string[]; colours: readonly string[] }, l: { size: string; colour: string }) {
+  if (p.sizes.length ? !p.sizes.includes(l.size) : l.size) return p.sizes.length ? `Choose a size for ${p.name}.` : `${p.name} has no sizes.`;
+  if (p.colours.length ? !p.colours.includes(l.colour) : l.colour) return p.colours.length ? `Choose a colour for ${p.name}.` : `${p.name} has no colours.`;
+  return null;
+}

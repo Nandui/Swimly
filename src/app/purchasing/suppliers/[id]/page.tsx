@@ -38,7 +38,8 @@ export default async function SupplierPage({ params }: { params: Promise<{ id: s
               <li key={p.id} className="pc-row">
                 <span className="pc-row-body">
                   <span className="pc-row-title">{p.name}</span>
-                  <span className="pc-row-hint">{[p.code, p.unit || "Each"].filter(Boolean).join(" · ")}</span>
+                  <span className="pc-row-hint">{[p.brand, p.code, p.unit || "Each"].filter(Boolean).join(" · ")}</span>
+                  {p.sizes.length || p.colours.length ? <span className="pc-row-hint">{[p.sizes.length ? `Sizes ${p.sizes.join(", ")}` : "", p.colours.length ? `Colours ${p.colours.join(", ")}` : ""].filter(Boolean).join(" · ")}</span> : null}
                 </span>
                 <span className="pc-row-trail">
                   {p.archivedAt ? <Tag meta={APPROVAL_LIST_META.removed} /> : null}

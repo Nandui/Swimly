@@ -17,7 +17,7 @@ export async function orderEmailContext(id: string, who: PurchasingActor) {
     select: {
       id: true, number: true, status: true, siteId: true, supplierId: true, requestedById: true, neededBy: true, decidedAt: true, note: true,
       supplier: { select: { name: true, contactName: true, email: true, accountNumber: true } },
-      lines: { orderBy: { name: "asc" }, select: { name: true, code: true, unit: true, quantity: true } },
+      lines: { orderBy: [{ name: "asc" }, { id: "asc" }], select: { name: true, code: true, unit: true, brand: true, size: true, colour: true, quantity: true } },
       emails: { orderBy: { createdAt: "desc" }, select: { id: true, kind: true, toAddress: true, ccAddress: true, sentByName: true, status: true, error: true, createdAt: true } },
     },
   });

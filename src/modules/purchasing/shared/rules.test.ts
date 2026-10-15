@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { approverRoles, centsOf, euro, mayApprove, orderTotal, poNumber, rulesFor } from "./rules";
+import { approverRoles, centsOf, euro, lineDetails, mayApprove, optionsOf, orderTotal, poNumber, rulesFor, variantProblem } from "./rules";
 
 test("numbers read <site>-<month>-<running number>", () => {
   assert.equal(poNumber("BT", new Date("2026-10-15T12:00:00Z"), 42), "BT-OCT-0042");
@@ -36,4 +36,21 @@ test("a supplier's own rules win over the ones for every supplier; the limit dec
   assert.deepEqual(approverRoles(rules, "office", 10000), ["duty", "gm"], "the smallest limit first");
   assert.deepEqual(approverRoles(rules, "office", 60000), ["gm"]);
   assert.deepEqual(approverRoles(rules, "chem", 300000), [], "nobody may approve that much");
+});
+
+test("retail details: sizes and colours typed as a list, shown as one phrase", () => {
+  assert.deepEqual(optionsOf(" S, M ,, l, m, X  L "), ["S", "M", "l", "X L"]);
+  assert.deepEqual(optionsOf(""), []);
+  assert.equal(lineDetails({ brand: "Speedo", size: "30", colour: "Navy" }), "Speedo · Size 30 · Navy");
+  assert.equal(lineDetails({ brand: "", size: "", colour: "" }), "");
+});
+
+test("an order line picks one of the product's sizes and colours, or none when it has none", () => {
+  const suit = { name: "Suit", sizes: ["28", "30"], colours: ["Navy"] };
+  assert.equal(variantProblem(suit, { size: "30", colour: "Navy" }), null);
+  assert.equal(variantProblem(suit, { size: "", colour: "Navy" }), "Choose a size for Suit.");
+  assert.equal(variantProblem(suit, { size: "30", colour: "Red" }), "Choose a colour for Suit.");
+  const chlorine = { name: "Chlorine", sizes: [], colours: [] };
+  assert.equal(variantProblem(chlorine, { size: "", colour: "" }), null);
+  assert.equal(variantProblem(chlorine, { size: "M", colour: "" }), "Chlorine has no sizes.");
 });
