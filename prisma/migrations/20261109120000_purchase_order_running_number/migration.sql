@@ -2,4 +2,4 @@
 -- for the organisation ("BT-OCT-0042"), kept on the organisation's settings. Additive only.
 
 -- AlterTable
-ALTER TABLE "PurchasingSettings" ADD COLUMN     "lastOrderNumber" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "PurchasingSettings" ADD COLUMN IF NOT EXISTS "lastOrderNumber" INTEGER NOT NULL DEFAULT 0;
