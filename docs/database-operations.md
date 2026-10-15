@@ -103,6 +103,13 @@ the `swimly-dev.vercel.app` branch domain was removed, `ACTIVITIES_URL` and
 `PG*`, `POSTGRES_*`, `NEON_*` and `VITE_*` variables, including their `HR_DB_`
 copies. Do not add them back.
 
+Never rename or edit a migration once its branch has been pushed: the previews
+have already applied it to the development database under its first name, so the
+renamed copy runs again and fails, and Prisma then refuses every later preview's
+migrations (P3009). If it happens, mark the failed one rolled back on the
+development database (`prisma migrate resolve --rolled-back <name>`, or set
+`rolled_back_at` on its `_prisma_migrations` row) and push again.
+
 The development database starts with fictional data. Two scripts fill it from
 production instead:
 - `scripts/copy-staff-to-dev.ts` copies staff accounts, roles and sites only
