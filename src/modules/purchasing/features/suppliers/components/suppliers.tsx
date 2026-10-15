@@ -11,6 +11,7 @@ import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { addApprovalRule, removeApprovalRule, saveProduct, saveSupplier, setProductArchived, setSupplierArchived, setSupplierEmailCopy, setSupplierEmails } from "@/modules/purchasing/features/suppliers/server/actions";
 import { toast } from "@/components/ui/toast";
+import { MAX_COPY_TO } from "@/modules/purchasing/shared/rules";
 
 const THEME = "turnfin-docs turnfin-module turnfin-purchasing";
 type Supplier = { id: string; name: string; accountNumber: string; contactName: string; email: string; phone: string; note: string };
@@ -187,14 +188,14 @@ export function SupplierEmailCopy({ copyTo }: { copyTo: string }) {
   return (
     <FormDialog
       portalClassName={THEME}
-      trigger={<Button variant="outline" className="min-h-11"><Mail aria-hidden="true" />{copyTo ? "Change" : "Add a copy"}</Button>}
+      trigger={<Button variant="outline" className="min-h-11"><Mail aria-hidden="true" />{copyTo ? "Change" : "Add copies"}</Button>}
       title="Copy every email to a supplier"
-      description="This address gets a copy (CC) of every purchase order emailed to a supplier, and the supplier sees it. Tests are not copied. Leave it empty to copy nobody."
+      description={`These addresses get a copy (CC) of every purchase order emailed to a supplier, and the supplier sees them. Tests are not copied. Up to ${MAX_COPY_TO}; leave it empty to copy nobody.`}
       submitLabel="Save"
       successMessage="Saved"
       submit={(f) => setSupplierEmailCopy(value(f, "copyTo"))}
     >
-      <Field label="Email address" htmlFor="sup-copy-to"><Input id="sup-copy-to" name="copyTo" type="email" maxLength={254} defaultValue={copyTo} placeholder="name@example.com" className="min-h-11" /></Field>
+      <Field label="Email addresses" htmlFor="sup-copy-to" hint="Separate them with commas."><Input id="sup-copy-to" name="copyTo" type="email" multiple maxLength={1300} defaultValue={copyTo} placeholder="name@example.com, other@example.com" className="min-h-11" /></Field>
     </FormDialog>
   );
 }

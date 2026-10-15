@@ -17,6 +17,8 @@ export type OrderEmailInput = {
   /** Brand, size and colour are empty for products without them. */
   lines: { name: string; code: string; unit: string; brand: string; size: string; colour: string; quantity: number }[];
   sender: { name: string; email: string };
+  /** Who the supplier's replies go to: whoever raised the order. */
+  replyTo: { name: string; email: string };
 };
 
 /** Where suppliers send invoices for every purchase order (owner decision, 15 October 2026). */
@@ -53,7 +55,7 @@ export function orderEmail(o: OrderEmailInput, test = false, logoSrc = `cid:${PO
     ...(o.approvedOn ? [["Approved", o.approvedOn] as [string, string]] : []),
   ];
   const invoices = `Please submit all invoices for this order to ${INVOICE_ADDRESS}, quoting ${o.number}.`;
-  const quote = `Please quote ${o.number} on your delivery note. Reply to this email with any questions about the order; it goes to ${o.sender.name}.`;
+  const quote = `Please quote ${o.number} on your delivery note. Reply to this email with any questions about the order; it goes to ${o.replyTo.name}.`;
   const banner = `Test email. This is exactly what ${o.supplier.name} will receive at ${o.supplier.email || "their email address (none saved yet)"}. It was sent only to you.`;
   const items = o.lines.reduce((n, l) => n + l.quantity, 0);
   const preheader = `${o.lines.length} ${o.lines.length === 1 ? "line" : "lines"}${o.neededBy ? `, needed by ${o.neededBy}` : ""}. Invoices to ${INVOICE_ADDRESS}.`;

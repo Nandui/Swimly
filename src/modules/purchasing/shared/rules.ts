@@ -107,3 +107,13 @@ export function variantProblem(p: { name: string; sizes: readonly string[]; colo
   if (p.colours.length ? !p.colours.includes(l.colour) : l.colour) return p.colours.length ? `Choose a colour for ${p.name}.` : `${p.name} has no colours.`;
   return null;
 }
+
+/** Most addresses Copy to may hold (owner request, 15 October 2026: "a few"). */
+export const MAX_COPY_TO = 5;
+
+/** The addresses in a Copy to list, as typed or stored: separated by commas, semicolons
+ *  or spaces, each once (ignoring case), in the order given. */
+export function copyList(raw: string): string[] {
+  const seen = new Set<string>();
+  return raw.split(/[\s,;]+/).map((a) => a.trim()).filter((a) => a && !seen.has(a.toLowerCase()) && seen.add(a.toLowerCase()));
+}
