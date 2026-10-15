@@ -12,6 +12,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - Whoever raised the order, anyone who raises orders at its site, and whoever manages Purchasing can email it. Every email, sent or failed, is listed on the order and in the activity log.
 - The supplier's email address is the one on their supplier page.
 
+## 1.12.5 · 15 October 2026 · Rota: change an activity from the timeline
+
+- An activity on the **Plan** asked for "People at once", which read like how many swimmers or customers it takes. It now says **How many staff**, and a booking's form says the same.
+- Once an activity was on the timeline, the only way back into it was its name on the left, which did not look like something to press. Now pressing a covered stretch of the activity, or **Change the activity** in the box for someone on it, opens it again: change its times, its area, how many staff it needs, or remove it. On a phone, press the activity's name in the list.
+- Days that have come still ask for a reason, as before. Nothing changes in the rota itself.
+
 ## 1.12.4 · 15 October 2026 · New sites show in every module
 
 - A site added under **Admin > Sites** showed in the site picker and the swim school, but not in Incidents, Rota, Tasks, Training, Short courses, Stock, Purchasing or the Academy, or when choosing the sites a person works at. It was saved without belonging to LeisureWorld, and those lists only show LeisureWorld's sites.
