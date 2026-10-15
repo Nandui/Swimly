@@ -40,7 +40,7 @@ const needSchema = z.object({
   place: z.string().trim().max(60, "Keep the place under 60 characters."),
   start: z.string(),
   end: z.string(),
-  places: z.coerce.number().int().min(1, "It needs at least one person.").max(20, "Up to 20 people at once."),
+  places: z.coerce.number().int().min(1, "It needs at least one member of staff.").max(20, "Up to 20 staff at once."),
   note: z.string().trim().max(300, "Keep the note under 300 characters.").default(""),
   /** The area's lanes it takes; none for the whole area. */
   lanes: z.array(z.union([z.number(), z.string()])).max(20).default([]),
