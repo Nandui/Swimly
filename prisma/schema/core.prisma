@@ -331,6 +331,7 @@ model QualificationType {
   positions        PositionQualification[]
   academyTypes     AcademyCourseType[]
   rotaShifts       RotaShift[]
+  areaStaffing     SiteAreaStaffing[]
   rotaActivities   RotaActivity[]
   activityTypes    ActivityType[]
 
@@ -593,15 +594,37 @@ model SiteArea {
   /// How many lanes it has (owner request, 13 October 2026): a pool with lanes is booked whole
   /// or by lane on the rota. 0 for an area without lanes (a gym, reception).
   lanes      Int       @default(0)
+  /// When the area is open every day, in minutes from midnight (owner request, 16 October 2026):
+  /// its minimum staff apply then, and whenever anything is on in it. Both empty: only then.
+  openFrom   Int?
+  openUntil  Int?
   sortOrder  Int       @default(0)
   archivedAt DateTime?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
-  site Club @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  site     Club               @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  staffing SiteAreaStaffing[]
 
   @@unique([siteId, name])
   @@index([orgId])
+}
+
+/// The fewest staff an area needs while it is in use (owner request, 16 October 2026: "define a
+/// minimum of staffing for each area, and what type of staff that is"): one line per type, such as
+/// 2 holding a lifeguard qualification and 1 anyone. The rota shows any time it drops below.
+model SiteAreaStaffing {
+  id                  String  @id @default(cuid())
+  areaId              String
+  count               Int
+  /// The qualification they need to hold; empty for anyone.
+  qualificationTypeId String?
+  sortOrder           Int     @default(0)
+
+  area              SiteArea           @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  qualificationType QualificationType? @relation(fields: [qualificationTypeId], references: [id], onDelete: Restrict)
+
+  @@index([areaId])
 }
 
 /// A job in the organisation (owner decision, 8 October 2026): Lifeguard, Swim teacher,

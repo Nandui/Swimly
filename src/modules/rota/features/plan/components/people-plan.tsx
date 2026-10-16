@@ -38,7 +38,9 @@ type Ctx = { siteId: string; departmentId: string; date: string; dateLabel: stri
   /** Every department's activities and the site's areas, to put someone on any activity. */
   anyTypes?: TypeOption[]; areaList?: AreaLanes[] };
 /** An activity on the organisation's list, with its department. */
-export type TypeOption = { id: string; name: string; departmentId: string; departmentName: string };
+export type TypeOption = { id: string; name: string; departmentId: string; departmentName: string;
+  /** The qualification it needs, to offer it first for an area short of that type of staff. */
+  requiredTypeId?: string | null };
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? "");
 
 export function PeoplePlan({ people, ...ctx }: Ctx & { people: Person[] }) {
@@ -75,12 +77,12 @@ export function ShiftSheet({ person, onClose, ...ctx }: Ctx & { person: Person |
 
 /** Whether someone's day has something to look at, and that in a few words. */
 export function warned(p: Person) {
-  return p.rest.length > 0 || p.breakClashes.length > 0 || p.warnings.length > 0 || p.shift.parts.some((x) => x.unplaced.length);
+  return p.rest.length > 0 || p.breakClashes.some((c) => !c.covered) || p.warnings.some((w) => w !== "break") || p.shift.parts.some((x) => x.unplaced.length);
 }
 
 /** The first thing to look at on someone's day, in a few words. */
 export function checkLabel(p: Person) {
-  return p.rest.length ? "Under-18 rest" : p.breakClashes.length ? "Break needs cover" : p.shift.parts.some((x) => x.unplaced.length) ? "Breaks to place" : "To check";
+  return p.rest.length ? "Under-18 rest" : p.breakClashes.some((c) => !c.covered) ? "Break needs cover" : p.shift.parts.some((x) => x.unplaced.length) ? "Breaks to place" : "To check";
 }
 
 function summary(p: Person) {
@@ -204,7 +206,10 @@ function ShiftBody({ person: p, siteId, departmentId, date, dateLabel, live, can
               {unplaced.length ? <li className="pc-row"><span className="pc-row-body"><span className="pc-row-title">No free time for {unplaced.reduce((n, b) => n + b.minutes, 0)} minutes of breaks</span><span className="pc-row-hint">Place them yourself and cover that time.</span></span><span className="pc-row-trail"><Tag meta={ROTA_SHIFT_NOTE_META.noBreak} /></span></li> : null}
             </ul>
           ) : <p className="text-sm text-ui-muted-foreground">No break for a shift of 4 hours or less.</p>}
-          {p.breakClashes.map((c) => (
+          {p.breakClashes.filter((c) => c.covered).map((c) => (
+            <p key={`${c.start}${c.label}`} className="text-sm text-ui-muted-foreground">{`${clock(c.start)} to ${clock(c.end)}: ${c.label} keeps its minimum staff while they are on their break.`}</p>
+          ))}
+          {p.breakClashes.filter((c) => !c.covered).map((c) => (
             <Notice key={`${c.start}${c.label}`} tone="warning" title="Break during an activity">
               <span className="flex flex-col items-start gap-2">
                 <span>{`${clock(c.start)} to ${clock(c.end)} on ${c.label} needs cover while they are on their break.`}</span>

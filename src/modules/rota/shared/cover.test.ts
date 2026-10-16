@@ -60,7 +60,7 @@ test("breaks go into free time, and the shift says when there is none", () => {
   assert.deepEqual(free!.parts[0].breaks, [{ start: h("09:30"), end: h("09:45"), paid: false, pinned: false }], "5 hours: one 15-minute unpaid break, in the free quarter");
   assert.equal(free!.paidMinutes, 5 * 60 - 15);
   const full = dayShift([{ start: h("07:00"), end: h("14:00"), label: "Lifeguarding" }]);
-  assert.deepEqual(full!.parts[0].unplaced, [{ minutes: 15, paid: true }, { minutes: 30, paid: false }], "7 hours straight: both breaks have nowhere to go");
+  assert.deepEqual(full!.parts[0].unplaced.map(({ minutes, paid }) => ({ minutes, paid })), [{ minutes: 15, paid: true }, { minutes: 30, paid: false }], "7 hours straight: both breaks have nowhere to go");
   assert.equal(full!.paidMinutes, 7 * 60 - 30, "the unpaid break still comes off the hours");
 });
 

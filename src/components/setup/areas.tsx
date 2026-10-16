@@ -1,11 +1,14 @@
 "use client";
 
-import { ArchiveRestore, ArrowDown, ArrowUp, CirclePause, Pencil, Plus } from "lucide-react";
+import { useState } from "react";
+import { ArchiveRestore, ArrowDown, ArrowUp, CirclePause, Pencil, Plus, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
+import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { moveArea, saveArea, setAreaArchived } from "@/lib/setup/actions";
+import { moveArea, saveArea, saveAreaStaffing, setAreaArchived } from "@/lib/setup/actions";
+import { hhmm } from "@/lib/setup/area-staffing";
 
 /** Add an area to a site, or change one: its name and how many lanes it has. A rename reaches
  *  every record that uses it; lanes let the rota book a pool whole or by lane. */
@@ -55,5 +58,78 @@ export function MoveArea({ id, name, first, last }: { id: string; name: string; 
       <ActionButton ariaLabel={`Move ${name} up`} successMessage="Moved" disabled={first} run={() => moveArea(id, "up")}><ArrowUp aria-hidden="true" /></ActionButton>
       <ActionButton ariaLabel={`Move ${name} down`} successMessage="Moved" disabled={last} run={() => moveArea(id, "down")}><ArrowDown aria-hidden="true" /></ActionButton>
     </>
+  );
+}
+
+type Minimum = { count: number; typeId: string | null; typeName: string | null };
+
+/** An area's minimum staff (owner request, 16 October 2026): one line per type of staff, a
+ *  qualification they hold or anyone, and the daily hours it is open. The rota shows any time it
+ *  is in use (open, or with anything on in it) with fewer. */
+export function AreaStaffing({ area, qualifications }: {
+  area: { id: string; name: string; minimums: Minimum[]; openFrom: number | null; openUntil: number | null };
+  qualifications: { id: string; name: string }[];
+}) {
+  const start = area.minimums.length ? area.minimums : [{ count: 1, typeId: null, typeName: null }];
+  return (
+    <FormDialog
+      trigger={<Button variant="outline" size="icon" aria-label={`Minimum staff for ${area.name}`}><Users aria-hidden="true" /></Button>}
+      title={`Minimum staff for ${area.name}`}
+      description="The fewest staff it needs while it is in use. The rota highlights any time breaks or activities leave it with fewer, so someone can be put on."
+      width="sm:max-w-lg"
+      submitLabel="Save minimum"
+      successMessage="Minimum saved"
+      submit={(formData) => {
+        const keys = formData.getAll("line").map(String);
+        return saveAreaStaffing(area.id, {
+          lines: keys.map((k) => ({ count: Number(formData.get(`count-${k}`) ?? 0), typeId: String(formData.get(`type-${k}`) ?? "") })),
+          openFrom: String(formData.get("openFrom") ?? ""), openUntil: String(formData.get("openUntil") ?? ""),
+        });
+      }}
+    >
+      <StaffingLines id={`staffing-${area.id}`} start={start} qualifications={qualifications} />
+      <fieldset className="flex flex-col gap-2">
+        <legend className="text-sm font-medium">Open every day</legend>
+        <p className="text-sm text-ui-muted-foreground">Optional. Leave empty to check it only while something is on in it, such as a booking, a class or an activity.</p>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="From" htmlFor={`staffing-${area.id}-from`}><Input id={`staffing-${area.id}-from`} name="openFrom" type="time" step={300} defaultValue={hhmm(area.openFrom)} className="min-h-11" /></Field>
+          <Field label="Until" htmlFor={`staffing-${area.id}-until`}><Input id={`staffing-${area.id}-until`} name="openUntil" type="time" step={300} defaultValue={hhmm(area.openUntil)} className="min-h-11" /></Field>
+        </div>
+      </fieldset>
+    </FormDialog>
+  );
+}
+
+/** The lines of a minimum: how many, and which type of staff. Remove every line for no minimum. */
+function StaffingLines({ id, start, qualifications }: { id: string; start: Minimum[]; qualifications: { id: string; name: string }[] }) {
+  const [lines, setLines] = useState(() => start.map((m, i) => ({ key: String(i), ...m })));
+  const [next, setNext] = useState(start.length);
+  return (
+    <fieldset className="flex flex-col gap-3">
+      <legend className="text-sm font-medium">Staff it needs</legend>
+      {lines.length === 0 ? <p className="text-sm text-ui-muted-foreground">No minimum. Save to take it away, or add a line.</p> : null}
+      {lines.map((l, i) => (
+        <div key={l.key} className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto] items-end gap-3">
+          <input type="hidden" name="line" value={l.key} />
+          <Field label="How many" htmlFor={`${id}-count-${l.key}`}>
+            <Input id={`${id}-count-${l.key}`} name={`count-${l.key}`} type="number" inputMode="numeric" min={1} max={30} required defaultValue={l.count} className="min-h-11" />
+          </Field>
+          <Field label="Type of staff" htmlFor={`${id}-type-${l.key}`}>
+            <NativeSelect id={`${id}-type-${l.key}`} name={`type-${l.key}`} defaultValue={l.typeId ?? ""} className="min-h-11 w-full">
+              <NativeSelectOption value="">Anyone</NativeSelectOption>
+              {qualifications.map((q) => <NativeSelectOption key={q.id} value={q.id}>Holds {q.name}</NativeSelectOption>)}
+            </NativeSelect>
+          </Field>
+          <Button type="button" variant="ghost" size="icon" className="size-11" aria-label={`Remove line ${i + 1}`} onClick={() => setLines((all) => all.filter((x) => x.key !== l.key))}>
+            <Trash2 aria-hidden="true" />
+          </Button>
+        </div>
+      ))}
+      {lines.length < 8 ? (
+        <Button type="button" variant="outline" className="self-start" onClick={() => { setLines((all) => [...all, { key: String(next), count: 1, typeId: null, typeName: null }]); setNext((n) => n + 1); }}>
+          <Plus aria-hidden="true" />Add a type of staff
+        </Button>
+      ) : null}
+    </fieldset>
   );
 }
