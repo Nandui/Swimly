@@ -19,6 +19,7 @@ import { lanesLabel } from "@/modules/rota/shared/lanes";
 import { ROTA_DAY_META, activityIcon, qualificationShort } from "@/modules/rota/shared/meta";
 import { freeTime, needRows, personBlocks, type CoverSpan, type NeedRow } from "@/modules/rota/shared/plan-rows";
 import { duration } from "@/modules/rota/shared/shifts";
+import { minimumWords, type AreaStaffing, type StaffingSpan } from "@/modules/rota/shared/staffing";
 import { AnyActivity, OptionRow, ShiftSheet, checkLabel, warned, type TypeOption } from "@/modules/rota/features/plan/components/people-plan";
 import { MIN_SPAN, firstTick, panView, sameView, tickStep, ticks as ticksOf, zoomView, type View } from "@/modules/rota/features/plan/server/view";
 
@@ -61,6 +62,10 @@ type Props = {
   anyTypes: TypeOption[];
   /** The site's areas and their lanes, for a new activity's "where" (Admin, Areas). */
   areaList: AreaLanes[];
+  /** Areas with a minimum staff where this department has something on, and every one of them
+   *  that day (for "Show other departments"). */
+  staffing?: AreaStaffing[];
+  allStaffing?: AreaStaffing[];
 };
 
 /** A class block standing for a run of back-to-back classes with the same teacher (or nobody). */
@@ -126,14 +131,15 @@ const isOff = (b: Block) => b.kind === "on" && b.warnings.includes("off");
 const needsCover = (b: Block) => b.kind === "gap" || isOff(b);
 const ROW_WORDS: Record<NeedRow["kind"], string> = { activity: "Needed", booking: "Booking", classes: "Swim classes", booked: "Booked" };
 
-export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel, live, canChange, zones, groups, allGroups, people, hours, types, anyTypes, areaList }: Props) {
+export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel, live, canChange, zones, groups, allGroups, people, hours, types, anyTypes, areaList, staffing = [], allStaffing = [] }: Props) {
   const router = useRouter();
   const [others, setOthers] = useState(false);
   const shownGroups = others ? allGroups : groups;
+  const shownStaffing = others ? allStaffing : staffing;
   const rows = useMemo(() => needRows(shownGroups), [shownGroups]);
   const laneCount = useMemo(() => new Map(areaList.map((a) => [a.name.toLowerCase(), a.lanes])), [areaList]);
   const ourNeeds = useMemo(() => new Map(groups.flatMap((g) => g.needs.map((n) => [n.id, n] as [string, DayNeed]))), [groups]);
-  const wins = useMemo(() => windows([...rows, ...people.flatMap((p) => p.shift.parts)]), [rows, people]);
+  const wins = useMemo(() => windows([...rows, ...people.flatMap((p) => p.shift.parts), ...shownStaffing.flatMap((a) => a.spans)]), [rows, people, shownStaffing]);
   const bounds = wins.day;
   const [view, setShown] = useState<View>({ from: bounds.from, to: bounds.to });
   /** Set once someone zooms or moves the day, so only their choice is kept, never the start. */
@@ -332,6 +338,42 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
       onClick={() => openGap(row.group, b, [b.classRef!])}>{words}</Button>;
   };
 
+  /** An area short of its minimum staff: who could join it then, best fit for the type of staff
+   *  it is short of first, put on an activity there (one needing that qualification first, then
+   *  what is already on in the area). */
+  const openAreaGap = (a: AreaStaffing, c: StaffingSpan) => {
+    const line = [...c.short].sort((x, y) => Number(!x.typeId) - Number(!y.typeId))[0];
+    const here = new Set(allGroups.filter((g) => g.zoneKey === a.key).map((g) => g.typeId));
+    const rank = (t: TypeOption) => (line.typeId && t.requiredTypeId === line.typeId ? 0 : here.has(t.id) ? 1 : 2) * 2 + (t.departmentId === departmentId ? 0 : 1);
+    const offer = [...anyTypes].sort((x, y) => rank(x) - rank(y) || x.name.localeCompare(y.name));
+    if (!canChange || !offer.length) return;
+    setSelected(`${a.key}|${c.start}`);
+    setGap({ siteId, date, typeId: offer[0].id, what: `${a.name}: ${c.have} of ${c.want} staff`, dateLabel, start: c.start, end: c.end,
+      requiredName: line.typeId ? line.typeName : null, needId: null, place: null, classRefs: [], replace: null,
+      area: { place: a.name, requiredTypeId: line.typeId, types: offer.map((t) => ({ id: t.id, name: t.departmentId === departmentId ? t.name : `${t.name} (${t.departmentName})` })) } });
+  };
+  /** A stretch of an area's day: green at its minimum, amber where it is short and of what. */
+  const staffingFor = (a: AreaStaffing, c: StaffingSpan, key: string) => {
+    const pos = at(c.start, c.end);
+    if (!pos) return null;
+    const density = densityOf(pos.px);
+    const short = c.short.length > 0;
+    const names = people.filter((p) => c.userIds.includes(p.userId)).map((p) => firstName(p.name));
+    const missing = minimumWords(c.short, qualificationShort);
+    const label = `${a.name}, ${clock(c.start)} to ${clock(c.end)}: ${c.have} of ${c.want} minimum staff${short ? `, short of ${missing}` : ""}${names.length ? ` (${names.join(", ")})` : ""}${short && canChange && anyTypes.length ? ". Choose someone" : ""}`;
+    const words = density === "icon" ? <span className="pc-block-title tabular-nums">{c.have}/{c.want}</span> : (
+      <span className="pc-block-body">
+        <span className="pc-block-title tabular-nums">{c.have}/{c.want}{short ? ` · needs ${missing}` : ""}</span>
+        {density === "full" && names.length ? <span className="pc-block-hint">{names.join(", ")}</span> : null}
+      </span>
+    );
+    const common = { className: "pc-block rota-cover", "data-block": short ? "cover" : "done", "data-ok": short ? undefined : "", "data-density": density, style: pos.style, title: label };
+    if (short && canChange && anyTypes.length) {
+      return <Button key={key} type="button" variant="link" {...common} aria-label={label} aria-pressed={selected === `${a.key}|${c.start}`} onClick={() => openAreaGap(a, c)}>{words}</Button>;
+    }
+    return <span key={key} {...common} role="img" aria-label={label}>{words}</span>;
+  };
+
   /** Open one of this department's activities to change its time, area or how many staff, or
    *  take it off the day, from wherever it shows on the timeline. */
   const changeActivity = (need: DayNeed, trigger: ReactNode, key?: string) => (
@@ -401,7 +443,7 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
 
   const person = people.find((p) => p.userId === openPerson) ?? null;
   const freePerson = free ? people.find((p) => p.userId === free.userId) ?? null : null;
-  const gapCount = groups.reduce((n, g) => n + g.gapCount, 0);
+  const gapCount = groups.reduce((n, g) => n + g.gapCount, 0) + staffing.reduce((n, a) => n + a.shortCount, 0);
   const addHere = (name: string) => canChange && types.length ? (
     <NeedDialog siteId={siteId} date={date} live={live} types={types} areas={areaList} place={name}
       trigger={<Button type="button" variant="ghost" size="icon" aria-label={`Add an activity in ${name}`}><Plus aria-hidden="true" /></Button>} />
@@ -447,6 +489,18 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
         </div>
 
         <h3 className="rota-tl-sec">What needs people<span className="rota-count" data-gaps={gapCount ? "" : undefined}>{gapCount ? `${gapCount} ${gapCount === 1 ? "gap" : "gaps"}` : "Covered"}</span></h3>
+        {shownStaffing.map((a) => (
+          <div key={a.key} className="rota-tl-row">
+            <div className="rota-tl-label">
+              <span className="rota-tl-name"><MapPin aria-hidden="true" /><span>{a.name}</span></span>
+              <small>At least {minimumWords(a.minimums, qualificationShort)}</small>
+              <small className="rota-tl-kind">Minimum staff{a.shortCount ? ` · ${a.shortCount} short` : a.spans.length ? "" : " · not in use"}</small>
+            </div>
+            <div className="rota-tl-track" data-row="need" style={gridStyle} {...dragHandlers}>
+              {a.spans.map((c, i) => staffingFor(a, c, `${a.key}-${i}`))}
+            </div>
+          </div>
+        ))}
         {rows.map((row) => row.kind === "classes" ? (
           // Each swim class on its own, straight from the swim school, ready to click and staff.
           <section key={row.key} aria-label={`${row.label}, ${row.group.place}`} className="rota-tl-band">
@@ -467,7 +521,7 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
             </div>
           </div>
         ))}
-        {!rows.length ? (
+        {!rows.length && !shownStaffing.length ? (
           <div className="rota-tl-row">
             <span aria-hidden="true" />
             <p className="text-sm text-ui-muted-foreground">Nothing needs people yet. Add what the day needs with Add activity; bookings and swim classes appear here on their own.</p>
@@ -545,7 +599,7 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
 
         <div className="rota-tl-key">
           <span><i className="pc-block rota-cover" data-block="done" data-ok="" />Enough people</span>
-          <span><i style={{ background: "var(--pc-block-cover)" }} />Short of people</span>
+          <span><i style={{ background: "var(--pc-block-cover)" }} />Short of people or of an area&apos;s minimum</span>
           <span><i style={{ background: "var(--pc-block-next)" }} />Activity</span>
           <span><i style={{ background: "var(--pc-block-assess)" }} />Booking</span>
           <span><i style={{ background: "var(--pc-block-now)" }} />Swim classes</span>
@@ -558,6 +612,25 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
       </div>
 
       <div className="rota-agenda">
+        {shownStaffing.some((a) => a.shortCount) ? (
+          <section aria-label="Areas short of their minimum staff" className="flex flex-col gap-3">
+            <div className="rota-agenda-head">
+              <span className="pc-tile-icon" aria-hidden="true"><TriangleAlert /></span>
+              <span className="flex min-w-0 flex-1 flex-col"><span className="font-semibold">Short of minimum staff</span>
+                <span className="text-xs text-ui-muted-foreground">Areas in use with fewer staff than they need</span></span>
+            </div>
+            <ul className="pc-rows">
+              {shownStaffing.flatMap((a) => a.spans.filter((c) => c.short.length).map((c) => {
+                const text = <span className="pc-row-body"><span className="pc-row-title">{a.name}, {clock(c.start)} to {clock(c.end)}</span>
+                  <span className="pc-row-hint">{c.have} of {c.want} · needs {minimumWords(c.short, qualificationShort)}</span></span>;
+                const trail = <span className="pc-row-trail"><Tag meta={ROTA_DAY_META.gaps} label="Short" />{canChange && anyTypes.length ? <ChevronRight aria-hidden="true" className="pc-row-chevron" /> : null}</span>;
+                return <li key={`${a.key}-${c.start}`}>{canChange && anyTypes.length
+                  ? <Button type="button" variant="outline" className={ROW} data-first="" onClick={() => openAreaGap(a, c)} aria-label={`${a.name}, ${clock(c.start)} to ${clock(c.end)}, short of ${minimumWords(c.short, qualificationShort)}. Choose someone`}>{text}{trail}</Button>
+                  : <div className="pc-row" data-first="">{text}{trail}</div>}</li>;
+              }))}
+            </ul>
+          </section>
+        ) : null}
         {zones.map((z) => (
           <section key={z.key} aria-label={z.name} className="flex flex-col gap-3">
             <div className="rota-agenda-head">

@@ -26,7 +26,7 @@ const day = buildDay({
 test("reads by area in the site's order, each with its activities; classes join the area their location names", () => {
   assert.deepEqual(day.zones.map((z) => [z.name, z.groups.map((g) => [g.name, g.lanes.length])]), [
     ["Main pool", [["Lifeguarding", 2]]],
-    ["Learner pool", [["Lifeguarding", 1], ["Teaching", 3]]],
+    ["Learner pool", [["Lifeguarding", 1], ["Swim classes", 3]]],
   ], "a lane per teacher, then the classes nobody teaches");
   assert.equal(day.zones[1].gapCount, 1 + 2, "an area's gaps are its activities' gaps");
 });
@@ -82,9 +82,9 @@ test("each person's shift comes from what they are on, in start order", () => {
   assert.deepEqual(day.people[1].warnings, ["missing", "overlap"]);
 });
 
-test("the swim classes fill the day by themselves, with no activity that takes them", () => {
-  // Owner request, 16 October 2026: no booking or activity to set up for the swim school.
-  const bare = buildDay({ date: "2026-10-23", types: [types[0]], names, needs: [], assignments: [], classes: [cls("c1", "lauren", "16:00", "16:30"), cls("c2", null, "16:30", "17:00")] });
+test("the swim classes fill the day by themselves; an old activity that took them is ignored", () => {
+  // Owner decisions, 16 October 2026: no booking or activity takes the swim school any more.
+  const bare = buildDay({ date: "2026-10-23", types, names, needs: [], assignments: [], classes: [cls("c1", "lauren", "16:00", "16:30"), cls("c2", null, "16:30", "17:00")] });
   assert.deepEqual(bare.groups.map((g) => [g.name, g.departmentId, g.fromClasses, g.gapCount]), [["Swim classes", ANY_DEPARTMENT, true, 1]]);
   assert.deepEqual(bare.people.map((p) => [p.name, p.activities]), [["Lauren Kelly", ["Stage 3"]]]);
 });

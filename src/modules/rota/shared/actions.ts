@@ -332,7 +332,6 @@ export async function putOnActivity(input: PutOnInput, changeInput: ChangeInput 
 export async function planTeacher(input: { siteId: string; date: string; classRef: string; userId: string | null; departmentId?: string }, changeInput: ChangeInput = {}): Promise<ActionResult> {
   const change = changeSchema.parse(changeInput);
   if (!isDateOnly(input.date)) return fail("Choose a day.");
-  const actor = await currentActor();
   const departmentId = input.departmentId ?? ANY_DEPARTMENT;
   const at = input.userId ? await allowedForPerson(input.siteId, input.date, departmentId, input.userId) : await allowedFor(input.siteId, input.date, departmentId);
   if (!at.ok) return fail(at.error);
@@ -402,6 +401,13 @@ export async function whoCanFill(input: { siteId: string; date: string; start: n
   if (!isDateOnly(input.date)) return [];
   const type = await activityTypeById(input.typeId);
   return fitsFor({ siteId: input.siteId, date: input.date, start: input.start, end: input.end, requiredTypeId: type?.requiredTypeId ?? null });
+}
+
+/** "Who can fill it" for an area short of its minimum staff: best fit for the type of staff it
+ *  is short of (a qualification, or anyone). Reading, so View is enough. */
+export async function whoCanFillArea(input: { siteId: string; date: string; start: number; end: number; requiredTypeId: string | null }) {
+  if (!isDateOnly(input.date)) return [];
+  return fitsFor({ siteId: input.siteId, date: input.date, start: input.start, end: input.end, requiredTypeId: input.requiredTypeId });
 }
 
 /* ---------- Copy and share ---------- */

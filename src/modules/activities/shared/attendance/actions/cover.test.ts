@@ -1,3 +1,4 @@
+import { plannedDouble } from "@/test/planned-double";
 import { directoryDouble } from "@/test/directory-double";
 import assert from "node:assert/strict";
 import { test } from "node:test";
@@ -53,7 +54,7 @@ function fixture() {
     "src/modules/activities/shared/attendance/actions/cover.ts",
     { "@/lib/directory": directoryDouble({ people: [{ id: "scheduled", name: "Scheduled Teacher" }] }),
       // Nobody planned on the rota for these dates: the class's own instructor teaches.
-      "@/modules/activities/shared/courses/planned": { plannedTeachers: async () => new Map() },
+      "@/modules/activities/shared/courses/planned": plannedDouble(),
       "@/lib/authz": {
         requirePermission: async () => ({
           user: { id: actor, name: actor, permissions: [...permissions] },

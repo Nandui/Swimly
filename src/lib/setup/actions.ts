@@ -108,6 +108,50 @@ export async function saveArea(siteId: string, id: string | null, input: { name:
   return ok();
 }
 
+const clockTime = z.string().trim().max(5).refine((v) => !v || /^([01]\d|2[0-3]):[0-5]\d$/.test(v), "Use times like 07:00.");
+const staffingSchema = z.object({
+  lines: z.array(z.object({
+    count: z.coerce.number().int("Give a whole number of staff.").min(1, "Give at least 1 staff, or remove the line.").max(30, "Up to 30 staff."),
+    typeId: z.string().trim().max(64).default("").transform((v) => v || null),
+  })).max(8, "Up to 8 lines."),
+  openFrom: clockTime.default(""),
+  openUntil: clockTime.default(""),
+});
+export type AreaStaffingInput = z.input<typeof staffingSchema>;
+const minutesOf = (v: string) => (v ? Number(v.slice(0, 2)) * 60 + Number(v.slice(3, 5)) : null);
+
+/** Set an area's minimum staff and the daily hours it is open (owner request, 16 October 2026):
+ *  "define a minimum of staffing for each area, and what type of staff that is". The rota then
+ *  shows any time the area is in use with fewer. No lines takes the minimum away. */
+export async function saveAreaStaffing(id: string, input: AreaStaffingInput): Promise<ActionResult> {
+  const session = await requirePermission("setup.areas");
+  const orgId = session.user.orgId;
+  const parsed = staffingSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const { lines } = parsed.data;
+  const openFrom = minutesOf(parsed.data.openFrom), openUntil = minutesOf(parsed.data.openUntil);
+  if ((openFrom === null) !== (openUntil === null)) return fail("Give both opening times, or leave both empty.");
+  if (openFrom !== null && openUntil !== null && openUntil <= openFrom) return fail("It has to close after it opens, on the same day.");
+  const area = await prisma.siteArea.findFirst({ where: { id, orgId: orgId ?? undefined }, select: { name: true, siteId: true, site: { select: { name: true } } } });
+  if (!area) return fail("That area no longer exists.");
+  const typeIds = [...new Set(lines.flatMap((l) => (l.typeId ? [l.typeId] : [])))];
+  const types = typeIds.length ? await prisma.qualificationType.findMany({ where: { id: { in: typeIds }, orgId: orgId ?? undefined }, select: { id: true, name: true } }) : [];
+  if (types.length !== typeIds.length) return fail("That qualification is no longer offered.");
+  if (new Set(lines.map((l) => l.typeId ?? "")).size !== lines.length) return fail("Each type of staff once: add to its number instead.");
+  const name = new Map(types.map((t) => [t.id, t.name]));
+  const words = lines.length ? lines.map((l) => `${l.count} ${l.typeId ? name.get(l.typeId) : "anyone"}`).join(", ") : "no minimum";
+  const hours = openFrom !== null && openUntil !== null ? `, open ${parsed.data.openFrom} to ${parsed.data.openUntil}` : "";
+  await prisma.$transaction(async (tx) => {
+    await tx.siteAreaStaffing.deleteMany({ where: { areaId: id } });
+    if (lines.length) await tx.siteAreaStaffing.createMany({ data: lines.map((l, i) => ({ areaId: id, count: l.count, qualificationTypeId: l.typeId, sortOrder: i })) });
+    await tx.siteArea.update({ where: { id }, data: { openFrom, openUntil } });
+    await logAudit({ actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: "update", entity: "SiteArea", entityId: id, clubId: area.siteId,
+      summary: `Set ${area.site.name}'s area ${area.name} to ${words}${hours}` }, tx);
+  });
+  refresh("/areas");
+  return ok();
+}
+
 /** Archive or restore an area. Archived ones are no longer offered; records that use them keep the name. */
 export async function setAreaArchived(id: string, archived: boolean): Promise<ActionResult> {
   const session = await requirePermission("setup.areas");

@@ -57,7 +57,7 @@ test("by person: only the classes they teach that day; another site has none", a
   assert.deepEqual(await list({ siteIds: ["club_bishopstown"], from: MON, to: "2026-10-11" }), []);
 });
 
-test("a teacher planned on the rota teaches that date; the usual instructor clears the plan", async () => {
+test("a teacher planned on the rota teaches that date; the plan is kept whoever it names", async () => {
   const by = { id: "tess", name: "tess" };
   const MON2 = "2026-10-19";
   assert.deepEqual(await plan({ ref: "seam-mon", siteId: "club_churchfield", date: MON2, userId: "cole", by }), { ok: true });
@@ -69,7 +69,20 @@ test("a teacher planned on the rota teaches that date; the usual instructor clea
   assert.deepEqual(day.map((c) => [c.userId, c.planned]), [[null, true]], "planned with nobody is a gap");
   await plan({ ref: "seam-mon", siteId: "club_churchfield", date: MON2, userId: "tess", by });
   day = await list({ siteIds: ["club_churchfield"], from: MON2, to: MON2 });
-  assert.deepEqual(day.map((c) => [c.userId, c.planned]), [["tess", false]], "back to the usual instructor, no plan kept");
+  assert.deepEqual(day.map((c) => [c.userId, c.planned]), [["tess", true]], "the stored instructor chosen on the Plan is a plan too");
+});
+
+test("after the grace day only the Plan names a class's teacher", async () => {
+  // Owner decision, 16 October 2026 (two weeks' grace): from 2 November a class nothing is
+  // planned for has no teacher, whatever instructor is stored on it.
+  const by = { id: "tess", name: "tess" };
+  const LATER = "2026-11-02";
+  let day = await list({ siteIds: ["club_churchfield"], from: LATER, to: LATER });
+  assert.deepEqual(day.map((c) => [c.ref, c.userId, c.planned]), [["seam-mon", null, false]]);
+  assert.deepEqual(await list({ userIds: ["tess"], from: LATER, to: LATER }), [], "not the stored instructor's class any more");
+  await plan({ ref: "seam-mon", siteId: "club_churchfield", date: LATER, userId: "tess", by });
+  day = await list({ siteIds: ["club_churchfield"], from: LATER, to: LATER });
+  assert.deepEqual(day.map((c) => [c.userId, c.planned]), [["tess", true]]);
 });
 
 test("a class that has started, is cancelled or does not run that day cannot be planned", async () => {

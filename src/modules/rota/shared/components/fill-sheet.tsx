@@ -6,12 +6,13 @@ import { ArrowLeftRight, Plus, TriangleAlert } from "lucide-react";
 import { Avatar, AvatarFallback, initials } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
+import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/shadcn/sheet";
 import { Field } from "@/components/form-dialog";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { Tag } from "@/components/ui-kit/tag";
 import { ChangeFields, changeOf } from "@/modules/rota/shared/components/change-fields";
-import { assign, handOver, planTeacher, whoCanFill } from "@/modules/rota/shared/actions";
+import { assign, handOver, planTeacher, putOnActivity, whoCanFill, whoCanFillArea } from "@/modules/rota/shared/actions";
 import { clock, parseClock } from "@/modules/rota/shared/constants";
 import type { Fit } from "@/modules/rota/shared/fit";
 import { ROTA_FIT_META, qualificationShort } from "@/modules/rota/shared/meta";
@@ -45,6 +46,10 @@ export type GapRef = {
    *  and out" of an activity): who keeps the rest, and their own time on it (`from`-`to`), which
    *  the cover must stay inside. `start`-`end` is the cover suggested first. */
   handOver?: { assignmentId: string; userId: string; name: string; from: number; to: number } | null;
+  /** An area short of its minimum staff (owner request, 16 October 2026): the person chosen goes on
+   *  one of `types` there for the time, `typeId` first. Best fit is for the type of staff it is
+   *  short of (`requiredTypeId`, or anyone). */
+  area?: { place: string; requiredTypeId: string | null; types: { id: string; name: string }[] } | null;
 };
 
 /** The sheet's gap for handing part of someone's time on an activity to another person: the
@@ -76,7 +81,7 @@ export function FillSheet({ gap, live, onClose }: { gap: GapRef | null; live: bo
     <Sheet open={!!gap} onOpenChange={(open) => { if (!open) onClose(); }}>
       <SheetContent portalClassName="turnfin-module" className="flex w-full flex-col gap-0 overflow-y-auto sm:max-w-md">
         <SheetHeader className="p-6 pb-4">
-          <SheetTitle>{gap?.handOver ? `Who covers ${gap.handOver.name.split(" ")[0]}` : gap?.classRefs.length ? "Who teaches it" : "Who can fill it"}</SheetTitle>
+          <SheetTitle>{gap?.handOver ? `Who covers ${gap.handOver.name.split(" ")[0]}` : gap?.classRefs.length ? "Who teaches it" : gap?.area ? `Who can join ${gap.area.place}` : "Who can fill it"}</SheetTitle>
           <SheetDescription>Best fit first: qualified, free, then fewest hours this week. Warnings never stop you.{gap?.classRefs.length ? " This changes that day only, and the swim school follows it." : ""}</SheetDescription>
         </SheetHeader>
         {/* A fresh body for each gap, so its list, search and error start empty. */}
@@ -94,7 +99,8 @@ function FillBody({ gap, live, onClose }: { gap: GapRef; live: boolean; onClose:
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     let stale = false;
-    whoCanFill({ siteId: gap.siteId, date: gap.date, start: gap.start, end: gap.end, typeId: gap.typeId }).then((list) => { if (!stale) setFits(list); });
+    (gap.area ? whoCanFillArea({ siteId: gap.siteId, date: gap.date, start: gap.start, end: gap.end, requiredTypeId: gap.area.requiredTypeId })
+      : whoCanFill({ siteId: gap.siteId, date: gap.date, start: gap.start, end: gap.end, typeId: gap.typeId })).then((list) => { if (!stale) setFits(list); });
     return () => { stale = true; };
   }, [gap]);
 
@@ -106,7 +112,9 @@ function FillBody({ gap, live, onClose }: { gap: GapRef; live: boolean; onClose:
     const to = parseClock(String(data.get("to") ?? clock(gap.end))) ?? gap.end;
     start(async () => {
       setError(null);
-      const results = gap.handOver
+      const results = gap.area
+        ? (userId ? [await putOnActivity({ siteId: gap.siteId, date: gap.date, typeId: String(data.get("typeId") ?? gap.typeId), place: gap.area.place, lanes: [], start: clock(from), end: clock(to), userId }, change)] : [])
+        : gap.handOver
         ? (userId ? [await handOver(gap.handOver.assignmentId, { userId, start: clock(from), end: clock(to) }, change)] : [])
         : gap.classRefs.length
         ? await teachAll(gap, userId, change)
@@ -137,6 +145,13 @@ function FillBody({ gap, live, onClose }: { gap: GapRef; live: boolean; onClose:
               ) : null}
               {gap.replace ? <p className="text-sm">{gap.replace.name} is off. The person you choose takes their place{gap.classRefs.length ? "" : " for this time"}.</p> : null}
               {gap.handOver ? <p className="text-sm">The person you choose covers this time on the same place. {gap.handOver.name.split(" ")[0]} keeps the time before and after it, so the activity stays covered.</p> : null}
+              {gap.area ? (
+                <Field label="Put them on" htmlFor="rota-fill-type" hint={`It is added to ${gap.area.place} for the time, with them on it.`}>
+                  <NativeSelect id="rota-fill-type" name="typeId" defaultValue={gap.typeId} className="min-h-11 w-full">
+                    {gap.area.types.map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.name}</NativeSelectOption>)}
+                  </NativeSelect>
+                </Field>
+              ) : null}
               {gap.classRefs.length || gap.replace ? null : (
                 <div className="grid grid-cols-2 gap-4">
                   <Field label={gap.handOver ? "Cover from" : "From"} htmlFor="rota-fill-from"><Input id="rota-fill-from" name="from" type="time" step={300} defaultValue={clock(gap.start)} min={clock(bounds.from)} max={clock(bounds.to)} className="min-h-11" /></Field>

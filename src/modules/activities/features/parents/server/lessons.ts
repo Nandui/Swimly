@@ -1,6 +1,6 @@
 import { liveSiteIds, withSites, type SiteRef, type StaffRef } from "@/lib/directory";
 import { withClassRefs } from "@/modules/activities/shared/courses/refs";
-import { dayTeacherId } from "@/modules/activities/shared/courses/planned";
+import { dayTeacherId } from "@/modules/activities/shared/courses/day-teacher";
 import type { ParentAccount, Prisma } from "@/generated/prisma/client";
 import { parseDateOnly, today, weekdayOf } from "@/lib/format";
 import { requireChild } from "@/modules/activities/shared/parents/children";

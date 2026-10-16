@@ -190,10 +190,34 @@ and two 15 paid, by the length of each part of a shift. **Under-18s** (Protectio
 Persons (Employment) Act 1996) get at least 30 minutes unpaid after 4.5 hours at 16 and 17,
 or 4 hours under 16 (`youngBand`, from the optional date of birth; the rota reads only the
 band). Breaks are placed on quarter hours in time the person has nothing on, aimed at the
-middle (one), a third and three fifths (two), or quarters (three). A break never takes
-someone off an activity: with no free time, the shift says so and the planner leaves a gap
-(which then needs cover) or the duty manager arranges it on the day. Unpaid breaks come off
-the paid hours whether placed or not.
+middle (one), a third and three fifths (two), or quarters (three). With no free time, a
+break is suggested during the person's activity only where that area has a **minimum staff**
+(below): at the time the area stays at its minimum without them, else where it is least short,
+so the gap shows. Elsewhere a break never takes someone off an activity: the shift says
+"Breaks to place" and the planner leaves a gap (which then needs cover) or the duty manager
+arranges it on the day. Unpaid breaks come off the paid hours whether placed or not.
+
+## Minimum staff for each area (owner request, 16 October 2026)
+
+"Define a minimum of staffing for each area, and what type of staff that is, so when planning
+breaks (and activities), if one area needs to be in use and creates a gap, that should be
+highlighted so a staff member can be assigned." Admin, Areas sets each area's minimum as lines
+of how many and which type of staff (`SiteAreaStaffing`: a qualification they hold, or anyone),
+and optional daily opening hours (`SiteArea.openFrom`, `openUntil`). An area is **in use** while
+anything is on in it (an activity, a booking, a swim class, another module's session) and
+through its opening hours. Everyone on something in it counts there, unless they are off or on a
+break; a qualified line counts only people holding it in date, matched so a lifeguard is never
+spent on "anyone" while a lifeguard place is empty (`shared/staffing.ts`, pure, tested).
+
+`buildDay` returns `staffing`: each area with a minimum, stretch by stretch, with how many of
+the places are filled and which lines are short. The Plan shows a row per area (where the
+department has something on, or every area with "Show other departments") above the
+activities: green at its minimum, amber where short. An amber stretch opens **Who can join**:
+best fit for the type of staff it is short of, put on an activity there for the time
+(`putOnActivity`; one needing that qualification first). Short stretches count as gaps on the
+day and the week. Today lists the areas short for the rest of the day with the best free and
+suited people. A break during an activity in an area that keeps its minimum is marked covered
+and needs nobody; otherwise "Find cover for the break" stays.
 
 ## Shifts first (owner decision, 8 October 2026)
 
