@@ -385,9 +385,16 @@ test("swim classes are Teaching; the rota plans their teacher through the swim s
   let plan = await data.planWeek({ site: churchfield, day, dept: "d-pool" });
   const teaching = plan.day!.groups.find((g) => g.fromClasses)!;
   assert.deepEqual([teaching.name, teaching.place, teaching.gapCount], ["Teaching", "Learner pool", 1]);
-  assert.equal((await actions.planTeacher({ siteId: churchfield, date: day, classRef: "c2", userId: "lee" })).ok, true);
+  assert.equal((await actions.planTeacher({ siteId: churchfield, date: day, classRef: "c2", userId: "lee", departmentId: "d-pool" })).ok, true);
   plan = await data.planWeek({ site: churchfield, day, dept: "d-pool" });
   assert.equal(plan.day!.groups.find((g) => g.fromClasses)!.gapCount, 0);
+  // Given from the Plan, the class goes on their shift there: a new one holding Lee's run of classes
+  // (Stage 1 is theirs already), then stretched by the next class.
+  const shifts = () => fixture.prisma.rotaPlanShift.findMany({ where: { userId: "lee", siteId: churchfield, date: new Date(`${day}T00:00:00Z`) }, select: { departmentId: true, startMinutes: true, endMinutes: true } });
+  assert.deepEqual(await shifts(), [{ departmentId: "d-pool", startMinutes: 960, endMinutes: 1020 }]);
+  classes.push({ source: "activities.classes", userId: null, siteId: churchfield, date: day, startMinutes: 1020, endMinutes: 1050, label: "Stage 3, Learner pool", ref: "c3", title: "Stage 3", place: "Learner pool" });
+  assert.equal((await actions.planTeacher({ siteId: churchfield, date: day, classRef: "c3", userId: "lee", departmentId: "d-pool" })).ok, true);
+  assert.deepEqual(await shifts(), [{ departmentId: "d-pool", startMinutes: 960, endMinutes: 1050 }]);
   as("sam", [at("rota.manage", bishopstown)]);
   assert.equal((await actions.planTeacher({ siteId: churchfield, date: day, classRef: "c2", userId: null })).ok, false, "another site's duty manager");
   classes.length = 0;

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { buildDay, dayGaps, type DayType } from "@/modules/rota/shared/day";
+import { ANY_DEPARTMENT, buildDay, dayGaps, type DayType } from "@/modules/rota/shared/day";
 
 /** Invented site, people and classes. */
 const h = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3));
@@ -82,9 +82,11 @@ test("each person's shift comes from what they are on, in start order", () => {
   assert.deepEqual(day.people[1].warnings, ["missing", "overlap"]);
 });
 
-test("no teaching activity on the list means the classes stay off the rota", () => {
-  const bare = buildDay({ date: "2026-10-23", types: [types[0]], names, needs: [], assignments: [], classes: [cls("c1", "lauren", "16:00", "16:30")] });
-  assert.deepEqual(bare.groups, []);
+test("the swim classes fill the day by themselves, with no activity that takes them", () => {
+  // Owner request, 16 October 2026: no booking or activity to set up for the swim school.
+  const bare = buildDay({ date: "2026-10-23", types: [types[0]], names, needs: [], assignments: [], classes: [cls("c1", "lauren", "16:00", "16:30"), cls("c2", null, "16:30", "17:00")] });
+  assert.deepEqual(bare.groups.map((g) => [g.name, g.departmentId, g.fromClasses, g.gapCount]), [["Swim classes", ANY_DEPARTMENT, true, 1]]);
+  assert.deepEqual(bare.people.map((p) => [p.name, p.activities]), [["Lauren Kelly", ["Stage 3"]]]);
 });
 
 test("someone on a planned shift: the day's gaps inside it they could take, and why not", () => {

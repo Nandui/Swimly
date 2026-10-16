@@ -71,9 +71,12 @@ export async function myDays(userId: string, days = 28) {
     if (a.updatedAt > shared || a.createdAt > shared) d.changed = true;
   }
   for (const c of classes) {
-    if (!teaching || !sharedAt(c.siteId, teaching.departmentId, c.date)) continue;
+    // Without an activity that takes the classes, a class shows once the department whose shift
+    // holds it has shared that week (owner request, 16 October 2026: classes need no activity).
+    const holder = teaching?.departmentId ?? planned.find((p) => p.siteId === c.siteId && p.date.toISOString().slice(0, 10) === c.date && p.startMinutes < c.endMinutes && c.startMinutes < p.endMinutes)?.departmentId;
+    if (!holder || !sharedAt(c.siteId, holder, c.date)) continue;
     const d = dayOf(c.date, c.siteId, sites.find((s) => s.id === c.siteId)?.name ?? "");
-    d.items.push({ start: c.startMinutes, end: c.endMinutes, label: `${teaching.name}: ${c.title ?? c.label}`, icon: teaching.icon, place: c.place ?? "", needs: null, problem: null });
+    d.items.push({ start: c.startMinutes, end: c.endMinutes, label: `${teaching?.name ?? "Swim class"}: ${c.title ?? c.label}`, icon: teaching?.icon ?? "teaching", place: c.place ?? "", needs: null, problem: null });
   }
   for (const p of planned) {
     const date = p.date.toISOString().slice(0, 10);
