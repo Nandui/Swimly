@@ -76,8 +76,8 @@ test("each person's shift comes from what they are on, in start order", () => {
   assert.deepEqual(day.people.map((p) => [p.name, p.shift.start, p.shift.end, p.activities]), [
     ["Aoife Byrne", h("07:00"), h("14:00"), ["Lifeguarding"]],
     ["Ciara Murphy", h("07:00"), h("15:00"), ["Lifeguarding"]],
-    ["Lauren Kelly", h("16:00"), h("16:30"), ["Teaching"]],
-    ["Róisín Kelly", h("16:00"), h("16:30"), ["Teaching"]],
+    ["Lauren Kelly", h("16:00"), h("16:30"), ["Stage 3"]],
+    ["Róisín Kelly", h("16:00"), h("16:30"), ["Stage 3"]],
   ]);
   assert.deepEqual(day.people[1].warnings, ["missing", "overlap"]);
 });

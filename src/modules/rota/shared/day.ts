@@ -204,7 +204,7 @@ export function buildDay(input: {
       const lanes = teachers.flatMap((who) => intoLanes(classes.filter((c) => c.userId === who).map((c) => ({ start: c.startMinutes, end: c.endMinutes, key: c.userId, c }))));
       for (const lane of lanes) {
         const blocks = lane.map(({ c }): Block => {
-          if (c.userId) add(c.userId, { start: c.startMinutes, end: c.endMinutes, label: teaching.name });
+          if (c.userId) add(c.userId, { start: c.startMinutes, end: c.endMinutes, label: c.title || teaching.name });
           return { ...blank, kind: c.userId ? "on" : "gap", start: c.startMinutes, end: c.endMinutes, userId: c.userId, name: name(c.userId), classRef: c.ref, detail: c.title, warnings: [] };
         });
         g.lanes.push(blocks);
@@ -271,7 +271,7 @@ export function buildDay(input: {
       if (b.userId !== userId || b.kind !== "on") continue;
       for (const x of placed) if (x.start < b.end && b.start < x.end) {
         if (!b.warnings.includes("break")) b.warnings.push("break");
-        breakClashes.push({ start: Math.max(x.start, b.start), end: Math.min(x.end, b.end), label: `${g.name} in ${g.place}`,
+        breakClashes.push({ start: Math.max(x.start, b.start), end: Math.min(x.end, b.end), label: `${(b.classRef && b.detail) || g.name} in ${g.place}`,
           assignment: b.assignmentId && b.needId && b.place ? { id: b.assignmentId, needId: b.needId, place: b.place, typeId: g.typeId, requiredName: g.requiredName, start: b.start, end: b.end } : null });
       }
     }

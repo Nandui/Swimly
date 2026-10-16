@@ -4,6 +4,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.18.1 · 16 October 2026 · Swim levels on the rota
+
+- Swim school lessons on the rota now show their **level** (Dolphins, Sharks, Penguins and so on) as the main name on the block, with the pool and time underneath. The green colour still tells you it is the swim school.
+- When back-to-back lessons are joined into one block, it lists each level once ("Dolphins, Sharks").
+- A person's day, the list of lessons under each pool and the "what they could take" options name the level too.
+
 ## 1.18.0 · 16 October 2026 · Split shifts, and covering part of an activity
 
 - On the rota Plan, someone can now work a **split shift**: open their name and choose **Add another part** to give them a second stretch of work the same day. Add staff does the same when you add someone already on that day at times that do not overlap.

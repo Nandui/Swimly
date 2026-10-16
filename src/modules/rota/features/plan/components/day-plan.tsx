@@ -89,13 +89,17 @@ function windows(times: { start: number; end: number }[]): Record<WindowKey, { f
   };
 }
 
+/** The levels of merged swim classes, each once ("Dolphins, Sharks"): the level is what staff
+ *  read first on a class, not the department (owner request, 16 October 2026). */
+const levels = (a: string | null, b: string | null) => [...new Set([a, b].flatMap((x) => (x ? x.split(", ") : [])))].join(", ") || null;
+
 /** Merge each lane's back-to-back classes taught by the same person (or nobody). */
 function merged(lane: Block[]): Shown[] {
   const out: Shown[] = [];
   for (const b of lane) {
     const last = out[out.length - 1];
     if (last && b.classRef && last.classRef && last.userId === b.userId && last.end === b.start) {
-      last.end = b.end; last.count += 1; last.refs.push(b.classRef); last.detail = null;
+      last.end = b.end; last.count += 1; last.refs.push(b.classRef); last.detail = levels(last.detail, b.detail);
       last.warnings = [...new Set([...last.warnings, ...b.warnings])];
     } else out.push({ ...b, warnings: [...b.warnings], count: 1, refs: b.classRef ? [b.classRef] : [] });
   }
@@ -339,11 +343,12 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
     const density = densityOf(pos.px);
     const need = needOf(b);
     const lent = theirs(g);
-    const title = b.detail && !b.classRef ? b.detail : g.name;
+    // A swim class leads with its level; the colour already says it is the swim school.
+    const title = b.detail || g.name;
     const where = whereOf(g, need);
-    const hint = [where, b.count > 1 ? `${b.count} classes` : b.classRef ? b.detail : null, lent, `${clock(b.start)}–${clock(b.end)}`].filter(Boolean).join(" · ");
+    const hint = [where, b.count > 1 ? `${b.count} classes` : null, lent, `${clock(b.start)}–${clock(b.end)}`].filter(Boolean).join(" · ");
     const warn = b.warnings.length ? `. Check: ${b.warnings.map((w) => WARNING_WORDS[w]).join(", ")}` : "";
-    const label = `${title}${lent ? ` for ${lent}` : ""}, ${where}, ${clock(b.start)} to ${clock(b.end)}${warn}`;
+    const label = `${title}${b.classRef && b.detail ? ` (${g.name})` : ""}${lent ? ` for ${lent}` : ""}, ${where}, ${clock(b.start)} to ${clock(b.end)}${warn}`;
     const Icon = activityIcon(g.icon);
     const words = density === "icon"
       ? (b.warnings.length ? <TriangleAlert aria-hidden="true" /> : <span className="pc-block-title">{nameInitials(title)}</span>)
@@ -535,9 +540,14 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
                   <ul className="pc-rows">
                     {list.map((b, i) => {
                       const off = isOff(b);
-                      const what = `${g.name} in ${g.place}, ${clock(b.start)} to ${clock(b.end)}`;
-                      const text = <span className="pc-row-body"><span className="pc-row-title tabular-nums">{clock(b.start)} to {clock(b.end)}</span>
-                        <span className="pc-row-hint">{b.kind === "gap" ? "Nobody yet" : off ? `${b.name} is off` : b.name}{b.count > 1 ? ` · ${b.count} classes` : b.detail ? ` · ${b.detail}` : ""}</span></span>;
+                      const level = b.classRef ? b.detail : null;
+                      const what = `${level ?? g.name} in ${g.place}, ${clock(b.start)} to ${clock(b.end)}`;
+                      const who = b.kind === "gap" ? "Nobody yet" : off ? `${b.name} is off` : b.name;
+                      const text = level
+                        ? <span className="pc-row-body"><span className="pc-row-title">{level}</span>
+                            <span className="pc-row-hint tabular-nums">{clock(b.start)} to {clock(b.end)} · {who}{b.count > 1 ? ` · ${b.count} classes` : ""}</span></span>
+                        : <span className="pc-row-body"><span className="pc-row-title tabular-nums">{clock(b.start)} to {clock(b.end)}</span>
+                            <span className="pc-row-hint">{who}{b.count > 1 ? ` · ${b.count} classes` : b.detail ? ` · ${b.detail}` : ""}</span></span>;
                       const trail = <span className="pc-row-trail">{needsCover(b) ? <Tag meta={ROTA_DAY_META.gaps} label={off ? "Cover needed" : "Gap"} /> : null}{canChange ? <ChevronRight aria-hidden="true" className="pc-row-chevron" /> : null}</span>;
                       if (!canChange || g.href) return <li key={i}><div className="pc-row" {...(needsCover(b) ? { "data-first": "" } : {})}>{text}{trail}</div></li>;
                       if (needsCover(b) || b.classRef) {
@@ -581,7 +591,7 @@ function mergeRuns(list: { g: Group; b: Shown }[]) {
   for (const x of list) {
     const last = out[out.length - 1];
     if (last && last.g.key === x.g.key && x.b.classRef && last.b.classRef && last.b.end === x.b.start) {
-      last.b = { ...last.b, end: x.b.end, count: last.b.count + 1, refs: [...last.b.refs, x.b.classRef], detail: null, warnings: [...new Set([...last.b.warnings, ...x.b.warnings])] };
+      last.b = { ...last.b, end: x.b.end, count: last.b.count + 1, refs: [...last.b.refs, x.b.classRef], detail: levels(last.b.detail, x.b.detail), warnings: [...new Set([...last.b.warnings, ...x.b.warnings])] };
     } else out.push({ g: x.g, b: { ...x.b } });
   }
   return out;
