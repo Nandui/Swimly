@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.18.0 · 16 October 2026 · Split shifts, and covering part of an activity
+
+- On the rota Plan, someone can now work a **split shift**: open their name and choose **Add another part** to give them a second stretch of work the same day. Add staff does the same when you add someone already on that day at times that do not overlap.
+- A split shift shows its time off between the parts on their row ("Off 4h"). That time is unpaid; paid hours add up across the day, and breaks are worked out for each part.
+- Staff can now go **in and out** of an activity. Open the person on it, choose **Hand over part of it**, set the time (for example 10:00 to 11:00 of a 09:00 to 14:00 Functional Zone) and pick who covers. They cover that hour on the same place, and the first person keeps the time before and after it, so the activity never shows a gap.
+- The activity's row shows each person's stretch with their name, so you can see who is on it when.
+- When someone's break falls during an activity, their shift now has **Find cover for the break**, which hands over just that time.
+
 ## 1.17.9 · 15 October 2026 · Sites have an address, and supplier emails use it
 
 - Each site now has an **Address** under Admin, Sites. Open a site with the pencil, type its address with the Eircode, and choose Save changes.

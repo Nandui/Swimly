@@ -209,6 +209,70 @@ export async function unassign(id: string, changeInput: ChangeInput = {}): Promi
   return ok();
 }
 
+const handOverSchema = z.object({
+  userId: z.string().min(1, "Choose who covers."),
+  start: z.string(),
+  end: z.string(),
+});
+export type HandOverInput = z.input<typeof handOverSchema>;
+
+/** Hand part of someone's time on an activity to another person (owner request, 16 October 2026:
+ *  staff going "in and out" of an activity such as Functional Zone, 09:00 to 14:00 with someone
+ *  else on from 10:00 to 11:00). The cover person takes that stretch of the same place; the first
+ *  person keeps the time before and after it, so the activity never shows a gap. All of it at once
+ *  is a swap. Warnings never refuse it, as `assign`. */
+export async function handOver(assignmentId: string, input: HandOverInput, changeInput: ChangeInput = {}): Promise<ActionResult> {
+  const parsed = handOverSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const change = changeSchema.parse(changeInput);
+  const start = parseClock(parsed.data.start), end = parseClock(parsed.data.end);
+  if (start === null || end === null) return fail("Use times like 10:00.");
+  if (end <= start) return fail("The cover has to end after it starts.");
+  const slot = slotProblem(start, end);
+  if (slot) return fail(slot);
+  const found = await prisma.rotaAssignment.findFirst({ where: { id: assignmentId }, select: { id: true, place: true, userId: true, startMinutes: true, endMinutes: true,
+    need: { select: { id: true, siteId: true, date: true, place: true, typeId: true } } } });
+  if (!found) return fail("That person is no longer on this activity.");
+  const need = (await withType(found.need))!;
+  if (start < found.startMinutes || end > found.endMinutes) return fail(`Keep the cover inside their time, ${clock(found.startMinutes)} to ${clock(found.endMinutes)}.`);
+  if (parsed.data.userId === found.userId) return fail("Choose someone else to cover.");
+  const date = iso(need.date);
+  const at = await allowedForPerson(need.siteId, date, need.type.departmentId, parsed.data.userId);
+  if (!at.ok) return fail(at.error);
+  const off = await allowedForPerson(need.siteId, date, need.type.departmentId, found.userId);
+  if (!off.ok) return fail(off.error);
+  const [cover, first] = await Promise.all([staffContact(parsed.data.userId, at.site.orgId, { activeOnly: true }), staffContact(found.userId, at.site.orgId)]);
+  if (!cover) return fail("That person is no longer active.");
+  if (at.live && !change.reason) return fail(NEEDS_REASON);
+  const firstName = first?.name ?? "Former staff";
+  const what = `${need.type.name}${need.place ? `, ${need.place}` : ""}`;
+  const whole = start === found.startMinutes && end === found.endMinutes;
+  const words = `${cover.name} covers ${firstName} on ${what}, ${clock(start)} to ${clock(end)}`;
+  const tell = await shared(prisma, need.siteId, need.type.departmentId, date);
+  await prisma.$transaction(async (tx) => {
+    const by = { createdById: at.actor.id, createdByName: at.actor.name };
+    if (whole) {
+      await tx.rotaAssignment.update({ where: { id: found.id }, data: { userId: cover.id } });
+    } else {
+      // The first person keeps what is either side of the cover: the row itself for the time
+      // before (or after, when the cover starts with them), and a new row for the time after.
+      const keep = [{ start: found.startMinutes, end: start }, { start: end, end: found.endMinutes }].filter((s) => s.end > s.start);
+      await tx.rotaAssignment.update({ where: { id: found.id }, data: { startMinutes: keep[0].start, endMinutes: keep[0].end } });
+      if (keep[1]) await tx.rotaAssignment.create({ data: { needId: need.id, place: found.place, userId: found.userId, startMinutes: keep[1].start, endMinutes: keep[1].end, ...by } });
+      await tx.rotaAssignment.create({ data: { needId: need.id, place: found.place, userId: cover.id, startMinutes: start, endMinutes: end, ...by } });
+    }
+    await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "update", entity: "RotaAssignment", entityId: found.id, clubId: at.site.id, summary: `${words}, ${date}` }, tx);
+    if (at.live) await logLive(tx, at, date, "changed", words, cover.id, change, found.userId);
+  });
+  refresh();
+  if (tell) {
+    await notifyShiftChange(cover.id, `You cover ${what} at ${at.site.name} on ${date}, ${clock(start)}–${clock(end)}.`);
+    await notifyShiftChange(found.userId, whole ? `You are no longer on ${what} at ${at.site.name} on ${date}.`
+      : `${cover.name} covers you on ${what} at ${at.site.name} on ${date}, ${clock(start)}–${clock(end)}.`);
+  }
+  return ok();
+}
+
 const putOnSchema = needSchema.pick({ siteId: true, date: true, typeId: true, place: true, start: true, end: true, lanes: true }).extend({ userId: z.string().min(1, "Choose who.") });
 export type PutOnInput = z.input<typeof putOnSchema>;
 

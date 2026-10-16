@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Coffee, Plus, UserPlus } from "lucide-react";
+import { ArrowLeftRight, Coffee, Plus, SplitSquareHorizontal, UserPlus } from "lucide-react";
 import { Avatar, AvatarFallback, initials } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
@@ -12,6 +12,7 @@ import { Notice } from "@/components/ui-kit/notice";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { Tag } from "@/components/ui-kit/tag";
 import { ChangeFields, changeOf } from "@/modules/rota/shared/components/change-fields";
+import { FillSheet, handOverGap, type GapRef } from "@/modules/rota/shared/components/fill-sheet";
 import { assign, planTeacher, putOnActivity } from "@/modules/rota/shared/actions";
 import { AreaLanesFields, type AreaLanes } from "@/modules/rota/shared/components/area-lanes";
 import { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from "@/components/shadcn/native-select";
@@ -84,14 +85,18 @@ export function checkLabel(p: Person) {
 
 function summary(p: Person) {
   const parts = p.shift.parts.map((x) => `${clock(x.start)} to ${clock(x.end)}`).join(" and ");
-  return `${parts} · ${duration(p.shift.paidMinutes)} paid · ${p.activities.length ? p.activities.join(", ") : "no activities yet"}`;
+  return `${p.shift.parts.length > 1 ? "Split shift: " : ""}${parts} · ${duration(p.shift.paidMinutes)} paid · ${p.activities.length ? p.activities.join(", ") : "no activities yet"}`;
 }
 
 /** One person's day: shift, breaks, what they could take. */
 function ShiftBody({ person: p, siteId, departmentId, date, dateLabel, live, canChange, departmentNames, anyTypes = [], areaList = [] }: Ctx & { person: Person }) {
   const router = useRouter();
   const done = () => router.refresh();
+  const [cover, setCover] = useState<GapRef | null>(null);
   const breaks = p.shift.parts.flatMap((x) => x.breaks);
+  const last = p.shift.parts[p.shift.parts.length - 1];
+  // A split shift's next part: after a few hours off, inside the day.
+  const nextStart = Math.min((last?.end ?? 720) + 180, 1260), nextEnd = Math.min(nextStart + 240, 1435);
   const unplaced = p.shift.parts.flatMap((x) => x.unplaced);
   const open = p.options.filter((o) => o.ok), closed = p.options.filter((o) => !o.ok);
   return (
@@ -104,11 +109,28 @@ function ShiftBody({ person: p, siteId, departmentId, date, dateLabel, live, can
         {p.rest.map((w) => <Notice key={w} tone="warning" title="Under-18 rest">{w}</Notice>)}
 
         <section aria-labelledby="shift-parts" className="flex flex-col gap-2">
-          <h3 id="shift-parts" className="font-semibold">Shift</h3>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 id="shift-parts" className="font-semibold">{p.shift.parts.length > 1 ? "Split shift" : "Shift"}</h3>
+            {canChange ? (
+              <ShiftTimes title="Add another part (split shift)" submitLabel="Add part" start={nextStart} end={nextEnd} live={live} fid={`shift-split-${p.userId}`}
+                description="A second stretch of work the same day, with unpaid time off between. Breaks are worked out for each part; paid hours add up across the day."
+                trigger={<Button type="button" variant="outline"><SplitSquareHorizontal aria-hidden="true" />Add another part</Button>}
+                submit={(fd) => savePlanShift(null, { siteId, departmentId, date, userId: p.userId, start: text(fd, "start"), end: text(fd, "end") }, changeOf(fd))} />
+            ) : null}
+          </div>
           <ul className="pc-rows">
-            {p.shift.parts.map((x) => {
+            {p.shift.parts.flatMap((x, i) => {
+              const prev = i > 0 ? p.shift.parts[i - 1] : null;
+              const off = prev && x.start > prev.end ? (
+                <li key={`off-${x.start}`} className="pc-row" data-muted="">
+                  <span className="pc-row-body">
+                    <span className="pc-row-title tabular-nums">Off {clock(prev.end)} to {clock(x.start)}</span>
+                    <span className="pc-row-hint">{duration(x.start - prev.end)} between the parts, unpaid</span>
+                  </span>
+                </li>
+              ) : null;
               const planned = x.planned ? p.planned.find((s) => s.startMinutes === x.start && s.endMinutes === x.end) ?? p.planned.find((s) => s.startMinutes < x.end && x.start < s.endMinutes) : null;
-              return (
+              return [off, (
                 <li key={x.start} className="pc-row">
                   <span className="pc-row-body">
                     <span className="pc-row-title tabular-nums">{clock(x.start)} to {clock(x.end)}</span>
@@ -135,7 +157,7 @@ function ShiftBody({ person: p, siteId, departmentId, date, dateLabel, live, can
                     </span>
                   ) : null}
                 </li>
-              );
+              )];
             })}
           </ul>
         </section>
@@ -182,7 +204,19 @@ function ShiftBody({ person: p, siteId, departmentId, date, dateLabel, live, can
               {unplaced.length ? <li className="pc-row"><span className="pc-row-body"><span className="pc-row-title">No free time for {unplaced.reduce((n, b) => n + b.minutes, 0)} minutes of breaks</span><span className="pc-row-hint">Place them yourself and cover that time.</span></span><span className="pc-row-trail"><Tag meta={ROTA_SHIFT_NOTE_META.noBreak} /></span></li> : null}
             </ul>
           ) : <p className="text-sm text-ui-muted-foreground">No break for a shift of 4 hours or less.</p>}
-          {p.breakClashes.map((c) => <Notice key={`${c.start}${c.label}`} tone="warning" title="Break during an activity">{`${clock(c.start)} to ${clock(c.end)} on ${c.label} needs cover while they are on their break.`}</Notice>)}
+          {p.breakClashes.map((c) => (
+            <Notice key={`${c.start}${c.label}`} tone="warning" title="Break during an activity">
+              <span className="flex flex-col items-start gap-2">
+                <span>{`${clock(c.start)} to ${clock(c.end)} on ${c.label} needs cover while they are on their break.`}</span>
+                {canChange && c.assignment ? (
+                  <Button type="button" variant="outline" onClick={() => setCover(handOverGap({ siteId, date, dateLabel, typeId: c.assignment!.typeId, what: c.label, requiredName: c.assignment!.requiredName },
+                    { id: c.assignment!.id, needId: c.assignment!.needId, place: c.assignment!.place, userId: p.userId, name: p.name, start: c.assignment!.start, end: c.assignment!.end }, { start: c.start, end: c.end }))}>
+                    <ArrowLeftRight aria-hidden="true" />Find cover for the break
+                  </Button>
+                ) : null}
+              </span>
+            </Notice>
+          ))}
         </section>
 
         {p.shift.parts.some((x) => x.work.length) ? (
@@ -210,6 +244,7 @@ function ShiftBody({ person: p, siteId, departmentId, date, dateLabel, live, can
           ) : null}
         </section>
       </div>
+      <FillSheet gap={cover} live={live} onClose={() => setCover(null)} />
     </>
   );
 }
@@ -295,13 +330,13 @@ export function AnyActivity({ person, within, types, areas, siteId, departmentId
   );
 }
 
-function ShiftTimes({ title, submitLabel, start, end, live, fid, trigger, submit }: {
-  title: string; submitLabel: string; start: number; end: number; live: boolean; fid: string; trigger: React.ReactNode;
+function ShiftTimes({ title, description, submitLabel, start, end, live, fid, trigger, submit }: {
+  title: string; description?: string; submitLabel: string; start: number; end: number; live: boolean; fid: string; trigger: React.ReactNode;
   submit: (fd: FormData) => ReturnType<typeof savePlanShift>;
 }) {
   const router = useRouter();
   return (
-    <FormDialog portalClassName={THEME} title={title} trigger={trigger} submitLabel={submitLabel} successMessage="Shift saved" onSuccess={() => router.refresh()} submit={submit}>
+    <FormDialog portalClassName={THEME} title={title} description={description} trigger={trigger} submitLabel={submitLabel} successMessage="Shift saved" onSuccess={() => router.refresh()} submit={submit}>
       <div className="grid grid-cols-2 gap-4">
         <Field label="Starts" htmlFor={`${fid}-start`}><Input id={`${fid}-start`} name="start" type="time" step={300} required defaultValue={clock(start)} className="min-h-11" /></Field>
         <Field label="Ends" htmlFor={`${fid}-end`}><Input id={`${fid}-end`} name="end" type="time" step={300} required defaultValue={clock(end)} className="min-h-11" /></Field>
@@ -321,7 +356,7 @@ export function AddShiftSheet({ siteId, departmentId, date, dateLabel, live }: O
         <SheetContent portalClassName={THEME} className="flex w-full flex-col gap-0 overflow-y-auto sm:max-w-md">
           <SheetHeader className="p-6 pb-4">
             <SheetTitle>Add staff to this day</SheetTitle>
-            <SheetDescription>{dateLabel}. Choose their shift, then who. It starts as No activity, and you give its time to the day&apos;s work on the plan.</SheetDescription>
+            <SheetDescription>{dateLabel}. Choose their shift, then who. It starts as No activity, and you give its time to the day&apos;s work on the plan. Someone already on that day gets a split shift when the times do not overlap.</SheetDescription>
           </SheetHeader>
           {open ? <AddShiftBody siteId={siteId} departmentId={departmentId} date={date} live={live} onClose={() => setOpen(false)} /> : null}
         </SheetContent>

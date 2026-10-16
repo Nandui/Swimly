@@ -30,19 +30,23 @@ const needsCover = (b: Block) => b.kind === "gap" || (b.kind === "on" && b.warni
 
 /** How many people a set of places has against how many it needs, stretch by stretch: each
  *  block is one place for its time, so overlapping places add up. Neighbouring stretches with
- *  the same count are one. */
+ *  the same count and the same people are one, so a hand-over (someone covering 10:00 to 11:00
+ *  of an activity; owner request, 16 October 2026) shows as its own stretch with its own name. */
 export function coverOf(blocks: readonly Block[]): CoverSpan[] {
   const cuts = [...new Set(blocks.flatMap((b) => [b.start, b.end]))].sort((a, b) => a - b);
   const out: CoverSpan[] = [];
+  let lastWho = "";
   for (let i = 0; i < cuts.length - 1; i++) {
     const start = cuts[i], end = cuts[i + 1];
     const here = blocks.filter((b) => b.start <= start && b.end >= end);
     if (!here.length) continue;
     const have = here.filter((b) => !needsCover(b)).length;
     const gap = here.find(needsCover) ?? null;
+    const who = here.filter((b) => !needsCover(b)).map((b) => b.userId ?? "").sort().join("|");
     const last = out[out.length - 1];
-    if (last && last.end === start && last.have === have && last.want === here.length && (last.gap === gap || (!!last.gap && !!gap))) last.end = end;
+    if (last && last.end === start && last.have === have && last.want === here.length && lastWho === who && (last.gap === gap || (!!last.gap && !!gap))) last.end = end;
     else out.push({ start, end, have, want: here.length, gap });
+    lastWho = who;
   }
   return out;
 }

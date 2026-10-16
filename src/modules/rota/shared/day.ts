@@ -80,8 +80,10 @@ export type Person = {
   planned: DayPlannedShift[];
   /** Under-18 rest warnings (`youngRest`). */
   rest: string[];
-  /** Placed breaks that fall during an activity they are on: that time needs cover. */
-  breakClashes: { start: number; end: number; label: string }[];
+  /** Placed breaks that fall during an activity they are on: that time needs cover. A planned
+   *  activity's place (`assignment`) can be handed to someone else for the break. */
+  breakClashes: { start: number; end: number; label: string;
+    assignment: { id: string; needId: string; place: number; typeId: string; requiredName: string | null; start: number; end: number } | null }[];
   /** What they could take inside their shifts, open ones first. */
   options: ShiftOption[];
 };
@@ -269,7 +271,8 @@ export function buildDay(input: {
       if (b.userId !== userId || b.kind !== "on") continue;
       for (const x of placed) if (x.start < b.end && b.start < x.end) {
         if (!b.warnings.includes("break")) b.warnings.push("break");
-        breakClashes.push({ start: Math.max(x.start, b.start), end: Math.min(x.end, b.end), label: `${g.name} in ${g.place}` });
+        breakClashes.push({ start: Math.max(x.start, b.start), end: Math.min(x.end, b.end), label: `${g.name} in ${g.place}`,
+          assignment: b.assignmentId && b.needId && b.place ? { id: b.assignmentId, needId: b.needId, place: b.place, typeId: g.typeId, requiredName: g.requiredName, start: b.start, end: b.end } : null });
       }
     }
     const warnings = new Set<BlockWarning>();
