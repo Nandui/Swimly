@@ -14,7 +14,9 @@ import { lanesFrom, lanesLabel, lanesProblem } from "@/modules/rota/shared/lanes
 import { areaProblem } from "@/lib/setup/data";
 import { fitsFor } from "@/modules/rota/shared/data";
 import { notifyShiftChange } from "@/lib/staff-api/notify";
-import { planCommitment } from "@/modules/contributions";
+import { commitmentsFor, planCommitment } from "@/modules/contributions";
+import { ANY_DEPARTMENT } from "@/modules/rota/shared/day";
+import type { Prisma } from "@/generated/prisma/client";
 import { type Allowed, CLASSES, NEEDS_REASON, allowedFor, allowedForPerson, changeSchema, iso, logLive, refresh, shared } from "@/modules/rota/shared/writes";
 
 export type ChangeInput = z.input<typeof changeSchema>;
@@ -322,24 +324,79 @@ export async function putOnActivity(input: PutOnInput, changeInput: ChangeInput 
 }
 
 /** Plan who teaches a swim class on a date (owner decision: Rota assigns instructors). The swim
- *  school keeps the record and checks the class runs; this checks the Teaching department. */
-export async function planTeacher(input: { siteId: string; date: string; classRef: string; userId: string | null }, changeInput: ChangeInput = {}): Promise<ActionResult> {
+ *  school keeps the record and checks the class runs. Who may: the department of the activity that
+ *  takes the swim classes, when there is one; else the department whose plan it is done from
+ *  (`departmentId`), since the classes then sit on every department's plan (owner request, 16
+ *  October 2026: no booking or activity to set up). Without either, only Run. From a department's
+ *  plan the class also goes on the person's shift there: inside one already, else stretching
+ *  the shift it meets, else a new part of the day (`shiftForClass`). */
+export async function planTeacher(input: { siteId: string; date: string; classRef: string; userId: string | null; departmentId?: string }, changeInput: ChangeInput = {}): Promise<ActionResult> {
   const change = changeSchema.parse(changeInput);
   if (!isDateOnly(input.date)) return fail("Choose a day.");
   const actor = await currentActor();
   const teaching = await classesActivity(actor.orgId);
-  if (!teaching) return fail("Swim classes are not on the rota yet. Add a Teaching activity that takes them, on the activity list.");
-  const at = input.userId ? await allowedForPerson(input.siteId, input.date, teaching.departmentId, input.userId) : await allowedFor(input.siteId, input.date, teaching.departmentId);
+  const departmentId = teaching?.departmentId ?? input.departmentId ?? ANY_DEPARTMENT;
+  const at = input.userId ? await allowedForPerson(input.siteId, input.date, departmentId, input.userId) : await allowedFor(input.siteId, input.date, departmentId);
   if (!at.ok) return fail(at.error);
   if (at.live && !change.reason) return fail(NEEDS_REASON);
   const person = input.userId ? await staffContact(input.userId, at.site.orgId, { activeOnly: true }) : null;
   if (input.userId && !person) return fail("That person is no longer active.");
+  const lessons = (await commitmentsFor({ siteIds: [at.site.id], from: input.date, to: input.date })).filter((c) => c.source === CLASSES);
+  const lesson = lessons.find((c) => c.ref === input.classRef);
   const result = await planCommitment(CLASSES, { ref: input.classRef, siteId: at.site.id, date: input.date, userId: person?.id ?? null, by: at.actor });
   if (!result.ok) return fail(result.error);
-  if (at.live) await prisma.$transaction((tx) => logLive(tx, at, input.date, "changed", `${person ? `${person.name} planned to teach` : "Nobody planned for"} a swim class`, person?.id ?? null, change));
+  const what = lesson?.title ? `the ${lesson.title} swim class` : "a swim class";
+  // Their shift on the plan it was done from, when this person may plan that department's day.
+  const shiftAt = person && lesson && input.departmentId ? await allowedFor(at.site.id, input.date, input.departmentId) : null;
+  const shifted = shiftAt?.ok && person && lesson
+    ? await prisma.$transaction((tx) => shiftForClass(tx, shiftAt, input.departmentId!, person, input.date, runOf(lesson, lessons.filter((c) => c.userId === person.id))))
+    : null;
+  if (at.live) await prisma.$transaction((tx) => logLive(tx, at, input.date, "changed", `${person ? `${person.name} planned to teach` : "Nobody planned for"} ${what}${shifted ? `; ${shifted}` : ""}`, person?.id ?? null, change));
   refresh();
-  if (person && (await shared(prisma, at.site.id, teaching.departmentId, input.date))) await notifyShiftChange(person.id, `You are teaching a swim class at ${at.site.name} on ${input.date}.`);
+  if (person && (await shared(prisma, at.site.id, input.departmentId ?? departmentId, input.date))) {
+    await notifyShiftChange(person.id, `You are teaching ${what} at ${at.site.name} on ${input.date}${lesson ? `, ${clock(lesson.startMinutes)}–${clock(lesson.endMinutes)}` : ""}.`);
+  }
   return ok();
+}
+
+/** A class with the classes back to back with it (or overlapping) that the same person already
+ *  teaches: one stretch of work, so their shift covers the run, not a sliver of it. */
+function runOf(lesson: { startMinutes: number; endMinutes: number }, theirs: readonly { startMinutes: number; endMinutes: number }[]) {
+  let start = lesson.startMinutes, end = lesson.endMinutes, grew = true;
+  while (grew) {
+    grew = false;
+    for (const c of theirs) if (c.startMinutes <= end && c.endMinutes >= start && (c.startMinutes < start || c.endMinutes > end)) {
+      start = Math.min(start, c.startMinutes); end = Math.max(end, c.endMinutes); grew = true;
+    }
+  }
+  return { start, end };
+}
+
+/** Put a class's time (`span`, its run) on someone's shift on a department's plan at the site:
+ *  nothing when one of their shifts there already holds it; else the department's shift it
+ *  overlaps or meets grows to hold the run; else a new shift for the run. Never makes two of theirs
+ *  overlap. Says what it did, for the day's log, or null. */
+async function shiftForClass(tx: Prisma.TransactionClient, at: Extract<Allowed, { ok: true }>, departmentId: string, person: { id: string; name: string }, date: string, span: { start: number; end: number }) {
+  const { start, end } = span;
+  const on = parseDateOnly(date);
+  const shifts = await tx.rotaPlanShift.findMany({ where: { siteId: at.site.id, date: on, userId: person.id }, orderBy: { startMinutes: "asc" }, select: { id: true, departmentId: true, startMinutes: true, endMinutes: true } });
+  if (shifts.some((x) => x.startMinutes <= start && x.endMinutes >= end)) return null;
+  const clashes = (from: number, to: number, except: string | null) => shifts.some((x) => x.id !== except && x.startMinutes < to && from < x.endMinutes);
+  const meets = shifts.find((x) => x.departmentId === departmentId && x.startMinutes <= end && x.endMinutes >= start);
+  if (meets) {
+    const from = Math.min(meets.startMinutes, start), to = Math.max(meets.endMinutes, end);
+    if (clashes(from, to, meets.id)) return null;
+    await tx.rotaPlanShift.update({ where: { id: meets.id }, data: { startMinutes: from, endMinutes: to } });
+    const summary = `${person.name}'s shift now ${clock(from)} to ${clock(to)}`;
+    await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "update", entity: "RotaPlanShift", entityId: meets.id, clubId: at.site.id,
+      summary: `${summary} on ${date} for a swim class (was ${clock(meets.startMinutes)}–${clock(meets.endMinutes)})` }, tx);
+    return summary;
+  }
+  if (clashes(start, end, null)) return null;
+  const row = await tx.rotaPlanShift.create({ data: { orgId: at.site.orgId, siteId: at.site.id, departmentId, date: on, userId: person.id, startMinutes: start, endMinutes: end, createdById: at.actor.id, createdByName: at.actor.name } });
+  const summary = `${person.name} on a shift ${clock(start)} to ${clock(end)}`;
+  await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "create", entity: "RotaPlanShift", entityId: row.id, clubId: at.site.id, summary: `Put ${summary} on ${date} for a swim class` }, tx);
+  return summary;
 }
 
 /** "Who can fill it" for a gap, best fit first, for the sheet. Reading, so View is enough. */

@@ -4,6 +4,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.19.0 · 16 October 2026 · Swim classes fill the rota by themselves
+
+- Every swim class running that day now shows on the rota **Plan** by itself, straight from the swim school's timetable. You no longer need a booking or an activity to put swim teachers on.
+- Under **What needs people**, each class is its own block with its level and who teaches it. Classes with nobody teaching them are amber, so they stand out.
+- **Click a class** to choose who teaches it, best fit first. Click a class that already has a teacher to change them, or to take them off.
+- The person you choose gets the class on their shift for that department: it joins the shift it sits next to, or starts a new part of their day.
+- This changes that day only. The class keeps its usual instructor in the swim school.
+- Bookings and activities you already made for swim lessons stay on the rota as they are. Cancel them yourself once you are happy with the classes showing.
+
 ## 1.18.1 · 16 October 2026 · Swim levels on the rota
 
 - Swim school lessons on the rota now show their **level** (Dolphins, Sharks, Penguins and so on) as the main name on the block, with the pool and time underneath. The green colour still tells you it is the swim school.

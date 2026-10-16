@@ -14,7 +14,7 @@ import { AssignmentDialog, NeedDialog } from "@/modules/rota/shared/components/p
 import type { AreaLanes } from "@/modules/rota/shared/components/area-lanes";
 import { FillSheet, handOverGap, type GapRef } from "@/modules/rota/shared/components/fill-sheet";
 import { clock } from "@/modules/rota/shared/constants";
-import type { Block, DayNeed, DayZone, Group, Person } from "@/modules/rota/shared/day";
+import { ANY_DEPARTMENT, type Block, type DayNeed, type DayZone, type Group, type Person } from "@/modules/rota/shared/day";
 import { lanesLabel } from "@/modules/rota/shared/lanes";
 import { ROTA_DAY_META, activityIcon, qualificationShort } from "@/modules/rota/shared/meta";
 import { freeTime, needRows, personBlocks, type CoverSpan, type NeedRow } from "@/modules/rota/shared/plan-rows";
@@ -259,8 +259,9 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
   const openGap = (g: Group, b: Block, refs: string[]) => {
     if (!canChange) return;
     setSelected(`${g.key}|${b.start}|${b.place ?? refs.join(",")}`);
-    setGap({ siteId, date, typeId: g.typeId, what: `${g.name} in ${g.place}`, dateLabel, start: b.start, end: b.end, requiredName: g.requiredName,
-      needId: b.needId, place: b.place, classRefs: refs,
+    setGap({ siteId, date, typeId: g.typeId, what: `${(refs.length && b.detail) || g.name} in ${g.place}`, dateLabel, start: b.start, end: b.end, requiredName: g.requiredName,
+      needId: b.needId, place: b.place, classRefs: refs, departmentId,
+      teacher: refs.length && b.kind === "on" && b.userId ? { userId: b.userId, name: b.name ?? "Someone" } : null,
       replace: isOff(b) ? { assignmentId: b.assignmentId, name: b.name ?? "Someone" } : null });
   };
   /** Hand part of someone's time on a planned activity to another person (staff "in and out"). */
@@ -300,6 +301,35 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
     }
     if (canChange && row.need && ourNeeds.has(row.need.id)) return changeActivity(row.need, <Button key={key} type="button" variant="link" {...common} aria-label={`${label}. Change the activity`}>{words}</Button>, key);
     return <span key={key} {...common} role="img" aria-label={label}>{words}</span>;
+  };
+
+  /** One swim class on the classes row (owner request, 16 October 2026: the classes come from the
+   *  swim school and "you can simply click on them and assign a staff"): its level and who teaches
+   *  it, amber when nobody does (or they are off). Choosing it opens who can teach it, staffed or
+   *  not; the change is for that day only. */
+  const classFor = (row: NeedRow, b: Block, key: string) => {
+    const pos = at(b.start, b.end);
+    if (!pos) return null;
+    const density = densityOf(pos.px);
+    const open = needsCover(b);
+    const level = b.detail || "Swim class";
+    const who = b.kind === "gap" ? "Needs a teacher" : isOff(b) ? `${b.name ?? "Teacher"} is off` : b.name ?? "Someone";
+    const warn = b.warnings.filter((w) => w !== "off").map((w) => WARNING_WORDS[w]);
+    const label = `${level}, ${row.group.place}, ${clock(b.start)} to ${clock(b.end)}: ${who}${warn.length ? `. Check: ${warn.join(", ")}` : ""}`;
+    const words = density === "icon"
+      ? (open ? <TriangleAlert aria-hidden="true" /> : <span className="pc-block-title">{nameInitials(b.name ?? level)}</span>)
+      : <>
+          {open || warn.length ? <TriangleAlert aria-hidden="true" /> : null}
+          <span className="pc-block-body">
+            <span className="pc-block-title">{density === "full" || b.kind === "gap" ? level : firstName(b.name)}</span>
+            {density === "full" ? <span className="pc-block-hint">{who} · {clock(b.start)}–{clock(b.end)}</span> : null}
+          </span>
+        </>;
+    const common = { className: "pc-block", "data-block": isOff(b) ? "absent" : open ? "cover" : "now", "data-density": density, style: pos.style, title: label };
+    if (!canChange || !b.classRef) return <span key={key} {...common} role="img" aria-label={label}>{words}</span>;
+    const id = `${row.group.key}|${b.start}|${b.classRef}`;
+    return <Button key={key} type="button" variant="link" {...common} aria-label={`${label}. ${open ? "Choose who teaches it" : "Change who teaches it"}`} aria-pressed={selected === id}
+      onClick={() => openGap(row.group, b, [b.classRef!])}>{words}</Button>;
   };
 
   /** Open one of this department's activities to change its time, area or how many staff, or
@@ -417,7 +447,19 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
         </div>
 
         <h3 className="rota-tl-sec">What needs people<span className="rota-count" data-gaps={gapCount ? "" : undefined}>{gapCount ? `${gapCount} ${gapCount === 1 ? "gap" : "gaps"}` : "Covered"}</span></h3>
-        {rows.map((row) => (
+        {rows.map((row) => row.kind === "classes" ? (
+          // Each swim class on its own, straight from the swim school, ready to click and staff.
+          <section key={row.key} aria-label={`${row.label}, ${row.group.place}`} className="rota-tl-band">
+            {pack(row.blocks).map((line, li) => (
+              <div key={li} className="rota-tl-row">
+                {li === 0 ? rowLabel(row) : <span aria-hidden="true" />}
+                <div className="rota-tl-track" data-row="need" style={gridStyle} {...dragHandlers}>
+                  {line.map((b, i) => classFor(row, b, `${row.key}-${li}-${i}`))}
+                </div>
+              </div>
+            ))}
+          </section>
+        ) : (
           <div key={row.key} className="rota-tl-row">
             {rowLabel(row)}
             <div className="rota-tl-track" data-row="need" style={gridStyle} {...dragHandlers}>
@@ -616,8 +658,8 @@ function FreeBody({ person: p, free, departmentId, departmentNames, anyTypes, ar
         {options.length ? (
           <ul className="pc-rows" aria-label="What needs someone then">
             {[...open, ...closed].map((o) => (
-              <OptionRow key={o.key} option={o} person={p} siteId={ctx.siteId} date={ctx.date} live={ctx.live} canChange={ctx.canChange} onDone={onDone} within={free}
-                lentTo={o.departmentId !== departmentId ? departmentNames[o.departmentId] ?? "another department" : null} />
+              <OptionRow key={o.key} option={o} person={p} siteId={ctx.siteId} date={ctx.date} live={ctx.live} canChange={ctx.canChange} onDone={onDone} within={free} departmentId={departmentId}
+                lentTo={o.departmentId !== departmentId && o.departmentId !== ANY_DEPARTMENT ? departmentNames[o.departmentId] ?? "another department" : null} />
             ))}
           </ul>
         ) : <p className="text-sm">Nothing on the day needs someone then.</p>}

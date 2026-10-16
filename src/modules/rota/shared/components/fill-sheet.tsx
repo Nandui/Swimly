@@ -34,6 +34,11 @@ export type GapRef = {
   place: number | null;
   /** The classes the gap covers, when it is swim teaching. */
   classRefs: string[];
+  /** Who teaches those classes that day now, when someone does: choosing another person changes
+   *  it for that day only, and they can be taken off. */
+  teacher?: { userId: string; name: string } | null;
+  /** The department whose plan it was opened from: a class given to someone goes on their shift there. */
+  departmentId?: string;
   /** Covering someone who is off: their place on the activity, swapped to the person chosen. */
   replace: { assignmentId: string | null; name: string } | null;
   /** Handing part of someone's time to another person (owner request, 16 October 2026: staff "in
@@ -51,6 +56,18 @@ export function handOverGap(at: { siteId: string; date: string; dateLabel: strin
     handOver: { assignmentId: a.id, userId: a.userId, name: a.name || "Someone", from: a.start, to: a.end } };
 }
 
+/** Plan one teacher (or nobody) on each of a gap's classes, one after another so each lands on
+ *  their shift in turn. */
+async function teachAll(gap: GapRef, userId: string | null, change: ReturnType<typeof changeOf>) {
+  const out = [];
+  for (const ref of gap.classRefs) {
+    const result = await planTeacher({ siteId: gap.siteId, date: gap.date, classRef: ref, userId, departmentId: gap.departmentId }, change);
+    out.push(result);
+    if (!result.ok) break;
+  }
+  return out;
+}
+
 /** "Who can fill it" (owner decision, 6 October 2026): everyone who works at the site, best fit
  *  first; warnings sit beside each name and never stop anyone. Put someone on for the whole gap
  *  or part of it. On a day that has come, the change asks for its reason. */
@@ -59,8 +76,8 @@ export function FillSheet({ gap, live, onClose }: { gap: GapRef | null; live: bo
     <Sheet open={!!gap} onOpenChange={(open) => { if (!open) onClose(); }}>
       <SheetContent portalClassName="turnfin-module" className="flex w-full flex-col gap-0 overflow-y-auto sm:max-w-md">
         <SheetHeader className="p-6 pb-4">
-          <SheetTitle>{gap?.handOver ? `Who covers ${gap.handOver.name.split(" ")[0]}` : "Who can fill it"}</SheetTitle>
-          <SheetDescription>Best fit first: qualified, free, then fewest hours this week. Warnings never stop you.</SheetDescription>
+          <SheetTitle>{gap?.handOver ? `Who covers ${gap.handOver.name.split(" ")[0]}` : gap?.classRefs.length ? "Who teaches it" : "Who can fill it"}</SheetTitle>
+          <SheetDescription>Best fit first: qualified, free, then fewest hours this week. Warnings never stop you.{gap?.classRefs.length ? " This changes that day only; the class keeps its usual instructor in the swim school." : ""}</SheetDescription>
         </SheetHeader>
         {/* A fresh body for each gap, so its list, search and error start empty. */}
         {gap ? <FillBody key={`${gap.what}|${gap.date}|${gap.start}|${gap.place ?? gap.classRefs.join(",")}`} gap={gap} live={live} onClose={onClose} /> : null}
@@ -81,7 +98,7 @@ function FillBody({ gap, live, onClose }: { gap: GapRef; live: boolean; onClose:
     return () => { stale = true; };
   }, [gap]);
 
-  function put(userId: string, form: HTMLFormElement | null) {
+  function put(userId: string | null, form: HTMLFormElement | null) {
     const data = form ? new FormData(form) : new FormData();
     const change = changeOf(data);
     if (live && !change.reason) { setError("This day has come. Choose why it changed first."); form?.querySelector<HTMLSelectElement>("select[name=reason]")?.focus(); return; }
@@ -90,28 +107,34 @@ function FillBody({ gap, live, onClose }: { gap: GapRef; live: boolean; onClose:
     start(async () => {
       setError(null);
       const results = gap.handOver
-        ? [await handOver(gap.handOver.assignmentId, { userId, start: clock(from), end: clock(to) }, change)]
+        ? (userId ? [await handOver(gap.handOver.assignmentId, { userId, start: clock(from), end: clock(to) }, change)] : [])
         : gap.classRefs.length
-        ? await Promise.all(gap.classRefs.map((ref) => planTeacher({ siteId: gap.siteId, date: gap.date, classRef: ref, userId }, change)))
-        : [await assign(gap.replace?.assignmentId ?? null, { needId: gap.needId!, place: gap.place!, userId, start: clock(from), end: clock(to) }, change)];
+        ? await teachAll(gap, userId, change)
+        : userId ? [await assign(gap.replace?.assignmentId ?? null, { needId: gap.needId!, place: gap.place!, userId, start: clock(from), end: clock(to) }, change)] : [];
       const failed = results.find((r) => !r.ok);
       if (failed && !failed.ok) { setError(failed.error); return; }
-      toast.success(gap.handOver ? "Cover put on" : "Put on the rota");
+      toast.success(gap.handOver ? "Cover put on" : userId ? "Put on the rota" : "Taken off the class");
       onClose();
       router.refresh();
     });
   }
 
-  const shown = (fits ?? []).filter((f) => f.userId !== gap.handOver?.userId && f.name.toLowerCase().includes(query.trim().toLowerCase()));
+  const shown = (fits ?? []).filter((f) => f.userId !== gap.handOver?.userId && f.userId !== gap.teacher?.userId && f.name.toLowerCase().includes(query.trim().toLowerCase()));
   const formId = "rota-fill-form";
   const bounds = gap.handOver ? { from: gap.handOver.from, to: gap.handOver.to } : { from: gap.start, to: gap.end };
   return (
           <div className="flex flex-col gap-4 px-6 pb-6">
             <div className="rota-gap-card">
-              <span className="flex items-center gap-1.5 font-semibold">{gap.handOver ? <ArrowLeftRight aria-hidden="true" className="size-4" /> : <TriangleAlert aria-hidden="true" className="size-4" />}{gap.what}</span>
+              <span className="flex items-center gap-1.5 font-semibold">{gap.handOver ? <ArrowLeftRight aria-hidden="true" className="size-4" /> : gap.teacher ? null : <TriangleAlert aria-hidden="true" className="size-4" />}{gap.what}</span>
               <small>{gap.dateLabel}, {gap.handOver ? `${gap.handOver.name} on it ${clock(gap.handOver.from)} to ${clock(gap.handOver.to)}` : `${clock(gap.start)} to ${clock(gap.end)}`}{gap.requiredName ? ` · needs ${qualificationShort(gap.requiredName)}` : ""}{gap.classRefs.length > 1 ? ` · ${gap.classRefs.length} classes` : ""}</small>
             </div>
             <form id={formId} className="flex flex-col gap-4" onSubmit={(e) => e.preventDefault()}>
+              {gap.teacher && !gap.replace ? (
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm">{gap.teacher.name} teaches {gap.classRefs.length > 1 ? "them" : "it"} that day. Choose someone below to change it.</p>
+                  <Button type="button" variant="outline" disabled={pending} onClick={() => put(null, document.getElementById(formId) as HTMLFormElement | null)}>Take {gap.teacher.name.split(" ")[0]} off</Button>
+                </div>
+              ) : null}
               {gap.replace ? <p className="text-sm">{gap.replace.name} is off. The person you choose takes their place{gap.classRefs.length ? "" : " for this time"}.</p> : null}
               {gap.handOver ? <p className="text-sm">The person you choose covers this time on the same place. {gap.handOver.name.split(" ")[0]} keeps the time before and after it, so the activity stays covered.</p> : null}
               {gap.classRefs.length || gap.replace ? null : (

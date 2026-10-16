@@ -19,7 +19,7 @@ import { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from "@/compon
 import { freeTime } from "@/modules/rota/shared/plan-rows";
 import { removePlanShift, saveBreaks, savePlanShift, whoForShift } from "@/modules/rota/features/plan/server/actions";
 import { clock, parseClock, slotProblem } from "@/modules/rota/shared/constants";
-import type { Person, ShiftOption } from "@/modules/rota/shared/day";
+import { ANY_DEPARTMENT, type Person, type ShiftOption } from "@/modules/rota/shared/day";
 import type { Fit } from "@/modules/rota/shared/fit";
 import { ROTA_FIT_META, ROTA_SHIFT_NOTE_META, qualificationShort } from "@/modules/rota/shared/meta";
 import { duration } from "@/modules/rota/shared/shifts";
@@ -234,8 +234,8 @@ function ShiftBody({ person: p, siteId, departmentId, date, dateLabel, live, can
           <p className="text-sm text-ui-muted-foreground">The day&apos;s gaps inside their shift, at the time they are free for each.</p>
           {p.options.length === 0 ? <p className="text-sm">Nothing on the day needs someone during their shift.</p> : (
             <ul className="pc-rows">
-              {[...open, ...closed].map((o) => <OptionRow key={o.key} option={o} person={p} siteId={siteId} date={date} live={live} canChange={canChange} onDone={done}
-                lentTo={o.departmentId !== departmentId ? departmentNames?.[o.departmentId] ?? "another department" : null} />)}
+              {[...open, ...closed].map((o) => <OptionRow key={o.key} option={o} person={p} siteId={siteId} date={date} live={live} canChange={canChange} onDone={done} departmentId={departmentId}
+                lentTo={o.departmentId !== departmentId && o.departmentId !== ANY_DEPARTMENT ? departmentNames?.[o.departmentId] ?? "another department" : null} />)}
             </ul>
           )}
           {canChange && anyTypes.length ? (
@@ -252,9 +252,11 @@ function ShiftBody({ person: p, siteId, departmentId, date, dateLabel, live, can
 /** Something a person on shift could take, with a button to put them on it. `within` narrows the
  *  times offered to one stretch of their free time; `lentTo` names another department's work
  *  (lending, owner request, 13 October 2026). */
-export function OptionRow({ option: o, person, siteId, date, live, canChange, onDone, within, lentTo }: {
+export function OptionRow({ option: o, person, siteId, date, live, canChange, onDone, within, lentTo, departmentId }: {
   option: ShiftOption; person: Person; siteId: string; date: string; live: boolean; canChange: boolean; onDone: () => void;
   within?: { start: number; end: number }; lentTo?: string | null;
+  /** The plan it is done from: a class taken goes on their shift there. */
+  departmentId?: string;
 }) {
   const what = `${o.classRef && o.detail ? o.detail : o.name} in ${o.area}`;
   const from = within ? Math.max(o.start, within.start) : o.start, to = within ? Math.min(o.end, within.end) : o.end;
@@ -274,7 +276,7 @@ export function OptionRow({ option: o, person, siteId, date, live, canChange, on
             trigger={<Button type="button" variant="outline" className="tabular-nums"><Plus aria-hidden="true" />{clock(o.classRef ? o.gapStart : from)}–{clock(o.classRef ? o.gapEnd : to)}</Button>}
             submitLabel="Put on" successMessage="Put on the rota" onSuccess={onDone}
             submit={(fd) => o.classRef
-              ? planTeacher({ siteId, date, classRef: o.classRef, userId: person.userId }, changeOf(fd))
+              ? planTeacher({ siteId, date, classRef: o.classRef, userId: person.userId, departmentId }, changeOf(fd))
               : assign(null, { needId: o.needId!, place: o.place!, userId: person.userId, start: text(fd, "start"), end: text(fd, "end") }, changeOf(fd))}>
             {o.classRef ? <p className="text-sm tabular-nums">{clock(o.gapStart)} to {clock(o.gapEnd)}{o.detail ? `, ${o.detail}` : ""}.</p> : (
               <div className="grid grid-cols-2 gap-4">
