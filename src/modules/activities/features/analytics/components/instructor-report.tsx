@@ -34,7 +34,10 @@ export function InstructorReport({ data }: { data: InstructorAnalyticsData }) {
   const scoped = data.classes.filter(row => !instructor || row.instructorKey === instructor);
   const classes = scoped.filter(row => matches(row.status, filter));
   return <div className="flex min-w-0 flex-col gap-6">
-    <PageHeader title="Registers" description={`${data.siteName} · This week, Monday to Sunday · ${weekLabel(data.period)}`} actions={<AnalyticsRefresh />} />
+    <div className="ins-hero">
+      <span className="ins-eyebrow">Swim school analytics</span>
+      <PageHeader title="Registers" description={`${data.siteName} · This week, Monday to Sunday · ${weekLabel(data.period)}`} actions={<AnalyticsRefresh />} />
+    </div>
     <AnalyticsNav active="instructors" />
     <ul className="pc-stats" aria-label="Attendance at a glance">
       <StatTile icon={CheckCheck} value={formatCount(data.totals.due)} label="Classes finished" caption="This week" />

@@ -1,12 +1,13 @@
 import Link from "next/link";
+import * as React from "react";
 import { ArrowDownRight, ArrowRight, ArrowUpRight } from "lucide-react";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
-import { formatCount, formatDateRange, formatDateTime, formatDayMonth } from "@/lib/format";
+import { addDaysIso, formatCount, formatDateRange, formatDateTime, formatDayMonth } from "@/lib/format";
 import { AnalyticsNav, type AnalyticsPage } from "@/modules/activities/features/analytics/components/navigation";
 import { AnalyticsRefresh } from "@/modules/activities/features/analytics/components/refresh";
+import { FilterBar, type FilterBarProps } from "@/modules/activities/features/analytics/components/insights/filters";
 export { Meter } from "@/modules/activities/features/analytics/components/insights/meter";
-import { RANGES, reportQuery, type RangeKey, type ReportPeriod, type SiteScope } from "@/modules/activities/features/analytics/server/period";
+import { DEFAULT_RANGE, RANGES, reportQuery, type ReportFilters, type ReportPeriod, type SiteScope } from "@/modules/activities/features/analytics/server/period";
 
 const one = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 1 });
 const whole = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 0 });
@@ -23,51 +24,127 @@ export function weeks(value: number) {
 
 /** The shared context every report page receives. */
 export type ReportContext = {
-  period: ReportPeriod; allSites: boolean; multipleSites: boolean; siteName: string; updatedAt: string;
+  period: ReportPeriod; filters: ReportFilters; programmes: { id: string; name: string }[]; programme: { id: string; name: string } | null;
+  allSites: boolean; multipleSites: boolean; siteName: string; updatedAt: string;
   canOpenClasses: boolean; canOpenSwimmers: boolean;
 };
 
 export function scopeOf(ctx: ReportContext): SiteScope {
   return ctx.allSites ? "all" : "site";
 }
-/** A link to another analytics page that keeps the chosen period and sites. */
+/** The query string that keeps the chosen period, sites and programme. */
+export function filterQuery(ctx: ReportContext, extra: Record<string, string> = {}) {
+  return reportQuery(ctx.filters, extra);
+}
+/** A link to another analytics page that keeps the chosen period, sites and programme. */
 export function reportHref(ctx: ReportContext, path: string, extra: Record<string, string> = {}) {
-  return `${path}${reportQuery(ctx.period.key as RangeKey, scopeOf(ctx), extra)}`;
+  return `${path}${filterQuery(ctx, extra)}`;
 }
 
 export function periodText(period: ReportPeriod) {
-  return `Last ${period.label}, ${formatDateRange(period.start, period.end)}`;
+  return period.key === "custom" ? formatDateRange(period.start, period.end) : `Last ${period.label}, ${formatDateRange(period.start, period.end)}`;
+}
+/** "now", or the last day of a custom period that ended before today. */
+export function asOf(period: ReportPeriod, now = "now") {
+  return period.current ? now : `on ${formatDayMonth(period.end)}`;
 }
 
-/** Page opening, the analytics tabs, then the period and sites choice. */
-export function ReportShell({ ctx, page, path, title, description, back, children, footnotes }: {
+function quickPicks(ctx: ReportContext) {
+  const date = ctx.period.now;
+  const [y, m] = date.split("-").map(Number);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const monthStart = `${y}-${pad(m)}-01`;
+  const lastMonthStart = m === 1 ? `${y - 1}-12-01` : `${y}-${pad(m - 1)}-01`;
+  const schoolYear = m >= 9 ? y : y - 1;
+  return [
+    { label: "Last 30 days", start: addDaysIso(date, -29), end: date },
+    { label: "This month", start: monthStart, end: date },
+    { label: "Last month", start: lastMonthStart, end: addDaysIso(monthStart, -1) },
+    { label: "This school year", start: `${schoolYear}-09-01`, end: date },
+    { label: "Last school year", start: `${schoolYear - 1}-09-01`, end: `${schoolYear}-08-31` },
+    { label: "This year", start: `${y}-01-01`, end: date },
+    { label: "Last year", start: `${y - 1}-01-01`, end: `${y - 1}-12-31` },
+  ];
+}
+
+/** Page opening, the suite's grouped pages, then one tray of filters. `programme` is false on pages
+ *  the programme does not narrow (reception work is not tied to a programme). */
+export function ReportShell({ ctx, page, path, title, description, back, children, footnotes, sections, programme = true }: {
   ctx: ReportContext; page: AnalyticsPage; path: string; title: string; description?: string;
   back?: { href: string; label: string }; children: React.ReactNode; footnotes?: React.ReactNode[];
+  sections?: { id: string; label: string }[]; programme?: boolean;
 }) {
+  const { period, filters } = ctx;
+  const keep = (extra: Partial<ReportFilters>) => `${path}${reportQuery({ ...filters, ...extra })}`;
+  const keepParams = Object.fromEntries(new URLSearchParams(reportQuery({ ...filters, period: { key: DEFAULT_RANGE, start: "", end: "" } }).slice(1)));
+  const defaults = !ctx.programme && !ctx.allSites && period.key === DEFAULT_RANGE;
+  const bar: FilterBarProps = {
+    path,
+    presets: RANGES.map(range => ({ label: range.label, href: keep({ period: { key: range.key, start: "", end: "" } }), current: period.key === range.key })),
+    custom: {
+      current: period.key === "custom", start: period.start, end: period.end, today: period.now, label: formatDateRange(period.start, period.end), keep: keepParams,
+      quick: quickPicks(ctx).map(q => ({ label: q.label, href: keep({ period: { key: "custom", start: q.start, end: q.end } }), current: period.key === "custom" && period.start === q.start && period.end === q.end })),
+    },
+    sites: ctx.multipleSites ? [
+      { label: "This site", href: keep({ scope: "site" }), current: !ctx.allSites },
+      { label: "All my sites", href: keep({ scope: "all" }), current: ctx.allSites },
+    ] : null,
+    programme: programme && ctx.programmes.length > 1 ? {
+      value: ctx.programme?.id ?? "",
+      options: [{ value: "", label: "Every programme", href: keep({ programme: null }) }, ...ctx.programmes.map(p => ({ value: p.id, label: p.name, href: keep({ programme: p.id }) }))],
+    } : null,
+    summary: {
+      range: `${formatDateRange(period.start, period.end)} · ${period.label}`,
+      compare: `Against ${formatDateRange(period.previousStart, period.previousEnd)}`,
+      asOf: period.current ? null : `"Now" figures as of ${formatDayMonth(period.end)}`,
+    },
+    reset: defaults ? null : path,
+  };
+  const scope = [ctx.siteName, ctx.programme && programme ? ctx.programme.name : null].filter(Boolean).join(" · ");
   return <div className="ins">
-    <PageHeader title={title} back={back} description={description ?? `${ctx.siteName} · ${periodText(ctx.period)}`} actions={<AnalyticsRefresh />} />
-    <AnalyticsNav active={page} query={reportQuery(ctx.period.key as RangeKey, scopeOf(ctx))} />
-    <div className="ins-controls">
-      <SegmentedLinks label="Period" items={RANGES.map(range => ({ href: `${path}${reportQuery(range.key, scopeOf(ctx))}`, label: range.label, current: ctx.period.key === range.key }))} />
-      {ctx.multipleSites ? <SegmentedLinks label="Sites" items={[
-        { href: `${path}${reportQuery(ctx.period.key as RangeKey, "site")}`, label: "This site", current: !ctx.allSites },
-        { href: `${path}${reportQuery(ctx.period.key as RangeKey, "all")}`, label: "All my sites", current: ctx.allSites },
-      ]} /> : null}
+    <div className="ins-hero">
+      <span className="ins-eyebrow">Swim school analytics</span>
+      <PageHeader title={title} back={back} description={description ?? `${scope} · ${periodText(period)}`} actions={<AnalyticsRefresh />} />
     </div>
+    <AnalyticsNav active={page} query={filterQuery(ctx)} />
+    <FilterBar {...bar} />
+    {sections?.length ? <nav aria-label="On this page" className="ins-jump">
+      <span className="ins-jump-label">On this page</span>
+      {sections.map(s => <a key={s.id} href={`#${s.id}`}>{s.label}</a>)}
+    </nav> : null}
     {children}
     <footer className="ins-footnote">
       {footnotes?.map((note, i) => <p key={i}>{note}</p>)}
-      <p>Compared with the {ctx.period.label} before, {formatDateRange(ctx.period.previousStart, ctx.period.previousEnd)}. Updated {formatDateTime(new Date(ctx.updatedAt))} · Europe/Dublin.</p>
+      {programme && ctx.programme ? <p>Only {ctx.programme.name}: its classes, places, waiting lists and passes. A move into another programme counts as leaving this one.</p> : null}
+      <p>Compared with the {period.label} before, {formatDateRange(period.previousStart, period.previousEnd)}. Updated {formatDateTime(new Date(ctx.updatedAt))} · Europe/Dublin.</p>
     </footer>
   </div>;
 }
 
+/** A group of panels that answer one question, with a short heading and what it is for. */
+export function Section({ id, eyebrow, title, intro, children }: { id: string; eyebrow: string; title: string; intro?: React.ReactNode; children: React.ReactNode }) {
+  return <section id={id} className="ins-section" aria-labelledby={`${id}-title`}>
+    <header className="ins-section-head">
+      <span className="ins-section-eyebrow">{eyebrow}</span>
+      <h2 id={`${id}-title`}>{title}</h2>
+      {intro ? <p>{intro}</p> : null}
+    </header>
+    {children}
+  </section>;
+}
+
 export function Panel({ id, title, sub, action, children, className }: { id: string; title: string; sub?: React.ReactNode; action?: React.ReactNode; children: React.ReactNode; className?: string }) {
-  return <section className={`pc-panel${className ? ` ${className}` : ""}`} aria-labelledby={id}>
-    <div className="ins-head"><h2 id={id}>{title}</h2>{action}</div>
+  return <section id={id} className={`pc-panel${className ? ` ${className}` : ""}`} aria-labelledby={`${id}-heading`}>
+    <div className="ins-head"><h3 id={`${id}-heading`}>{title}</h3>{action}</div>
     {sub ? <p className="ins-sub">{sub}</p> : null}
     {children}
   </section>;
+}
+
+/** The headline figures, laid out in even rows whatever their number. */
+export function KpiStrip({ label, children }: { label: string; children: React.ReactNode }) {
+  const count = React.Children.toArray(children).filter(Boolean).length;
+  return <ul className="ins-kpis" aria-label={label} data-count={count}>{children}</ul>;
 }
 
 export function PanelLink({ href, children }: { href: string; children: React.ReactNode }) {
@@ -95,7 +172,7 @@ export function Kpi({ label, value, unit, note, delta, href }: { label: string; 
     {delta}
     {note ? <span className="ins-kpi-note">{note}</span> : null}
   </>;
-  return <li className="flex min-w-0">{href ? <Link href={href} className="ins-kpi w-full">{body}</Link> : <div className="ins-kpi w-full">{body}</div>}</li>;
+  return <li className="flex min-w-0">{href ? <Link href={href} className="ins-kpi w-full">{body}<span className="ins-kpi-go" aria-hidden="true"><ArrowUpRight strokeWidth={1.8} /></span></Link> : <div className="ins-kpi w-full">{body}</div>}</li>;
 }
 
 /** A line over time with its area, to scale from zero, every point hoverable. */

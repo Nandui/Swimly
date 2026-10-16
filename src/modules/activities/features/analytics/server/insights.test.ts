@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { LessonRow, MarkRow, PlaceRow } from "@/modules/activities/features/analytics/server/insight-queries";
-import { reportPeriod, reportQuery, rangeKey } from "@/modules/activities/features/analytics/server/period";
+import { customPeriod, periodFrom, reportPeriod, reportQuery, rangeKey } from "@/modules/activities/features/analytics/server/period";
 import { activeAt, ageOn, attendanceRisk, movements, retention, swimmerSpans } from "@/modules/activities/features/analytics/server/swimmers";
 import { readLessons, teacherStats } from "@/modules/activities/features/analytics/server/teaching";
 
@@ -10,16 +10,32 @@ function place(studentId: string, startedOn: string, endOn: string | null, extra
   return { id: `p${n++}`, studentId, courseId: "c1", levelId: "l1", programmeId: "pr", clubId: "a", status: endOn ? "WITHDRAWN" : "ACTIVE", startedOn, endOn, scheduledEnd: false, leaveReason: null, inScope: true, dateOfBirth: null, ...extra };
 }
 
+const now = new Date("2026-10-16T12:00:00Z");
+const p13 = reportPeriod("13w", now);
+
 test("the period ends today, starts on a Monday and has a same-length period before it", () => {
-  const p = reportPeriod("4w", new Date("2026-10-16T12:00:00Z"));
+  const p = reportPeriod("4w", now);
   assert.equal(p.start, "2026-09-21");
   assert.equal(p.end, "2026-10-16");
   assert.equal(p.previousEnd, "2026-09-20");
   assert.equal(p.previousStart, "2026-08-24");
   assert.deepEqual(p.weeks, ["2026-09-21", "2026-09-28", "2026-10-05", "2026-10-12"]);
   assert.equal(rangeKey("nonsense"), "13w");
-  assert.equal(reportQuery("13w", "site"), "");
-  assert.equal(reportQuery("52w", "all"), "?range=52w&sites=all");
+  assert.equal(reportQuery({ period: p13, scope: "site" }), "");
+  assert.equal(reportQuery({ period: reportPeriod("52w", now), scope: "all", programme: "pr1" }), "?range=52w&sites=all&programme=pr1");
+});
+
+test("custom dates: never past today, a same-length comparison, and weeks from the Monday", () => {
+  const p = customPeriod("2026-09-03", "2026-09-30", now);
+  assert.deepEqual([p.key, p.start, p.end, p.today, p.label, p.current], ["custom", "2026-09-03", "2026-09-30", "2026-09-30", "4 weeks", false]);
+  assert.deepEqual([p.previousStart, p.previousEnd], ["2026-08-06", "2026-09-02"]);
+  assert.deepEqual(p.weeks, ["2026-08-31", "2026-09-07", "2026-09-14", "2026-09-21", "2026-09-28"]);
+  const late = customPeriod("2026-10-01", "2027-01-01", now);
+  assert.deepEqual([late.end, late.current, late.label], ["2026-10-16", true, "16 days"]);
+  assert.equal(customPeriod("2020-01-01", "2026-10-16", now).start, "2023-10-15");
+  assert.equal(periodFrom({ from: "2026-02-30", to: "2026-03-01", range: "4w" }, now).key, "4w");
+  assert.equal(periodFrom({ from: "2026-09-03", to: "2026-09-30" }, now).key, "custom");
+  assert.equal(reportQuery({ period: p, scope: "site" }), "?from=2026-09-03&to=2026-09-30");
 });
 
 test("moving class or coming back within two weeks is not leaving; a longer gap is", () => {

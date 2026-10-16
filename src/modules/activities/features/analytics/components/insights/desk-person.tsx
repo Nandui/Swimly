@@ -1,7 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { formatCount, formatDateTime, formatDayMonth, plural } from "@/lib/format";
 import type { DeskPersonInsights } from "@/modules/activities/features/analytics/server/desk-data";
-import { Bars, decimal, Kpi, Meter, Panel, percent, ReportShell, reportHref, TrendChart } from "@/modules/activities/features/analytics/components/insights/kit";
+import { Bars, decimal, Kpi, KpiStrip, Meter, Panel, percent, reportHref, ReportShell, Section, TrendChart } from "@/modules/activities/features/analytics/components/insights/kit";
 import { BusyHours, duration, outcomeLabel, Versus } from "@/modules/activities/features/analytics/components/insights/desk-kit";
 
 type Person = NonNullable<DeskPersonInsights["person"]>;
@@ -9,18 +9,21 @@ type Person = NonNullable<DeskPersonInsights["person"]>;
 export function DeskPersonReport({ data }: { data: DeskPersonInsights & { person: Person } }) {
   const { person: p, sites, weeks, heat, kinds, jobs, compare: c, followUps, corrections } = data.person;
   const hours = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 0 });
-  return <ReportShell ctx={data} page="reception" path={`/analytics/reception/${encodeURIComponent(p.key)}`} back={{ href: reportHref(data, "/analytics/reception"), label: "Reception" }} title={p.name} footnotes={[
+  return <ReportShell ctx={data} page="reception" path={`/analytics/reception/${encodeURIComponent(p.key)}`} back={{ href: reportHref(data, "/analytics/reception"), label: "Reception" }} title={p.name} programme={false} footnotes={[
     "Work done counts what this person recorded in Turnfin for the swim school, short courses, the Academy and refunds. Phone calls, emails and the till are not in Turnfin.",
     "Team figures are for everyone who did desk work at the same sites in the same period. Small numbers move a lot: read a quiet week with care.",
   ]}>
-    <ul className="ins-kpis" aria-label={`${p.name} at a glance`}>
+    <Section id="glance" eyebrow="At a glance" title="Their figures">
+    <KpiStrip label={`${p.name} at a glance`}>
       <Kpi label="Work done" value={formatCount(p.actions)} note={`${percent(p.share)} of the desk · ${plural(p.days, "day")}`} />
       <Kpi label="Per day worked" value={decimal(p.perDay)} note={`Team average ${decimal(c.perDay.team)}`} />
       <Kpi label="Timed jobs" value={formatCount(p.jobsDone)} note={p.median !== null ? `Typically ${duration(p.median)}` : undefined} />
       <Kpi label="On time" value={percent(p.onTime)} note={`Team ${percent(data.team.onTime)}`} />
       <Kpi label="New swimmers" value={formatCount(p.added)} note={p.missingDetails !== null ? `${percent(p.missingDetails)} missing details` : undefined} />
       <Kpi label="Follow-ups" value={formatCount(p.followUps)} note={p.booked ? `${p.booked} assessments booked` : undefined} />
-    </ul>
+    </KpiStrip>
+    </Section>
+    <Section id="detail" eyebrow="In detail" title="Against the team" intro="Each figure beside the team's, their work week by week, what they did and when.">
 
     <Panel id="compare" title="Against the team" sub="Each figure beside the team's for the same sites and period.">
       <ul className="ins-compare">
@@ -78,5 +81,6 @@ export function DeskPersonReport({ data }: { data: DeskPersonInsights & { person
         </div></li>)}</ul> : <p className="ins-sub">None in this period.</p>}
       </Panel>
     </div>
+    </Section>
   </ReportShell>;
 }

@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.33.0 · 16 October 2026 · Analytics: one suite, with your own dates
+
+- **Analytics** is now one suite, grouped by what you want to know: **The business** (Overview, Classes, Swimmers, Progression), **Our people** (Teachers, Reception) and **Checks** (Registers, Multiple enrolments).
+- Choose **Custom** beside the periods for any two days, or a quick pick: last 30 days, this or last month, this or last school year (from 1 September), or this or last year. Figures compare with the same number of days just before.
+- When your dates end before today, figures such as swimmers and places filled are as of the last day you chose. Waiting lists and the next four weeks are always as of today.
+- Choose a **programme** to see only its classes, swimmers, waiting lists and passes. **Reset filters** goes back to the last 13 weeks at this site.
+- Each page is split into short sections, such as Capacity, Lessons and Every class, with **On this page** links to jump between them, and has a cleaner, calmer look in light and dark mode.
+
 ## 1.32.0 · 16 October 2026 · Analytics: reception and much more on the swim school
 
 - **Analytics** has a new **Reception** page for swim school managers. It shows the work each person on the desk did in Turnfin: enrolments, moves, unenrols, new swimmers, parent app requests, follow-up calls, billing checks, assessment bookings, Academy call backs and refund requests.
