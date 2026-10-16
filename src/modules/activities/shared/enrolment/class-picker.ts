@@ -24,7 +24,7 @@ export function filterClassChoices(courses: TransferTarget[], filters: ClassPick
     if (filters.time !== "all" && String(course.startMinutes) !== filters.time) return false;
     if (filters.availableOnly && placesLeft(course._count.enrolments, course.capacity) === 0) return false;
     const text = [courseName(course), course.level.name, course.club.name, DAY_META[course.dayOfWeek].label,
-      classTimes(course), course.location, course.instructor?.name].join(" ").toLocaleLowerCase("en");
+      classTimes(course), course.location].join(" ").toLocaleLowerCase("en");
     return words.every(word => text.includes(word));
   }).sort((a, b) => DAY_META[a.dayOfWeek].index - DAY_META[b.dayOfWeek].index ||
     a.startMinutes - b.startMinutes || a.club.name.localeCompare(b.club.name) ||

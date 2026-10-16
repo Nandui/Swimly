@@ -40,7 +40,6 @@
 }
 .identity,
 .site,
-.instructor,
 .schedule,
 .availability {
   min-width: 0;
@@ -57,8 +56,7 @@
   font-size: var(--pc-text-caption);
   line-height: var(--pc-leading-caption);
 }
-.site,
-.instructor {
+.site {
   display: none;
 }
 .arrow {
@@ -78,17 +76,6 @@
   }
   .mobileSite {
     display: none;
-  }
-}
-@media (min-width: 80rem) {
-  .columns,
-  .row {
-    grid-template-columns:
-      minmax(0, 1.25fr) minmax(0, 0.85fr) minmax(0, 1fr)
-      minmax(0, 0.8fr) minmax(0, 1fr) calc(var(--spacing) * 4);
-  }
-  .instructor {
-    display: block;
   }
 }
 @media (max-width: 47.99rem) {

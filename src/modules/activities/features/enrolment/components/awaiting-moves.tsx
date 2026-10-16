@@ -28,7 +28,7 @@ export function AwaitingMoves({ result, enrol, profiles, courses, counts }: {
         <div className="text-xs text-ui-muted-foreground"><p>Confirmed ready {formatDate(row.readyToMoveAt!)}</p><p>By {row.readyToMoveByName ?? "Staff"}</p></div>
         <QueueContact student={row.student} />
       </>} placement={<>
-        <div className="min-w-0 rounded-ui-lg border border-ui-border p-4"><p className="text-xs text-ui-muted-foreground">Current class</p><p className="font-semibold">{label}</p><p className="text-xs text-ui-muted-foreground">{row.course.instructor?.name ?? "Instructor unassigned"}{row.course.location ? ` · ${row.course.location}` : ""}</p></div>
+        <div className="min-w-0 rounded-ui-lg border border-ui-border p-4"><p className="text-xs text-ui-muted-foreground">Current class</p><p className="font-semibold">{label}</p><p className="text-xs text-ui-muted-foreground">{row.course.location ?? "Pool area not recorded"}</p></div>
         <div className="min-w-0 rounded-ui-lg border border-ui-border p-4"><p className="text-sm">{row.completedLevelName ? `${row.completedLevelName} completed` : "Level confirmation needs review"} · {row.programmeName}</p>
           {row.nextLevel ? <p className="font-semibold">Next level: {row.nextLevel.name}</p> : <p className="text-xs text-ui-muted-foreground">Choose the appropriate next class with the family.</p>}
         </div>

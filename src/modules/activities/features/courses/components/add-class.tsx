@@ -13,13 +13,12 @@ import { FormFeedbackProvider, useFormFeedback } from "@/components/ui/form-feed
 import { Select } from "@/components/ui/select";
 import { DAY_META, DAYS_IN_ORDER } from "@/modules/activities/shared/courses/constants";
 import { createCourse } from "@/modules/activities/features/courses/server/actions/courses";
-import { readCourseInput, UNASSIGNED_INSTRUCTOR } from "@/modules/activities/features/courses/server/form-input";
-import type { InstructorOption } from "@/modules/activities/shared/courses/data/courses";
+import { readCourseInput } from "@/modules/activities/features/courses/server/form-input";
 import type { LevelOption } from "@/modules/activities/shared/curriculum/data/curriculum";
 import { toast } from "@/components/ui/toast";
 import { withTimeout } from "@/lib/save-feedback";
 
-export function AddClass({ levels, instructors, workingSite }: { levels: LevelOption[]; instructors: InstructorOption[]; workingSite: string }) {
+export function AddClass({ levels, workingSite }: { levels: LevelOption[]; workingSite: string }) {
   const id = useId();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -35,7 +34,7 @@ export function AddClass({ levels, instructors, workingSite }: { levels: LevelOp
   return <Dialog open={open} onOpenChange={changeOpen}>
     <DialogTrigger asChild><Button><CalendarPlus aria-hidden="true" />Add class</Button></DialogTrigger>
     <DialogContent className="flex max-h-(--pc-overlay-max-height) flex-col gap-0 overflow-hidden p-0 sm:max-w-xl" showCloseButton={false}>
-      <DialogHeader className="shrink-0 p-6"><DialogTitle>Add a class</DialogTitle><DialogDescription>A weekly class at {workingSite}, your current working site.</DialogDescription></DialogHeader>
+      <DialogHeader className="shrink-0 p-6"><DialogTitle>Add a class</DialogTitle><DialogDescription>A weekly class at {workingSite}, your current working site. Who teaches it is chosen for each day on the rota Plan.</DialogDescription></DialogHeader>
       <FormFeedbackProvider feedback={feedback}><form ref={formRef} aria-busy={pending} className="flex min-h-0 flex-1 flex-col" onSubmit={event => {
         event.preventDefault(); if (pending) return;
         const input = readCourseInput(new FormData(event.currentTarget)); feedback.reset();
@@ -57,7 +56,6 @@ export function AddClass({ levels, instructors, workingSite }: { levels: LevelOp
             <Entry name="durationMinutes" label="Duration (minutes)" type="number" min={5} max={240} step={5} defaultValue={30} required />
             <Entry name="capacity" label="Capacity" type="number" min={1} max={999} optional hint="Leave blank for no limit." />
           </div>
-          <Select id={`${id}-instructor`} name="instructorId" label="Instructor" defaultValue={UNASSIGNED_INSTRUCTOR} disabled={pending} options={[{value: UNASSIGNED_INSTRUCTOR, label:"Not assigned"}, ...instructors.map(instructor => ({value: instructor.id,label: instructor.name}))]} />
           <LocationField id={`${id}-location`} label="Pool area" />
         </fieldset></div>
         <div className="shrink-0 space-y-3 p-4 sm:px-6">

@@ -22,8 +22,6 @@ export type CourseFilters = {
   level: string;
   day: string;
   time: string;
-  /** A user id, or "none" for the classes nobody is assigned to. */
-  instructor: string;
   location: string;
   /** "open" — a place left. "full" — none. */
   places: string;
@@ -36,13 +34,12 @@ export const EMPTY_FILTERS: CourseFilters = {
   level: "",
   day: "",
   time: "",
-  instructor: "",
   location: "",
   places: "",
 };
 
 /** Every key except `q`, which is a text box rather than a picker. */
-export const PICKER_KEYS = ["site", "programme", "level", "day", "time", "instructor", "location", "places"] as const;
+export const PICKER_KEYS = ["site", "programme", "level", "day", "time", "location", "places"] as const;
 export type PickerKey = (typeof PICKER_KEYS)[number];
 
 const PICKER_LABELS: Record<PickerKey, string> = {
@@ -51,7 +48,6 @@ const PICKER_LABELS: Record<PickerKey, string> = {
   level: "Level",
   day: "Day",
   time: "Time",
-  instructor: "Instructor",
   location: "Pool area",
   places: "Places",
 };
@@ -75,7 +71,6 @@ export function parseCourseFilters(params: RawParams): CourseFilters {
     level: one(params, "level"),
     day: day === ANY_DAY ? "" : day,
     time: one(params, "time"),
-    instructor: one(params, "instructor"),
     location: one(params, "location"),
     places: one(params, "places"),
   };
@@ -98,7 +93,6 @@ function haystack(course: CourseRow): string {
     course.level.programme.name,
     course.location ?? "",
     course.club.name,
-    course.instructor?.name ?? "",
     formatTime(course.startMinutes),
     DAY_META[course.dayOfWeek].label,
   ]
@@ -125,13 +119,6 @@ function matchesFilters(
   if (except !== "day" && filters.day && course.dayOfWeek !== filters.day) return false;
   if (except !== "time" && filters.time && String(course.startMinutes) !== filters.time) return false;
   if (except !== "location" && filters.location && (course.location ?? "") !== filters.location) return false;
-  if (except !== "instructor" && filters.instructor) {
-    const matches =
-      filters.instructor === "none"
-        ? course.instructor === null
-        : course.instructorId === filters.instructor;
-    if (!matches) return false;
-  }
   if (except !== "places" && filters.places) {
     const open = hasPlace(course);
     if (filters.places === "open" && !open) return false;
@@ -223,14 +210,6 @@ export function courseFilterDimensions(
       "time",
       (c) => ({ value: String(c.startMinutes), label: formatTime(c.startMinutes) }),
       byValueNumber
-    ),
-
-    dimension(
-      courses,
-      filters,
-      "instructor",
-      (c) => ({ value: c.instructorId ?? "none", label: c.instructor?.name ?? "Nobody assigned" }),
-      byLabel
     ),
 
     dimension(

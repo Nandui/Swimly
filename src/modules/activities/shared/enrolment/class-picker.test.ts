@@ -36,8 +36,8 @@ test("available-only includes uncapped classes and hides full or over-capacity c
   assert.equal(filterClassChoices(rows, { ...ALL_CLASSES, availableOnly: false }).length, rows.length);
 });
 
-test("search combines case-insensitive words from site, time, level, pool and instructor", () => {
-  assert.deepEqual(filterClassChoices(courses, { ...ALL_CLASSES, search: "  CHURCHFIELD turtles Thursday 16:30 learner Demo " }).map(c => c.id), ["churchfield"]);
+test("search combines case-insensitive words from site, time, level and pool", () => {
+  assert.deepEqual(filterClassChoices(courses, { ...ALL_CLASSES, search: "  CHURCHFIELD turtles Thursday 16:30 learner " }).map(c => c.id), ["churchfield"]);
   assert.deepEqual(filterClassChoices(courses, { ...ALL_CLASSES, search: "Churchfield Monday" }), []);
 });
 

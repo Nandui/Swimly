@@ -23,10 +23,9 @@ export type DayAssignment = { id: string; needId: string; place: number; userId:
 export type DayBooked = { ref: string; userId: string | null; startMinutes: number; endMinutes: number; title: string; place: string; href: string | null; module?: string };
 /** Booked things sit on every department's plan: the time and the area are taken. */
 export const ANY_DEPARTMENT = "*";
-/** The swim classes when no activity on the list takes them (owner request, 16 October 2026: the
- *  swim school's classes fill the Plan by themselves, with no booking or activity to set up):
- *  on every department's plan, as booked things are. An activity that "takes the swim classes"
- *  still gives them its name, icon, qualification and department. */
+/** The swim classes (owner decisions, 16 October 2026: the swim school's classes fill the Plan by
+ *  themselves, and "no booking option takes the swim school anymore"): on every department's
+ *  plan, as booked things are, waiting for a teacher. */
 export const SWIM_CLASSES: DayType = { id: "swim-classes", name: "Swim classes", icon: "teaching", departmentId: ANY_DEPARTMENT, requiredTypeId: null, requiredName: null, fromClasses: true };
 /** A swim class that day, from the swim school's commitments. */
 export type DayClass = { ref: string; userId: string | null; startMinutes: number; endMinutes: number; title: string; place: string; planned: boolean };
@@ -141,7 +140,7 @@ export function buildDay(input: {
   rest?: ReadonlyMap<string, readonly string[]>;
 }): Day {
   const types = new Map(input.types.map((t) => [t.id, t]));
-  const teaching = input.types.find((t) => t.fromClasses) ?? SWIM_CLASSES;
+  const teaching = SWIM_CLASSES;
   const name = (id: string | null) => (id ? input.names.get(id) ?? "Someone" : null);
   const siteAreas = (input.areas ?? []).map((a) => (typeof a === "string" ? { name: a, lanes: 0 } : a));
   const holds = (userId: string, typeId: string) => qualification(input.held ?? [], userId, typeId, input.date) === "ok";

@@ -117,7 +117,7 @@ function ClassPicker({ courses, name, selectedId, onSelect, currentEnrolment }: 
               <span className="min-w-0 break-words">
                 <span className="block font-semibold">{courseName(course)}</span>
                 <span className="pc-row-hint block">{course.name && course.name !== course.level.name ? `${course.level.name} · ` : ""}{course.durationMinutes}-minute lesson</span>
-                {course.location || course.instructor?.name ? <span className="pc-row-hint block">{[course.location, course.instructor?.name].filter(Boolean).join(" · ")}</span> : null}
+                {course.location ? <span className="pc-row-hint block">{course.location}</span> : null}
               </span>
               <span className="min-w-0 break-words"><span className="sr-only">Site: </span>{course.club.name}</span>
               <span><span className="sr-only">Day: </span>{DAY_META[course.dayOfWeek].label}</span>

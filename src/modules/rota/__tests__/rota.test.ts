@@ -375,7 +375,7 @@ test("changing a booking: kept days take what changed, dropped days leave with a
   assert.equal((await actions.cancelRepeat(repeat.id)).ok, true);
 });
 
-test("swim classes are Teaching; the rota plans their teacher through the swim school", async () => {
+test("swim classes fill the Plan by themselves, even with an old Teaching activity; the rota plans their teacher through the swim school", async () => {
   as("maya", [at("rota.plan")]);
   const day = addDaysIso(nextMonday(), 1);
   classes.push(
@@ -384,7 +384,7 @@ test("swim classes are Teaching; the rota plans their teacher through the swim s
   );
   let plan = await data.planWeek({ site: churchfield, day, dept: "d-pool" });
   const teaching = plan.day!.groups.find((g) => g.fromClasses)!;
-  assert.deepEqual([teaching.name, teaching.place, teaching.gapCount], ["Teaching", "Learner pool", 1]);
+  assert.deepEqual([teaching.name, teaching.place, teaching.gapCount], ["Swim classes", "Learner pool", 1]);
   assert.equal((await actions.planTeacher({ siteId: churchfield, date: day, classRef: "c2", userId: "lee", departmentId: "d-pool" })).ok, true);
   plan = await data.planWeek({ site: churchfield, day, dept: "d-pool" });
   assert.equal(plan.day!.groups.find((g) => g.fromClasses)!.gapCount, 0);

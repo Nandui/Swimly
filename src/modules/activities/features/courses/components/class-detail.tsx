@@ -33,7 +33,6 @@ import {
 } from "@/modules/activities/shared/courses/constants";
 import type {
   CourseDetail,
-  InstructorOption,
   RosterEntry,
 } from "@/modules/activities/shared/courses/data/courses";
 import type { LevelOption } from "@/modules/activities/shared/curriculum/data/curriculum";
@@ -63,24 +62,25 @@ export function ClassDetailView({
   roster,
   targets,
   levels,
-  instructors,
   access,
   backHref,
   backLabel = "Classes",
   levelImage,
   coverName,
+  nextTeacher,
   sites = [],
 }: {
   course: CourseDetail;
   roster: RosterEntry[];
   targets: TransferTarget[];
   levels: LevelOption[];
-  instructors: InstructorOption[];
   access: ClassAccess;
   backHref: string;
   backLabel?: string;
   levelImage?: ReactNode;
   coverName?: string;
+  /** Who teaches the next lesson, chosen on the rota Plan (owner decision, 16 October 2026). */
+  nextTeacher?: { day: string; name: string | null };
   /** The sites the person works at; a second one offers "Move". */
   sites?: { id: string; name: string }[];
 }) {
@@ -128,9 +128,9 @@ export function ClassDetailView({
             value={course.location ?? "Not recorded"}
           />
           <ClassFact
-            label="Instructor"
-            value={course.instructor?.name ?? "Not assigned"}
-            hint={coverName ? `${coverName} is covering today` : undefined}
+            label="Teacher"
+            value={nextTeacher?.name ?? "Not chosen yet"}
+            hint={coverName ? `${coverName} is covering today` : nextTeacher ? `${nextTeacher.day} · chosen on the rota Plan` : "Chosen on the rota Plan"}
           />
           <ClassFact
             label="Places"
@@ -220,12 +220,11 @@ export function ClassDetailView({
               <EditCourse
                 course={course}
                 levels={levels}
-                instructors={instructors}
               />
             </div>
           </div>
           <p className="text-sm text-ui-muted-foreground">
-            Update the weekly schedule, instructor or capacity, or move the class to another site.
+            Update the weekly schedule, pool area or capacity, or move the class to another site.
           </p>
         </section>
       ) : null}

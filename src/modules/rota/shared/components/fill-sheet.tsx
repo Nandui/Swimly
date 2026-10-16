@@ -82,7 +82,7 @@ export function FillSheet({ gap, live, onClose }: { gap: GapRef | null; live: bo
       <SheetContent portalClassName="turnfin-module" className="flex w-full flex-col gap-0 overflow-y-auto sm:max-w-md">
         <SheetHeader className="p-6 pb-4">
           <SheetTitle>{gap?.handOver ? `Who covers ${gap.handOver.name.split(" ")[0]}` : gap?.classRefs.length ? "Who teaches it" : gap?.area ? `Who can join ${gap.area.place}` : "Who can fill it"}</SheetTitle>
-          <SheetDescription>Best fit first: qualified, free, then fewest hours this week. Warnings never stop you.{gap?.classRefs.length ? " This changes that day only; the class keeps its usual instructor in the swim school." : ""}</SheetDescription>
+          <SheetDescription>Best fit first: qualified, free, then fewest hours this week. Warnings never stop you.{gap?.classRefs.length ? " This changes that day only, and the swim school follows it." : ""}</SheetDescription>
         </SheetHeader>
         {/* A fresh body for each gap, so its list, search and error start empty. */}
         {gap ? <FillBody key={`${gap.what}|${gap.date}|${gap.start}|${gap.place ?? gap.classRefs.join(",")}`} gap={gap} live={live} onClose={onClose} /> : null}

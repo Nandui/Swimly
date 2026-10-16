@@ -27,7 +27,7 @@ test("one row per activity and per booking, swim classes together", () => {
   assert.deepEqual(needRows(day.groups).map((r) => [r.kind, r.label, r.gaps]), [
     ["booking", "St Joseph's NS", 1],
     ["activity", "Lifeguarding", 1],
-    ["classes", "Teaching", 1],
+    ["classes", "Swim classes", 1],
     ["activity", "Reception", 1],
   ]);
 });

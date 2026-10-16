@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.21.0 · 16 October 2026 · The rota Plan chooses who teaches each swim class
+
+- Swim classes no longer have a set instructor. Whoever you choose for a class on the rota **Plan** teaches it that day, and the swim school follows: the pool deck, the schedule, starting the class, the register and what parents see.
+- **Two weeks to switch over:** up to Sunday 1 November, a class nobody has been chosen for on the Plan is still taught by its current instructor. From Monday 2 November, a class with nobody chosen has no teacher until someone is picked on the Plan.
+- Adding or changing a swim class no longer asks for an instructor, and the class list no longer shows one. A class's page now shows who teaches its next lesson.
+- Activities can no longer be set to take the swim classes. The classes fill the Plan by themselves. An activity that used to take them is marked on the activity list and stays off the Plan; saving it makes it an ordinary activity.
+
 ## 1.20.0 · 16 October 2026 · Minimum staff for each area
 
 - In **Admin > Areas**, each area now has a **Minimum staff** button. Say how many staff it needs and what type: for example 2 holding the lifeguard qualification and 1 anyone. You can also give the hours it is open every day.

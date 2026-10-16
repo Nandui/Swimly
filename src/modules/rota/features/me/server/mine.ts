@@ -3,7 +3,7 @@ import { sitesByIds, staffAgesByIds, staffStatus, withSites } from "@/lib/direct
 import { parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { qualificationsHeldBy, qualificationTypesByIds } from "@/lib/qualifications";
-import { activityTypesByIds, classesActivity } from "@/lib/setup/activity-types";
+import { activityTypesByIds } from "@/lib/setup/activity-types";
 import { addDaysIso, mondayOf, youngBand } from "@/modules/rota/shared/constants";
 import { qualification } from "@/modules/rota/shared/fit";
 import { dayShift, type WorkItem } from "@/modules/rota/shared/shifts";
@@ -33,14 +33,13 @@ export async function myDays(userId: string, days = 28) {
   const [status, [age]] = await Promise.all([staffStatus(userId), staffAgesByIds([userId])]);
   if (!status?.orgId) return [];
   const me = { orgId: status.orgId, dateOfBirth: age?.dateOfBirth ?? null };
-  const [assignments, classes, held, teaching, planned, placed] = await Promise.all([
+  const [assignments, classes, held, planned, placed] = await Promise.all([
     prisma.rotaAssignment.findMany({
       where: { userId, need: { date: range } },
       select: { startMinutes: true, endMinutes: true, createdAt: true, updatedAt: true, need: { select: { date: true, place: true, siteId: true, typeId: true } } },
     }).then(withActivities),
     commitmentsFor({ userIds: [userId], from, to }).then((all) => all.filter((c) => c.source === "activities.classes")),
     qualificationsHeldBy([userId]),
-    classesActivity(me.orgId),
     prisma.rotaPlanShift.findMany({ where: { userId, date: range }, select: { date: true, siteId: true, departmentId: true, startMinutes: true, endMinutes: true, createdAt: true, updatedAt: true } })
       .then((rows) => withSites(rows, "siteId", "site")),
     prisma.rotaBreak.findMany({ where: { userId, date: range }, select: { date: true, siteId: true, startMinutes: true, minutes: true, paid: true } }),
@@ -71,12 +70,12 @@ export async function myDays(userId: string, days = 28) {
     if (a.updatedAt > shared || a.createdAt > shared) d.changed = true;
   }
   for (const c of classes) {
-    // Without an activity that takes the classes, a class shows once the department whose shift
-    // holds it has shared that week (owner request, 16 October 2026: classes need no activity).
-    const holder = teaching?.departmentId ?? planned.find((p) => p.siteId === c.siteId && p.date.toISOString().slice(0, 10) === c.date && p.startMinutes < c.endMinutes && c.startMinutes < p.endMinutes)?.departmentId;
+    // A class shows once the department whose shift holds it has shared that week (owner
+    // request, 16 October 2026: classes need no activity).
+    const holder = planned.find((p) => p.siteId === c.siteId && p.date.toISOString().slice(0, 10) === c.date && p.startMinutes < c.endMinutes && c.startMinutes < p.endMinutes)?.departmentId;
     if (!holder || !sharedAt(c.siteId, holder, c.date)) continue;
     const d = dayOf(c.date, c.siteId, sites.find((s) => s.id === c.siteId)?.name ?? "");
-    d.items.push({ start: c.startMinutes, end: c.endMinutes, label: `${teaching?.name ?? "Swim class"}: ${c.title ?? c.label}`, icon: teaching?.icon ?? "teaching", place: c.place ?? "", needs: null, problem: null });
+    d.items.push({ start: c.startMinutes, end: c.endMinutes, label: `Swim class: ${c.title ?? c.label}`, icon: "teaching", place: c.place ?? "", needs: null, problem: null });
   }
   for (const p of planned) {
     const date = p.date.toISOString().slice(0, 10);

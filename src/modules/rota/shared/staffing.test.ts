@@ -70,8 +70,10 @@ test("an area with no minimum keeps the old rule: a break never takes someone of
   assert.ok(day.people.every((p) => p.shift.parts.every((x) => x.unplaced.length === 2 && !x.breaks.length)));
 });
 
-test("a swim class's teacher counts toward the area they teach in", () => {
-  const day = buildDay({ date: "2026-10-23", types, names, held, needs: [], assignments: [],
+test("a swim class's teacher counts toward the area they teach in, with no activity taking the classes", () => {
+  // An old activity marked as taking the classes is ignored (owner decision, 16 October 2026).
+  const legacy: DayType = { id: "teach", name: "Teaching", icon: "teaching", departmentId: "pool", requiredTypeId: null, requiredName: null, fromClasses: true };
+  const day = buildDay({ date: "2026-10-23", types: [...types, legacy], names, held, needs: [], assignments: [],
     areas: [{ name: "Learner pool", lanes: 0, minimums: [{ count: 1, typeId: null, typeName: null }] }],
     classes: [{ ref: "c1", userId: "aoife", startMinutes: h("16:00"), endMinutes: h("16:30"), title: "Stage 3", place: "Learner pool, lane 3", planned: false },
       { ref: "c2", userId: null, startMinutes: h("16:30"), endMinutes: h("17:00"), title: "Stage 4", place: "Learner pool, lane 2", planned: false }] });

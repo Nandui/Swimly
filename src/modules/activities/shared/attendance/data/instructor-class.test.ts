@@ -1,12 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { serverModule } from "@/test/server-module";
+import { plannedDouble } from "@/test/planned-double";
 
 function fixture(owner: string | null | undefined, cancelled = false) {
   const reads: string[] = [];
   const data = serverModule<typeof import("@/modules/activities/shared/attendance/data/instructor-class")>(
     "src/modules/activities/shared/attendance/data/instructor-class.ts",
     {
+      "@/modules/activities/shared/courses/planned": plannedDouble(),
       "@/modules/activities/shared/cancellations/data": { getCancellation: async () => cancelled ? { id: "cancelled", reason: "Pool closed" } : null },
       "@/modules/activities/shared/attendance/page-guard": {
         classPage: async () => ({ user: { id: "teacher" } }),

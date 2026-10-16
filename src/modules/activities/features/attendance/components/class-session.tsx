@@ -1,5 +1,5 @@
 import { Button } from "@/components/shadcn/button";
-import { plannedTeachers } from "@/modules/activities/shared/courses/planned";
+import { dayTeacherId, plannedTeachers } from "@/modules/activities/shared/courses/planned";
 import UiLink from "next/link";
 import { Notice } from "@/components/ui-kit/notice";
 import {
@@ -157,8 +157,8 @@ export async function ClassSession({
 
   const access = {
     session,
-    // Whose class it is that day: the teacher planned on the rota for this date, else its instructor.
-    instructorId: planned.has(id) ? planned.get(id)!.teacherId : course.instructorId,
+    // Whose class it is that day: the teacher planned on the rota for this date (`dayTeacherId`).
+    instructorId: dayTeacherId(course.instructorId, planned.get(id), iso),
     coverById: cover?.coverById,
   };
   const mayMark =
@@ -179,6 +179,9 @@ export async function ClassSession({
   const competencies = progress.course.level.competencies.length;
 
   const covered = Boolean(cover && cover.coverById !== cover.instructorId);
+  // That day's teacher, from the rota's plan (`dayTeacherId`): no class has a set instructor.
+  const dayPlanned = planned.get(id);
+  const teacherName = dayPlanned ? dayPlanned.teacherName : dayTeacherId(course.instructorId, undefined, iso) ? course.instructor?.name ?? null : null;
   return (
     <div className="min-w-0 flex flex-col gap-6">
       {/* The tags sit in their own row under the description (SSClassRegister),
@@ -192,8 +195,8 @@ export async function ClassSession({
             `${formatSlot(course)} · ${formatDate(parseDateOnly(iso))}` +
             (cover
               ? ` · ${coverLabel(cover)}`
-              : course.instructor
-                ? ` · ${course.instructor.name}`
+              : teacherName
+                ? ` · ${teacherName}`
                 : "")
           }
         />
@@ -224,7 +227,7 @@ export async function ClassSession({
           date={iso}
           classLabel={courseName(course)}
           dateLabel={formatDate(parseDateOnly(iso))}
-          instructorName={course.instructor?.name ?? null}
+          instructorName={teacherName}
           mayMarkAnyway={mayMark}
           autoOpen
         />
