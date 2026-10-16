@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, UserPlus, UsersRound, X } from "lucide-react";
+import { ChevronDown, RotateCcw, UserPlus, UsersRound, X } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/shadcn/dropdown-menu";
 import { Field, FormDialog } from "@/components/form-dialog";
@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { Textarea } from "@/components/ui/textarea";
 import { today } from "@/lib/format";
-import { assignTraining, cancelAssignment } from "@/modules/training/features/assignments/server/actions";
+import { assignTraining, cancelAssignment, giveExamAttempt } from "@/modules/training/features/assignments/server/actions";
 import { THEME } from "@/modules/training/shared/components/dialog-kit";
 
 type Person = { id: string; name: string; jobTitle: string | null; staffRole?: { id: string; name: string } | null };
@@ -119,6 +119,23 @@ export function CancelTraining({ id, name, title }: { id: string; name: string; 
       <Field label="Why it is no longer needed" htmlFor="cancel-reason">
         <Textarea id="cancel-reason" name="reason" rows={2} required minLength={3} maxLength={300} autoFocus />
       </Field>
+    </FormDialog>
+  );
+}
+
+/** A learner who has used every exam attempt gets one more. */
+export function GiveExamAttempt({ id, name, title }: { id: string; name: string; title: string }) {
+  return (
+    <FormDialog
+      portalClassName={THEME}
+      trigger={<Button variant="outline" className="min-h-11"><RotateCcw aria-hidden="true" />Give another attempt</Button>}
+      title={`Give ${name} another go at the exam?`}
+      description={`They have used every attempt at the ${title} exam without passing. This gives them one more. It is recorded in the log.`}
+      submitLabel="Give another attempt"
+      successMessage="Another attempt given"
+      submit={() => giveExamAttempt(id)}
+    >
+      <p className="text-sm text-ui-muted-foreground">Their earlier scores stay on their record. Talk through what they got wrong first if you can.</p>
     </FormDialog>
   );
 }

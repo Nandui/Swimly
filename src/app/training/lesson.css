@@ -46,4 +46,64 @@
 .tf-video { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: var(--pc-radius-card); overflow: hidden; background: var(--pc-surface-sunken); }
 .tf-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 
+/* Interactive blocks (phase 3). The builder and Preview show them open and labelled;
+   Turnfin Me makes them interactive (apps/me/src/app/globals.css). */
+.tf-callout { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 32px 16px 12px; border-radius: var(--pc-radius-card); background: var(--pc-primary-soft); color: var(--pc-ink); }
+.tf-callout::before { content: attr(data-label); position: absolute; top: 8px; left: 16px; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--pc-primary-ink); }
+.tf-callout[data-tone="tip"] { background: var(--pc-success-soft); }
+.tf-callout[data-tone="tip"]::before { color: var(--pc-success); }
+.tf-callout[data-tone="warning"] { background: var(--pc-warning-soft); }
+.tf-callout[data-tone="warning"]::before { color: var(--pc-ink); }
+.tf-callout[data-tone="danger"] { background: var(--pc-danger-soft); }
+.tf-callout[data-tone="danger"]::before { color: var(--pc-danger); }
+.tf-reveal { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); }
+.tf-reveal-title { font-weight: 600; }
+.tf-reveal-title::before { content: "Tap to reveal · "; color: var(--pc-ink-muted); font-weight: 500; font-size: var(--pc-text-caption); }
+.tf-reveal-content { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; border-top: 1px dashed var(--pc-line); }
+.tf-flip-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--pc-tile-min), 1fr)); gap: 12px; padding: 0; list-style: none; }
+.tf-flip-card { display: grid; grid-template-rows: auto auto; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); overflow: hidden; }
+.tf-flip-front, .tf-flip-back { display: flex; flex-direction: column; gap: 6px; padding: 28px 12px 12px; position: relative; }
+.tf-flip-front { background: var(--pc-surface-sunken); font-weight: 600; }
+.tf-flip-front::before, .tf-flip-back::before { position: absolute; top: 6px; left: 12px; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; color: var(--pc-ink-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.tf-flip-front::before { content: "Front"; }
+.tf-flip-back::before { content: "Back"; }
+.tf-flip-front img { max-height: 8rem; width: auto; }
+.tf-stepper { display: flex; flex-direction: column; gap: 8px; counter-reset: tf-step; }
+.tf-step { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 12px 16px 12px 52px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); counter-increment: tf-step; }
+.tf-step::before { content: counter(tf-step); position: absolute; left: 14px; top: 12px; display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 999px; background: var(--pc-primary); color: var(--pc-on-primary); font-size: var(--pc-text-caption); font-weight: 700; }
+.tf-step > :is(h2, h3) { margin-top: 0; }
+.tf-check { display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px; border: 2px dashed var(--pc-primary); border-radius: var(--pc-radius-card); background: var(--pc-surface); }
+.tf-check > svg { flex: none; width: 20px; height: 20px; color: var(--pc-primary); margin-top: 3px; }
+.tf-check.ProseMirror-selectednode { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.tf-check-box { flex: none; width: 22px; height: 22px; border: 2px solid var(--pc-line-strong); border-radius: 6px; }
+.tf-editor-context { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%; padding: 4px 8px; border-top: 1px solid var(--pc-line); }
+
+/* Pick the spot: boxes drawn over the picture, in percent of it. */
+.tf-spot-frame { position: relative; display: inline-block; max-width: 100%; cursor: crosshair; touch-action: none; user-select: none; border-radius: var(--pc-radius-card); overflow: hidden; }
+.tf-spot-frame.is-static { cursor: default; max-width: 28rem; }
+.tf-spot-frame img { display: block; max-width: 100%; height: auto; pointer-events: none; }
+.tf-spot-area { position: absolute; border: 2px solid var(--pc-primary); border-radius: 6px; background: color-mix(in srgb, var(--pc-primary) 18%, transparent); }
+.tf-spot-number { position: absolute; top: 2px; left: 2px; display: flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 4px; border-radius: 999px; background: var(--pc-primary); color: var(--pc-on-primary); font-size: var(--pc-text-caption); font-weight: 700; }
+
+/* A course's cover picture and tags. */
+.tf-cover { display: block; width: 100%; max-height: 16rem; object-fit: cover; border-radius: var(--pc-radius-card); }
+.tf-cover-thumb { flex: none; width: 64px; height: 44px; object-fit: cover; border-radius: var(--pc-radius-control); }
+.tf-tag { display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px; border-radius: 999px; background: var(--pc-surface-sunken); color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
+
 @media (prefers-reduced-motion: reduce) { .tf-outline-row { transition: none; } }
+
+/* Explore a picture (phase 8): numbered spots on the picture. */
+.tf-explore-marker { position: absolute; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; transform: translate(-50%, -50%); border-radius: 999px; border: 2px solid var(--pc-surface); background: var(--pc-primary); color: var(--pc-on-primary); font-size: var(--pc-text-caption); font-weight: 700; box-shadow: 0 1px 4px color-mix(in srgb, var(--pc-ink) 30%, transparent); }
+
+/* Tabs, a video in the text and a file button (phase 8), shown open for the author. */
+.tf-tabs { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); }
+.tf-tabs::before { content: "Tabs"; font-size: var(--pc-text-caption); font-weight: 600; color: var(--pc-ink-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.tf-tab { display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; background: var(--pc-surface-sunken); border-radius: var(--pc-radius-card); }
+.tf-tab-title { font-weight: 700; margin: 0; color: var(--pc-primary); }
+.tf-media-block { display: flex; align-items: center; gap: 8px; padding: 12px; border: 1px dashed var(--pc-line-strong); border-radius: var(--pc-radius-card); color: var(--pc-ink-muted); }
+.tf-media-block svg { flex: none; width: 20px; height: 20px; color: var(--pc-primary); }
+.tf-embed { position: relative; width: 100%; aspect-ratio: 16 / 10; border-radius: var(--pc-radius-card); overflow: hidden; background: var(--pc-surface-sunken); }
+.tf-embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+/* Sort into groups, in the preview. */
+.tf-sort-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(var(--pc-tile-min), 1fr)); gap: 12px; }

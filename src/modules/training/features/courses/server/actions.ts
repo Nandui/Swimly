@@ -19,6 +19,16 @@ const courseSchema = z.object({
   content: z.string().trim().max(10000, "Keep the material under 10,000 characters.").optional(),
   requiresSignoff: z.boolean(),
   grantsTypeId: z.string().trim().max(64).transform((v) => v || null),
+  /** Where it sits in the catalogue, such as "Pool safety", and words to find it by (phase 3). */
+  category: z.string().trim().max(60, "Keep the category under 60 characters.").optional(),
+  tags: z.array(z.string().trim().max(30, "Keep each tag under 30 characters.")).max(10, "Use up to 10 tags.").optional()
+    .transform((tags) => tags && [...new Set(tags.map((t) => t.replace(/^#/, "")).filter(Boolean))]),
+  /** Open in Turnfin Me's catalogue, for staff to enrol themselves (phase 6). */
+  selfEnrol: z.boolean().optional(),
+  /** Lessons open one after another; courses to finish first; offered as a template (phase 8). */
+  lessonsInOrder: z.boolean().optional(),
+  prerequisiteIds: z.array(z.string().trim().min(1).max(64)).max(5, "Choose up to 5 courses to finish first.").optional().transform((ids) => ids && [...new Set(ids)]),
+  isTemplate: z.boolean().optional(),
 });
 export type CourseInput = z.input<typeof courseSchema>;
 
@@ -32,6 +42,13 @@ export async function saveCourse(id: string | null, input: CourseInput): Promise
   const result = await onUniqueViolation(() => prisma.$transaction(async (tx) => {
     if (data.grantsTypeId && !(await liveQualificationTypeById(data.grantsTypeId, who.orgId!, tx))) {
       return fail("That qualification is no longer offered.");
+    }
+    if (data.prerequisiteIds?.length) {
+      if (id && data.prerequisiteIds.includes(id)) return fail("A course can't need itself first.");
+      const found = await tx.trainingCourse.findMany({ where: { id: { in: data.prerequisiteIds }, orgId: who.orgId! }, select: { id: true, prerequisiteIds: true } });
+      if (found.length !== data.prerequisiteIds.length) return fail("A course to finish first no longer exists.");
+      // Two courses that each need the other first could never be taken.
+      if (id && found.some((c) => c.prerequisiteIds.includes(id))) return fail("One of those courses already needs this one first, so neither could be taken.");
     }
     if (id) {
       const existing = await tx.trainingCourse.findFirst({ where: { id, orgId: who.orgId! }, select: { title: true } });

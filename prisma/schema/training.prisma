@@ -21,6 +21,26 @@ model TrainingCourse {
   /// The version learners get when assigned (e-learning, phase 1). Null until
   /// the course is first published: such a course shows `content` as before.
   publishedVersionId String?
+  /// The draft's final exam rules (e-learning phase 2): { passMark, attempts,
+  /// draw, timeLimit, testOut }. Null when the course has no exam.
+  exam               Json?
+  /// The course's cover picture (a TrainingFile), category and tags
+  /// (e-learning phase 3). Live settings: they apply to every version.
+  coverId            String?
+  category           String   @default("")
+  tags               String[] @default([])
+  /// What a trainer watches for at the practical sign-off (phase 5):
+  /// [{ id, text, critical }]. Null when there is no checklist.
+  observation        Json?
+  /// Staff may enrol themselves from the catalogue in Turnfin Me (phase 6).
+  selfEnrol          Boolean  @default(false)
+  /// Learners take the lessons in order: each opens once the one before is
+  /// done (phase 8). Live: applies to every version.
+  lessonsInOrder     Boolean  @default(false)
+  /// Courses a learner must have completed before this one opens (phase 8).
+  prerequisiteIds    String[] @default([])
+  /// Offered under Start from a template to the organisation's authors (phase 8).
+  isTemplate         Boolean  @default(false)
 
   organisation Organisation            @relation(fields: [orgId], references: [id], onDelete: Restrict)
   grantsType   QualificationType?      @relation(fields: [grantsTypeId], references: [id], onDelete: SetNull)
@@ -28,6 +48,11 @@ model TrainingCourse {
   sections     TrainingSection[]
   versions     TrainingCourseVersion[]
   files        TrainingFile[]
+  questions    TrainingQuestion[]
+  comments     TrainingReviewComment[]
+  rule         TrainingRule?
+  pathSteps    TrainingPathStep[]
+  sessions     TrainingSession[]
 
   @@unique([orgId, title])
 }
@@ -43,15 +68,18 @@ model TrainingSection {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  course  TrainingCourse   @relation(fields: [courseId], references: [id], onDelete: Restrict)
-  lessons TrainingLesson[]
+  course    TrainingCourse     @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  lessons   TrainingLesson[]
+  questions TrainingQuestion[]
 
   @@index([courseId, position])
   @@map("training_sections")
 }
 
 /// One lesson in a draft: READING (rich text, Tiptap JSON), VIDEO (a link,
-/// with notes) or FILE (an uploaded PDF or image, with notes).
+/// with notes), FILE (an uploaded PDF or image, with notes), QUIZ (practice
+/// on its section's questions, with an optional introduction in `body`), or
+/// (phase 3) SCENARIO, FLASHCARDS, CHECKLIST and AUDIO, set up in `data`.
 model TrainingLesson {
   id        String   @id @default(cuid())
   sectionId String
@@ -63,6 +91,9 @@ model TrainingLesson {
   videoUrl  String   @default("")
   fileId    String?
   minutes   Int?
+  /// SCENARIO, FLASHCARDS, CHECKLIST and AUDIO lessons (phase 3) keep their
+  /// settings here; see `cleanLessonData` in shared/lessons.ts.
+  data      Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -85,6 +116,10 @@ model TrainingCourseVersion {
   publishedById   String?
   publishedByName String
   publishedAt     DateTime @default(now())
+  /// What changed since the version before, in the author's words (phase 3).
+  changeNote      String   @default("")
+  /// Whether people who finished an older version were asked to take this one.
+  retake          Boolean  @default(false)
 
   course TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Restrict)
 
@@ -111,6 +146,78 @@ model TrainingFile {
   @@map("training_files")
 }
 
+/// A question in a draft section (e-learning phase 2). A Quiz lesson practises
+/// its section's questions; the final exam draws from every section's. kind is
+/// SINGLE, MULTIPLE, TRUE_FALSE, ORDER, MATCH, FILL_BLANK or HOTSPOT; options holds
+/// [{ id, text, imageId, correct, match }] (ORDER in the right order). Published
+/// versions keep their own frozen copy, so ids carry across for reports.
+model TrainingQuestion {
+  id          String   @id @default(cuid())
+  courseId    String
+  sectionId   String
+  position    Int
+  kind        String
+  prompt      String
+  imageId     String?
+  options     Json
+  explanation String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  course  TrainingCourse  @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  section TrainingSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@index([sectionId, position])
+  @@index([courseId])
+  @@map("training_questions")
+}
+
+/// A reviewer's comment on a course draft (phase 3): on one lesson, or on the
+/// course as a whole (lessonId null). Resolved, never deleted.
+model TrainingReviewComment {
+  id             String    @id @default(cuid())
+  courseId       String
+  lessonId       String?
+  body           String
+  authorId       String?
+  authorName     String
+  createdAt      DateTime  @default(now())
+  resolvedAt     DateTime?
+  resolvedById   String?
+  resolvedByName String?
+
+  course TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Restrict)
+
+  @@index([courseId, createdAt])
+  @@map("training_review_comments")
+}
+
+/// One sitting of a course's final exam. paper is the question ids in the
+/// order this person got them; answers maps question id to answer and is saved
+/// as they go; results maps question id to right or wrong once submitted.
+model TrainingExamAttempt {
+  id           String    @id @default(cuid())
+  assignmentId String
+  versionId    String
+  number       Int
+  paper        Json
+  answers      Json      @default("{}")
+  startedAt    DateTime  @default(now())
+  deadlineAt   DateTime?
+  submittedAt  DateTime?
+  correct      Int?
+  total        Int
+  percent      Int?
+  passed       Boolean?
+  results      Json?
+
+  assignment TrainingAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, number])
+  @@index([versionId])
+  @@map("training_exam_attempts")
+}
+
 /// A lesson a learner has finished, on their assignment's version.
 model TrainingLessonProgress {
   id           String   @id @default(cuid())
@@ -128,37 +235,351 @@ model TrainingLessonProgress {
 /// trainer's sign-off) → COMPLETED, or CANCELLED. One open assignment per
 /// person and course (partial unique index in the migration).
 model TrainingAssignment {
-  id              String    @id @default(cuid())
-  orgId           String
-  courseId        String
-  userId          String
-  status          String    @default("ASSIGNED")
-  dueOn           DateTime? @db.Date
-  assignedById    String?
-  assignedByName  String
-  assignedAt      DateTime  @default(now())
-  learnerNote     String    @default("")
-  submittedAt     DateTime?
-  completedAt     DateTime?
-  signedOffById   String?
-  signedOffByName String?
-  signoffNote     String    @default("")
-  qualificationId String?
-  cancelledAt     DateTime?
-  cancelReason    String    @default("")
+  id                String    @id @default(cuid())
+  orgId             String
+  courseId          String
+  userId            String
+  status            String    @default("ASSIGNED")
+  dueOn             DateTime? @db.Date
+  assignedById      String?
+  assignedByName    String
+  assignedAt        DateTime  @default(now())
+  learnerNote       String    @default("")
+  submittedAt       DateTime?
+  completedAt       DateTime?
+  signedOffById     String?
+  signedOffByName   String?
+  signoffNote       String    @default("")
+  qualificationId   String?
+  cancelledAt       DateTime?
+  cancelReason      String    @default("")
   /// The published version this person takes (e-learning). Null when the
   /// course had no published version at the time: the learner gets the
   /// current version the first time they open it, or the old text if none.
-  versionId       String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  versionId         String?
+  /// Exam attempts a trainer gave on top of the exam's own allowance.
+  examExtraAttempts Int       @default(0)
+  /// The rule that assigned it (phase 4), null when a person assigned it.
+  ruleId            String?
+  /// Checks the certificate of finished training; made the first time it is shown.
+  certificateCode   String?   @unique
+  /// What the trainer saw at the sign-off (phase 5): { steps: [{ id, text,
+  /// critical, result, note }], observedById, observedByName, observedAt }.
+  observation       Json?
+  /// The learning path enrolment that assigned it, if any (phase 5).
+  pathEnrolmentId   String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   organisation Organisation             @relation(fields: [orgId], references: [id], onDelete: Restrict)
   course       TrainingCourse           @relation(fields: [courseId], references: [id], onDelete: Restrict)
   user         User                     @relation("TrainingLearner", fields: [userId], references: [id], onDelete: Cascade)
   progress     TrainingLessonProgress[]
+  examAttempts TrainingExamAttempt[]
+  evidence     TrainingEvidence[]
+  notes        TrainingLessonNote[]
+  feedback     TrainingFeedback?
+  refreshers   TrainingRefresherCard[]
+  submissions  TrainingSubmission[]
 
   @@index([userId, status])
   @@index([orgId, status])
   @@index([courseId])
+}
+
+/// Who must take a course and how often (e-learning phase 4, compliance
+/// autopilot). One rule a course. Empty lists mean everyone; within a list any
+/// one matches; across lists all must. Applied daily and when saved.
+model TrainingRule {
+  id            String    @id @default(cuid())
+  orgId         String
+  courseId      String    @unique
+  roleIds       String[]  @default([])
+  departmentIds String[]  @default([])
+  siteIds       String[]  @default([])
+  positionIds   String[]  @default([])
+  /// Days people get to finish it once it is assigned.
+  dueDays       Int       @default(30)
+  /// Months after finishing that it is due again; null for once only.
+  renewMonths   Int?
+  /// How many days before it is due again that it is assigned.
+  renewLeadDays Int       @default(30)
+  pausedAt      DateTime?
+  createdById   String?
+  createdByName String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastRunAt     DateTime?
+
+  course TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Restrict)
+
+  @@index([orgId])
+  @@map("training_rules")
+}
+
+/// A photo taken as evidence at a practical sign-off (phase 5). A person's
+/// record, read like their training, never course material.
+model TrainingEvidence {
+  id           String   @id @default(cuid())
+  orgId        String
+  assignmentId String
+  userId       String
+  name         String
+  mime         String
+  size         Int
+  bytes        Bytes
+  addedById    String?
+  addedByName  String
+  createdAt    DateTime @default(now())
+
+  assignment TrainingAssignment @relation(fields: [assignmentId], references: [id], onDelete: Restrict)
+
+  @@index([assignmentId])
+  @@map("training_evidence")
+}
+
+/// A learning path (phase 5): courses in order, each due a number of days
+/// after the person starts, such as a new lifeguard's first month.
+model TrainingPath {
+  id            String    @id @default(cuid())
+  orgId         String
+  title         String
+  summary       String    @default("")
+  archivedAt    DateTime?
+  createdById   String?
+  createdByName String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  steps      TrainingPathStep[]
+  enrolments TrainingPathEnrolment[]
+
+  @@unique([orgId, title])
+  @@map("training_paths")
+}
+
+model TrainingPathStep {
+  id       String @id @default(cuid())
+  pathId   String
+  courseId String
+  position Int
+  /// Days after the start date that this course is due.
+  dueDays  Int    @default(7)
+
+  path   TrainingPath   @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  course TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Restrict)
+
+  @@unique([pathId, courseId])
+  @@map("training_path_steps")
+}
+
+/// One person on a path. One open enrolment a path a person (a partial
+/// unique index in the migration).
+model TrainingPathEnrolment {
+  id             String    @id @default(cuid())
+  orgId          String
+  pathId         String
+  userId         String
+  startsOn       DateTime  @db.Date
+  enrolledById   String?
+  enrolledByName String
+  createdAt      DateTime  @default(now())
+  cancelledAt    DateTime?
+
+  path TrainingPath @relation(fields: [pathId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([pathId])
+  @@map("training_path_enrolments")
+}
+
+/// A classroom or poolside session (phase 5) with places and a register.
+/// Closing the register completes its course and credits in-service hours
+/// to everyone who attended.
+model TrainingSession {
+  id                   String    @id @default(cuid())
+  orgId                String
+  title                String
+  courseId             String?
+  siteId               String?
+  location             String    @default("")
+  startsAt             DateTime
+  minutes              Int
+  capacity             Int?
+  trainerName          String    @default("")
+  /// The qualification whose in-service hours attending counts towards.
+  hoursTypeId          String?
+  note                 String    @default("")
+  cancelledAt          DateTime?
+  registerClosedAt     DateTime?
+  registerClosedByName String?
+  createdById          String?
+  createdByName        String
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  course TrainingCourse?        @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  places TrainingSessionPlace[]
+  hours  TrainingHours[]
+
+  @@index([orgId, startsAt])
+  @@map("training_sessions")
+}
+
+/// BOOKED, then ATTENDED or ABSENT on the register.
+model TrainingSessionPlace {
+  id          String    @id @default(cuid())
+  sessionId   String
+  userId      String
+  status      String    @default("BOOKED")
+  addedByName String
+  createdAt   DateTime  @default(now())
+  markedAt    DateTime?
+
+  session TrainingSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+
+  @@unique([sessionId, userId])
+  @@index([userId])
+  @@map("training_session_places")
+}
+
+/// In-service hours (phase 5), logged by a trainer or from a session's
+/// register. Never deleted: removing one stamps removedAt.
+model TrainingHours {
+  id             String    @id @default(cuid())
+  orgId          String
+  userId         String
+  typeId         String?
+  on             DateTime  @db.Date
+  minutes        Int
+  topic          String
+  sessionId      String?
+  recordedById   String?
+  recordedByName String
+  createdAt      DateTime  @default(now())
+  removedAt      DateTime?
+  removedByName  String?
+
+  session TrainingSession? @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+
+  @@index([userId, on])
+  @@index([orgId, typeId])
+  @@map("training_hours")
+}
+
+/// How many in-service hours a qualification needs over how many months.
+model TrainingHourTarget {
+  id           String   @id @default(cuid())
+  orgId        String
+  typeId       String   @unique
+  hours        Int
+  windowMonths Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("training_hour_targets")
+}
+
+/// A learner's bookmark and private note on a lesson (phase 6). Private to
+/// them: Work never shows it; HR's export of their record includes it.
+model TrainingLessonNote {
+  id           String   @id @default(cuid())
+  userId       String
+  assignmentId String
+  lessonId     String
+  bookmarked   Boolean  @default(false)
+  note         String   @default("")
+  updatedAt    DateTime @updatedAt
+
+  assignment TrainingAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, lessonId])
+  @@index([userId])
+  @@map("training_lesson_notes")
+}
+
+/// A learner's rating (1 to 5) of a course they finished and what was unclear
+/// (phase 6). Authors see the average and the comments without names.
+model TrainingFeedback {
+  id           String   @id @default(cuid())
+  orgId        String
+  assignmentId String   @unique
+  userId       String
+  courseId     String
+  versionId    String?
+  rating       Int
+  unclear      String   @default("")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  assignment TrainingAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@index([courseId])
+  @@map("training_feedback")
+}
+
+/// A question a learner missed, brought back in their daily refresher
+/// (phase 6). A right answer moves it up a box (1, 2, 4, 8, 16 days apart);
+/// a wrong one sends it back to box 1.
+model TrainingRefresherCard {
+  id           String    @id @default(cuid())
+  userId       String
+  assignmentId String
+  versionId    String
+  questionId   String
+  box          Int       @default(1)
+  dueOn        DateTime  @db.Date
+  misses       Int       @default(1)
+  lastSeenAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  assignment TrainingAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, versionId, questionId])
+  @@index([userId, dueOn])
+  @@map("training_refresher_cards")
+}
+
+/// Refresher questions a learner answered on a day, for their streak (phase 6).
+model TrainingRefresherDay {
+  id       String   @id @default(cuid())
+  userId   String
+  on       DateTime @db.Date
+  answered Int      @default(0)
+  correct  Int      @default(0)
+
+  @@unique([userId, on])
+  @@map("training_refresher_days")
+}
+
+/// Work handed in on a Hand in work lesson (phase 8): a written answer, a photo
+/// or PDF, or both. One a lesson an assignment; handing in again replaces it.
+/// SUBMITTED waits for a trainer when the lesson asks for one; ACCEPTED
+/// finishes the lesson; RETURNED goes back to the learner with feedback.
+model TrainingSubmission {
+  id             String    @id @default(cuid())
+  orgId          String
+  assignmentId   String
+  userId         String
+  lessonId       String
+  versionId      String?
+  text           String    @default("")
+  fileName       String?
+  mime           String?
+  size           Int?
+  bytes          Bytes?
+  status         String    @default("SUBMITTED")
+  feedback       String    @default("")
+  reviewedById   String?
+  reviewedByName String?
+  reviewedAt     DateTime?
+  submittedAt    DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  assignment TrainingAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, lessonId])
+  @@index([orgId, status])
+  @@map("training_submissions")
 }

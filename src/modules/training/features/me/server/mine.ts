@@ -13,7 +13,7 @@ import { progressFor } from "@/modules/training/features/me/server/course";
 const MY_SELECT = {
   id: true, status: true, versionId: true, dueOn: true, assignedAt: true, assignedByName: true, submittedAt: true, completedAt: true,
   learnerNote: true, signoffNote: true, signedOffByName: true,
-  course: { select: { title: true, summary: true, content: true, requiresSignoff: true, grantsTypeId: true, publishedVersionId: true } },
+  course: { select: { title: true, summary: true, content: true, requiresSignoff: true, grantsTypeId: true, publishedVersionId: true, coverId: true, category: true } },
 } as const satisfies Prisma.TrainingAssignmentSelect;
 
 /** Each course's qualification, by name, from Core. */
