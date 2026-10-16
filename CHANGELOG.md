@@ -4,6 +4,16 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.30.0 · 16 October 2026 · Swim school: much fuller analytics
+
+- **Analytics** has new pages for swim school managers: **Overview**, **Classes**, **Swimmers**, **Progression** and **Teachers**. Choose the last 4 weeks, 13 weeks, 6 months or 12 months, and this site or all your sites; figures show how they changed against the time before.
+- **Overview** shows swimmers, places filled, the waiting list, who joined and left, how many stayed, attendance and level passes, with a **Needs attention** list: swimmers who may leave, full classes with a waiting list, quiet classes, swimmers stuck at one level and lessons nobody started.
+- **Classes** shades the timetable by how full each day and time is, and opens each class to show its swimmers, their last lessons, the waiting list and every lesson with who taught it.
+- **Swimmers** shows joiners and leavers month by month, why swimmers left, how long they stayed and who is leaving soon. **Progression** shows how long each level takes and which skill holds swimmers back.
+- **Teachers** shows each teacher's lessons, cover, attendance, starting on time, registers, skills ticked, passes and swimmers who left after their lessons, against the whole swim school. A lesson counts for whoever started it on the pool deck.
+- **Instructor attendance** is now called **Registers**.
+- **Unenrol** now asks why the swimmer is leaving, from a short list. The reason shows on the swimmer's history and in Analytics.
+
 ## 1.29.1 · 16 October 2026 · Purchasing: a cleaner, clearer look
 
 - Every Purchasing page has a new look, in the same style as the new incident report page: soft cards, larger numbers and clearer steps.
