@@ -406,6 +406,13 @@ export async function whoCanFill(input: { siteId: string; date: string; start: n
   return fitsFor({ siteId: input.siteId, date: input.date, start: input.start, end: input.end, requiredTypeId: type?.requiredTypeId ?? null });
 }
 
+/** "Who can fill it" for an area short of its minimum staff: best fit for the type of staff it
+ *  is short of (a qualification, or anyone). Reading, so View is enough. */
+export async function whoCanFillArea(input: { siteId: string; date: string; start: number; end: number; requiredTypeId: string | null }) {
+  if (!isDateOnly(input.date)) return [];
+  return fitsFor({ siteId: input.siteId, date: input.date, start: input.start, end: input.end, requiredTypeId: input.requiredTypeId });
+}
+
 /* ---------- Copy and share ---------- */
 
 const copySchema = z.object({

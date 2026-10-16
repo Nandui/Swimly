@@ -4,6 +4,16 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.20.0 · 16 October 2026 · Minimum staff for each area
+
+- In **Admin > Areas**, each area now has a **Minimum staff** button. Say how many staff it needs and what type: for example 2 holding the lifeguard qualification and 1 anyone. You can also give the hours it is open every day.
+- An area counts as in use whenever something is on in it (an activity, a booking or a swim class) and during the hours you gave.
+- On the rota **Plan**, each area with a minimum gets its own row at the top of **What needs people**. It is green while the area has enough staff and amber wherever breaks or activities leave it short, with what is missing.
+- Click an amber stretch to see who could join the area then, best fit first, and put them on.
+- Staff on an activity all day used to have their breaks left for you to place. Now, where the area has a minimum, Turnfin suggests a time when the area still has enough people without them. If there is no such time, it picks the least short time and the gap shows in amber.
+- A break that leaves the area with enough people no longer asks you to find cover.
+- **Today** lists the areas short of their minimum for the rest of the day, with who is free and suited.
+
 ## 1.19.0 · 16 October 2026 · Swim classes fill the rota by themselves
 
 - Every swim class running that day now shows on the rota **Plan** by itself, straight from the swim school's timetable. You no longer need a booking or an activity to put swim teachers on.

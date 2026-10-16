@@ -20,8 +20,9 @@ export type ShiftPart = Span & {
   planned: boolean;
   work: WorkItem[];
   breaks: PlacedBreak[];
-  /** Breaks the person is owed that found no free time. */
-  unplaced: { minutes: number; paid: boolean }[];
+  /** Breaks the person is owed that found no free time, with when they aimed for. Where the
+   *  person's area has a minimum staff, the day suggests one during their work instead (day.ts). */
+  unplaced: { minutes: number; paid: boolean; aim?: number }[];
 };
 export type DayShift = Span & { parts: ShiftPart[]; paidMinutes: number };
 
@@ -81,7 +82,7 @@ function placeBreaks(span: Span & { planned: boolean }, work: readonly WorkItem[
       if (f.end - f.start >= b.minutes && !breaks.some((x) => x.start < f.start + b.minutes && f.start < x.end)
         && (best === null || Math.abs(f.start - target) < Math.abs(best - target))) best = f.start;
     }
-    if (best === null) unplaced.push({ minutes: b.minutes, paid: b.paid });
+    if (best === null) unplaced.push({ minutes: b.minutes, paid: b.paid, aim: target });
     else breaks.push({ start: best, end: best + b.minutes, paid: b.paid, pinned: false });
   });
   return { start: span.start, end: span.end, planned: span.planned, work: [...work].sort((a, b) => a.start - b.start), breaks: breaks.sort((a, b) => a.start - b.start), unplaced };
