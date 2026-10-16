@@ -193,3 +193,20 @@ H&S adviser should still look over the wording before launch.
   with owners, due dates and reminders, a reopen with a reason, photos and files.
 - **Phase 3** (above, 1.8.0): insights, the full record for the insurer, the keeping period,
   staff injuries on the HR file and links to the site's emergency plans.
+
+## The report page's look
+
+The report page (`/incidents/[id]`) was redesigned with the high-end-visual-design taste skill
+(16 October 2026, like the rota Plan and the refund request page). The case card at the top holds
+the kind and category, where and when, the level it is handled at with meters for what happened
+and what could have, and the four steps (reported, triaged, investigating or not needed, closed).
+Beside it from 1024px, and straight after it on phones, **What happens next** says whose move it
+is from the same `can` flags the page already uses, with a jump link to the triage, investigation
+or close form, the investigation checklist and the HSA deadline with days left (this replaces the
+HSA notice above the report). Then the account as written, the people, triage, files, the
+investigation and closing, with the history as a timeline in the side column. Cards are double
+bezels drawn with shadows so the existing form panels take them too; styles live in
+`src/app/incidents/incidents.css`, scoped to `.inc-file`. Motion is a spring on transform and
+opacity that stops for reduced motion. Visual only: the data, actions, permissions, read log and
+audit are unchanged.
+
