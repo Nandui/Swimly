@@ -16,6 +16,14 @@ const nextConfig: NextConfig = {
         { key: "Referrer-Policy", value: "no-referrer" },
         { key: "X-Frame-Options", value: "DENY" },
       ],
+    }, {
+      // The service worker that keeps pages for courses saved for offline:
+      // always checked for a new version.
+      source: "/sw.js",
+      headers: [
+        { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+        { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+      ],
     }];
   },
 };

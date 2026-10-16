@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, ExternalLink, FileText, Lock } from "lucide-react";
 import { Frame } from "@/components/frame";
+import { NeedsSignal } from "@/components/offline";
 import { BookmarkButton, LessonNote, ReadAloud } from "@/components/learner";
 import { LessonBody } from "@/components/lesson-body";
 import type { LearnerQuestion } from "@/components/question";
@@ -116,6 +117,7 @@ export default function LessonPage() {
               <BookmarkButton key={`b-${data.id}`} assignmentId={id} lessonId={data.id} initial={data.bookmarked} />
               {data.body || data.kind === "SCENARIO" || data.kind === "FLASHCARDS" ? <ReadAloud key={`r-${data.id}`} target={readable} /> : null}
             </div>
+            <NeedsSignal kind={data.kind} />
             {data.video?.embed ? (
               <div className="lesson-video"><iframe src={data.video.embed} title={`Video: ${data.title}`} allow="encrypted-media; picture-in-picture; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" /></div>
             ) : data.video ? (

@@ -4,7 +4,7 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.30.0 · 16 October 2026 · Swim school: much fuller analytics
+## 1.31.0 · 16 October 2026 · Swim school: much fuller analytics
 
 - **Analytics** has new pages for swim school managers: **Overview**, **Classes**, **Swimmers**, **Progression** and **Teachers**. Choose the last 4 weeks, 13 weeks, 6 months or 12 months, and this site or all your sites; figures show how they changed against the time before.
 - **Overview** shows swimmers, places filled, the waiting list, who joined and left, how many stayed, attendance and level passes, with a **Needs attention** list: swimmers who may leave, full classes with a waiting list, quiet classes, swimmers stuck at one level and lessons nobody started.
@@ -13,6 +13,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - **Teachers** shows each teacher's lessons, cover, attendance, starting on time, registers, skills ticked, passes and swimmers who left after their lessons, against the whole swim school. A lesson counts for whoever started it on the pool deck.
 - **Instructor attendance** is now called **Registers**.
 - **Unenrol** now asks why the swimmer is leaving, from a short list. The reason shows on the swimmer's history and in Analytics.
+## 1.30.0 · 16 October 2026 · Training: take courses with no signal
+
+- In Turnfin Me, a course now has **Save for offline**. Once saved, its lessons, pictures and documents open even with no signal, in a plant room, a basement or on the pool deck.
+- Lessons you finish, notes you write and work you hand in with no signal are kept on your phone and sent to Turnfin when you are back online, with the time you actually did them. A line at the top tells you when you are offline and how many changes are waiting.
+- Practice questions, the exam, videos and slides still need a connection, and say so if you open them offline.
+- **More > Saved for offline** lists the courses on your phone. They are removed after 30 days, and when you sign out. If changes are still waiting, Sign out asks first.
 
 ## 1.29.1 · 16 October 2026 · Purchasing: a cleaner, clearer look
 

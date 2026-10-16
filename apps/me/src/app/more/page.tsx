@@ -3,7 +3,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bell, ChevronRight, GraduationCap, MessageCircle, Type, UserRound } from "lucide-react";
+import { Bell, ChevronRight, CloudDownload, GraduationCap, MessageCircle, Type, UserRound } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { session } from "@/lib/api";
 
@@ -14,6 +14,7 @@ const LINKS = [
   { href: "/hr", label: "Shared by HR", hint: "Reviews and notes shared with you. Asks for a fresh code.", icon: MessageCircle },
   { href: "/details", label: "My details", hint: "Phone, address and emergency contact", icon: UserRound },
   { href: "/reminders", label: "Reminders", hint: "Which emails you get", icon: Bell },
+  { href: "/offline", label: "Saved for offline", hint: "Courses you can open with no signal", icon: CloudDownload },
   { href: "/display", label: "Text size and reading aloud", hint: "Bigger text, and how fast lessons are read to you", icon: Type },
 ];
 
