@@ -256,9 +256,9 @@ export function OptionRow({ option: o, person, siteId, date, live, canChange, on
   option: ShiftOption; person: Person; siteId: string; date: string; live: boolean; canChange: boolean; onDone: () => void;
   within?: { start: number; end: number }; lentTo?: string | null;
 }) {
-  const what = `${o.name} in ${o.area}`;
+  const what = `${o.classRef && o.detail ? o.detail : o.name} in ${o.area}`;
   const from = within ? Math.max(o.start, within.start) : o.start, to = within ? Math.min(o.end, within.end) : o.end;
-  const hint = [`${clock(o.gapStart)}–${clock(o.gapEnd)} needs someone`, lentTo ? `for ${lentTo}` : null, o.detail, o.requiredName ? `needs ${qualificationShort(o.requiredName)}` : null].filter(Boolean).join(" · ");
+  const hint = [`${clock(o.gapStart)}–${clock(o.gapEnd)} needs someone`, lentTo ? `for ${lentTo}` : null, o.classRef ? null : o.detail, o.requiredName ? `needs ${qualificationShort(o.requiredName)}` : null].filter(Boolean).join(" · ");
   const fid = `take-${o.key.replace(/\W+/g, "-")}`;
   return (
     <li className="pc-row" {...(o.ok ? {} : { "data-muted": "" })}>
