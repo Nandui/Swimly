@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { Client } from "pg";
 import type { PrismaClient } from "../src/generated/prisma/client";
+import { seedSwimHistory } from "./sandbox-swim-history";
 
 /** Extra fictional data for `npm run sandbox`, loaded by scripts/sandbox.mts.
  *  Everything here is synthetic and only ever written to the throwaway PGlite
@@ -19,6 +20,7 @@ export async function seed(ctx: Ctx) {
   await seedAcademy(ctx.prisma);
   await seedShortCourses(ctx.prisma);
   await seedStock(ctx.prisma);
+  await seedSwimHistory(ctx.prisma, ctx.roles.Instructor);
 }
 
 /** Two sites' worth of classes so the deck and desk surfaces can be checked:

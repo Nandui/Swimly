@@ -19,6 +19,7 @@ export async function getEnrolmentsForStudent(studentId: string) {
       startedOn: true,
       endedOn: true,
       scheduledEndOn: true,
+      leaveReason: true,
       placementReason: true,
       programmeId: true,
       levelId: true,

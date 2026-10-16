@@ -48,7 +48,7 @@ function fixture() {
 
 test("the place stays active through the chosen last lesson and ends the day after, exactly once", async () => {
   const f = fixture();
-  assert.equal((await f.actions.scheduleUnenrolment("place", "2026-09-14")).ok, true);
+  assert.equal((await f.actions.scheduleUnenrolment("place", "2026-09-14", "moving")).ok, true);
   assert.deepEqual(f.row.scheduledEndOn, parseDateOnly("2026-09-15"));
   assert.equal(f.row.status, "ACTIVE"); assert.equal(f.row.endedOn, null);
   f.day("2026-09-14");
@@ -66,7 +66,7 @@ test("the place stays active through the chosen last lesson and ends the day aft
 
 test("today's lesson can be the last one", async () => {
   const f = fixture();
-  assert.equal((await f.actions.scheduleUnenrolment("place", "2026-09-07")).ok, true);
+  assert.equal((await f.actions.scheduleUnenrolment("place", "2026-09-07", "moving")).ok, true);
   assert.deepEqual(await f.worker.processScheduledUnenrolments(), { withdrawn: 0 });
   f.day("2026-09-08");
   assert.deepEqual(await f.worker.processScheduledUnenrolments(), { withdrawn: 1 });
@@ -74,8 +74,8 @@ test("today's lesson can be the last one", async () => {
 
 test("changing or cancelling a schedule retains the current place", async () => {
   const f = fixture();
-  await f.actions.scheduleUnenrolment("place", "2026-09-14");
-  await f.actions.scheduleUnenrolment("place", "2026-09-21");
+  await f.actions.scheduleUnenrolment("place", "2026-09-14", "moving");
+  await f.actions.scheduleUnenrolment("place", "2026-09-21", "moving");
   f.day("2026-09-15");
   assert.deepEqual(await f.worker.processScheduledUnenrolments(), { withdrawn: 0 });
   await f.actions.scheduleUnenrolment("place", null);
@@ -86,25 +86,25 @@ test("changing or cancelling a schedule retains the current place", async () => 
 
 test("past lessons, days the class doesn't run, invalid dates and ended places are refused; another site is supported", async () => {
   const f = fixture();
-  for (const date of ["2026-08-31", "2026-09-10", "2026-02-30", "bad"]) assert.equal((await f.actions.scheduleUnenrolment("place", date)).ok, false);
+  for (const date of ["2026-08-31", "2026-09-10", "2026-02-30", "bad"]) assert.equal((await f.actions.scheduleUnenrolment("place", date, "moving")).ok, false);
   f.row.status = "WITHDRAWN";
-  assert.equal((await f.actions.scheduleUnenrolment("place", "2026-09-14")).ok, false);
+  assert.equal((await f.actions.scheduleUnenrolment("place", "2026-09-14", "moving")).ok, false);
   assert.equal(f.audits.length, 0);
   f.row.status = "ACTIVE"; f.row.course.clubId = "other";
-  assert.equal((await f.actions.scheduleUnenrolment("place", "2026-09-14")).ok, true);
+  assert.equal((await f.actions.scheduleUnenrolment("place", "2026-09-14", "moving")).ok, true);
   assert.equal(f.audits.length, 1);
 });
 
 test("overdue processing preserves the intended end, not the visit date", async () => {
   const f = fixture();
-  await f.actions.scheduleUnenrolment("place", "2026-09-14"); f.day("2026-09-20");
+  await f.actions.scheduleUnenrolment("place", "2026-09-14", "moving"); f.day("2026-09-20");
   await f.worker.processScheduledUnenrolments();
   assert.deepEqual(f.row.endedOn, parseDateOnly("2026-09-15"));
 });
 
 test("a cancellation or transfer winning the lock prevents automatic withdrawal", async () => {
   for (const change of ["cancel", "transfer"]) {
-    const f = fixture(); await f.actions.scheduleUnenrolment("place", "2026-09-14"); f.day("2026-09-15");
+    const f = fixture(); await f.actions.scheduleUnenrolment("place", "2026-09-14", "moving"); f.day("2026-09-15");
     f.beforeLock(() => { if (change === "cancel") f.row.scheduledEndOn = null; else f.row.status = "TRANSFERRED"; });
     assert.deepEqual(await f.worker.processScheduledUnenrolments(), { withdrawn: 0 });
     assert.equal(f.audits.length, 1);
@@ -113,7 +113,7 @@ test("a cancellation or transfer winning the lock prevents automatic withdrawal"
 
 test("a failed audit rolls back both scheduling and automatic withdrawal", async () => {
   const f = fixture(); f.failAudit();
-  await assert.rejects(f.actions.scheduleUnenrolment("place", "2026-09-14"), /Audit failed/);
+  await assert.rejects(f.actions.scheduleUnenrolment("place", "2026-09-14", "moving"), /Audit failed/);
   assert.equal(f.row.scheduledEndOn, null);
   f.row.scheduledEndOn = parseDateOnly("2026-09-07");
   await assert.rejects(f.worker.processScheduledUnenrolments(), /Audit failed/);

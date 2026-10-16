@@ -290,6 +290,11 @@ model Enrolment {
   readyToMoveByName            String?
   readyToMoveLevelId           String?
   readyToMoveNote              String?
+  /// Why the swimmer left this class, a key from LEAVE_REASONS
+  /// (src/modules/activities/shared/enrolment/leave-reasons.ts). Set when a
+  /// place is withdrawn or its last lesson is scheduled; null before
+  /// 16 October 2026 and for finished or waitlist places.
+  leaveReason                  String?
   createdAt                    DateTime              @default(now())
   updatedAt                    DateTime              @updatedAt
 

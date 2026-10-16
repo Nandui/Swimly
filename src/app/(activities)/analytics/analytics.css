@@ -1,0 +1,133 @@
+/* ── Swim school analytics (16 October 2026) ───────────────────────────────────────────────────
+   A manager reads these pages to decide: where to add or merge classes, who is about to leave,
+   which level holds swimmers back and how each teacher's lessons go. So each page leads with a
+   few figures that say whether things are better or worse than the period before, then the
+   picture (a trend, a timetable heat map, bars), then the rows behind it, each opening the class,
+   swimmer or teacher. One blue for magnitude (the app's accent, light to dark), green and red
+   kept for better and worse, always with words and an arrow. Charts are drawn to scale in SVG or
+   CSS widths, with the numbers in a table beside or under them for screen readers. */
+.turnfin-app .ins {
+  --ins-bar: var(--pc-primary);
+  --ins-bar-soft: color-mix(in srgb, var(--pc-primary) 16%, var(--pc-surface));
+  --ins-second: color-mix(in srgb, var(--pc-ink) 38%, var(--pc-surface));
+  --ins-grid: color-mix(in srgb, var(--pc-ink) 8%, transparent);
+  --ins-hair: color-mix(in srgb, var(--pc-ink) 8%, transparent);
+  display: flex; flex-direction: column; gap: 24px; min-width: 0;
+}
+
+/* Period and sites: one row of choices under the page tabs. */
+.turnfin-app .ins-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+.turnfin-app .ins-controls .ins-label { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); font-weight: 600; }
+
+/* Figures: the value, what it is, and how it moved against the period before. */
+.turnfin-app .ins-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; }
+.turnfin-app .ins-kpi { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 20px 22px; border-radius: var(--pc-radius-panel); background: var(--pc-surface); color: var(--pc-ink); text-decoration: none; }
+a.ins-kpi { transition: box-shadow 160ms var(--pc-ease); }
+@media (max-width: 520px) { .turnfin-app .ins-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .turnfin-app .ins-kpi { padding: 14px 16px; } }
+a.ins-kpi:hover { box-shadow: inset 0 0 0 1px var(--pc-line-strong); }
+a.ins-kpi:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.turnfin-app .ins-kpi-label { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.turnfin-app .ins-kpi-value { font-size: var(--pc-text-figure); line-height: var(--pc-leading-figure); font-weight: 750; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.turnfin-app .ins-kpi-value small { margin-left: 2px; color: var(--pc-ink-muted); font-size: var(--pc-text-body); font-weight: 600; letter-spacing: 0; }
+.turnfin-app .ins-kpi-note { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
+.turnfin-app .ins-delta { align-self: flex-start; display: inline-flex; align-items: center; gap: 4px; min-height: 24px; padding: 0 10px; border-radius: 999px; font-size: var(--pc-text-caption); font-weight: 650; font-variant-numeric: tabular-nums; background: var(--pc-neutral-soft); color: var(--pc-ink-muted); }
+.turnfin-app .ins-delta svg { width: 14px; height: 14px; }
+.turnfin-app .ins-delta[data-tone='good'] { background: var(--pc-success-soft); color: var(--pc-success); }
+.turnfin-app .ins-delta[data-tone='bad'] { background: var(--pc-danger-soft); color: var(--pc-danger); }
+
+/* Panels: the app's white panels, with a head that can carry a link. */
+.turnfin-app .ins-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 1100px) {
+  .turnfin-app .ins-grid { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+  .turnfin-app .ins-grid.ins-even { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.turnfin-app .ins-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; }
+.turnfin-app .ins-head h2 { margin: 0; }
+.turnfin-app .ins-minor { margin: 12px 0 0; font-size: var(--pc-text-body); font-weight: 650; }
+.turnfin-app .ins-sub { margin: 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); max-width: 70ch; }
+
+/* The trend: an area under a 2px line, a faint grid, the last value marked. */
+.turnfin-app .ins-trend { display: block; width: 100%; height: auto; overflow: visible; }
+.turnfin-app .ins-trend .ins-area { fill: color-mix(in srgb, var(--pc-primary) 14%, transparent); }
+.turnfin-app .ins-trend .ins-line { fill: none; stroke: var(--ins-bar); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.turnfin-app .ins-trend .ins-gridline { stroke: var(--ins-grid); stroke-width: 1; }
+.turnfin-app .ins-trend .ins-axis { fill: var(--pc-ink-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.turnfin-app .ins-trend .ins-end { fill: var(--ins-bar); stroke: var(--pc-surface); stroke-width: 3; }
+.turnfin-app .ins-trend .ins-hit { fill: transparent; }
+.turnfin-app .ins-trend .ins-hit:hover { fill: color-mix(in srgb, var(--pc-primary) 8%, transparent); }
+.turnfin-app .ins-trend .ins-col-a { fill: var(--ins-bar); }
+.turnfin-app .ins-trend .ins-col-b { fill: var(--ins-second); }
+
+/* Legend: a swatch beside each series name, in ink. */
+.turnfin-app .ins-legend { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0; padding: 0; list-style: none; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
+.turnfin-app .ins-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.turnfin-app .ins-swatch { width: 10px; height: 10px; border-radius: 3px; background: var(--ins-bar); }
+.turnfin-app .ins-swatch[data-series='b'] { background: var(--ins-second); }
+
+/* Bars: label, a bar drawn to the largest value, the number. */
+.turnfin-app .ins-bars { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.turnfin-app .ins-bar-row { display: grid; grid-template-columns: minmax(0, 14rem) minmax(0, 1fr) auto; align-items: center; gap: 12px; font-size: var(--pc-text-body); line-height: 1.3; }
+.turnfin-app .ins-bar-track { position: relative; height: 10px; border-radius: 999px; background: var(--pc-surface-sunken); overflow: hidden; }
+.turnfin-app .ins-bar-fill { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--ins-bar); min-width: 4px; }
+.turnfin-app .ins-bar-fill[data-zero] { min-width: 0; }
+.turnfin-app .ins-bar-row[data-tone='warn'] .ins-bar-fill, .turnfin-app .ins-meter[data-tone='warn'] .ins-bar-fill { background: var(--pc-warning); }
+.turnfin-app .ins-bar-value { font-variant-numeric: tabular-nums; font-weight: 650; text-align: right; min-width: 3ch; }
+@media (max-width: 640px) { .turnfin-app .ins-bar-row { grid-template-columns: minmax(0, 1fr) auto; } .turnfin-app .ins-bar-track { grid-column: 1 / -1; grid-row: 2; } }
+
+/* The timetable heat map: days across, start hours down, fill as shade of blue. */
+.turnfin-app .ins-heat-wrap { overflow-x: auto; }
+.turnfin-app .ins-heat { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 4px; font-size: var(--pc-text-caption); }
+.turnfin-app .ins-heat th { padding: 4px 6px; color: var(--pc-ink-muted); font-weight: 650; text-align: center; white-space: nowrap; }
+.turnfin-app .ins-heat th[scope='row'] { text-align: right; font-variant-numeric: tabular-nums; }
+.turnfin-app .ins-heat td { height: 48px; min-width: 64px; padding: 4px; border-radius: 10px; text-align: center; vertical-align: middle; background: var(--pc-surface-sunken); color: var(--pc-ink); font-variant-numeric: tabular-nums; }
+.turnfin-app .ins-heat td[data-empty] { background: transparent; color: var(--pc-ink-muted); }
+.turnfin-app .ins-heat td strong { display: block; font-size: var(--pc-text-body); }
+.turnfin-app .ins-heat td span { display: block; opacity: 0.8; }
+.turnfin-app .ins-heat td[data-band='1'] { background: color-mix(in srgb, var(--pc-primary) 12%, var(--pc-surface)); }
+.turnfin-app .ins-heat td[data-band='2'] { background: color-mix(in srgb, var(--pc-primary) 28%, var(--pc-surface)); }
+.turnfin-app .ins-heat td[data-band='3'] { background: color-mix(in srgb, var(--pc-primary) 50%, var(--pc-surface)); }
+.turnfin-app .ins-heat td[data-band='4'] { background: var(--pc-primary); color: var(--pc-on-primary); }
+.turnfin-app .ins-heat td[data-waiting] { box-shadow: inset 0 0 0 2px var(--pc-warning); }
+
+/* Tables of rows behind the figures. */
+.turnfin-app .ins-table-wrap { overflow-x: auto; margin: 0 -8px; padding: 0 8px; }
+.turnfin-app .ins-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.turnfin-app .ins-muted { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
+.turnfin-app .ins-meter { display: inline-grid; grid-template-columns: 56px auto; align-items: center; gap: 8px; justify-content: end; }
+.turnfin-app .ins-meter .ins-bar-track { height: 6px; }
+.turnfin-app .ins-flag { display: inline-flex; align-items: center; gap: 4px; min-height: 22px; padding: 0 8px; border-radius: 999px; font-size: var(--pc-text-caption); font-weight: 650; white-space: nowrap; background: var(--pc-neutral-soft); color: var(--pc-ink-muted); }
+.turnfin-app .ins-flag[data-tone='warn'] { background: var(--pc-warning-soft); color: var(--pc-warning); }
+.turnfin-app .ins-flag[data-tone='bad'] { background: var(--pc-danger-soft); color: var(--pc-danger); }
+.turnfin-app .ins-flag[data-tone='good'] { background: var(--pc-success-soft); color: var(--pc-success); }
+.turnfin-app .ins-flag[data-tone='info'] { background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.turnfin-app .ins-flags { display: flex; flex-wrap: wrap; gap: 4px; }
+.turnfin-app .ins-marks { display: inline-flex; gap: 3px; }
+.turnfin-app .ins-mark { width: 10px; height: 10px; border-radius: 50%; background: var(--pc-success); }
+.turnfin-app .ins-mark[data-status='LATE'] { background: var(--pc-warning); }
+.turnfin-app .ins-mark[data-status='ABSENT'] { background: transparent; box-shadow: inset 0 0 0 2px var(--pc-danger); }
+
+/* Needs attention: a short list of things to act on, each a link. */
+.turnfin-app .ins-attention { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.turnfin-app .ins-attention li + li { border-top: 1px solid var(--ins-hair); }
+.turnfin-app .ins-attention a, .turnfin-app .ins-attention .ins-attention-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: 56px; padding: 8px 4px; color: var(--pc-ink); text-decoration: none; border-radius: 12px; }
+.turnfin-app .ins-attention a:hover { background: var(--pc-hover); }
+.turnfin-app .ins-attention a:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.turnfin-app .ins-attention-count { display: grid; place-items: center; min-width: 40px; height: 40px; padding: 0 8px; border-radius: 12px; font-weight: 750; font-variant-numeric: tabular-nums; background: var(--pc-neutral-soft); }
+.turnfin-app .ins-attention [data-tone='warn'] .ins-attention-count { background: var(--pc-warning-soft); color: var(--pc-warning); }
+.turnfin-app .ins-attention [data-tone='bad'] .ins-attention-count { background: var(--pc-danger-soft); color: var(--pc-danger); }
+.turnfin-app .ins-attention [data-tone='good'] .ins-attention-count { background: var(--pc-success-soft); color: var(--pc-success); }
+.turnfin-app .ins-attention-title { font-weight: 650; }
+.turnfin-app .ins-attention-hint { display: block; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
+
+/* One teacher against the school: their value, the school's, a short bar each. */
+.turnfin-app .ins-compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; }
+.turnfin-app .ins-compare li { display: flex; flex-direction: column; gap: 8px; padding: 16px 18px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); }
+.turnfin-app .ins-compare .ins-compare-line { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr) 3.5rem; align-items: center; gap: 8px; font-size: var(--pc-text-caption); color: var(--pc-ink-muted); }
+.turnfin-app .ins-compare .ins-compare-line .ins-bar-track { height: 8px; background: var(--pc-surface); }
+.turnfin-app .ins-compare .ins-compare-line[data-who='school'] .ins-bar-fill { background: var(--ins-second); }
+
+.turnfin-app .ins-footnote { max-width: 72ch; display: flex; flex-direction: column; gap: 6px; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
+
+@media (prefers-reduced-motion: reduce) { .turnfin-app .ins * { transition: none !important; } }
+.turnfin-app .ins-heat tr, .turnfin-app .ins-heat tr:hover { border: 0; background: none; }
+.turnfin-app .ins-heat .ins-heat-corner { width: 4rem; height: auto; }

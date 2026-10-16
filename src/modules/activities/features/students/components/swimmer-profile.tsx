@@ -1,5 +1,6 @@
 "use client";
 
+import { leaveReasonLabel } from "@/modules/activities/shared/enrolment/leave-reasons";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -92,7 +93,7 @@ export function SwimmerProfile({ student, enrolments, programmes, assessments, t
                         <span className="min-w-0 flex-1">
                           <span className="pc-row-hint block tabular-nums">{formatDate(e.startedOn)} to {ends}</span>
                           <span className="block font-semibold">{e.level.name} · {e.course.club.name}</span>
-                          <span className="pc-row-hint block">{formatSlotShort(e.course)}</span>
+                          <span className="pc-row-hint block">{formatSlotShort(e.course)}{e.leaveReason ? ` · Left: ${leaveReasonLabel(e.leaveReason)}` : ""}</span>
                         </span>
                         <Tag meta={ENROLMENT_STATUS_META[e.status]} />
                       </CollapsibleTrigger>

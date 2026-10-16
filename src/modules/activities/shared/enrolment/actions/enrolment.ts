@@ -15,6 +15,7 @@ import { fullName } from "@/modules/activities/shared/students/constants";
 import { readSharedCurriculum, sharedCourse } from "@/modules/activities/shared/curriculum/data/shared";
 import { prisma } from "@/lib/prisma";
 import { agreementRecord, LEGEND_AGREEMENT_META, type LegendAgreementChoice } from "@/modules/activities/shared/enrolment/legend-agreement";
+import { isLeaveReason, LEAVE_REASONS } from "@/modules/activities/shared/enrolment/leave-reasons";
 
 const placementReasonSchema = z.string().trim().max(300, "Keep the reason under 300 characters.");
 const enrolSchema = z.object({
@@ -183,6 +184,8 @@ export async function enrolStudent(input: EnrolInput, confirmation?: Confirmatio
 const endSchema = z.object({
   status: z.enum(["WITHDRAWN", "COMPLETED"]),
   note: z.string().trim().max(300, "Keep the note under 300 characters."),
+  /** Required to withdraw a swimmer from a place they hold (LEAVE_REASONS). */
+  leaveReason: z.string().optional(),
 });
 
 export async function endEnrolment(id: string, input: z.infer<typeof endSchema>): Promise<ActionResult> {
@@ -198,13 +201,16 @@ export async function endEnrolment(id: string, input: z.infer<typeof endSchema>)
     if (!enrolment) return fail("That enrolment no longer exists.");
     if (enrolment.status !== "ACTIVE" && enrolment.status !== "WAITLISTED") return fail("That enrolment has already ended.");
     if (enrolment.status === "WAITLISTED" && parsed.data.status === "COMPLETED") return fail("A waitlisted swimmer has not taken this class. Withdraw the booking instead.");
-    await tx.enrolment.update({ where: { id }, data: { status: parsed.data.status, endedOn: parseDateOnly(today()), scheduledEndOn: null } });
+    const leaving = enrolment.status === "ACTIVE" && parsed.data.status === "WITHDRAWN";
+    if (leaving && !isLeaveReason(parsed.data.leaveReason)) return fail("Choose why they are leaving.", { leaveReason: "Choose a reason." });
+    const leaveReason = leaving && isLeaveReason(parsed.data.leaveReason) ? parsed.data.leaveReason : null;
+    await tx.enrolment.update({ where: { id }, data: { status: parsed.data.status, endedOn: parseDateOnly(today()), scheduledEndOn: null, ...(leaveReason ? { leaveReason } : {}) } });
     await logAudit({
       actorId: session.user.id, actorName: session.user.name ?? "Unknown",
       action: parsed.data.status === "COMPLETED" ? "complete" : "withdraw",
       entity: "Enrolment", entityId: id, programmeId: enrolment.programmeId, clubId: enrolment.course.clubId,
       summary: `${parsed.data.status === "COMPLETED" ? "Finished" : "Withdrew"} ${fullName(enrolment.student)} from ${courseLabel(enrolment.course)}` +
-        (parsed.data.note ? ` — ${parsed.data.note}` : ""),
+        (leaveReason ? ` (${LEAVE_REASONS[leaveReason]})` : "") + (parsed.data.note ? ` — ${parsed.data.note}` : ""),
     }, tx);
     return ok();
   });
