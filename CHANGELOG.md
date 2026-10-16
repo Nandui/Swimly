@@ -4,6 +4,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.22.0 · 16 October 2026 · Each area has its own staff needs on the rota
+
+- Under **Admin > Areas**, the people button now sets the **staff an area needs while it is open**: how many, and which qualification they hold (or anyone), with the hours it is open every day. A weekday can have its own hours or be closed, for example the 25m pool opening later on Saturday and closed on Sunday.
+- On the rota **Plan**, each of these shows as its own row in that area, such as "NPLQ on duty, 2 staff", for the hours the area is open that day, alongside bookings, activities and swim classes. Click a gap to put someone on it, the same way as an activity.
+- Only the people you put on an area's need count towards it. Staff on a booking, an activity or a swim class in the same area do not.
+- Breaks for people on an area's need are spread so two people are not away at once where that can be avoided. Each break shows as a place to fill for its time, on the Plan and in Today's gaps, and choosing someone for it covers that break.
+- Time on an area's need shows in Turnfin Me, in the person's file and in their hours, like any other activity.
+- The separate "minimum staff" rows on the Plan and the "Areas short of minimum staff" list on Today are gone: an area's needs now show as gaps like everything else. The staff numbers already set for each area are kept. An area with staff set but no opening hours shows nothing on the Plan until you add its hours.
+
 ## 1.21.1 · 16 October 2026 · Incidents: a clearer incident report page
 
 - An incident report now opens like a case file. At the top: what kind it is and what it was about in large type, where and when, the level it is handled at with two bars for what happened and what could have, and a progress line showing how far it has got: reported, triaged, investigating and closed.
