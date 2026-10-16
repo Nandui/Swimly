@@ -295,6 +295,14 @@ export async function activeStaffIds(ids: readonly string[], db?: Db): Promise<S
   return new Set(rows.map((row) => row.id));
 }
 
+/** Each person's line manager (the "their team" link HR keeps), by person id; null when none is set. */
+export async function lineManagersOf(ids: readonly string[], db?: Db): Promise<Map<string, StaffRef | null>> {
+  const wanted = unique(ids);
+  if (wanted.length === 0) return new Map();
+  const rows = await (await client(db)).user.findMany({ where: { id: { in: wanted } }, select: { id: true, manager: { select: { id: true, name: true } } } });
+  return new Map(rows.map((row) => [row.id, row.manager]));
+}
+
 /** Ids of the people in this organisation whose name contains `query`. */
 export async function staffIdsNamed(orgId: string | null, query: string, db?: Db): Promise<string[]> {
   const rows = await (await client(db)).user.findMany({ where: { orgId: orgId ?? undefined, name: { contains: query, mode: "insensitive" } }, select: { id: true } });
@@ -438,4 +446,17 @@ export async function activeStaffAtSite(orgId: string | null, siteId: string, db
     where: { orgId: orgId ?? undefined, isActive: true, OR: [{ siteIds: { has: siteId } }, { siteIds: { isEmpty: true } }] },
     orderBy: { name: "asc" }, select: { id: true, name: true, jobTitle: true },
   });
+}
+
+/** Active staff in an organisation with what places them: role, live departments, sites and
+ *  position (Training's compliance rules and matrix). No personal details. */
+export type PlacedStaff = StaffRef & { roleId: string | null; departmentIds: string[]; siteIds: string[]; positionId: string | null };
+export async function activePlacedStaff(orgId: string | null, people: SubjectFilter = { kind: "all" }, db?: Db & DepartmentDb): Promise<PlacedStaff[]> {
+  const rows = await (await client(db)).user.findMany({
+    where: { orgId: orgId ?? undefined, isActive: true, ...(people.kind === "all" ? {} : { id: { in: [...people.userIds] } }) },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, staffRoleId: true, siteIds: true, positionId: true, departments: { select: { departmentId: true, department: { select: { archivedAt: true } } } } },
+  });
+  return rows.map((u) => ({ id: u.id, name: u.name, roleId: u.staffRoleId, siteIds: u.siteIds, positionId: u.positionId,
+    departmentIds: u.departments.filter((d) => !d.department.archivedAt).map((d) => d.departmentId) }));
 }

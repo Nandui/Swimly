@@ -2,7 +2,7 @@ import "server-only";
 import { logAudit } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 import { requireTrainingActor } from "@/modules/training/shared/access";
-import { FILE_SELECT, fileProblem, MAX_FILE_BYTES, safeFileName } from "@/modules/training/shared/files";
+import { FILE_SELECT, fileProblem, MAX_FILE_BYTES, safeFileName, storedMime } from "@/modules/training/shared/files";
 
 /** Adding a file to a course, and opening one in Work. Files are never deleted:
  *  a published version may still show them. */
@@ -21,7 +21,7 @@ export async function addCourseFile(courseId: string, file: File) {
   return prisma.$transaction(async (tx) => {
     const course = await tx.trainingCourse.findFirst({ where: { id: courseId, orgId: who.orgId! }, select: { title: true } });
     if (!course) throw new TrainingFileError("That course no longer exists.");
-    const row = await tx.trainingFile.create({ data: { courseId, name, mime: file.type, size: bytes.length, bytes, addedById: who.id, addedByName: who.name }, select: { id: true, name: true, mime: true, size: true } });
+    const row = await tx.trainingFile.create({ data: { courseId, name, mime: storedMime(file.type), size: bytes.length, bytes, addedById: who.id, addedByName: who.name }, select: { id: true, name: true, mime: true, size: true } });
     await logAudit({ actorId: who.id, actorName: who.name, action: "update", entity: "TrainingCourse", entityId: courseId, summary: `Added the file ${name} to ${course.title}` }, tx);
     return row;
   });

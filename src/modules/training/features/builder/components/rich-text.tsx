@@ -5,13 +5,18 @@ import { EditorContent, useEditor, useEditorState, type Editor, type JSONContent
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import { Table, TableCell, TableHeader, TableRow } from "@tiptap/extension-table";
-import { Bold, Heading2, Heading3, ImagePlus, Italic, Link as LinkIcon, List, ListOrdered, Minus, Quote, Redo2, Table2, Undo2, type LucideIcon } from "lucide-react";
+import { Bold, CircleHelp, FileDown, Footprints, GalleryHorizontal, PanelsTopLeft, PlayCircle, Heading2, Heading3, ImagePlus, Italic, Link as LinkIcon, List, ListOrdered, ListPlus, Megaphone, Minus, PanelTopOpen, Quote, Redo2, Table2, Trash2, Undo2, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/shadcn/tooltip";
 import { FileField } from "@/components/ui/file-field";
 import { Input } from "@/components/ui/input";
 import { Notice } from "@/components/ui-kit/notice";
-import { fileSrc, safeHref } from "@/modules/training/shared/lessons";
+import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
+import { Field } from "@/components/form-dialog";
+import { CALLOUT_META, CALLOUT_TONES, fileSrc, safeHref, videoFor, type CalloutTone } from "@/modules/training/shared/lessons";
+import {
+  addToBlock, BLOCK_META, blockAt, blockExtensions, CheckQuestions, CourseFiles, insertBlock, insertCheck, insertFileButton, insertVideo, removeBlock, setTone,
+} from "@/modules/training/features/builder/components/blocks";
 
 /** The lesson text editor: what a creator needs and nothing more. Headings,
  *  emphasis, lists, a key-point quote, links, images, tables and a divider.
@@ -23,6 +28,7 @@ function extensions() {
   return [
     StarterKit.configure({ heading: { levels: [2, 3] }, code: false, codeBlock: false, link: { openOnClick: false, protocols: ["http", "https", "mailto"] } }),
     Image, Table.configure({ resizable: false }), TableRow, TableHeader, TableCell,
+    ...blockExtensions(),
   ];
 }
 
@@ -49,11 +55,16 @@ function Tool({ label, icon: Icon, onClick, active, disabled }: { label: string;
   );
 }
 
-function Toolbar({ editor, disabled, openLink, openImage }: { editor: Editor | null; disabled: boolean; openLink: () => void; openImage: () => void }) {
+const ATOM_LABEL = { knowledgeCheck: "Knowledge check", videoEmbed: "Video", fileButton: "File to download" } as const;
+
+function Toolbar({ editor, disabled, openLink, openImage, openCheck, openVideo, openFile }: {
+  editor: Editor | null; disabled: boolean; openLink: () => void; openImage: () => void; openCheck: (() => void) | null; openVideo: () => void; openFile: () => void;
+}) {
   const state = useEditorState({ editor, selector: ({ editor: e }) => ({
     h2: e?.isActive("heading", { level: 2 }), h3: e?.isActive("heading", { level: 3 }), bold: e?.isActive("bold"), italic: e?.isActive("italic"),
     bullets: e?.isActive("bulletList"), numbers: e?.isActive("orderedList"), quote: e?.isActive("blockquote"), link: e?.isActive("link"),
     table: e?.isActive("table"), undo: e?.can().undo(), redo: e?.can().redo(),
+    block: e ? blockAt(e)?.kind ?? null : null, tone: e ? (blockAt(e)?.node.attrs.tone as CalloutTone | undefined) ?? null : null,
   }) });
   const off = disabled || !editor;
   const run = (fn: (e: Editor) => void) => () => { if (editor && !off) fn(editor); };
@@ -73,17 +84,50 @@ function Toolbar({ editor, disabled, openLink, openImage }: { editor: Editor | n
       <Tool label="Table" icon={Table2} disabled={off || state?.table} onClick={run((e) => e.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run())} />
       <Tool label="Divider" icon={Minus} disabled={off} onClick={run((e) => e.chain().focus().setHorizontalRule().run())} />
       <span className="tf-editor-divider" aria-hidden="true" />
+      <Tool label={`${BLOCK_META.callout.label}: ${BLOCK_META.callout.help}`} icon={Megaphone} disabled={off || !!state?.block} onClick={run((e) => insertBlock(e, "callout", "tip"))} />
+      <Tool label={`${BLOCK_META.reveal.label}: ${BLOCK_META.reveal.help}`} icon={PanelTopOpen} disabled={off || !!state?.block} onClick={run((e) => insertBlock(e, "reveal"))} />
+      <Tool label={`${BLOCK_META.flipCards.label}: ${BLOCK_META.flipCards.help}`} icon={GalleryHorizontal} disabled={off || !!state?.block} onClick={run((e) => insertBlock(e, "flipCards"))} />
+      <Tool label={`${BLOCK_META.stepper.label}: ${BLOCK_META.stepper.help}`} icon={Footprints} disabled={off || !!state?.block} onClick={run((e) => insertBlock(e, "stepper"))} />
+      <Tool label={`${BLOCK_META.tabs.label}: ${BLOCK_META.tabs.help}`} icon={PanelsTopLeft} disabled={off || !!state?.block} onClick={run((e) => insertBlock(e, "tabs"))} />
+      <Tool label="Video: a YouTube or Vimeo video played right here in the text" icon={PlayCircle} disabled={off || !!state?.block} onClick={openVideo} />
+      <Tool label="File to download: a button to open a PDF or picture, such as a form or a poster" icon={FileDown} disabled={off || !!state?.block} onClick={openFile} />
+      {openCheck ? <Tool label="Knowledge check: one of this course's questions, answered right here" icon={CircleHelp} disabled={off || !!state?.block} onClick={openCheck} /> : null}
+      <span className="tf-editor-divider" aria-hidden="true" />
       <Tool label="Undo" icon={Undo2} disabled={off || !state?.undo} onClick={run((e) => e.chain().focus().undo().run())} />
       <Tool label="Redo" icon={Redo2} disabled={off || !state?.redo} onClick={run((e) => e.chain().focus().redo().run())} />
+      {state?.block ? (
+        <div className="tf-editor-context" role="group" aria-label="This block">
+          <span className="text-xs font-semibold uppercase tracking-wide text-ui-muted-foreground">{state.block in ATOM_LABEL ? ATOM_LABEL[state.block as keyof typeof ATOM_LABEL] : BLOCK_META[state.block as keyof typeof BLOCK_META].label}</span>
+          {state.block === "callout" ? (
+            <NativeSelect aria-label="Kind of callout" value={state.tone ?? "note"} disabled={off} onChange={(event) => editor && setTone(editor, event.target.value as CalloutTone)} className="min-h-11">
+              {CALLOUT_TONES.map((t) => <NativeSelectOption key={t} value={t}>{CALLOUT_META[t].label}</NativeSelectOption>)}
+            </NativeSelect>
+          ) : null}
+          {state.block === "flipCards" || state.block === "stepper" || state.block === "tabs" ? (
+            <Button type="button" variant="ghost" className="min-h-11" disabled={off} onMouseDown={(event) => event.preventDefault()} onClick={run(addToBlock)}>
+              <ListPlus aria-hidden="true" />{state.block === "flipCards" ? "Add a card" : state.block === "tabs" ? "Add a tab" : "Add a step"}
+            </Button>
+          ) : null}
+          <Button type="button" variant="ghost" className="min-h-11" disabled={off} onMouseDown={(event) => event.preventDefault()} onClick={run(removeBlock)}><Trash2 aria-hidden="true" />Remove block</Button>
+        </div>
+      ) : null}
     </div>
   );
 }
 
-export function RichText({ id, label, value, onChange, courseId, disabled = false, onUploaded }: {
+export function RichText({ id, label, value, onChange, courseId, disabled = false, onUploaded, questions, files = [] }: {
   id: string; label: string; value: JSONContent | null; onChange: (value: JSONContent) => void; courseId: string; disabled?: boolean;
   onUploaded?: (file: UploadedFile) => void;
+  /** The course's files, to offer one to download. */
+  files?: UploadedFile[];
+  /** The course's questions, for knowledge checks. Leave out where checks don't belong. */
+  questions?: { id: string; prompt: string }[];
 }) {
-  const [panel, setPanel] = useState<"link" | "image" | null>(null);
+  const [panel, setPanel] = useState<"link" | "image" | "check" | "video" | "file" | null>(null);
+  const [videoUrl, setVideoUrl] = useState("");
+  const [fileId, setFileId] = useState("");
+  const [fileLabel, setFileLabel] = useState("");
+  const [questionId, setQuestionId] = useState("");
   const [href, setHref] = useState("");
   const [alt, setAlt] = useState("");
   const [image, setImage] = useState<File | null>(null);
@@ -109,6 +153,32 @@ export function RichText({ id, label, value, onChange, courseId, disabled = fals
       close();
       return;
     }
+    if (panel === "video") {
+      const video = videoFor(videoUrl);
+      if (!video) { setError("Use a video link that starts https://."); return; }
+      insertVideo(editor, video.href);
+      setVideoUrl(""); close();
+      return;
+    }
+    if (panel === "file") {
+      let chosen = fileId;
+      if (!chosen && image) {
+        setBusy(true);
+        try { const added = await uploadCourseFile(courseId, image); onUploaded?.(added); chosen = added.id; }
+        catch (caught) { setError((caught as Error).message); setBusy(false); return; }
+        setBusy(false);
+      }
+      if (!chosen) { setError("Choose a file, or add a new one."); return; }
+      insertFileButton(editor, chosen, fileLabel.trim() || "Download");
+      setFileId(""); setFileLabel(""); setImage(null); close();
+      return;
+    }
+    if (panel === "check") {
+      if (!questionId) { setError("Choose a question."); return; }
+      insertCheck(editor, questionId);
+      setQuestionId(""); close();
+      return;
+    }
     if (!image) { setError("Choose an image."); return; }
     if (!alt.trim()) { setError("Describe the image for someone who can't see it."); return; }
     if (!image.type.startsWith("image/")) { setError("Use a JPEG, PNG or WebP image."); return; }
@@ -130,11 +200,37 @@ export function RichText({ id, label, value, onChange, courseId, disabled = fals
       <div className="tf-editor" data-disabled={disabled || undefined}>
         <Toolbar editor={editor} disabled={disabled || busy}
           openLink={() => { setHref(editor?.getAttributes("link").href ?? ""); setPanel("link"); setError(""); }}
-          openImage={() => { setPanel("image"); setError(""); }} />
+          openImage={() => { setPanel("image"); setError(""); }}
+          openCheck={questions ? () => { setPanel("check"); setError(""); } : null}
+          openVideo={() => { setPanel("video"); setError(""); }}
+          openFile={() => { setPanel("file"); setError(""); }} />
         {panel ? (
           <div className="tf-editor-panel">
             {panel === "link" ? (
               <Input id={`${id}-href`} label="Link" type="url" value={href} onChange={setHref} placeholder="https://" autoFocus description="Leave it empty to remove the link." />
+            ) : panel === "video" ? (
+              <Input id={`${id}-video`} label="Video link" type="url" value={videoUrl} onChange={setVideoUrl} placeholder="https://www.youtube.com/watch?v=…" autoFocus
+                description="YouTube and Vimeo play inside the text. Any other https link becomes a Watch button." />
+            ) : panel === "file" ? (
+              <>
+                <Input id={`${id}-file-label`} label="Button text" value={fileLabel} onChange={setFileLabel} maxLength={120} placeholder="Download the daily pool test sheet" />
+                <Field label="File" htmlFor={`${id}-file`} hint="Learners open it from the lesson.">
+                  <NativeSelect id={`${id}-file`} value={fileId} onChange={(event) => setFileId(event.target.value)} className="min-h-11 w-full">
+                    <NativeSelectOption value="">{files.length ? "Choose a file" : "No files yet: add one below"}</NativeSelectOption>
+                    {files.filter((f) => !f.mime.startsWith("audio/")).map((f) => <NativeSelectOption key={f.id} value={f.id}>{f.name}</NativeSelectOption>)}
+                  </NativeSelect>
+                </Field>
+                {fileId ? null : <FileField label="Or add a new file" description="PDF, JPEG, PNG or WebP, up to 4 MB." accept="application/pdf,image/png,image/jpeg,image/webp" pending={busy} onChange={(event) => setImage(event.target.files?.[0] ?? null)} />}
+              </>
+            ) : panel === "check" ? (
+              questions?.length ? (
+                <Field label="Question to ask" htmlFor={`${id}-check`} hint="Learners answer it right here and see straight away if they're right. It isn't marked.">
+                  <NativeSelect id={`${id}-check`} value={questionId} onChange={(event) => setQuestionId(event.target.value)} className="min-h-11 w-full">
+                    <NativeSelectOption value="">Choose a question</NativeSelectOption>
+                    {questions.map((q) => <NativeSelectOption key={q.id} value={q.id}>{q.prompt.slice(0, 120)}</NativeSelectOption>)}
+                  </NativeSelect>
+                </Field>
+              ) : <Notice tone="info" title="This course has no questions yet">Add questions to a section first, then ask one here.</Notice>
             ) : (
               <>
                 <FileField label="Image" description="JPEG, PNG or WebP, up to 4 MB." accept="image/png,image/jpeg,image/webp" pending={busy} onChange={(event) => setImage(event.target.files?.[0] ?? null)} />
@@ -144,11 +240,15 @@ export function RichText({ id, label, value, onChange, courseId, disabled = fals
             {error ? <Notice tone="error" live="alert" title={error} /> : null}
             <div className="flex flex-wrap justify-end gap-2">
               <Button type="button" variant="outline" className="min-h-11" onClick={close}>Cancel</Button>
-              <Button type="button" className="min-h-11" disabled={busy} onClick={insert}>{busy ? "Uploading…" : panel === "link" ? "Save link" : "Insert image"}</Button>
+              <Button type="button" className="min-h-11" disabled={busy} onClick={insert}>{busy ? "Uploading…" : panel === "link" ? "Save link" : panel === "check" ? "Insert question" : panel === "video" ? "Insert video" : panel === "file" ? "Insert button" : "Insert image"}</Button>
             </div>
           </div>
         ) : null}
-        <EditorContent editor={editor} />
+        <CheckQuestions.Provider value={questions ?? []}>
+          <CourseFiles.Provider value={files}>
+            <EditorContent editor={editor} />
+          </CourseFiles.Provider>
+        </CheckQuestions.Provider>
       </div>
     </div>
   );

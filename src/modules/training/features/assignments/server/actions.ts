@@ -60,3 +60,19 @@ export async function cancelAssignment(id: string, reason: string): Promise<Acti
   if (result.ok) refresh(`/training/people/${existing.userId}`);
   return result;
 }
+
+/** A learner who has used every exam attempt gets one more. */
+export async function giveExamAttempt(id: string): Promise<ActionResult> {
+  const existing = await prisma.trainingAssignment.findUnique({ where: { id }, select: { userId: true, orgId: true } });
+  if (!existing) return fail("That training no longer exists.");
+  const actor = await requireCapFor("training.assign", { subjectUserId: existing.userId, orgId: existing.orgId });
+  const result = await prisma.$transaction(async (tx) => {
+    const moved = await tx.trainingAssignment.updateMany({ where: { id, status: "ASSIGNED" }, data: { examExtraAttempts: { increment: 1 } } });
+    if (moved.count !== 1) return fail("That training is no longer open.");
+    const row = await withOneStaff(await tx.trainingAssignment.findUniqueOrThrow({ where: { id }, select: { userId: true, course: { select: { title: true } } } }), "userId", "user", tx);
+    await logAudit({ actorId: actor.id, actorName: actor.name, action: "update", entity: "TrainingAssignment", entityId: id, summary: `Gave ${row.user?.name ?? "former staff"} another attempt at the exam for ${row.course.title}` }, tx);
+    return ok();
+  });
+  if (result.ok) refresh(`/training/people/${existing.userId}`);
+  return result;
+}

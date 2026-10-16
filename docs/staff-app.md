@@ -77,15 +77,35 @@ turning it on.
 | POST | `auth/confirm` | Sends a fresh code for HR (session required) |
 | POST | `auth/confirm/verify` | `{ challengeId, code }`. HR opens for 15 minutes |
 | POST | `auth/logout` | Ends the session |
-| GET | `home` | Open training, outstanding reading, expiring qualifications, the next shifts, and a count of reviews to acknowledge (no HR content) |
+| GET | `home` | Open training, outstanding reading, expiring qualifications, the next shifts, a count of reviews to acknowledge (no HR content), and how many refresher questions wait today (`refresher`) |
 | GET, PATCH | `me` | Profile and own details. PATCH proposes phone, address or emergency contact changes; the record changes only after review on Work. One request is waiting at a time |
 | GET | `qualifications` | The newest certificate of each type, uploads and their status, and the qualification types |
 | POST | `qualifications/evidence` | Upload a PDF, PNG or JPEG (up to 5 MB, checked by file signature) for someone to check |
-| GET | `training`, `training/{id}` | Own training: progress through a course built from lessons, and its outline (`sections`); a course without lessons sends its text (`content`) |
-| GET | `training/{id}/lessons/{lessonId}` | One lesson of the person's own course version: its text, video link or file, and the lessons either side |
-| POST | `training/{id}/lessons/{lessonId}/complete` | Marks the lesson done. The first one fixes the course version the person takes |
-| GET | `training/{id}/files/{fileId}` | A PDF or image used in the person's own course version, as the file itself (not JSON) |
-| POST | `training/{id}/complete` | `{ note }`. Needs every lesson done first. A practical course waits for a trainer; anything else completes and records any qualification it grants |
+| GET | `training`, `training/{id}` | Own training: progress through a course built from lessons, and its outline (`sections`); a course without lessons sends its text (`content`). A practical with a checklist sends `practical`: the steps a trainer watches for and how the last observation went (no photos). `waitingOn` names courses to finish first and `inOrder` says the lessons open one at a time |
+| GET | `training/search?q=` | Own courses and lessons with every word searched for (2 to 80 characters): course title and the text around the match; lessons with their course and section |
+| GET | `training/saved` | Own bookmarked lessons and private notes, newest first |
+| PUT | `training/{id}/lessons/{lessonId}/note` | `{ bookmarked?, note? }` (note up to 2,000 characters). Private to the person; both empty removes it. The lesson response carries `bookmarked` and `note` |
+| GET | `training/record` | Own record: every course with status, dates, signed off by, version, best exam score and whether there is a certificate; paths, sessions attended, in-service hours |
+| GET | `training/catalogue` | Published courses open to everyone: summary, category, tags, lessons, minutes, exam, sign-off, qualification, the average rating (from three ratings) and the person's own assignment on it |
+| GET | `training/catalogue/{courseId}/cover` | A catalogue course's cover picture, as the file itself |
+| POST | `training/catalogue/{courseId}/enrol` | Assigns it to the person with no due date (audited), or returns the one already open: `{ assignmentId, already }` |
+| POST | `training/{id}/feedback` | `{ rating: 1–5, unclear }` once finished or waiting for sign-off. `training/{id}` sends `canRate` and the person's `feedback` |
+| GET | `training/refresher` | Today's refresher: up to 5 questions (without the key), how many answered today, the streak and every badge with whether it is earned |
+| POST | `training/refresher/answer` | `{ cardId }` or `{ assignmentId, questionId }` with `answer`: `{ done, correct, explanation, nextIn }`. Never the right answer. Once a question a day, 5 a day |
+| GET | `training/plan` | Own learning paths (each course's state and due date), sessions booked or attended, and in-service hours against each qualification they hold, with the log |
+| GET | `training/{id}/lessons/{lessonId}` | One lesson of the person's own course version: its text, video link or file, and the lessons either side; knowledge-check questions in the text (`checks`, without the key); a Scenario's scenes (`steps`), Flashcards' cards (`cards`), a Checklist's items (`items`), Sort into groups (`sorting`) and a picture's spots (`spots`), which are practice and sent whole; a Slides lesson's embed address (`embed`); a Hand in work lesson's settings and the person's own work (`handIn`); and `locked` when the course goes in order or waits on another course |
+| POST | `training/{id}/lessons/{lessonId}/complete` | Marks the lesson done. The first one fixes the course version the person takes. Refused while the lesson is locked, and on Hand in work until the work is accepted |
+| POST | `training/{id}/lessons/{lessonId}/hand-in` | `{ text, file?: { fileName, mime, data (base64) }, keepFile }` on a Hand in work lesson: a JPEG, PNG, WebP or PDF up to 4 MB. Replaces earlier work until a trainer accepts it. Audited; 30 an hour |
+| GET | `training/{id}/lessons/{lessonId}/hand-in/file` | The photo or PDF the person handed in, as the file itself |
+| POST | `training/{id}/lessons/{lessonId}/check` | `{ questionId, answer, giveUp }` on a Quiz lesson or a knowledge check in the lesson's text: `{ correct, explanation }`. The explanation only with a right answer or `giveUp`; never the right answer |
+| GET | `training/{id}/exam` | The final exam's rules, attempts left and past scores, plus the open paper (questions without the key, the answers saved so far) |
+| POST | `training/{id}/exam/start` | Starts a sitting, or returns the open one. Needs the lessons done unless the exam allows testing out |
+| PUT | `training/{id}/exam/answers` | `{ attemptId, questionId, answer }`; `answer: null` clears it. Refused once handed in or out of time |
+| POST | `training/{id}/exam/submit` | `{ attemptId }`. Marks it on the server; a pass finishes the course |
+| GET | `training/{id}/exam/attempts/{n}` | One handed-in attempt: the score; after a fail the sections to go over again, after a pass every question with the right answer and why |
+| GET | `training/{id}/files/{fileId}` | A PDF, image, recording or the cover used in the person's own course version, as the file itself (not JSON) |
+| GET | `training/{id}/certificate` | The certificate for the person's own finished training: name, course, date, who signed it off, the qualification it records, the version and its lasting code. 404 until finished |
+| POST | `training/{id}/complete` | `{ note }`. Needs every lesson done first, and the final exam passed when the course has one. A practical course waits for a trainer; anything else completes and records any qualification it grants |
 | GET | `reading`, `reading/{documentId}` | Assigned required reading only; the published body is Tiptap JSON |
 | POST | `reading/{documentId}/acknowledge` | `{ versionId }` |
 | GET | `shifts?days=28` | Own shifts, with any qualification warning |
