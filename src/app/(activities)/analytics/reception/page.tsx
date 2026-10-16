@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { getReceptionAnalytics, ReceptionReport } from "@/modules/activities/features/analytics";
+import { DeskReport, getDeskInsights } from "@/modules/activities/features/analytics";
 import { screenPage } from "@/lib/page-guards";
 
-export const metadata: Metadata = { title: "Reception activity" };
+export const metadata: Metadata = { title: "Reception · Analytics" };
 
-export default async function ReceptionAnalyticsPage() {
+export default async function ReceptionAnalyticsPage(props: PageProps<"/analytics/reception">) {
   await screenPage("analytics");
-  return <ReceptionReport data={await getReceptionAnalytics()} />;
+  return <DeskReport data={await getDeskInsights(await props.searchParams)} />;
 }

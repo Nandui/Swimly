@@ -288,3 +288,53 @@ export async function renameAreaEverywhere(change: AreaRename, tx?: unknown) {
   for (const handler of areaRenameHandlers) changed += await handler.rename(change, tx);
   return changed;
 }
+
+// ---------------------------------------------------------------------------
+
+/** Desk work that has a clock on it (owner request, 16 October 2026: performance manage the reception
+ *  area): each module reports the jobs the desk did, or still has to do, with how long each took. An
+ *  Academy place held online waits for a call back; a refund request waits as a draft until it is sent.
+ *  The swim school's analytics reads every source, so it can show a person's response times across the
+ *  modules they work in without importing any. One item per job; `open` items are still waiting. */
+export type DeskMeasure = {
+  /** Stable id of the kind of job, e.g. "academy.call-back". */
+  kind: string;
+  /** "Academy call backs". */
+  label: string;
+  /** The module's log name ("Short courses"). */
+  module: string;
+  siteId: string | null;
+  /** Who did it; null while it is still waiting. */
+  userId: string | null;
+  userName: string | null;
+  /** ISO: when it was done, or when it started waiting if still open. */
+  at: string;
+  /** Minutes from the job arriving to its being done (to now while open). */
+  minutes: number;
+  /** Done within the module's own promise (the 72-hour call back); null when there is none. */
+  onTime: boolean | null;
+  open: boolean;
+};
+export type DeskMeasureQuery = { siteIds: readonly string[] | null; from: string; to: string; now: Date };
+export type DeskMeasureSource = { id: string; list(query: DeskMeasureQuery): Promise<DeskMeasure[]> };
+const deskMeasureSources: DeskMeasureSource[] = [];
+
+export function registerDeskMeasures(source: DeskMeasureSource) {
+  const at = deskMeasureSources.findIndex((s) => s.id === source.id);
+  if (at >= 0) deskMeasureSources[at] = source;
+  else deskMeasureSources.push(source);
+}
+
+/** Every other module's desk jobs done between two local dates (inclusive), plus those still open.
+ *  The caller holds the page's permission; these are times, names and counts, never records. A source
+ *  that fails is left out and named in `failed`, so one module cannot blank the page. */
+export async function deskMeasuresFor(query: DeskMeasureQuery, except?: string) {
+  await modulesLoaded();
+  const failed: string[] = [];
+  const lists = await Promise.all(deskMeasureSources.filter((s) => s.id !== except).map((s) => s.list(query).catch((error) => {
+    console.error(`Desk measures from ${s.id} failed`, error);
+    failed.push(s.id);
+    return [] as DeskMeasure[];
+  })));
+  return { items: lists.flat(), failed };
+}

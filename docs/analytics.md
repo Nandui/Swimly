@@ -54,20 +54,55 @@ figures to check the comparisons.
 
 ## Older reports
 
-The figures below describe the Registers (`/analytics/instructors`), Reception
-activity and Multiple enrolments reports. The earlier one-page dashboard was removed on 16 October 2026.
+The figures below describe the Registers (`/analytics/instructors`) and Multiple
+enrolments reports. The earlier one-page dashboard was removed on 16 October 2026.
 
-## Reception activity
+## Reception (round two, 16 October 2026)
 
-`/analytics/reception` uses the same Analytics screen grant and sidebar site.
-It counts the same actions as Overview, grouped by recorded actor ID, without
-depending on a role name. Staff with activity appear in the table; search and
-an expandable Monday–Sunday breakdown help inspect individual staff members.
-Different people sharing a name stay separate while their accounts exist.
-When an account has been deleted, its retained audit name groups the records.
-Automatic withdrawals appear under Scheduled unenrolment when applied; the
-audit currently has no scheduler ID on that action, so the report does not
-invent attribution to the person who scheduled it.
+`/analytics/reception` and `/analytics/reception/[key]` (one person, keyed like
+teachers: `staff:<id>` or `name:<name>`) measure the desk's work in Turnfin, per
+person and per site, with the same period and site choice and the same Manage-only
+access as the other reports. Phone calls, emails and the till are not recorded, so
+they are not counted.
+
+- **Work done** comes from the audit log through Core (`auditWorkload` in
+  `src/lib/audit.ts`), for the Swim school, Short courses and Refunds modules,
+  mapped to kinds of desk work by `workKind` (`server/desk.ts`). Teaching and set-up
+  are left out. Busy hours use Irish local time.
+- **Timed jobs** have a start, an end and a target (`JOB_KINDS`): parent detail
+  changes and app links (24 h), billing agreement checks (7 days), cancelled classes
+  to billing (2 days), ready to move (14 days, from the teacher's mark to the next
+  place), waiting list to a place (no target, from the log), and from other modules
+  through `registerDeskMeasures` in `src/modules/contributions.ts`: Academy call backs
+  (Short courses, 72 h, `callBy`) and refund requests sent (Refunds, no target).
+  Still waiting is late once past its target.
+- **Record quality**: new swimmers added without a date of birth, contact phone or
+  emergency phone (yes/no only, never the details); unenrols with no reason (from
+  16 October 2026, when the reason was first asked); places made then unenrolled
+  within 24 hours, against whoever made them.
+- **Follow-ups** (`StudentFollowUp`) by outcome and channel, with swimmers past
+  their next contact date; **assessment bookings** by who booked them, no-shows and
+  how many assessed swimmers started a class within two months.
+- Swimmers belong to no site, so new swimmers count for people who did desk work at
+  the chosen sites; parent app link requests are not site-bound either.
+
+## More swim school figures (round two)
+
+Pure functions in `server/extras.ts`, tested in `extras.test.ts`:
+
+- **Stay curves** (Swimmers): of new swimmers who joined in each of the last six
+  quarters, the share still swimming after 4, 8, 13, 26 and 52 weeks, counting only
+  those who joined long enough ago; the top row covers the last two years.
+- **Parents in the app** (Swimmers): swimmers here today with a parent linked
+  (`ParentChildAccess`, not revoked), and those first linked in the period.
+- **The next four weeks** (Classes): places booked on each coming week against
+  capacity, with places starting and ending in between. New joiners are not guessed.
+- **Attendance by time slot** (Classes), **cancelled lessons** with the swimmer
+  places affected and reasons, and **same teacher each week**: the share of each
+  class's lessons taught by its most frequent teacher (also a Teachers figure).
+- **Assessment to first lesson** (Progression): median days for those who started
+  within two months.
+- **Overview** lists reception jobs past their target (`server/desk-overdue.ts`).
 
 ## Instructor attendance
 

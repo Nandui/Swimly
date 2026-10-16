@@ -19,6 +19,7 @@ export function ProgressionReport({ data }: { data: ProgressionInsights }) {
       <Kpi label="Over 6 months at a level" value={formatCount(p.stuck)} note="Swimmers here now" />
       <Kpi label="Assessed" value={formatCount(a.attended)} note={`${formatCount(a.sessions)} sessions · ${formatCount(a.noShow)} no-shows`} />
       <Kpi label="Booked to a place" value={percent(a.conversion)} note={`${formatCount(a.converted)} of ${formatCount(a.attended)} assessed started a class`} />
+      <Kpi label="Assessment to first lesson" value={a.daysToClass !== null ? `${formatCount(a.daysToClass)}` : "—"} unit={a.daysToClass !== null ? (a.daysToClass === 1 ? " day" : " days") : undefined} note="Typical wait for those who started within two months" />
     </ul>
     {groups.length === 0 ? <EmptyState title="No levels to show" hint="Levels appear once swimmers are in classes at this site." /> : null}
     {groups.map(group => {

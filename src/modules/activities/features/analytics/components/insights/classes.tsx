@@ -1,14 +1,20 @@
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
-import { formatCount, formatTime, plural } from "@/lib/format";
-import { DAY_META } from "@/modules/activities/shared/courses/constants";
+import Link from "next/link";
+import { formatCount, formatDayMonth, formatTime, plural } from "@/lib/format";
+import { DAY_META, formatSlotShort } from "@/modules/activities/shared/courses/constants";
 import type { ClassesInsights } from "@/modules/activities/features/analytics/server/insights-data";
 import { ClassTable } from "@/modules/activities/features/analytics/components/insights/class-table";
-import { Kpi, Meter, Panel, percent, ReportShell, scopeOf } from "@/modules/activities/features/analytics/components/insights/kit";
+import { Bars, Kpi, Meter, Panel, percent, ReportShell, reportHref, scopeOf } from "@/modules/activities/features/analytics/components/insights/kit";
 import { reportQuery, type RangeKey } from "@/modules/activities/features/analytics/server/period";
 
 function band(fill: number | null) {
   if (fill === null) return undefined;
   return fill >= 100 ? "4" : fill >= 80 ? "3" : fill >= 50 ? "2" : "1";
+}
+/** Attendance shading: the weaker the slot, the lighter. */
+function attendanceBand(rate: number | null) {
+  if (rate === null) return undefined;
+  return rate >= 92 ? "4" : rate >= 85 ? "3" : rate >= 75 ? "2" : "1";
 }
 
 export function ClassesReport({ data }: { data: ClassesInsights }) {
@@ -39,6 +45,49 @@ export function ClassesReport({ data }: { data: ClassesInsights }) {
         </Table>
       </div> : <p className="ins-sub">No weekly classes at this site.</p>}
     </Panel>
+    <Panel id="forecast" title="The next four weeks" sub={`Places already booked on each coming week, with the places starting and ending in between. New joiners are not guessed. ${plural(data.forecast.waiting, "swimmer is", "swimmers are")} on a waiting list.`}>
+      <div className="ins-table-wrap"><Table>
+        <TableHeader><TableRow>
+          <TableHead scope="col">Week of</TableHead>
+          <TableHead scope="col" className="text-right">Places</TableHead>
+          <TableHead scope="col" className="text-right">Filled</TableHead>
+          <TableHead scope="col" className="text-right">Starting</TableHead>
+          <TableHead scope="col" className="text-right">Ending</TableHead>
+        </TableRow></TableHeader>
+        <TableBody>{data.forecast.weeks.map((w, i) => <TableRow key={w.date}>
+          <TableHead scope="row">{i === 0 ? "Today" : formatDayMonth(w.date)}</TableHead>
+          <TableCell className="ins-num">{formatCount(w.places)}<span className="ins-muted block">{formatCount(w.swimmers)} swimmers</span></TableCell>
+          <TableCell className="ins-num"><Meter value={w.fill} /></TableCell>
+          <TableCell className="ins-num">{i === 0 ? "—" : formatCount(w.starting)}</TableCell>
+          <TableCell className="ins-num">{i === 0 ? "—" : w.ending ? <span className="font-semibold">{formatCount(w.ending)}</span> : "0"}</TableCell>
+        </TableRow>)}</TableBody>
+      </Table></div>
+    </Panel>
+    <Panel id="slots" title="Attendance by time slot" sub="The share of swimmers who came, by day and start time, across the lessons held in the period. Lighter slots lose more swimmers to absence.">
+      {data.slots.heat.length ? <div className="ins-heat-wrap">
+        <Table className="ins-heat" data-layout="grid">
+          <TableCaption className="sr-only">Attendance by day and start hour</TableCaption>
+          <TableHeader><TableRow><TableCell aria-hidden="true" data-empty="" className="ins-heat-corner" />{data.slots.days.map(day => <TableHead key={day} scope="col">{DAY_META[day].short}</TableHead>)}</TableRow></TableHeader>
+          <TableBody>{data.slots.heat.map(row => <TableRow key={row.hour}>
+            <TableHead scope="row">{formatTime(row.hour * 60)}</TableHead>
+            {row.cells.map(cell => cell.lessons === 0 ? <TableCell key={cell.day} data-empty=""><span className="sr-only">No lessons</span></TableCell> : <TableCell key={cell.day} data-band={attendanceBand(cell.rate)} title={`${DAY_META[cell.day].label} ${formatTime(row.hour * 60)}: ${percent(cell.rate)} attendance over ${plural(cell.lessons, "lesson")}`}>
+              <strong>{percent(cell.rate)}</strong><span>{plural(cell.lessons, "lesson")}</span>
+            </TableCell>)}
+          </TableRow>)}</TableBody>
+        </Table>
+      </div> : <p className="ins-sub">No registers taken in this period.</p>}
+    </Panel>
+    <div className="ins-grid ins-even">
+      <Panel id="cancelled" title="Cancelled lessons" sub={`${plural(data.cancellations.lessons, "lesson")} cancelled (${percent(data.cancellations.share, 1)} of those timetabled), affecting ${plural(data.cancellations.swimmers, "swimmer place", "swimmer places")}. ${formatCount(data.cancellations.previous)} in the period before.`}>
+        {data.cancellations.reasons.length ? <Bars label="Cancelled lessons by reason" rows={data.cancellations.reasons.map(r => ({ key: r.key, label: r.key, value: r.count }))} /> : <p className="ins-sub">No lessons were cancelled.</p>}
+      </Panel>
+      <Panel id="continuity" title="Same teacher each week" sub={`${percent(data.continuity.school)} of lessons were taught by the class's usual teacher. Classes with the most changes first.`}>
+        {data.continuity.classes.length ? <ul className="pc-rows">{data.continuity.classes.slice(0, 6).map(k => <li key={k.courseId} className="pc-row"><div className="pc-row-body">
+          <p className="pc-row-title">{k.course ? <Link href={reportHref(data, `/analytics/classes/${k.courseId}`)} className="text-ui-primary hover:underline">{k.course.name} · {formatSlotShort(k.course.slot)}</Link> : "Class removed"}</p>
+          <p className="pc-row-hint">{data.allSites && k.course ? `${k.course.siteName} · ` : ""}{plural(k.teachers, "teacher")} over {plural(k.lessons, "lesson")} · usually {k.main}</p>
+        </div><div className="pc-row-trail"><Meter value={k.share} tone={k.share < 75 ? "warn" : undefined} /></div></li>)}</ul> : <p className="ins-sub">No lessons started in this period.</p>}
+      </Panel>
+    </div>
     <Panel id="levels" title="Each level" sub="Where swimmers wait and where places sit empty, level by level.">
       <div className="ins-table-wrap">
         <Table>

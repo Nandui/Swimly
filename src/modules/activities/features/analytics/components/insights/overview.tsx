@@ -14,6 +14,7 @@ export function OverviewReport({ data }: { data: OverviewInsights }) {
     { key: "quiet", count: o.attention.quietCount, title: "Classes under half full", hint: o.attention.quiet.slice(0, 2).map(c => `${c.name} ${formatSlotShort(c)} (${c.enrolled} of ${c.capacity})`).join(" · ") || "Every class is at least half full", href: `${classesHref}#classes`, tone: "warn" as const },
     { key: "stuck", count: o.attention.stuck, title: "Swimmers at one level over 6 months", hint: "May need a different class or a word with the teacher", href: reportHref(data, "/analytics/progression"), tone: "warn" as const },
     { key: "starts", count: o.attention.missedStarts, title: "Lessons with no start record", hint: "Nobody started the class on the pool deck", href: reportHref(data, "/analytics/teachers"), tone: "bad" as const },
+    { key: "desk", count: data.deskOverdue, title: "Reception jobs past their target", hint: "Parent app requests, billing checks and moves waiting too long", href: reportHref(data, "/analytics/reception") + "#waiting", tone: "warn" as const },
     { key: "registers", count: o.attention.missingRegisters, title: "Registers not complete", hint: "Finished lessons with swimmers left unmarked", href: "/analytics/instructors", tone: "bad" as const },
   ];
   return <ReportShell ctx={data} page="overview" path="/analytics" title="Analytics" footnotes={[

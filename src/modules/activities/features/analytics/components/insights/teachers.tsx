@@ -1,7 +1,7 @@
 import { formatCount } from "@/lib/format";
 import type { TeacherInsights } from "@/modules/activities/features/analytics/server/insights-data";
 import { reportQuery, type RangeKey } from "@/modules/activities/features/analytics/server/period";
-import { Kpi, Panel, percent, ReportShell, scopeOf } from "@/modules/activities/features/analytics/components/insights/kit";
+import { Kpi, Panel, percent, ReportShell, reportHref, scopeOf } from "@/modules/activities/features/analytics/components/insights/kit";
 import { TeacherTable } from "@/modules/activities/features/analytics/components/insights/teacher-table";
 
 export function TeachersReport({ data }: { data: TeacherInsights }) {
@@ -19,6 +19,7 @@ export function TeachersReport({ data }: { data: TeacherInsights }) {
       <Kpi label="Started on time" value={percent(school.onTime)} note="Within 5 minutes" />
       <Kpi label="Registers complete" value={percent(school.registers)} note="Every swimmer marked" />
       <Kpi label="Left after" value={percent(school.leaverRate)} note="Of swimmers taught, across the school" />
+      <Kpi label="Same teacher each week" value={percent(data.continuity.school)} note="Lessons taught by the class's usual teacher" href={`${reportHref(data, "/analytics/classes")}#continuity`} />
     </ul>
     <Panel id="teachers" title="Every teacher" sub="Open a teacher for their week-by-week figures, their classes and the swimmers who left after their lessons.">
       <TeacherTable teachers={t.teachers} school={school} query={reportQuery(data.period.key as RangeKey, scopeOf(data))} />

@@ -98,7 +98,7 @@ const plans = [
   { id: 'cancel-session', as: 'maya', steps: [{ go: '/duty' }, { click: /^Cancel session/ }, { fill: { 'Reason for cancellation': 'Learner pool closed for cleaning.' } }], shot: 'dialog' },
   { id: 'billing', as: 'maya', steps: [{ go: '/cancellations' }, { click: /^Review cancellation/ }], shot: 'dialog' },
   { id: 'analytics', steps: [{ go: '/analytics' }] },
-  { id: 'analytics-reception', steps: [{ go: '/analytics' }, { link: 'Reception activity' }] },
+  { id: 'analytics-reception', steps: [{ go: '/analytics' }, { link: 'Reception' }] },
   { id: 'analytics-instructors', steps: [{ go: '/analytics' }, { link: 'Registers' }] },
   // Administration
   { id: 'programme', steps: [{ go: '/programmes' }, { click: /^Add (a )?programme/ }, { fill: { Name: 'Water safety' } }], shot: 'dialog' },
