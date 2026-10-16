@@ -411,3 +411,25 @@ test("the personal file keeps the changes to their activities on days that had c
   const riley = await file.dutyChangeFile("riley", ORG);
   assert.ok(riley.entries.some((e) => /riley put on Lifeguarding/.test(e.title) && /Covering an absence · by sam/.test(e.detail)));
 });
+
+test("every department on one Plan (owner, 16 October 2026): all their work and staff, changes for the viewer's own", async () => {
+  as("maya", [at("rota.plan")]);
+  const day = addDaysIso(today(), 61);
+  assert.equal((await actions.saveNeed(null, need(day, { start: "09:00", end: "12:00", places: 1 }))).ok, true);
+  assert.equal((await actions.saveNeed(null, { ...need(day, { start: "09:00", end: "12:00", places: 1 }), typeId: "t-desk", place: "Desk" })).ok, false, "Plan still changes only Maya's own department");
+  as("maya", [at("rota.manage")]);
+  assert.equal((await actions.saveNeed(null, { ...need(day, { start: "09:00", end: "12:00", places: 1 }), typeId: "t-desk", place: "Desk" })).ok, true);
+  assert.equal((await actions.savePlanShift(null, { siteId: churchfield, departmentId: "d-desk", date: day, userId: "sam", start: "09:00", end: "12:00" })).ok, true);
+  as("maya", [at("rota.plan")]);
+  const pool = await data.planWeek({ site: churchfield, day, dept: "d-pool" });
+  assert.ok(!pool.everyDepartment && !pool.day!.groups.some((g) => g.departmentId === "d-desk"), "one department shows only its own");
+  const all = await data.planWeek({ site: churchfield, day, dept: "all" });
+  assert.ok(all.everyDepartment);
+  assert.equal(all.department?.id, "d-pool", "changes are made for Maya's own department");
+  assert.ok(all.day!.groups.some((g) => g.departmentId === "d-desk") && all.day!.groups.some((g) => g.departmentId === "d-pool"), "every department's work");
+  assert.ok(all.day!.people.some((p) => p.userId === "sam"), "and everyone on a shift");
+  assert.deepEqual(all.changeable.map((d) => d.id), ["d-pool"]);
+  assert.ok(all.types.every((t) => t.departmentId === "d-pool"), "new activities only where Maya may plan");
+  assert.equal(all.canShare, false, "sharing, copying and exporting stay a department's");
+  assert.equal(all.canChange, true);
+});

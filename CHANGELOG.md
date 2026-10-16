@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.33.0 · 16 October 2026 · Rota: one Plan for every department, area by area
+
+- **Plan** can now show **All departments** at once: every area with its activities, bookings and swim classes, and everyone on a shift that day. Choose a department along the top to see just that one, as before.
+- **What needs people** is now grouped by area. Each area has its own heading with how many places are still to fill, and its own staffing need comes first.
+- A new **Area** choice above the timeline shows one area at a time: what it needs, and the people working there or with time still to give.
+- With **All departments**, **Add staff** asks which department the shift is for. You can still change only the departments you plan. To copy, export or share a week, choose that department first.
+
 ## 1.32.0 · 16 October 2026 · Analytics: reception and much more on the swim school
 
 - **Analytics** has a new **Reception** page for swim school managers. It shows the work each person on the desk did in Turnfin: enrolments, moves, unenrols, new swimmers, parent app requests, follow-up calls, billing checks, assessment bookings, Academy call backs and refund requests.

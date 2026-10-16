@@ -97,7 +97,11 @@ it.
 
 ## The screens
 
-- **Plan** (`/rota`, supervisors): one department's week, **shift first** (owner, 13 October
+- **Plan** (`/rota`, supervisors): one department's week, or **All departments** (`dept=all`;
+  owner, 16 October 2026: "merge it all and have a filter") with what needs people grouped by
+  area and an **Area** choice for one area; there a change is made for the activity's own
+  department, a person's shift department, or the viewer's own; copy, export and share stay per
+  department. **Shift first** (owner, 13 October
   2026: "we have people working every day, and we need to produce shifts for them, these will also
   be done to allocate staff during those shifts to activities, bookings, classes"). A strip of the
   days with each one's staff, paid hours and gaps, beside a card for the open day with its totals

@@ -17,9 +17,9 @@ import { clock } from "@/modules/rota/shared/constants";
 import { ANY_DEPARTMENT, isAreaNeed, type Block, type DayNeed, type DayZone, type Group, type Person } from "@/modules/rota/shared/day";
 import { lanesLabel } from "@/modules/rota/shared/lanes";
 import { ROTA_DAY_META, activityIcon, qualificationShort } from "@/modules/rota/shared/meta";
-import { freeTime, needRows, personBlocks, type CoverSpan, type NeedRow } from "@/modules/rota/shared/plan-rows";
+import { byArea, freeTime, needRows, personBlocks, type CoverSpan, type NeedRow } from "@/modules/rota/shared/plan-rows";
 import { duration } from "@/modules/rota/shared/shifts";
-import { AnyActivity, OptionRow, ShiftSheet, checkLabel, warned, type TypeOption } from "@/modules/rota/features/plan/components/people-plan";
+import { AnyActivity, OptionRow, ShiftSheet, checkLabel, departmentFor, warned, type TypeOption } from "@/modules/rota/features/plan/components/people-plan";
 import { MIN_SPAN, firstTick, panView, sameView, tickStep, ticks as ticksOf, zoomView, type View } from "@/modules/rota/features/plan/server/view";
 
 /** One day of a department's plan, shift first (owner, 13 October 2026: "we need to produce shifts
@@ -33,12 +33,18 @@ import { MIN_SPAN, firstTick, panView, sameView, tickStep, ticks as ticksOf, zoo
  *  hours and the week's against their contract. "Show" and the zoom buttons zoom (owner request,
  *  15 October 2026: no zooming on scroll, a control instead); dragging, sideways scrolling or
  *  Earlier and Later move a zoomed-in day, and the zoom stays on this device from day to day.
+ *  What needs people goes area by area (owner, 16 October 2026), and Area narrows the day to one
+ *  area: its needs and the people on something there or with time still free.
  *  Below 1024px the day is an agenda. */
 
 type Option = { id: string; name: string };
 type Props = {
   siteId: string;
   departmentId: string;
+  /** Every department on one Plan (owner, 16 October 2026): `groups` and `people` are all of
+   *  them, and `departmentId` is only what the viewer's changes are made for where nothing else
+   *  says. */
+  everyDepartment?: boolean;
   /** Department names by id, for other departments' work. */
   departmentNames: Record<string, string>;
   date: string;
@@ -126,11 +132,15 @@ const isOff = (b: Block) => b.kind === "on" && b.warnings.includes("off");
 const needsCover = (b: Block) => b.kind === "gap" || isOff(b);
 const ROW_WORDS: Record<NeedRow["kind"], string> = { area: "Area needs", activity: "Needed", booking: "Booking", classes: "Swim classes", booked: "Booked" };
 
-export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel, live, canChange, zones, groups, allGroups, people, hours, types, anyTypes, areaList }: Props) {
+export function DayPlan({ siteId, departmentId, everyDepartment = false, departmentNames, date, dateLabel, live, canChange, zones, groups, allGroups, people, hours, types, anyTypes, areaList }: Props) {
   const router = useRouter();
   const [others, setOthers] = useState(false);
-  const shownGroups = others ? allGroups : groups;
+  const shownGroups = others && !everyDepartment ? allGroups : groups;
   const rows = useMemo(() => needRows(shownGroups), [shownGroups]);
+  const areas = useMemo(() => byArea(rows, areaList.map((a) => a.name)), [rows, areaList]);
+  const [area, setArea] = useState("");
+  const areaKey = areas.some((a) => a.place.toLowerCase() === area) ? area : "";
+  const shownAreas = areaKey ? areas.filter((a) => a.place.toLowerCase() === areaKey) : areas;
   const laneCount = useMemo(() => new Map(areaList.map((a) => [a.name.toLowerCase(), a.lanes])), [areaList]);
   const ourNeeds = useMemo(() => new Map(groups.flatMap((g) => g.needs.filter((n) => !isAreaNeed(n.id)).map((n) => [n.id, n] as [string, DayNeed]))), [groups]);
   const wins = useMemo(() => windows([...rows, ...people.flatMap((p) => p.shift.parts)]), [rows, people]);
@@ -255,19 +265,23 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
     return count && lanes.length ? `${g.place}, ${lanesLabel(lanes, count).toLowerCase()}` : g.place;
   };
   const needOf = (b: Block) => (b.needId ? ourNeeds.get(b.needId) ?? null : null);
-  const theirs = (g: Group) => g.departmentId !== departmentId && departmentNames[g.departmentId] ? departmentNames[g.departmentId] : null;
+  const theirs = (g: Group) => !everyDepartment && g.departmentId !== departmentId && departmentNames[g.departmentId] ? departmentNames[g.departmentId] : null;
+  /** The department a change to this activity is made for: its own, or for something every
+   *  department shares (an area's need, a swim class), the plan's. */
+  const forGroup = (g: Group) => (everyDepartment && g.departmentId !== ANY_DEPARTMENT ? g.departmentId : departmentId);
+  const forPerson = (p: Person) => (everyDepartment ? departmentFor(p, departmentId) : departmentId);
   const openGap = (g: Group, b: Block, refs: string[]) => {
     if (!canChange) return;
     setSelected(`${g.key}|${b.start}|${b.place ?? refs.join(",")}`);
     setGap({ siteId, date, typeId: g.typeId, what: `${(refs.length && b.detail) || g.name} in ${g.place}`, dateLabel, start: b.start, end: b.end, requiredName: g.requiredName,
-      needId: b.needId, place: b.place, classRefs: refs, departmentId,
+      needId: b.needId, place: b.place, classRefs: refs, departmentId: forGroup(g),
       teacher: refs.length && b.kind === "on" && b.userId ? { userId: b.userId, name: b.name ?? "Someone" } : null,
       replace: isOff(b) ? { assignmentId: b.assignmentId, name: b.name ?? "Someone" } : null });
   };
   /** Hand part of someone's time on a planned activity to another person (staff "in and out"). */
   const handOverOf = (g: Group, b: Block) => () => {
     setSelected(null);
-    setGap(handOverGap({ siteId, date, dateLabel, typeId: g.typeId, what: `${g.name} in ${g.place}`, requiredName: g.requiredName, departmentId },
+    setGap(handOverGap({ siteId, date, dateLabel, typeId: g.typeId, what: `${g.name} in ${g.place}`, requiredName: g.requiredName, departmentId: forGroup(g) },
       { id: b.assignmentId!, needId: b.needId!, place: b.place!, userId: b.userId!, name: b.name ?? "", start: b.start, end: b.end }));
   };
   /** Where something sits on a track, or null when it is outside the view. */
@@ -401,7 +415,12 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
 
   const person = people.find((p) => p.userId === openPerson) ?? null;
   const freePerson = free ? people.find((p) => p.userId === free.userId) ?? null : null;
-  const gapCount = groups.reduce((n, g) => n + g.gapCount, 0);
+  const gapCount = shownAreas.reduce((n, a) => n + a.gaps, 0);
+  // With one area chosen: the people on something there, and anyone with time still to give.
+  const shownPeople = !areaKey ? people : people.filter((p) => {
+    const mine = personBlocks(allGroups, p.userId);
+    return mine.some(({ group }) => group.place.trim().toLowerCase() === areaKey) || freeTime(p, mine.map((x) => x.block)).length > 0;
+  });
   const addHere = (name: string) => canChange && types.length ? (
     <NeedDialog siteId={siteId} date={date} live={live} types={types} areas={areaList} place={name}
       trigger={<Button type="button" variant="ghost" size="icon" aria-label={`Add an activity in ${name}`}><Plus aria-hidden="true" /></Button>} />
@@ -433,11 +452,20 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
             </> : null}
           </span>
           <span className="rota-tl-hint" aria-live="polite">{zoomed ? `${clock(Math.round(from))} to ${clock(Math.round(to))} · drag the day to move` : ""}</span>
-          <span className="ms-auto flex min-h-11 items-center gap-2">
-            <Switch id={`rota-others-${date}`} checked={others} onCheckedChange={setOthers} />
-            <Label htmlFor={`rota-others-${date}`} className="font-normal">Show other departments</Label>
-          </span>
+          {everyDepartment ? null : (
+            <span className="ms-auto flex min-h-11 items-center gap-2">
+              <Switch id={`rota-others-${date}`} checked={others} onCheckedChange={setOthers} />
+              <Label htmlFor={`rota-others-${date}`} className="font-normal">Show other departments</Label>
+            </span>
+          )}
         </div>
+        {areas.length > 1 ? (
+          <div className="rota-tl-zoom">
+            <span className="rota-eyebrow" id={`rota-area-${date}`}>Area</span>
+            <SegmentedChoice aria-labelledby={`rota-area-${date}`} value={areaKey} onValueChange={setArea}
+              options={[{ value: "", label: "All areas" }, ...areas.map((a) => ({ value: a.place.toLowerCase(), label: a.place || "No area", count: a.gaps || undefined }))]} />
+          </div>
+        ) : null}
         <div className="rota-tl-row rota-tl-sticky" aria-hidden="true">
           <span />
           <div className="rota-tl-hours" ref={track} {...dragHandlers}>{ticks.map((t) => {
@@ -447,25 +475,33 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
         </div>
 
         <h3 className="rota-tl-sec">What needs people<span className="rota-count" data-gaps={gapCount ? "" : undefined}>{gapCount ? `${gapCount} ${gapCount === 1 ? "gap" : "gaps"}` : "Covered"}</span></h3>
-        {rows.map((row) => row.kind === "classes" ? (
-          // Each swim class on its own, straight from the swim school, ready to click and staff.
-          <section key={row.key} aria-label={`${row.label}, ${row.group.place}`} className="rota-tl-band">
-            {pack(row.blocks).map((line, li) => (
-              <div key={li} className="rota-tl-row">
-                {li === 0 ? rowLabel(row) : <span aria-hidden="true" />}
-                <div className="rota-tl-track" data-row="need" style={gridStyle} {...dragHandlers}>
-                  {line.map((b, i) => classFor(row, b, `${row.key}-${li}-${i}`))}
+        {shownAreas.map((area) => (
+          <section key={area.place || "-"} aria-label={area.place || "No area"} className="rota-tl-area-band">
+            <h4 className="rota-tl-area">
+              <span>{area.place || "No area"}</span>
+              <span className="rota-count" data-gaps={area.gaps ? "" : undefined}>{area.gaps ? `${area.gaps} to fill` : "Covered"}</span>
+            </h4>
+              {area.rows.map((row) => row.kind === "classes" ? (
+                // Each swim class on its own, straight from the swim school, ready to click and staff.
+                <section key={row.key} aria-label={`${row.label}, ${row.group.place}`} className="rota-tl-band">
+                  {pack(row.blocks).map((line, li) => (
+                    <div key={li} className="rota-tl-row">
+                      {li === 0 ? rowLabel(row) : <span aria-hidden="true" />}
+                      <div className="rota-tl-track" data-row="need" style={gridStyle} {...dragHandlers}>
+                        {line.map((b, i) => classFor(row, b, `${row.key}-${li}-${i}`))}
+                      </div>
+                    </div>
+                  ))}
+                </section>
+              ) : (
+                <div key={row.key} className="rota-tl-row">
+                  {rowLabel(row)}
+                  <div className="rota-tl-track" data-row="need" style={gridStyle} {...dragHandlers}>
+                    {row.cover.map((c, i) => coverFor(row, c, `${row.key}-${i}`))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </section>
-        ) : (
-          <div key={row.key} className="rota-tl-row">
-            {rowLabel(row)}
-            <div className="rota-tl-track" data-row="need" style={gridStyle} {...dragHandlers}>
-              {row.cover.map((c, i) => coverFor(row, c, `${row.key}-${i}`))}
-            </div>
-          </div>
         ))}
         {!rows.length ? (
           <div className="rota-tl-row">
@@ -474,8 +510,8 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
           </div>
         ) : null}
 
-        <h3 className="rota-tl-sec">Staff on today<span className="rota-count">{people.length}</span></h3>
-        {people.map((p) => {
+        <h3 className="rota-tl-sec">Staff on today<span className="rota-count">{shownPeople.length}</span></h3>
+        {shownPeople.map((p) => {
           const mine = personBlocks(allGroups, p.userId).map(({ group, block }) => ({ g: group, b: { ...block, count: 1, refs: block.classRef ? [block.classRef] : [] } as Shown }));
           const shown = perHour < 160 ? mergeRuns(mine) : mine;
           const packed = pack(shown.map((x) => ({ ...x, start: x.b.start, end: x.b.end })));
@@ -608,11 +644,11 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
         ))}
       </div>
       <FillSheet gap={gap} live={live} onClose={() => { setGap(null); setSelected(null); }} />
-      <ShiftSheet person={person} onClose={() => setOpenPerson(null)} siteId={siteId} departmentId={departmentId} departmentNames={departmentNames} date={date} dateLabel={dateLabel} live={live} canChange={canChange} anyTypes={anyTypes} areaList={areaList} />
+      <ShiftSheet person={person} onClose={() => setOpenPerson(null)} siteId={siteId} departmentId={person ? forPerson(person) : departmentId} departmentNames={departmentNames} date={date} dateLabel={dateLabel} live={live} canChange={canChange} anyTypes={anyTypes} areaList={areaList} />
       <Sheet open={!!free && !!freePerson} onOpenChange={(o) => { if (!o) setFree(null); }}>
         <SheetContent portalClassName="turnfin-module" className="flex w-full flex-col gap-0 overflow-y-auto sm:max-w-lg">
           {free && freePerson ? (
-            <FreeBody key={`${free.userId}-${free.start}`} person={freePerson} free={free} siteId={siteId} departmentId={departmentId} departmentNames={departmentNames} anyTypes={anyTypes} areaList={areaList}
+            <FreeBody key={`${free.userId}-${free.start}`} person={freePerson} free={free} siteId={siteId} departmentId={forPerson(freePerson)} departmentNames={departmentNames} anyTypes={anyTypes} areaList={areaList}
               date={date} dateLabel={dateLabel} live={live} canChange={canChange}
               onDone={() => { setFree(null); router.refresh(); }} onOpenDay={() => { setFree(null); setOpenPerson(freePerson.userId); }} />
           ) : null}

@@ -269,6 +269,12 @@
 .turnfin-module .rota-plan .rota-tl-sec::after { background: var(--rota-hair); }
 .turnfin-module .rota-plan .rota-count { display: inline-flex; align-items: center; min-height: 20px; padding: 0 8px; border-radius: 999px; background: var(--pc-surface-sunken); color: var(--pc-ink-muted); letter-spacing: 0.04em; text-transform: none; font-variant-numeric: tabular-nums; }
 .turnfin-module .rota-plan .rota-count[data-gaps] { background: var(--pc-warning-soft); color: var(--pc-warning); }
+/* What needs people, area by area (owner, 16 October 2026): a soft heading per area, its rows under it. */
+.turnfin-module .rota-plan .rota-tl-area-band { display: flex; flex-direction: column; gap: 6px; }
+.turnfin-module .rota-plan .rota-tl-area-band + .rota-tl-area-band { margin-top: 10px; }
+.turnfin-module .rota-plan .rota-tl-area { display: flex; align-items: center; gap: 10px; margin: 0; padding: 8px 14px; border-radius: 16px; background: var(--pc-surface-sunken); color: var(--pc-ink); font-size: var(--pc-text-body); font-weight: 750; letter-spacing: -0.01em; }
+.turnfin-module .rota-plan .rota-tl-area .rota-count { font-size: var(--pc-text-caption); font-weight: 650; }
+.turnfin-module .rota-plan .rota-departments { margin-bottom: 16px; }
 .turnfin-module .rota-plan .rota-tl-label { gap: 1px; padding: 8px 12px; border: 0; border-radius: 18px; background: transparent; }
 .turnfin-module .rota-plan .rota-tl-label.ui-motion-press { padding: 8px 12px; border-radius: 18px; }
 .turnfin-module .rota-plan .rota-tl-label.ui-motion-press:hover { background: var(--pc-surface-sunken); }

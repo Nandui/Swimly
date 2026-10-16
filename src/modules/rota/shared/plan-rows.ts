@@ -72,6 +72,30 @@ export function needRows(groups: readonly Group[]): NeedRow[] {
   return rows;
 }
 
+/** What needs people, area by area (owner, 16 October 2026: "areas with bookings and activities"):
+ *  each area once, in the site's order of areas (`order`, Admin, Areas), then any other place by
+ *  name, then things with no area. In an area its own need comes first, then what is in it by
+ *  start time. */
+export type AreaRows = { place: string; rows: NeedRow[]; gaps: number };
+const KIND_ORDER: Record<NeedRowKind, number> = { area: 0, activity: 1, booking: 1, classes: 1, booked: 1 };
+export function byArea(rows: readonly NeedRow[], order: readonly string[]): AreaRows[] {
+  const places = new Map<string, { place: string; rows: NeedRow[] }>();
+  for (const r of rows) {
+    const place = r.group.place.trim();
+    const key = place.toLowerCase();
+    const at = places.get(key) ?? { place, rows: [] };
+    at.rows.push(r);
+    places.set(key, at);
+  }
+  const rank = (place: string) => {
+    const i = order.findIndex((o) => o.trim().toLowerCase() === place.toLowerCase());
+    return place ? (i < 0 ? order.length : i) : order.length + 1;
+  };
+  return [...places.values()]
+    .map(({ place, rows: list }) => ({ place, rows: [...list].sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind] || a.start - b.start), gaps: list.reduce((n, r) => n + r.gaps, 0) }))
+    .sort((a, b) => rank(a.place) - rank(b.place) || a.place.localeCompare(b.place));
+}
+
 /** What a person is on that day, from every department's groups, in time order. */
 export function personBlocks(groups: readonly Group[], userId: string): { group: Group; block: Block }[] {
   return groups.flatMap((group) => group.lanes.flat().filter((b) => b.kind === "on" && b.userId === userId).map((block) => ({ group, block })))
