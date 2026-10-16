@@ -10,5 +10,5 @@ export const metadata: Metadata = { title: "Purchasing" };
 export default async function PurchasingOverviewPage() {
   const who = purchasingAccess(await pageSession());
   if (!who) notFound();
-  return <ModuleStart id="purchasing" groups={[{ label: "", links: purchasingPages(who) }]} />;
+  return <div className="po-desk po-start"><ModuleStart id="purchasing" groups={[{ label: "", links: purchasingPages(who) }]} /></div>;
 }
