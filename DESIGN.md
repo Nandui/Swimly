@@ -703,13 +703,13 @@ module's pages. Both hold navigation only: no action buttons such as "New docume
 module's main action sits in its page heading. The pool deck keeps its own top bar (in the
 shared frame, without the rail or bottom bar).
 
-Analytics (Swim school) opens with figure tiles on the canvas (`.pc-stats`: three
-headline totals), then two panels side by side (`.pc-grid`): Enrolled by level, each
-level a row with "count of capacity · % filled" and its bar, and Class cancellations,
-two nested tiles and an outline link to Cancelled classes. Daily activity is a
-full-width panel holding the Monday to Sunday table (future days marked as upcoming
-rather than zero) and the Updated line. A shared SegmentedLinks bar, without icons,
-links Overview, Reception activity and Instructor attendance. Each report shows its
+Analytics (Swim school) is a set of reports (Overview, Classes, Swimmers, Progression,
+Teachers) styled in `src/app/(activities)/analytics/analytics.css`: a period and sites
+choice under the page tabs, figure tiles with a change against the period before, then
+white panels of charts (one axis, thin marks, labelled values), bars and row tables, with
+gold for figures worse than the school. Class and teacher pages drill down from them.
+A shared SegmentedLinks bar, without icons,
+links the reports, Registers, Reception activity and Multiple enrolments. Each older report shows its
 totals as figure tiles, then one panel per section: title, a labelled SearchField
 live filter ("Find an instructor", "Find a staff member") and the table, whose row
 headers sit inside the row. Reception offers daily breakdowns per person. Instructor
