@@ -9,7 +9,8 @@
  *  months later, so it names what changed and to what — "email old → new", not
  *  "user updated". Diff old against new and say which fields moved. */
 
-import type { Prisma } from "@/generated/prisma/client";
+import { Prisma } from "@/generated/prisma/client";
+import { SCHOOL_TIMEZONE } from "@/lib/format";
 import { currentClubIdIfAny } from "@/lib/clubs/current";
 import type { SiteFilter } from "@/lib/policy/types";
 import { prisma } from "@/lib/prisma";
@@ -128,4 +129,39 @@ export async function auditTrailFor(entity: string, entityIds: readonly string[]
     select: { id: true, entityId: true, actorName: true, action: true, summary: true, createdAt: true },
   });
   return rows.reverse();
+}
+
+/** Who did how much, from the log: entries grouped by person, module, record type, action, site, local
+ *  day and hour, between two local dates (Europe/Dublin, both inclusive). For a manager's view of the work
+ *  done in some modules; counts only, never summaries. `siteIds` null means every site; otherwise the
+ *  entries at those sites plus the organisation-wide ones (no site), which belong to every site. The caller
+ *  has checked the reader may see this work. */
+export type AuditWorkRow = { actorId: string | null; actorName: string; module: string | null; entity: string; action: string; clubId: string | null; day: string; hour: number; count: number };
+export async function auditWorkload(query: { modules: readonly string[]; siteIds: readonly string[] | null; from: string; to: string }): Promise<AuditWorkRow[]> {
+  if (query.modules.length === 0 || query.siteIds?.length === 0) return [];
+  const local = Prisma.sql`(("createdAt" AT TIME ZONE 'UTC') AT TIME ZONE ${SCHOOL_TIMEZONE})`;
+  return prisma.$queryRaw<AuditWorkRow[]>(Prisma.sql`
+    SELECT "actorId", "actorName", module, entity, action, "clubId",
+      ${local}::date::text AS day, EXTRACT(HOUR FROM ${local})::int AS hour, COUNT(*)::int AS count
+    FROM "AuditLog"
+    WHERE module IN (${Prisma.join([...query.modules])})
+      AND ${local}::date BETWEEN ${query.from}::date AND ${query.to}::date
+      ${query.siteIds ? Prisma.sql`AND ("clubId" IS NULL OR "clubId" IN (${Prisma.join([...query.siteIds])}))` : Prisma.empty}
+    GROUP BY "actorId", "actorName", module, entity, action, "clubId", day, hour`);
+}
+
+/** When each of some audited actions happened to records of one type, between two local dates
+ *  (Europe/Dublin, inclusive): who, where and when, never summaries. For timing work (how long a place
+ *  stood before it was undone). Site filtering as in `auditWorkload`. */
+export type AuditEventRow = { entityId: string; action: string; actorId: string | null; actorName: string; clubId: string | null; at: Date };
+export async function auditEvents(query: { entity: string; actions: readonly string[]; siteIds: readonly string[] | null; from: string; to: string }): Promise<AuditEventRow[]> {
+  if (query.actions.length === 0 || query.siteIds?.length === 0) return [];
+  const local = Prisma.sql`(("createdAt" AT TIME ZONE 'UTC') AT TIME ZONE ${SCHOOL_TIMEZONE})`;
+  return prisma.$queryRaw<AuditEventRow[]>(Prisma.sql`
+    SELECT "entityId", action, "actorId", "actorName", "clubId", "createdAt" AS at
+    FROM "AuditLog"
+    WHERE entity = ${query.entity} AND action IN (${Prisma.join([...query.actions])}) AND "entityId" IS NOT NULL
+      AND ${local}::date BETWEEN ${query.from}::date AND ${query.to}::date
+      ${query.siteIds ? Prisma.sql`AND ("clubId" IS NULL OR "clubId" IN (${Prisma.join([...query.siteIds])}))` : Prisma.empty}
+    ORDER BY "createdAt"`);
 }

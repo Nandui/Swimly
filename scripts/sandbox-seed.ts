@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { Client } from "pg";
 import type { PrismaClient } from "../src/generated/prisma/client";
+import { seedDeskHistory } from "./sandbox-desk-history";
 import { seedSwimHistory } from "./sandbox-swim-history";
 
 /** Extra fictional data for `npm run sandbox`, loaded by scripts/sandbox.mts.
@@ -21,6 +22,7 @@ export async function seed(ctx: Ctx) {
   await seedShortCourses(ctx.prisma);
   await seedStock(ctx.prisma);
   await seedSwimHistory(ctx.prisma, ctx.roles.Instructor);
+  await seedDeskHistory(ctx.prisma, ctx.roles.Receptionist);
 }
 
 /** Two sites' worth of classes so the deck and desk surfaces can be checked:

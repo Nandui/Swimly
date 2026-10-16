@@ -4,6 +4,18 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.32.0 · 16 October 2026 · Analytics: reception and much more on the swim school
+
+- **Analytics** has a new **Reception** page for swim school managers. It shows the work each person on the desk did in Turnfin: enrolments, moves, unenrols, new swimmers, parent app requests, follow-up calls, billing checks, assessment bookings, Academy call backs and refund requests.
+- **How fast the desk answers** times each job with a clock on it against a target: parent app requests within a day, cancelled classes to billing within two days, billing agreements within a week, swimmers ready to move within two weeks and Academy call backs within 72 hours. **Still waiting** lists what is not done yet, longest first.
+- **Busy hours** shades each day and hour by how much desk work was done, so you can match staff on the desk to the busy times.
+- **Record quality** counts new swimmers added without a date of birth, phone or emergency number, unenrols with no reason, and places made then unenrolled within a day. **Follow-up calls** and **Assessment bookings** show outcomes and how many assessed swimmers started a class.
+- Open a person on the Reception page to see their work week by week, their response times against the team, when they work and where they differ from the team.
+- **Classes** now shows the next four weeks of booked places, attendance by day and time, cancelled lessons and why, and how often each class has the same teacher each week.
+- **Swimmers** now shows how long new swimmers stay (still swimming after 4, 8, 13 and 26 weeks and a year, by when they joined) and how many swimmers have a parent in the parents app.
+- **Progression** shows the typical wait from an assessment to a first lesson. **Teachers** shows the share of lessons taught by each class's usual teacher. The **Overview** lists reception jobs past their target under **Needs attention**.
+- Phone calls, emails and the till are not in Turnfin, so the Reception page does not count them.
+
 ## 1.31.0 · 16 October 2026 · Swim school: much fuller analytics
 
 - **Analytics** has new pages for swim school managers: **Overview**, **Classes**, **Swimmers**, **Progression** and **Teachers**. Choose the last 4 weeks, 13 weeks, 6 months or 12 months, and this site or all your sites; figures show how they changed against the time before.

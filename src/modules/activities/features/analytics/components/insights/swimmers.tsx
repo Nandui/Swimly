@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatCount, formatDate, formatMonth, parseDateOnly, plural } from "@/lib/format";
 import { formatSlotShort } from "@/modules/activities/shared/courses/constants";
 import type { SwimmerInsights } from "@/modules/activities/features/analytics/server/insights-data";
-import { Bars, Flag, Kpi, PairedColumns, Panel, percent, ReportShell, reportHref, weeks, type ReportContext } from "@/modules/activities/features/analytics/components/insights/kit";
+import { Attention, Bars, Flag, Kpi, Meter, PairedColumns, Panel, percent, ReportShell, reportHref, weeks, type ReportContext } from "@/modules/activities/features/analytics/components/insights/kit";
 
 type Person = SwimmerInsights["swimmers"]["leavers"][number];
 
@@ -64,6 +64,23 @@ export function SwimmersReport({ data }: { data: SwimmerInsights }) {
         </TableRow>)}</TableBody>
       </Table></div>
     </Panel>
+    <Panel id="stay" title="How long new swimmers stay" sub="Of the new swimmers who joined in each quarter, the share still swimming after each number of weeks. Each figure counts only those who joined long enough ago; a blank means nobody has yet. The top row is everyone who joined in the last two years.">
+      <div className="ins-table-wrap"><Table>
+        <TableHeader><TableRow>
+          <TableHead scope="col">Joined</TableHead>
+          <TableHead scope="col" className="text-right">New swimmers</TableHead>
+          {data.stay.milestones.map(w => <TableHead key={w} scope="col" className="text-right">{w === 52 ? "1 year" : `${w} weeks`}</TableHead>)}
+        </TableRow></TableHeader>
+        <TableBody>
+          <TableRow><TableHead scope="row" className="font-semibold">Last two years</TableHead><TableCell className="ins-num">—</TableCell>{data.stay.overall.map((v, i) => <TableCell key={i} className="ins-num"><Meter value={v} /></TableCell>)}</TableRow>
+          {[...data.stay.cohorts].reverse().map(c => <TableRow key={c.key}>
+            <TableHead scope="row">{c.label}</TableHead>
+            <TableCell className="ins-num">{formatCount(c.joined)}</TableCell>
+            {c.values.map((v, i) => <TableCell key={i} className="ins-num">{v === null ? <span className="ins-muted">—</span> : <Meter value={v} tone={data.stay.overall[i] !== null && v < data.stay.overall[i]! - 10 ? "warn" : undefined} />}</TableCell>)}
+          </TableRow>)}
+        </TableBody>
+      </Table></div>
+    </Panel>
     <div className="ins-grid ins-even">
       <Panel id="reasons" title="Why they left" sub={`${plural(s.left, "leaver")} in the period.`}>
         {s.reasons.length ? <Bars label="Leavers by reason" rows={s.reasons.map(r => ({ key: r.key, label: r.label, value: r.count, tone: r.key === "teaching" || r.key === "progress" ? "warn" as const : undefined }))} /> : <p className="ins-sub">Nobody left.</p>}
@@ -73,6 +90,13 @@ export function SwimmersReport({ data }: { data: SwimmerInsights }) {
       </Panel>
       <Panel id="by-level" title="The level they left from" sub="Level of their last place.">
         {s.byLevel.length ? <Bars label="Leavers by level" rows={s.byLevel.map(l => ({ key: `${l.programmeName}-${l.name}`, label: `${l.name}${l.programmeName ? ` · ${l.programmeName}` : ""}`, value: l.count }))} /> : <p className="ins-sub">Nobody left.</p>}
+      </Panel>
+      <Panel id="parents" title="Parents in the app" sub="Swimmers here today with a parent linked in the parents app, where they book, see progress and ask for changes.">
+        <Attention items={[
+          { key: "linked", count: data.parents.linked, title: `${percent(data.parents.share)} of swimmers linked`, hint: `Of ${plural(data.parents.swimmers, "swimmer")} here today` },
+          { key: "not", count: data.parents.swimmers - data.parents.linked, title: "No parent in the app", hint: "Worth a mention at the desk", tone: "warn" },
+          { key: "new", count: data.parents.newLinks, title: "Linked in this period", hint: "Swimmers here today first linked in the period" },
+        ]} />
       </Panel>
       <Panel id="ages" title="Swimmers by age" sub="Swimmers here today.">
         <Bars label="Swimmers by age" rows={s.ages.bands.map(b => ({ key: b.label, label: b.label, value: b.count }))} />

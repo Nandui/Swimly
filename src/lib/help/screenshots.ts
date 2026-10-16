@@ -110,7 +110,7 @@ export const GUIDE_SCREENSHOTS: Record<string, Placement[]> = {
   "billing-follow-up": [{ image: "billing", step: "Record the handoff", caption: "After contacting billing, save a handoff note against the affected swimmers.", alt: "Cancelled Otters session awaiting billing, with the reason, the affected fictional swimmers, a billing handoff note and Mark billing notified." }],
   "analytics": [
     { image: "analytics", step: "Start with the Overview", caption: "The Overview shows the swim school at a glance for the period you choose, with what needs attention beside the weekly trend.", alt: "Analytics Overview with fictional figures for swimmers, places filled, waiting list, joiners and leavers, a weekly trend and a Needs attention list." },
-    { image: "analytics-reception", step: "Use the older reports", caption: "Reception activity groups recorded actions by person, with a daily breakdown for each.", alt: "Reception activity report with fictional staff, weekly enrolment and unenrolment totals, and daily breakdown controls." },
+    { image: "analytics-reception", step: "See how the desk is doing", caption: "Reception shows the desk's work, how many jobs were done on time and what is still waiting.", alt: "Reception analytics with fictional figures for work done, jobs on time, jobs still waiting, new swimmer records and places undone within a day." },
     { image: "analytics-instructors", step: "Use the older reports", caption: "Registers finds missing or partial attendance, then shows the class and the staff who saved marks.", alt: "Registers report with fictional instructors, saved and missing registers, and dated class details." },
   ],
   "manage-curriculum": [

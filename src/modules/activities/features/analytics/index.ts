@@ -1,4 +1,4 @@
-/** Swim school analytics: the Overview, Classes, Swimmers, Progression and Teachers reports, and the registers, reception and
+/** Swim school analytics: the Overview, Classes, Swimmers, Progression, Teachers and Reception reports, and the registers and
  *  multiple-places reports. Entry for the module and its routes. */
 export { InstructorReport } from "@/modules/activities/features/analytics/components/instructor-report";
 export { MultiplePlacesReport } from "@/modules/activities/features/analytics/components/multiple-places-report";
@@ -10,6 +10,9 @@ export { ClassDetailReport } from "@/modules/activities/features/analytics/compo
 export { SwimmersReport } from "@/modules/activities/features/analytics/components/insights/swimmers";
 export { ProgressionReport } from "@/modules/activities/features/analytics/components/insights/progression";
 export { TeachersReport } from "@/modules/activities/features/analytics/components/insights/teachers";
+export { DeskReport } from "@/modules/activities/features/analytics/components/insights/desk";
+export { DeskPersonReport } from "@/modules/activities/features/analytics/components/insights/desk-person";
+export { getDeskInsights, getDeskPersonInsights } from "@/modules/activities/features/analytics/server/desk-data";
 export { TeacherDetailReport } from "@/modules/activities/features/analytics/components/insights/teacher-detail";
 export {
   getClassesInsights, getClassInsights, getOneTeacherInsights, getOverviewInsights, getProgressionInsights, getSwimmerInsights, getTeacherInsights,

@@ -450,6 +450,11 @@ export function buildProgression(ds: Dataset) {
   const sessions = new Set(ds.assessments.filter(a => within(a.date, period.start, period.end) && !a.sessionCancelled).map(a => a.sessionId));
   const attended = bookings.filter(b => b.status === "ATTENDED");
   const converted = attended.filter(b => b.studentId && placesOf(ds.places, b.studentId).some(p => p.startedOn >= b.date && p.startedOn <= addDaysIso(b.date, 30)));
+  // Days from the assessment to the first lesson in a class, for those who started within two months.
+  const waits = attended.flatMap(b => {
+    const first = b.studentId ? placesOf(ds.places, b.studentId).map(p => p.startedOn).filter(d => d >= b.date && d <= addDaysIso(b.date, 60)).sort()[0] : undefined;
+    return first ? [Math.round((Date.parse(first) - Date.parse(b.date)) / 86_400_000)] : [];
+  }).sort((a, b) => a - b);
   return {
     levels,
     passes: levels.reduce((s, l) => s + l.passes, 0),
@@ -459,6 +464,7 @@ export function buildProgression(ds: Dataset) {
       noShow: bookings.filter(b => b.status === "NO_SHOW").length, cancelled: bookings.filter(b => b.status === "CANCELLED").length,
       upcoming: bookings.filter(b => b.status === "BOOKED").length,
       placed: attended.filter(b => b.outcomeLevelId).length, converted: converted.length, conversion: pct(converted.length, attended.length),
+      daysToClass: waits.length ? waits[Math.floor((waits.length - 1) / 2)] : null,
     },
   };
 }
