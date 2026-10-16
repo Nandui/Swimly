@@ -4,6 +4,16 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.29.1 · 16 October 2026 · Purchasing: a cleaner, clearer look
+
+- Every Purchasing page has a new look, in the same style as the new incident report page: soft cards, larger numbers and clearer steps.
+- **Orders** opens with three figures: how many orders wait for your approval (and what they come to), your own open orders, and the approved suppliers. Each order in the lists shows its number large, a coloured mark for where it has got to, and its amount.
+- **An order** now opens with the supplier and the total in large type, and a progress line: raised, sent for approval, approved and numbered, emailed to the supplier. A **What happens next** card beside it says whose move it is, and holds your buttons: approve or reject, email to the supplier, change it or cancel it. The order's emails show as a timeline underneath.
+- **New order** walks you through three numbered steps (where it goes and who from, the products, when it is needed and a note), with the total shown large beside them as you go.
+- **Email to supplier** shows who it goes to, the copies and the subject at the top, then the email exactly as the supplier will see it.
+- **Suppliers** show as tiles with their initials, products and orders. A supplier's products show as tiles with the price large. Who approves, and whether emails to suppliers are on, sit side by side.
+- The printout and the email the supplier gets look the same as before. Nothing about what you can do, or who can do it, has changed.
+
 ## 1.29.0 · 16 October 2026 · Each area has its own staff needs on the rota
 
 - Under **Admin > Areas**, the people button now sets the **staff an area needs while it is open**: how many, and which qualification they hold (or anyone), with the hours it is open every day. A weekday can have its own hours or be closed, for example the 25m pool opening later on Saturday and closed on Sunday.

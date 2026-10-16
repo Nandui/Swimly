@@ -17,15 +17,15 @@ export default async function EmailOrderPage({ params }: { params: Promise<{ id:
   const supplierEmail = o.supplier.email.trim();
   const sentBefore = lastSentToSupplier(o.emails);
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title={<span className="tabular-nums">Email {input.number}</span>} back={{ href: `/purchasing/${o.id}`, label: "The order" }}
+    <div className="po-desk">
+      <PageHeader title={<span className="po-num">Email {input.number}</span>} back={{ href: `/purchasing/${o.id}`, label: "The order" }}
         description={`To ${o.supplier.name}. Check the email, send yourself a test, then send it.`}
         actions={mayEmail ? <span className="flex flex-wrap gap-2">
           {sender.email ? <SendTest id={o.id} to={sender.email} /> : null}
           {emailsOn && supplierEmail ? <SendToSupplier id={o.id} number={input.number} supplier={o.supplier.name} to={supplierEmail} copyTo={supplierCopies.filter((a) => a.toLowerCase() !== supplierEmail.toLowerCase()).join(", ")} replyTo={replyTo.email} sentBefore={sentBefore} /> : null}
         </span> : null} />
 
-      <div className="space-y-3">
+      <div className="space-y-3 empty:hidden">
         {!mayEmail ? <Notice title="You can't email this order" description="Whoever raised it, anyone who raises orders at its site, or whoever manages Purchasing can." /> : null}
         {!emailsOn ? (
           <Notice tone="warning" title="Emails to suppliers are off"
@@ -40,15 +40,18 @@ export default async function EmailOrderPage({ params }: { params: Promise<{ id:
         {!sender.email ? <Notice tone="warning" title="Your account has no email address" description={replyTo.email ? "A test can't reach you. Ask an administrator to add one." : "A test can't reach you, and the supplier's replies would have nowhere to go. Ask an administrator to add one."} /> : null}
       </div>
 
-      <section aria-labelledby="po-email" className="pc-panel flex flex-col gap-4">
-        <div className="pc-panel-head"><h2 id="po-email">The email</h2></div>
-        <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-[auto_minmax(0,1fr)]">
-          <dt className="text-ui-muted-foreground">To</dt><dd className="font-medium break-words">{supplierEmail || "No address yet"}</dd>
-          <dt className="text-ui-muted-foreground">Copy to</dt><dd className="font-medium break-words">{supplierCopies.join(", ") || "Nobody"}<span className="font-normal text-ui-muted-foreground"> (not on tests)</span></dd>
-          <dt className="text-ui-muted-foreground">Replies go to</dt><dd className="font-medium break-words">{replyTo.email ? `${replyTo.name}, ${replyTo.email}` : "Nobody: no email address for whoever raised the order or for you"}{replyTo.email && replyTo.email !== sender.email ? <span className="font-normal text-ui-muted-foreground"> (raised the order)</span> : null}</dd>
-          <dt className="text-ui-muted-foreground">Subject</dt><dd className="font-medium break-words">{preview.subject}</dd>
+      <section aria-labelledby="po-email" className="po-card">
+        <div className="po-card-head"><div><span className="po-eyebrow">Exactly as it arrives</span><h2 id="po-email">The email</h2></div></div>
+        <dl className="po-envelope">
+          <dt>To</dt><dd>{supplierEmail || "No address yet"}</dd>
+          <dt>Copy to</dt><dd>{supplierCopies.join(", ") || "Nobody"}<span className="font-normal text-ui-muted-foreground"> (not on tests)</span></dd>
+          <dt>Replies go to</dt><dd>{replyTo.email ? `${replyTo.name}, ${replyTo.email}` : "Nobody: no email address for whoever raised the order or for you"}{replyTo.email && replyTo.email !== sender.email ? <span className="font-normal text-ui-muted-foreground"> (raised the order)</span> : null}</dd>
+          <dt>Subject</dt><dd>{preview.subject}</dd>
         </dl>
-        <EmailPreview html={preview.html} title={`The email of ${input.number}`} />
+        <div className="po-pane">
+          <div className="po-pane-bar" aria-hidden="true"><span /><span /><span /><p>{preview.subject}</p></div>
+          <EmailPreview html={preview.html} title={`The email of ${input.number}`} />
+        </div>
       </section>
 
       <EmailHistory emails={o.emails} />
