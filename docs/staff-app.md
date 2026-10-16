@@ -51,6 +51,12 @@ turning it on.
 - **Sessions last up to 12 hours.** The app keeps the token in the open tab
   only (`sessionStorage`), so closing it means a new code next time. Tokens and
   codes are stored hashed.
+- **Courses saved for offline** are the only other thing kept on the phone
+  (IndexedDB, `apps/me/src/lib/offline.ts`): the course's lessons and files the
+  person chose to save, and their changes waiting for signal. Removed after 30
+  days without an update, on Sign out, and when a different email signs in.
+  The service worker (`apps/me/public/sw.js`) keeps only the app's own pages
+  and scripts, never API answers. See docs/training.md (e-learning, phase 9).
 - **HR records need a fresh code** on top of the session (`auth/confirm`), valid
   for 15 minutes.
 - **Deactivating** an account, or removing it from the organisation, ends all
@@ -94,8 +100,8 @@ turning it on.
 | POST | `training/refresher/answer` | `{ cardId }` or `{ assignmentId, questionId }` with `answer`: `{ done, correct, explanation, nextIn }`. Never the right answer. Once a question a day, 5 a day |
 | GET | `training/plan` | Own learning paths (each course's state and due date), sessions booked or attended, and in-service hours against each qualification they hold, with the log |
 | GET | `training/{id}/lessons/{lessonId}` | One lesson of the person's own course version: its text, video link or file, and the lessons either side; knowledge-check questions in the text (`checks`, without the key); a Scenario's scenes (`steps`), Flashcards' cards (`cards`), a Checklist's items (`items`), Sort into groups (`sorting`) and a picture's spots (`spots`), which are practice and sent whole; a Slides lesson's embed address (`embed`); a Hand in work lesson's settings and the person's own work (`handIn`); and `locked` when the course goes in order or waits on another course |
-| POST | `training/{id}/lessons/{lessonId}/complete` | Marks the lesson done. The first one fixes the course version the person takes. Refused while the lesson is locked, and on Hand in work until the work is accepted |
-| POST | `training/{id}/lessons/{lessonId}/hand-in` | `{ text, file?: { fileName, mime, data (base64) }, keepFile }` on a Hand in work lesson: a JPEG, PNG, WebP or PDF up to 4 MB. Replaces earlier work until a trainer accepts it. Audited; 30 an hour |
+| POST | `training/{id}/lessons/{lessonId}/complete` | Optional `{ at }`: when it was done with no signal (kept only within 14 days, after it was assigned and not in the future; the audit says "offline at …"). Marks the lesson done. The first one fixes the course version the person takes. Refused while the lesson is locked, and on Hand in work until the work is accepted |
+| POST | `training/{id}/lessons/{lessonId}/hand-in` | `{ text, file?: { fileName, mime, data (base64) }, keepFile, at? }` (`at` as on `complete`) on a Hand in work lesson: a JPEG, PNG, WebP or PDF up to 4 MB. Replaces earlier work until a trainer accepts it. Audited; 30 an hour |
 | GET | `training/{id}/lessons/{lessonId}/hand-in/file` | The photo or PDF the person handed in, as the file itself |
 | POST | `training/{id}/lessons/{lessonId}/check` | `{ questionId, answer, giveUp }` on a Quiz lesson or a knowledge check in the lesson's text: `{ correct, explanation }`. The explanation only with a right answer or `giveUp`; never the right answer |
 | GET | `training/{id}/exam` | The final exam's rules, attempts left and past scores, plus the open paper (questions without the key, the answers saved so far) |

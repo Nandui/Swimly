@@ -5,7 +5,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { BookOpen, CalendarDays, GraduationCap, House, LayoutGrid, LogOut } from "lucide-react";
 import { TextSizeEffect } from "@/components/learner";
+import { OfflineBar, useOffline } from "@/components/offline";
 import { api, session } from "@/lib/api";
+import { clearAll } from "@/lib/offline";
 
 const TABS = [
   { href: "/", label: "Home", icon: House },
@@ -35,11 +37,16 @@ export function Frame({ title, children }: { title: string; children: ReactNode 
   const pathname = usePathname();
   const router = useRouter();
   const [leaving, setLeaving] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const { waiting } = useOffline();
   const active = (href: string) => href === "/" ? pathname === "/" : href === "/more" ? MORE.some((p) => pathname.startsWith(p)) : pathname.startsWith(href);
-  async function signOut() {
+  async function signOut(sure = false) {
+    // Changes not sent yet would be lost: say so first.
+    if (waiting && !sure) { setConfirming(true); return; }
     setLeaving(true);
     try { await api("auth/logout", { method: "POST" }); } catch { /* the token is dropped anyway */ }
     session.clear();
+    await clearAll();
     router.replace("/sign-in");
   }
   return (
@@ -49,9 +56,19 @@ export function Frame({ title, children }: { title: string; children: ReactNode 
       <header className="topbar">
         <Brand href="/" />
         <div className="tf-bar">
-          <button type="button" className="tf-bar-item" onClick={signOut} disabled={leaving}><LogOut aria-hidden="true" />{leaving ? "Signing out…" : "Sign out"}</button>
+          <button type="button" className="tf-bar-item" onClick={() => void signOut()} disabled={leaving}><LogOut aria-hidden="true" />{leaving ? "Signing out…" : "Sign out"}</button>
         </div>
       </header>
+      <OfflineBar />
+      {confirming ? (
+        <div className="offline-failed" role="alert">
+          <p><strong>{waiting === 1 ? "1 change hasn’t" : `${waiting} changes haven’t`} reached Turnfin yet.</strong> Signing out now deletes {waiting === 1 ? "it" : "them"} from this phone.</p>
+          <div className="row">
+            <button type="button" className="button outline" onClick={() => void signOut(true)}>Sign out anyway</button>
+            <button type="button" className="button ghost" onClick={() => setConfirming(false)}>Stay signed in</button>
+          </div>
+        </div>
+      ) : null}
       <main className="page" id="main" aria-label={title}>{children}</main>
       <nav className="tf-bottom" aria-label="Turnfin Me">
         {TABS.map(({ href, label, icon: Icon }) => (

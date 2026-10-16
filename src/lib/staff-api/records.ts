@@ -256,6 +256,8 @@ const handInSchema = z.object({
     data: z.string().min(4).max(5_800_000),
   }).strict().nullable().default(null),
   keepFile: z.boolean().default(false),
+  /** When it was handed in on the phone with no signal (phase 9). */
+  at: z.string().max(40).nullable().default(null),
 }).strict();
 
 /** Hands in work on a Hand in work lesson: a written answer, a photo or PDF, or both. */
@@ -263,7 +265,7 @@ export async function handInTraining(request: Request, identity: StaffIdentity, 
   const input = await readBody(request, handInSchema, 6_000_000);
   await rateLimit(`training-hand-in:${identity.user.id}`, 30, 3600);
   const bytes = input.file ? Buffer.from(input.file.data, "base64") : null;
-  const result = await handInWork(me(identity), id, lessonId, { text: input.text, keepFile: input.keepFile, file: input.file && bytes ? { name: input.file.fileName, mime: input.file.mime, bytes } : null });
+  const result = await handInWork(me(identity), id, lessonId, { text: input.text, keepFile: input.keepFile, at: input.at, file: input.file && bytes ? { name: input.file.fileName, mime: input.file.mime, bytes } : null });
   if (!result.ok) {
     if (result.error.includes("not assigned to you") || result.error.includes("not in your course")) notFound();
     throw failed(result.error);
@@ -334,8 +336,11 @@ export async function trainingExamResult(identity: StaffIdentity, id: string, nu
   };
 }
 
-export async function completeTrainingLesson(identity: StaffIdentity, id: string, lessonId: string) {
-  const result = await completeLessonFor({ id: identity.user.id, name: identity.user.name }, id, lessonId);
+/** Finishing a lesson. Turnfin Me sends `{ at }` when it was finished with no signal (phase 9); no body is now. */
+const completeLessonSchema = z.object({ at: z.string().max(40).nullable().default(null) }).strict();
+export async function completeTrainingLesson(request: Request, identity: StaffIdentity, id: string, lessonId: string) {
+  const input = request.headers.get("content-type")?.toLowerCase().startsWith("application/json") ? await readBody(request, completeLessonSchema) : { at: null };
+  const result = await completeLessonFor({ id: identity.user.id, name: identity.user.name }, id, lessonId, input.at);
   if (!result.ok) {
     if (result.error.includes("not assigned to you") || result.error.includes("not in your course")) notFound();
     throw failed(result.error);
