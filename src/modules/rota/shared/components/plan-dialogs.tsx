@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { Copy, Plus, Send } from "lucide-react";
+import { ArrowLeftRight, Copy, Plus, Send } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
+import { DialogClose } from "@/components/shadcn/dialog";
 import { Input } from "@/components/shadcn/input";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { RadioGroup } from "@/components/shadcn/radio-group";
@@ -78,17 +79,18 @@ function RemoveNeed({ id, live }: { id: string; live: boolean }) {
   );
 }
 
-/** Someone on a place: change their time, or take them off (that time becomes a gap). `change`
- *  opens the activity itself (its time, area or how many staff), when this plan may change it. */
-export function AssignmentDialog({ live, assignment, trigger, change }: {
-  live: boolean; trigger: ReactNode; change?: ReactNode;
+/** Someone on a place: change their time, hand part of it to someone else, or take them off
+ *  (that time becomes a gap). `change` opens the activity itself (its time, area or how many
+ *  staff), when this plan may change it; `onHandOver` closes this and opens who could cover. */
+export function AssignmentDialog({ live, assignment, trigger, change, onHandOver }: {
+  live: boolean; trigger: ReactNode; change?: ReactNode; onHandOver?: () => void;
   assignment: { id: string; needId: string; place: number; userId: string; name: string; start: number; end: number; what: string };
 }) {
   const a = assignment;
   const fid = `assign-${a.id}`;
   return (
     <FormDialog portalClassName={THEME} width="sm:max-w-lg" trigger={trigger}
-      title={`${a.name} on ${a.what}`} description="Change their time on this place, or take them off. To put someone else on, take them off and fill the gap."
+      title={`${a.name} on ${a.what}`} description={onHandOver ? "Change their time on this place, hand part of it to someone else while they step out, or take them off." : "Change their time on this place, or take them off. To put someone else on, take them off and fill the gap."}
       submitLabel="Save time" successMessage="Time saved"
       submit={(formData) => assign(a.id, { needId: a.needId, place: a.place, userId: a.userId, start: text(formData, "start"), end: text(formData, "end") }, changeOf(formData))}>
       <div className="grid grid-cols-2 gap-4">
@@ -97,6 +99,7 @@ export function AssignmentDialog({ live, assignment, trigger, change }: {
       </div>
       {live ? <ChangeFields id={fid} /> : null}
       <div className="flex flex-wrap gap-2">
+        {onHandOver ? <DialogClose asChild><Button type="button" variant="outline" onClick={onHandOver}><ArrowLeftRight aria-hidden="true" />Hand over part of it</Button></DialogClose> : null}
         {change}
         <FormDialog portalClassName={THEME} destructive cancelLabel="Keep them on"
           trigger={<Button type="button" variant="ghost" className="text-ui-destructive">Take {a.name.split(" ")[0]} off</Button>}

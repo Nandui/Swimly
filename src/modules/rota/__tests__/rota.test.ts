@@ -179,6 +179,26 @@ test("putting people on: warnings never refuse; one person at a time on a place;
   assert.equal(await fixture.prisma.rotaLog.count(), 0, "days ahead change freely, nothing logged");
 });
 
+test("in and out: someone covers part of an activity and the first person keeps the rest (owner request, 16 October 2026)", async () => {
+  as("maya", [at("rota.plan")]);
+  const day = addDaysIso(today(), 60);
+  assert.equal((await actions.saveNeed(null, need(day, { start: "09:00", end: "14:00", places: 1 }))).ok, true);
+  const zone = await fixture.prisma.rotaNeed.findFirstOrThrow({ where: { siteId: churchfield, date: new Date(`${day}T00:00:00Z`), startMinutes: 9 * 60 } });
+  assert.equal((await actions.assign(null, { needId: zone.id, place: 1, userId: "ava", start: "09:00", end: "14:00" })).ok, true);
+  const first = await fixture.prisma.rotaAssignment.findFirstOrThrow({ where: { needId: zone.id } });
+  assert.equal((await actions.handOver(first.id, { userId: "ava", start: "10:00", end: "11:00" })).ok, false, "someone else covers");
+  assert.equal((await actions.handOver(first.id, { userId: "sam", start: "08:00", end: "11:00" })).ok, false, "inside their own time");
+  assert.equal((await actions.handOver(first.id, { userId: "sam", start: "10:00", end: "11:00" })).ok, true);
+  const rows = await fixture.prisma.rotaAssignment.findMany({ where: { needId: zone.id }, orderBy: { startMinutes: "asc" } });
+  assert.deepEqual(rows.map((r) => [r.userId, r.startMinutes / 60, r.endMinutes / 60]), [["ava", 9, 10], ["sam", 10, 11], ["ava", 11, 14]]);
+  const plan = await data.planWeek({ site: churchfield, day, dept: "d-pool" });
+  assert.equal(plan.day!.gapCount, 0, "no gap: someone is on it all day");
+  const sam = rows.find((r) => r.userId === "sam")!;
+  assert.equal((await actions.handOver(sam.id, { userId: "riley", start: "10:00", end: "11:00" })).ok, true, "all of it is a swap");
+  assert.equal((await fixture.prisma.rotaAssignment.findUniqueOrThrow({ where: { id: sam.id } })).userId, "riley");
+  assert.equal((await actions.removeNeed(zone.id)).ok, true);
+});
+
 test("shifts first: put someone on a shift, give them the day's gaps, and place their breaks", async () => {
   const shift = (extra: Partial<{ userId: string; start: string; end: string }> = {}) => ({ siteId: churchfield, departmentId: "d-pool", date: tomorrow(), userId: "ava", start: "07:00", end: "15:00", ...extra });
   as("lee", [at("rota.view")]);

@@ -54,3 +54,25 @@ test("time in a shift with nothing on and no break is free, ready to give to som
   assert.equal(free.reduce((n, s) => n + s.end - s.start, 0) + placed, 60, "that hour is either a break or free");
   assert.deepEqual(partPaid(ciara.shift.parts[0]), { paid: 8 * 60 - 30, unpaid: 30 });
 });
+
+test("someone covering part of an activity shows as their own stretch, with no gap (owner request, 16 October 2026)", () => {
+  const zone = buildDay({
+    date: "2026-10-19", types, names: new Map([["ciara", "Ciara Murphy"], ["sean", "Seán Byrne"]]), areas: ["Main pool"],
+    needs: [need("fz", "guard", "Main pool", "09:00", "14:00", 1)],
+    assignments: [on("a1", "fz", 1, "ciara", "09:00", "10:00"), on("a2", "fz", 1, "sean", "10:00", "11:00"), on("a3", "fz", 1, "ciara", "11:00", "14:00")],
+    classes: [],
+  });
+  const row = needRows(zone.groups)[0];
+  assert.equal(row.gaps, 0);
+  assert.deepEqual(row.cover.map((c) => [c.start / 60, c.end / 60, c.have, c.want]), [[9, 10, 1, 1], [10, 11, 1, 1], [11, 14, 1, 1]]);
+});
+
+test("a split shift keeps its parts apart: paid hours add up, the time off is not paid", () => {
+  const split = buildDay({
+    date: "2026-10-19", types, names: new Map([["ciara", "Ciara Murphy"]]), areas: ["Main pool"], needs: [], assignments: [], classes: [],
+    planned: [{ id: "s1", userId: "ciara", departmentId: "pool", startMinutes: h("07:00"), endMinutes: h("11:00") }, { id: "s2", userId: "ciara", departmentId: "pool", startMinutes: h("17:00"), endMinutes: h("21:00") }],
+  });
+  const ciara = split.people[0];
+  assert.deepEqual(ciara.shift.parts.map((x) => [x.start / 60, x.end / 60]), [[7, 11], [17, 21]]);
+  assert.equal(ciara.shift.paidMinutes, 8 * 60);
+});

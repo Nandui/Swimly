@@ -123,6 +123,10 @@
 /* A person's row: the shift's outline under what they are on, and their breaks. */
 .turnfin-module .rota-people-shift { position: absolute; top: 2px; bottom: 2px; border: 1px dashed var(--pc-line-strong, var(--pc-ink-muted)); border-radius: 14px; }
 .turnfin-module .rota-people-shift[data-planned] { border-style: solid; border-color: var(--pc-primary); background: color-mix(in srgb, var(--pc-primary) 6%, transparent); }
+.turnfin-module .rota-split-gap { position: absolute; top: 50%; z-index: 1; display: flex; align-items: center; justify-content: center; height: 0; border-top: 2px dotted var(--pc-ink-muted); color: var(--pc-ink-muted); font-size: var(--pc-text-caption); pointer-events: none; }
+.turnfin-module .rota-split-gap > span { padding: 0 8px; border-radius: 999px; background: var(--pc-surface); line-height: var(--pc-leading-caption); white-space: nowrap; translate: 0 -1px; }
+.turnfin-module .rota-split-gap[data-density="icon"] > span { display: none; }
+.turnfin-module .rota-tl-key i.rota-split-gap { position: static; display: inline-block; height: 0; vertical-align: middle; }
 .turnfin-module .rota-people-break { position: absolute; top: 10px; bottom: 10px; z-index: 2; display: grid; place-items: center; min-width: 6px; border: 1px dashed var(--pc-ink-muted); border-radius: 8px; background: var(--pc-surface); color: var(--pc-ink-muted); }
 .turnfin-module .rota-people-break[data-pinned] { border-style: solid; border-color: var(--pc-ink); color: var(--pc-ink); }
 .turnfin-module .rota-people-break > svg { width: 12px; height: 12px; }
@@ -288,3 +292,6 @@
 .turnfin-module .rota-plan .rota-tl-key { gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--rota-hair); }
 .turnfin-module .rota-plan .rota-tl-key > span { padding: 4px 10px 4px 6px; border-radius: 999px; background: var(--pc-surface-sunken); }
 .turnfin-module .rota-plan .rota-tl-key i { width: 16px; height: 10px; border-radius: 999px; }
+
+/* Split shifts (owner request, 16 October 2026): the key shows the dotted "off" line. */
+.turnfin-module .rota-plan .rota-tl-key i.rota-split-gap { height: 0; border-radius: 0; background: none; }

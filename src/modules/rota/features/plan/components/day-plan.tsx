@@ -12,7 +12,7 @@ import { Tag } from "@/components/ui-kit/tag";
 import { SegmentedChoice } from "@/components/ui-kit/segmented-links";
 import { AssignmentDialog, NeedDialog } from "@/modules/rota/shared/components/plan-dialogs";
 import type { AreaLanes } from "@/modules/rota/shared/components/area-lanes";
-import { FillSheet, type GapRef } from "@/modules/rota/shared/components/fill-sheet";
+import { FillSheet, handOverGap, type GapRef } from "@/modules/rota/shared/components/fill-sheet";
 import { clock } from "@/modules/rota/shared/constants";
 import type { Block, DayNeed, DayZone, Group, Person } from "@/modules/rota/shared/day";
 import { lanesLabel } from "@/modules/rota/shared/lanes";
@@ -259,6 +259,12 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
       needId: b.needId, place: b.place, classRefs: refs,
       replace: isOff(b) ? { assignmentId: b.assignmentId, name: b.name ?? "Someone" } : null });
   };
+  /** Hand part of someone's time on a planned activity to another person (staff "in and out"). */
+  const handOverOf = (g: Group, b: Block) => () => {
+    setSelected(null);
+    setGap(handOverGap({ siteId, date, dateLabel, typeId: g.typeId, what: `${g.name} in ${g.place}`, requiredName: g.requiredName },
+      { id: b.assignmentId!, needId: b.needId!, place: b.place!, userId: b.userId!, name: b.name ?? "", start: b.start, end: b.end }));
+  };
   /** Where something sits on a track, or null when it is outside the view. */
   const at = (start: number, end: number) => {
     const a = Math.max(start, from), e = Math.min(end, to);
@@ -354,7 +360,7 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
     if (b.classRef) return <Button key={key} type="button" variant="link" className="pc-block" {...common} aria-label={`${label}. Change who teaches`} onClick={() => openGap(g, b, b.refs)}>{words}</Button>;
     return b.assignmentId ? (
       <AssignmentDialog key={key} live={live} assignment={{ id: b.assignmentId, needId: b.needId!, place: b.place!, userId: b.userId!, name: b.name ?? "", start: b.start, end: b.end, what: `${g.name} in ${g.place}` }}
-        change={changeOf(b)} trigger={<Button type="button" variant="link" className="pc-block" {...common} aria-label={`${label}. Change their time or take them off`}>{words}</Button>} />
+        change={changeOf(b)} onHandOver={handOverOf(g, b)} trigger={<Button type="button" variant="link" className="pc-block" {...common} aria-label={`${label}. Change their time, hand part of it over or take them off`}>{words}</Button>} />
     ) : <span key={key} className="pc-block" {...common} role="img" aria-label={label}>{words}</span>;
   };
 
@@ -436,10 +442,10 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
                 <div key={ri} className="rota-tl-row">
                   {ri === 0 ? (
                     <Button type="button" variant="ghost" className="rota-tl-label rota-tl-person h-auto items-stretch whitespace-normal" onClick={() => setOpenPerson(p.userId)}
-                      aria-label={`${p.name}: ${times}, ${duration(p.shift.paidMinutes)} paid today${week ? `, ${week}` : ""}${warned(p) ? `. ${checkLabel(p)}` : ""}. Open their shift`}>
+                      aria-label={`${p.name}: ${p.shift.parts.length > 1 ? "split shift, " : ""}${times}, ${duration(p.shift.paidMinutes)} paid today${week ? `, ${week}` : ""}${warned(p) ? `. ${checkLabel(p)}` : ""}. Open their shift`}>
                       <span className="rota-avatar" aria-hidden="true">{nameInitials(p.name)}</span>
                       <span className="rota-tl-name"><span>{p.name}</span></span>
-                      <small className="tabular-nums">{times}</small>
+                      <small className="tabular-nums">{p.shift.parts.length > 1 ? "Split · " : ""}{times}</small>
                       <small className={`tabular-nums${over(p) ? " rota-people-warn" : ""}`}>{duration(p.shift.paidMinutes)} paid{week ? ` · ${week}` : ""}</small>
                       {hours[p.userId]?.contract ? <span className="rota-meter" data-over={over(p) ? "" : undefined} aria-hidden="true"><span style={{ inlineSize: `${Math.min(100, Math.round((hours[p.userId].week / hours[p.userId].contract!) * 100))}%` }} /></span> : null}
                       {warned(p) ? <small className="rota-people-warn"><TriangleAlert aria-hidden="true" />{checkLabel(p)}</small> : null}
@@ -449,6 +455,12 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
                     {ri === 0 ? p.shift.parts.map((x) => {
                       const pos = at(x.start, x.end);
                       return pos ? <span key={`s${x.start}`} className="rota-people-shift" data-planned={x.planned ? "" : undefined} style={pos.style} /> : null;
+                    }) : null}
+                    {ri === 0 ? splitGaps(p).map((x) => {
+                      const pos = at(x.start, x.end);
+                      if (!pos) return null;
+                      const label = `Off between ${firstName(p.name)}'s shifts, ${clock(x.start)} to ${clock(x.end)}, unpaid`;
+                      return <span key={`o${x.start}`} className="rota-split-gap" data-density={densityOf(pos.px)} style={pos.style} role="img" aria-label={label} title={label}><span>Off {duration(x.end - x.start)}</span></span>;
                     }) : null}
                     {ri === 0 ? open.map((f) => {
                       const pos = at(f.start, f.end);
@@ -492,6 +504,7 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
           <span><i style={{ background: "var(--pc-block-now)" }} />Swim classes</span>
           <span><i className="pc-block rota-free-time" data-block="done" />No activity yet</span>
           <span><i className="rota-people-shift" data-planned="" />Shift</span>
+          <span><i className="rota-split-gap" />Off between split shifts</span>
           <span><i className="rota-people-break" data-pinned="" />Break placed</span>
           <span><i className="rota-people-break" />Break suggested</span>
         </div>
@@ -532,7 +545,7 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
                       }
                       return <li key={i}>{b.assignmentId ? (
                         <AssignmentDialog live={live} assignment={{ id: b.assignmentId, needId: b.needId!, place: b.place!, userId: b.userId!, name: b.name ?? "", start: b.start, end: b.end, what: `${g.name} in ${g.place}` }}
-                          change={changeOf(b)} trigger={<Button type="button" variant="outline" className={ROW} aria-label={`${b.name}, ${what}`}>{text}{trail}</Button>} />
+                          change={changeOf(b)} onHandOver={handOverOf(g, b)} trigger={<Button type="button" variant="outline" className={ROW} aria-label={`${b.name}, ${what}`}>{text}{trail}</Button>} />
                       ) : <div className="pc-row">{text}</div>}</li>;
                     })}
                   </ul>
@@ -555,6 +568,11 @@ export function DayPlan({ siteId, departmentId, departmentNames, date, dateLabel
       </Sheet>
     </>
   );
+}
+
+/** The unpaid time between the parts of a split shift. */
+function splitGaps(p: Person) {
+  return p.shift.parts.slice(1).map((x, i) => ({ start: p.shift.parts[i].end, end: x.start })).filter((x) => x.end > x.start);
 }
 
 /** Back-to-back swim classes on someone's row as one block when the day is too narrow to read them. */
