@@ -394,6 +394,43 @@ additive (three defaulted course columns and `training_submissions`).
   exam sections with no questions, questions with no "why", courses over an
   hour, and all-reading courses.
 
+## Offline in Turnfin Me (e-learning, phase 9)
+
+Owner go-ahead, 16 October 2026. For plant rooms, basements and pool decks
+with no signal. No migration.
+
+- **Save for offline** on a course in Me keeps its outline, every lesson and
+  every file it uses (lesson files, pictures, scene and card pictures, the
+  cover) in the phone's IndexedDB, plus My training. Each saved course shows its
+  size and date, with **Bring up to date** and **Remove**; More > **Saved for
+  offline** lists them. A fresh answer from Turnfin replaces the copy.
+- **With no signal**, a saved course opens from the phone. Finishing a lesson,
+  a lesson note or bookmark, and handed-in work wait in an outbox and show at
+  once in the saved copy (ticked, the next lesson opened when lessons go in
+  order, work shown as "Waiting for signal"). A line under the top row says
+  the phone is offline and how many changes wait.
+- **Back online**, the outbox is sent oldest first, then the course is brought
+  up to date. It stops on no signal, a sign-in or too many requests and tries
+  again later (on reconnect, and when the app comes back to the front); one
+  Turnfin refuses (a lesson locked meanwhile, accepted work) is dropped and
+  listed, so the person can do it again.
+- **When it was done**: `complete` and `hand-in` take the phone's time (`at`).
+  `offlineTime` (`features/me/server/offline.ts`) keeps it only within 14 days, after the
+  course was assigned and not in the future (two minutes ahead counts as now);
+  the audit summary adds "offline at 16 Oct, 10:42". Otherwise the server time
+  is used.
+- **Still needs a connection**: practice questions, knowledge checks, the exam
+  (all marked on the server, and keys never reach the phone), videos and
+  slides. Opening one of those offline says so.
+- **Privacy**: only material the person saved and their own unsent changes are
+  kept, for 30 days at most. Sign out removes everything (after warning if
+  changes are still waiting), and so does a different email signing in on the
+  same phone (`claim`). The session token stays in the tab only, as before.
+- **Pages**: `public/sw.js`, registered in production builds, keeps the app's
+  own scripts (cache first) and pages (network first, then the copy, then
+  `/offline`). It never touches the staff API. Saving a course loads its pages
+  once so they are kept.
+
 ## Expiring qualifications
 
 `/training/expiring` lists qualifications that have expired or expire within 60

@@ -4,6 +4,7 @@ import { Suspense, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, Send } from "lucide-react";
 import { ApiError, api, session } from "@/lib/api";
+import { claim, flush } from "@/lib/offline";
 import { Brand } from "@/components/frame";
 import { Notice } from "@/components/ui";
 
@@ -34,6 +35,9 @@ function SignIn() {
     try {
       const result = await api<{ accessToken: string }>("auth/verify-code", { method: "POST", body: { challengeId: challenge, code }, auth: false });
       session.set(result.accessToken);
+      // Someone else's saved courses go; this person's waiting changes are sent.
+      await claim(email);
+      void flush();
       router.replace(destination);
     } catch (caught) { setError(caught instanceof ApiError ? caught.message : "Could not sign you in. Try again."); setBusy(false); }
   }

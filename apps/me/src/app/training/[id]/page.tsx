@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import { Award, BookOpen, ChevronLeft, ChevronRight, CircleCheck, ClipboardCheck, Columns3, FileText, GitBranch, GraduationCap, Headphones, Layers, ListChecks, ListTodo, Lock, MonitorPlay, PlayCircle, ScanSearch, Send, Upload } from "lucide-react";
 import { Frame } from "@/components/frame";
+import { OfflineCourse } from "@/components/offline";
 import { RateCourse } from "@/components/learner";
 import { CourseImage, type ExamInfo } from "@/components/question";
 import { LoadError, Loading, Notice, Tag, useLoad } from "@/components/ui";
@@ -191,6 +192,7 @@ export default function TrainingDetailPage() {
               </section>
             )}
 
+            {open && data.sections?.length ? <OfflineCourse id={data.id} /> : null}
             {data.canRate ? <RateCourse key={data.id} assignmentId={data.id} initial={data.feedback} /> : null}
             {data.practical ? <PracticalCard practical={data.practical} open={open && !data.trainerNote} /> : null}
 

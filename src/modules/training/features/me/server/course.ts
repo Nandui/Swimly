@@ -7,6 +7,7 @@ import { FILE_SELECT } from "@/modules/training/shared/files";
 import { grantQualification } from "@/modules/training/shared/grant";
 import { docChecks, embedFor, learnerScenario, lessonFiles, lessonMinutes, lessonPlace, outlineLessons, readOutline, videoFor, type Outline } from "@/modules/training/shared/lessons";
 import { learnerQuestion, questionFiles, seeded } from "@/modules/training/shared/questions";
+import { offlineLabel, offlineTime } from "@/modules/training/features/me/server/offline";
 import { submissionFor } from "@/modules/training/features/me/server/hand-in";
 
 /** A learner's course in Turnfin Me (docs/training.md, e-learning phase 1): the
@@ -22,7 +23,7 @@ export const effectiveVersionId = (row: { versionId: string | null; status: stri
   row.versionId ?? (row.status === "ASSIGNED" ? row.course.publishedVersionId : null);
 
 const ROW = {
-  id: true, status: true, versionId: true, examExtraAttempts: true, orgId: true,
+  id: true, status: true, versionId: true, examExtraAttempts: true, orgId: true, assignedAt: true,
   course: { select: { id: true, publishedVersionId: true, coverId: true, lessonsInOrder: true, prerequisiteIds: true } }, progress: { select: { lessonId: true } },
 } as const satisfies Prisma.TrainingAssignmentSelect;
 
@@ -145,7 +146,8 @@ export async function myLesson(userId: string, assignmentId: string, lessonId: s
 }
 
 /** The learner finished a lesson. The first one fixes the version they take. */
-export async function completeLessonFor(me: { id: string; name: string }, assignmentId: string, lessonId: string): Promise<ActionResult> {
+/** `at`: when it was finished on the phone with no signal (phase 9), if believable. */
+export async function completeLessonFor(me: { id: string; name: string }, assignmentId: string, lessonId: string, at: string | null = null): Promise<ActionResult> {
   return prisma.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM "TrainingAssignment" WHERE id = ${assignmentId} AND "userId" = ${me.id} FOR UPDATE`;
     const found = await mine(tx, me.id, assignmentId);
@@ -162,9 +164,10 @@ export async function completeLessonFor(me: { id: string; name: string }, assign
       if (sent.status !== "ACCEPTED") return fail(sent.status === "RETURNED" ? "Your trainer sent this back. Change it and hand it in again." : "A trainer checks this first. The lesson is done once they accept it.");
     }
     if (!found.row.versionId) await tx.trainingAssignment.update({ where: { id: assignmentId }, data: { versionId: found.version.id } });
-    await tx.trainingLessonProgress.create({ data: { assignmentId, lessonId } });
+    const offline = offlineTime(at, found.row.assignedAt);
+    await tx.trainingLessonProgress.create({ data: { assignmentId, lessonId, ...(offline ? { completedAt: offline } : {}) } });
     await logAudit({ actorId: me.id, actorName: me.name, action: "update", entity: "TrainingAssignment", entityId: assignmentId,
-      summary: `Finished lesson ${place.index + 1} of ${place.total}, ${place.lesson.title}` }, tx);
+      summary: `Finished lesson ${place.index + 1} of ${place.total}, ${place.lesson.title}${offline ? `, offline at ${offlineLabel(offline)}` : ""}` }, tx);
     return ok();
   });
 }

@@ -466,3 +466,14 @@ html[data-text] .input { font-size: max(16px, var(--pc-text-body)); }
 .lesson-embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 .lesson-locked { display: flex; flex-direction: column; gap: 12px; }
 .lesson-row-locked { opacity: 0.6; }
+
+/* Offline (e-learning phase 9): the line under the top row, and what Turnfin turned down. */
+.offline-bar, .offline-failed { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; width: calc(100% - 32px); max-width: 688px; margin: 12px auto 0; padding: 8px 8px 8px 16px; border-radius: var(--pc-radius-card); background: var(--pc-surface); color: var(--pc-ink); }
+.offline-bar > svg { width: 20px; height: 20px; flex: none; color: var(--pc-primary); }
+.offline-bar > p { flex: 1; min-width: 0; margin: 0; }
+.offline-failed { flex-direction: column; align-items: stretch; padding: 16px; }
+.offline-failed > p { margin: 0; }
+.offline-failed > .button { align-self: flex-start; }
+.spin { animation: offline-spin 1s linear infinite; }
+@keyframes offline-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }

@@ -15,7 +15,7 @@ export type Spot = { id: string; x: number; y: number; title: string; text: stri
 export type Embed = { src: string; href: string; provider: string };
 export type HandInInfo = {
   text: "required" | "optional" | "off"; photo: "required" | "optional" | "off"; review: boolean;
-  submission: { status: "SUBMITTED" | "ACCEPTED" | "RETURNED"; text: string; fileName: string | null; feedback: string; reviewedBy: string | null; reviewedAt: string | null; submittedAt: string } | null;
+  submission: { status: "SUBMITTED" | "ACCEPTED" | "RETURNED"; text: string; fileName: string | null; feedback: string; reviewedBy: string | null; reviewedAt: string | null; submittedAt: string; waiting?: boolean } | null;
 };
 
 /** The same mixed-up order every time for the same lesson, without randomness during render. */
@@ -214,7 +214,9 @@ export function HandInForm({ assignmentId, lessonId, info, open, onSaved }: { as
   return (
     <section className="pc-panel stack" aria-labelledby="hand-in-title">
       <h2 id="hand-in-title">Your work</h2>
-      {sent && status ? (
+      {sent?.waiting ? (
+        <Notice title="Waiting for signal">Your work is saved on this phone and goes to Turnfin when you’re back online.</Notice>
+      ) : sent && status ? (
         <Notice title={status.title} tone={status.tone}>
           {sent.status === "SUBMITTED" ? (info.review ? "You can carry on with other lessons. This one is done once a trainer accepts it." : "")
             : sent.feedback ? `${sent.reviewedBy ?? "Your trainer"}: ${sent.feedback}` : sent.reviewedBy ? `By ${sent.reviewedBy}.` : ""}
@@ -223,7 +225,7 @@ export function HandInForm({ assignmentId, lessonId, info, open, onSaved }: { as
       {sent && !editing ? (
         <div className="stack-sm">
           {sent.text ? <blockquote className="pre-line">{sent.text}</blockquote> : null}
-          {sent.fileName ? <button type="button" className="button outline block" onClick={openFile}><FileText aria-hidden="true" />Open {sent.fileName}</button> : null}
+          {sent.fileName && !sent.waiting ? <button type="button" className="button outline block" onClick={openFile}><FileText aria-hidden="true" />Open {sent.fileName}</button> : null}
           {open && sent.status === "SUBMITTED" ? <button type="button" className="button ghost" onClick={() => setEditing(true)}>Change what I handed in</button> : null}
         </div>
       ) : open ? (

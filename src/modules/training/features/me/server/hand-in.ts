@@ -4,6 +4,7 @@ import { logAudit } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 import { fileProblem, safeFileName, storedMime } from "@/modules/training/shared/files";
 import { lessonPlace } from "@/modules/training/shared/lessons";
+import { offlineLabel, offlineTime } from "@/modules/training/features/me/server/offline";
 import { lockedBecause, mine, type Db } from "@/modules/training/features/me/server/course";
 
 /** Hand in work (docs/training.md, e-learning phase 8): the learner's answer to
@@ -21,7 +22,8 @@ export const MAX_HAND_IN_TEXT = 5000;
 /** Photos and PDFs a learner hands in. */
 export const HAND_IN_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 
-export type HandIn = { text: string; file: { name: string; mime: string; bytes: Buffer } | null; keepFile: boolean };
+/** `at`: when it was handed in on the phone with no signal (phase 9), if believable. */
+export type HandIn = { text: string; file: { name: string; mime: string; bytes: Buffer } | null; keepFile: boolean; at?: string | null };
 
 export async function handInWork(me: { id: string; name: string }, assignmentId: string, lessonId: string, work: HandIn): Promise<ActionResult> {
   const text = work.text.trim().slice(0, MAX_HAND_IN_TEXT);
@@ -53,7 +55,8 @@ export async function handInWork(me: { id: string; name: string }, assignmentId:
     const fileData = file
       ? { fileName: safeFileName(file.name), mime: storedMime(file.mime), size: file.bytes.length, bytes: new Uint8Array(file.bytes) }
       : keep && settings.photo !== "off" ? {} : { fileName: null, mime: null, size: null, bytes: null };
-    const data = { text: settings.text === "off" ? "" : text, ...fileData, status, feedback: "", reviewedById: null, reviewedByName: null, reviewedAt: null, submittedAt: new Date(), versionId: found.version.id };
+    const offline = offlineTime(work.at, found.row.assignedAt);
+    const data = { text: settings.text === "off" ? "" : text, ...fileData, status, feedback: "", reviewedById: null, reviewedByName: null, reviewedAt: null, submittedAt: offline ?? new Date(), versionId: found.version.id };
     await tx.trainingSubmission.upsert({
       where: { assignmentId_lessonId: { assignmentId, lessonId } },
       create: { orgId: found.row.orgId, assignmentId, userId: me.id, lessonId, ...data },
@@ -62,7 +65,7 @@ export async function handInWork(me: { id: string; name: string }, assignmentId:
     // The first piece of work fixes the version they take, as finishing a lesson does.
     if (!found.row.versionId) await tx.trainingAssignment.update({ where: { id: assignmentId }, data: { versionId: found.version.id } });
     await logAudit({ actorId: me.id, actorName: me.name, action: "hand-in", entity: "TrainingAssignment", entityId: assignmentId,
-      summary: `${before ? "Handed in again" : "Handed in"} work for lesson ${place.index + 1}, ${place.lesson.title}${settings.review ? ", for a trainer to check" : ""}` }, tx);
+      summary: `${before ? "Handed in again" : "Handed in"} work for lesson ${place.index + 1}, ${place.lesson.title}${settings.review ? ", for a trainer to check" : ""}${offline ? `, offline at ${offlineLabel(offline)}` : ""}` }, tx);
     return ok();
   });
 }

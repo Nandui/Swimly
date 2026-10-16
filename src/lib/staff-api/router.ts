@@ -67,7 +67,7 @@ export async function handleStaffRequest(request: Request, path: string[]) {
       if (lesson[3] === "/hand-in") return json(await records.handInTraining(request, identity, id, lessonId));
       if (lesson[3] === "/hand-in/file") return records.trainingHandInFile(identity, id, lessonId);
       return json(lesson[3] === "/check" ? await records.checkTrainingQuiz(request, identity, id, lessonId)
-        : lesson[3] ? await records.completeTrainingLesson(identity, id, lessonId) : await records.trainingLesson(identity, id, lessonId));
+        : lesson[3] ? await records.completeTrainingLesson(request, identity, id, lessonId) : await records.trainingLesson(identity, id, lessonId));
     }
     if (exam) {
       const id = parseInput(idSchema, exam[1]);
