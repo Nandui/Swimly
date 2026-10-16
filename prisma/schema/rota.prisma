@@ -438,6 +438,38 @@ model RotaAssignment {
   @@index([userId])
 }
 
+/// Someone on one place of an area's own need on a day (owner request, 16 October 2026: "in
+/// addition to bookings and activities, each area has their needs"): the need comes from the
+/// area's hours and staff in Admin, Areas (`SiteAreaStaffing`, one per type of staff, keyed here
+/// by its qualification, empty for anyone), so only the people are stored. Only these count
+/// toward the area's need, not bookings or activities in it.
+model RotaAreaAssignment {
+  id                  String   @id @default(cuid())
+  orgId               String
+  siteId              String
+  /// The site's area (Core's `SiteArea`).
+  areaId              String
+  date                DateTime @db.Date
+  /// The type of staff it is for: the qualification its line asks for, empty for anyone.
+  qualificationTypeId String?
+  /// 1 to the line's count.
+  place               Int
+  userId              String
+  startMinutes        Int
+  endMinutes          Int
+  createdById         String?
+  createdByName       String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  site Club @relation(fields: [siteId], references: [id], onDelete: Restrict)
+  user User @relation("RotaAreaAssignee", fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([siteId, date])
+  @@index([userId, date])
+  @@index([areaId, date])
+}
+
 /// Someone put on a shift on the plan before their activities (owner decision, 8 October
 /// 2026): "add a staff member to a shift, then assign activities to them". Their activities
 /// fill it; anyone on an activity without one still gets a shift worked out from what they are on.

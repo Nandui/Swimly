@@ -1,13 +1,13 @@
 import { subtract, type Span } from "@/modules/rota/shared/cover";
-import type { Block, DayNeed, Group, Person } from "@/modules/rota/shared/day";
+import { isAreaNeed, type Block, type DayNeed, type Group, type Person } from "@/modules/rota/shared/day";
 
 /** The Plan's day, shift first (owner, 13 October 2026): "what needs people today" as one row per
- *  thing that needs people (an activity the department always needs, a booking, a run of swim
+ *  thing that needs people (an area's own need, an activity the department always needs, a booking, a run of swim
  *  classes, another module's session), each with how many people it has against how many it
  *  needs over the day; and each person's shift with the time nothing is given to yet ("No
  *  activity / booking"), ready to give to something. Pure (plan-rows.test.ts). */
 
-export type NeedRowKind = "activity" | "booking" | "classes" | "booked";
+export type NeedRowKind = "area" | "activity" | "booking" | "classes" | "booked";
 /** A stretch of a row's day with the same cover: `have` people on it of `want`. `gap` is the
  *  first place in it nobody is on (or whose person is off), to fill. */
 export type CoverSpan = Span & { have: number; want: number; gap: Block | null };
@@ -67,7 +67,7 @@ export function needRows(groups: readonly Group[]): NeedRow[] {
     const all = g.lanes.flat();
     if (g.href) row(g.key, "booked", g.name, g, null, all);
     else if (g.fromClasses) row(g.key, "classes", g.name, g, null, all);
-    else for (const n of g.needs) row(`${g.key}|${n.id}`, n.repeatTitle ? "booking" : "activity", n.repeatTitle ?? g.name, g, n, all.filter((b) => b.needId === n.id));
+    else for (const n of g.needs) row(`${g.key}|${n.id}`, isAreaNeed(n.id) ? "area" : n.repeatTitle ? "booking" : "activity", n.repeatTitle ?? g.name, g, n, all.filter((b) => b.needId === n.id));
   }
   return rows;
 }

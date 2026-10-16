@@ -4,7 +4,8 @@ import { subtract } from "@/modules/rota/shared/cover";
 import { dayShift, type DayShift, type PinnedBreak, type WorkItem } from "@/modules/rota/shared/shifts";
 import type { YoungBand } from "@/modules/rota/shared/constants";
 import { lanesInPlace } from "@/modules/rota/shared/lanes";
-import { inUse, shortWeight, staffingSpans, without, type AreaMinimum, type AreaStaffing, type Presence } from "@/modules/rota/shared/staffing";
+import { shortWeight, without, type AreaMinimum, type Presence } from "@/modules/rota/shared/staffing";
+import { hoursOn, type WeekHour } from "@/lib/setup/area-staffing";
 
 /** One day at one site, as every Rota screen draws it (Plan, Today, Turnfin Me): its **areas**
  *  (the site's list in Admin, Areas: Main pool, Learner pool, Front desk; owner decisions, 6 and 7
@@ -27,6 +28,24 @@ export const ANY_DEPARTMENT = "*";
  *  themselves, and "no booking option takes the swim school anymore"): on every department's
  *  plan, as booked things are, waiting for a teacher. */
 export const SWIM_CLASSES: DayType = { id: "swim-classes", name: "Swim classes", icon: "teaching", departmentId: ANY_DEPARTMENT, requiredTypeId: null, requiredName: null, fromClasses: true };
+/** Someone on a place of an area's own need (owner request, 16 October 2026: "in addition to
+ *  bookings and activities, each area has their needs"): the need is the area's hours and staff
+ *  in Admin, Areas, one per type of staff (`typeId`, the qualification, null for anyone). */
+export type DayAreaAssignment = { id: string; areaId: string; typeId: string | null; place: number; userId: string; startMinutes: number; endMinutes: number };
+/** An area's need is an activity on the day like any other, with ids that say whose it is: the
+ *  activity `area:<area>:<type>`, the need that and `:<date>`, a person on it `area:<row>`. */
+export const areaTypeId = (areaId: string, typeId: string | null) => `area:${areaId}:${typeId ?? "*"}`;
+export const isAreaNeed = (id: string | null | undefined) => !!id && id.startsWith("area:");
+/** The area, type of staff and date an area need's id names; null for any other need. */
+export function areaNeedOf(needId: string): { areaId: string; typeId: string | null; date: string } | null {
+  const [prefix, areaId, type, date] = needId.split(":");
+  return prefix === "area" && areaId && type && date ? { areaId, typeId: type === "*" ? null : type, date } : null;
+}
+/** The stored row behind a person on an area need (`area:<row>`), or null. */
+export const areaAssignmentRow = (id: string) => (id.startsWith("area:") ? id.slice(5) : null);
+/** "Pool Lifeguard on duty", "Staff on duty". */
+export const areaNeedName = (typeName: string | null) => (typeName ? `${typeName} on duty` : "Staff on duty");
+
 /** A swim class that day, from the swim school's commitments. */
 export type DayClass = { ref: string; userId: string | null; startMinutes: number; endMinutes: number; title: string; place: string; planned: boolean };
 
@@ -88,8 +107,6 @@ export type Person = {
   /** Placed breaks that fall during an activity they are on: that time needs cover. A planned
    *  activity's place (`assignment`) can be handed to someone else for the break. */
   breakClashes: { start: number; end: number; label: string;
-    /** The area keeps its minimum staff without them then (Admin, Areas), so nobody has to cover. */
-    covered: boolean;
     assignment: { id: string; needId: string; place: number; typeId: string; requiredName: string | null; start: number; end: number } | null }[];
   /** What they could take inside their shifts, open ones first. */
   options: ShiftOption[];
@@ -102,24 +119,24 @@ export type DayZone = { key: string; name: string; unmatched: boolean; gapCount:
  *  module's session, with the lanes it takes (none for the whole area) and how many of its
  *  places still need someone. */
 export type ZoneItem = {
-  key: string; kind: "booking" | "activity" | "class" | "booked"; label: string; detail: string | null; start: number; end: number;
+  key: string; kind: "booking" | "activity" | "area" | "class" | "booked"; label: string; detail: string | null; start: number; end: number;
   lanes: number[]; departmentId: string; groupKey: string; needId: string | null; places: number; gaps: number; href: string | null;
 };
 /** One of the site's areas with how many lanes it has and what uses it that day. Every area on
  *  the site's list is here, in its order, even with nothing on; places not on it follow. */
 export type ZoneBand = { key: string; name: string; lanes: number; unmatched: boolean; items: ZoneItem[] };
-export type Day = { date: string; zones: DayZone[]; groups: Group[]; people: Person[]; gapCount: number; areas: ZoneBand[];
-  /** Each area with a minimum staff, against it while in use (`staffing.ts`). */
-  staffing: AreaStaffing[] };
+export type Day = { date: string; zones: DayZone[]; groups: Group[]; people: Person[]; gapCount: number; areas: ZoneBand[] };
 /** A site's area as the day takes it: a name, or a name with its lanes, the hours it is open and
- *  its minimum staff (Admin, Areas). */
-export type DayArea = string | { name: string; lanes: number; openFrom?: number | null; openUntil?: number | null; minimums?: AreaMinimum[] };
+ *  the staff it needs then (Admin, Areas). */
+export type DayArea = string | { id?: string; name: string; lanes: number; openFrom?: number | null; openUntil?: number | null; weekHours?: readonly WeekHour[]; minimums?: AreaMinimum[] };
 
 export function buildDay(input: {
   date: string;
   types: readonly DayType[];
   needs: readonly DayNeed[];
   assignments: readonly DayAssignment[];
+  /** People on the areas' own needs. */
+  areaAssignments?: readonly DayAreaAssignment[];
   classes: readonly DayClass[];
   /** Other modules' sessions at the site (the Academy, Short courses). */
   booked?: readonly DayBooked[];
@@ -143,7 +160,27 @@ export function buildDay(input: {
   const teaching = SWIM_CLASSES;
   const name = (id: string | null) => (id ? input.names.get(id) ?? "Someone" : null);
   const siteAreas = (input.areas ?? []).map((a) => (typeof a === "string" ? { name: a, lanes: 0 } : a));
-  const holds = (userId: string, typeId: string) => qualification(input.held ?? [], userId, typeId, input.date) === "ok";
+  // Each area's own needs while it is open that day: one per type of staff, its places the number
+  // it needs, on every department's plan. Only the people put on these count toward the area.
+  const areaNeeds: DayNeed[] = [];
+  const open = new Map<string, { start: number; end: number; minimums: AreaMinimum[] }>();
+  for (const a of siteAreas) {
+    if (!a.id || !a.minimums?.length) continue;
+    const hours = hoursOn({ openFrom: a.openFrom ?? null, openUntil: a.openUntil ?? null, weekHours: a.weekHours ?? [] }, input.date);
+    if (!hours) continue;
+    const lines = new Map<string, AreaMinimum>();
+    for (const m of a.minimums) { const k = m.typeId ?? "*"; const had = lines.get(k); lines.set(k, had ? { ...had, count: had.count + m.count } : { ...m }); }
+    open.set(`area:${a.name.toLowerCase()}`, { ...hours, minimums: [...lines.values()] });
+    for (const m of lines.values()) {
+      if (m.count < 1) continue;
+      const id = areaTypeId(a.id, m.typeId);
+      types.set(id, { id, name: areaNeedName(m.typeId ? m.typeName ?? "Qualified" : null), icon: "activity", departmentId: ANY_DEPARTMENT, requiredTypeId: m.typeId,
+        requiredName: m.typeId ? m.typeName : null, fromClasses: false });
+      areaNeeds.push({ id: `${id}:${input.date}`, typeId: id, place: a.name, startMinutes: hours.start, endMinutes: hours.end, places: m.count, note: "", repeatTitle: null });
+    }
+  }
+  const assignments = [...input.assignments, ...(input.areaAssignments ?? []).map((a): DayAssignment => ({
+    id: `area:${a.id}`, needId: `${areaTypeId(a.areaId, a.typeId)}:${input.date}`, place: a.place, userId: a.userId, startMinutes: a.startMinutes, endMinutes: a.endMinutes }))];
   const areaOrder = new Map(siteAreas.map((a, i) => [a.name.trim().toLowerCase(), { name: a.name, i }]));
   const items = new Map<string, ZoneItem[]>();
   const addItem = (zone: DayZone, item: ZoneItem) => items.set(zone.key, [...(items.get(zone.key) ?? []), item]);
@@ -179,15 +216,15 @@ export function buildDay(input: {
   const work = new Map<string, WorkItem[]>();
   const add = (userId: string, item: WorkItem) => work.set(userId, [...(work.get(userId) ?? []), item]);
 
-  for (const need of [...input.needs].sort((a, b) => a.startMinutes - b.startMinutes)) {
+  for (const need of [...input.needs, ...areaNeeds].sort((a, b) => a.startMinutes - b.startMinutes)) {
     const type = types.get(need.typeId);
     if (!type) continue;
     const zone = zoneFor(need.place);
     const g = groupFor(type, zone);
     g.needs.push(need);
-    addItem(zone, { key: `need:${need.id}`, kind: need.repeatTitle ? "booking" : "activity", label: need.repeatTitle ?? type.name, detail: need.repeatTitle ? type.name : null,
+    addItem(zone, { key: `need:${need.id}`, kind: isAreaNeed(need.id) ? "area" : need.repeatTitle ? "booking" : "activity", label: need.repeatTitle ?? type.name, detail: need.repeatTitle ? type.name : null,
       start: need.startMinutes, end: need.endMinutes, lanes: [...(need.lanes ?? [])], departmentId: type.departmentId, groupKey: g.key, needId: need.id, places: need.places, gaps: 0, href: null });
-    const mine = input.assignments.filter((a) => a.needId === need.id);
+    const mine = assignments.filter((a) => a.needId === need.id);
     const gaps = needGaps(need, mine);
     for (let place = 1; place <= need.places; place++) {
       const lane: Lane = [
@@ -262,10 +299,10 @@ export function buildDay(input: {
   }
 
   // Areas in the site's order (Admin, Areas), places not on the list after them; inside an area,
-  // planned activities by name, then the swim classes.
+  // its own needs, planned activities by name, then the swim classes.
   const orderedZones: DayZone[] = [...zones.values()].sort((a, b) => a.order - b.order || a.name.localeCompare(b.name)).map(({ order: _order, ...z }) => {
     void _order;
-    const inZone = z.groups.sort((a, b) => Number(a.fromClasses) - Number(b.fromClasses) || a.name.localeCompare(b.name));
+    const inZone = z.groups.sort((a, b) => Number(!isAreaNeed(a.typeId)) - Number(!isAreaNeed(b.typeId)) || Number(a.fromClasses) - Number(b.fromClasses) || a.name.localeCompare(b.name));
     return { ...z, groups: inZone, gapCount: inZone.reduce((n, g) => n + g.gapCount, 0) };
   });
   const ordered = orderedZones.flatMap((z) => z.groups);
@@ -275,21 +312,21 @@ export function buildDay(input: {
     const mine = planned.filter((p) => p.userId === userId).sort((a, b) => a.startMinutes - b.startMinutes);
     return [userId, dayShift(work.get(userId) ?? [], input.young?.get(userId) ?? null, { planned: mine.map((p) => ({ start: p.startMinutes, end: p.endMinutes })), pinned: input.pinned?.get(userId) ?? [] })!];
   }));
-  // Each area with a minimum staff (owner request, 16 October 2026): who is in it when, and when it
-  // is in use. Breaks owed with no free time are then suggested where the area keeps its minimum
-  // without the person, or, when nowhere does, where it is least short, so the gap shows.
-  const rules = new Map(siteAreas.filter((a) => a.minimums?.length).map((a) => [`area:${a.name.toLowerCase()}`, a]));
+  // Breaks (owner requests, 16 October 2026): someone on an area's own need whose breaks have no
+  // free time gets them where the area is least short without them, never two away at once when
+  // it can be helped. That time then shows as a place to fill. Never off a booking, an activity,
+  // a class or another module's session.
   const onIn = (userId: string) => ordered.flatMap((g) => g.lanes.flat().filter((b) => b.kind === "on" && b.userId === userId).map((b) => ({ g, b })));
   const presence = new Map<string, Presence[]>();
   for (const g of ordered) {
-    if (!rules.has(g.zoneKey)) continue;
+    if (!isAreaNeed(g.typeId) || !open.has(g.zoneKey)) continue;
     for (const b of g.lanes.flat()) if (b.kind === "on" && b.userId && !b.warnings.includes("off")) presence.set(g.zoneKey, [...(presence.get(g.zoneKey) ?? []), { userId: b.userId, start: b.start, end: b.end }]);
   }
-  const use = new Map([...rules].map(([key, rule]) => [key, inUse({ openFrom: rule.openFrom ?? null, openUntil: rule.openUntil ?? null }, items.get(key) ?? [])]));
-  const shortIn = (key: string, list: readonly Presence[], within: { start: number; end: number }) => shortWeight(rules.get(key)!.minimums!, use.get(key)!, list, holds, within);
+  // Whoever is on a place counts for it here, qualified or not (that shows as a warning on them).
+  const shortIn = (key: string, list: readonly Presence[], within: { start: number; end: number }) => shortWeight(open.get(key)!.minimums, [open.get(key)!], list, () => true, within);
   // Placed breaks take people out of their area first.
-  for (const [userId, shift] of shifts) for (const part of shift.parts) for (const x of part.breaks) for (const key of rules.keys()) presence.set(key, without(presence.get(key) ?? [], userId, x));
-  if (rules.size) {
+  for (const [userId, shift] of shifts) for (const part of shift.parts) for (const x of part.breaks) for (const key of presence.keys()) presence.set(key, without(presence.get(key) ?? [], userId, x));
+  if (presence.size) {
     for (const userId of [...shifts.keys()].sort((a, b) => shifts.get(a)!.start - shifts.get(b)!.start || a.localeCompare(b))) {
       const blocks = onIn(userId);
       for (const part of shifts.get(userId)!.parts) {
@@ -299,9 +336,7 @@ export function buildDay(input: {
             const slot = { start: at, end: at + u.minutes };
             if (part.breaks.some((x) => x.start < slot.end && slot.start < x.end)) continue;
             const during = blocks.filter(({ b }) => b.start < slot.end && slot.start < b.end);
-            // Only off a planned activity in an area with a minimum: never off a class, another
-            // module's session or an area nobody has set a minimum for.
-            if (!during.length || during.some(({ g, b }) => !b.needId || !rules.has(g.zoneKey))) continue;
+            if (!during.length || during.some(({ g }) => !isAreaNeed(g.typeId) || !open.has(g.zoneKey))) continue;
             const keys = [...new Set(during.map(({ g }) => g.zoneKey))];
             const cost = keys.reduce((n, key) => n + shortIn(key, without(presence.get(key) ?? [], userId, slot), slot) - shortIn(key, presence.get(key) ?? [], slot), 0);
             const aim = u.aim ?? (part.start + part.end) / 2;
@@ -310,30 +345,37 @@ export function buildDay(input: {
           if (!best) return true;
           const x = { start: best.at, end: best.at + u.minutes, paid: u.paid, pinned: false };
           part.breaks = [...part.breaks, x].sort((a, b) => a.start - b.start);
-          for (const key of rules.keys()) presence.set(key, without(presence.get(key) ?? [], userId, x));
+          for (const key of presence.keys()) presence.set(key, without(presence.get(key) ?? [], userId, x));
           return false;
         });
       }
     }
   }
-  const staffing: AreaStaffing[] = [...rules].map(([key, rule]) => {
-    const spans = staffingSpans(rule.minimums!, use.get(key)!, presence.get(key) ?? [], holds);
-    return { key, name: rule.name, minimums: rule.minimums!, spans, shortCount: spans.filter((x) => x.short.length).length };
-  });
+  // A break during an area's need leaves that place to fill for its time.
+  for (const g of ordered) {
+    if (!isAreaNeed(g.typeId)) continue;
+    g.lanes = g.lanes.map((lane) => lane.flatMap((b): Block[] => {
+      if (b.kind !== "on" || !b.userId) return [b];
+      const away = (shifts.get(b.userId)?.parts ?? []).flatMap((p) => p.breaks).filter((x) => x.start < b.end && b.start < x.end);
+      if (!away.length) return [b];
+      const gaps = away.map((x): Block => ({ ...blank, kind: "gap", start: Math.max(b.start, x.start), end: Math.min(b.end, x.end), needId: b.needId, place: b.place, detail: `${b.name ?? "Someone"}'s break` }));
+      return [...subtract(b, away).map((s): Block => ({ ...b, start: s.start, end: s.end })), ...gaps].sort((x, y) => x.start - y.start);
+    }));
+    g.gapCount = g.lanes.reduce((n, lane) => n + lane.filter(needsCover).length, 0);
+  }
+  for (const z of orderedZones) z.gapCount = z.groups.reduce((n, g) => n + g.gapCount, 0);
   const people: Person[] = everyone.map((userId) => {
     const items = work.get(userId) ?? [];
     const mine = planned.filter((p) => p.userId === userId).sort((a, b) => a.startMinutes - b.startMinutes);
     const shift = shifts.get(userId)!;
-    // A break during something they are on takes them off it: say so on the block, and whether
-    // the area still has its minimum without them.
+    // A break during something they are on takes them off it: say so on the block.
     const breaks = shift.parts.flatMap((p) => p.breaks);
     const breakClashes: Person["breakClashes"] = [];
     for (const { g, b } of onIn(userId)) {
       for (const x of breaks) if (x.start < b.end && b.start < x.end) {
         const span = { start: Math.max(x.start, b.start), end: Math.min(x.end, b.end) };
-        const covered = rules.has(g.zoneKey) && shortIn(g.zoneKey, presence.get(g.zoneKey) ?? [], span) === shortIn(g.zoneKey, [...(presence.get(g.zoneKey) ?? []), { userId, ...span }], span);
-        if (!covered && !b.warnings.includes("break")) b.warnings.push("break");
-        breakClashes.push({ ...span, label: `${(b.classRef && b.detail) || g.name} in ${g.place}`, covered,
+        if (!b.warnings.includes("break")) b.warnings.push("break");
+        breakClashes.push({ ...span, label: `${(b.classRef && b.detail) || g.name} in ${g.place}`,
           assignment: b.assignmentId && b.needId && b.place ? { id: b.assignmentId, needId: b.needId, place: b.place, typeId: g.typeId, requiredName: g.requiredName, start: b.start, end: b.end } : null });
       }
     }
@@ -356,7 +398,7 @@ export function buildDay(input: {
     ...siteAreas.map((a) => bandOf(`area:${a.name.toLowerCase()}`, a.name, a.lanes, false)),
     ...orderedZones.filter((z) => z.unmatched).map((z) => bandOf(z.key, z.name, 0, true)),
   ];
-  return { date: input.date, zones: orderedZones, groups: ordered, people, gapCount: ordered.reduce((n, g) => n + g.gapCount, 0), areas, staffing };
+  return { date: input.date, zones: orderedZones, groups: ordered, people, gapCount: ordered.reduce((n, g) => n + g.gapCount, 0), areas };
 }
 
 /** A block that needs someone: nobody is on it, or the person on it is off that day. */

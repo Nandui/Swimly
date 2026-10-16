@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { ABSENCE_REASON_META, RETURN_FIT_META, ROTA_CHANGE_REASON_META, addDaysIso, clock, daysOff, type AbsenceReason, type ReturnFit, type RotaChangeReason } from "@/modules/rota/shared/constants";
 import type { PersonFileEntry } from "@/modules/contributions";
 import { withNeedNames } from "@/modules/rota/shared/data";
+import { areaNeedName } from "@/modules/rota/shared/day";
+import { areaById, sitesByIds } from "@/lib/directory";
 
 /** Rota's part of a person's file: what they are planned on in the next two
  *  weeks; every absence recorded for them, with its
@@ -24,14 +26,32 @@ export async function plannedFile(userId: string): Promise<{ summary: string; en
     orderBy: [{ need: { date: "asc" } }, { startMinutes: "asc" }],
     select: { id: true, startMinutes: true, endMinutes: true, need: { select: { date: true, place: true, siteId: true, typeId: true } } },
   }).then(withNeedNames);
-  const days = new Set(rows.map((r) => iso(r.need.date))).size;
+  // On an area's own need (Admin, Areas): its type of staff and the area.
+  const onAreas = await prisma.rotaAreaAssignment.findMany({
+    where: { userId, date: { gte: parseDateOnly(from), lte: parseDateOnly(addDaysIso(from, 13)) } },
+    select: { id: true, date: true, siteId: true, areaId: true, qualificationTypeId: true, startMinutes: true, endMinutes: true },
+  });
+  const [areas, sites] = await Promise.all([
+    Promise.all([...new Set(onAreas.map((a) => a.areaId))].map((id) => areaById(id))).then((all) => new Map(all.flatMap((a) => (a ? [[a.id, a] as const] : [])))),
+    sitesByIds(onAreas.map((a) => a.siteId)),
+  ]);
+  const items = [
+    ...rows.map((r) => ({ id: r.id, on: iso(r.need.date), start: r.startMinutes, end: r.endMinutes, detail: [r.need.type.name, r.need.place || null, r.need.site.name] })),
+    ...onAreas.map((a) => {
+      const area = areas.get(a.areaId);
+      const typeName = area?.minimums.find((m) => m.typeId === a.qualificationTypeId)?.typeName ?? null;
+      return { id: a.id, on: iso(a.date), start: a.startMinutes, end: a.endMinutes,
+        detail: [areaNeedName(a.qualificationTypeId ? typeName ?? "Qualified" : null), area?.name ?? null, sites.get(a.siteId)?.name ?? null] };
+    }),
+  ].sort((x, y) => x.on.localeCompare(y.on) || x.start - y.start);
+  const days = new Set(items.map((r) => r.on)).size;
   return {
-    summary: rows.length ? `${plural(rows.length, "activity", "activities")} on ${plural(days, "day")} in the next two weeks.` : "Nothing planned in the next two weeks.",
-    entries: rows.map((r): PersonFileEntry => ({
+    summary: items.length ? `${plural(items.length, "activity", "activities")} on ${plural(days, "day")} in the next two weeks.` : "Nothing planned in the next two weeks.",
+    entries: items.map((r): PersonFileEntry => ({
       id: r.id,
-      title: `${day(iso(r.need.date))}, ${clock(r.startMinutes)}–${clock(r.endMinutes)}`,
-      detail: [r.need.type.name, r.need.place || null, r.need.site.name].filter(Boolean).join(" · "),
-      on: iso(r.need.date),
+      title: `${day(r.on)}, ${clock(r.start)}–${clock(r.end)}`,
+      detail: r.detail.filter(Boolean).join(" · "),
+      on: r.on,
     })),
   };
 }

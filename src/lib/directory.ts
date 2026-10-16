@@ -1,4 +1,5 @@
 import type { Prisma } from "@/generated/prisma/client";
+import { weekHoursOf, type WeekHour } from "@/lib/setup/area-staffing";
 import type { SiteFilter, SubjectFilter } from "@/lib/policy/types";
 import { ADMINISTRATOR_PERMISSIONS } from "@/lib/staff/permissions";
 
@@ -82,13 +83,21 @@ export async function areaNamesAt(siteId: string, db?: Pick<Prisma.TransactionCl
  *  book lanes in, and what it checks staffing against. */
 export async function areasAt(siteId: string, db?: Pick<Prisma.TransactionClient, "siteArea">): Promise<AreaAt[]> {
   const rows = await (db ?? (await import("@/lib/prisma")).prisma).siteArea.findMany({ where: { siteId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    select: { name: true, lanes: true, openFrom: true, openUntil: true,
+    select: { id: true, name: true, lanes: true, openFrom: true, openUntil: true, weekHours: true,
       staffing: { orderBy: { sortOrder: "asc" }, select: { count: true, qualificationTypeId: true, qualificationType: { select: { name: true } } } } } });
-  return rows.map(({ staffing, ...area }) => ({ ...area,
+  return rows.map(({ staffing, weekHours, ...area }) => ({ ...area, weekHours: weekHoursOf(weekHours),
     minimums: staffing.map((m) => ({ count: m.count, typeId: m.qualificationTypeId, typeName: m.qualificationType?.name ?? null })) }));
 }
-/** An area as `areasAt` gives it. `minimums`: "2 holding Pool Lifeguard", `typeId` null for anyone. */
-export type AreaAt = { name: string; lanes: number; openFrom: number | null; openUntil: number | null; minimums: { count: number; typeId: string | null; typeName: string | null }[] };
+/** One open area with its site, as `areasAt` gives it; null once archived or gone. */
+export async function areaById(id: string, db?: Pick<Prisma.TransactionClient, "siteArea">): Promise<(AreaAt & { siteId: string }) | null> {
+  const row = await (db ?? (await import("@/lib/prisma")).prisma).siteArea.findFirst({ where: { id, archivedAt: null }, select: { siteId: true } });
+  if (!row) return null;
+  const area = (await areasAt(row.siteId, db)).find((a) => a.id === id);
+  return area ? { ...area, siteId: row.siteId } : null;
+}
+/** An area as `areasAt` gives it: its hours (`hoursOn`) and the staff it needs then, "2 holding
+ *  Pool Lifeguard", `typeId` null for anyone. */
+export type AreaAt = { id: string; name: string; lanes: number; openFrom: number | null; openUntil: number | null; weekHours: WeekHour[]; minimums: { count: number; typeId: string | null; typeName: string | null }[] };
 
 /** Live sites in the order people see them, e.g. for a public site picker. */
 export async function liveSites(db?: Db): Promise<SiteRef[]> {

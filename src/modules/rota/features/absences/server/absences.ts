@@ -24,12 +24,14 @@ async function reach() {
 /** The days a person works from `from` on: rota activities and swim classes they teach. */
 async function workDays(userIds: string[], from: string, to: string) {
   if (!userIds.length) return new Map<string, string[]>();
-  const [assignments, classes] = await Promise.all([
+  const [assignments, onAreas, classes] = await Promise.all([
     prisma.rotaAssignment.findMany({ where: { userId: { in: userIds }, need: { date: { gte: parseDateOnly(from), lte: parseDateOnly(to) } } }, select: { userId: true, need: { select: { date: true } } } }),
+    prisma.rotaAreaAssignment.findMany({ where: { userId: { in: userIds }, date: { gte: parseDateOnly(from), lte: parseDateOnly(to) } }, select: { userId: true, date: true } }),
     commitmentsFor({ userIds, from, to }).then((all) => all.filter((c) => c.source === "activities.classes")),
   ]);
   const out = new Map<string, string[]>();
   for (const a of assignments) out.set(a.userId, [...(out.get(a.userId) ?? []), iso(a.need.date)!]);
+  for (const a of onAreas) out.set(a.userId, [...(out.get(a.userId) ?? []), iso(a.date)!]);
   for (const c of classes) if (c.userId) out.set(c.userId, [...(out.get(c.userId) ?? []), c.date]);
   for (const [k, v] of out) out.set(k, [...new Set(v)].sort());
   return out;

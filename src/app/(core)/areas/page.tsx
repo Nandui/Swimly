@@ -19,7 +19,7 @@ export default async function AreasPage() {
   const { sites, canKeep, qualifications } = await areasPage();
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Areas" description="Where work happens at each site, how many lanes a pool has and the fewest staff each needs. The rota, bookings and swim classes pick from these, in this order." />
+      <PageHeader title="Areas" description="Where work happens at each site, how many lanes a pool has, and the staff each needs while it is open. The rota, bookings and swim classes pick from these, in this order." />
       {sites.length === 0 ? <EmptyState icon="building" title="No open sites" hint="Add a site under Sites first." /> : sites.map((site) => {
         const live = site.areas.filter((a) => !a.archivedAt);
         return (

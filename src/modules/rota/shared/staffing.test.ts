@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { buildDay, type DayType } from "@/modules/rota/shared/day";
-import { inUse, minimumWords, shortOf, staffingSpans, type AreaMinimum } from "@/modules/rota/shared/staffing";
+import { hoursOn, staffingWords } from "@/lib/setup/area-staffing";
+import { ANY_DEPARTMENT, areaNeedOf, buildDay, dayGaps, isAreaNeed, type DayAreaAssignment, type DayType } from "@/modules/rota/shared/day";
+import { needRows } from "@/modules/rota/shared/plan-rows";
+import { shortOf, staffingSpans, type AreaMinimum } from "@/modules/rota/shared/staffing";
 
-/** Invented site and people. */
+/** Invented site and people. 23 October 2026 is a Friday, the 24th a Saturday. */
 const h = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3));
 const guards = new Set(["aoife", "ciara", "dara"]);
 const holds = (userId: string, typeId: string) => typeId === "nplq" && guards.has(userId);
@@ -14,15 +16,9 @@ test("a qualified place takes only someone holding it; anyone takes whoever is l
   assert.deepEqual(shortOf(rule, ["eoin", "aoife"], holds).short, [{ count: 1, typeId: "nplq", typeName: "NPLQ" }], "Eoin fills anyone, not a lifeguard place");
   // A greedy fill would spend Aoife on anyone first; the matching moves her to a lifeguard place.
   assert.deepEqual(shortOf([{ count: 1, typeId: null, typeName: null }, { count: 1, typeId: "nplq", typeName: "NPLQ" }], ["aoife", "eoin"], holds), { have: 2, short: [] });
-  assert.equal(minimumWords(rule), "2 NPLQ, 1 anyone");
 });
 
-test("in use while anything is on in it, and through its opening hours", () => {
-  assert.deepEqual(inUse({ openFrom: null, openUntil: null }, [{ start: h("09:00"), end: h("10:00") }, { start: h("10:00"), end: h("11:00") }]), [{ start: h("09:00"), end: h("11:00") }]);
-  assert.deepEqual(inUse({ openFrom: h("07:00"), openUntil: h("22:00") }, [{ start: h("21:00"), end: h("22:30") }]), [{ start: h("07:00"), end: h("22:30") }]);
-});
-
-test("stretches short of the minimum, and of what", () => {
+test("stretches short of what the area needs, and of what", () => {
   const spans = staffingSpans(rule, [{ start: h("07:00"), end: h("12:00") }],
     [{ userId: "aoife", start: h("07:00"), end: h("12:00") }, { userId: "ciara", start: h("07:00"), end: h("10:00") }, { userId: "eoin", start: h("07:00"), end: h("12:00") }], holds);
   assert.deepEqual(spans.map((s) => [s.start, s.end, s.have, s.short.map((m) => `${m.count} ${m.typeName ?? "anyone"}`)]), [
@@ -31,51 +27,68 @@ test("stretches short of the minimum, and of what", () => {
   ]);
 });
 
+const pool = { id: "pool25", name: "25m pool", lanes: 0, openFrom: h("07:00"), openUntil: h("14:00"),
+  weekHours: [{ day: 5, from: h("09:00"), until: h("13:00") }, { day: 6, from: null, until: null }], minimums: [{ count: 2, typeId: "nplq", typeName: "NPLQ" }] };
+
+test("an area's hours: its own on a weekday, closed on another, every day's otherwise", () => {
+  assert.deepEqual(hoursOn(pool, "2026-10-23"), { start: h("07:00"), end: h("14:00") }, "Friday keeps every day's hours");
+  assert.deepEqual(hoursOn(pool, "2026-10-24"), { start: h("09:00"), end: h("13:00") }, "Saturday has its own");
+  assert.equal(hoursOn(pool, "2026-10-25"), null, "closed on Sunday");
+  assert.equal(staffingWords(pool), "Needs 2 NPLQ · open 07:00 to 14:00, Saturday 09:00 to 13:00, Sunday closed");
+});
+
 const types: DayType[] = [{ id: "guard", name: "Lifeguarding", icon: "lifeguard", departmentId: "pool", requiredTypeId: "nplq", requiredName: "NPLQ", fromClasses: false }];
-const names = new Map([["aoife", "Aoife"], ["ciara", "Ciara"], ["dara", "Dara"]]);
+const names = new Map([["aoife", "Aoife"], ["ciara", "Ciara"], ["dara", "Dara"], ["eoin", "Eoin"]]);
 const held = [...guards].map((userId) => ({ userId, typeId: "nplq", issuedOn: null, expiresOn: null, revoked: false }));
-const twoGuards = [{ name: "Main pool", lanes: 0, minimums: [{ count: 2, typeId: "nplq", typeName: "NPLQ" }] }];
-const guarding = (people: string[], pinned?: Map<string, { start: number; minutes: number; paid: boolean }[]>, areas: typeof twoGuards = twoGuards) => buildDay({
-  date: "2026-10-23", types, names, held, areas, pinned,
-  needs: [{ id: "main", typeId: "guard", place: "Main pool", startMinutes: h("07:00"), endMinutes: h("14:00"), places: people.length, note: "", repeatTitle: null }],
-  assignments: people.map((userId, i) => ({ id: `a${i}`, needId: "main", place: i + 1, userId, startMinutes: h("07:00"), endMinutes: h("14:00") })),
-  classes: [],
+const onPool = (people: string[]): DayAreaAssignment[] => people.map((userId, i) => ({ id: `r${i}`, areaId: "pool25", typeId: "nplq", place: i + 1, userId, startMinutes: h("07:00"), endMinutes: h("14:00") }));
+const day = (date: string, areaAssignments: DayAreaAssignment[], extra: Partial<Parameters<typeof buildDay>[0]> = {}) =>
+  buildDay({ date, types, names, held, areas: [pool], needs: [], assignments: [], classes: [], areaAssignments, ...extra });
+
+test("an area's need is on the Plan in its own right, with a place for each staff it needs while open", () => {
+  const d = day("2026-10-23", []);
+  const g = d.groups.find((x) => isAreaNeed(x.typeId))!;
+  assert.equal(g.name, "NPLQ on duty");
+  assert.equal(g.departmentId, ANY_DEPARTMENT, "on every department's plan");
+  assert.equal(g.requiredTypeId, "nplq");
+  assert.deepEqual(g.needs.map((n) => [n.startMinutes, n.endMinutes, n.places]), [[h("07:00"), h("14:00"), 2]]);
+  assert.deepEqual(areaNeedOf(g.needs[0].id), { areaId: "pool25", typeId: "nplq", date: "2026-10-23" });
+  assert.equal(g.gapCount, 2, "both places to fill");
+  assert.equal(needRows(d.groups)[0].kind, "area");
+  assert.equal(day("2026-10-25", []).groups.length, 0, "nothing while it is closed");
+  assert.deepEqual(day("2026-10-24", []).groups[0].needs.map((n) => [n.startMinutes, n.endMinutes]), [[h("09:00"), h("13:00")]]);
 });
 
-test("with a spare lifeguard, breaks owed with no free time are suggested so the pool keeps its minimum", () => {
-  const day = guarding(["aoife", "ciara", "dara"]);
-  const breaks = day.people.flatMap((p) => p.shift.parts.flatMap((x) => x.breaks.map((b) => ({ userId: p.userId, ...b }))));
-  assert.equal(breaks.length, 6, "two breaks each, none left unplaced");
-  assert.ok(day.people.every((p) => p.shift.parts.every((x) => !x.unplaced.length)));
-  assert.equal(day.staffing[0].shortCount, 0, "never two away at once");
-  assert.ok(day.people.every((p) => p.breakClashes.every((c) => c.covered)), "no cover needed");
+test("staff on bookings or activities in the area do not fill its need", () => {
+  const d = day("2026-10-23", [], {
+    needs: [{ id: "lg", typeId: "guard", place: "25m pool", startMinutes: h("07:00"), endMinutes: h("14:00"), places: 2, note: "", repeatTitle: null }],
+    assignments: [{ id: "a1", needId: "lg", place: 1, userId: "aoife", startMinutes: h("07:00"), endMinutes: h("14:00") }, { id: "a2", needId: "lg", place: 2, userId: "ciara", startMinutes: h("07:00"), endMinutes: h("14:00") }],
+  });
+  assert.equal(d.groups.find((x) => isAreaNeed(x.typeId))!.gapCount, 2);
+  // And a break never takes them off the activity (the old rule).
+  assert.ok(d.people.every((p) => p.shift.parts.every((x) => x.unplaced.length === 2 && !x.breaks.length)));
 });
 
-test("with no spare, the break still goes in and the pool shows short, needing cover", () => {
-  const day = guarding(["aoife", "ciara"]);
-  assert.ok(day.staffing[0].shortCount > 0);
-  assert.deepEqual(day.staffing[0].spans.find((s) => s.short.length)!.short, [{ count: 1, typeId: "nplq", typeName: "NPLQ" }]);
-  assert.ok(day.people.some((p) => p.breakClashes.some((c) => !c.covered)));
+test("someone not holding the qualification shows a warning on the place, never refused", () => {
+  const d = day("2026-10-23", [{ id: "r9", areaId: "pool25", typeId: "nplq", place: 1, userId: "eoin", startMinutes: h("07:00"), endMinutes: h("10:00") }]);
+  const block = d.groups[0].lanes[0].find((b) => b.kind === "on")!;
+  assert.deepEqual(block.warnings, ["missing"]);
+  assert.equal(block.assignmentId, "area:r9");
 });
 
-test("a placed break that leaves the pool short shows as a gap", () => {
-  const day = guarding(["aoife", "ciara", "dara"], new Map([["aoife", [{ start: h("10:00"), minutes: 30, paid: false }]], ["ciara", [{ start: h("10:15"), minutes: 30, paid: false }]]]));
-  const short = day.staffing[0].spans.filter((s) => s.short.length).map((s) => [s.start, s.end]);
-  assert.deepEqual(short, [[h("10:15"), h("10:30")]], "Aoife and Ciara both away 10:15 to 10:30");
-});
-
-test("an area with no minimum keeps the old rule: a break never takes someone off an activity", () => {
-  const day = guarding(["aoife", "ciara", "dara"], undefined, [{ name: "Main pool", lanes: 0, minimums: [] }]);
-  assert.equal(day.staffing.length, 0);
-  assert.ok(day.people.every((p) => p.shift.parts.every((x) => x.unplaced.length === 2 && !x.breaks.length)));
-});
-
-test("a swim class's teacher counts toward the area they teach in, with no activity taking the classes", () => {
-  // An old activity marked as taking the classes is ignored (owner decision, 16 October 2026).
-  const legacy: DayType = { id: "teach", name: "Teaching", icon: "teaching", departmentId: "pool", requiredTypeId: null, requiredName: null, fromClasses: true };
-  const day = buildDay({ date: "2026-10-23", types: [...types, legacy], names, held, needs: [], assignments: [],
-    areas: [{ name: "Learner pool", lanes: 0, minimums: [{ count: 1, typeId: null, typeName: null }] }],
-    classes: [{ ref: "c1", userId: "aoife", startMinutes: h("16:00"), endMinutes: h("16:30"), title: "Stage 3", place: "Learner pool, lane 3", planned: false },
-      { ref: "c2", userId: null, startMinutes: h("16:30"), endMinutes: h("17:00"), title: "Stage 4", place: "Learner pool, lane 2", planned: false }] });
-  assert.deepEqual(day.staffing[0].spans.map((s) => [s.start, s.end, s.have]), [[h("16:00"), h("16:30"), 1], [h("16:30"), h("17:00"), 0]], "nobody teaches the second class");
+test("breaks on the area's need go in one at a time, each a place to fill for its time", () => {
+  const d = day("2026-10-23", onPool(["aoife", "ciara"]));
+  const g = d.groups[0];
+  const breaks = d.people.flatMap((p) => p.shift.parts.flatMap((x) => x.breaks));
+  assert.equal(breaks.length, 4, "two breaks each, none left to place");
+  const gaps = g.lanes.flat().filter((b) => b.kind === "gap");
+  assert.equal(gaps.length, 4);
+  assert.equal(g.gapCount, 4);
+  for (const x of gaps) assert.ok(gaps.every((y) => x === y || x.end <= y.start || y.end <= x.start), "never both away at once");
+  assert.ok(gaps.every((x) => /'s break$/.test(x.detail ?? "")));
+  assert.ok(d.people.every((p) => !p.breakClashes.length && !p.warnings.includes("break")), "the gap shows instead of a warning");
+  assert.equal(dayGaps(d).length, 4, "on Today's list too");
+  // Someone free can take it.
+  const eoin = buildDay({ date: "2026-10-23", types, names, held, areas: [pool], needs: [], assignments: [], classes: [], areaAssignments: onPool(["aoife", "ciara"]),
+    planned: [{ id: "s1", userId: "dara", departmentId: "pool", startMinutes: h("07:00"), endMinutes: h("14:00") }] });
+  assert.ok(eoin.people.find((p) => p.userId === "dara")!.options.some((o) => o.ok && o.needId === g.needs[0].id));
 });

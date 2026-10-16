@@ -39,9 +39,9 @@ The lists are organisation-wide, so their actions use the flat permission check.
   Rota reads it; Rota's own copy of the page and its actions are gone.
 - **Areas** (`SiteArea`): each site's pools, gym and reception, in order, and how many **lanes**
   each has (0 for none; owner request, 13 October 2026), so the rota books a pool whole or by lane. Each area may also have a
-  **minimum staff** (`SiteAreaStaffing`, `saveAreaStaffing`; owner request, 16 October 2026): lines of how many and which type of
-  staff (a qualification they hold, or anyone), and optional daily opening hours; the rota highlights any time it is in use with
-  fewer (docs/rota.md). The rota's activities,
+  **staff needed** while it is open (`SiteAreaStaffing`, `saveAreaStaffing`; owner requests, 16 October 2026): lines of how many and
+  which type of staff (a qualification they hold, or anyone), every day's opening hours and any weekday's own hours or closed
+  (`weekHours`). Each line is a need on the rota Plan with places to put people on (docs/rota.md). The rota's activities,
   repeats and bookings choose their "where" from them (`AreaSelect`, checked by
   `areaProblem` on save; a value saved before keeps working). The swim school's classes and
   assessment sessions choose an area and add a detail, saved as before ("Learner pool, lane 3",
