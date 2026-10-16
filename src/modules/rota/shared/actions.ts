@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
-import { activeStaffIds, areasAt, departmentById, departmentIdsOf, liveSiteById, staffContact, withOneStaff, withStaff } from "@/lib/directory";
+import { activeStaffIds, areaById, areasAt, departmentById, departmentIdsOf, liveSiteById, staffContact, withOneStaff, withStaff } from "@/lib/directory";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { currentActor, mayFor } from "@/lib/policy/session";
@@ -15,7 +15,8 @@ import { areaProblem } from "@/lib/setup/data";
 import { fitsFor } from "@/modules/rota/shared/data";
 import { notifyShiftChange } from "@/lib/staff-api/notify";
 import { commitmentsFor, planCommitment } from "@/modules/contributions";
-import { ANY_DEPARTMENT } from "@/modules/rota/shared/day";
+import { ANY_DEPARTMENT, areaAssignmentRow, areaNeedName, areaNeedOf, isAreaNeed } from "@/modules/rota/shared/day";
+import { hoursOn } from "@/lib/setup/area-staffing";
 import type { Prisma } from "@/generated/prisma/client";
 import { type Allowed, CLASSES, NEEDS_REASON, allowedFor, allowedForPerson, changeSchema, iso, logLive, refresh, shared } from "@/modules/rota/shared/writes";
 
@@ -137,6 +138,9 @@ const assignSchema = z.object({
   userId: z.string().min(1, "Choose who."),
   start: z.string(),
   end: z.string(),
+  /** The department's plan it is done from: for an area's own need, which is on every
+   *  department's plan, whose right it is done with, and the shift it goes on. */
+  departmentId: z.string().optional(),
 });
 export type AssignInput = z.input<typeof assignSchema>;
 
@@ -151,6 +155,7 @@ export async function assign(id: string | null, input: AssignInput, changeInput:
   if (start === null || end === null) return fail("Use times like 07:00.");
   const slot = slotProblem(start, end);
   if (slot) return fail(slot);
+  if (isAreaNeed(data.needId)) return assignArea(id, data, start, end, change);
   const need = await prisma.rotaNeed.findFirst({ where: { id: data.needId }, select: { id: true, siteId: true, date: true, place: true, startMinutes: true, endMinutes: true, places: true, typeId: true,
     assignments: { select: { id: true, needId: true, place: true, userId: true, startMinutes: true, endMinutes: true } } } }).then(withType);
   if (!need) return fail("That activity is no longer on the plan.");
@@ -191,6 +196,8 @@ export async function assign(id: string | null, input: AssignInput, changeInput:
 /** Take someone off a place; that time becomes a gap. */
 export async function unassign(id: string, changeInput: ChangeInput = {}): Promise<ActionResult> {
   const change = changeSchema.parse(changeInput);
+  const areaRow = areaAssignmentRow(id);
+  if (areaRow) return unassignArea(areaRow, change);
   const found = await prisma.rotaAssignment.findFirst({ where: { id }, select: { userId: true, startMinutes: true, endMinutes: true,
     need: { select: { siteId: true, date: true, place: true, typeId: true } } } });
   const a = found && { ...(await withOneStaff(found, "userId", "user")), need: (await withType(found.need))! };
@@ -215,6 +222,8 @@ const handOverSchema = z.object({
   userId: z.string().min(1, "Choose who covers."),
   start: z.string(),
   end: z.string(),
+  /** The department's plan it is done from, as `assign`. */
+  departmentId: z.string().optional(),
 });
 export type HandOverInput = z.input<typeof handOverSchema>;
 
@@ -232,6 +241,8 @@ export async function handOver(assignmentId: string, input: HandOverInput, chang
   if (end <= start) return fail("The cover has to end after it starts.");
   const slot = slotProblem(start, end);
   if (slot) return fail(slot);
+  const areaRow = areaAssignmentRow(assignmentId);
+  if (areaRow) return handOverArea(areaRow, { userId: parsed.data.userId, start, end, departmentId: parsed.data.departmentId }, change);
   const found = await prisma.rotaAssignment.findFirst({ where: { id: assignmentId }, select: { id: true, place: true, userId: true, startMinutes: true, endMinutes: true,
     need: { select: { id: true, siteId: true, date: true, place: true, typeId: true } } } });
   if (!found) return fail("That person is no longer on this activity.");
@@ -373,7 +384,7 @@ function runOf(lesson: { startMinutes: number; endMinutes: number }, theirs: rea
  *  nothing when one of their shifts there already holds it; else the department's shift it
  *  overlaps or meets grows to hold the run; else a new shift for the run. Never makes two of theirs
  *  overlap. Says what it did, for the day's log, or null. */
-async function shiftForClass(tx: Prisma.TransactionClient, at: Extract<Allowed, { ok: true }>, departmentId: string, person: { id: string; name: string }, date: string, span: { start: number; end: number }) {
+async function shiftForClass(tx: Prisma.TransactionClient, at: Extract<Allowed, { ok: true }>, departmentId: string, person: { id: string; name: string }, date: string, span: { start: number; end: number }, forWhat = "a swim class") {
   const { start, end } = span;
   const on = parseDateOnly(date);
   const shifts = await tx.rotaPlanShift.findMany({ where: { siteId: at.site.id, date: on, userId: person.id }, orderBy: { startMinutes: "asc" }, select: { id: true, departmentId: true, startMinutes: true, endMinutes: true } });
@@ -386,28 +397,161 @@ async function shiftForClass(tx: Prisma.TransactionClient, at: Extract<Allowed, 
     await tx.rotaPlanShift.update({ where: { id: meets.id }, data: { startMinutes: from, endMinutes: to } });
     const summary = `${person.name}'s shift now ${clock(from)} to ${clock(to)}`;
     await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "update", entity: "RotaPlanShift", entityId: meets.id, clubId: at.site.id,
-      summary: `${summary} on ${date} for a swim class (was ${clock(meets.startMinutes)}–${clock(meets.endMinutes)})` }, tx);
+      summary: `${summary} on ${date} for ${forWhat} (was ${clock(meets.startMinutes)}–${clock(meets.endMinutes)})` }, tx);
     return summary;
   }
   if (clashes(start, end, null)) return null;
   const row = await tx.rotaPlanShift.create({ data: { orgId: at.site.orgId, siteId: at.site.id, departmentId, date: on, userId: person.id, startMinutes: start, endMinutes: end, createdById: at.actor.id, createdByName: at.actor.name } });
   const summary = `${person.name} on a shift ${clock(start)} to ${clock(end)}`;
-  await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "create", entity: "RotaPlanShift", entityId: row.id, clubId: at.site.id, summary: `Put ${summary} on ${date} for a swim class` }, tx);
+  await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "create", entity: "RotaPlanShift", entityId: row.id, clubId: at.site.id, summary: `Put ${summary} on ${date} for ${forWhat}` }, tx);
   return summary;
 }
 
-/** "Who can fill it" for a gap, best fit first, for the sheet. Reading, so View is enough. */
+/** "Who can fill it" for a gap, best fit first, for the sheet. An area's own need asks for its
+ *  type of staff (`area:<area>:<qualification>`). Reading, so View is enough. */
 export async function whoCanFill(input: { siteId: string; date: string; start: number; end: number; typeId: string }) {
   if (!isDateOnly(input.date)) return [];
-  const type = await activityTypeById(input.typeId);
-  return fitsFor({ siteId: input.siteId, date: input.date, start: input.start, end: input.end, requiredTypeId: type?.requiredTypeId ?? null });
+  const area = areaNeedOf(`${input.typeId}:${input.date}`);
+  const requiredTypeId = area ? area.typeId : (await activityTypeById(input.typeId))?.requiredTypeId ?? null;
+  return fitsFor({ siteId: input.siteId, date: input.date, start: input.start, end: input.end, requiredTypeId });
 }
 
-/** "Who can fill it" for an area short of its minimum staff: best fit for the type of staff it
- *  is short of (a qualification, or anyone). Reading, so View is enough. */
-export async function whoCanFillArea(input: { siteId: string; date: string; start: number; end: number; requiredTypeId: string | null }) {
-  if (!isDateOnly(input.date)) return [];
-  return fitsFor({ siteId: input.siteId, date: input.date, start: input.start, end: input.end, requiredTypeId: input.requiredTypeId });
+/* ---------- People on an area's own need ---------- */
+
+/** An area's own need on a date (owner request, 16 October 2026: "the 25 meter pool has a time to
+ *  be open, and during that time it will need a specific amount of staff with specific
+ *  qualifications"): its hours that weekday and the places for one type of staff, from Admin,
+ *  Areas, with the people on it. Null once the area is closed that day or no longer needs them. */
+async function areaNeedFor(needId: string) {
+  const ref = areaNeedOf(needId);
+  if (!ref || !isDateOnly(ref.date)) return null;
+  const area = await areaById(ref.areaId);
+  if (!area) return null;
+  const hours = hoursOn(area, ref.date);
+  const lines = area.minimums.filter((m) => m.typeId === ref.typeId);
+  const places = lines.reduce((n, m) => n + m.count, 0);
+  if (!hours || !places) return null;
+  const rows = await prisma.rotaAreaAssignment.findMany({ where: { areaId: area.id, date: parseDateOnly(ref.date), qualificationTypeId: ref.typeId },
+    select: { id: true, place: true, userId: true, startMinutes: true, endMinutes: true } });
+  return { id: needId, area, date: ref.date, typeId: ref.typeId, what: `${areaNeedName(ref.typeId ? lines[0].typeName ?? "Qualified" : null)}, ${area.name}`,
+    startMinutes: hours.start, endMinutes: hours.end, places, rows: rows.map((r) => ({ ...r, needId })) };
+}
+
+/** "Pool Lifeguard on duty, Main pool" for a stored row, even once the area has changed. */
+async function areaWhat(row: { areaId: string; qualificationTypeId: string | null }) {
+  const area = await areaById(row.areaId);
+  const typeName = area?.minimums.find((m) => m.typeId === row.qualificationTypeId)?.typeName ?? null;
+  return `${areaNeedName(row.qualificationTypeId ? typeName ?? "Qualified" : null)}${area ? `, ${area.name}` : ""}`;
+}
+
+/** An area's need sits on every department's plan, so a person on it hears of a change once a
+ *  week they have a shift in is shared. */
+async function sharedForPerson(siteId: string, date: string, userId: string) {
+  const shifts = await prisma.rotaPlanShift.findMany({ where: { siteId, date: parseDateOnly(date), userId }, distinct: ["departmentId"], select: { departmentId: true } });
+  for (const x of shifts) if (await shared(prisma, siteId, x.departmentId, date)) return true;
+  return false;
+}
+
+/** `assign` for an area's own need. Choosing someone for a stretch inside another person's time
+ *  on the same place (their break, shown as a place to fill) hands that stretch to them. From a
+ *  department's plan the time also goes on their shift there, as a swim class does. */
+async function assignArea(id: string | null, data: z.output<typeof assignSchema>, start: number, end: number, change: z.output<typeof changeSchema>): Promise<ActionResult> {
+  const need = await areaNeedFor(data.needId);
+  if (!need) return fail("That area no longer needs these staff that day. Check its hours and staff under Admin, Areas.");
+  const departmentId = data.departmentId || ANY_DEPARTMENT;
+  const rowId = id ? areaAssignmentRow(id) : null;
+  const before = rowId ? need.rows.find((r) => r.id === rowId) : null;
+  if (id && !before) return fail("That person is no longer on this.");
+  const holder = !before ? need.rows.find((r) => r.place === data.place && r.userId !== data.userId && r.startMinutes <= start && r.endMinutes >= end) : null;
+  if (holder) return handOverArea(holder.id, { userId: data.userId, start, end, departmentId: data.departmentId }, change);
+  const at = await allowedForPerson(need.area.siteId, need.date, departmentId, data.userId);
+  if (!at.ok) return fail(at.error);
+  if (before && before.userId !== data.userId) {
+    const off = await allowedForPerson(need.area.siteId, need.date, departmentId, before.userId);
+    if (!off.ok) return fail(off.error);
+  }
+  const problem = placeProblem(need, need.rows, { id: rowId ?? undefined, needId: need.id, place: data.place, userId: data.userId, startMinutes: start, endMinutes: end });
+  if (problem) return fail(problem.replace("the activity's own time", `the hours it is open, ${clock(need.startMinutes)} to ${clock(need.endMinutes)}`));
+  const person = await staffContact(data.userId, at.site.orgId, { activeOnly: true });
+  if (!person) return fail("That person is no longer active.");
+  if (at.live && !change.reason) return fail(NEEDS_REASON);
+  const previous = before && before.userId !== person.id ? before.userId : null;
+  const shiftAt = data.departmentId ? await allowedFor(at.site.id, need.date, data.departmentId) : null;
+  await prisma.$transaction(async (tx) => {
+    const values = { place: data.place, userId: person.id, startMinutes: start, endMinutes: end };
+    const row = before ? await tx.rotaAreaAssignment.update({ where: { id: before.id }, data: values })
+      : await tx.rotaAreaAssignment.create({ data: { ...values, orgId: at.site.orgId, siteId: at.site.id, areaId: need.area.id, date: parseDateOnly(need.date), qualificationTypeId: need.typeId,
+        createdById: at.actor.id, createdByName: at.actor.name } });
+    await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: before ? "update" : "create", entity: "RotaAreaAssignment", entityId: row.id, clubId: at.site.id,
+      summary: `Put ${person.name} on ${need.what}, ${need.date} ${clock(start)}–${clock(end)}` }, tx);
+    const shifted = shiftAt?.ok ? await shiftForClass(tx, shiftAt, data.departmentId!, person, need.date, { start, end }, need.what) : null;
+    if (at.live) await logLive(tx, at, need.date, before ? "changed" : "added", `${person.name} put on ${need.what}, ${clock(start)} to ${clock(end)}${shifted ? `; ${shifted}` : ""}`, person.id, change, previous);
+  });
+  refresh();
+  if (await sharedForPerson(at.site.id, need.date, person.id)) {
+    await notifyShiftChange(person.id, `${before?.userId === person.id ? "Your time changed" : "You are on"} ${need.what} at ${at.site.name} on ${need.date}, ${clock(start)}–${clock(end)}.`);
+  }
+  if (previous && (await sharedForPerson(at.site.id, need.date, previous))) await notifyShiftChange(previous, `You are no longer on ${need.what} at ${at.site.name} on ${need.date}.`);
+  return ok();
+}
+
+/** `unassign` for an area's own need: that time is a place to fill again. */
+async function unassignArea(rowId: string, change: z.output<typeof changeSchema>): Promise<ActionResult> {
+  const row = await prisma.rotaAreaAssignment.findFirst({ where: { id: rowId }, select: { id: true, siteId: true, areaId: true, date: true, qualificationTypeId: true, userId: true, startMinutes: true, endMinutes: true } });
+  if (!row) return fail("That person is no longer on this.");
+  const date = iso(row.date);
+  const at = await allowedForPerson(row.siteId, date, ANY_DEPARTMENT, row.userId);
+  if (!at.ok) return fail(at.error);
+  if (at.live && !change.reason) return fail(NEEDS_REASON);
+  const [what, person] = await Promise.all([areaWhat(row), staffContact(row.userId, at.site.orgId)]);
+  const name = person?.name ?? "Former staff";
+  await prisma.$transaction(async (tx) => {
+    await tx.rotaAreaAssignment.delete({ where: { id: row.id } });
+    await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "delete", entity: "RotaAreaAssignment", entityId: row.id, clubId: at.site.id, summary: `Took ${name} off ${what}, ${date}` }, tx);
+    if (at.live) await logLive(tx, at, date, "removed", `${name} taken off ${what}, ${clock(row.startMinutes)} to ${clock(row.endMinutes)}`, row.userId, change, row.userId);
+  });
+  refresh();
+  if (await sharedForPerson(at.site.id, date, row.userId)) await notifyShiftChange(row.userId, `You are no longer on ${what} at ${at.site.name} on ${date}, ${clock(row.startMinutes)}–${clock(row.endMinutes)}.`);
+  return ok();
+}
+
+/** `handOver` for an area's own need: the cover takes that stretch of the same place. */
+async function handOverArea(rowId: string, input: { userId: string; start: number; end: number; departmentId?: string }, change: z.output<typeof changeSchema>): Promise<ActionResult> {
+  const { start, end } = input;
+  const found = await prisma.rotaAreaAssignment.findFirst({ where: { id: rowId }, select: { id: true, orgId: true, siteId: true, areaId: true, date: true, qualificationTypeId: true, place: true, userId: true, startMinutes: true, endMinutes: true } });
+  if (!found) return fail("That person is no longer on this.");
+  if (start < found.startMinutes || end > found.endMinutes) return fail(`Keep the cover inside their time, ${clock(found.startMinutes)} to ${clock(found.endMinutes)}.`);
+  if (input.userId === found.userId) return fail("Choose someone else to cover.");
+  const date = iso(found.date);
+  const departmentId = input.departmentId || ANY_DEPARTMENT;
+  const at = await allowedForPerson(found.siteId, date, departmentId, input.userId);
+  if (!at.ok) return fail(at.error);
+  const off = await allowedForPerson(found.siteId, date, departmentId, found.userId);
+  if (!off.ok) return fail(off.error);
+  const [cover, first, what] = await Promise.all([staffContact(input.userId, at.site.orgId, { activeOnly: true }), staffContact(found.userId, at.site.orgId), areaWhat(found)]);
+  if (!cover) return fail("That person is no longer active.");
+  if (at.live && !change.reason) return fail(NEEDS_REASON);
+  const whole = start === found.startMinutes && end === found.endMinutes;
+  const words = `${cover.name} covers ${first?.name ?? "Former staff"} on ${what}, ${clock(start)} to ${clock(end)}`;
+  const shiftAt = input.departmentId ? await allowedFor(at.site.id, date, input.departmentId) : null;
+  await prisma.$transaction(async (tx) => {
+    const same = { orgId: found.orgId, siteId: found.siteId, areaId: found.areaId, date: found.date, qualificationTypeId: found.qualificationTypeId, place: found.place, createdById: at.actor.id, createdByName: at.actor.name };
+    if (whole) await tx.rotaAreaAssignment.update({ where: { id: found.id }, data: { userId: cover.id } });
+    else {
+      const keep = [{ start: found.startMinutes, end: start }, { start: end, end: found.endMinutes }].filter((x) => x.end > x.start);
+      await tx.rotaAreaAssignment.update({ where: { id: found.id }, data: { startMinutes: keep[0].start, endMinutes: keep[0].end } });
+      if (keep[1]) await tx.rotaAreaAssignment.create({ data: { ...same, userId: found.userId, startMinutes: keep[1].start, endMinutes: keep[1].end } });
+      await tx.rotaAreaAssignment.create({ data: { ...same, userId: cover.id, startMinutes: start, endMinutes: end } });
+    }
+    await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "update", entity: "RotaAreaAssignment", entityId: found.id, clubId: at.site.id, summary: `${words}, ${date}` }, tx);
+    const shifted = shiftAt?.ok ? await shiftForClass(tx, shiftAt, input.departmentId!, cover, date, { start, end }, what) : null;
+    if (at.live) await logLive(tx, at, date, "changed", `${words}${shifted ? `; ${shifted}` : ""}`, cover.id, change, found.userId);
+  });
+  refresh();
+  if (await sharedForPerson(at.site.id, date, cover.id)) await notifyShiftChange(cover.id, `You cover ${what} at ${at.site.name} on ${date}, ${clock(start)}–${clock(end)}.`);
+  if (await sharedForPerson(at.site.id, date, found.userId)) await notifyShiftChange(found.userId, whole ? `You are no longer on ${what} at ${at.site.name} on ${date}.`
+    : `${cover.name} covers you on ${what} at ${at.site.name} on ${date}, ${clock(start)}–${clock(end)}.`);
+  return ok();
 }
 
 /* ---------- Copy and share ---------- */

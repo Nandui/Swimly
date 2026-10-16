@@ -191,33 +191,39 @@ Persons (Employment) Act 1996) get at least 30 minutes unpaid after 4.5 hours at
 or 4 hours under 16 (`youngBand`, from the optional date of birth; the rota reads only the
 band). Breaks are placed on quarter hours in time the person has nothing on, aimed at the
 middle (one), a third and three fifths (two), or quarters (three). With no free time, a
-break is suggested during the person's activity only where that area has a **minimum staff**
-(below): at the time the area stays at its minimum without them, else where it is least short,
-so the gap shows. Elsewhere a break never takes someone off an activity: the shift says
+break is suggested during the person's time on an **area's own need** (below) only: where the
+area is least short without them, so two people on it are not away at once when that can be
+helped, and that time shows as a place to fill. Elsewhere a break never takes someone off an
+activity, a booking or a class: the shift says
 "Breaks to place" and the planner leaves a gap (which then needs cover) or the duty manager
 arranges it on the day. Unpaid breaks come off the paid hours whether placed or not.
 
-## Minimum staff for each area (owner request, 16 October 2026)
+## Each area's own needs (owner requests, 16 October 2026)
 
-"Define a minimum of staffing for each area, and what type of staff that is, so when planning
-breaks (and activities), if one area needs to be in use and creates a gap, that should be
-highlighted so a staff member can be assigned." Admin, Areas sets each area's minimum as lines
-of how many and which type of staff (`SiteAreaStaffing`: a qualification they hold, or anyone),
-and optional daily opening hours (`SiteArea.openFrom`, `openUntil`). An area is **in use** while
-anything is on in it (an activity, a booking, a swim class, another module's session) and
-through its opening hours. Everyone on something in it counts there, unless they are off or on a
-break; a qualified line counts only people holding it in date, matched so a lifeguard is never
-spent on "anyone" while a lifeguard place is empty (`shared/staffing.ts`, pure, tested).
+"In addition to bookings and activities, each area has their needs. For example, the 25 meter
+pool has a time to be open, and during that time it will need a specific amount of staff with
+specific qualifications." Admin, Areas sets each area's needs: lines of how many and which type
+of staff (`SiteAreaStaffing`: a qualification they hold, or anyone), every day's opening hours
+(`SiteArea.openFrom`, `openUntil`) and any weekday's own hours or closed (`SiteArea.weekHours`;
+`hoursOn` in `src/lib/setup/area-staffing.ts`). An area with staff lines and no hours needs
+nobody yet.
 
-`buildDay` returns `staffing`: each area with a minimum, stretch by stretch, with how many of
-the places are filled and which lines are short. The Plan shows a row per area (where the
-department has something on, or every area with "Show other departments") above the
-activities: green at its minimum, amber where short. An amber stretch opens **Who can join**:
-best fit for the type of staff it is short of, put on an activity there for the time
-(`putOnActivity`; one needing that qualification first). Short stretches count as gaps on the
-day and the week. Today lists the areas short for the rest of the day with the best free and
-suited people. A break during an activity in an area that keeps its minimum is marked covered
-and needs nobody; otherwise "Find cover for the break" stays.
+On each day it is open, `buildDay` turns each line into an activity on the Plan in its own
+right, "NPLQ on duty" in that area for its hours with as many places as the line asks for, on
+every department's plan (`ANY_DEPARTMENT`) and first in its area. Its ids say whose it is
+(`area:<area>:<qualification or *>`, plus `:<date>` for the need; `areaNeedOf`). Only the
+people put on these places count: staff on a booking, an activity or a swim class in the area
+do not fill its need. They are stored in `RotaAreaAssignment` (the area, date, qualification,
+place, person and time; the need itself is never stored, so changing Admin, Areas changes every
+day ahead). Someone without the qualification shows a warning and is never refused.
+
+Putting people on works as on any activity (`assign`, `unassign`, `handOver` route `area:` ids
+to their area versions): click a gap, or take it from someone's open options. From a
+department's plan the time also goes on the person's shift there, as a swim class does
+(`shiftForClass`), so they show on that plan. Their breaks are spread so the area is least
+short (`staffing.ts`); each break leaves that place to fill for its time ("Aoife's break"), on
+the Plan and Today's gaps, and choosing someone for it hands that stretch to them. Turnfin Me,
+the person's file, double bookings, under-18 rest and "Who can fill it" count this time too.
 
 ## Shifts first (owner decision, 8 October 2026)
 

@@ -77,12 +77,12 @@ export function ShiftSheet({ person, onClose, ...ctx }: Ctx & { person: Person |
 
 /** Whether someone's day has something to look at, and that in a few words. */
 export function warned(p: Person) {
-  return p.rest.length > 0 || p.breakClashes.some((c) => !c.covered) || p.warnings.some((w) => w !== "break") || p.shift.parts.some((x) => x.unplaced.length);
+  return p.rest.length > 0 || p.breakClashes.length > 0 || p.warnings.some((w) => w !== "break") || p.shift.parts.some((x) => x.unplaced.length);
 }
 
 /** The first thing to look at on someone's day, in a few words. */
 export function checkLabel(p: Person) {
-  return p.rest.length ? "Under-18 rest" : p.breakClashes.some((c) => !c.covered) ? "Break needs cover" : p.shift.parts.some((x) => x.unplaced.length) ? "Breaks to place" : "To check";
+  return p.rest.length ? "Under-18 rest" : p.breakClashes.length > 0 ? "Break needs cover" : p.shift.parts.some((x) => x.unplaced.length) ? "Breaks to place" : "To check";
 }
 
 function summary(p: Person) {
@@ -206,15 +206,12 @@ function ShiftBody({ person: p, siteId, departmentId, date, dateLabel, live, can
               {unplaced.length ? <li className="pc-row"><span className="pc-row-body"><span className="pc-row-title">No free time for {unplaced.reduce((n, b) => n + b.minutes, 0)} minutes of breaks</span><span className="pc-row-hint">Place them yourself and cover that time.</span></span><span className="pc-row-trail"><Tag meta={ROTA_SHIFT_NOTE_META.noBreak} /></span></li> : null}
             </ul>
           ) : <p className="text-sm text-ui-muted-foreground">No break for a shift of 4 hours or less.</p>}
-          {p.breakClashes.filter((c) => c.covered).map((c) => (
-            <p key={`${c.start}${c.label}`} className="text-sm text-ui-muted-foreground">{`${clock(c.start)} to ${clock(c.end)}: ${c.label} keeps its minimum staff while they are on their break.`}</p>
-          ))}
-          {p.breakClashes.filter((c) => !c.covered).map((c) => (
+          {p.breakClashes.map((c) => (
             <Notice key={`${c.start}${c.label}`} tone="warning" title="Break during an activity">
               <span className="flex flex-col items-start gap-2">
                 <span>{`${clock(c.start)} to ${clock(c.end)} on ${c.label} needs cover while they are on their break.`}</span>
                 {canChange && c.assignment ? (
-                  <Button type="button" variant="outline" onClick={() => setCover(handOverGap({ siteId, date, dateLabel, typeId: c.assignment!.typeId, what: c.label, requiredName: c.assignment!.requiredName },
+                  <Button type="button" variant="outline" onClick={() => setCover(handOverGap({ siteId, date, dateLabel, typeId: c.assignment!.typeId, what: c.label, requiredName: c.assignment!.requiredName, departmentId },
                     { id: c.assignment!.id, needId: c.assignment!.needId, place: c.assignment!.place, userId: p.userId, name: p.name, start: c.assignment!.start, end: c.assignment!.end }, { start: c.start, end: c.end }))}>
                     <ArrowLeftRight aria-hidden="true" />Find cover for the break
                   </Button>
@@ -282,7 +279,7 @@ export function OptionRow({ option: o, person, siteId, date, live, canChange, on
             submitLabel="Put on" successMessage="Put on the rota" onSuccess={onDone}
             submit={(fd) => o.classRef
               ? planTeacher({ siteId, date, classRef: o.classRef, userId: person.userId, departmentId }, changeOf(fd))
-              : assign(null, { needId: o.needId!, place: o.place!, userId: person.userId, start: text(fd, "start"), end: text(fd, "end") }, changeOf(fd))}>
+              : assign(null, { needId: o.needId!, place: o.place!, userId: person.userId, start: text(fd, "start"), end: text(fd, "end"), departmentId }, changeOf(fd))}>
             {o.classRef ? <p className="text-sm tabular-nums">{clock(o.gapStart)} to {clock(o.gapEnd)}{o.detail ? `, ${o.detail}` : ""}.</p> : (
               <div className="grid grid-cols-2 gap-4">
                 <Field label="From" htmlFor={`${fid}-start`}><Input id={`${fid}-start`} name="start" type="time" step={300} required defaultValue={clock(from)} min={clock(o.gapStart)} max={clock(o.gapEnd)} className="min-h-11" /></Field>

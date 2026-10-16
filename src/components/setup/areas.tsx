@@ -8,7 +8,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-sel
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { moveArea, saveArea, saveAreaStaffing, setAreaArchived } from "@/lib/setup/actions";
-import { hhmm } from "@/lib/setup/area-staffing";
+import { WEEKDAYS, hhmm, type WeekHour } from "@/lib/setup/area-staffing";
 
 /** Add an area to a site, or change one: its name and how many lanes it has. A rename reaches
  *  every record that uses it; lanes let the rota book a pool whole or by lane. */
@@ -63,51 +63,89 @@ export function MoveArea({ id, name, first, last }: { id: string; name: string; 
 
 type Minimum = { count: number; typeId: string | null; typeName: string | null };
 
-/** An area's minimum staff (owner request, 16 October 2026): one line per type of staff, a
- *  qualification they hold or anyone, and the daily hours it is open. The rota shows any time it
- *  is in use (open, or with anything on in it) with fewer. */
+/** The staff an area needs while it is open (owner requests, 16 October 2026: "the 25 meter pool
+ *  has a time to be open, and during that time it will need a specific amount of staff with
+ *  specific qualifications"): one line per type of staff, a qualification they hold or anyone,
+ *  every day's hours and any weekday's own. Each line is a need on the rota Plan to put staff on. */
 export function AreaStaffing({ area, qualifications }: {
-  area: { id: string; name: string; minimums: Minimum[]; openFrom: number | null; openUntil: number | null };
+  area: { id: string; name: string; minimums: Minimum[]; openFrom: number | null; openUntil: number | null; weekHours: WeekHour[] };
   qualifications: { id: string; name: string }[];
 }) {
   const start = area.minimums.length ? area.minimums : [{ count: 1, typeId: null, typeName: null }];
   return (
     <FormDialog
-      trigger={<Button variant="outline" size="icon" aria-label={`Minimum staff for ${area.name}`}><Users aria-hidden="true" /></Button>}
-      title={`Minimum staff for ${area.name}`}
-      description="The fewest staff it needs while it is in use. The rota highlights any time breaks or activities leave it with fewer, so someone can be put on."
-      width="sm:max-w-lg"
-      submitLabel="Save minimum"
-      successMessage="Minimum saved"
+      trigger={<Button variant="outline" size="icon" aria-label={`Staff needed in ${area.name}`}><Users aria-hidden="true" /></Button>}
+      title={`Staff needed in ${area.name}`}
+      description="While it is open it needs these staff, on top of its bookings and activities. Each type of staff shows on the rota Plan with places to put people on."
+      width="sm:max-w-xl"
+      submitLabel="Save"
+      successMessage="Staff needed saved"
       submit={(formData) => {
         const keys = formData.getAll("line").map(String);
         return saveAreaStaffing(area.id, {
           lines: keys.map((k) => ({ count: Number(formData.get(`count-${k}`) ?? 0), typeId: String(formData.get(`type-${k}`) ?? "") })),
           openFrom: String(formData.get("openFrom") ?? ""), openUntil: String(formData.get("openUntil") ?? ""),
+          days: WEEKDAYS.flatMap((_, day) => {
+            const mode = String(formData.get(`mode-${day}`) ?? "same");
+            if (mode === "same") return [];
+            return [mode === "closed" ? { day, from: "", until: "" } : { day, from: String(formData.get(`from-${day}`) ?? ""), until: String(formData.get(`until-${day}`) ?? "") }];
+          }),
         });
       }}
     >
       <StaffingLines id={`staffing-${area.id}`} start={start} qualifications={qualifications} />
       <fieldset className="flex flex-col gap-2">
         <legend className="text-sm font-medium">Open every day</legend>
-        <p className="text-sm text-ui-muted-foreground">Optional. Leave empty to check it only while something is on in it, such as a booking, a class or an activity.</p>
         <div className="grid grid-cols-2 gap-4">
           <Field label="From" htmlFor={`staffing-${area.id}-from`}><Input id={`staffing-${area.id}-from`} name="openFrom" type="time" step={300} defaultValue={hhmm(area.openFrom)} className="min-h-11" /></Field>
           <Field label="Until" htmlFor={`staffing-${area.id}-until`}><Input id={`staffing-${area.id}-until`} name="openUntil" type="time" step={300} defaultValue={hhmm(area.openUntil)} className="min-h-11" /></Field>
         </div>
       </fieldset>
+      <WeekHours id={`staffing-${area.id}`} start={area.weekHours} />
     </FormDialog>
   );
 }
 
-/** The lines of a minimum: how many, and which type of staff. Remove every line for no minimum. */
+/** A weekday's own hours, or closed; the rest keep every day's. */
+function WeekHours({ id, start }: { id: string; start: WeekHour[] }) {
+  const [modes, setModes] = useState<string[]>(() => WEEKDAYS.map((_, day) => {
+    const own = start.find((w) => w.day === day);
+    return !own ? "same" : own.from === null ? "closed" : "own";
+  }));
+  return (
+    <fieldset className="flex flex-col gap-3">
+      <legend className="text-sm font-medium">Different on some days</legend>
+      {WEEKDAYS.map((name, day) => {
+        const own = start.find((w) => w.day === day);
+        const mode = modes[day];
+        return (
+          <div key={name} className="grid grid-cols-1 items-end gap-3 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)]">
+            <Field label={name} htmlFor={`${id}-mode-${day}`}>
+              <NativeSelect id={`${id}-mode-${day}`} name={`mode-${day}`} value={mode} onChange={(e) => setModes((all) => all.map((m, i) => (i === day ? e.target.value : m)))} className="min-h-11 w-full">
+                <NativeSelectOption value="same">Every day&apos;s hours</NativeSelectOption>
+                <NativeSelectOption value="own">Its own hours</NativeSelectOption>
+                <NativeSelectOption value="closed">Closed</NativeSelectOption>
+              </NativeSelect>
+            </Field>
+            {mode === "own" ? <>
+              <Field label="From" htmlFor={`${id}-from-${day}`}><Input id={`${id}-from-${day}`} name={`from-${day}`} type="time" step={300} required defaultValue={hhmm(own?.from ?? null)} className="min-h-11" /></Field>
+              <Field label="Until" htmlFor={`${id}-until-${day}`}><Input id={`${id}-until-${day}`} name={`until-${day}`} type="time" step={300} required defaultValue={hhmm(own?.until ?? null)} className="min-h-11" /></Field>
+            </> : null}
+          </div>
+        );
+      })}
+    </fieldset>
+  );
+}
+
+/** The lines of what an area needs: how many, and which type of staff. Remove every line for none. */
 function StaffingLines({ id, start, qualifications }: { id: string; start: Minimum[]; qualifications: { id: string; name: string }[] }) {
   const [lines, setLines] = useState(() => start.map((m, i) => ({ key: String(i), ...m })));
   const [next, setNext] = useState(start.length);
   return (
     <fieldset className="flex flex-col gap-3">
       <legend className="text-sm font-medium">Staff it needs</legend>
-      {lines.length === 0 ? <p className="text-sm text-ui-muted-foreground">No minimum. Save to take it away, or add a line.</p> : null}
+      {lines.length === 0 ? <p className="text-sm text-ui-muted-foreground">No staff needed. Save to take it off the rota, or add a line.</p> : null}
       {lines.map((l, i) => (
         <div key={l.key} className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto] items-end gap-3">
           <input type="hidden" name="line" value={l.key} />

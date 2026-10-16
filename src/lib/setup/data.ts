@@ -1,6 +1,7 @@
 import "server-only";
 import { can, requireSession } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
+import { weekHoursOf } from "@/lib/setup/area-staffing";
 import type { PermissionKey } from "@/lib/staff/permissions";
 
 /** The shared setup every module uses, read for Admin's pages and for the
@@ -37,11 +38,11 @@ export async function areasPage() {
   const sites = await prisma.club.findMany({
     where: { orgId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     select: { id: true, name: true, code: true, areas: { orderBy: [{ archivedAt: { sort: "asc", nulls: "first" } }, { sortOrder: "asc" }, { name: "asc" }],
-      select: { id: true, name: true, lanes: true, archivedAt: true, openFrom: true, openUntil: true,
+      select: { id: true, name: true, lanes: true, archivedAt: true, openFrom: true, openUntil: true, weekHours: true,
         staffing: { orderBy: { sortOrder: "asc" }, select: { count: true, qualificationTypeId: true, qualificationType: { select: { name: true } } } } } } },
   });
   const qualifications = await prisma.qualificationType.findMany({ where: { orgId, archivedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } });
-  return { canKeep: keeps("setup.areas"), qualifications, sites: sites.map((site) => ({ ...site, areas: site.areas.map(({ staffing, ...area }) => ({ ...area,
+  return { canKeep: keeps("setup.areas"), qualifications, sites: sites.map((site) => ({ ...site, areas: site.areas.map(({ staffing, weekHours, ...area }) => ({ ...area, weekHours: weekHoursOf(weekHours),
     minimums: staffing.map((m) => ({ count: m.count, typeId: m.qualificationTypeId, typeName: m.qualificationType?.name ?? null })) })) })) };
 }
 

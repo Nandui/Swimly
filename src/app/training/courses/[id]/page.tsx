@@ -1,23 +1,23 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Eye } from "lucide-react";
+import { ChartColumn, Eye } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
-import { COURSE_DRAFT_META, CourseBuilder, courseForBuilder, PublishCourse } from "@/modules/training/features/builder";
+import { COURSE_DRAFT_META, CourseBuilder, CourseFeedback, courseForBuilder, DuplicateCourse, PublishCourse } from "@/modules/training/features/builder";
 import { CourseDialog, listQualificationTypeOptions } from "@/modules/training/features/courses";
 
 export const metadata: Metadata = { title: "Course builder" };
 
 /** One course: its outline and lessons, preview and publishing. Anyone in
  *  Training may look; building needs the Author level (`training.manage`). */
-export default async function CourseBuilderPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ lesson?: string }> }) {
-  const [{ id }, { lesson }] = await Promise.all([params, searchParams]);
+export default async function CourseBuilderPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ lesson?: string; questions?: string; exam?: string; practical?: string }> }) {
+  const [{ id }, { lesson, questions, exam, practical }] = await Promise.all([params, searchParams]);
   const [data, types] = await Promise.all([courseForBuilder(id), listQualificationTypeOptions()]);
   if (!data) notFound();
-  const { who, course, draft, files, published, changed, openAssignments } = data;
+  const { who, course, draft, practical: checklist, files, published, changed, openAssignments, report, comments, versions, finished, courses, categories, feedback } = data;
   const canEdit = who.manage && !course.archivedAt;
   const state = !published ? "draft" : changed ? "changed" : "published";
   return (
@@ -31,13 +31,18 @@ export default async function CourseBuilderPage({ params, searchParams }: { para
         status={course.archivedAt ? <Tag meta={ARCHIVAL_STATUS_META.archived} /> : <Tag meta={COURSE_DRAFT_META[state]} />}
         actions={
           <>
-            {who.manage ? <CourseDialog course={course} qualificationTypes={types} /> : null}
+            {who.manage ? <CourseDialog course={course} qualificationTypes={types} categories={categories} courses={courses} /> : null}
+            {who.manage ? <DuplicateCourse courseId={course.id} title={course.title} /> : null}
+            <Button asChild variant="outline" className="min-h-11"><Link href={`/training/courses/${course.id}/insight`}><ChartColumn aria-hidden="true" />Insight</Link></Button>
             <Button asChild variant="outline" className="min-h-11"><Link href={`/training/courses/${course.id}/preview`}><Eye aria-hidden="true" />Preview</Link></Button>
-            {canEdit ? <PublishCourse courseId={course.id} title={course.title} changed={changed} published={published} openAssignments={openAssignments} /> : null}
+            {canEdit ? <PublishCourse courseId={course.id} title={course.title} changed={changed} published={published} openAssignments={openAssignments} canRetake={who.assign} finished={finished} /> : null}
           </>
         }
       />
-      <CourseBuilder courseId={course.id} title={course.title} hasOldText={!!course.content.trim()} draft={draft} files={files} selected={lesson ?? null} canEdit={canEdit} changed={changed} />
+      <CourseBuilder courseId={course.id} title={course.title} hasOldText={!!course.content.trim()} draft={draft} files={files} selected={lesson ?? null}
+        panel={exam ? "exam" : practical ? "practical" : questions ?? null} report={report} canEdit={canEdit} canComment={who.manage || who.signoff} changed={changed}
+        comments={comments} coverId={course.coverId} versions={versions} courses={courses} practical={checklist} requiresSignoff={course.requiresSignoff} />
+      {published ? <CourseFeedback report={feedback} /> : null}
     </>
   );
 }

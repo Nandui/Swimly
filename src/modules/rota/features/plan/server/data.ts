@@ -38,9 +38,7 @@ export async function planWeek(input: { site?: string; week?: string; dept?: str
   const week = days.map((d) => {
     const groups = d.groups.filter(ours);
     const people = staffOf(d, department?.id ?? null);
-    // Areas short of their minimum count too, where this department has something on.
-    const short = d.staffing.filter((a) => groups.some((g) => g.zoneKey === a.key)).reduce((n, a) => n + a.shortCount, 0);
-    return { iso: d.date, gapCount: groups.reduce((n, g) => n + g.gapCount, 0) + short, planned: groups.some((g) => g.departmentId !== ANY_DEPARTMENT) || people.length > 0,
+    return { iso: d.date, gapCount: groups.reduce((n, g) => n + g.gapCount, 0), planned: groups.some((g) => g.departmentId !== ANY_DEPARTMENT) || people.length > 0,
       staff: people.length, paidMinutes: people.reduce((n, p) => n + p.shift.paidMinutes, 0) };
   });
   const full = days[Math.round((Date.parse(date) - Date.parse(monday)) / 86_400_000)];
@@ -50,8 +48,6 @@ export async function planWeek(input: { site?: string; week?: string; dept?: str
     const mine = z.groups.filter(ours);
     return { ...z, groups: mine, gapCount: mine.reduce((n, g) => n + g.gapCount, 0) };
   }).filter((z) => z.groups.length);
-  // The areas with a minimum staff where this department has something on.
-  const staffing = full.staffing.filter((a) => groups.some((g) => g.zoneKey === a.key));
   // Everyone on this department's day; what they could take comes from every department, since a
   // supervisor may lend their people to another department's work (owner, 13 October 2026).
   const people = staffOf(full, department?.id ?? null);
@@ -63,11 +59,9 @@ export async function planWeek(input: { site?: string; week?: string; dept?: str
   const at = { plan: site.plan, run: site.run };
   return {
     who, sites, site, monday, now, date, departments, department, week, share,
-    day: { ...full, zones, groups, people, gapCount: groups.reduce((n, g) => n + g.gapCount, 0) + staffing.reduce((n, a) => n + a.shortCount, 0), staffing },
+    day: { ...full, zones, groups, people, gapCount: groups.reduce((n, g) => n + g.gapCount, 0) },
     /** Every department's activities that day, for lending and "show other departments". */
     allGroups: full.groups,
-    /** Every area with a minimum staff that day, for "show other departments". */
-    allStaffing: full.staffing,
     hours,
     canChange: !!department && !changeBlocked(at, date, now, department.id, mine),
     /** Why this day can't be changed here, for the Plan to say so. */

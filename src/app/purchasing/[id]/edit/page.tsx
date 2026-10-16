@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Change order" };
 export default async function EditOrderPage({ params }: { params: Promise<{ id: string }> }) {
   const data = await orderForm((await params).id);
   return (
-    <div className="flex flex-col gap-6">
+    <div className="po-desk">
       <PageHeader title="Change purchase order" description="Change it and send it for approval again." back={data.existing ? { href: `/purchasing/${data.existing.id}`, label: "The order" } : undefined} />
       <OrderForm sites={data.sites} suppliers={data.suppliers} rules={data.rules} roleNames={data.roleNames} existing={data.existing} />
     </div>

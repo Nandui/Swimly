@@ -1,11 +1,12 @@
 import "server-only";
-import { sitesByIds, staffAgesByIds, staffStatus, withSites } from "@/lib/directory";
+import { areaById, sitesByIds, staffAgesByIds, staffStatus, withSites } from "@/lib/directory";
 import { parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { qualificationsHeldBy, qualificationTypesByIds } from "@/lib/qualifications";
 import { activityTypesByIds } from "@/lib/setup/activity-types";
 import { addDaysIso, mondayOf, youngBand } from "@/modules/rota/shared/constants";
 import { qualification } from "@/modules/rota/shared/fit";
+import { areaNeedName } from "@/modules/rota/shared/day";
 import { dayShift, type WorkItem } from "@/modules/rota/shared/shifts";
 import { commitmentsFor } from "@/modules/contributions";
 
@@ -33,7 +34,7 @@ export async function myDays(userId: string, days = 28) {
   const [status, [age]] = await Promise.all([staffStatus(userId), staffAgesByIds([userId])]);
   if (!status?.orgId) return [];
   const me = { orgId: status.orgId, dateOfBirth: age?.dateOfBirth ?? null };
-  const [assignments, classes, held, planned, placed] = await Promise.all([
+  const [assignments, classes, held, planned, placed, onAreas] = await Promise.all([
     prisma.rotaAssignment.findMany({
       where: { userId, need: { date: range } },
       select: { startMinutes: true, endMinutes: true, createdAt: true, updatedAt: true, need: { select: { date: true, place: true, siteId: true, typeId: true } } },
@@ -43,10 +44,12 @@ export async function myDays(userId: string, days = 28) {
     prisma.rotaPlanShift.findMany({ where: { userId, date: range }, select: { date: true, siteId: true, departmentId: true, startMinutes: true, endMinutes: true, createdAt: true, updatedAt: true } })
       .then((rows) => withSites(rows, "siteId", "site")),
     prisma.rotaBreak.findMany({ where: { userId, date: range }, select: { date: true, siteId: true, startMinutes: true, minutes: true, paid: true } }),
+    prisma.rotaAreaAssignment.findMany({ where: { userId, date: range }, select: { date: true, siteId: true, areaId: true, qualificationTypeId: true, startMinutes: true, endMinutes: true, createdAt: true, updatedAt: true } }),
   ]);
-  const sites = [...(await sitesByIds(classes.map((c) => c.siteId))).values()];
+  const areas = new Map((await Promise.all([...new Set(onAreas.map((a) => a.areaId))].map((id) => areaById(id)))).flatMap((a) => (a ? [[a.id, a] as const] : [])));
+  const sites = [...(await sitesByIds([...classes.map((c) => c.siteId), ...onAreas.map((a) => a.siteId)])).values()];
   const shares = await prisma.rotaWeekShare.findMany({
-    where: { monday: { gte: parseDateOnly(mondayOf(from)), lte: parseDateOnly(to) }, siteId: { in: [...new Set([...assignments.map((a) => a.need.siteId), ...classes.map((c) => c.siteId), ...planned.map((p) => p.siteId)])] } },
+    where: { monday: { gte: parseDateOnly(mondayOf(from)), lte: parseDateOnly(to) }, siteId: { in: [...new Set([...assignments.map((a) => a.need.siteId), ...classes.map((c) => c.siteId), ...onAreas.map((a) => a.siteId), ...planned.map((p) => p.siteId)])] } },
     select: { siteId: true, departmentId: true, monday: true, sharedAt: true },
   });
   const sharedAt = (siteId: string, departmentId: string, date: string) =>
@@ -76,6 +79,21 @@ export async function myDays(userId: string, days = 28) {
     if (!holder || !sharedAt(c.siteId, holder, c.date)) continue;
     const d = dayOf(c.date, c.siteId, sites.find((s) => s.id === c.siteId)?.name ?? "");
     d.items.push({ start: c.startMinutes, end: c.endMinutes, label: `Swim class: ${c.title ?? c.label}`, icon: "teaching", place: c.place ?? "", needs: null, problem: null });
+  }
+  for (const a of onAreas) {
+    // An area's own need sits on every department's plan: it shows once the department whose
+    // shift holds it has shared that week, as a class does.
+    const date = a.date.toISOString().slice(0, 10);
+    const holder = planned.find((p) => p.siteId === a.siteId && p.date.toISOString().slice(0, 10) === date && p.startMinutes < a.endMinutes && a.startMinutes < p.endMinutes)?.departmentId;
+    const shared = holder ? sharedAt(a.siteId, holder, date) : null;
+    if (!shared) continue;
+    const area = areas.get(a.areaId);
+    const typeName = area?.minimums.find((m) => m.typeId === a.qualificationTypeId)?.typeName ?? null;
+    const d = dayOf(date, a.siteId, sites.find((s) => s.id === a.siteId)?.name ?? "");
+    const q = qualification(heldList, userId, a.qualificationTypeId, date);
+    d.items.push({ start: a.startMinutes, end: a.endMinutes, label: areaNeedName(a.qualificationTypeId ? typeName ?? "Qualified" : null), icon: "activity", place: area?.name ?? "",
+      needs: a.qualificationTypeId ? typeName : null, problem: q === "ok" ? null : q });
+    if (a.updatedAt > shared || a.createdAt > shared) d.changed = true;
   }
   for (const p of planned) {
     const date = p.date.toISOString().slice(0, 10);

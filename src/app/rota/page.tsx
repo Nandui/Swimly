@@ -34,7 +34,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
   const sunday = addDaysIso(monday, 6);
   const live = date <= now;
   const dayGaps = day.gapCount;
-  const warned = day.people.filter((p) => p.warnings.some((w) => w !== "break") || p.rest.length || p.breakClashes.some((c) => !c.covered) || p.shift.parts.some((x) => x.unplaced.length)).length;
+  const warned = day.people.filter((p) => p.warnings.some((w) => w !== "break") || p.rest.length || p.breakClashes.length || p.shift.parts.some((x) => x.unplaced.length)).length;
   const thisMonday = mondayOf(now);
   const weeksBack = Array.from({ length: 6 }, (_, i) => addDaysIso(monday, -7 * (i + 1)));
   const daysBack = Array.from({ length: 14 }, (_, i) => addDaysIso(date, -(i + 1)));
@@ -126,7 +126,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
                   hint={data.types.length ? "Add staff to give people their shifts, add what the day needs, or copy an earlier day." : "Add this department's activities to the activity list first."} />
               ) : (
                 <DayPlan siteId={site.id} departmentId={department.id} departmentNames={Object.fromEntries(departments.map((d) => [d.id, d.name]))} date={date} dateLabel={dateLabel} live={live}
-                  canChange={data.canChange} zones={day.zones} groups={day.groups} allGroups={data.allGroups} people={day.people} hours={data.hours} types={data.types} anyTypes={data.anyTypes} areaList={data.areas} staffing={day.staffing} allStaffing={data.allStaffing} />
+                  canChange={data.canChange} zones={day.zones} groups={day.groups} allGroups={data.allGroups} people={day.people} hours={data.hours} types={data.types} anyTypes={data.anyTypes} areaList={data.areas} />
               )}
             </div>
           </section>

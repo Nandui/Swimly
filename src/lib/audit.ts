@@ -50,7 +50,7 @@ export const MODULE_OF_ENTITY: Readonly<Record<string, string>> = {
   ParentAccount: "Swim school", ParentSignInChallenge: "Swim school", ParentChildAccess: "Swim school", ParentAccessRequest: "Swim school",
   ParentChangeRequest: "Swim school", ParentAssessmentPublication: "Swim school",
   // Training, including the qualifications it keeps.
-  TrainingCourse: "Training", TrainingAssignment: "Training", Qualification: "Training", QualificationType: "Training", QualificationEvidence: "Training",
+  TrainingCourse: "Training", TrainingAssignment: "Training", TrainingRule: "Training", TrainingEvidence: "Training", TrainingPath: "Training", TrainingPathEnrolment: "Training", TrainingSession: "Training", TrainingHours: "Training", TrainingHourTarget: "Training", Qualification: "Training", QualificationType: "Training", QualificationEvidence: "Training",
   // Refunds and Rota.
   RefundRequest: "Refunds", RefundNotification: "Refunds",
   AcademyCourseType: "Short courses", AcademyCourse: "Short courses", AcademySession: "Short courses", AcademyCandidate: "Short courses", AcademyCall: "Short courses",
@@ -61,7 +61,7 @@ export const MODULE_OF_ENTITY: Readonly<Record<string, string>> = {
   ShortCourseType: "Short courses", ShortCourse: "Short courses", ShortCourseSession: "Short courses", ShortCourseParticipant: "Short courses",
   ActivityType: "Admin", SiteArea: "Admin", Position: "Admin",
   RotaShift: "Rota", RotaDayNote: "Rota", RotaActivity: "Rota", RotaAbsence: "Rota", RotaImport: "Rota", RotaDepartment: "Rota",
-  RotaNeed: "Rota", RotaAssignment: "Rota", RotaWeekShare: "Rota", RotaLog: "Rota", RotaRepeat: "Rota", RotaActivityType: "Rota", RotaPlanShift: "Rota", RotaBreak: "Rota",
+  RotaNeed: "Rota", RotaAssignment: "Rota", RotaAreaAssignment: "Rota", RotaWeekShare: "Rota", RotaLog: "Rota", RotaRepeat: "Rota", RotaActivityType: "Rota", RotaPlanShift: "Rota", RotaBreak: "Rota",
   // Planned from the rota, kept by the swim school.
   ClassPlannedTeacher: "Swim school",
 };
@@ -69,7 +69,7 @@ export const MODULE_OF_ENTITY: Readonly<Record<string, string>> = {
 /** Rows that belong to no club, so their audit entries belong to none either
  *  and show up in every club's activity. */
 // Organisation-level records (People core) belong to no single site either.
-const SHARED_ENTITIES = new Set(["User", "StaffRole", "Student", "Programme", "Level", "Competency", "AssessmentType", "Organisation", "Department", "RoleAssignment", "QualificationType", "Qualification", "SharedDevice", "TrainingCourse", "TrainingAssignment", "RotaAbsence", "RotaImport", "RotaDepartment", "Supplier", "PurchaseProduct", "PurchaseApprovalRule", "PurchasingSettings", "StockCategory", "StockProduct", "ActivityType", "Position"]);
+const SHARED_ENTITIES = new Set(["User", "StaffRole", "Student", "Programme", "Level", "Competency", "AssessmentType", "Organisation", "Department", "RoleAssignment", "QualificationType", "Qualification", "SharedDevice", "TrainingCourse", "TrainingAssignment", "TrainingRule", "TrainingEvidence", "TrainingPath", "TrainingPathEnrolment", "TrainingSession", "TrainingHours", "TrainingHourTarget", "RotaAbsence", "RotaImport", "RotaDepartment", "Supplier", "PurchaseProduct", "PurchaseApprovalRule", "PurchasingSettings", "StockCategory", "StockProduct", "ActivityType", "Position"]);
 
 /** @param db Pass the transaction client when the audit row must live or die
  *  with the write it describes. The default writes on its own connection,
@@ -116,4 +116,16 @@ export async function moduleAuditTrail(module: string, sites: SiteFilter, page: 
     prisma.auditLog.count({ where }),
   ]);
   return { rows, total };
+}
+
+/** The audit trail of some records of one type, oldest first (the latest `take`): who did what and when. For an
+ *  audit pack of a person's or a course's records; the caller has checked the reader may see them. */
+export async function auditTrailFor(entity: string, entityIds: readonly string[], take = 1000) {
+  if (entityIds.length === 0) return [];
+  const rows = await prisma.auditLog.findMany({
+    where: { entity, entityId: { in: [...entityIds] } },
+    orderBy: { createdAt: "desc" }, take,
+    select: { id: true, entityId: true, actorName: true, action: true, summary: true, createdAt: true },
+  });
+  return rows.reverse();
 }

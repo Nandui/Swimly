@@ -11,6 +11,8 @@ import { qualificationsOf } from "@/lib/qualifications";
 import { requireTrainingActor } from "@/modules/training/shared/access";
 import { OPEN_TRAINING_STATUSES, trainingState } from "@/modules/training/shared/constants";
 import { expiringQualificationRows, people } from "@/modules/training/shared/data";
+import { readExam } from "@/modules/training/shared/questions";
+import { readObservationRecord } from "@/modules/training/shared/on-the-job";
 
 // ---------------------------------------------------------------------------
 // Overview: open and recent assignments for the people in scope
@@ -90,17 +92,30 @@ export async function personTraining(userId: string) {
       orderBy: [{ assignedAt: "desc" }],
       select: {
         id: true, status: true, dueOn: true, assignedAt: true, assignedByName: true, submittedAt: true, completedAt: true,
-        signedOffByName: true, signoffNote: true, learnerNote: true, cancelReason: true,
-        course: { select: { id: true, title: true, requiresSignoff: true } },
+        signedOffByName: true, signoffNote: true, learnerNote: true, cancelReason: true, versionId: true, examExtraAttempts: true, observation: true,
+        evidence: { orderBy: { createdAt: "asc" }, select: { id: true, name: true } },
+        course: { select: { id: true, title: true, requiresSignoff: true, publishedVersionId: true } },
+        examAttempts: { where: { submittedAt: { not: null } }, orderBy: { number: "asc" }, select: { number: true, percent: true, passed: true } },
       },
     }),
     qualificationsOf(userId),
   ]);
+  // The exam each assignment sits: its own version's, or the latest published one before they start.
+  const versionOf = (a: (typeof assignments)[number]) => a.versionId ?? (a.status === "ASSIGNED" ? a.course.publishedVersionId : null);
+  const versionIds = [...new Set(assignments.map(versionOf).filter((v): v is string => !!v))];
+  const exams = new Map((versionIds.length ? await prisma.trainingCourseVersion.findMany({ where: { id: { in: versionIds } }, select: { id: true, outline: true } }) : [])
+    .map((v) => [v.id, readExam((v.outline as { exam?: unknown } | null)?.exam)]));
+  const examOf = (a: (typeof assignments)[number]) => {
+    const exam = exams.get(versionOf(a) ?? "");
+    if (!exam) return null;
+    const allowed = exam.attempts + a.examExtraAttempts;
+    return { passMark: exam.passMark, allowed, attempts: a.examAttempts, passed: a.examAttempts.some((t) => t.passed), outOfAttempts: a.examAttempts.length >= allowed && !a.examAttempts.some((t) => t.passed) };
+  };
   const assignScope = who.assign ? await subjectsFor("training.assign") : null;
   return {
     who, person,
     canAssign: !!assignScope && (assignScope.kind === "all" || assignScope.userIds.has(userId)),
-    assignments: assignments.map((a) => ({ ...a, state: trainingState(a, on) })),
+    assignments: assignments.map((a) => ({ ...a, state: trainingState(a, on), exam: examOf(a), observation: readObservationRecord(a.observation) })),
     qualifications: qualifications.map((q) => ({ ...q, state: qualificationState(q, on) })),
   };
 }

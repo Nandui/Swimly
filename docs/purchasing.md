@@ -28,6 +28,18 @@ running number (owner request, 15 October 2026; orders approved before then keep
   supplier's code, unit, agreed price and, for retail products, the brand and the sizes and
   colours it comes in) and **its own approvers**.
 
+### How the screens look (16 October 2026)
+
+Restyled with the high-end-visual-design taste skill, like the incident report and the
+refund request: double-bezel cards, styles in `src/app/purchasing/purchasing.css` scoped to
+`.po-desk` (every Purchasing page wraps in it) and dialogs portalled with `.turnfin-purchasing`.
+**Orders** opens with three figures (waiting for your approval, your open orders, approved
+suppliers); **an order** is a bento of the order and its four steps (raised, sent for
+approval, approved and numbered, emailed), the document, and a **What happens next** card
+that holds the person's actions with the emails as a timeline; **New order** is three
+numbered step cards and a summary rail. Visual only: the same data, actions and permissions.
+Printing hides the cards and keeps the plain document; the supplier email is unchanged.
+
 ## Approval
 
 A rule is a role and a limit (none means any amount), for one supplier or for every
@@ -108,7 +120,7 @@ unit, brand and price as ordered, and the size and colour picked, so changing a 
 
 - Schema: `prisma/schema/purchasing.prisma`, `prisma/migrations/20261018120000_purchasing`, `prisma/migrations/20261106120000_purchase_order_emails`, `prisma/migrations/20261107120000_purchasing_email_copy`
 - `src/modules/purchasing/`: `shared/` (`rules.ts`, pure; `access.ts`; `forms.ts`), `features/orders` and `features/suppliers` (each with `server/data.ts` and `server/actions.ts`; the home card is `features/orders/server/home.ts`, registered in `module.ts`), `features/workspace` (the frame). See its README.md
-- UI: `src/app/purchasing/` and each feature's `components/`
+- UI: `src/app/purchasing/` (styles in `purchasing.css`) and each feature's `components/`
 - Tests: `rules.test.ts`, `order-email.test.ts`, `purchasing.test.ts` (end to end on an isolated database, with the email transport replaced so nothing is sent)
 
 ## Not built yet

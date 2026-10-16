@@ -1,41 +1,23 @@
-import { mergeTouching, subtract, type Span } from "@/modules/rota/shared/cover";
+import { subtract, type Span } from "@/modules/rota/shared/cover";
 
-/** Each area's minimum staff (owner request, 16 October 2026: "define a minimum of staffing for
- *  each area, and what type of staff that is, so when planning breaks and activities, if one area
- *  needs to be in use and creates a gap, that should be highlighted"). An area is in use while
- *  anything is on in it, and through the daily hours it is open when Admin sets them. Everyone on
- *  something in it counts there, unless they are off or on a break; a line asking for a
- *  qualification counts only people who hold it, in date. Pure (staffing.test.ts). */
+/** How short an area is of the staff it needs while it is open (owner requests, 16 October 2026:
+ *  "each area has their needs... during that time it will need a specific amount of staff with
+ *  specific qualifications"), for placing breaks so it is never left shorter than it has to be.
+ *  Only the people on the area's own need count, a qualified place only someone holding it in
+ *  date. Pure (staffing.test.ts). */
 
 /** "2 holding Pool Lifeguard", or `typeId` null for anyone. */
 export type AreaMinimum = { count: number; typeId: string | null; typeName: string | null };
-export type AreaRule = { name: string; openFrom: number | null; openUntil: number | null; minimums: AreaMinimum[] };
 /** Someone in an area for a stretch. */
 export type Presence = Span & { userId: string };
 /** One stretch of an area's day in use: `have` of the `want` places filled, and the lines still
  *  short. */
 export type StaffingSpan = Span & { have: number; want: number; short: AreaMinimum[]; userIds: string[] };
-export type AreaStaffing = {
-  /** The area's zone key on the day (`area:<name>`). */
-  key: string;
-  name: string;
-  minimums: AreaMinimum[];
-  /** The stretches it is in use, in time order. */
-  spans: StaffingSpan[];
-  /** Stretches short of its minimum. */
-  shortCount: number;
-};
-
 /** Is someone holding this qualification (in date) on the day? */
 export type Holds = (userId: string, typeId: string) => boolean;
 
 /** How many staff a minimum asks for in all. */
 export const wanted = (minimums: readonly AreaMinimum[]) => minimums.reduce((n, m) => n + m.count, 0);
-
-/** "2 Pool Lifeguard, 1 anyone". */
-export function minimumWords(minimums: readonly AreaMinimum[], short: (name: string) => string = (n) => n) {
-  return minimums.map((m) => `${m.count} ${m.typeId ? short(m.typeName ?? "qualified") : "anyone"}`).join(", ");
-}
 
 /** The lines a set of people leaves short: each person fills one place, a qualified line only
  *  with someone who holds it. The most places that can be filled are (a matching), so a lifeguard
@@ -56,12 +38,6 @@ export function shortOf(minimums: readonly AreaMinimum[], userIds: readonly stri
   for (let person = 0; person < userIds.length; person++) if (tryPut(person, new Array<boolean>(places.length).fill(false))) have += 1;
   const short = minimums.map((m, line) => ({ ...m, count: places.filter((l, place) => l === line && taken[place] < 0).length })).filter((m) => m.count > 0);
   return { have, short };
-}
-
-/** When an area is in use that day: whatever is on in it, and its opening hours. */
-export function inUse(rule: Pick<AreaRule, "openFrom" | "openUntil">, items: readonly Span[]): Span[] {
-  const open = rule.openFrom !== null && rule.openUntil !== null && rule.openUntil > rule.openFrom ? [{ start: rule.openFrom, end: rule.openUntil }] : [];
-  return mergeTouching([...items, ...open]).map(({ start, end }) => ({ start, end }));
 }
 
 const shortKey = (short: readonly AreaMinimum[]) => short.map((m) => `${m.count}×${m.typeId ?? "*"}`).join("|");

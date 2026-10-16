@@ -13,7 +13,6 @@ import { Notice } from "@/components/ui-kit/notice";
 import { saveOrder } from "@/modules/purchasing/features/orders/server/actions";
 import { approverRoles, euro, lineDetails, rulesFor, type ApprovalRule } from "@/modules/purchasing/shared/rules";
 import { toast } from "@/components/ui/toast";
-import { cn } from "@/lib/utils";
 
 type Product = { id: string; name: string; code: string; unit: string; brand: string; sizes: string[]; colours: string[]; priceCents: number };
 type Supplier = { id: string; name: string; products: Product[] };
@@ -85,9 +84,11 @@ export function OrderForm({ sites, suppliers, rules, roleNames, existing, initia
   if (!suppliers.length) return <Notice tone="warning" title="No approved suppliers with products yet." description="Whoever manages Purchasing approves suppliers and their products first." />;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_var(--pc-rail-width)]">
-      <div className="min-w-0 space-y-5">
+    <div className="po-form">
+      <div className="po-form-main">
         {existing?.status === "rejected" && existing.decisionNote ? <Notice tone="warning" title="It was rejected" description={existing.decisionNote} /> : null}
+        <section aria-labelledby="po-where" className="po-card">
+          <div className="po-step-head"><span className="po-step-n" aria-hidden="true">1</span><h2 id="po-where">Where it goes and who from</h2></div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="po-site">For site</Label>
@@ -104,17 +105,19 @@ export function OrderForm({ sites, suppliers, rules, roleNames, existing, initia
             </NativeSelect>
           </div>
         </div>
+        </section>
 
         {supplier ? (
-          <section aria-labelledby="po-products" className="space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 id="po-products">Approved products</h2>
-              <div className="relative w-full sm:w-64">
-                <Search aria-hidden="true" className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ui-muted-foreground" />
-                <Input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Find a product" aria-label="Find a product" className="pl-9" />
+          <section aria-labelledby="po-products" className="po-card">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="po-step-head"><span className="po-step-n" aria-hidden="true">2</span><h2 id="po-products">Approved products</h2></div>
+              <div className="po-find">
+                <Search aria-hidden="true" />
+                <Input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Find a product" aria-label="Find a product" />
               </div>
             </div>
-            <Table containerClassName="rounded-[var(--pc-radius-panel)] border border-ui-border bg-ui-card">
+            <div className="po-lines">
+            <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="px-3">Product</TableHead>
@@ -134,7 +137,7 @@ export function OrderForm({ sites, suppliers, rules, roleNames, existing, initia
                     const key = keyOf({ productId: p.id, size: "", colour: "" });
                     const n = count(qty[key]);
                     return (
-                      <TableRow key={p.id} className={cn(n > 0 && "bg-[var(--pc-primary-soft)]/40")}>
+                      <TableRow key={p.id} data-picked={n > 0 ? "" : undefined}>
                         {product}
                         <TableCell className="hidden px-3 text-ui-muted-foreground sm:table-cell">{p.unit || "Each"}</TableCell>
                         <TableCell className="px-3 text-right tabular-nums">{euro(p.priceCents)}</TableCell>
@@ -159,7 +162,7 @@ export function OrderForm({ sites, suppliers, rules, roleNames, existing, initia
                         const n = count(qty[key]);
                         const label = lineDetails({ size: l.size, colour: l.colour });
                         return (
-                          <TableRow key={key} className={cn("border-b-0", n > 0 && "bg-[var(--pc-primary-soft)]/40")}>
+                          <TableRow key={key} data-sub="" data-picked={n > 0 ? "" : undefined}>
                             <TableCell colSpan={3} className="px-3 pl-6">
                               <span className="flex items-center gap-1">
                                 <Button type="button" variant="ghost" size="icon" className="size-11 shrink-0" aria-label={`Remove ${p.name}, ${label}`} onClick={() => removeLine(key)}><X aria-hidden="true" /></Button>
@@ -172,7 +175,7 @@ export function OrderForm({ sites, suppliers, rules, roleNames, existing, initia
                           </TableRow>
                         );
                       })}
-                      <TableRow>
+                      <TableRow data-sub="">
                         <TableCell colSpan={5} className="px-3 pl-6">
                           <div className="flex flex-wrap items-center gap-2">
                             {p.sizes.length ? (
@@ -203,37 +206,42 @@ export function OrderForm({ sites, suppliers, rules, roleNames, existing, initia
                 </TableRow>
               </TableFooter>
             </Table>
+            </div>
           </section>
         ) : null}
 
+        <section aria-labelledby="po-delivery" className="po-card">
+          <div className="po-step-head"><span className="po-step-n" aria-hidden="true">{supplier ? 3 : 2}</span><h2 id="po-delivery">When and anything to add</h2></div>
         <div className="grid gap-4 sm:grid-cols-[12rem_minmax(0,1fr)]">
           <div className="space-y-2"><Label htmlFor="po-needed">Needed by (optional)</Label><Input id="po-needed" type="date" value={neededBy} onChange={(e) => setNeededBy(e.target.value)} /></div>
           <div className="space-y-2"><Label htmlFor="po-note">Note (optional)</Label><Textarea id="po-note" value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} rows={2} placeholder="For the approver or the supplier, for example the delivery entrance." /></div>
         </div>
+        </section>
       </div>
 
-      <aside className="space-y-4 lg:sticky lg:top-4 lg:self-start">
-        <section className="pc-panel" aria-labelledby="po-summary">
-          <div className="pc-panel-head"><h2 id="po-summary">Summary</h2></div>
-          <dl className="grid grid-cols-2 gap-y-1 text-sm">
-            <dt className="text-ui-muted-foreground">Lines</dt><dd className="text-right tabular-nums">{lines.length}</dd>
-            <dt className="text-ui-muted-foreground">Total before VAT</dt><dd className="text-right text-lg font-bold tabular-nums">{euro(total)}</dd>
+      <aside className="min-w-0">
+        <section className="po-card po-summary" aria-labelledby="po-summary">
+          <span className="po-eyebrow">Summary</span>
+          <h2 id="po-summary" className="po-label">Total before VAT</h2>
+          <p className="po-summary-total" aria-live="polite">{euro(total)}</p>
+          <dl className="po-summary-lines">
+            <dt>Lines</dt><dd>{lines.length}</dd>
           </dl>
           {supplier ? (
             approvers.length ? (
-              <p className="flex items-start gap-2 text-sm"><UserCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-[var(--pc-success)]" />
+              <p className="po-callout"><UserCheck aria-hidden="true" />
                 <span>Approved by {approvers.map((id) => { const r = limits.find((l) => l.roleId === id); return `${roleNames[id] ?? "a role"}${r?.limitCents == null ? "" : ` (up to ${euro(r.limitCents)})`}`; }).join(" or ")}.</span></p>
             ) : (
-              <p className="flex items-start gap-2 text-sm text-[var(--pc-warning)]"><TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+              <p className="po-callout" data-tone="warning"><TriangleAlert aria-hidden="true" />
                 <span>{limits.length ? `Nobody may approve ${euro(total)} from ${supplier.name}.` : `${supplier.name} has no approvers yet.`} Ask whoever manages Purchasing.</span></p>
             )
           ) : null}
-          {error ? <p className="text-sm text-[var(--pc-danger)]" role="alert">{error}</p> : null}
-          <div className="flex flex-col gap-2">
+          {error ? <p className="po-callout" data-tone="danger" role="alert">{error}</p> : null}
+          <div className="po-islands">
             <Button type="button" className="min-h-11" disabled={pending || !siteId || !supplierId || lines.length === 0 || approvers.length === 0} onClick={() => save(true)}><Send aria-hidden="true" />Send for approval</Button>
             <Button type="button" variant="outline" className="min-h-11" disabled={pending || !siteId || !supplierId} onClick={() => save(false)}><Save aria-hidden="true" />Save draft</Button>
           </div>
-          <p className="text-xs text-ui-muted-foreground">It gets its number (for example BT-OCT-0042) once it is approved.</p>
+          <p className="po-fine">It gets its number (for example BT-OCT-0042) once it is approved.</p>
         </section>
       </aside>
     </div>

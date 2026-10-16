@@ -1,4 +1,5 @@
 import type { Prisma } from "@/generated/prisma/client";
+import { weekHoursOf, type WeekHour } from "@/lib/setup/area-staffing";
 import type { SiteFilter, SubjectFilter } from "@/lib/policy/types";
 import { ADMINISTRATOR_PERMISSIONS } from "@/lib/staff/permissions";
 
@@ -82,13 +83,21 @@ export async function areaNamesAt(siteId: string, db?: Pick<Prisma.TransactionCl
  *  book lanes in, and what it checks staffing against. */
 export async function areasAt(siteId: string, db?: Pick<Prisma.TransactionClient, "siteArea">): Promise<AreaAt[]> {
   const rows = await (db ?? (await import("@/lib/prisma")).prisma).siteArea.findMany({ where: { siteId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    select: { name: true, lanes: true, openFrom: true, openUntil: true,
+    select: { id: true, name: true, lanes: true, openFrom: true, openUntil: true, weekHours: true,
       staffing: { orderBy: { sortOrder: "asc" }, select: { count: true, qualificationTypeId: true, qualificationType: { select: { name: true } } } } } });
-  return rows.map(({ staffing, ...area }) => ({ ...area,
+  return rows.map(({ staffing, weekHours, ...area }) => ({ ...area, weekHours: weekHoursOf(weekHours),
     minimums: staffing.map((m) => ({ count: m.count, typeId: m.qualificationTypeId, typeName: m.qualificationType?.name ?? null })) }));
 }
-/** An area as `areasAt` gives it. `minimums`: "2 holding Pool Lifeguard", `typeId` null for anyone. */
-export type AreaAt = { name: string; lanes: number; openFrom: number | null; openUntil: number | null; minimums: { count: number; typeId: string | null; typeName: string | null }[] };
+/** One open area with its site, as `areasAt` gives it; null once archived or gone. */
+export async function areaById(id: string, db?: Pick<Prisma.TransactionClient, "siteArea">): Promise<(AreaAt & { siteId: string }) | null> {
+  const row = await (db ?? (await import("@/lib/prisma")).prisma).siteArea.findFirst({ where: { id, archivedAt: null }, select: { siteId: true } });
+  if (!row) return null;
+  const area = (await areasAt(row.siteId, db)).find((a) => a.id === id);
+  return area ? { ...area, siteId: row.siteId } : null;
+}
+/** An area as `areasAt` gives it: its hours (`hoursOn`) and the staff it needs then, "2 holding
+ *  Pool Lifeguard", `typeId` null for anyone. */
+export type AreaAt = { id: string; name: string; lanes: number; openFrom: number | null; openUntil: number | null; weekHours: WeekHour[]; minimums: { count: number; typeId: string | null; typeName: string | null }[] };
 
 /** Live sites in the order people see them, e.g. for a public site picker. */
 export async function liveSites(db?: Db): Promise<SiteRef[]> {
@@ -295,6 +304,14 @@ export async function activeStaffIds(ids: readonly string[], db?: Db): Promise<S
   return new Set(rows.map((row) => row.id));
 }
 
+/** Each person's line manager (the "their team" link HR keeps), by person id; null when none is set. */
+export async function lineManagersOf(ids: readonly string[], db?: Db): Promise<Map<string, StaffRef | null>> {
+  const wanted = unique(ids);
+  if (wanted.length === 0) return new Map();
+  const rows = await (await client(db)).user.findMany({ where: { id: { in: wanted } }, select: { id: true, manager: { select: { id: true, name: true } } } });
+  return new Map(rows.map((row) => [row.id, row.manager]));
+}
+
 /** Ids of the people in this organisation whose name contains `query`. */
 export async function staffIdsNamed(orgId: string | null, query: string, db?: Db): Promise<string[]> {
   const rows = await (await client(db)).user.findMany({ where: { orgId: orgId ?? undefined, name: { contains: query, mode: "insensitive" } }, select: { id: true } });
@@ -438,4 +455,17 @@ export async function activeStaffAtSite(orgId: string | null, siteId: string, db
     where: { orgId: orgId ?? undefined, isActive: true, OR: [{ siteIds: { has: siteId } }, { siteIds: { isEmpty: true } }] },
     orderBy: { name: "asc" }, select: { id: true, name: true, jobTitle: true },
   });
+}
+
+/** Active staff in an organisation with what places them: role, live departments, sites and
+ *  position (Training's compliance rules and matrix). No personal details. */
+export type PlacedStaff = StaffRef & { roleId: string | null; departmentIds: string[]; siteIds: string[]; positionId: string | null };
+export async function activePlacedStaff(orgId: string | null, people: SubjectFilter = { kind: "all" }, db?: Db & DepartmentDb): Promise<PlacedStaff[]> {
+  const rows = await (await client(db)).user.findMany({
+    where: { orgId: orgId ?? undefined, isActive: true, ...(people.kind === "all" ? {} : { id: { in: [...people.userIds] } }) },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, staffRoleId: true, siteIds: true, positionId: true, departments: { select: { departmentId: true, department: { select: { archivedAt: true } } } } },
+  });
+  return rows.map((u) => ({ id: u.id, name: u.name, roleId: u.staffRoleId, siteIds: u.siteIds, positionId: u.positionId,
+    departmentIds: u.departments.filter((d) => !d.department.archivedAt).map((d) => d.departmentId) }));
 }

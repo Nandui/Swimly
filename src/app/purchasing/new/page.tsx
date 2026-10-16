@@ -10,7 +10,7 @@ export default async function NewOrderPage({ searchParams }: { searchParams: Pro
   const data = await orderForm();
   if (!data.who.request) notFound();
   return (
-    <div className="flex flex-col gap-6">
+    <div className="po-desk">
       <PageHeader title="New purchase order" description="Only approved products from approved suppliers, at their agreed prices." />
       <OrderForm sites={data.sites} suppliers={data.suppliers} rules={data.rules} roleNames={data.roleNames} existing={null} initialSupplier={(await searchParams).supplier} />
     </div>
