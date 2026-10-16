@@ -12,6 +12,7 @@ import {
   UserRoundPlus,
 } from "lucide-react";
 import { Select } from "@/components/ui/select";
+import { LeaveReasonField } from "@/modules/activities/shared/enrolment/components/leave-reason-field";
 import { scheduleUnenrolment } from "@/modules/activities/shared/enrolment/actions/schedule";
 import { formatDay, today } from "@/lib/format";
 import type { DayOfWeek } from "@/generated/prisma/client";
@@ -245,6 +246,7 @@ type EnrolmentLike = {
   id: string;
   status: string;
   scheduledEndOn?: Date | null;
+  leaveReason?: string | null;
   student: { firstName: string; lastName: string };
 };
 
@@ -265,6 +267,7 @@ export function EndEnrolment({
 }: WithClass & { enrolment: { startedOn: Date }; lessonDay: DayOfWeek }) {
   const id = useId();
   const [when, setWhen] = useState(enrolment.scheduledEndOn ? "date" : "now");
+  const [finished, setFinished] = useState(false);
   const name = fullName(enrolment.student);
   const lessons = upcomingLessons(lessonDay, enrolment.startedOn, today());
   const saved = enrolment.scheduledEndOn
@@ -275,7 +278,7 @@ export function EndEnrolment({
   const current = saved && lessons.includes(saved) ? saved : undefined;
   return (
     <FormDialog
-      onOpen={() => setWhen(enrolment.scheduledEndOn ? "date" : "now")}
+      onOpen={() => { setWhen(enrolment.scheduledEndOn ? "date" : "now"); setFinished(false); }}
       trigger={
         <Button variant="outline">
           <LogOut aria-hidden={true} className="size-4 shrink-0" />
@@ -301,13 +304,14 @@ export function EndEnrolment({
       }
       submit={(data) =>
         when === "date"
-          ? scheduleUnenrolment(enrolment.id, String(data.get("lastLesson") ?? ""))
+          ? scheduleUnenrolment(enrolment.id, String(data.get("lastLesson") ?? ""), String(data.get("leaveReason") ?? ""))
           : when === "keep"
             ? scheduleUnenrolment(enrolment.id, null)
             : endEnrolment(enrolment.id, {
                 status:
                   data.get("finished") === "on" ? "COMPLETED" : "WITHDRAWN",
                 note: String(data.get("note") ?? ""),
+                leaveReason: String(data.get("leaveReason") ?? ""),
               })
       }
     >
@@ -334,6 +338,9 @@ export function EndEnrolment({
           defaultValue={current}
           options={lessons.map((iso) => ({ value: iso, label: formatDay(iso) }))}
         />
+      ) : null}
+      {when === "date" ? (
+        <LeaveReasonField defaultValue={enrolment.leaveReason} />
       ) : when === "keep" ? (
         <p className="text-sm text-ui-foreground">
           This cancels the scheduled unenrolment. They stay in this class.
@@ -346,13 +353,16 @@ export function EndEnrolment({
             label="They finished the class"
             description="Leave off if they are withdrawing before completion."
             labelSpacing="spread"
+            checked={finished}
+            onCheckedChange={setFinished}
           />
+          {enrolment.status === "ACTIVE" && !finished ? <LeaveReasonField defaultValue={enrolment.leaveReason} /> : null}
           <Field label="Anything worth recording" htmlFor={`${id}-note`}>
             <Textarea
               id={`${id}-note`}
               name="note"
               rows={2}
-              placeholder="Reason for leaving this class"
+              placeholder="Optional detail"
             />
           </Field>
         </>

@@ -99,7 +99,7 @@ const plans = [
   { id: 'billing', as: 'maya', steps: [{ go: '/cancellations' }, { click: /^Review cancellation/ }], shot: 'dialog' },
   { id: 'analytics', steps: [{ go: '/analytics' }] },
   { id: 'analytics-reception', steps: [{ go: '/analytics' }, { link: 'Reception activity' }] },
-  { id: 'analytics-instructors', steps: [{ go: '/analytics' }, { link: 'Instructor attendance' }] },
+  { id: 'analytics-instructors', steps: [{ go: '/analytics' }, { link: 'Registers' }] },
   // Administration
   { id: 'programme', steps: [{ go: '/programmes' }, { click: /^Add (a )?programme/ }, { fill: { Name: 'Water safety' } }], shot: 'dialog' },
   { id: 'curriculum', steps: [{ go: '/programmes' }, { link: /Learn to swim/ }, { click: /^Add (a )?competency/ }], shot: 'dialog' },

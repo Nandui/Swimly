@@ -10,11 +10,13 @@ import { formatDate, parseDateOnly, today } from "@/lib/format";
 import { endAfterLesson, lastLessonError } from "@/modules/activities/shared/enrolment/last-lesson";
 import { prisma } from "@/lib/prisma";
 import { withCourseSeat } from "@/modules/activities/shared/enrolment/seat";
+import { isLeaveReason, LEAVE_REASONS } from "@/modules/activities/shared/enrolment/leave-reasons";
 
 /** Staff choose the swimmer's last lesson; the place stays active through it
  *  and ends the day after. Null cancels the schedule. Scheduling never
- *  releases the place. */
-export async function scheduleUnenrolment(id: string, lastLesson: string | null): Promise<ActionResult> {
+ *  releases the place. A last lesson needs the reason they are leaving
+ *  (LEAVE_REASONS); cancelling clears it. */
+export async function scheduleUnenrolment(id: string, lastLesson: string | null, reason?: string): Promise<ActionResult> {
   const session = await requirePermission("enrolment.manage");
   const source = await prisma.enrolment.findUnique({
     where: { id }, select: { courseId: true },
@@ -29,14 +31,17 @@ export async function scheduleUnenrolment(id: string, lastLesson: string | null)
     if (lastLesson !== null) {
       const error = lastLessonError(lastLesson, row.course, row.startedOn, today());
       if (error) return fail(error);
+      if (!isLeaveReason(reason)) return fail("Choose why they are leaving.", { leaveReason: "Choose a reason." });
     }
+    const leaveReason = lastLesson !== null && isLeaveReason(reason) ? reason : null;
     const scheduledEndOn = lastLesson === null ? null : parseDateOnly(endAfterLesson(lastLesson));
-    if ((row.scheduledEndOn?.getTime() ?? null) === (scheduledEndOn?.getTime() ?? null)) return ok();
-    await tx.enrolment.update({ where: { id }, data: { scheduledEndOn } });
+    if ((row.scheduledEndOn?.getTime() ?? null) === (scheduledEndOn?.getTime() ?? null) && row.leaveReason === leaveReason) return ok();
+    await tx.enrolment.update({ where: { id }, data: { scheduledEndOn, leaveReason } });
     await logAudit({
       actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: scheduledEndOn ? "schedule-withdrawal" : "cancel-withdrawal",
       entity: "Enrolment", entityId: id, programmeId: row.programmeId, clubId: row.course.clubId,
       summary: `${lastLesson ? `Scheduled unenrolment after the lesson on ${formatDate(parseDateOnly(lastLesson))}` : "Cancelled scheduled unenrolment"} for ${fullName(row.student)} from ${courseLabel(row.course)}` +
+        (leaveReason ? ` (${LEAVE_REASONS[leaveReason]})` : "") +
         (row.scheduledEndOn ? ` (previously ending ${formatDate(row.scheduledEndOn)})` : ""),
     }, tx);
     return ok();

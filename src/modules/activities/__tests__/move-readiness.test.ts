@@ -202,7 +202,7 @@ test("ending a place removes it from the queue, while audit failures roll back t
   await assert.rejects(actions.cancelInstructorMoveReadiness(f.input), /audit failure/);
   assert.equal((await read({ q: f.id })).total, 1);
   state.auditFails = false;
-  assert.equal((await enrolments.endEnrolment(f.place.id, { status: "WITHDRAWN", note: "Synthetic withdrawal" })).ok, true);
+  assert.equal((await enrolments.endEnrolment(f.place.id, { status: "WITHDRAWN", note: "Synthetic withdrawal", leaveReason: "moving" })).ok, true);
   assert.equal((await read({ q: f.id })).total, 0);
 });
 

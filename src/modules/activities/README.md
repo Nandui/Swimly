@@ -16,7 +16,7 @@ It covers both menu entries Swim school (the desk, `src/app/(activities)`) and P
 - `schedule` — the week's timetable (`/schedule`).
 - `today` — the swim school's day (`/today`).
 - `together` — swimmers who can be taught together (`/together`).
-- `analytics` — the dashboard and the reception, instructor and multiple-places reports (`/analytics`).
+- `analytics` — the swim school reports (`/analytics`): Overview, Classes (and each class), Swimmers, Progression, Teachers (and each teacher, by who started each lesson), plus the Registers, reception and multiple-places reports. Swim school Manage only.
 - `parents` — parent accounts and access requests (`/students/parents`), the parent API and the parent-admin API.
 - `instructor` — the pool-deck workspace: today's classes, starting a class, assessments and swimmers (`/instructor`).
 - `workspace` — the swim school frame, its menu (`NAV_ITEMS`, for the page bar and the starter page `/swim-school`) and workspace search (`src/app/(activities)/layout.tsx`).
