@@ -7,6 +7,8 @@ import { requirePermission } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 import { ACTIVITY_ICON_KEYS } from "@/lib/setup/meta";
+import { WEEKDAYS, hoursWords, type WeekHour } from "@/lib/setup/area-staffing";
+import { Prisma } from "@/generated/prisma/client";
 import { renameAreaEverywhere } from "@/modules/server";
 
 /** Writes to the shared setup (docs/admin-setup.md): the activity list and
@@ -116,13 +118,16 @@ const staffingSchema = z.object({
   })).max(8, "Up to 8 lines."),
   openFrom: clockTime.default(""),
   openUntil: clockTime.default(""),
+  /** A weekday's own hours, Monday 0; both empty is closed that day. Weekdays left out keep every day's. */
+  days: z.array(z.object({ day: z.number().int().min(0).max(6), from: clockTime.default(""), until: clockTime.default("") })).max(7).default([]),
 });
 export type AreaStaffingInput = z.input<typeof staffingSchema>;
 const minutesOf = (v: string) => (v ? Number(v.slice(0, 2)) * 60 + Number(v.slice(3, 5)) : null);
 
-/** Set an area's minimum staff and the daily hours it is open (owner request, 16 October 2026):
- *  "define a minimum of staffing for each area, and what type of staff that is". The rota then
- *  shows any time the area is in use with fewer. No lines takes the minimum away. */
+/** Set the staff an area needs and the hours it is open (owner requests, 16 October 2026: "the 25
+ *  meter pool has a time to be open, and during that time it will need a specific amount of staff
+ *  with specific qualifications"): every day's hours, and a weekday's own hours or closed. Each line
+ *  is then a need on the rota Plan while it is open. No lines takes the need away. */
 export async function saveAreaStaffing(id: string, input: AreaStaffingInput): Promise<ActionResult> {
   const session = await requirePermission("setup.areas");
   const orgId = session.user.orgId;
@@ -132,6 +137,15 @@ export async function saveAreaStaffing(id: string, input: AreaStaffingInput): Pr
   const openFrom = minutesOf(parsed.data.openFrom), openUntil = minutesOf(parsed.data.openUntil);
   if ((openFrom === null) !== (openUntil === null)) return fail("Give both opening times, or leave both empty.");
   if (openFrom !== null && openUntil !== null && openUntil <= openFrom) return fail("It has to close after it opens, on the same day.");
+  const days: WeekHour[] = [];
+  for (const d of parsed.data.days) {
+    const from = minutesOf(d.from), until = minutesOf(d.until);
+    if ((from === null) !== (until === null)) return fail(`Give both of ${WEEKDAYS[d.day]}'s times, or choose closed.`);
+    if (from !== null && until !== null && until <= from) return fail(`On ${WEEKDAYS[d.day]} it has to close after it opens.`);
+    if (!days.some((x) => x.day === d.day)) days.push({ day: d.day, from, until });
+  }
+  days.sort((a, b) => a.day - b.day);
+  if (lines.length && openFrom === null && !days.some((d) => d.from !== null)) return fail("Give the hours it is open, when it needs these staff.");
   const area = await prisma.siteArea.findFirst({ where: { id, orgId: orgId ?? undefined }, select: { name: true, siteId: true, site: { select: { name: true } } } });
   if (!area) return fail("That area no longer exists.");
   const typeIds = [...new Set(lines.flatMap((l) => (l.typeId ? [l.typeId] : [])))];
@@ -140,11 +154,11 @@ export async function saveAreaStaffing(id: string, input: AreaStaffingInput): Pr
   if (new Set(lines.map((l) => l.typeId ?? "")).size !== lines.length) return fail("Each type of staff once: add to its number instead.");
   const name = new Map(types.map((t) => [t.id, t.name]));
   const words = lines.length ? lines.map((l) => `${l.count} ${l.typeId ? name.get(l.typeId) : "anyone"}`).join(", ") : "no minimum";
-  const hours = openFrom !== null && openUntil !== null ? `, open ${parsed.data.openFrom} to ${parsed.data.openUntil}` : "";
+  const hours = lines.length ? `, ${hoursWords({ openFrom, openUntil, weekHours: days })}` : "";
   await prisma.$transaction(async (tx) => {
     await tx.siteAreaStaffing.deleteMany({ where: { areaId: id } });
     if (lines.length) await tx.siteAreaStaffing.createMany({ data: lines.map((l, i) => ({ areaId: id, count: l.count, qualificationTypeId: l.typeId, sortOrder: i })) });
-    await tx.siteArea.update({ where: { id }, data: { openFrom, openUntil } });
+    await tx.siteArea.update({ where: { id }, data: { openFrom, openUntil, weekHours: days.length ? days : Prisma.DbNull } });
     await logAudit({ actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: "update", entity: "SiteArea", entityId: id, clubId: area.siteId,
       summary: `Set ${area.site.name}'s area ${area.name} to ${words}${hours}` }, tx);
   });

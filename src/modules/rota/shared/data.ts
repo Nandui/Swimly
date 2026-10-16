@@ -1,5 +1,5 @@
 import "server-only";
-import { activeStaffAgesAtSite, areasAt, liveSitesWithin, sitesByIds, staffAgesByIds } from "@/lib/directory";
+import { activeStaffAgesAtSite, areasAt, liveSitesWithin, sitesByIds, staffAgesByIds, withSites } from "@/lib/directory";
 import { qualificationsHeldBy } from "@/lib/qualifications";
 import { activityTypesByIds, activityTypesOf } from "@/lib/setup/activity-types";
 import { notFound } from "next/navigation";
@@ -53,7 +53,7 @@ export async function withNeedNames<T extends { need: { date: Date; typeId: stri
 /** Everything `buildDay` needs for each day from `from` to `to` at one site. */
 export async function loadDays(siteId: string, orgId: string | undefined, from: string, to: string) {
   const range = { gte: parseDateOnly(from), lte: parseDateOnly(to) };
-  const [types, needs, siteCommitments, planned, pinned] = await Promise.all([
+  const [types, needs, siteCommitments, planned, pinned, onAreas] = await Promise.all([
     activityTypes(orgId, true),
     prisma.rotaNeed.findMany({
       where: { siteId, date: range }, orderBy: [{ date: "asc" }, { startMinutes: "asc" }],
@@ -63,13 +63,14 @@ export async function loadDays(siteId: string, orgId: string | undefined, from: 
     commitmentsFor({ siteIds: [siteId], from, to }),
     prisma.rotaPlanShift.findMany({ where: { siteId, date: range }, select: { id: true, date: true, userId: true, departmentId: true, startMinutes: true, endMinutes: true } }),
     prisma.rotaBreak.findMany({ where: { siteId, date: range }, orderBy: { startMinutes: "asc" }, select: { date: true, userId: true, startMinutes: true, minutes: true, paid: true } }),
+    prisma.rotaAreaAssignment.findMany({ where: { siteId, date: range }, select: { id: true, date: true, areaId: true, qualificationTypeId: true, place: true, userId: true, startMinutes: true, endMinutes: true } }),
   ]);
   // Swim classes are Teaching; anything else another module reports here (Academy and short course sessions) is
   // drawn in its area, planned there.
   const classes = siteCommitments.filter((c) => c.source === CLASSES);
   const others = siteCommitments.filter((c) => c.source !== CLASSES);
-  const userIds = [...new Set([...needs.flatMap((n) => n.assignments.map((a) => a.userId)), ...siteCommitments.flatMap((c) => (c.userId ? [c.userId] : [])), ...planned.map((p) => p.userId)])];
-  const [users, held, absences, elsewhere, elsewhereClasses] = userIds.length ? await Promise.all([
+  const userIds = [...new Set([...needs.flatMap((n) => n.assignments.map((a) => a.userId)), ...siteCommitments.flatMap((c) => (c.userId ? [c.userId] : [])), ...planned.map((p) => p.userId), ...onAreas.map((a) => a.userId)])];
+  const [users, held, absences, elsewhere, elsewhereClasses, elsewhereAreas] = userIds.length ? await Promise.all([
     staffAgesByIds(userIds),
     qualificationsHeldBy(userIds),
     prisma.rotaAbsence.findMany({
@@ -82,7 +83,9 @@ export async function loadDays(siteId: string, orgId: string | undefined, from: 
       select: { userId: true, startMinutes: true, endMinutes: true, need: { select: { date: true, typeId: true, siteId: true } } },
     }).then(withNeedNames),
     commitmentsFor({ userIds, from, to }).then((all) => all.filter((c) => c.siteId !== siteId)),
-  ]) : [[], [], [], [], []];
+    prisma.rotaAreaAssignment.findMany({ where: { userId: { in: userIds }, siteId: { not: siteId }, date: range }, select: { userId: true, date: true, siteId: true, startMinutes: true, endMinutes: true } })
+      .then((rows) => withSites(rows, "siteId", "site")),
+  ]) : [[], [], [], [], [], []];
   const names = new Map(users.map((u) => [u.id, u.name]));
   const rest = await youngDays(users, from, to);
   const heldList: Held[] = held.map((q) => ({ userId: q.userId, typeId: q.typeId, issuedOn: q.issuedOn ? isoOf(q.issuedOn) : null, expiresOn: q.expiresOn ? isoOf(q.expiresOn) : null, revoked: !!q.revokedAt }));
@@ -92,6 +95,7 @@ export async function loadDays(siteId: string, orgId: string | undefined, from: 
     const off = new Set(absences.filter((a) => a.userId && isoOf(a.firstDay) <= date && (!a.lastDay || isoOf(a.lastDay) >= date)).map((a) => a.userId!));
     const away = new Map<string, WorkItem[]>();
     for (const a of elsewhere) if (isoOf(a.need.date) === date) away.set(a.userId, [...(away.get(a.userId) ?? []), { start: a.startMinutes, end: a.endMinutes, label: `${a.need.type.name} at ${a.need.site.name}` }]);
+    for (const a of elsewhereAreas) if (isoOf(a.date) === date) away.set(a.userId, [...(away.get(a.userId) ?? []), { start: a.startMinutes, end: a.endMinutes, label: `On duty at ${a.site.name}` }]);
     for (const c of elsewhereClasses) if (c.date === date && c.userId) away.set(c.userId, [...(away.get(c.userId) ?? []), { start: c.startMinutes, end: c.endMinutes, label: c.label }]);
     const young = new Map<string, YoungBand>();
     for (const u of users) { const band = youngBand(u.dateOfBirth ? isoOf(u.dateOfBirth) : null, date); if (band) young.set(u.id, band); }
@@ -105,6 +109,7 @@ export async function loadDays(siteId: string, orgId: string | undefined, from: 
       planned: planned.filter((p) => isoOf(p.date) === date).map((p) => ({ id: p.id, userId: p.userId, departmentId: p.departmentId, startMinutes: p.startMinutes, endMinutes: p.endMinutes })),
       needs: dayNeeds.map((n) => ({ id: n.id, typeId: n.typeId, place: n.place, lanes: n.lanes, startMinutes: n.startMinutes, endMinutes: n.endMinutes, places: n.places, note: n.note, repeatTitle: n.repeat?.title ?? null })),
       assignments: dayNeeds.flatMap((n) => n.assignments),
+      areaAssignments: onAreas.filter((a) => isoOf(a.date) === date).map((a) => ({ id: a.id, areaId: a.areaId, typeId: a.qualificationTypeId, place: a.place, userId: a.userId, startMinutes: a.startMinutes, endMinutes: a.endMinutes })),
       booked: others.filter((c) => c.date === date).map((c): DayBooked => ({ ref: c.ref ?? `${c.source}:${c.startMinutes}`, userId: c.userId, startMinutes: c.startMinutes, endMinutes: c.endMinutes,
         title: c.title ?? c.label, place: c.place ?? "", href: c.href ?? null, module: c.module })),
       classes: classes.filter((c) => c.date === date && c.ref).map((c): DayClass => ({ ref: c.ref!, userId: c.userId, startMinutes: c.startMinutes, endMinutes: c.endMinutes,
@@ -123,8 +128,9 @@ async function youngDays(users: readonly { id: string; dateOfBirth: Date | null 
   if (!ids.length) return out;
   const first = addDaysIso(mondayOf(from), -1), last = addDaysIso(mondayOf(to), 7);
   const range = { gte: parseDateOnly(first), lte: parseDateOnly(last) };
-  const [assigned, shifts, classes] = await Promise.all([
+  const [assigned, onAreas, shifts, classes] = await Promise.all([
     prisma.rotaAssignment.findMany({ where: { userId: { in: ids }, need: { date: range } }, select: { userId: true, startMinutes: true, endMinutes: true, need: { select: { date: true } } } }),
+    prisma.rotaAreaAssignment.findMany({ where: { userId: { in: ids }, date: range }, select: { userId: true, date: true, startMinutes: true, endMinutes: true } }),
     prisma.rotaPlanShift.findMany({ where: { userId: { in: ids }, date: range }, select: { userId: true, date: true, startMinutes: true, endMinutes: true } }),
     commitmentsFor({ userIds: ids, from: first, to: last }),
   ]);
@@ -135,6 +141,7 @@ async function youngDays(users: readonly { id: string; dateOfBirth: Date | null 
     out.set(userId, days);
   };
   for (const a of assigned) add(a.userId, isoOf(a.need.date), a.startMinutes, a.endMinutes);
+  for (const a of onAreas) add(a.userId, isoOf(a.date), a.startMinutes, a.endMinutes);
   for (const p of shifts) add(p.userId, isoOf(p.date), p.startMinutes, p.endMinutes);
   for (const c of classes) if (c.userId) add(c.userId, c.date, c.startMinutes, c.endMinutes);
   return out;
@@ -148,7 +155,7 @@ export async function fitsFor(input: { siteId: string; date: string; start: numb
   const people = await activeStaffAgesAtSite(orgId ?? null, input.siteId);
   const ids = people.map((p) => p.id);
   const monday = mondayOf(input.date), on = parseDateOnly(input.date);
-  const [held, absences, assignments, classes] = await Promise.all([
+  const [held, absences, assignments, classes, onAreas] = await Promise.all([
     input.requiredTypeId ? qualificationsHeldBy(ids, input.requiredTypeId) : [],
     prisma.rotaAbsence.findMany({ where: { userId: { in: ids }, withdrawnAt: null, firstDay: { lte: on }, OR: [{ lastDay: null }, { lastDay: { gte: on } }] }, select: { userId: true } }),
     prisma.rotaAssignment.findMany({
@@ -156,6 +163,7 @@ export async function fitsFor(input: { siteId: string; date: string; start: numb
       select: { userId: true, startMinutes: true, endMinutes: true, need: { select: { date: true, typeId: true, siteId: true } } },
     }).then(withNeedNames),
     commitmentsFor({ userIds: ids, from: input.date, to: input.date }),
+    prisma.rotaAreaAssignment.findMany({ where: { userId: { in: ids }, date: { gte: parseDateOnly(monday), lte: parseDateOnly(addDaysIso(monday, 6)) } }, select: { userId: true, siteId: true, date: true, startMinutes: true, endMinutes: true } }),
   ]);
   const work = new Map<string, WorkItem[]>();
   const weekMinutes = new Map<string, number>();
@@ -164,6 +172,10 @@ export async function fitsFor(input: { siteId: string; date: string; start: numb
     if (isoOf(a.need.date) !== input.date) continue;
     const label = a.need.site.id === input.siteId ? a.need.type.name : `${a.need.type.name} at ${a.need.site.name}`;
     work.set(a.userId, [...(work.get(a.userId) ?? []), { start: a.startMinutes, end: a.endMinutes, label }]);
+  }
+  for (const a of onAreas) {
+    weekMinutes.set(a.userId, (weekMinutes.get(a.userId) ?? 0) + a.endMinutes - a.startMinutes);
+    if (isoOf(a.date) === input.date) work.set(a.userId, [...(work.get(a.userId) ?? []), { start: a.startMinutes, end: a.endMinutes, label: a.siteId === input.siteId ? "On duty" : "On duty at another site" }]);
   }
   for (const c of classes) if (c.userId) work.set(c.userId, [...(work.get(c.userId) ?? []), { start: c.startMinutes, end: c.endMinutes, label: c.source === CLASSES ? `Teaching ${c.title ?? c.label}` : c.label }]);
   const young = new Map<string, YoungBand>();

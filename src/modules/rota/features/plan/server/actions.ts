@@ -111,14 +111,17 @@ export async function saveBreaks(input: BreaksInput, changeInput: ChangeInput = 
   if (!at.ok) return fail(at.error);
   if (at.live && !change.reason) return fail(NEEDS_REASON);
   const on = parseDateOnly(date);
-  // They are on this department's plan that day: a shift on it, one of its activities, or a
-  // swim class they teach here (the classes sit on every department's plan).
-  const [person, onPlan] = await Promise.all([
+  // They are on this department's plan that day: a shift on it, one of its activities, an area's
+  // own need or a swim class they teach here (those sit on every department's plan).
+  const [person, onDepartment, onArea] = await Promise.all([
     staffContact(userId, at.site.orgId),
     prisma.rotaPlanShift.findFirst({ where: { siteId, departmentId, date: on, userId }, select: { id: true } })
       .then(async (x) => x ?? prisma.rotaAssignment.findFirst({ where: { userId, need: { siteId, date: on, typeId: { in: await activityTypeIdsIn(departmentId) } } }, select: { id: true } })),
+    // An area's own need sits on every department's plan too.
+    prisma.rotaAreaAssignment.findFirst({ where: { userId, siteId, date: on }, select: { id: true } }),
   ]);
   if (!person) return fail("That person is no longer here.");
+  const onPlan = onDepartment ?? onArea;
   const teaches = !onPlan
     ? (await commitmentsFor({ userIds: [userId], from: date, to: date })).some((c) => c.source === CLASSES && c.siteId === siteId)
     : false;
