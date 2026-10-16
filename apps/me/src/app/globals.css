@@ -436,7 +436,7 @@ html[data-text] .input { font-size: max(16px, var(--pc-text-body)); }
 .typed-answer .input { flex: 1; }
 .typed-unit { font-weight: 600; color: var(--pc-ink-muted); }
 .tabs { display: flex; flex-direction: column; gap: 12px; margin-block: 16px; }
-.tab-list { display: flex; gap: 4px; overflow-x: auto; padding: 4px; border-radius: var(--pc-radius-control); background: var(--pc-surface-sunken); }
+.tab-list { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); }
 .tab-button { flex: 1 0 auto; min-height: 44px; padding: 8px 16px; border: 0; border-radius: var(--pc-radius-control); background: transparent; color: var(--pc-ink-muted); font: inherit; font-weight: 600; cursor: pointer; }
 .tab-button[aria-selected="true"] { background: var(--pc-surface); color: var(--pc-ink); box-shadow: 0 1px 3px color-mix(in srgb, var(--pc-ink) 15%, transparent); }
 .tab-button:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
@@ -447,8 +447,8 @@ html[data-text] .input { font-size: max(16px, var(--pc-text-body)); }
 .sort-item[data-state="right"] { border-color: var(--pc-success, var(--pc-primary)); background: color-mix(in srgb, var(--pc-success, var(--pc-primary)) 8%, transparent); }
 .sort-item[data-state="wrong"] { border-color: var(--pc-danger, var(--pc-line-strong)); border-width: 2px; }
 .sort-text { font-weight: 600; padding: 0; }
-.sort-groups { display: flex; flex-wrap: wrap; gap: 8px; }
-.sort-group { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 16px; border: 1px solid var(--pc-line-strong); border-radius: 999px; cursor: pointer; }
+.sort-groups { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.sort-group { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--pc-line-strong); border-radius: 999px; cursor: pointer; }
 .sort-group[data-chosen] { border-color: var(--pc-primary); background: color-mix(in srgb, var(--pc-primary) 12%, transparent); font-weight: 600; }
 .sort-group input { accent-color: var(--pc-primary); }
 .sort-group:has(input:focus-visible) { outline: 2px solid var(--pc-focus); outline-offset: 2px; }

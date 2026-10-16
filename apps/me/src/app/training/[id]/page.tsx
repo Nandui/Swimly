@@ -150,7 +150,7 @@ export default function TrainingDetailPage() {
 
             {data.sections && data.progress ? (
               <>
-                {open && next ? (
+                {open && next && !data.waitingOn?.length ? (
                   <section className="pc-panel course-hero" aria-labelledby="continue-title">
                     <div className="stack-sm">
                       <h2 id="continue-title">{data.progress.done === 0 ? "Ready when you are" : "Pick up where you left off"}</h2>
