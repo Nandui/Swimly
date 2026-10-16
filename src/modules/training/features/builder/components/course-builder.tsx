@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import type { JSONContent } from "@tiptap/react";
-import { ArrowDown, ArrowUp, CircleCheck, ClipboardCheck, Eye, FilePlus2, FileText, GraduationCap, Headphones, ListChecks, MessageSquare, Pencil, Plus, Trash2, Upload } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, CircleCheck, ClipboardCheck, Eye, FilePlus2, FileText, GraduationCap, Headphones, ListChecks, MessageSquare, Pencil, Plus, Sparkles, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
 import { RadioGroup } from "@/components/shadcn/radio-group";
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
@@ -18,14 +19,15 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Notice } from "@/components/ui-kit/notice";
 import { cn } from "@/lib/utils";
 import { THEME } from "@/modules/training/shared/components/dialog-kit";
-import { frozenOutline, LESSON_KIND_META, LESSON_KINDS, lessonMinutes, publishProblems, videoFor, type LessonData, type LessonKind, type Outline, type OutlineLesson } from "@/modules/training/shared/lessons";
+import { EMBED_SOURCES, embedFor, frozenOutline, LESSON_KIND_META, LESSON_KINDS, lessonMinutes, publishProblems, videoFor, type LessonData, type LessonKind, type Outline, type OutlineLesson } from "@/modules/training/shared/lessons";
 import { blankedPrompt } from "@/modules/training/shared/questions";
 import {
   addLesson, addSection, moveLesson, moveSection, removeLesson, removeSection, renameSection, saveLesson, startFromOldText,
 } from "@/modules/training/features/builder/server/actions";
 import { RichText, uploadCourseFile, type UploadedFile } from "@/modules/training/features/builder/components/rich-text";
 import { ExamPanel, QuestionsPanel, type ExamReport } from "@/modules/training/features/builder/components/question-bank";
-import { CardsEditor, ChecklistEditor, ScenarioEditor } from "@/modules/training/features/builder/components/lesson-kinds";
+import { CardsEditor, ChecklistEditor, ExploreEditor, HandInEditor, ScenarioEditor, SortingEditor } from "@/modules/training/features/builder/components/lesson-kinds";
+import { qualityTips } from "@/modules/training/shared/quality";
 import { PracticalPanel } from "@/modules/training/features/builder/components/practical";
 import type { ObservationStep } from "@/modules/training/shared/on-the-job";
 import { CopyIntoSection, CoverPicker, ReviewComments, type ReviewComment, type VersionNote } from "@/modules/training/features/builder/components/library";
@@ -241,6 +243,7 @@ function AddLessonDialog({ sectionId, sectionTitle, onAdded }: { sectionId: stri
   return (
     <FormDialog
       portalClassName={THEME}
+      width="sm:max-w-3xl"
       trigger={<Button type="button" variant="ghost" className="min-h-11 justify-start text-ui-primary"><Plus aria-hidden="true" />Add a lesson</Button>}
       title={`Add a lesson to ${sectionTitle}`}
       description="Each lesson is one screen in Turnfin Me. Keep it short: one idea, a few minutes."
@@ -255,7 +258,7 @@ function AddLessonDialog({ sectionId, sectionTitle, onAdded }: { sectionId: stri
       <Input id={`lesson-title-${sectionId}`} name="title" label="Lesson name" required minLength={2} maxLength={120} autoFocus />
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-2 text-sm font-semibold">Kind of lesson</legend>
-        <RadioGroup value={kind} onValueChange={(value) => setKind(value as LessonKind)} className="gap-2">
+        <RadioGroup value={kind} onValueChange={(value) => setKind(value as LessonKind)} className="grid gap-2 sm:grid-cols-2">
           {LESSON_KINDS.map((k) => <ChoiceRow key={k} type="radio" value={k} id={`kind-${sectionId}-${k}`} title={LESSON_KIND_META[k].label} hint={LESSON_KIND_META[k].help} />)}
         </RadioGroup>
       </fieldset>
@@ -269,6 +272,7 @@ function AddLessonDialog({ sectionId, sectionTitle, onAdded }: { sectionId: stri
 
 function StartPanel({ courseId, title, draft, canEdit, changed, comments }: { courseId: string; title: string; draft: Outline; canEdit: boolean; changed: boolean; comments: ReviewComment[] }) {
   const problems = useMemo(() => publishProblems(frozenOutline(draft)), [draft]);
+  const tips = useMemo(() => qualityTips(frozenOutline(draft)), [draft]);
   const openComments = comments.filter((c) => !c.resolvedAt).length;
   const lessons = draft.sections.flatMap((s) => s.lessons);
   const minutes = lessons.reduce((n, l) => n + (lessonMinutes(l) ?? 0), 0);
@@ -300,6 +304,30 @@ function StartPanel({ courseId, title, draft, canEdit, changed, comments }: { co
       ) : (
         <Notice tone="success" title="Ready to publish">Preview it as a learner first, then publish from the top of the page.</Notice>
       )}
+      {tips.length ? (
+        <Collapsible className="flex flex-col gap-2 rounded-[var(--pc-radius-card)] bg-ui-muted p-4">
+          <CollapsibleTrigger asChild>
+            <Button type="button" variant="ghost" className="min-h-11 justify-between self-stretch">
+              <span className="flex items-center gap-2"><Sparkles aria-hidden="true" />Make it better: {tips.length} {tips.length === 1 ? "suggestion" : "suggestions"}</span>
+              <ChevronDown aria-hidden="true" />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <p className="pb-2 text-sm text-ui-muted-foreground">Advice from the quality check. None of it stops you publishing.</p>
+            <ul className="pc-rows">
+              {tips.map((t) => (
+                <li key={t.text} className="pc-row items-start">
+                  <span className="pc-row-body">
+                    <span className="text-sm">{t.text}</span>
+                    {t.lessonId ? <Link href={hrefFor(courseId, t.lessonId)} className="text-sm font-medium text-ui-primary underline-offset-4 hover:underline">Open the lesson</Link>
+                      : t.sectionId ? <Link href={questionsHref(courseId, t.sectionId)} className="text-sm font-medium text-ui-primary underline-offset-4 hover:underline">Open its questions</Link> : null}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </CollapsibleContent>
+        </Collapsible>
+      ) : lessons.length ? <Notice tone="success" title="The quality check has no suggestions" /> : null}
       {openComments ? <Notice tone="info" title={`${openComments} review ${openComments === 1 ? "comment is" : "comments are"} still open`}>Have a look before you publish. They don&apos;t stop you publishing.</Notice> : null}
       <Button asChild variant="outline" className="min-h-11 self-start"><Link href={`/training/courses/${courseId}/preview`}><Eye aria-hidden="true" />Preview as a learner</Link></Button>
     </section>
@@ -313,6 +341,7 @@ function StartPanel({ courseId, title, draft, canEdit, changed, comments }: { co
 const BODY_LABEL: Record<LessonKind, string> = {
   READING: "Lesson text", VIDEO: "Notes under it (optional)", FILE: "Notes under it (optional)", QUIZ: "Introduction (optional)",
   SCENARIO: "Introduction (optional)", FLASHCARDS: "Introduction (optional)", CHECKLIST: "Introduction (optional)", AUDIO: "Transcript and notes",
+  SORTING: "Introduction (optional)", EXPLORE: "Introduction (optional)", ASSIGNMENT: "The task: what to do and what to hand in", EMBED: "Notes under it (optional)",
 };
 
 function VersionHistory({ versions }: { versions: VersionNote[] }) {
@@ -359,6 +388,7 @@ function LessonEditor({ courseId, lesson, files, onUploaded, canEdit, position, 
     return () => window.removeEventListener("beforeunload", warn);
   }, [dirty]);
   const video = lesson.kind === "VIDEO" && videoUrl ? videoFor(videoUrl) : null;
+  const embed = lesson.kind === "EMBED" && videoUrl ? embedFor(videoUrl) : null;
   const meta = LESSON_KIND_META[lesson.kind];
   const Icon = meta.icon;
   const save = () => act(() => saveLesson(lesson.id, {
@@ -409,6 +439,31 @@ function LessonEditor({ courseId, lesson, files, onUploaded, canEdit, position, 
         </div>
       ) : null}
 
+      {lesson.kind === "EMBED" ? (
+        <div className="flex flex-col gap-3">
+          <Input id="lesson-embed" label="Link to the slides or activity" type="url" value={videoUrl} onChange={change(setVideoUrl)} placeholder="https://docs.google.com/presentation/d/…" disabled={!canEdit}
+            description={`Paste the share or publish link from ${EMBED_SOURCES}. Share it so anyone with the link can view it.`} />
+          {embed ? (
+            <div className="tf-embed"><iframe src={embed.src} title={`${embed.provider}: ${title}`} loading="lazy" allow="fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" /></div>
+          ) : videoUrl ? <Notice tone="warning" title="That link can’t be shown in a lesson">Use a link from {EMBED_SOURCES}.</Notice> : null}
+        </div>
+      ) : null}
+
+      {lesson.kind === "EXPLORE" ? (
+        <div className="flex flex-col gap-3">
+          <Field label="Picture" htmlFor="lesson-explore" hint="A clear photo or plan, such as the plant room or the first aid room.">
+            <NativeSelect id="lesson-explore" value={fileId} disabled={!canEdit} onChange={(event) => change(setFileId)(event.target.value)} className="min-h-11 w-full">
+              <NativeSelectOption value="">Choose a picture</NativeSelectOption>
+              {images.map((f) => <NativeSelectOption key={f.id} value={f.id}>{f.name}</NativeSelectOption>)}
+            </NativeSelect>
+          </Field>
+          {canEdit ? <FileField label="Or add a new picture" description="JPEG, PNG or WebP, up to 4 MB." accept="image/png,image/jpeg,image/webp" pending={uploading} onChange={(event) => upload(event.target.files?.[0])} error={fileError || undefined} /> : null}
+          <ExploreEditor imageId={fileId || null} data={data} onChange={change(setData)} disabled={!canEdit} />
+        </div>
+      ) : null}
+      {lesson.kind === "SORTING" ? <SortingEditor title={title} data={data} onChange={change(setData)} disabled={!canEdit} /> : null}
+      {lesson.kind === "ASSIGNMENT" ? <HandInEditor data={data} onChange={change(setData)} disabled={!canEdit} /> : null}
+
       {lesson.kind === "FILE" ? (
         <div className="flex flex-col gap-3">
           <Field label="File" htmlFor="lesson-file" hint="The PDF or image learners open in this lesson.">
@@ -447,7 +502,7 @@ function LessonEditor({ courseId, lesson, files, onUploaded, canEdit, position, 
         </Notice>
       ) : null}
 
-      <RichText id="lesson-body" label={BODY_LABEL[lesson.kind]} value={body} onChange={change(setBody)} courseId={courseId} disabled={!canEdit} onUploaded={onUploaded}
+      <RichText id="lesson-body" label={BODY_LABEL[lesson.kind]} value={body} onChange={change(setBody)} courseId={courseId} disabled={!canEdit} onUploaded={onUploaded} files={files}
         questions={lesson.kind === "READING" ? questions : undefined} />
 
       <Input id="lesson-minutes" label="Minutes it takes" type="number" inputMode="numeric" min={1} max={240} value={minutes} onChange={change(setMinutes)} optional disabled={!canEdit}

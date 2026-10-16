@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { Separator } from "@/components/shadcn/separator";
 import { Table, TableBody, TableCell, TableHead, TableRow } from "@/components/shadcn/table";
-import { CALLOUT_META, safeHref, type CalloutTone, type DocNode } from "@/modules/training/shared/lessons";
+import { FileDown, PlayCircle } from "lucide-react";
+import { CALLOUT_META, fileSrc, safeHref, videoFor, type CalloutTone, type DocNode } from "@/modules/training/shared/lessons";
 import { blankedPrompt, type Question } from "@/modules/training/shared/questions";
 
 /** Draws a lesson's text (cleaned Tiptap JSON) as plain elements. Text is never
@@ -53,6 +54,21 @@ function render(node: DocNode, key: string, questions: Question[]): ReactNode {
     case "flipBack": return <div key={key} className="tf-flip-back">{kids}</div>;
     case "stepper": return <div key={key} className="tf-stepper">{kids}</div>;
     case "stepItem": return <div key={key} className="tf-step">{kids}</div>;
+    case "tabs": return <div key={key} className="tf-tabs">{kids}</div>;
+    case "tab": return <div key={key} className="tf-tab">{kids}</div>;
+    case "tabTitle": return <p key={key} className="tf-tab-title">{kids}</p>;
+    case "tabContent": return <div key={key}>{kids}</div>;
+    case "videoEmbed": {
+      const video = videoFor(String(node.attrs?.url ?? ""));
+      if (!video) return null;
+      return video.embed
+        ? <div key={key} className="tf-video"><iframe src={video.embed} title={`Video on ${video.provider}`} allow="encrypted-media; picture-in-picture; fullscreen" loading="lazy" referrerPolicy="strict-origin-when-cross-origin" /></div>
+        : <a key={key} href={video.href} target="_blank" rel="noopener noreferrer" className="tf-media-block"><PlayCircle aria-hidden="true" />Watch on {video.provider}</a>;
+    }
+    case "fileButton": {
+      const id = String(node.attrs?.fileId ?? "");
+      return <a key={key} href={fileSrc(id)} target="_blank" rel="noopener noreferrer" className="tf-media-block"><FileDown aria-hidden="true" />{String(node.attrs?.label || "Download")}</a>;
+    }
     case "knowledgeCheck": {
       const q = questions.find((x) => x.id === node.attrs?.questionId);
       return (

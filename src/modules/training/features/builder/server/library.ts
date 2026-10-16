@@ -34,7 +34,7 @@ const audit = (who: TrainingActor, tx: Prisma.TransactionClient, action: string,
 const titleSchema = z.string().trim().min(3, "Give the course a name.").max(120, "Keep the name under 120 characters.");
 
 const SOURCE = {
-  id: true, title: true, summary: true, requiresSignoff: true, grantsTypeId: true, exam: true, coverId: true, category: true, tags: true,
+  id: true, title: true, summary: true, requiresSignoff: true, grantsTypeId: true, exam: true, coverId: true, category: true, tags: true, lessonsInOrder: true, prerequisiteIds: true,
   sections: { orderBy: { position: "asc" }, select: {
     id: true, title: true,
     lessons: { orderBy: { position: "asc" }, select: { id: true, kind: true, title: true, body: true, videoUrl: true, fileId: true, minutes: true, data: true } },
@@ -115,6 +115,7 @@ export async function duplicateCourse(courseId: string, title: string): Promise<
     const course = await tx.trainingCourse.create({ data: {
       orgId: who.orgId, title: name.data, summary: source.summary, requiresSignoff: source.requiresSignoff, grantsTypeId: grants,
       exam: readExam(source.exam) ? json(readExam(source.exam)) : Prisma.DbNull, category: source.category, tags: source.tags, createdById: who.id,
+      lessonsInOrder: source.lessonsInOrder, prerequisiteIds: source.prerequisiteIds,
     }, select: { id: true } });
     id = course.id;
     const lessons = source.sections.flatMap((s) => s.lessons), questions = source.sections.flatMap((s) => s.questions).map(asQuestion).filter((q): q is Question => !!q);

@@ -41,9 +41,11 @@ const when = (date: Date) => date.toLocaleString("en-IE", { day: "numeric", mont
 // ---------------------------------------------------------------------------
 
 /** "Start from a template" beside Add a course: one of the built-in outlines, or a copy of a course. */
-export function StartFromTemplate({ courses }: { courses: { id: string; title: string }[] }) {
+export function StartFromTemplate({ courses }: { courses: { id: string; title: string; isTemplate?: boolean }[] }) {
   const router = useRouter();
   const [choice, setChoice] = useState(COURSE_TEMPLATES[0].key);
+  // The organisation's own templates (phase 8): courses an author offered as one.
+  const own = courses.filter((c) => c.isTemplate);
   const copying = choice.startsWith("copy:");
   return (
     <FormDialog
@@ -66,12 +68,13 @@ export function StartFromTemplate({ courses }: { courses: { id: string; title: s
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-2 text-sm font-semibold">Start from</legend>
         <RadioGroup value={choice} onValueChange={setChoice} className="grid gap-2 sm:grid-cols-2">
+          {own.map((c) => <ChoiceRow key={c.id} type="radio" value={`copy:${c.id}`} id={`template-own-${c.id}`} title={c.title} hint="Your organisation’s template: a full copy, ready to change." />)}
           {COURSE_TEMPLATES.map((t) => <ChoiceRow key={t.key} type="radio" value={t.key} id={`template-${t.key}`} title={t.title} hint={t.help} />)}
         </RadioGroup>
       </fieldset>
       {courses.length ? (
         <Field label="Or copy one of your courses" htmlFor="template-copy" optional hint="Everything is copied: lessons, questions, files and the exam. Nobody is assigned to the copy.">
-          <NativeSelect id="template-copy" value={copying ? choice : ""} onChange={(event) => setChoice(event.target.value || COURSE_TEMPLATES[0].key)} className="min-h-11 w-full">
+          <NativeSelect id="template-copy" value={copying && !own.some((c) => `copy:${c.id}` === choice) ? choice : ""} onChange={(event) => setChoice(event.target.value || COURSE_TEMPLATES[0].key)} className="min-h-11 w-full">
             <NativeSelectOption value="">Don’t copy a course</NativeSelectOption>
             {courses.map((c) => <NativeSelectOption key={c.id} value={`copy:${c.id}`}>{c.title}</NativeSelectOption>)}
           </NativeSelect>

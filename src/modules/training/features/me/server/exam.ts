@@ -70,6 +70,7 @@ function examSummary(found: Found, attempts: Attempt[]) {
   const lessonsDone = outlineLessons(outline).every((l) => found.done.has(l.id));
   const assigned = found.row.status === "ASSIGNED";
   const reason = !assigned ? "This training is finished." : passed ? "You have passed the exam." : used >= allowed && !open ? "You have used every attempt. Your trainer can give you another."
+    : found.waitingOn.length ? `Finish ${found.waitingOn.map((c) => `“${c.title}”`).join(" and ")} first.`
     : !lessonsDone && !exam.testOut ? "Finish the lessons first." : null;
   return {
     questions: paperSize(exam, outline.questions.length), passMark: exam.passMark, timeLimit: exam.timeLimit, testOut: exam.testOut,

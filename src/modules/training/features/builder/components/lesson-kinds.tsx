@@ -1,20 +1,25 @@
 "use client";
 
+import { useRef, type PointerEvent } from "react";
 import { ArrowDown, ArrowUp, Plus, X } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
+import { RadioGroup } from "@/components/shadcn/radio-group";
+import { ChoiceRow } from "@/components/ui/choice-row";
+import { Switch } from "@/components/ui/switch";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { Field } from "@/components/form-dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Notice } from "@/components/ui-kit/notice";
 import {
-  MAX_CARDS, MAX_CHOICES, MAX_ITEMS, MAX_SCENES, scenarioProblems,
-  type ChecklistItem, type Flashcard, type LessonData, type ScenarioChoice, type ScenarioStep,
+  fileSrc, HAND_IN_PARTS, MAX_CARDS, MAX_CHOICES, MAX_GROUPS, MAX_ITEMS, MAX_SCENES, MAX_SORTS, MAX_SPOTS, scenarioProblems, sortingProblems,
+  type ChecklistItem, type ExploreSpot, type Flashcard, type HandInPart, type HandInSettings, type LessonData, type ScenarioChoice, type ScenarioStep, type SortItem,
 } from "@/modules/training/shared/lessons";
 import type { UploadedFile } from "@/modules/training/features/builder/components/rich-text";
 
-/** Editors for the lesson kinds that aren't text (e-learning phase 3):
- *  Scenario, Flashcards and Checklist. Each edits the lesson's `data`; the
+/** Editors for the lesson kinds that aren't text (e-learning phases 3 and 8):
+ *  Scenario, Flashcards, Checklist, Sort into groups, Explore a picture and
+ *  Hand in work. Each edits the lesson's `data`; the
  *  server cleans it again on save (`cleanLessonData`). */
 
 export const id = () => crypto.randomUUID().replace(/-/g, "").slice(0, 8);
@@ -165,6 +170,129 @@ export function ChecklistEditor({ data, onChange, disabled }: { data: LessonData
         ))}
       </ol>
       {items.length < MAX_ITEMS ? <Button type="button" variant="outline" className="min-h-11 self-start" onClick={() => set([...items, { id: id(), text: "" }])}><Plus aria-hidden="true" />Add one</Button> : null}
+    </fieldset>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Sort into groups (phase 8)
+// ---------------------------------------------------------------------------
+
+export function SortingEditor({ title, data, onChange, disabled }: { title: string; data: LessonData | null; onChange: (data: LessonData) => void; disabled: boolean }) {
+  const groups = data?.groups ?? [], sorts = data?.sorts ?? [];
+  const set = (patch: LessonData) => onChange({ groups, sorts, ...patch });
+  const problems = sortingProblems(title || "This lesson", { groups, sorts });
+  return (
+    <fieldset className="flex flex-col gap-4" disabled={disabled}>
+      <legend className="mb-1 text-sm font-semibold">Groups and what goes in them</legend>
+      <p className="text-sm text-ui-muted-foreground">Learners get everything shuffled and put each one in a group. They check their answer, see which are in the wrong place, and finish once all are right.</p>
+      <ol className="grid gap-2 sm:grid-cols-2">
+        {groups.map((g, i) => (
+          <li key={g.id} className="flex items-end gap-2">
+            <Input id={`group-${g.id}`} label={`Group ${i + 1}`} value={g.name} onChange={(value) => set({ groups: groups.map((x) => x.id === g.id ? { ...x, name: value } : x) })} maxLength={60} className="min-w-0 flex-1"
+              placeholder={i === 0 ? "Safe to mix" : "Never mix"} />
+            <RowTools label={`group ${i + 1}`} index={i} count={groups.length} min={2} onMove={(by) => set({ groups: moved(groups, i, by) })}
+              onRemove={() => set({ groups: groups.filter((x) => x.id !== g.id), sorts: sorts.map((x) => x.group === g.id ? { ...x, group: "" } : x) })} />
+          </li>
+        ))}
+      </ol>
+      {groups.length < MAX_GROUPS ? <Button type="button" variant="outline" className="min-h-11 self-start" onClick={() => set({ groups: [...groups, { id: id(), name: "" }] })}><Plus aria-hidden="true" />Add a group</Button> : null}
+      <ol className="flex flex-col gap-2">
+        {sorts.map((item, i) => (
+          <li key={item.id} className="flex flex-wrap items-end gap-2 rounded-[var(--pc-radius-card)] bg-ui-muted p-3">
+            <Input id={`sort-${item.id}`} label={`Thing ${i + 1}`} value={item.text} onChange={(value) => set({ sorts: sorts.map((x) => x.id === item.id ? { ...x, text: value } : x) })} maxLength={200} className="min-w-0 flex-1"
+              placeholder="Sodium hypochlorite and acid" />
+            <Field label="Belongs in" htmlFor={`sort-group-${item.id}`}>
+              <NativeSelect id={`sort-group-${item.id}`} value={item.group} onChange={(event) => set({ sorts: sorts.map((x) => x.id === item.id ? { ...x, group: event.target.value } : x) })} className="min-h-11">
+                <NativeSelectOption value="">Choose a group</NativeSelectOption>
+                {groups.map((g, gi) => <NativeSelectOption key={g.id} value={g.id}>{g.name || `Group ${gi + 1}`}</NativeSelectOption>)}
+              </NativeSelect>
+            </Field>
+            <RowTools label={`thing ${i + 1}`} index={i} count={sorts.length} min={1} onMove={(by) => set({ sorts: moved(sorts, i, by) })} onRemove={() => set({ sorts: sorts.filter((x) => x.id !== item.id) })} />
+          </li>
+        ))}
+      </ol>
+      {sorts.length < MAX_SORTS ? (
+        <Button type="button" variant="outline" className="min-h-11 self-start" onClick={() => set({ sorts: [...sorts, { id: id(), text: "", group: groups[0]?.id ?? "" } satisfies SortItem] })}><Plus aria-hidden="true" />Add a thing to sort</Button>
+      ) : null}
+      {problems.length ? (
+        <Notice tone="warning" title="Before learners can do it"><ul className="list-disc pl-5">{problems.map((p) => <li key={p}>{p}</li>)}</ul></Notice>
+      ) : null}
+    </fieldset>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Explore a picture (phase 8)
+// ---------------------------------------------------------------------------
+
+export function ExploreEditor({ imageId, data, onChange, disabled }: { imageId: string | null; data: LessonData | null; onChange: (data: LessonData) => void; disabled: boolean }) {
+  const spots = data?.spots ?? [];
+  const frame = useRef<HTMLDivElement>(null);
+  const set = (next: ExploreSpot[]) => onChange({ spots: next });
+  const update = (spotId: string, patch: Partial<ExploreSpot>) => set(spots.map((sp) => sp.id === spotId ? { ...sp, ...patch } : sp));
+  const round = (n: number) => Math.round(Math.min(100, Math.max(0, n)) * 10) / 10;
+  function place(event: PointerEvent<HTMLDivElement>) {
+    if (disabled || spots.length >= MAX_SPOTS || event.button !== 0) return;
+    const box = frame.current!.getBoundingClientRect();
+    set([...spots, { id: id(), x: round(((event.clientX - box.left) / box.width) * 100), y: round(((event.clientY - box.top) / box.height) * 100), title: "", text: "" }]);
+  }
+  if (!imageId) return <Notice tone="info" title="Choose or add the picture first">Then tap it wherever you want a numbered spot for learners to open.</Notice>;
+  return (
+    <fieldset className="flex flex-col gap-3" disabled={disabled}>
+      <legend className="mb-1 text-sm font-semibold">Spots to explore</legend>
+      <p className="text-sm text-ui-muted-foreground">Tap the picture to add a numbered spot. Learners open each one to read about it, and finish once they have opened them all.</p>
+      <div ref={frame} className="tf-spot-frame" role="presentation" onPointerDown={place}>
+        {/* eslint-disable-next-line @next/next/no-img-element -- a private file served by this app */}
+        <img src={fileSrc(imageId)} alt="The picture to explore" draggable={false} />
+        {spots.map((sp, i) => <span key={sp.id} className="tf-explore-marker" style={{ left: `${sp.x}%`, top: `${sp.y}%` }} aria-hidden="true">{i + 1}</span>)}
+      </div>
+      <ol className="flex flex-col gap-3">
+        {spots.map((sp, i) => (
+          <li key={sp.id} className="flex flex-col gap-2 rounded-[var(--pc-radius-card)] bg-ui-muted p-3">
+            <div className="flex flex-wrap items-end gap-2">
+              <span className="flex min-h-11 items-center font-semibold tabular-nums">{i + 1}</span>
+              <Input id={`explore-${sp.id}-title`} label="Name" value={sp.title} onChange={(value) => update(sp.id, { title: value })} maxLength={120} className="min-w-0 flex-1" placeholder="Chlorine dosing pump" />
+              <Input id={`explore-${sp.id}-x`} label="From left %" type="number" inputMode="decimal" min={0} max={100} step={0.5} value={String(sp.x)} className="w-28" onChange={(value) => update(sp.id, { x: round(Number(value) || 0) })} />
+              <Input id={`explore-${sp.id}-y`} label="From top %" type="number" inputMode="decimal" min={0} max={100} step={0.5} value={String(sp.y)} className="w-28" onChange={(value) => update(sp.id, { y: round(Number(value) || 0) })} />
+              <RowTools label={`spot ${i + 1}`} index={i} count={spots.length} min={0} onMove={(by) => set(moved(spots, i, by))} onRemove={() => set(spots.filter((x) => x.id !== sp.id))} />
+            </div>
+            <Textarea id={`explore-${sp.id}-text`} label="What learners read when they open it" value={sp.text} onChange={(event) => update(sp.id, { text: event.target.value })} maxLength={1000} rows={2}
+              placeholder="Pumps sodium hypochlorite into the return line. Never open it while it runs." />
+          </li>
+        ))}
+      </ol>
+      {spots.length < MAX_SPOTS ? (
+        <Button type="button" variant="outline" className="min-h-11 self-start" onClick={() => set([...spots, { id: id(), x: 50, y: 50, title: "", text: "" }])}><Plus aria-hidden="true" />Add a spot in the middle</Button>
+      ) : null}
+    </fieldset>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Hand in work (phase 8)
+// ---------------------------------------------------------------------------
+
+const PART_LABEL: Record<HandInPart, string> = { required: "Must", optional: "May", off: "None" };
+
+export function HandInEditor({ data, onChange, disabled }: { data: LessonData | null; onChange: (data: LessonData) => void; disabled: boolean }) {
+  const handIn: HandInSettings = data?.handIn ?? { text: "required", photo: "optional", review: true };
+  const set = (patch: Partial<HandInSettings>) => onChange({ handIn: { ...handIn, ...patch } });
+  return (
+    <fieldset className="flex flex-col gap-4" disabled={disabled}>
+      <legend className="mb-1 text-sm font-semibold">What learners hand in</legend>
+      <p className="text-sm text-ui-muted-foreground">Write the task in the text below: what to do, and what a good answer looks like. Learners hand it in from their phone.</p>
+      {(["text", "photo"] as const).map((part) => (
+        <div key={part} className="flex flex-col gap-2">
+          <span className="text-sm font-semibold">{part === "text" ? "A written answer" : "A photo or PDF"}</span>
+          <RadioGroup value={handIn[part]} onValueChange={(value) => set({ [part]: value as HandInPart })} className="grid gap-2 sm:grid-cols-3" aria-label={part === "text" ? "A written answer" : "A photo or PDF"}>
+            {HAND_IN_PARTS.map((p) => <ChoiceRow key={p} type="radio" value={p} id={`handin-${part}-${p}`} title={PART_LABEL[p]} hint={p === "required" ? "They can’t hand in without it" : p === "optional" ? "If they want to" : "Not asked for"} />)}
+          </RadioGroup>
+        </div>
+      ))}
+      {handIn.text === "off" && handIn.photo === "off" ? <Notice tone="warning" title="Ask for a written answer, a photo or both" /> : null}
+      <Switch id="handin-review" label="A trainer checks it" checked={handIn.review} onCheckedChange={(review) => set({ review })}
+        description={handIn.review ? "The lesson is done once a trainer accepts it under Sign-off. They can send it back with what to change." : "The lesson is done as soon as they hand it in. Trainers can still read it."} />
     </fieldset>
   );
 }

@@ -20,6 +20,8 @@ type Result = {
 function rightInWords(q: Reviewed) {
   const text = new Map(q.options.map((o) => [o.id, o.text || "The picture"]));
   if (q.kind === "HOTSPOT") return "the place marked in green";
+  if (q.kind === "NUMBER") return `${String(q.right)}${q.options[0]?.text ? ` ${q.options[0].text}` : ""}`;
+  if (q.kind === "SHORT_ANSWER") return String(q.right);
   if (q.kind === "FILL_BLANK" && q.right && typeof q.right === "object" && !Array.isArray(q.right)) return Object.values(q.right).join(", ");
   if (typeof q.right === "string") return text.get(q.right) ?? "";
   if (Array.isArray(q.right)) return q.right.map((id, i) => (q.kind === "ORDER" ? `${i + 1}. ` : "") + (text.get(id) ?? "")).join(q.kind === "ORDER" ? "  " : ", ");

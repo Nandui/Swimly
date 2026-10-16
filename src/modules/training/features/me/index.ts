@@ -14,3 +14,4 @@ export { answerRefresher, myRefresher, refresherWaiting } from "@/modules/traini
 export { myRecord } from "@/modules/training/features/me/server/record";
 export { catalogueCover, catalogueFor, enrolMyself } from "@/modules/training/features/me/server/catalogue";
 export { myFeedback, rateCourse } from "@/modules/training/features/me/server/feedback";
+export { handInWork, HAND_IN_TYPES, MAX_HAND_IN_TEXT, mySubmissionFile } from "@/modules/training/features/me/server/hand-in";

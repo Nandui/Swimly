@@ -4,7 +4,7 @@
  *  server only: what a learner's phone gets is `learnerQuestion`, never the key.
  *  Pure and client-safe: the builder, the staff API and tests use it. */
 
-export const QUESTION_KINDS = ["SINGLE", "MULTIPLE", "TRUE_FALSE", "ORDER", "MATCH", "FILL_BLANK", "HOTSPOT"] as const;
+export const QUESTION_KINDS = ["SINGLE", "MULTIPLE", "TRUE_FALSE", "ORDER", "MATCH", "FILL_BLANK", "HOTSPOT", "NUMBER", "SHORT_ANSWER"] as const;
 export type QuestionKind = (typeof QUESTION_KINDS)[number];
 
 export const QUESTION_KIND_META = {
@@ -15,6 +15,9 @@ export const QUESTION_KIND_META = {
   MATCH: { label: "Match pairs", help: "Match each item with its partner." },
   FILL_BLANK: { label: "Fill in the blanks", help: "A sentence with missing words the learner types in." },
   HOTSPOT: { label: "Pick the spot", help: "A picture where the learner taps the right place." },
+  // Phase 8: typed answers.
+  NUMBER: { label: "Number", help: "A reading, dose or count, right within a margin you set, such as 1.5 mg/l give or take 0.2." },
+  SHORT_ANSWER: { label: "Short answer", help: "A word or a few words the learner types, with every answer you accept." },
 } as const satisfies Record<QuestionKind, { label: string; help: string }>;
 
 export const isQuestionKind = (value: unknown): value is QuestionKind => QUESTION_KINDS.includes(value as QuestionKind);
@@ -22,8 +25,10 @@ export const isQuestionKind = (value: unknown): value is QuestionKind => QUESTIO
 /** A spot on a picture, in percent of its width and height from the top left. */
 export type Area = { x: number; y: number; w: number; h: number };
 /** One option. Fill in the blanks keeps one per blank (text holds the accepted
- *  answers, separated by |); Pick the spot keeps one per right area. */
-export type QuestionOption = { id: string; text: string; imageId: string | null; correct: boolean; match: string; area: Area | null };
+ *  answers, separated by |); Pick the spot keeps one per right area. Number
+ *  keeps one: text is the answer, match the margin either side, unit what it
+ *  is measured in. Short answer keeps one per accepted answer. */
+export type QuestionOption = { id: string; text: string; imageId: string | null; correct: boolean; match: string; area: Area | null; unit?: string };
 export type Question = { id: string; sectionId: string; kind: QuestionKind; prompt: string; imageId: string | null; options: QuestionOption[]; explanation: string };
 
 /** The final exam's rules. Null on a course means it has no exam. */
@@ -90,6 +95,16 @@ export function sameAnswer(given: string, accepted: string) {
   return na !== null && nb !== null && na === nb;
 }
 
+/** A typed number, written with a full stop or a comma. Null when it isn't one. */
+export function readNumber(value: unknown): number | null {
+  if (typeof value !== "string" && typeof value !== "number") return null;
+  const text = String(value).trim().replace(/\s+/g, "").replace(",", ".");
+  if (!/^-?\d{1,9}(?:\.\d{1,6})?$/.test(text)) return null;
+  const n = Number(text);
+  return Number.isFinite(n) ? n : null;
+}
+const numberText = (n: number) => String(Math.round(n * 1e6) / 1e6);
+
 /** A question as an author saved it, normalised: True/false always has the
  *  two fixed options, and only choice questions keep "correct" marks. */
 export function normaliseQuestion(raw: { id: string; sectionId: string; kind: unknown; prompt: unknown; imageId?: unknown; options?: unknown; explanation?: unknown }, newId: () => string): Question | null {
@@ -102,6 +117,13 @@ export function normaliseQuestion(raw: { id: string; sectionId: string; kind: un
     // The blanks come from the sentence itself, so the two can never disagree.
     : kind === "FILL_BLANK"
       ? readBlanks(prompt).blanks.map((accepted, i) => ({ id: blankId(i), text: accepted.join(" | "), imageId: null, correct: true, match: "", area: null }))
+      : kind === "NUMBER"
+        ? (() => {
+          const o = given[0], answer = readNumber(o?.text), margin = readNumber(o?.match);
+          return answer === null ? [] : [{ id: "n", text: numberText(answer), imageId: null, correct: true, match: numberText(Math.abs(margin ?? 0)), area: null, unit: clip(o?.unit, 20) }];
+        })()
+      : kind === "SHORT_ANSWER"
+        ? given.map((o): QuestionOption => ({ id: optionId(o?.id) ?? newId(), text: clip(o?.text, 120), imageId: null, correct: true, match: "", area: null })).filter((o) => o.text)
       : kind === "HOTSPOT"
         ? given.map((o): QuestionOption => ({ id: optionId(o?.id) ?? newId(), text: clip(o?.text, 300), imageId: null, correct: true, match: "", area: cleanArea(o?.area) }))
           .filter((o) => !!o.area)
@@ -147,6 +169,10 @@ export function questionProblem(q: Question): string | null {
     case "HOTSPOT":
       if (!q.imageId) return "Add the picture people tap on.";
       return q.options.length ? null : "Mark at least one right spot on the picture.";
+    case "NUMBER":
+      return q.options.length ? null : "Give the right number, such as 1.5.";
+    case "SHORT_ANSWER":
+      return q.options.length ? null : "Give at least one answer you accept.";
   }
 }
 
@@ -182,6 +208,8 @@ export function cleanAnswer(q: Question, raw: unknown): Answer | null {
   const ids = new Set(q.options.map((o) => o.id));
   if (q.kind === "SINGLE" || q.kind === "TRUE_FALSE") return typeof raw === "string" && ids.has(raw) ? raw : null;
   if (q.kind === "HOTSPOT") return readSpot(raw) ? raw as string : null;
+  if (q.kind === "NUMBER") return readNumber(raw) === null ? null : String(raw).trim().slice(0, 32);
+  if (q.kind === "SHORT_ANSWER") return typeof raw === "string" && raw.trim() ? raw.trim().slice(0, 200) : null;
   if (q.kind === "FILL_BLANK") {
     if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
     const typed = Object.entries(raw as Record<string, unknown>)
@@ -222,6 +250,13 @@ export function isCorrect(q: Question, answer: Answer | null | undefined): boole
       const spot = readSpot(answer);
       return !!spot && q.options.some((o) => o.area && inside(spot, o.area));
     }
+    case "NUMBER": {
+      const given = readNumber(answer), right = readNumber(q.options[0]?.text), margin = readNumber(q.options[0]?.match) ?? 0;
+      // A hair of slack so 1.3 is within 0.2 of 1.5 despite how computers store decimals.
+      return given !== null && right !== null && Math.abs(given - right) <= margin + 1e-9;
+    }
+    case "SHORT_ANSWER":
+      return typeof answer === "string" && q.options.some((o) => sameAnswer(answer, o.text));
   }
 }
 
@@ -231,6 +266,7 @@ export function rightAnswer(q: Question): Answer {
   if (q.kind === "MULTIPLE") return q.options.filter((o) => o.correct).map((o) => o.id);
   if (q.kind === "ORDER") return q.options.map((o) => o.id);
   if (q.kind === "FILL_BLANK") return Object.fromEntries(q.options.map((o) => [o.id, o.text.split("|")[0].trim()]));
+  if (q.kind === "NUMBER" || q.kind === "SHORT_ANSWER") return q.options[0]?.text ?? "";
   if (q.kind === "HOTSPOT") {
     const a = q.options[0]?.area;
     return a ? spotAnswer(a.x + a.w / 2, a.y + a.h / 2) : "";
@@ -266,6 +302,14 @@ export function shuffle<T>(items: readonly T[], random: () => number): T[] {
 export function learnerQuestion(q: Question, random: () => number) {
   // Blanks stay in sentence order and never carry their answers; the right
   // spots on a picture are never sent at all.
+  // A typed answer: a Number question sends only its unit, a Short answer nothing.
+  if (q.kind === "NUMBER" || q.kind === "SHORT_ANSWER") {
+    return {
+      id: q.id, kind: q.kind, prompt: q.prompt, imageId: q.imageId,
+      options: q.kind === "NUMBER" ? [{ id: "n", text: q.options[0]?.unit ?? "", imageId: null as string | null }] : [],
+      partners: null as { id: string; text: string }[] | null, segments: null as string[] | null,
+    };
+  }
   if (q.kind === "FILL_BLANK" || q.kind === "HOTSPOT") {
     return {
       id: q.id, kind: q.kind, prompt: q.kind === "FILL_BLANK" ? blankedPrompt(q.prompt) : q.prompt, imageId: q.imageId,

@@ -4,5 +4,6 @@
 export {
   checkQuizAnswer, completeLessonFor, completeTrainingFor, myCertificate, myCourse, myCourseFile, myExam, myExamPaper, myExamResult, myLesson, myTraining,
   myPlan, myPractical, saveExamAnswer,
+  handInWork, HAND_IN_TYPES, MAX_HAND_IN_TEXT, mySubmissionFile,
   answerRefresher, catalogueCover, catalogueFor, enrolMyself, myFeedback, myLessonNote, myRecord, myRefresher, mySaved, rateCourse, refresherWaiting, saveLessonNote, searchMyTraining, startExam, submitExam, trainingFileResponse, trainingReminderItems,
 } from "@/modules/training/features/me";

@@ -16,11 +16,17 @@ async function signoffWhere(who: { id: string; orgId: string | null }): Promise<
   return { orgId: who.orgId ?? undefined, status: "SUBMITTED", userId: { ...(await scopedUserIds("training.signoff")), not: who.id } };
 }
 
-/** How many wait for this person's sign-off, for the home page: a count, no names. */
+/** How many wait for this person's sign-off, for the home page: a count, no
+ *  names. Work handed in to check (phase 8) counts too. */
 export async function signoffCount() {
   const who = await requireTrainingActor();
   if (!who.signoff) return 0;
-  return prisma.trainingAssignment.count({ where: await signoffWhere(who) });
+  const where = await signoffWhere(who);
+  const [practicals, handIns] = await Promise.all([
+    prisma.trainingAssignment.count({ where }),
+    prisma.trainingSubmission.count({ where: { orgId: who.orgId ?? undefined, status: "SUBMITTED", userId: { ...(await scopedUserIds("training.signoff")), not: who.id }, assignment: { status: "ASSIGNED" } } }),
+  ]);
+  return practicals + handIns;
 }
 
 export async function signoffQueue() {

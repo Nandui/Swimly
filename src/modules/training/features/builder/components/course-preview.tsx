@@ -5,7 +5,7 @@ import { Progress } from "@/components/shadcn/progress";
 import { Notice } from "@/components/ui-kit/notice";
 import { cn } from "@/lib/utils";
 import { LessonBody } from "@/modules/training/shared/components/lesson-body";
-import { fileSrc, LESSON_KIND_META, lessonMinutes, lessonPlace, outlineLessons, videoFor, type Outline } from "@/modules/training/shared/lessons";
+import { embedFor, fileSrc, LESSON_KIND_META, lessonMinutes, lessonPlace, outlineLessons, videoFor, type Outline } from "@/modules/training/shared/lessons";
 import { blankedPrompt, paperSize, QUESTION_KIND_META, type Question } from "@/modules/training/shared/questions";
 import type { LessonData } from "@/modules/training/shared/lessons";
 
@@ -27,7 +27,8 @@ function QuestionsPreview({ questions }: { questions: Question[] }) {
               </span>
             /* eslint-disable-next-line @next/next/no-img-element -- a private file served by this app */
             ) : q.imageId ? <img src={fileSrc(q.imageId)} alt="" loading="lazy" className="max-h-48 w-fit rounded-[var(--pc-radius-card)]" /> : null}
-            {q.kind === "HOTSPOT" ? null : <ul className="flex flex-col gap-1 text-sm">
+            {q.kind === "NUMBER" ? <span className="text-sm font-semibold">Right: {q.options[0]?.text}{q.options[0]?.unit ? ` ${q.options[0].unit}` : ""}{Number(q.options[0]?.match) ? `, give or take ${q.options[0].match}` : ""}</span> : null}
+            {q.kind === "HOTSPOT" || q.kind === "NUMBER" ? null : <ul className="flex flex-col gap-1 text-sm">
               {q.options.map((o, n) => (
                 <li key={o.id} className={cn("flex items-center gap-2", o.correct && "font-semibold")}>
                   {o.correct ? <CircleCheck aria-label="Right answer" className="size-4 text-ui-primary" /> : <span className="size-4" aria-hidden="true" />}
@@ -45,7 +46,7 @@ function QuestionsPreview({ questions }: { questions: Question[] }) {
 
 /** A Scenario, Flashcards or Checklist lesson laid out for its author: every
  *  scene with where each choice leads, every card front and back, every item. */
-function DataPreview({ kind, data }: { kind: string; data: LessonData | null }) {
+function DataPreview({ kind, data, fileId }: { kind: string; data: LessonData | null; fileId: string | null }) {
   if (kind === "SCENARIO") {
     const steps = data?.steps ?? [];
     return (
@@ -91,6 +92,46 @@ function DataPreview({ kind, data }: { kind: string; data: LessonData | null }) 
       </ul>
     );
   }
+  if (kind === "SORTING") {
+    const groups = data?.groups ?? [], sorts = data?.sorts ?? [];
+    return (
+      <div className="flex flex-col gap-3">
+        <Notice title="Learners get these shuffled">They put each one in a group and check. Here you see where each one belongs.</Notice>
+        <div className="tf-sort-groups">
+          {groups.map((g) => (
+            <section key={g.id} className="flex flex-col gap-2 rounded-[var(--pc-radius-card)] bg-ui-muted p-4" aria-label={g.name}>
+              <h3 className="font-semibold">{g.name}</h3>
+              <ul className="flex flex-col gap-1 text-sm">{sorts.filter((i) => i.group === g.id).map((i) => <li key={i.id}>{i.text}</li>)}</ul>
+            </section>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  if (kind === "EXPLORE") {
+    const spots = data?.spots ?? [];
+    return (
+      <div className="flex flex-col gap-3">
+        {fileId ? (
+          <span className="tf-spot-frame is-static">
+            {/* eslint-disable-next-line @next/next/no-img-element -- a private file served by this app */}
+            <img src={fileSrc(fileId)} alt="The picture to explore" loading="lazy" />
+            {spots.map((sp, i) => <span key={sp.id} className="tf-explore-marker" style={{ left: `${sp.x}%`, top: `${sp.y}%` }} aria-hidden="true">{i + 1}</span>)}
+          </span>
+        ) : null}
+        <Notice title="Learners tap each numbered spot to open it">They finish once they have opened them all. Here every spot is open.</Notice>
+        <ol className="pc-rows">
+          {spots.map((sp, i) => <li key={sp.id} className="pc-row items-start"><span className="pc-row-body"><span className="pc-row-title">{i + 1}. {sp.title}</span><span className="text-sm whitespace-pre-line">{sp.text}</span></span></li>)}
+        </ol>
+      </div>
+    );
+  }
+  if (kind === "ASSIGNMENT") {
+    const h = data?.handIn;
+    const part = (p: string | undefined, what: string) => p === "required" ? `must add ${what}` : p === "optional" ? `may add ${what}` : null;
+    const asks = [part(h?.text, "a written answer"), part(h?.photo, "a photo or PDF")].filter(Boolean).join(" and ");
+    return <Notice title="Learners hand this in from their phone">{`They ${asks || "hand it in"}. ${h?.review ? "A trainer then accepts it under Sign-off, or sends it back with what to change." : "The lesson is done as soon as they hand it in."}`}</Notice>;
+  }
   if (kind === "CHECKLIST") {
     return (
       <ul className="pc-rows">
@@ -125,7 +166,10 @@ export function CoursePreview({ courseId, outline, lessonId, requiresSignoff }: 
           <Button asChild variant="outline" className="min-h-11 self-start"><a href={video.href} target="_blank" rel="noopener noreferrer"><ExternalLink aria-hidden="true" />Watch on {video.provider}</a></Button>
         ) : null}
         {lesson.kind === "AUDIO" && lesson.fileId ? <audio controls preload="metadata" src={`/training/files/${lesson.fileId}`} className="w-full"><track kind="captions" /></audio> : null}
-        <DataPreview kind={lesson.kind} data={lesson.data} />
+        {lesson.kind === "EMBED" && embedFor(lesson.videoUrl) ? (
+          <div className="tf-embed"><iframe src={embedFor(lesson.videoUrl)!.src} title={`${embedFor(lesson.videoUrl)!.provider}: ${lesson.title}`} loading="lazy" allow="fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" /></div>
+        ) : null}
+        <DataPreview kind={lesson.kind} data={lesson.data} fileId={lesson.fileId} />
         {lesson.kind === "FILE" && lesson.fileId ? (
           <Button asChild variant="outline" className="min-h-11 self-start"><a href={`/training/files/${lesson.fileId}`} target="_blank" rel="noopener noreferrer"><FileText aria-hidden="true" />Open the file</a></Button>
         ) : null}

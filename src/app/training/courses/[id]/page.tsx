@@ -31,7 +31,7 @@ export default async function CourseBuilderPage({ params, searchParams }: { para
         status={course.archivedAt ? <Tag meta={ARCHIVAL_STATUS_META.archived} /> : <Tag meta={COURSE_DRAFT_META[state]} />}
         actions={
           <>
-            {who.manage ? <CourseDialog course={course} qualificationTypes={types} categories={categories} /> : null}
+            {who.manage ? <CourseDialog course={course} qualificationTypes={types} categories={categories} courses={courses} /> : null}
             {who.manage ? <DuplicateCourse courseId={course.id} title={course.title} /> : null}
             <Button asChild variant="outline" className="min-h-11"><Link href={`/training/courses/${course.id}/insight`}><ChartColumn aria-hidden="true" />Insight</Link></Button>
             <Button asChild variant="outline" className="min-h-11"><Link href={`/training/courses/${course.id}/preview`}><Eye aria-hidden="true" />Preview</Link></Button>

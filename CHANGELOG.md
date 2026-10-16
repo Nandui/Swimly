@@ -4,6 +4,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.24.0 · 16 October 2026 · Training: a deeper course builder
+
+- Four new kinds of lesson. **Sort into groups**: people sort things into the right group, like which chemicals are stored together. **Explore a picture**: people tap numbered spots on a photo, like the plant room or a first aid kit, to read about each part. **Hand in work**: people write an answer or send a photo or PDF from their phone, and you can have a trainer check it before the lesson counts. **Slides or interactive**: show Google Slides, a Google Form, Canva, Genially, H5P or Microsoft Forms right inside the lesson.
+- Two new kinds of question. **Number**: the answer is a number, right within a margin you choose, like 1.5 mg/l give or take 0.2. **Short answer**: people type a word or two, and you list every answer you accept. Both can be pasted in from Excel.
+- In lesson text you can now add **tabs**, a **video** in the middle of a reading, and a **file to download** as a button.
+- Course settings now have **Lessons in order** (each lesson opens once the one before is done), **Finish these first** (courses people must complete before this one opens) and **Offer as a template**, so your own courses appear first when you start a new one from a template.
+- A **Make it better** list on each course gives tips while you build: pictures with no description, readings that are too long, recordings with no transcript, sections with nothing that checks understanding, and more. It never stops you publishing.
+- Work handed in waits on the **Sign-off** page. Accept it and the lesson is done, or send it back with what to change.
+
 ## 1.23.0 · 15 October 2026 · Training: insight, reports and audit packs
 
 - Every course has an **Insight** page: how many people have started and finished it, **where people stop** (the lesson most people don't get past is marked), how long it takes, how many pass the exam first time, its rating, and how each site is doing. Filter it by site and by when people were given it, and download it for Excel.

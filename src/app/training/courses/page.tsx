@@ -37,7 +37,7 @@ export default async function TrainingCoursesPage({ searchParams }: { searchPara
               { href: "/training/courses", label: "Current", current: !archived },
               { href: "/training/courses?view=retired", label: "Retired", current: archived },
             ]} />
-            {who.manage && !archived ? <StartFromTemplate courses={all.map((c) => ({ id: c.id, title: c.title }))} /> : null}
+            {who.manage && !archived ? <StartFromTemplate courses={all.map((c) => ({ id: c.id, title: c.title, isTemplate: c.isTemplate }))} /> : null}
             {who.manage && !archived ? <CourseDialog qualificationTypes={types} categories={categories} /> : null}
           </>
         }

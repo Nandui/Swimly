@@ -1,4 +1,4 @@
-import { BookOpen, FileText, GitBranch, Headphones, Layers, ListChecks, ListTodo, PlayCircle } from "lucide-react";
+import { BookOpen, Columns3, FileText, GitBranch, Headphones, Layers, ListChecks, ListTodo, MonitorPlay, PlayCircle, ScanSearch, Upload } from "lucide-react";
 import { normaliseQuestion, questionProblem, readExam, type ExamSettings, type Question } from "@/modules/training/shared/questions";
 
 /** E-learning courses (docs/training.md, phase 1): a course is sections of
@@ -7,7 +7,7 @@ import { normaliseQuestion, questionProblem, readExam, type ExamSettings, type Q
  *  Pure and client-safe: the builder, the preview, the staff API and tests use
  *  it. Turnfin Me keeps its own copy of the renderer (apps/me). */
 
-export const LESSON_KINDS = ["READING", "VIDEO", "FILE", "QUIZ", "SCENARIO", "FLASHCARDS", "CHECKLIST", "AUDIO"] as const;
+export const LESSON_KINDS = ["READING", "VIDEO", "FILE", "QUIZ", "SCENARIO", "FLASHCARDS", "CHECKLIST", "AUDIO", "SORTING", "EXPLORE", "ASSIGNMENT", "EMBED"] as const;
 export type LessonKind = (typeof LESSON_KINDS)[number];
 
 export const LESSON_KIND_META = {
@@ -19,6 +19,11 @@ export const LESSON_KIND_META = {
   FLASHCARDS: { label: "Flashcards", help: "Cards to flip and remember, such as chemical names or signals. Cards they don't know come back.", icon: Layers },
   CHECKLIST: { label: "Checklist", help: "Things to find, check or do on site, ticked off one by one.", icon: ListTodo },
   AUDIO: { label: "Audio", help: "A recording to listen to, such as a briefing or a radio call, with a transcript.", icon: Headphones },
+  // The deeper builder (e-learning phase 8).
+  SORTING: { label: "Sort into groups", help: "Things to sort into the right group, such as safe and not safe, or which bin each chemical goes in.", icon: Columns3 },
+  EXPLORE: { label: "Explore a picture", help: "A photo or plan with numbered spots to open one by one, such as a plant room or a first aid box.", icon: ScanSearch },
+  ASSIGNMENT: { label: "Hand in work", help: "A task the learner does and hands in: a written answer, a photo or both, checked by a trainer if you want.", icon: Upload },
+  EMBED: { label: "Slides or interactive", help: "Google Slides, Docs or Forms, Canva, Genially, H5P, Microsoft Forms or a Google Drive file, shown inside the lesson.", icon: MonitorPlay },
 } as const satisfies Record<LessonKind, { label: string; help: string; icon: unknown }>;
 
 export const isLessonKind = (value: unknown): value is LessonKind => LESSON_KINDS.includes(value as LessonKind);
@@ -32,8 +37,17 @@ export type ScenarioChoice = { id: string; text: string; feedback: string; next:
 export type ScenarioStep = { id: string; text: string; imageId: string | null; choices: ScenarioChoice[] };
 export type Flashcard = { id: string; front: string; back: string; imageId: string | null };
 export type ChecklistItem = { id: string; text: string };
-/** What a Scenario, Flashcards or Checklist lesson is made of (Audio uses fileId). */
-export type LessonData = { steps?: ScenarioStep[]; cards?: Flashcard[]; items?: ChecklistItem[] };
+/** Sort into groups: two to four groups, and things that each belong in one. */
+export type SortGroup = { id: string; name: string };
+export type SortItem = { id: string; text: string; group: string };
+/** Explore a picture: numbered spots, in percent of the picture from its top left. */
+export type ExploreSpot = { id: string; x: number; y: number; title: string; text: string };
+/** Hand in work: what the learner sends, and whether a trainer checks it. */
+export const HAND_IN_PARTS = ["required", "optional", "off"] as const;
+export type HandInPart = (typeof HAND_IN_PARTS)[number];
+export type HandInSettings = { text: HandInPart; photo: HandInPart; review: boolean };
+/** What a lesson is made of beyond its text (Audio, File and Explore use fileId; Slides uses videoUrl). */
+export type LessonData = { steps?: ScenarioStep[]; cards?: Flashcard[]; items?: ChecklistItem[]; groups?: SortGroup[]; sorts?: SortItem[]; spots?: ExploreSpot[]; handIn?: HandInSettings };
 
 export type OutlineLesson = { id: string; kind: LessonKind; title: string; body: DocNode | null; videoUrl: string; fileId: string | null; minutes: number | null; data: LessonData | null };
 export type OutlineSection = { id: string; title: string; lessons: OutlineLesson[] };
@@ -52,6 +66,9 @@ export const MAX_SCENES = 20;
 export const MAX_CHOICES = 4;
 export const MAX_CARDS = 40;
 export const MAX_ITEMS = 30;
+export const MAX_GROUPS = 4;
+export const MAX_SORTS = 24;
+export const MAX_SPOTS = 12;
 
 // ---------------------------------------------------------------------------
 // Lesson text
@@ -60,7 +77,9 @@ export const MAX_ITEMS = 30;
 const BLOCKS = new Set(["doc", "paragraph", "heading", "bulletList", "orderedList", "listItem", "blockquote", "horizontalRule", "hardBreak", "image", "table", "tableRow", "tableHeader", "tableCell", "text",
   // Interactive blocks (phase 3): a coloured callout, a tap-to-reveal, flip
   // cards, a step-by-step and a knowledge check on one of the course's questions.
-  "callout", "reveal", "revealTitle", "revealContent", "flipCards", "flipCard", "flipFront", "flipBack", "stepper", "stepItem", "knowledgeCheck"]);
+  "callout", "reveal", "revealTitle", "revealContent", "flipCards", "flipCard", "flipFront", "flipBack", "stepper", "stepItem", "knowledgeCheck",
+  // Phase 8: tabs, a video inside the text and a file to download.
+  "tabs", "tab", "tabTitle", "tabContent", "videoEmbed", "fileButton"]);
 
 export const CALLOUT_TONES = ["note", "tip", "warning", "danger"] as const;
 export type CalloutTone = (typeof CALLOUT_TONES)[number];
@@ -96,6 +115,14 @@ function cleanNode(node: DocNode, depth: number): DocNode | null {
     const id = typeof node.attrs?.questionId === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(node.attrs.questionId) ? node.attrs.questionId : null;
     return id ? { type: "knowledgeCheck", attrs: { questionId: id } } : null;
   }
+  if (node.type === "videoEmbed") {
+    const video = typeof node.attrs?.url === "string" ? videoFor(node.attrs.url) : null;
+    return video ? { type: "videoEmbed", attrs: { url: video.href } } : null;
+  }
+  if (node.type === "fileButton") {
+    const id = typeof node.attrs?.fileId === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(node.attrs.fileId) ? node.attrs.fileId : null;
+    return id ? { type: "fileButton", attrs: { fileId: id, label: String(node.attrs?.label ?? "").trim().slice(0, 120) } } : null;
+  }
   if (node.type === "image") {
     const id = fileIdFromSrc(node.attrs?.src);
     if (!id) return null;
@@ -114,7 +141,21 @@ export function cleanDoc(value: unknown): DocNode | null {
   if (!value || typeof value !== "object" || (value as DocNode).type !== "doc") return null;
   const doc = cleanNode(value as DocNode, 0);
   if (!doc || !doc.content?.length || JSON.stringify(doc).length > MAX_BODY_CHARS) return null;
-  return docText(doc).trim() || docImages(doc).length || docChecks(doc).length ? doc : null;
+  return docText(doc).trim() || docImages(doc).length || docChecks(doc).length || docFiles(doc).length || docVideos(doc).length ? doc : null;
+}
+
+/** Files offered to download from the text (fileButton blocks). */
+export function docFiles(node: DocNode | null | undefined): string[] {
+  if (!node) return [];
+  const own = node.type === "fileButton" && typeof node.attrs?.fileId === "string" ? [node.attrs.fileId] : [];
+  return [...own, ...(node.content ?? []).flatMap(docFiles)];
+}
+
+/** Video links played inside the text (videoEmbed blocks). */
+export function docVideos(node: DocNode | null | undefined): string[] {
+  if (!node) return [];
+  const own = node.type === "videoEmbed" && typeof node.attrs?.url === "string" ? [node.attrs.url] : [];
+  return [...own, ...(node.content ?? []).flatMap(docVideos)];
 }
 
 /** The questions a lesson's knowledge checks ask, in order. */
@@ -166,6 +207,23 @@ export function cleanLessonData(kind: LessonKind, raw: unknown, newId: () => str
   if (kind === "CHECKLIST") {
     return { items: uniqueIds(list(value.items, MAX_ITEMS).map((i) => ({ id: cleanId(i?.id) ?? "", text: clip(i?.text, 200) })).filter((i) => draft || i.text), newId) };
   }
+  if (kind === "SORTING") {
+    const groups = uniqueIds(list(value.groups, MAX_GROUPS).map((g) => ({ id: cleanId(g?.id) ?? "", name: clip(g?.name, 60) })).filter((g) => draft || g.name), newId);
+    const ids = new Set(groups.map((g) => g.id));
+    const sorts = uniqueIds(list(value.sorts, MAX_SORTS).map((i) => ({ id: cleanId(i?.id) ?? "", text: clip(i?.text, 200), group: cleanId(i?.group) ?? "" }))
+      .map((i) => ({ ...i, group: ids.has(i.group) ? i.group : "" })).filter((i) => draft || (i.text && i.group)), newId);
+    return { groups, sorts };
+  }
+  if (kind === "EXPLORE") {
+    const pct = (n: unknown) => typeof n === "number" && Number.isFinite(n) ? Math.round(Math.min(100, Math.max(0, n)) * 10) / 10 : 50;
+    return { spots: uniqueIds(list(value.spots, MAX_SPOTS).map((sp) => ({ id: cleanId(sp?.id) ?? "", x: pct(sp?.x), y: pct(sp?.y), title: clip(sp?.title, 120), text: clip(sp?.text, 1000) }))
+      .filter((sp) => draft || sp.title), newId) };
+  }
+  if (kind === "ASSIGNMENT") {
+    const raw = (value.handIn && typeof value.handIn === "object" ? value.handIn : {}) as Record<string, unknown>;
+    const part = (v: unknown, fallback: HandInPart) => HAND_IN_PARTS.includes(v as HandInPart) ? v as HandInPart : fallback;
+    return { handIn: { text: part(raw.text, "required"), photo: part(raw.photo, "optional"), review: raw.review !== false } };
+  }
   return null;
 }
 
@@ -175,6 +233,12 @@ export function startingLessonData(kind: LessonKind, newId: () => string = () =>
   if (kind === "SCENARIO") return { steps: [{ id: newId(), text: "", imageId: null, choices: [choice(), choice()] }] };
   if (kind === "FLASHCARDS") return { cards: [1, 2, 3].map(() => ({ id: newId(), front: "", back: "", imageId: null })) };
   if (kind === "CHECKLIST") return { items: [1, 2, 3].map(() => ({ id: newId(), text: "" })) };
+  if (kind === "SORTING") {
+    const groups = [newId(), newId()].map((id) => ({ id, name: "" }));
+    return { groups, sorts: [0, 1, 0, 1].map((g) => ({ id: newId(), text: "", group: groups[g].id })) };
+  }
+  if (kind === "EXPLORE") return { spots: [] };
+  if (kind === "ASSIGNMENT") return { handIn: { text: "required", photo: "optional", review: true } };
   return null;
 }
 
@@ -194,7 +258,7 @@ export function reachableScenes(steps: readonly ScenarioStep[]) {
 
 /** Every file a lesson shows: its own file, images in its text, and pictures in its scenes or cards. */
 export const lessonFiles = (lesson: Pick<OutlineLesson, "fileId" | "body" | "data">) => [
-  ...(lesson.fileId ? [lesson.fileId] : []), ...docImages(lesson.body),
+  ...(lesson.fileId ? [lesson.fileId] : []), ...docImages(lesson.body), ...docFiles(lesson.body),
   ...(lesson.data?.steps ?? []).map((s) => s.imageId), ...(lesson.data?.cards ?? []).map((c) => c.imageId),
 ].filter((id): id is string => !!id);
 
@@ -257,6 +321,43 @@ export function videoFor(raw: string): { href: string; embed: string | null; pro
 }
 
 // ---------------------------------------------------------------------------
+// Slides and interactive content (phase 8)
+// ---------------------------------------------------------------------------
+
+/** Where a "Slides or interactive" lesson may come from. Only these play
+ *  inside the lesson; their own share or publish link is turned into the
+ *  embed address. Null for anything else. */
+export const EMBED_SOURCES = "Google Slides, Docs, Sheets or Forms, a Google Drive file, Canva, Genially, H5P or Microsoft Forms";
+export function embedFor(raw: string): { src: string; href: string; provider: string } | null {
+  let url: URL;
+  try { url = new URL(raw.trim()); } catch { return null; }
+  if (url.protocol !== "https:") return null;
+  const host = url.hostname.toLowerCase(), parts = url.pathname.split("/").filter(Boolean);
+  const okId = (value: string | undefined) => !!value && /^[\w-]{6,200}$/.test(value);
+  const out = (src: string, provider: string) => ({ src, href: url.toString(), provider });
+  if (host === "docs.google.com") {
+    const [app, d, a, b] = parts;
+    const published = d === "d" && a === "e" && okId(b);
+    const id = published ? `e/${b}` : d === "d" && okId(a) ? a : null;
+    if (!id) return null;
+    if (app === "presentation") return out(`https://docs.google.com/presentation/d/${id}/${published ? "embed" : "embed?start=false&loop=false"}`, "Google Slides");
+    if (app === "document") return out(`https://docs.google.com/document/d/${id}/${published ? "pub?embedded=true" : "preview"}`, "Google Docs");
+    if (app === "spreadsheets") return out(`https://docs.google.com/spreadsheets/d/${id}/${published ? "pubhtml?widget=true" : "preview"}`, "Google Sheets");
+    if (app === "forms") return out(`https://docs.google.com/forms/d/${id}/viewform?embedded=true`, "Google Forms");
+    return null;
+  }
+  if (host === "drive.google.com" && parts[0] === "file" && parts[1] === "d" && okId(parts[2])) return out(`https://drive.google.com/file/d/${parts[2]}/preview`, "Google Drive");
+  if ((host === "www.canva.com" || host === "canva.com") && parts[0] === "design" && okId(parts[1]) && okId(parts[2])) return out(`https://www.canva.com/design/${parts[1]}/${parts[2]}/view?embed`, "Canva");
+  if (host === "view.genial.ly" && okId(parts[0])) return out(`https://view.genial.ly/${parts[0]}`, "Genially");
+  if (/^[a-z0-9-]+\.h5p\.com$/.test(host) && parts[0] === "content" && /^\d{6,24}$/.test(parts[1] ?? "")) return out(`https://${host}/content/${parts[1]}/embed`, "H5P");
+  if (host === "forms.office.com" || host === "forms.microsoft.com") {
+    const id = url.searchParams.get("id");
+    return id && /^[\w-]{10,200}$/.test(id) ? out(`https://forms.office.com/Pages/ResponsePage.aspx?id=${id}&embed=true`, "Microsoft Forms") : null;
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // Publishing
 // ---------------------------------------------------------------------------
 
@@ -280,6 +381,12 @@ export function publishProblems(outline: Outline): string[] {
     if (lesson.kind === "FLASHCARDS" && (lesson.data?.cards ?? []).filter((c) => (c.front || c.imageId) && c.back).length < 2) problems.push(`“${lesson.title}” needs at least two cards with a front and a back.`);
     if (lesson.kind === "FLASHCARDS" && (lesson.data?.cards ?? []).some((c) => !(c.front || c.imageId) || !c.back)) problems.push(`A card in “${lesson.title}” is missing its front or back.`);
     if (lesson.kind === "CHECKLIST" && !(lesson.data?.items ?? []).length) problems.push(`“${lesson.title}” needs at least one thing to tick off.`);
+    if (lesson.kind === "SORTING") problems.push(...sortingProblems(lesson.title, lesson.data));
+    if (lesson.kind === "EXPLORE" && !lesson.fileId) problems.push(`“${lesson.title}” needs the picture to explore.`);
+    if (lesson.kind === "EXPLORE" && !(lesson.data?.spots ?? []).length) problems.push(`“${lesson.title}” needs at least one spot on the picture.`);
+    if (lesson.kind === "EMBED" && !embedFor(lesson.videoUrl)) problems.push(`“${lesson.title}” needs a link from ${EMBED_SOURCES}.`);
+    if (lesson.kind === "ASSIGNMENT" && !lesson.body) problems.push(`“${lesson.title}” needs the task written out: what to do and what to hand in.`);
+    if (lesson.kind === "ASSIGNMENT" && lesson.data?.handIn?.text === "off" && lesson.data.handIn.photo === "off") problems.push(`“${lesson.title}” must ask for a written answer, a photo or both.`);
     if (lessonText(lesson).includes(TEMPLATE_MARK)) problems.push(`“${lesson.title}” still has template text marked ${TEMPLATE_MARK}. Replace it with your own.`);
     for (const id of docChecks(lesson.body)) {
       if (!outline.questions.some((q) => q.id === id)) problems.push(`A knowledge check in “${lesson.title}” uses a question that has been removed. Take it out or choose another.`);
@@ -303,7 +410,19 @@ export const lessonText = (lesson: Pick<OutlineLesson, "body" | "data">) => [
   ...(lesson.data?.steps ?? []).flatMap((s) => [s.text, ...s.choices.flatMap((c) => [c.text, c.feedback])]),
   ...(lesson.data?.cards ?? []).flatMap((c) => [c.front, c.back]),
   ...(lesson.data?.items ?? []).map((i) => i.text),
+  ...(lesson.data?.groups ?? []).map((g) => g.name), ...(lesson.data?.sorts ?? []).map((i) => i.text),
+  ...(lesson.data?.spots ?? []).flatMap((sp) => [sp.title, sp.text]),
 ].join("\n");
+
+/** What stops a Sort into groups lesson working, worded for its author. */
+export function sortingProblems(title: string, data: LessonData | null): string[] {
+  const groups = (data?.groups ?? []).filter((g) => g.name), sorts = data?.sorts ?? [];
+  const problems: string[] = [];
+  if (groups.length < 2) problems.push(`“${title}” needs at least two groups with names.`);
+  if (sorts.length < 2) problems.push(`“${title}” needs at least two things to sort.`);
+  if (sorts.some((i) => !i.text || !groups.some((g) => g.id === i.group))) problems.push(`Something to sort in “${title}” is missing its text or its group.`);
+  return problems;
+}
 
 /** What stops a scenario working, worded for its author. */
 export function scenarioProblems(title: string, steps: readonly ScenarioStep[]): string[] {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { ChevronDown, ChevronLeft, ChevronRight, CircleHelp, RotateCw } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, CircleHelp, ExternalLink, FileDown, RotateCw } from "lucide-react";
 import { answered, QuestionField, type Answer, type LearnerQuestion } from "@/components/question";
 import { Notice } from "@/components/ui";
 import { ApiError, api, apiFile } from "@/lib/api";
@@ -70,6 +70,66 @@ function Stepper({ steps }: { steps: ReactNode[] }) {
         {index > 0 ? <button type="button" className="button outline" onClick={() => setIndex(index - 1)}><ChevronLeft aria-hidden="true" />Back</button> : <span />}
         {index + 1 < steps.length ? <button type="button" className="button outline" onClick={() => setIndex(index + 1)}>Next step<ChevronRight aria-hidden="true" /></button> : null}
       </div>
+    </div>
+  );
+}
+
+/** Tabs: one panel at a time, switched with the tab buttons or the arrow keys. */
+function Tabs({ id, tabs }: { id: string; tabs: { title: ReactNode; body: ReactNode }[] }) {
+  const [index, setIndex] = useState(0);
+  const move = (to: number) => {
+    const next = (to + tabs.length) % tabs.length;
+    setIndex(next);
+    document.getElementById(`${id}-tab-${next}`)?.focus();
+  };
+  return (
+    <div className="tabs">
+      <div role="tablist" className="tab-list" aria-label="Tabs">
+        {tabs.map((t, i) => (
+          <button key={i} id={`${id}-tab-${i}`} type="button" role="tab" className="tab-button" aria-selected={i === index} aria-controls={`${id}-panel-${i}`} tabIndex={i === index ? 0 : -1}
+            onClick={() => setIndex(i)}
+            onKeyDown={(e) => { if (e.key === "ArrowRight") { e.preventDefault(); move(i + 1); } else if (e.key === "ArrowLeft") { e.preventDefault(); move(i - 1); } }}>
+            {t.title}
+          </button>
+        ))}
+      </div>
+      {tabs.map((t, i) => <div key={i} id={`${id}-panel-${i}`} role="tabpanel" aria-labelledby={`${id}-tab-${i}`} hidden={i !== index} className="tab-panel">{t.body}</div>)}
+    </div>
+  );
+}
+
+/** A video in the text: YouTube and Vimeo play in place (Turnfin cleans the link). */
+function videoEmbed(raw: unknown) {
+  let url: URL;
+  try { url = new URL(String(raw ?? "")); } catch { return null; }
+  if (url.protocol !== "https:") return null;
+  const host = url.hostname.replace(/^(www|m)\./, ""), parts = url.pathname.split("/").filter(Boolean);
+  const ok = (v: string | null | undefined) => v && /^[\w-]{6,20}$/.test(v) ? v : null;
+  const yt = host === "youtu.be" ? ok(parts[0]) : host === "youtube.com" ? (parts[0] === "watch" ? ok(url.searchParams.get("v")) : ["embed", "shorts", "live"].includes(parts[0]) ? ok(parts[1]) : null) : null;
+  if (yt) return { embed: `https://www.youtube-nocookie.com/embed/${yt}?rel=0`, href: url.toString(), provider: "YouTube" };
+  const vimeo = host === "vimeo.com" || host === "player.vimeo.com" ? parts.find((p) => /^\d{5,12}$/.test(p)) : null;
+  if (vimeo) return { embed: `https://player.vimeo.com/video/${vimeo}`, href: url.toString(), provider: "Vimeo" };
+  return { embed: null, href: url.toString(), provider: host };
+}
+
+/** A file to download from the text: fetched with the person's sign-in, then opened. */
+function FileButton({ assignmentId, fileId, label }: { assignmentId: string; fileId: string; label: string }) {
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
+  async function open() {
+    setBusy(true); setFailed(false);
+    // Opened first, so a phone doesn't block it as a pop-up once the file arrives.
+    const tab = window.open("", "_blank");
+    try {
+      const url = URL.createObjectURL(await apiFile(`training/${assignmentId}/files/${fileId}`));
+      if (tab) tab.location.href = url; else window.location.href = url;
+    } catch { tab?.close(); setFailed(true); }
+    finally { setBusy(false); }
+  }
+  return (
+    <div className="stack-sm">
+      <button type="button" className="button outline block" onClick={open} disabled={busy}><FileDown aria-hidden="true" />{busy ? "Getting it…" : label || "Download"}</button>
+      {failed ? <p className="caption">That file didn’t open. Check your connection and try again.</p> : null}
     </div>
   );
 }
@@ -163,6 +223,21 @@ function render(node: Node, key: string, assignmentId: string, checks: Checks | 
     case "flipFront": case "flipBack": case "revealContent": return <span key={key} className="flip-text">{kids}</span>;
     case "stepper": return <Stepper key={key} steps={kids} />;
     case "stepItem": return <div key={key} className="step-item">{kids}</div>;
+    case "tabs": return <Tabs key={key} id={key} tabs={(node.content ?? []).filter((t) => t.type === "tab").map((t, i) => ({
+      title: (t.content?.find((c) => c.type === "tabTitle")?.content ?? []).map((c, j) => render(c, `${key}-${i}-t${j}`, assignmentId, checks)),
+      body: (t.content?.find((c) => c.type === "tabContent")?.content ?? []).map((c, j) => render(c, `${key}-${i}-b${j}`, assignmentId, checks)),
+    }))} />;
+    case "videoEmbed": {
+      const video = videoEmbed(node.attrs?.url);
+      if (!video) return null;
+      return video.embed
+        ? <div key={key} className="lesson-video"><iframe src={video.embed} title={`Video on ${video.provider}`} allow="encrypted-media; picture-in-picture; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" loading="lazy" /></div>
+        : <a key={key} href={video.href} target="_blank" rel="noopener noreferrer" className="button outline block"><ExternalLink aria-hidden="true" />Watch on {video.provider}</a>;
+    }
+    case "fileButton": {
+      const id = typeof node.attrs?.fileId === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(node.attrs.fileId) ? node.attrs.fileId : null;
+      return id ? <FileButton key={key} assignmentId={assignmentId} fileId={id} label={String(node.attrs?.label ?? "")} /> : null;
+    }
     case "knowledgeCheck": return checks ? <KnowledgeCheck key={key} checks={checks} questionId={String(node.attrs?.questionId ?? "")} /> : null;
     default: return null;
   }

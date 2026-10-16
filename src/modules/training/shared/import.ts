@@ -5,7 +5,10 @@ import { normaliseQuestion, questionProblem, type Question, type QuestionKind } 
  *
  *    Type | Question | Option A | Option B | … | Option F | Right answer | Why
  *
- *  Type is One, Several, True/false, Order, Match or Blanks. Right answer is a
+ *  Type is One, Several, True/false, Order, Match, Blanks, Number or Short
+ *  answer. Number gives the right number as Option A, the margin either side
+ *  as Option B and the unit as Option C; Short answer lists every answer it
+ *  accepts as the options. Right answer is a
  *  letter (A), letters (A, C) or True / False. Order lists the steps in the right
  *  order; Match writes each pair as "item = partner"; Blanks puts the missing
  *  words in [square brackets] in the question. A first row starting "Type" is
@@ -21,6 +24,8 @@ const TYPES: Record<string, QuestionKind> = {
   order: "ORDER", "put in order": "ORDER",
   match: "MATCH", "match pairs": "MATCH",
   blanks: "FILL_BLANK", blank: "FILL_BLANK", "fill in the blanks": "FILL_BLANK",
+  number: "NUMBER", numeric: "NUMBER",
+  "short answer": "SHORT_ANSWER", short: "SHORT_ANSWER", text: "SHORT_ANSWER", typed: "SHORT_ANSWER",
 };
 
 /** Splits pasted text into rows of cells: tab-separated if any line has a tab, otherwise CSV with quotes. */
@@ -57,12 +62,12 @@ export function parseQuestions(text: string, newId: () => string): ImportResult 
   rows.slice(0, MAX_IMPORT_ROWS).forEach((cells, index) => {
     const row = index + 1;
     const kind = TYPES[(cells[0] ?? "").toLowerCase().replace(/\s+/g, " ").trim()];
-    if (!kind) { result.problems.push({ row, message: `“${cells[0] ?? ""}” isn't a type. Use One, Several, True/false, Order, Match or Blanks.` }); return; }
+    if (!kind) { result.problems.push({ row, message: `“${cells[0] ?? ""}” isn't a type. Use One, Several, True/false, Order, Match, Blanks, Number or Short answer.` }); return; }
     const prompt = cells[1] ?? "";
     const given = cells.slice(2, 8).filter(Boolean);
     const right = (cells[8] ?? "").toUpperCase().split(/[\s,;]+/).filter(Boolean);
     const why = cells[9] ?? "";
-    let options: { id?: string; text: string; imageId: null; correct: boolean; match: string; area: null }[] = [];
+    let options: { id?: string; text: string; imageId: null; correct: boolean; match: string; area: null; unit?: string }[] = [];
     if (kind === "TRUE_FALSE") {
       const truth = right[0] === "TRUE" || right[0] === "T" ? "true" : right[0] === "FALSE" || right[0] === "F" ? "false" : null;
       if (!truth) { result.problems.push({ row, message: "Say True or False under Right answer." }); return; }
@@ -76,6 +81,10 @@ export function parseQuestions(text: string, newId: () => string): ImportResult 
       const bad = right.find((letter) => !LETTERS.includes(letter) || LETTERS.indexOf(letter) >= given.length);
       if (bad || !right.length) { result.problems.push({ row, message: `Under Right answer, give the letter of ${kind === "SINGLE" ? "the right option" : "each right option"}, such as ${kind === "SINGLE" ? "B" : "A, C"}.` }); return; }
       options = given.map((cell, i) => ({ text: cell, imageId: null, correct: right.includes(LETTERS[i]), match: "", area: null }));
+    } else if (kind === "NUMBER") {
+      options = [{ text: cells[2] ?? "", imageId: null, correct: true, match: cells[3] ?? "", area: null, unit: cells[4] ?? "" }];
+    } else if (kind === "SHORT_ANSWER") {
+      options = given.map((cell) => ({ text: cell, imageId: null, correct: true, match: "", area: null }));
     } else if (kind === "ORDER") {
       options = given.map((cell) => ({ text: cell, imageId: null, correct: false, match: "", area: null }));
     }

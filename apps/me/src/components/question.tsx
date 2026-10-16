@@ -5,7 +5,7 @@ import { ArrowDown, ArrowUp } from "lucide-react";
 import { apiFile } from "@/lib/api";
 
 /** A question as Turnfin sends it: never which answer is right. */
-export type QuestionKind = "SINGLE" | "MULTIPLE" | "TRUE_FALSE" | "ORDER" | "MATCH" | "FILL_BLANK" | "HOTSPOT";
+export type QuestionKind = "SINGLE" | "MULTIPLE" | "TRUE_FALSE" | "ORDER" | "MATCH" | "FILL_BLANK" | "HOTSPOT" | "NUMBER" | "SHORT_ANSWER";
 export type LearnerQuestion = {
   id: string; kind: QuestionKind; prompt: string; imageId: string | null;
   options: { id: string; text: string; imageId: string | null }[];
@@ -33,7 +33,12 @@ export const QUESTION_HINT: Record<QuestionKind, string> = {
   MATCH: "Match each one to its partner.",
   FILL_BLANK: "Type the missing words.",
   HOTSPOT: "Tap the right place on the picture.",
+  NUMBER: "Type the number.",
+  SHORT_ANSWER: "Type your answer.",
 };
+
+/** A typed number, with a full stop or a comma. */
+export const isNumber = (value: unknown) => typeof value === "string" && /^-?\d{1,9}(?:[.,]\d{1,6})?$/.test(value.trim().replace(/\s+/g, ""));
 
 /** A tapped spot, "x,y" in percent of the picture, and back. */
 export const spotText = (x: number, y: number) => `${Math.round(Math.min(100, Math.max(0, x)) * 10) / 10},${Math.round(Math.min(100, Math.max(0, y)) * 10) / 10}`;
@@ -47,6 +52,8 @@ export function answered(question: LearnerQuestion, answer: Answer | null | unde
   if (answer == null) return false;
   if (question.kind === "SINGLE" || question.kind === "TRUE_FALSE") return typeof answer === "string" && !!answer;
   if (question.kind === "HOTSPOT") return !!readSpot(answer);
+  if (question.kind === "NUMBER") return isNumber(answer);
+  if (question.kind === "SHORT_ANSWER") return typeof answer === "string" && !!answer.trim();
   if (question.kind === "FILL_BLANK") return typeof answer === "object" && !Array.isArray(answer) && question.options.every((o) => !!answer[o.id]?.trim());
   if (question.kind === "MULTIPLE") return Array.isArray(answer) && answer.length > 0;
   if (question.kind === "ORDER") return Array.isArray(answer) && answer.length === question.options.length;
@@ -121,6 +128,24 @@ export function QuestionField({ assignmentId, question, answer, onChange, locked
       <fieldset className="question" disabled={locked}>
         {legend}
         <SpotField assignmentId={assignmentId} question={question} answer={answer} onChange={onChange} locked={locked} right={typeof right === "string" ? right : null} />
+      </fieldset>
+    );
+  }
+
+  if (question.kind === "NUMBER" || question.kind === "SHORT_ANSWER") {
+    const value = typeof answer === "string" ? answer : "";
+    const unit = question.kind === "NUMBER" ? question.options[0]?.text ?? "" : "";
+    return (
+      <fieldset className="question" disabled={locked}>
+        {legend}
+        {picture}
+        <div className="typed-answer">
+          <input id={`${name}-typed`} className="input" aria-label={question.kind === "NUMBER" ? `Your answer${unit ? ` in ${unit}` : ""}` : "Your answer"} value={value} disabled={locked}
+            inputMode={question.kind === "NUMBER" ? "decimal" : "text"} maxLength={question.kind === "NUMBER" ? 20 : 200} autoComplete="off" autoCapitalize={question.kind === "NUMBER" ? "off" : "sentences"}
+            onChange={(e) => onChange(e.target.value ? e.target.value : null)} />
+          {unit ? <span className="typed-unit" aria-hidden="true">{unit}</span> : null}
+        </div>
+        {question.kind === "NUMBER" && value && !isNumber(value) ? <p className="caption muted">Use only digits, such as 1.5.</p> : null}
       </fieldset>
     );
   }

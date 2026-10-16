@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ClipboardCheck } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { ReturnForPractice, SignOff, signoffQueue } from "@/modules/training/features/sign-off";
+import { HandInQueue, handInQueue } from "@/modules/training/features/hand-ins";
 import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
@@ -14,11 +15,12 @@ export const metadata: Metadata = { title: "Sign-off" };
 /** Practical training waiting for a trainer, for the people this trainer
  *  covers. Their own never appears: someone else signs that off. */
 export default async function TrainingSignoffPage() {
-  const { who, rows } = await signoffQueue();
+  const [{ who, rows }, handIns] = await Promise.all([signoffQueue(), handInQueue()]);
   if (!who.signoff) notFound();
   return (
     <>
-      <PageHeader title="Sign-off" description="People who say they are ready. Watch them do it, then sign it off or send it back with what to practise." />
+      <PageHeader title="Sign-off" description="People who say they are ready, and work handed in to check. Watch them do it, then sign it off or send it back with what to practise." />
+      <div className="flex flex-col gap-6">
       {rows.length === 0 ? (
         <EmptyState as="h2" icon="clipboardCheck" title="Nobody is waiting" hint="Practical training appears here when someone you cover asks for sign-off." />
       ) : (
@@ -48,6 +50,8 @@ export default async function TrainingSignoffPage() {
           </ul>
         </section>
       )}
+      <HandInQueue rows={handIns} />
+      </div>
     </>
   );
 }

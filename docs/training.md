@@ -348,6 +348,52 @@ access may open it. Cancelled training is never counted.
     covered with the version taught, result, sign-off and certificate, and the
     audit trail of the course and that training.
 
+## The deeper builder (e-learning, phase 8)
+
+Owner request, 16 October 2026: a builder for any kind of training. Lesson and
+question kinds are checked by the database, so the migration
+`20261119120000_training_builder_pro` widens both checks; everything else is
+additive (three defaulted course columns and `training_submissions`).
+
+- **New lessons** (Add lesson):
+  - **Sort into groups**: 2 to 4 named groups and up to 24 things to sort.
+    Turnfin Me mixes them up, the learner places each one and checks; practice,
+    sent whole.
+  - **Explore a picture**: a picture (one of the course's images) with up to 12
+    numbered spots, each with a name and text. Placed by tapping the picture in
+    the builder; Me shows 44px markers and the same spots as a list.
+  - **Hand in work**: the task in the lesson text, then a written answer and a
+    photo or PDF, each Must, May or None, and optionally "A trainer checks it".
+    The answer goes to `training_submissions` (one a lesson, handed in again
+    until accepted). With a check the lesson finishes only when someone with
+    `training.signoff` for the person accepts it (never their own); returning
+    it sends feedback. Both are on the Sign-off page and audited (`hand-in`,
+    `accept-work`, `return-work`). Photos are shrunk on the phone to 1600px;
+    PDFs up to 3 MB.
+  - **Slides or interactive**: a link from Google Slides, Docs, Sheets or Forms,
+    a Google Drive file, Canva, Genially, H5P or Microsoft Forms, played in the
+    lesson. `embedFor` turns the share link into the embed address; anything
+    else is refused.
+- **New questions**: **Number** (an answer, a margin either way and a unit;
+  a comma or full stop both work) and **Short answer** (every answer accepted,
+  forgiving case and spacing). Both are marked on the server and never send the
+  answer; both paste in from a spreadsheet (`Number`: Option A the answer, B the
+  margin, C the unit; `Short answer`: each option an accepted answer).
+- **New blocks in lesson text**: **Tabs**, **Video** (YouTube or Vimeo inside
+  a reading) and **File to download** (one of the course's files as a button).
+  Copying a course or lesson copies the file too.
+- **Course settings**: **Lessons in order** (each lesson opens when the one
+  before is done; checked on the server), **Finish these first** (up to 5 other
+  courses that must be completed; a course can't need itself and two courses
+  can't need each other), and **Offer as a template** (shown first under Start
+  from a template, copied whole).
+- **Make it better**: on the course's start panel, advice that never blocks
+  publishing (`qualityTips`): pictures with no description, readings over 10
+  minutes, recordings with no transcript, videos with no minutes, big flashcard
+  decks, long lesson names, sections with nothing that checks understanding,
+  exam sections with no questions, questions with no "why", courses over an
+  hour, and all-reading courses.
+
 ## Expiring qualifications
 
 `/training/expiring` lists qualifications that have expired or expire within 60

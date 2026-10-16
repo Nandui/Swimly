@@ -33,6 +33,10 @@ export function remapDoc(body: unknown, files: Ids, questions: Ids | null): DocN
       const next = id ? files.get(id) : null;
       return next ? { ...node, attrs: { ...node.attrs, src: fileSrc(next) } } : null;
     }
+    if (node.type === "fileButton") {
+      const next = files.get(String(node.attrs?.fileId ?? ""));
+      return next ? { ...node, attrs: { ...node.attrs, fileId: next } } : null;
+    }
     if (node.type === "knowledgeCheck") {
       const id = String(node.attrs?.questionId ?? "");
       const next = questions ? questions.get(id) : id;

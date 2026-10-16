@@ -10,7 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { filterAllows } from "@/lib/policy/engine";
 import { subjectsFor } from "@/lib/policy/session";
 import { requireTrainingActor, type TrainingActor } from "@/modules/training/shared/access";
-import { cleanDoc, cleanLessonData, isLessonKind, LESSON_KIND_META, lessonFiles, MAX_LESSONS, MAX_SECTIONS, frozenOutline, plainTextDoc, publishProblems, startingLessonData, videoFor, type LessonKind } from "@/modules/training/shared/lessons";
+import { cleanDoc, cleanLessonData, EMBED_SOURCES, embedFor, isLessonKind, LESSON_KIND_META, lessonFiles, MAX_LESSONS, MAX_SECTIONS, frozenOutline, plainTextDoc, publishProblems, startingLessonData, videoFor, type LessonKind } from "@/modules/training/shared/lessons";
 import { refresh } from "@/modules/training/shared/writes";
 import { MAX_QUESTIONS, QUESTION_KINDS, normaliseQuestion, questionFiles, questionProblem, QUESTION_KIND_META, readExam, type ExamSettings, type QuestionOption } from "@/modules/training/shared/questions";
 import { loadDraft } from "@/modules/training/features/builder/server/draft";
@@ -189,9 +189,10 @@ export async function saveLesson(lessonId: string, input: LessonInput): Promise<
     if (!lesson) return fail("That lesson no longer exists.");
     courseId = lesson.section.courseId;
     if (lesson.kind === "VIDEO" && videoUrl && !videoFor(videoUrl)) return fail("Use a video link that starts https://.");
+    if (lesson.kind === "EMBED" && videoUrl && !embedFor(videoUrl)) return fail(`Use a link from ${EMBED_SOURCES}.`);
     const kind = isLessonKind(lesson.kind) ? lesson.kind : "READING";
     const data = cleanLessonData(kind, rawData, undefined, true);
-    const ownFile = kind === "FILE" || kind === "AUDIO" ? fileId : null;
+    const ownFile = kind === "FILE" || kind === "AUDIO" || kind === "EXPLORE" ? fileId : null;
     const files = lessonFiles({ fileId: ownFile, body, data });
     if (files.length) {
       const found = await tx.trainingFile.count({ where: { id: { in: [...new Set(files)] }, courseId } });
@@ -200,9 +201,12 @@ export async function saveLesson(lessonId: string, input: LessonInput): Promise<
     if (kind === "AUDIO" && ownFile && !(await tx.trainingFile.findFirst({ where: { id: ownFile, courseId, mime: { startsWith: "audio/" } }, select: { id: true } }))) {
       return fail("Choose a recording (MP3, M4A, OGG or WAV) for an Audio lesson.");
     }
+    if (kind === "EXPLORE" && ownFile && !(await tx.trainingFile.findFirst({ where: { id: ownFile, courseId, mime: { startsWith: "image/" } }, select: { id: true } }))) {
+      return fail("Choose a picture (JPEG, PNG or WebP) to explore.");
+    }
     await tx.trainingLesson.update({ where: { id: lessonId }, data: {
       title, body: body ? (body as Prisma.InputJsonValue) : Prisma.DbNull,
-      videoUrl: kind === "VIDEO" ? videoUrl : "", fileId: ownFile, minutes, data: data ? (data as unknown as Prisma.InputJsonValue) : Prisma.DbNull,
+      videoUrl: kind === "VIDEO" || kind === "EMBED" ? videoUrl : "", fileId: ownFile, minutes, data: data ? (data as unknown as Prisma.InputJsonValue) : Prisma.DbNull,
     } });
     await audit(who, tx, "update", courseId, `Saved the lesson ${title} in ${lesson.section.course.title}`);
     return ok();
@@ -360,6 +364,7 @@ const questionSchema = z.object({
     id: z.string().max(32).optional(), text: z.string().max(300, "Keep each option under 300 characters."), imageId: z.string().max(64).nullable(),
     correct: z.boolean(), match: z.string().max(300, "Keep each partner under 300 characters."),
     area: z.object({ x: z.number(), y: z.number(), w: z.number(), h: z.number() }).nullable().default(null),
+    unit: z.string().max(20, "Keep the unit short, such as mg/l.").optional(),
   })).max(8, "A question can have up to 8 options."),
   explanation: z.string().max(1000, "Keep the explanation under 1,000 characters."),
 });

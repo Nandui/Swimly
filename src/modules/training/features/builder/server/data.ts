@@ -15,7 +15,7 @@ export async function courseForBuilder(courseId: string) {
     where: { id: courseId, orgId: who.orgId ?? undefined },
     select: {
       id: true, title: true, summary: true, content: true, requiresSignoff: true, grantsTypeId: true, archivedAt: true, publishedVersionId: true,
-      coverId: true, category: true, tags: true, observation: true, selfEnrol: true,
+      coverId: true, category: true, tags: true, observation: true, selfEnrol: true, lessonsInOrder: true, prerequisiteIds: true, isTemplate: true,
       ...DRAFT_SELECT,
       comments: { orderBy: { createdAt: "asc" }, take: 300, select: { id: true, lessonId: true, body: true, authorName: true, createdAt: true, resolvedAt: true, resolvedByName: true } },
       files: { orderBy: { createdAt: "asc" }, select: { id: true, name: true, mime: true, size: true } },
@@ -40,7 +40,7 @@ export async function courseForBuilder(courseId: string) {
     who,
     course: {
       id: row.id, title: row.title, summary: row.summary, content: row.content, requiresSignoff: row.requiresSignoff, archivedAt: row.archivedAt,
-      coverId: row.coverId, category: row.category, tags: row.tags, selfEnrol: row.selfEnrol,
+      coverId: row.coverId, category: row.category, tags: row.tags, selfEnrol: row.selfEnrol, lessonsInOrder: row.lessonsInOrder, prerequisiteIds: row.prerequisiteIds, isTemplate: row.isTemplate,
       grantsType: grants ? { id: grants.id, name: grants.name, validityMonths: grants.validityMonths } : null,
     },
     draft,

@@ -34,6 +34,13 @@ model TrainingCourse {
   observation        Json?
   /// Staff may enrol themselves from the catalogue in Turnfin Me (phase 6).
   selfEnrol          Boolean  @default(false)
+  /// Learners take the lessons in order: each opens once the one before is
+  /// done (phase 8). Live: applies to every version.
+  lessonsInOrder     Boolean  @default(false)
+  /// Courses a learner must have completed before this one opens (phase 8).
+  prerequisiteIds    String[] @default([])
+  /// Offered under Start from a template to the organisation's authors (phase 8).
+  isTemplate         Boolean  @default(false)
 
   organisation Organisation            @relation(fields: [orgId], references: [id], onDelete: Restrict)
   grantsType   QualificationType?      @relation(fields: [grantsTypeId], references: [id], onDelete: SetNull)
@@ -273,6 +280,7 @@ model TrainingAssignment {
   notes        TrainingLessonNote[]
   feedback     TrainingFeedback?
   refreshers   TrainingRefresherCard[]
+  submissions  TrainingSubmission[]
 
   @@index([userId, status])
   @@index([orgId, status])
@@ -542,4 +550,36 @@ model TrainingRefresherDay {
 
   @@unique([userId, on])
   @@map("training_refresher_days")
+}
+
+/// Work handed in on a Hand in work lesson (phase 8): a written answer, a photo
+/// or PDF, or both. One a lesson an assignment; handing in again replaces it.
+/// SUBMITTED waits for a trainer when the lesson asks for one; ACCEPTED
+/// finishes the lesson; RETURNED goes back to the learner with feedback.
+model TrainingSubmission {
+  id             String    @id @default(cuid())
+  orgId          String
+  assignmentId   String
+  userId         String
+  lessonId       String
+  versionId      String?
+  text           String    @default("")
+  fileName       String?
+  mime           String?
+  size           Int?
+  bytes          Bytes?
+  status         String    @default("SUBMITTED")
+  feedback       String    @default("")
+  reviewedById   String?
+  reviewedByName String?
+  reviewedAt     DateTime?
+  submittedAt    DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  assignment TrainingAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, lessonId])
+  @@index([orgId, status])
+  @@map("training_submissions")
 }

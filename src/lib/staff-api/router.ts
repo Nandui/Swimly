@@ -20,14 +20,14 @@ export async function handleStaffRequest(request: Request, path: string[]) {
     const route = path.join("/"), method = request.method;
     const trainingMatch = /^training\/([A-Za-z0-9_-]+)(\/complete|\/feedback)?$/.exec(route);
     const training = trainingMatch && !TRAINING_PAGES.has(trainingMatch[1]) ? trainingMatch : null;
-    const lesson = /^training\/([A-Za-z0-9_-]+)\/lessons\/([A-Za-z0-9_-]+)(\/complete|\/check|\/note)?$/.exec(route);
+    const lesson = /^training\/([A-Za-z0-9_-]+)\/lessons\/([A-Za-z0-9_-]+)(\/complete|\/check|\/note|\/hand-in|\/hand-in\/file)?$/.exec(route);
     const catalogue = /^training\/catalogue\/([A-Za-z0-9_-]+)\/(cover|enrol)$/.exec(route);
     const exam = /^training\/([A-Za-z0-9_-]+)\/exam(?:\/(start|answers|submit|attempts\/([1-9][0-9]{0,2})))?$/.exec(route);
     const trainingFile = /^training\/([A-Za-z0-9_-]+)\/files\/([A-Za-z0-9_-]+)$/.exec(route);
     const certificate = /^training\/([A-Za-z0-9_-]+)\/certificate$/.exec(route);
     const reading = /^reading\/([A-Za-z0-9_-]+)(\/acknowledge)?$/.exec(route);
     const review = /^hr\/reviews\/([A-Za-z0-9_-]+)\/acknowledge$/.exec(route);
-    const methods = training ? [training[2] ? "POST" : "GET"] : lesson ? [lesson[3] === "/note" ? "PUT" : lesson[3] ? "POST" : "GET"]
+    const methods = training ? [training[2] ? "POST" : "GET"] : lesson ? [lesson[3] === "/note" ? "PUT" : lesson[3] === "/hand-in/file" || !lesson[3] ? "GET" : "POST"]
       : catalogue ? [catalogue[2] === "enrol" ? "POST" : "GET"]
       : exam ? [!exam[2] || exam[3] ? "GET" : exam[2] === "answers" ? "PUT" : "POST"] : trainingFile || certificate ? ["GET"] : reading ? [reading[2] ? "POST" : "GET"] : review ? ["POST"] : ROUTES[route];
     if (!methods) notFound();
@@ -64,6 +64,8 @@ export async function handleStaffRequest(request: Request, path: string[]) {
     if (lesson) {
       const [id, lessonId] = [parseInput(idSchema, lesson[1]), parseInput(idSchema, lesson[2])];
       if (lesson[3] === "/note") return json(await records.saveTrainingNote(request, identity, id, lessonId));
+      if (lesson[3] === "/hand-in") return json(await records.handInTraining(request, identity, id, lessonId));
+      if (lesson[3] === "/hand-in/file") return records.trainingHandInFile(identity, id, lessonId);
       return json(lesson[3] === "/check" ? await records.checkTrainingQuiz(request, identity, id, lessonId)
         : lesson[3] ? await records.completeTrainingLesson(identity, id, lessonId) : await records.trainingLesson(identity, id, lessonId));
     }

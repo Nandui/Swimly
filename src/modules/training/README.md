@@ -6,9 +6,10 @@ The rules for courses, assignments, sign-offs and certificates are in [docs/trai
 
 ## Features
 - `courses` — training courses: create, change settings, archive, and the qualification each grants (`/training/courses`).
-- `builder` — building a course from sections and lessons (reading, video, file, quiz, scenario, flashcards, checklist, audio) with interactive blocks and knowledge checks, each section's questions (pasted from a spreadsheet too), the final exam and how it has gone, templates, duplicating and copying in, the cover, review comments, preview and publishing numbered versions with a note and optional retake (`/training/courses/[id]`, `/training/files`).
+- `builder` — building a course from sections and lessons (reading, video, file, quiz, scenario, flashcards, checklist, audio, sort into groups, explore a picture, hand in work, slides or interactive) with interactive blocks, tabs, videos, file buttons and knowledge checks, each section's questions (pasted from a spreadsheet too), the final exam and how it has gone, templates, duplicating and copying in, the cover, review comments, preview and publishing numbered versions with a note and optional retake, and the quality check (`/training/courses/[id]`, `/training/files`).
 - `assignments` — assigning training, following and cancelling it, giving another exam attempt, and one person's training and exam scores (`/training`, `/training/people/[id]`).
 - `sign-off` — practical sign-offs: confirming a skill shown in person, or returning it for practice; observing against the course's checklist on a tablet, with photos (`/training/sign-off`, `/training/sign-off/[id]`, `/training/evidence/[id]`).
+- `hand-ins` — work handed in on Hand in work lessons: the queue on the Sign-off page, accepting it (which finishes the lesson) or returning it with feedback, and the file (`/training/sign-off`, `/training/hand-ins/[id]/file`).
 - `paths` — learning paths: courses in order with due days from a start date, putting people on one and taking them off (`/training/paths`).
 - `sessions` — classroom and poolside sessions: places, bookings, the register, and closing it to credit hours and complete the course (`/training/sessions`).
 - `hours` — in-service hours against what each qualification needs, logged by hand or from a register (`/training/hours`).
@@ -31,6 +32,7 @@ The rules for courses, assignments, sign-offs and certificates are in [docs/trai
 - `trainingReminderItems(on)` — training due soon, for Turnfin Me's reminder digest.
 - `myPlan(userId, orgId)`, `myPractical(userId, id)` — the person's own paths, sessions and hours, and what a trainer watches for on their practical, for Turnfin Me.
 - `searchMyTraining`, `myLessonNote`, `saveLessonNote`, `mySaved`, `myRecord`, `catalogueFor`, `catalogueCover`, `enrolMyself`, `myFeedback`, `rateCourse`, `myRefresher`, `answerRefresher`, `refresherWaiting` — the learner's own space in Turnfin Me (phase 6).
+- `handInWork(person, id, lessonId, work)`, `mySubmissionFile(userId, id, lessonId)` — handing in work on a Hand in work lesson from Turnfin Me (phase 8).
 
 ## Data owned
 Declared in `prisma/schema/training.prisma` (table names kept, ADR 0002):
@@ -50,6 +52,7 @@ Declared in `prisma/schema/training.prisma` (table names kept, ADR 0002):
 - `training_hours`, `training_hour_targets` — in-service hours logged, and how many each qualification needs.
 - `training_lesson_notes` — a learner's bookmarks and private notes on lessons.
 - `training_feedback` — a learner's rating of a finished course and what was unclear.
+- `training_submissions` — work handed in on Hand in work lessons, and the trainer's review.
 - `training_refresher_cards`, `training_refresher_days` — questions a learner missed, spaced out for daily refreshers, and how many they answered each day.
 
 Training also reads and writes Core's qualification records (`Qualification`, `QualificationEvidence`, `QualificationType`) and reads `User`, `Club` and `Position`. Qualifications are Core's (ADR 0001); moving these reads onto Core functions is phase 3 of [MIGRATION.md](../../../docs/architecture/MIGRATION.md).

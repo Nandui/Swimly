@@ -18,7 +18,7 @@ import { toast } from "@/components/ui/toast";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Notice } from "@/components/ui-kit/notice";
 import { THEME } from "@/modules/training/shared/components/dialog-kit";
-import { blankedPrompt, EXAM_DEFAULTS, paperSize, QUESTION_KIND_META, QUESTION_KINDS, readBlanks, type ExamSettings, type Question, type QuestionKind } from "@/modules/training/shared/questions";
+import { blankedPrompt, EXAM_DEFAULTS, paperSize, QUESTION_KIND_META, QUESTION_KINDS, readBlanks, readNumber, type ExamSettings, type Question, type QuestionKind } from "@/modules/training/shared/questions";
 import { addQuestion, moveQuestion, removeQuestion, saveExam, saveQuestion, type QuestionInput } from "@/modules/training/features/builder/server/actions";
 import { uploadCourseFile, type UploadedFile } from "@/modules/training/features/builder/components/rich-text";
 import { SpotPicker, type SpotDraft } from "@/modules/training/features/builder/components/spot-picker";
@@ -115,6 +115,8 @@ function AnswerSummary({ question: q }: { question: Question }) {
     : q.kind === "MATCH" ? q.options.map((o) => `${o.text} → ${o.match}`).join(" · ")
     : q.kind === "FILL_BLANK" ? `Blanks: ${q.options.map((o) => o.text).join(" · ")}`
     : q.kind === "HOTSPOT" ? `${q.options.length} right ${q.options.length === 1 ? "spot" : "spots"} on the picture`
+    : q.kind === "NUMBER" ? `Right: ${q.options[0]?.text ?? ""}${q.options[0]?.unit ? ` ${q.options[0].unit}` : ""}${Number(q.options[0]?.match) ? `, give or take ${q.options[0].match}` : ""}`
+    : q.kind === "SHORT_ANSWER" ? `Accepts: ${q.options.map((o) => o.text).join(" · ")}`
     : `Right: ${q.options.filter((o) => o.correct).map((o) => o.text || "a picture").join(", ")}`;
   return <span className="pc-row-hint">{text}</span>;
 }
@@ -128,7 +130,7 @@ let keys = 0;
 const blank = (): DraftOption => ({ key: `o${++keys}`, text: "", imageId: null, correct: false, match: "" });
 const newKey = () => `s${++keys}`;
 // Blanks live in the sentence and spots in their own list, so neither is an option row here.
-const fromQuestion = (q?: Question): DraftOption[] => q?.options.length && q.kind !== "FILL_BLANK" && q.kind !== "HOTSPOT"
+const fromQuestion = (q?: Question): DraftOption[] => q?.options.length && q.kind !== "FILL_BLANK" && q.kind !== "HOTSPOT" && q.kind !== "NUMBER"
   ? q.options.map((o) => ({ id: o.id, text: o.text, imageId: o.imageId, correct: o.correct, match: o.match, key: `o${++keys}` }))
   : [blank(), blank(), blank()];
 const spotsFrom = (q?: Question): SpotDraft[] => q?.kind === "HOTSPOT" ? q.options.filter((o) => o.area).map((o) => ({ key: newKey(), id: o.id, text: o.text, area: o.area! })) : [];
@@ -143,12 +145,14 @@ function QuestionDialog({ courseId, sectionId, question, files, onUploaded, onSa
   const [truth, setTruth] = useState<"true" | "false" | "">(question?.kind === "TRUE_FALSE" ? (question.options.find((o) => o.correct)?.id as "true" | "false") ?? "" : "");
   const [explanation, setExplanation] = useState(question?.explanation ?? "");
   const [spots, setSpots] = useState<SpotDraft[]>(spotsFrom(question));
+  const numberOf = (q?: Question) => q?.kind === "NUMBER" ? { answer: q.options[0]?.text ?? "", margin: q.options[0]?.match === "0" ? "" : q.options[0]?.match ?? "", unit: q.options[0]?.unit ?? "" } : { answer: "", margin: "", unit: "" };
+  const [number, setNumber] = useState(numberOf(question));
   const [uploading, setUploading] = useState(false);
   const [fileError, setFileError] = useState("");
   const images = files.filter((f) => f.mime.startsWith("image/"));
   function reset() {
     setKind(question?.kind ?? "SINGLE"); setPrompt(question?.prompt ?? ""); setImageId(question?.imageId ?? null);
-    setOptions(fromQuestion(question)); setExplanation(question?.explanation ?? ""); setFileError(""); setSpots(spotsFrom(question));
+    setOptions(fromQuestion(question)); setExplanation(question?.explanation ?? ""); setFileError(""); setSpots(spotsFrom(question)); setNumber(numberOf(question));
     setTruth(question?.kind === "TRUE_FALSE" ? (question.options.find((o) => o.correct)?.id as "true" | "false") ?? "" : "");
   }
   const update = (key: string, patch: Partial<DraftOption>) => setOptions((now) => now.map((o) => o.key === key ? { ...o, ...patch } : o));
@@ -168,12 +172,15 @@ function QuestionDialog({ courseId, sectionId, question, files, onUploaded, onSa
     const used = kind === "TRUE_FALSE"
       ? [{ id: "true", text: "True", imageId: null, correct: truth === "true", match: "", area: null }, { id: "false", text: "False", imageId: null, correct: truth === "false", match: "", area: null }]
       : kind === "FILL_BLANK" ? []
+      : kind === "NUMBER" ? [{ id: "n", text: number.answer, imageId: null, correct: true, match: number.margin || "0", area: null, unit: number.unit }]
+      : kind === "SHORT_ANSWER" ? options.filter((o) => o.text.trim()).map(({ id, text }) => ({ id, text, imageId: null, correct: true, match: "", area: null }))
       : kind === "HOTSPOT" ? spots.map((sp) => ({ id: sp.id, text: sp.text, imageId: null, correct: true, match: "", area: sp.area }))
       : options.filter((o) => o.text.trim() || o.imageId || o.match.trim()).map(({ id, text, imageId: img, correct, match }) => ({ id, text, imageId: img, correct, match, area: null }));
     return { kind, prompt, imageId, options: used, explanation };
   }
   const choice = kind === "SINGLE" || kind === "MULTIPLE";
   const single = options.find((o) => o.correct)?.key ?? "";
+  const typed = kind === "SHORT_ANSWER";
   const rows = options.map((o, i) => (
               <div key={o.key} className="flex flex-wrap items-end gap-2 rounded-[var(--pc-radius-card)] bg-ui-muted p-3">
                 {kind === "SINGLE" ? (
@@ -181,7 +188,7 @@ function QuestionDialog({ courseId, sectionId, question, files, onUploaded, onSa
                 ) : kind === "MULTIPLE" ? (
                   <span className="flex min-h-11 items-center"><Checkbox id={`right-${o.key}`} checked={o.correct} onCheckedChange={(checked) => update(o.key, { correct: checked === true })} aria-label={`Option ${i + 1} is right`} /></span>
                 ) : null}
-                <Input id={`opt-${o.key}`} label={kind === "ORDER" ? `Step ${i + 1}` : kind === "MATCH" ? `Item ${i + 1}` : `Option ${i + 1}`} value={o.text} onChange={(value) => update(o.key, { text: value })} maxLength={300} className="min-w-0 flex-1" />
+                <Input id={`opt-${o.key}`} label={kind === "ORDER" ? `Step ${i + 1}` : kind === "MATCH" ? `Item ${i + 1}` : typed ? `Accepted answer ${i + 1}` : `Option ${i + 1}`} value={o.text} onChange={(value) => update(o.key, { text: value })} maxLength={300} className="min-w-0 flex-1" />
                 {kind === "MATCH" ? <Input id={`match-${o.key}`} label="Its partner" value={o.match} onChange={(value) => update(o.key, { match: value })} maxLength={300} className="min-w-0 flex-1" /> : null}
                 {choice && images.length ? (
                   <Field label="Picture" htmlFor={`optimg-${o.key}`}>
@@ -198,7 +205,7 @@ function QuestionDialog({ courseId, sectionId, question, files, onUploaded, onSa
                       <Button type="button" variant="ghost" size="icon" className="size-11" aria-label={`Move step ${i + 1} down`} disabled={i === options.length - 1} onClick={() => move(i, 1)}><ArrowDown aria-hidden="true" /></Button>
                     </>
                   ) : null}
-                  <Button type="button" variant="ghost" size="icon" className="size-11" aria-label={`Remove ${kind === "ORDER" ? "step" : kind === "MATCH" ? "pair" : "option"} ${i + 1}`} disabled={options.length <= 2}
+                  <Button type="button" variant="ghost" size="icon" className="size-11" aria-label={`Remove ${kind === "ORDER" ? "step" : kind === "MATCH" ? "pair" : typed ? "answer" : "option"} ${i + 1}`} disabled={options.length <= (typed ? 1 : 2)}
                     onClick={() => setOptions((now) => now.filter((x) => x.key !== o.key))}><X aria-hidden="true" /></Button>
                 </span>
               </div>
@@ -236,7 +243,7 @@ function QuestionDialog({ courseId, sectionId, question, files, onUploaded, onSa
       <Textarea id={`q-prompt-${question?.id ?? "new"}`} label={kind === "TRUE_FALSE" ? "Statement" : kind === "ORDER" ? "What to put in order" : kind === "FILL_BLANK" ? "Sentence, with each missing word in [square brackets]" : kind === "HOTSPOT" ? "What to find on the picture" : "Question"}
         value={prompt} onChange={(event) => setPrompt(event.target.value)} required minLength={3} maxLength={1000} rows={kind === "FILL_BLANK" ? 3 : 2}
         description={kind === "FILL_BLANK" ? "Other answers you accept go after a |, for example [1.0|1]. Capitals, spaces and 1 or 1.0 don't matter." : undefined}
-        placeholder={kind === "TRUE_FALSE" ? "Free chlorine should be between 1.0 and 1.5 mg/l." : kind === "ORDER" ? "Put the steps of a water test in order." : kind === "FILL_BLANK" ? "Free chlorine should be between [1.0|1] and [3.0|3] mg/l." : kind === "HOTSPOT" ? "Tap the emergency stop button." : "What do you do if a reading is out of range?"} />
+        placeholder={kind === "TRUE_FALSE" ? "Free chlorine should be between 1.0 and 1.5 mg/l." : kind === "ORDER" ? "Put the steps of a water test in order." : kind === "FILL_BLANK" ? "Free chlorine should be between [1.0|1] and [3.0|3] mg/l." : kind === "HOTSPOT" ? "Tap the emergency stop button." : kind === "NUMBER" ? "What is the lowest free chlorine reading allowed, in mg/l?" : kind === "SHORT_ANSWER" ? "What is the name of the chemical used to raise pH?" : "What do you do if a reading is out of range?"} />
       {kind === "FILL_BLANK" ? <BlankPreview prompt={prompt} /> : null}
 
       <Field label={kind === "HOTSPOT" ? "Picture" : "Picture (optional)"} htmlFor={`q-image-${question?.id ?? "new"}`} hint={kind === "HOTSPOT" ? "The picture learners tap on. A clear photo of the real place works best." : "Shown above the question."}>
@@ -249,7 +256,19 @@ function QuestionDialog({ courseId, sectionId, question, files, onUploaded, onSa
         </div>
       </Field>
 
-      {kind === "FILL_BLANK" ? null : kind === "HOTSPOT" ? (
+      {kind === "FILL_BLANK" ? null : kind === "NUMBER" ? (
+        <fieldset className="flex flex-col gap-2">
+          <legend className="mb-1 text-sm font-semibold">The right number</legend>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Input id={`num-${question?.id ?? "new"}`} label="Right answer" inputMode="decimal" value={number.answer} onChange={(answer) => setNumber((n) => ({ ...n, answer }))} required maxLength={20} placeholder="1.5" />
+            <Input id={`num-margin-${question?.id ?? "new"}`} label="Give or take" inputMode="decimal" value={number.margin} onChange={(margin) => setNumber((n) => ({ ...n, margin }))} optional maxLength={20} placeholder="0.2"
+              description="Answers this far either side count as right." />
+            <Input id={`num-unit-${question?.id ?? "new"}`} label="Unit" value={number.unit} onChange={(unit) => setNumber((n) => ({ ...n, unit }))} optional maxLength={20} placeholder="mg/l"
+              description="Shown beside the box." />
+          </div>
+          {number.answer ? <p className="text-sm text-ui-muted-foreground" aria-live="polite">Right: anything from {rangeText(number.answer, number.margin, -1)} to {rangeText(number.answer, number.margin, 1)}{number.unit ? ` ${number.unit}` : ""}. Learners may write 1.5 or 1,5.</p> : null}
+        </fieldset>
+      ) : kind === "HOTSPOT" ? (
         imageId ? (
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1 text-sm font-semibold">Right spots</legend>
@@ -267,10 +286,11 @@ function QuestionDialog({ courseId, sectionId, question, files, onUploaded, onSa
       ) : (
         <fieldset className="flex flex-col gap-3">
           <legend className="mb-1 text-sm font-semibold">
-            {kind === "ORDER" ? "Steps, in the right order" : kind === "MATCH" ? "Pairs" : kind === "SINGLE" ? "Options: mark the right one" : "Options: tick every right one"}
+            {kind === "ORDER" ? "Steps, in the right order" : kind === "MATCH" ? "Pairs" : kind === "SINGLE" ? "Options: mark the right one" : typed ? "Answers you accept" : "Options: tick every right one"}
           </legend>
           {kind === "ORDER" ? <p className="text-sm text-ui-muted-foreground">Learners get them shuffled and put them back in this order.</p> : null}
           {kind === "MATCH" ? <p className="text-sm text-ui-muted-foreground">Learners match each item on the left with its partner, shown shuffled.</p> : null}
+          {typed ? <p className="text-sm text-ui-muted-foreground">Learners type their answer. Capitals, spaces and a full stop at the end don’t matter, so add other spellings and words that mean the same.</p> : null}
           {kind === "SINGLE" ? (
             <RadioGroup value={single} onValueChange={(key) => setOptions((now) => now.map((o) => ({ ...o, correct: o.key === key })))} className="flex flex-col gap-3">
               {rows}
@@ -278,7 +298,7 @@ function QuestionDialog({ courseId, sectionId, question, files, onUploaded, onSa
           ) : <div className="flex flex-col gap-3">{rows}</div>}
           {options.length < 8 ? (
             <Button type="button" variant="outline" className="min-h-11 self-start" onClick={() => setOptions((now) => [...now, blank()])}>
-              <Plus aria-hidden="true" />{kind === "ORDER" ? "Add a step" : kind === "MATCH" ? "Add a pair" : "Add an option"}
+              <Plus aria-hidden="true" />{kind === "ORDER" ? "Add a step" : kind === "MATCH" ? "Add a pair" : typed ? "Add another answer" : "Add an option"}
             </Button>
           ) : null}
           {choice && !images.length ? <p className="flex items-center gap-2 text-sm text-ui-muted-foreground"><ImagePlus aria-hidden="true" className="size-4" />Add a picture above to use pictures as answers too.</p> : null}
@@ -289,6 +309,12 @@ function QuestionDialog({ courseId, sectionId, question, files, onUploaded, onSa
         description="Shown once the learner gets it right, and in the review after a passed exam. Never shown before." />
     </FormDialog>
   );
+}
+
+/** One end of a Number question's range, for the author to check. */
+function rangeText(answer: string, margin: string, side: -1 | 1) {
+  const a = readNumber(answer), m = readNumber(margin) ?? 0;
+  return a === null ? "?" : String(Math.round((a + side * Math.abs(m)) * 1e6) / 1e6);
 }
 
 /** How a fill-in-the-blanks sentence will read, and the answers each blank takes. */

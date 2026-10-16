@@ -7,15 +7,21 @@ import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
+import { ChoiceRow } from "@/components/ui/choice-row";
 import { Switch } from "@/components/ui/switch";
 import { saveCourse, setCourseArchived } from "@/modules/training/features/courses/server/actions";
 import { THEME } from "@/modules/training/shared/components/dialog-kit";
 
 type QualificationOption = { id: string; name: string; validityMonths: number | null };
-type CourseDraft = { id: string; title: string; summary: string; requiresSignoff: boolean; grantsType: { id: string } | null; category?: string; tags?: string[]; selfEnrol?: boolean };
+type CourseDraft = {
+  id: string; title: string; summary: string; requiresSignoff: boolean; grantsType: { id: string } | null; category?: string; tags?: string[]; selfEnrol?: boolean;
+  lessonsInOrder?: boolean; prerequisiteIds?: string[]; isTemplate?: boolean;
+};
 
-/** A course's settings. A new course opens in the builder to add its lessons. */
-export function CourseDialog({ course, qualificationTypes, categories = [] }: { course?: CourseDraft; qualificationTypes: QualificationOption[]; categories?: string[] }) {
+/** A course's settings. A new course opens in the builder to add its lessons.
+ *  `courses`: the organisation's other courses, to choose ones to finish first. */
+export function CourseDialog({ course, qualificationTypes, categories = [], courses = [] }: { course?: CourseDraft; qualificationTypes: QualificationOption[]; categories?: string[]; courses?: { id: string; title: string }[] }) {
+  const others = courses.filter((c) => c.id !== course?.id);
   const router = useRouter();
   return (
     <FormDialog
@@ -37,6 +43,9 @@ export function CourseDialog({ course, qualificationTypes, categories = [] }: { 
           category: String(formData.get("category") ?? ""),
           tags: String(formData.get("tags") ?? "").split(",").map((t) => t.trim()).filter(Boolean),
           selfEnrol: formData.get("selfEnrol") === "on",
+          lessonsInOrder: formData.get("lessonsInOrder") === "on",
+          isTemplate: formData.get("isTemplate") === "on",
+          ...(others.length ? { prerequisiteIds: formData.getAll("prerequisiteIds").map(String) } : {}),
         });
         if (!result.ok) return result;
         if (!course) router.push(`/training/courses/${result.id}`); else router.refresh();
@@ -60,6 +69,17 @@ export function CourseDialog({ course, qualificationTypes, categories = [] }: { 
       </div>
       <Switch id="course-signoff" name="requiresSignoff" label="A trainer signs it off in person at the end" defaultChecked={course?.requiresSignoff} />
       <Switch id="course-self-enrol" name="selfEnrol" label="Open in the course catalogue" description="Staff can find it in Turnfin Me and enrol themselves, with no deadline. Shown once it is published." defaultChecked={course?.selfEnrol} />
+      <Switch id="course-in-order" name="lessonsInOrder" label="Lessons in order" description="Each lesson opens once the one before it is done. Good for safety courses where each step builds on the last." defaultChecked={course?.lessonsInOrder} />
+      <Switch id="course-template" name="isTemplate" label="Offer as a template" description="Other authors can start a new course from a copy of this one, under Start from a template." defaultChecked={course?.isTemplate} />
+      {others.length ? (
+        <fieldset className="flex flex-col gap-2">
+          <legend className="mb-1 text-sm font-semibold">Finish these first <span className="font-normal text-ui-muted-foreground">(optional, up to 5)</span></legend>
+          <p className="text-sm text-ui-muted-foreground">Learners can open this course once they have completed each of these. Until then Turnfin Me tells them which to do first.</p>
+          <div className="flex max-h-(--pc-overlay-max-height) flex-col gap-1 overflow-y-auto">
+            {others.map((c) => <ChoiceRow key={c.id} type="checkbox" name="prerequisiteIds" value={c.id} id={`prereq-${c.id}`} title={c.title} defaultChecked={course?.prerequisiteIds?.includes(c.id)} />)}
+          </div>
+        </fieldset>
+      ) : null}
       <Field label="Records a qualification" htmlFor="course-grants" optional hint="On completion, the person gets this qualification, expiring after its validity.">
         <NativeSelect id="course-grants" name="grantsTypeId" defaultValue={course?.grantsType?.id ?? ""} className="min-h-11 w-full">
           <NativeSelectOption value="">None</NativeSelectOption>

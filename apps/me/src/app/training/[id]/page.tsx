@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { Award, BookOpen, ChevronLeft, ChevronRight, CircleCheck, ClipboardCheck, FileText, GitBranch, GraduationCap, Headphones, Layers, ListChecks, ListTodo, PlayCircle, Send } from "lucide-react";
+import { Award, BookOpen, ChevronLeft, ChevronRight, CircleCheck, ClipboardCheck, Columns3, FileText, GitBranch, GraduationCap, Headphones, Layers, ListChecks, ListTodo, Lock, MonitorPlay, PlayCircle, ScanSearch, Send, Upload } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { RateCourse } from "@/components/learner";
 import { CourseImage, type ExamInfo } from "@/components/question";
@@ -15,8 +15,9 @@ import { EXAM_RESULT_META, TRAINING_META } from "@/lib/meta";
 const KIND_LABEL = {
   READING: "Reading", VIDEO: "Video", FILE: "Document", QUIZ: "Practice questions",
   SCENARIO: "Scenario", FLASHCARDS: "Flashcards", CHECKLIST: "Checklist", AUDIO: "Recording",
+  SORTING: "Sort into groups", EXPLORE: "Explore a picture", ASSIGNMENT: "Hand in work", EMBED: "Slides",
 } as const;
-type Lesson = { id: string; kind: keyof typeof KIND_LABEL; title: string; minutes: number | null; done: boolean };
+type Lesson = { id: string; kind: keyof typeof KIND_LABEL; title: string; minutes: number | null; done: boolean; locked?: boolean };
 type Detail = {
   id: string; title: string; summary: string; content: string; state: string; requiresSignoff: boolean; grants: string | null;
   dueOn: string | null; assignedBy: string; assignedAt: string; completedAt: string | null; signedOffBy: string | null; trainerNote: string;
@@ -27,6 +28,7 @@ type Detail = {
   whatsNew: { number: number; note: string } | null;
   practical: Practical | null;
   canRate: boolean; feedback: { rating: number; unclear: string } | null;
+  waitingOn?: string[]; inOrder?: boolean;
 };
 type Practical = {
   steps: { id: string; text: string; critical: boolean }[];
@@ -64,6 +66,7 @@ function PracticalCard({ practical, open }: { practical: Practical; open: boolea
 const KIND_ICON = {
   READING: BookOpen, VIDEO: PlayCircle, FILE: FileText, QUIZ: ListChecks,
   SCENARIO: GitBranch, FLASHCARDS: Layers, CHECKLIST: ListTodo, AUDIO: Headphones,
+  SORTING: Columns3, EXPLORE: ScanSearch, ASSIGNMENT: Upload, EMBED: MonitorPlay,
 };
 
 /** The course's final exam: its rules, the way in, and past attempts. */
@@ -142,6 +145,7 @@ export default function TrainingDetailPage() {
             {data.state === "submitted" ? <Notice title="Waiting for sign-off" live={justDone}>A trainer will watch you do it and sign it off.</Notice> : null}
             {data.state === "completed" ? <Notice title={`Completed ${date(data.completedAt)}`} live={justDone}>{data.signedOffBy ? `Signed off by ${data.signedOffBy}.${data.trainerNote ? ` ${data.trainerNote}` : ""}` : "Well done."}</Notice> : null}
             {data.state === "completed" ? <Link href={`/training/${data.id}/certificate`} className="button outline block"><Award aria-hidden="true" />Your certificate</Link> : null}
+            {open && data.waitingOn?.length ? <Notice title="Finish these first" tone="warning">{`Finish ${data.waitingOn.map((t) => `“${t}”`).join(" and ")} to open this course.`}</Notice> : null}
             {open && data.trainerNote ? <Notice title={`Not signed off yet${data.signedOffBy ? ` by ${data.signedOffBy}` : ""}`} tone="warning">{data.trainerNote}</Notice> : null}
 
             {data.sections && data.progress ? (
@@ -159,17 +163,18 @@ export default function TrainingDetailPage() {
                   </section>
                 ) : null}
                 {data.exam && examFirst ? <ExamCard id={data.id} exam={data.exam} open={open} /> : null}
+                {open && data.inOrder ? <p className="caption">The lessons open one at a time, in order.</p> : null}
                 {data.sections.map((section, si) => (
                   <section key={section.id} className="pc-panel" aria-labelledby={`section-${section.id}`}>
                     <div className="pc-panel-head"><h2 id={`section-${section.id}`}><span className="muted tabular">{si + 1}.</span> {section.title}</h2></div>
                     <ol className="pc-rows">
                       {section.lessons.map((lesson) => {
-                        const Icon = lesson.done ? CircleCheck : KIND_ICON[lesson.kind];
+                        const Icon = lesson.done ? CircleCheck : lesson.locked ? Lock : KIND_ICON[lesson.kind] ?? BookOpen;
                         return (
-                          <li key={lesson.id}><Link href={`/training/${data.id}/${lesson.id}`} className="pc-row lesson-row" data-done={lesson.done || undefined}>
+                          <li key={lesson.id}><Link href={`/training/${data.id}/${lesson.id}`} className={`pc-row lesson-row${lesson.locked ? " lesson-row-locked" : ""}`} data-done={lesson.done || undefined}>
                             <span className="pc-tile-icon"><Icon aria-hidden="true" /></span>
                             <span className="pc-row-body"><span className="pc-row-title">{lesson.title}</span>
-                              <span className="pc-row-hint">{[lesson.done ? "Done" : null, lesson.minutes ? `${lesson.minutes} min` : null].filter(Boolean).join(" · ") || KIND_LABEL[lesson.kind]}</span></span>
+                              <span className="pc-row-hint">{[lesson.done ? "Done" : null, lesson.locked ? "Not open yet" : null, lesson.minutes ? `${lesson.minutes} min` : null].filter(Boolean).join(" · ") || KIND_LABEL[lesson.kind]}</span></span>
                             <ChevronRight className="pc-row-chevron" aria-hidden="true" />
                           </Link></li>
                         );

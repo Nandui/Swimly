@@ -5,8 +5,9 @@ import { logAudit } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 import { FILE_SELECT } from "@/modules/training/shared/files";
 import { grantQualification } from "@/modules/training/shared/grant";
-import { docChecks, learnerScenario, lessonFiles, lessonMinutes, lessonPlace, outlineLessons, readOutline, videoFor, type Outline } from "@/modules/training/shared/lessons";
+import { docChecks, embedFor, learnerScenario, lessonFiles, lessonMinutes, lessonPlace, outlineLessons, readOutline, videoFor, type Outline } from "@/modules/training/shared/lessons";
 import { learnerQuestion, questionFiles, seeded } from "@/modules/training/shared/questions";
+import { submissionFor } from "@/modules/training/features/me/server/hand-in";
 
 /** A learner's course in Turnfin Me (docs/training.md, e-learning phase 1): the
  *  published version they take, their progress through it, and each lesson.
@@ -20,14 +21,45 @@ export type Db = Prisma.TransactionClient | typeof prisma;
 export const effectiveVersionId = (row: { versionId: string | null; status: string; course: { publishedVersionId: string | null } }) =>
   row.versionId ?? (row.status === "ASSIGNED" ? row.course.publishedVersionId : null);
 
-const ROW = { id: true, status: true, versionId: true, examExtraAttempts: true, course: { select: { id: true, publishedVersionId: true, coverId: true } }, progress: { select: { lessonId: true } } } as const satisfies Prisma.TrainingAssignmentSelect;
+const ROW = {
+  id: true, status: true, versionId: true, examExtraAttempts: true, orgId: true,
+  course: { select: { id: true, publishedVersionId: true, coverId: true, lessonsInOrder: true, prerequisiteIds: true } }, progress: { select: { lessonId: true } },
+} as const satisfies Prisma.TrainingAssignmentSelect;
+
+/** Courses this person still has to complete before this one opens (phase 8), by name. */
+export async function prerequisitesLeft(db: Db, userId: string, courseIds: readonly string[]) {
+  if (!courseIds.length) return [];
+  const [courses, done] = await Promise.all([
+    db.trainingCourse.findMany({ where: { id: { in: [...courseIds] } }, select: { id: true, title: true } }),
+    db.trainingAssignment.findMany({ where: { userId, courseId: { in: [...courseIds] }, status: "COMPLETED" }, distinct: ["courseId"], select: { courseId: true } }),
+  ]);
+  const finished = new Set(done.map((d) => d.courseId));
+  return courses.filter((c) => !finished.has(c.id)).map((c) => ({ id: c.id, title: c.title }));
+}
 
 export async function mine(db: Db, userId: string, assignmentId: string) {
   const row = await db.trainingAssignment.findFirst({ where: { id: assignmentId, userId, status: { not: "CANCELLED" } }, select: ROW });
   if (!row) return null;
   const versionId = effectiveVersionId(row);
-  const version = versionId ? await db.trainingCourseVersion.findUnique({ where: { id: versionId }, select: { id: true, outline: true, number: true, changeNote: true } }) : null;
-  return { row, version: version && { id: version.id, number: version.number, changeNote: version.changeNote, outline: readOutline(version.outline) }, done: new Set(row.progress.map((p) => p.lessonId)) };
+  const [version, waitingOn] = await Promise.all([
+    versionId ? db.trainingCourseVersion.findUnique({ where: { id: versionId }, select: { id: true, outline: true, number: true, changeNote: true } }) : null,
+    row.status === "ASSIGNED" ? prerequisitesLeft(db, userId, row.course.prerequisiteIds) : [],
+  ]);
+  return {
+    row, waitingOn, inOrder: row.course.lessonsInOrder,
+    version: version && { id: version.id, number: version.number, changeNote: version.changeNote, outline: readOutline(version.outline) }, done: new Set(row.progress.map((p) => p.lessonId)),
+  };
+}
+
+/** Why a lesson can't be opened yet, or null: courses to finish first, or
+ *  (when lessons go in order) the earlier lesson still to do. */
+export function lockedBecause(found: { waitingOn: { title: string }[]; inOrder: boolean; done: ReadonlySet<string>; version: { outline: Outline } | null }, lessonId: string) {
+  if (found.waitingOn.length) return `Finish ${found.waitingOn.map((c) => `“${c.title}”`).join(" and ")} first.`;
+  if (!found.inOrder || !found.version || found.done.has(lessonId)) return null;
+  const lessons = outlineLessons(found.version.outline);
+  const index = lessons.findIndex((l) => l.id === lessonId);
+  const before = lessons.slice(0, Math.max(0, index)).find((l) => !found.done.has(l.id));
+  return before ? `This course goes in order. Finish “${before.title}” first.` : null;
 }
 
 /** Where someone is in a course: lessons done, the total, and the lesson to continue with. */
@@ -59,12 +91,15 @@ export async function myCourse(userId: string, assignmentId: string) {
   const found = await mine(prisma, userId, assignmentId);
   if (!found?.version) return null;
   const { version, done } = found;
+  const open = found.row.status === "ASSIGNED";
   return {
+    // Courses to finish first, and whether lessons go in order (phase 8).
+    waitingOn: open ? found.waitingOn : [], inOrder: found.inOrder,
     // What changed in this version, in its author's words, from version 2 on.
     whatsNew: version.number > 1 && version.changeNote ? { number: version.number, note: version.changeNote } : null,
     sections: version.outline.sections.map((s) => ({
       id: s.id, title: s.title,
-      lessons: s.lessons.map((l) => ({ id: l.id, kind: l.kind, title: l.title, minutes: lessonMinutes(l), done: done.has(l.id) })),
+      lessons: s.lessons.map((l) => ({ id: l.id, kind: l.kind, title: l.title, minutes: lessonMinutes(l), done: done.has(l.id), locked: open && !!lockedBecause(found, l.id) })),
     })),
     ...progressOf(version.outline, done),
   };
@@ -82,7 +117,7 @@ export async function myLesson(userId: string, assignmentId: string, lessonId: s
   const place = found?.version ? lessonPlace(found.version.outline, lessonId) : null;
   if (!found || !place) return null;
   const { lesson } = place;
-  const file = (lesson.kind === "FILE" || lesson.kind === "AUDIO") && lesson.fileId
+  const file = (lesson.kind === "FILE" || lesson.kind === "AUDIO" || lesson.kind === "EXPLORE") && lesson.fileId
     ? await prisma.trainingFile.findFirst({ where: { id: lesson.fileId, courseId: found.row.course.id }, select: { id: true, name: true, mime: true, size: true } })
     : null;
   const video = lesson.kind === "VIDEO" ? videoFor(lesson.videoUrl) : null;
@@ -96,6 +131,12 @@ export async function myLesson(userId: string, assignmentId: string, lessonId: s
     steps: lesson.kind === "SCENARIO" ? learnerScenario(lesson.data?.steps ?? []) : null,
     cards: lesson.kind === "FLASHCARDS" ? lesson.data?.cards ?? [] : null,
     items: lesson.kind === "CHECKLIST" ? lesson.data?.items ?? [] : null,
+    // Phase 8: groups and things to sort (practice, so sent whole), spots on a picture, slides, and work to hand in.
+    sorting: lesson.kind === "SORTING" ? { groups: lesson.data?.groups ?? [], sorts: lesson.data?.sorts ?? [] } : null,
+    spots: lesson.kind === "EXPLORE" ? lesson.data?.spots ?? [] : null,
+    embed: lesson.kind === "EMBED" ? embedFor(lesson.videoUrl) : null,
+    handIn: lesson.kind === "ASSIGNMENT" ? { settings: lesson.data?.handIn ?? null, submission: await submissionFor(prisma, assignmentId, lesson.id) } : null,
+    locked: found.row.status === "ASSIGNED" ? lockedBecause(found, lesson.id) : null,
     video: video && { embed: video.embed, href: video.href, provider: video.provider }, file,
     questions: lesson.kind === "QUIZ" ? quizQuestions(found.version!.outline, place.section.id, `${assignmentId}:${lesson.id}`) : null,
     section: place.section.title, index: place.index, total: place.total, prev: place.prev, next: place.next,
@@ -113,6 +154,13 @@ export async function completeLessonFor(me: { id: string; name: string }, assign
     const place = found.version ? lessonPlace(found.version.outline, lessonId) : null;
     if (!found.version || !place) return fail("That lesson is not in your course.");
     if (found.done.has(lessonId)) return ok();
+    const locked = lockedBecause(found, lessonId);
+    if (locked) return fail(locked);
+    if (place.lesson.kind === "ASSIGNMENT") {
+      const sent = await submissionFor(tx, assignmentId, lessonId);
+      if (!sent) return fail("Hand in your work first.");
+      if (sent.status !== "ACCEPTED") return fail(sent.status === "RETURNED" ? "Your trainer sent this back. Change it and hand it in again." : "A trainer checks this first. The lesson is done once they accept it.");
+    }
     if (!found.row.versionId) await tx.trainingAssignment.update({ where: { id: assignmentId }, data: { versionId: found.version.id } });
     await tx.trainingLessonProgress.create({ data: { assignmentId, lessonId } });
     await logAudit({ actorId: me.id, actorName: me.name, action: "update", entity: "TrainingAssignment", entityId: assignmentId,

@@ -9,6 +9,7 @@ import { docsReading } from "@/modules/docs";
 import {
   checkQuizAnswer, completeLessonFor, completeTrainingFor, myCertificate, myCourse, myCourseFile, myExam, myExamPaper, myExamResult, myLesson, myPlan, myPractical, myTraining,
   saveExamAnswer, startExam, submitExam, trainingFileResponse,
+  handInWork, HAND_IN_TYPES, MAX_HAND_IN_TEXT, mySubmissionFile,
   answerRefresher, catalogueCover, catalogueFor, enrolMyself, myFeedback, myLessonNote, myRecord, myRefresher, mySaved, rateCourse, refresherWaiting, saveLessonNote, searchMyTraining,
 } from "@/modules/training";
 import { StaffApiError, notFound } from "@/lib/staff-api/errors";
@@ -165,7 +166,9 @@ export async function trainingItem(identity: StaffIdentity, id: string) {
   const practical = row.course.requiresSignoff ? await myPractical(identity.user.id, id) : null;
   // Their rating once they have finished (phase 6).
   const feedback = row.state === "completed" || row.state === "submitted" ? await myFeedback(identity.user.id, id) : null;
-  return { ...trainingDto(row), content: course ? "" : row.course.content, sections: course?.sections ?? null, exam: exam && examDto(exam), whatsNew: course?.whatsNew ?? null, practical: practical && practicalDto(practical),
+  return { ...trainingDto(row), content: course ? "" : row.course.content, sections: course?.sections ?? null,
+    // Courses to finish first (by name) and whether lessons go in order (phase 8).
+    waitingOn: course?.waitingOn.map((c) => c.title) ?? [], inOrder: course?.inOrder ?? false, exam: exam && examDto(exam), whatsNew: course?.whatsNew ?? null, practical: practical && practicalDto(practical),
     canRate: row.state === "completed" || row.state === "submitted", feedback };
 }
 
@@ -209,7 +212,7 @@ const paperDto = (paper: Paper) => ({
   id: paper.id, number: paper.number, deadlineAt: paper.deadlineAt, questions: paper.questions.map((q) => ({ ...questionDto(q), answer: q.answer })),
 });
 const answerSchema = z.union([
-  z.string().max(64), z.array(z.string().max(64)).max(8), z.record(z.string().max(64), z.string().max(64)),
+  z.string().max(200), z.array(z.string().max(64)).max(8), z.record(z.string().max(64), z.string().max(64)),
 ]).nullable();
 
 /** One lesson of the person's own course: its text, video or file, and the
@@ -230,7 +233,49 @@ export async function trainingLesson(identity: StaffIdentity, id: string, lesson
     steps: lesson.steps?.map((st) => ({ id: st.id, text: st.text, imageId: st.imageId, choices: st.choices.map((c) => ({ id: c.id, text: c.text, feedback: c.feedback, next: c.next, best: c.best })) })) ?? null,
     cards: lesson.cards?.map((c) => ({ id: c.id, front: c.front, back: c.back, imageId: c.imageId })) ?? null,
     items: lesson.items?.map((i) => ({ id: i.id, text: i.text })) ?? null,
+    // Phase 8. Sorting is practice, so where each thing belongs is sent with it.
+    sorting: lesson.sorting && { groups: lesson.sorting.groups.map((g) => ({ id: g.id, name: g.name })), sorts: lesson.sorting.sorts.map((i) => ({ id: i.id, text: i.text, group: i.group })) },
+    spots: lesson.spots?.map((sp) => ({ id: sp.id, x: sp.x, y: sp.y, title: sp.title, text: sp.text })) ?? null,
+    embed: lesson.embed && { src: lesson.embed.src, href: lesson.embed.href, provider: lesson.embed.provider },
+    handIn: lesson.handIn && {
+      text: lesson.handIn.settings?.text ?? "required", photo: lesson.handIn.settings?.photo ?? "optional", review: lesson.handIn.settings?.review ?? true,
+      submission: lesson.handIn.submission && {
+        status: lesson.handIn.submission.status, text: lesson.handIn.submission.text, fileName: lesson.handIn.submission.fileName, feedback: lesson.handIn.submission.feedback,
+        reviewedBy: lesson.handIn.submission.reviewedByName, reviewedAt: lesson.handIn.submission.reviewedAt?.toISOString() ?? null, submittedAt: lesson.handIn.submission.submittedAt.toISOString(),
+      },
+    },
+    locked: lesson.locked,
   };
+}
+
+const handInSchema = z.object({
+  text: z.string().max(MAX_HAND_IN_TEXT, "Keep your answer under 5,000 characters.").default(""),
+  file: z.object({
+    fileName: z.string().trim().min(1).max(120).regex(/^[^/\\\r\n]+$/, "Use a plain file name."),
+    mime: z.enum(HAND_IN_TYPES as [string, ...string[]]),
+    data: z.string().min(4).max(5_800_000),
+  }).strict().nullable().default(null),
+  keepFile: z.boolean().default(false),
+}).strict();
+
+/** Hands in work on a Hand in work lesson: a written answer, a photo or PDF, or both. */
+export async function handInTraining(request: Request, identity: StaffIdentity, id: string, lessonId: string) {
+  const input = await readBody(request, handInSchema, 6_000_000);
+  await rateLimit(`training-hand-in:${identity.user.id}`, 30, 3600);
+  const bytes = input.file ? Buffer.from(input.file.data, "base64") : null;
+  const result = await handInWork(me(identity), id, lessonId, { text: input.text, keepFile: input.keepFile, file: input.file && bytes ? { name: input.file.fileName, mime: input.file.mime, bytes } : null });
+  if (!result.ok) {
+    if (result.error.includes("not assigned to you") || result.error.includes("not in your course")) notFound();
+    throw failed(result.error);
+  }
+  return trainingLesson(identity, id, lessonId);
+}
+
+/** The photo or PDF they handed in, to look at again. */
+export async function trainingHandInFile(identity: StaffIdentity, id: string, lessonId: string) {
+  const file = await mySubmissionFile(identity.user.id, id, lessonId);
+  if (!file) notFound();
+  return trainingFileResponse(file);
 }
 
 /** Checks one practice question on a Quiz lesson: right or not, and why. */
