@@ -4,6 +4,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.21.1 · 16 October 2026 · Incidents: a clearer incident report page
+
+- An incident report now opens like a case file. At the top: what kind it is and what it was about in large type, where and when, the level it is handled at with two bars for what happened and what could have, and a progress line showing how far it has got: reported, triaged, investigating and closed.
+- A **What happens next** card says whose move it is: triage it, investigate it, waiting for someone else, or closed. When it is your move, a button takes you straight to the right part of the page. During an investigation it ticks off statements, the root cause and open actions.
+- When the report must go to the HSA, the same card shows the date and how many days are left.
+- The reporter's words read as a quote, kept as written. People involved show as cards, with an ambulance or a hospital visit picked out, and the history reads as a timeline beside the report.
+- On phones everything stacks in reading order, with what happens next straight after the summary.
+- Nothing about what you can do on a report, or who can do it, has changed.
+
 ## 1.21.0 · 16 October 2026 · The rota Plan chooses who teaches each swim class
 
 - Swim classes no longer have a set instructor. Whoever you choose for a class on the rota **Plan** teaches it that day, and the swim school follows: the pool deck, the schedule, starting the class, the register and what parents see.

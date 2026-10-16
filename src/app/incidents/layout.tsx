@@ -5,6 +5,7 @@ import { incidentsAccess, IncidentsShell } from "@/modules/incidents/features/wo
 import { pageSession } from "@/lib/page-guards";
 import { TITLE_TEMPLATE } from "@/lib/app";
 import '../workspace/module-workspace.css';
+import './incidents.css';
 
 export const metadata: Metadata = { title: { default: "Incidents", template: TITLE_TEMPLATE } };
 
