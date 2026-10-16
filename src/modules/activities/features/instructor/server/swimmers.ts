@@ -3,7 +3,7 @@ import { AuthorizationError, can } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
 import { parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { plannedTeachers } from "@/modules/activities/shared/courses/planned";
+import { dayTeacherId, plannedTeachers } from "@/modules/activities/shared/courses/planned";
 import { classifyMedical, requireActivitiesAccess } from "@/modules/activities/shared/classification";
 
 /** The deck's swimmer lookup (owner decision, September 2026): instructors can
@@ -44,7 +44,7 @@ export async function findSiteSwimmers(query: string) {
   ]);
   const coveringToday = new Set(covers.map((c) => c.courseId));
   const teachesToday = (course: { id: string; instructorId: string | null }) =>
-    (planned.has(course.id) ? planned.get(course.id)!.teacherId : course.instructorId) === session.user.id;
+    dayTeacherId(course.instructorId, planned.get(course.id), today()) === session.user.id;
   return swimmers.map((s) => {
     const teaching = s.enrolments.some((e) => teachesToday(e.course) || coveringToday.has(e.course.id));
     const { medicalNotes, hasMedicalNotes } = classifyMedical(s, teaching);

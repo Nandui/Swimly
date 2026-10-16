@@ -16,8 +16,8 @@ import { classBrowserHref } from "@/modules/activities/features/courses/server/b
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 
 const PRIMARY = ["site", "level", "day"];
-const EXTRA = ["programme", "time", "instructor", "location"];
-const ALL_LABELS: Record<string, string> = { site: "All sites", level: "All levels", day: "Any day", programme: "All programmes", time: "Any start time", instructor: "All instructors", location: "All pool areas" };
+const EXTRA = ["programme", "time", "location"];
+const ALL_LABELS: Record<string, string> = { site: "All sites", level: "All levels", day: "Any day", programme: "All programmes", time: "Any start time", location: "All pool areas" };
 
 export function CourseFilters({ dimensions, q, active, state, todayDay, views, selectedView, showing }: {
   dimensions: FilterDimension[]; q: string; active: number;
@@ -47,7 +47,7 @@ export function CourseFilters({ dimensions, q, active, state, todayDay, views, s
       <Form action="/courses" role="search" aria-label="Search weekly classes" className="min-w-0 flex-[1_1_var(--pc-field-min)] md:max-w-md">
         {dimensions.map(d => d.selected ? <input key={d.key} type="hidden" name={d.key} value={d.selected} /> : null)}
         {state === "archived" ? <input type="hidden" name="state" value="archived" /> : null}
-        <SearchField id="class-query" label="Find a class" defaultValue={q} placeholder="Class, level, site or instructor" clearHref={href({ q: null })} />
+        <SearchField id="class-query" label="Find a class" defaultValue={q} placeholder="Class, level, site or pool area" clearHref={href({ q: null })} />
       </Form>
       <SegmentedLinks label="Class availability" items={views.map(view => ({ href: href({ state: view.state, places: view.places }), label: view.label, count: view.count, current: selectedView === view.key }))} />
     </div>

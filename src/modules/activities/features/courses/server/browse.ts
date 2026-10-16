@@ -3,7 +3,7 @@ import { DAY_META } from "@/modules/activities/shared/courses/constants";
 import { filterCourses, parseCourseFilters, type CourseFilters } from "@/modules/activities/features/courses/server/filters";
 
 type Params = Record<string, string | string[] | undefined>;
-const QUERY_KEYS = ["q", "site", "programme", "level", "day", "time", "instructor", "location", "places", "state", "page"] as const;
+const QUERY_KEYS = ["q", "site", "programme", "level", "day", "time", "location", "places", "state", "page"] as const;
 export const CLASS_PAGE_SIZE = 24;
 
 /** Only class-browser parameters can travel through a detail page's return link. */

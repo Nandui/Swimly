@@ -5,7 +5,7 @@ import { z } from "zod";
 import type { AttendanceStatus } from "@/generated/prisma/client";
 import { fail } from "@/lib/action-result";
 import { canMarkRegister } from "@/modules/activities/shared/attendance/access";
-import { plannedTeachers } from "@/modules/activities/shared/courses/planned";
+import { dayTeacherId, plannedTeachers } from "@/modules/activities/shared/courses/planned";
 import { describeRegister } from "@/modules/activities/shared/attendance/summary";
 import { logAudit } from "@/lib/audit";
 import { canSee, requirePermission } from "@/lib/authz";
@@ -91,9 +91,9 @@ export async function markRegister(input: MarkRegisterInput): Promise<RegisterSa
       select: { coverById: true, coverByName: true, instructorId: true, instructorName: true },
     });
 
-    // Whose class it is that day: the teacher the rota planned for that date, else its instructor.
+    // Whose class it is that day: the teacher the rota planned for that date (`dayTeacherId`).
     const planned = (await plannedTeachers([courseId], iso, tx)).get(courseId);
-    const dayInstructorId = planned ? planned.teacherId : course.instructorId;
+    const dayInstructorId = dayTeacherId(course.instructorId, planned, iso);
     if (
       !canMarkRegister({ session, instructorId: dayInstructorId, coverById: cover?.coverById })
     ) {

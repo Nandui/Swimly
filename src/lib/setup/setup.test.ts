@@ -44,14 +44,15 @@ before(async () => {
 });
 after(async () => { await fixture?.close(); });
 
-test("the activity list is kept with its own permission; names are unique; one activity takes the classes", async () => {
+test("the activity list is kept with its own permission; names are unique; no activity takes the classes any more", async () => {
   as("ana", ["setup.view"]);
   await assert.rejects(actions.saveActivityType(null, { name: "Lifeguarding", departmentId: "d-pool", icon: "lifeguard" }), Denied, "seeing the setup is not keeping it");
   as("ana", ["setup.activities"]);
   assert.equal((await actions.saveActivityType(null, { name: "Lifeguarding", departmentId: "d-pool", icon: "lifeguard" })).ok, true);
   assert.equal((await actions.saveActivityType(null, { name: "lifeguarding", departmentId: "d-pool", icon: "lifeguard" })).ok, false, "names are unique");
-  assert.equal((await actions.saveActivityType(null, { name: "Teaching", departmentId: "d-pool", icon: "teaching", fromClasses: true })).ok, true);
-  assert.equal((await actions.saveActivityType(null, { name: "Squad coaching", departmentId: "d-pool", icon: "teaching", fromClasses: true })).ok, false, "one activity takes the classes");
+  const old = await fixture.prisma.activityType.create({ data: { orgId: ORG, name: "Teaching", departmentId: "d-pool", icon: "teaching", fromClasses: true } });
+  assert.equal((await actions.saveActivityType(old.id, { name: "Teaching", departmentId: "d-pool", icon: "teaching" })).ok, true);
+  assert.equal((await fixture.prisma.activityType.findUniqueOrThrow({ where: { id: old.id } })).fromClasses, false, "saving one that took the classes makes it ordinary");
   const lg = await fixture.prisma.activityType.findFirstOrThrow({ where: { name: "Lifeguarding" } });
   assert.equal((await actions.archiveActivityType(lg.id, true)).ok, true);
   const log = await fixture.prisma.auditLog.findFirstOrThrow({ where: { entity: "ActivityType", action: "create" } });

@@ -7,7 +7,7 @@ import { activeStaffIds, areasAt, departmentById, departmentIdsOf, liveSiteById,
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { currentActor, mayFor } from "@/lib/policy/session";
-import { activityTypeById, activityTypeIdsIn, classesActivity } from "@/lib/setup/activity-types";
+import { activityTypeById, activityTypeIdsIn } from "@/lib/setup/activity-types";
 import { addDaysIso, clock, mondayOf, parseClock, slotProblem } from "@/modules/rota/shared/constants";
 import { placeProblem } from "@/modules/rota/shared/cover";
 import { lanesFrom, lanesLabel, lanesProblem } from "@/modules/rota/shared/lanes";
@@ -323,19 +323,17 @@ export async function putOnActivity(input: PutOnInput, changeInput: ChangeInput 
   return ok();
 }
 
-/** Plan who teaches a swim class on a date (owner decision: Rota assigns instructors). The swim
- *  school keeps the record and checks the class runs. Who may: the department of the activity that
- *  takes the swim classes, when there is one; else the department whose plan it is done from
- *  (`departmentId`), since the classes then sit on every department's plan (owner request, 16
- *  October 2026: no booking or activity to set up). Without either, only Run. From a department's
+/** Plan who teaches a swim class on a date (owner decision, 16 October 2026: "the instructor is
+ *  defined via the plan"). The swim school keeps the record and checks the class runs. Who may:
+ *  the department whose plan it is done from (`departmentId`), since the classes sit on every
+ *  department's plan; without one, only Run. From a department's
  *  plan the class also goes on the person's shift there: inside one already, else stretching
  *  the shift it meets, else a new part of the day (`shiftForClass`). */
 export async function planTeacher(input: { siteId: string; date: string; classRef: string; userId: string | null; departmentId?: string }, changeInput: ChangeInput = {}): Promise<ActionResult> {
   const change = changeSchema.parse(changeInput);
   if (!isDateOnly(input.date)) return fail("Choose a day.");
   const actor = await currentActor();
-  const teaching = await classesActivity(actor.orgId);
-  const departmentId = teaching?.departmentId ?? input.departmentId ?? ANY_DEPARTMENT;
+  const departmentId = input.departmentId ?? ANY_DEPARTMENT;
   const at = input.userId ? await allowedForPerson(input.siteId, input.date, departmentId, input.userId) : await allowedFor(input.siteId, input.date, departmentId);
   if (!at.ok) return fail(at.error);
   if (at.live && !change.reason) return fail(NEEDS_REASON);

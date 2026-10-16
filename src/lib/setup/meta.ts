@@ -21,9 +21,10 @@ export function activityIcon(key: string): LucideIcon {
   return (ACTIVITY_ICONS as Record<string, { icon: LucideIcon }>)[key]?.icon ?? Activity;
 }
 
-/** The activity the swim school's classes arrive as. */
+/** An activity that used to take the swim classes: the classes now fill the Plan by themselves,
+ *  so it is not offered there. Saving it makes it an ordinary activity. */
 export const ACTIVITY_TAG_META = {
-  classes: { label: "Takes the swim classes", color: "blue", icon: GraduationCap },
+  classes: { label: "Not on the Plan: swim classes fill it by themselves", color: "gray", icon: GraduationCap },
 } as const satisfies Record<string, StatusMeta>;
 
 /** "Learner pool, lane 3" → the area and the detail after it, when the text starts with an area. */

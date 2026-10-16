@@ -25,11 +25,12 @@ const typeSchema = z.object({
   departmentId: z.string().min(1, "Choose the department that plans it."),
   icon: z.enum(ACTIVITY_ICON_KEYS as [string, ...string[]]),
   requiredTypeId: z.string().trim().max(64).default("").transform((v) => v || null),
-  fromClasses: z.boolean().default(false),
 });
 export type ActivityTypeInput = z.input<typeof typeSchema>;
 
-/** Add an activity to the organisation's list, or change one. One activity takes the swim classes. */
+/** Add an activity to the organisation's list, or change one. No activity takes the swim classes
+ *  any more (owner decision, 16 October 2026: they fill the rota Plan by themselves), so saving
+ *  one that used to makes it an ordinary activity. */
 export async function saveActivityType(id: string | null, input: ActivityTypeInput): Promise<ActionResult> {
   const session = await requirePermission("setup.activities");
   const orgId = session.user.orgId;
@@ -41,12 +42,9 @@ export async function saveActivityType(id: string | null, input: ActivityTypeInp
   if (data.requiredTypeId && !(await prisma.qualificationType.findFirst({ where: { id: data.requiredTypeId, orgId }, select: { id: true } }))) return fail("That qualification is no longer offered.");
   const clash = await prisma.activityType.findFirst({ where: { orgId, name: { equals: data.name, mode: "insensitive" }, ...(id ? { id: { not: id } } : {}) }, select: { id: true } });
   if (clash) return fail("There is already an activity with that name.");
-  if (data.fromClasses && (await prisma.activityType.findFirst({ where: { orgId, fromClasses: true, archivedAt: null, ...(id ? { id: { not: id } } : {}) }, select: { name: true } }))) {
-    return fail("Another activity already takes the swim classes.");
-  }
   if (id && !(await prisma.activityType.findFirst({ where: { id, orgId }, select: { id: true } }))) return fail("That activity is no longer on the list.");
   await prisma.$transaction(async (tx) => {
-    const row = id ? await tx.activityType.update({ where: { id }, data }) : await tx.activityType.create({ data: { ...data, orgId } });
+    const row = id ? await tx.activityType.update({ where: { id }, data: { ...data, fromClasses: false } }) : await tx.activityType.create({ data: { ...data, orgId } });
     await logAudit({ actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: id ? "update" : "create", entity: "ActivityType", entityId: row.id, clubId: null, summary: `${id ? "Changed" : "Added"} the activity ${data.name}` }, tx);
   });
   refresh("/activity-list");

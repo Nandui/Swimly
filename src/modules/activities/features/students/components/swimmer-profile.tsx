@@ -69,7 +69,7 @@ export function SwimmerProfile({ student, enrolments, programmes, assessments, t
         <aside className={`pc-panel ${styles.glance}`} aria-labelledby="glance-heading">
           <h2 id="glance-heading">Swimmer at a glance</h2>
           <ul className="pc-rows">
-            {(current.length ? current : [null]).map(e => <li key={e?.id ?? "none"} className="pc-row"><span className="pc-tile-icon"><Waves aria-hidden="true" /></span><div className="pc-row-body"><p className="pc-row-title">{e ? e.level.name : "Not in a class"}</p><p className="pc-row-hint">{e ? ["Current class", formatSlotShort(e.course), e.course.instructor?.name].filter(Boolean).join(" · ") : "Current class"}</p></div></li>)}
+            {(current.length ? current : [null]).map(e => <li key={e?.id ?? "none"} className="pc-row"><span className="pc-tile-icon"><Waves aria-hidden="true" /></span><div className="pc-row-body"><p className="pc-row-title">{e ? e.level.name : "Not in a class"}</p><p className="pc-row-hint">{e ? ["Current class", formatSlotShort(e.course)].join(" · ") : "Current class"}</p></div></li>)}
             <li className="pc-row"><span className="pc-tile-icon"><CalendarDays aria-hidden="true" /></span><div className="pc-row-body"><p className="pc-row-title tabular-nums">{next ? `${formatDate(parseDateOnly(next.date))}, ${formatTime(next.enrolment.course.startMinutes)}` : "No upcoming class"}</p><p className="pc-row-hint">{next ? `Next lesson · ${next.enrolment.course.club.name}` : "Next lesson"}</p></div></li>
             <li><a href={swimmerProfileHref(student.id, returnTo, "details")} className="pc-row" onClick={event => { event.preventDefault(); navigate("details"); }}><span className="pc-tile-icon"><Phone aria-hidden="true" /></span><span className="pc-row-body"><span className="pc-row-title">{student.contactName ?? "No contact recorded"}</span><span className="pc-row-hint tabular-nums">{student.contactPhone ? `Contact · ${student.contactPhone}` : "Contact details"}</span></span><ChevronRight className="pc-row-chevron" aria-hidden="true" /></a></li>
           </ul>
@@ -92,7 +92,7 @@ export function SwimmerProfile({ student, enrolments, programmes, assessments, t
                         <span className="min-w-0 flex-1">
                           <span className="pc-row-hint block tabular-nums">{formatDate(e.startedOn)} to {ends}</span>
                           <span className="block font-semibold">{e.level.name} · {e.course.club.name}</span>
-                          <span className="pc-row-hint block">{formatSlotShort(e.course)}{e.course.instructor ? ` · ${e.course.instructor.name}` : ""}</span>
+                          <span className="pc-row-hint block">{formatSlotShort(e.course)}</span>
                         </span>
                         <Tag meta={ENROLMENT_STATUS_META[e.status]} />
                       </CollapsibleTrigger>

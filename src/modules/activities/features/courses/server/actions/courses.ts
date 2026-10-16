@@ -1,6 +1,5 @@
 "use server";
 
-import { isActiveStaff } from "@/lib/directory";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { DayOfWeek } from "@/generated/prisma/client";
@@ -39,7 +38,6 @@ const courseSchema = z.object({
     .string()
     .trim()
     .refine((v) => v === "" || /^\d{1,3}$/.test(v), "Capacity has to be a whole number, or blank."),
-  instructorId: z.string(),
   location: z.string().trim().max(80, "Keep the location under 80 characters."),
 });
 
@@ -52,7 +50,6 @@ type CourseData = {
   startMinutes: number;
   durationMinutes: number;
   capacity: number | null;
-  instructorId: string | null;
   location: string | null;
 };
 
@@ -79,7 +76,6 @@ function resolve(input: CourseInput): Resolved {
       startMinutes,
       durationMinutes: parsed.data.durationMinutes,
       capacity: parsed.data.capacity === "" ? null : Number(parsed.data.capacity),
-      instructorId: parsed.data.instructorId || null,
       location: parsed.data.location || null,
     },
   };
@@ -98,9 +94,6 @@ export async function createCourse(input: CourseInput): Promise<ActionResult> {
   if (!level) return fail("That level no longer exists.");
   if (level.archivedAt) return fail(`${level.name} is archived. Restore it first.`);
   if (level.programme.archivedAt) return fail("That programme is archived. Restore it first.");
-  if (data.instructorId && !await isActiveStaff(data.instructorId)) {
-    return fail("That instructor is not available. Pick an active staff member.");
-  }
 
   await prisma.$transaction(async (tx) => {
     const course = await tx.course.create({
@@ -151,7 +144,6 @@ export async function updateCourse(id: string, input: CourseInput): Promise<Acti
         durationMinutes: true,
         capacity: true,
         location: true,
-        instructorId: true,
         level: { select: { name: true, programmeId: true } },
         _count: { select: { enrolments: { where: TAKES_A_PLACE } } },
       },
@@ -180,9 +172,6 @@ export async function updateCourse(id: string, input: CourseInput): Promise<Acti
       return fail(`${level.name} is archived. Restore it first.`);
     }
     if (level.programme.archivedAt && level.id !== existing.levelId) return fail("That programme is archived. Restore it first.");
-    if (data.instructorId && data.instructorId !== existing.instructorId && !await isActiveStaff(data.instructorId, tx)) {
-      return fail("That instructor is not available. Pick an active staff member.");
-    }
 
     const changes: string[] = [];
     if (data.levelId !== existing.levelId) changes.push(`level ${existing.level.name} → ${level.name}`);
@@ -197,7 +186,6 @@ export async function updateCourse(id: string, input: CourseInput): Promise<Acti
     if (data.capacity !== existing.capacity) {
       changes.push(`capacity ${existing.capacity ?? "no limit"} → ${data.capacity ?? "no limit"}`);
     }
-    if (data.instructorId !== existing.instructorId) changes.push("instructor");
     if ((data.location ?? "") !== (existing.location ?? "")) changes.push("location");
     if (changes.length === 0) return ok();
 

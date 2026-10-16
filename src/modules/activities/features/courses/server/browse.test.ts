@@ -26,7 +26,7 @@ test("combined search and pool filters match results and keep honest alternative
   assert.deepEqual(filterCourses(rows, filters).map(row => row.id), ["pool"]);
   assert.deepEqual(courseFilterDimensions(rows, filters).find(d => d.key === "location")?.options,
     [{ value: "Lane 1", label: "Lane 1", count: 1 }, { value: "Learner Pool", label: "Learner Pool", count: 1 }]);
-  const impossible = { ...filters, instructor: "missing" };
+  const impossible = { ...filters, time: "1" };
   assert.deepEqual(filterCourses(rows, impossible), []);
   assert.equal(courseFilterDimensions(rows, impossible).find(d => d.key === "location")?.options[0].count, 0);
 });
@@ -61,9 +61,9 @@ test("return links stay on the class browser and accept only known query keys", 
   assert.equal(classReturnHref("/courses?state=archived&page=2&returnTo=https://evil.test&unknown=1"), "/courses?state=archived&page=2");
 });
 
-test("multiword search finds a level, weekday, site and instructor in any order", () => {
+test("multiword search finds a level, weekday, site and pool area in any order", () => {
   const rows = [course("one"), course("two", { clubId: "north", club: { id: "north", name: "North Pool" }, dayOfWeek: "TUESDAY" })];
-  for (const q of ["starfish monday", "MONDAY  starfish", "Alex demo", "starfish 16:00"]) {
+  for (const q of ["starfish monday", "MONDAY  starfish", "learner demo", "starfish 16:00"]) {
     assert.deepEqual(classBrowserModel(rows, { q }).rows.map(c => c.id), q === "starfish 16:00" ? ["one", "two"] : ["one"]);
   }
   assert.deepEqual(classBrowserModel(rows, { q: "North Tuesday" }).rows.map(c => c.id), ["two"]);

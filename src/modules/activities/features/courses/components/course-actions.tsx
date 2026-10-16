@@ -21,22 +21,16 @@ import {
   formatTime,
 } from "@/modules/activities/shared/courses/constants";
 import type { CourseDetail } from "@/modules/activities/shared/courses/data/courses";
-import type { InstructorOption } from "@/modules/activities/shared/courses/data/courses";
 import type { LevelOption } from "@/modules/activities/shared/curriculum/data/curriculum";
 
-import {
-  readCourseInput as readInput,
-  UNASSIGNED_INSTRUCTOR as UNASSIGNED,
-} from "@/modules/activities/features/courses/server/form-input";
+import { readCourseInput as readInput } from "@/modules/activities/features/courses/server/form-input";
 
 function CourseFields({
   course,
   levels,
-  instructors,
 }: {
   course?: CourseDetail;
   levels: LevelOption[];
-  instructors: InstructorOption[];
 }) {
   const byProgramme = new Map<
     string,
@@ -135,21 +129,6 @@ function CourseFields({
         </Field>
       </div>
 
-      <Field label="Instructor" htmlFor="instructorId">
-        <Select
-          id="instructorId"
-          name="instructorId"
-          defaultValue={course?.instructor?.id ?? UNASSIGNED}
-          options={[
-            { value: UNASSIGNED, label: "Nobody yet" },
-            ...instructors.map((instructor) => ({
-              value: instructor.id,
-              label: instructor.name,
-            })),
-          ]}
-        />
-      </Field>
-
       <LocationField defaultValue={course?.location} />
     </>
   );
@@ -158,11 +137,9 @@ function CourseFields({
 export function EditCourse({
   course,
   levels,
-  instructors,
 }: {
   course: CourseDetail;
   levels: LevelOption[];
-  instructors: InstructorOption[];
 }) {
   return (
     <FormDialog
@@ -179,7 +156,7 @@ export function EditCourse({
       successMessage="Class updated"
       submit={(formData) => updateCourse(course.id, readInput(formData))}
     >
-      <CourseFields course={course} levels={levels} instructors={instructors} />
+      <CourseFields course={course} levels={levels} />
     </FormDialog>
   );
 }
@@ -207,7 +184,7 @@ export function MoveCourse({
       successMessage="Class moved"
       submit={(formData) => moveCourseSite(course.id, String(formData.get("siteId") ?? ""))}
     >
-      <Field label="Site" htmlFor="siteId" hint="Check the instructor works at the new site.">
+      <Field label="Site" htmlFor="siteId" hint="Teachers at the new site are chosen on its rota Plan.">
         <Select
           id="siteId"
           name="siteId"

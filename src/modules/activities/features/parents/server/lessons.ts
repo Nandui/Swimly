@@ -1,5 +1,6 @@
 import { liveSiteIds, withSites, type SiteRef, type StaffRef } from "@/lib/directory";
 import { withClassRefs } from "@/modules/activities/shared/courses/refs";
+import { dayTeacherId } from "@/modules/activities/shared/courses/planned";
 import type { ParentAccount, Prisma } from "@/generated/prisma/client";
 import { parseDateOnly, today, weekdayOf } from "@/lib/format";
 import { requireChild } from "@/modules/activities/shared/parents/children";
@@ -70,7 +71,7 @@ export async function childLessons(tx: Prisma.TransactionClient, parent: ParentA
         (enrolment.scheduledEndOn && date >= enrolment.scheduledEndOn) || weekdayOf(date) !== course.dayOfWeek) continue;
       const cover = course.covers.find(c => c.date.getTime() === date.getTime());
       const planned = course.plannedTeachers.find(p => p.date.getTime() === date.getTime());
-      const item = lesson(course, date, cover?.coverByName ?? (planned ? (planned.teacherId ? planned.teacherName : null) : course.instructor?.name ?? null));
+      const item = lesson(course, date, cover?.coverByName ?? (planned ? (planned.teacherId ? planned.teacherName : null) : dayTeacherId(course.instructorId, undefined, date.toISOString().slice(0, 10)) ? course.instructor?.name ?? null : null));
       if (!item || new Date(item.endsAt) <= now) continue;
       const key = `${course.id}:${item.date}`;
       if (cancelled.has(item.date)) { cancelledUpcoming.set(key, item); continue; }

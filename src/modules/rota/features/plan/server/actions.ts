@@ -6,7 +6,7 @@ import { logAudit } from "@/lib/audit";
 import { departmentById, staffByIds, staffContact } from "@/lib/directory";
 import { isDateOnly, parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { activityTypeIdsIn, classesActivity } from "@/lib/setup/activity-types";
+import { activityTypeIdsIn } from "@/lib/setup/activity-types";
 import { clock, parseClock, slotProblem } from "@/modules/rota/shared/constants";
 import { fitsFor } from "@/modules/rota/shared/data";
 import { notifyShiftChange } from "@/lib/staff-api/notify";
@@ -111,16 +111,15 @@ export async function saveBreaks(input: BreaksInput, changeInput: ChangeInput = 
   if (!at.ok) return fail(at.error);
   if (at.live && !change.reason) return fail(NEEDS_REASON);
   const on = parseDateOnly(date);
-  // They are on this department's plan that day: a shift on it, one of its activities, or (for
-  // the department that takes the swim classes) a class they teach here.
-  const [person, onPlan, teaching] = await Promise.all([
+  // They are on this department's plan that day: a shift on it, one of its activities, or a
+  // swim class they teach here (the classes sit on every department's plan).
+  const [person, onPlan] = await Promise.all([
     staffContact(userId, at.site.orgId),
     prisma.rotaPlanShift.findFirst({ where: { siteId, departmentId, date: on, userId }, select: { id: true } })
       .then(async (x) => x ?? prisma.rotaAssignment.findFirst({ where: { userId, need: { siteId, date: on, typeId: { in: await activityTypeIdsIn(departmentId) } } }, select: { id: true } })),
-    classesActivity(at.site.orgId, { departmentId, liveOnly: false }),
   ]);
   if (!person) return fail("That person is no longer here.");
-  const teaches = !onPlan && teaching
+  const teaches = !onPlan
     ? (await commitmentsFor({ userIds: [userId], from: date, to: date })).some((c) => c.source === CLASSES && c.siteId === siteId)
     : false;
   if (!onPlan && !teaches) return fail(`${person.name} is not on this department's plan that day.`);
