@@ -7,7 +7,7 @@ import { serverModule } from "@/test/server-module";
 type Actions = typeof import("@/modules/activities/features/courses/server/actions/courses");
 const input: import("@/modules/activities/features/courses/server/actions/courses").CourseInput = {
   levelId: "entry", name: "Test class", dayOfWeek: "MONDAY", startTime: "15:00",
-  durationMinutes: 30, capacity: "8", instructorId: "", location: "",
+  durationMinutes: 30, capacity: "8", location: "",
 };
 
 function fixture() {
@@ -59,6 +59,13 @@ test("new classes belong to the working site even when their shared curriculum o
   assert.equal(f.created[0].levelId, "entry");
   assert.equal(f.audits[0].clubId, "club");
   assert.equal(f.audits[0].programmeId, "programme");
+});
+
+test("a new class has no set instructor: the rota Plan names each day's teacher", async () => {
+  const f = fixture();
+  const old = { ...input, instructorId: "instructor" } as typeof input;
+  assert.equal((await f.actions.createCourse(old)).ok, true);
+  assert.equal("instructorId" in f.created[0], false);
 });
 
 test("changing a class level refuses a missing curriculum definition", async () => {

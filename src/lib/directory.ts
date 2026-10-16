@@ -77,11 +77,18 @@ export async function areaNamesAt(siteId: string, db?: Pick<Prisma.TransactionCl
   return rows.map((row) => row.name);
 }
 
-/** A site's areas (Admin, Areas), in order, with how many lanes each has (0 for none): what the
- *  rota's activities and bookings pick from and book lanes in. */
-export async function areasAt(siteId: string, db?: Pick<Prisma.TransactionClient, "siteArea">): Promise<{ name: string; lanes: number }[]> {
-  return (db ?? (await import("@/lib/prisma")).prisma).siteArea.findMany({ where: { siteId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { name: true, lanes: true } });
+/** A site's areas (Admin, Areas), in order, with how many lanes each has (0 for none), the daily
+ *  hours it is open and its minimum staff: what the rota's activities and bookings pick from and
+ *  book lanes in, and what it checks staffing against. */
+export async function areasAt(siteId: string, db?: Pick<Prisma.TransactionClient, "siteArea">): Promise<AreaAt[]> {
+  const rows = await (db ?? (await import("@/lib/prisma")).prisma).siteArea.findMany({ where: { siteId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    select: { name: true, lanes: true, openFrom: true, openUntil: true,
+      staffing: { orderBy: { sortOrder: "asc" }, select: { count: true, qualificationTypeId: true, qualificationType: { select: { name: true } } } } } });
+  return rows.map(({ staffing, ...area }) => ({ ...area,
+    minimums: staffing.map((m) => ({ count: m.count, typeId: m.qualificationTypeId, typeName: m.qualificationType?.name ?? null })) }));
 }
+/** An area as `areasAt` gives it. `minimums`: "2 holding Pool Lifeguard", `typeId` null for anyone. */
+export type AreaAt = { name: string; lanes: number; openFrom: number | null; openUntil: number | null; minimums: { count: number; typeId: string | null; typeName: string | null }[] };
 
 /** Live sites in the order people see them, e.g. for a public site picker. */
 export async function liveSites(db?: Db): Promise<SiteRef[]> {

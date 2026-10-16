@@ -36,9 +36,13 @@ export async function areasPage() {
   const { orgId, keeps } = await viewer();
   const sites = await prisma.club.findMany({
     where: { orgId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    select: { id: true, name: true, code: true, areas: { orderBy: [{ archivedAt: { sort: "asc", nulls: "first" } }, { sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true, lanes: true, archivedAt: true } } },
+    select: { id: true, name: true, code: true, areas: { orderBy: [{ archivedAt: { sort: "asc", nulls: "first" } }, { sortOrder: "asc" }, { name: "asc" }],
+      select: { id: true, name: true, lanes: true, archivedAt: true, openFrom: true, openUntil: true,
+        staffing: { orderBy: { sortOrder: "asc" }, select: { count: true, qualificationTypeId: true, qualificationType: { select: { name: true } } } } } } },
   });
-  return { canKeep: keeps("setup.areas"), sites };
+  const qualifications = await prisma.qualificationType.findMany({ where: { orgId, archivedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } });
+  return { canKeep: keeps("setup.areas"), qualifications, sites: sites.map((site) => ({ ...site, areas: site.areas.map(({ staffing, ...area }) => ({ ...area,
+    minimums: staffing.map((m) => ({ count: m.count, typeId: m.qualificationTypeId, typeName: m.qualificationType?.name ?? null })) })) })) };
 }
 
 /** A site's open areas, in order: what a module's place field offers. */

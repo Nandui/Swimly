@@ -6,7 +6,6 @@ import { Input } from "@/components/shadcn/input";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { ChoiceRow } from "@/components/ui/choice-row";
 import { archiveActivityType, saveActivityType } from "@/lib/setup/actions";
 import { ACTIVITY_ICONS, ACTIVITY_ICON_KEYS } from "@/lib/setup/meta";
 
@@ -15,7 +14,7 @@ type Option = { id: string; name: string };
 export type ActivityRow = { id: string; name: string; icon: string; departmentId: string; requiredTypeId: string | null; fromClasses: boolean };
 
 /** Add an activity to the organisation's list, or change one: its name, the department that plans
- *  it, its icon and the qualification it needs. One activity takes the swim classes. */
+ *  it, its icon and the qualification it needs. Swim classes need none: they fill the Plan by themselves. */
 export function ActivityDialog({ activity, departments, qualifications }: { activity?: ActivityRow; departments: Option[]; qualifications: Option[] }) {
   const fid = activity ? `activity-${activity.id}` : "activity-new";
   return (
@@ -26,7 +25,7 @@ export function ActivityDialog({ activity, departments, qualifications }: { acti
       submitLabel={activity ? "Save activity" : "Add activity"} successMessage={activity ? "Activity saved" : "Activity added"}
       submit={(formData) => saveActivityType(activity?.id ?? null, {
         name: String(formData.get("name") ?? ""), departmentId: String(formData.get("departmentId") ?? ""), icon: String(formData.get("icon") ?? "activity"),
-        requiredTypeId: String(formData.get("requiredTypeId") ?? ""), fromClasses: formData.get("fromClasses") === "1",
+        requiredTypeId: String(formData.get("requiredTypeId") ?? ""),
       })}>
       <Field label="Name" htmlFor={`${fid}-name`} hint="For example Lifeguarding, Teaching, Reception."><Input id={`${fid}-name`} name="name" required minLength={2} maxLength={40} defaultValue={activity?.name} className="min-h-11" /></Field>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -47,8 +46,6 @@ export function ActivityDialog({ activity, departments, qualifications }: { acti
           {qualifications.map((q) => <NativeSelectOption key={q.id} value={q.id}>{q.name}</NativeSelectOption>)}
         </NativeSelect>
       </Field>
-      <ChoiceRow type="checkbox" id={`${fid}-classes`} name="fromClasses" value="1" defaultChecked={activity?.fromClasses} title="Takes the swim classes"
-        hint="Every class on the swim school timetable shows as this activity, and its teacher is planned on the rota." />
     </FormDialog>
   );
 }

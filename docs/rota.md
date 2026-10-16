@@ -14,7 +14,7 @@ holds hours and pay; the rota keeps a log of every change to a day that has come
 
 | Concept | Table | What it is |
 | --- | --- | --- |
-| Activity | `RotaActivityType` | The organisation's one list: Lifeguarding, Teaching, Reception. Each belongs to a **department** (who plans it), has an icon (`ACTIVITY_ICONS` in src/lib/setup/meta.ts) and may need a **qualification**. One activity "takes the swim classes" (`fromClasses`). Archived, never deleted. |
+| Activity | `RotaActivityType` | The organisation's one list: Lifeguarding, Teaching, Reception. Each belongs to a **department** (who plans it), has an icon (`ACTIVITY_ICONS` in src/lib/setup/meta.ts) and may need a **qualification**. One activity may "take the swim classes" (`fromClasses`), giving them its name and department; without one they still show (below). Archived, never deleted. |
 | Need | `RotaNeed` | One activity at a site on a day: where (one of the site's **areas**, Admin, Areas: "Main pool"), from and to, and how many **places** (people at once). Each place is a lane on the timeline. |
 | Assignment | `RotaAssignment` | A person on one place for all or part of the need's time. One person at a time on a place (`placeProblem`). |
 | Gap | worked out | Any time a place has nobody on it, or the person on it is off that day (`needGaps`, `needsCover`). Back-to-back swim classes nobody teaches count as one gap. |
@@ -29,20 +29,35 @@ holds hours and pay; the rota keeps a log of every change to a day that has come
 | Absence | `RotaAbsence` | Kept in the main database so the rota always has them (HR's database is optional); shown on the person's HR file. |
 
 Swim classes are not copied into the rota: the swim school reports each class through the
-**commitments** seam (`activities.classes`, with `ref`, `place` and `title`), and they appear
-as the Teaching activity, one lane per teacher (`intoLanes`), in the area their location
-names (the part before a comma: "Learner pool, lane 3"). The rota **plans who
-teaches** a class on a date through the same seam's `plan` (`planCommitment`), which writes
-the swim school's `ClassPlannedTeacher`. Planning the class's usual instructor clears it. The
-class's start record (`ClassCover`) is untouched: it is still written when the class starts,
-and a class that has started, is cancelled or does not run that day cannot be planned.
-Teacher order: the start record, else the planned teacher, else the usual instructor.
-Owner decision, 8 October 2026: **the plan defines who teaches a class that day**, and the
-swim school follows it everywhere a day's teacher matters: the pool deck's classes, the
-schedule, the duty page, starting a class, **saving its register** (the usual instructor of a
-class planned to someone else no longer counts as its teacher that day), the pool deck's
-swimmer lookup (medical notes reach that day's teacher) and the lessons parents see. The
-class's instructor in the swim school is only its usual teacher.
+**commitments** seam (`activities.classes`, with `ref`, `place` and `title`), in the area their
+location names (the part before a comma: "Learner pool, lane 3"). Owner decisions, 16 October
+2026: **the classes fill the Plan by themselves**, waiting for a teacher, and "no booking option
+takes the swim school anymore". They are drawn as **Swim classes** on every department's plan
+(`SWIM_CLASSES`, `ANY_DEPARTMENT`), and whoever may change that department's day plans their
+teachers. No activity takes the classes: the old "Takes the swim classes" option is gone, an
+activity that had it is left out of the Plan and tagged in the activity list, and saving it
+makes it an ordinary activity (the column stays). On the Plan each class is its own block on its
+area's classes row (level and teacher, amber when nobody teaches it); choosing one opens **Who
+teaches it**, to give it to someone, change them or take them off, for that day only. Given from
+a department's plan, the class (with the run of classes back to back with it that the person
+already teaches) goes on the person's planned shift there: kept when a shift holds it, else the
+shift it meets is stretched, else a new shift is made, never overlapping another of theirs
+(`shiftForClass`). The rota **plans who teaches** a class on a date through the same seam's
+`plan` (`planCommitment`), which always writes the swim school's `ClassPlannedTeacher` (with
+nobody, when taken off). The class's start record (`ClassCover`) is untouched: it is still
+written when the class starts, and a class that has started, is cancelled or does not run that
+day cannot be planned.
+
+**There is no set instructor any more** (owner decision, 16 October 2026: "the instructor is
+defined via the plan"). Teacher order for a date: the start record, else the planned teacher
+(or nobody), else nobody. Two weeks' grace (his choice): up to and including Sunday 1 November
+2026 (`USUAL_INSTRUCTOR_UNTIL` in `src/modules/activities/shared/courses/planned.ts`) a class
+nothing is planned for is still taught by the instructor stored on it. The swim school follows
+the plan everywhere a day's teacher matters: the pool deck's classes, the schedule, the duty
+page, starting a class, **saving its register**, cancellations, the pool deck's swimmer lookup
+(medical notes reach that day's teacher) and the lessons parents see. The class forms no longer
+ask for an instructor and the class lists no longer show one; the stored `Course.instructorId`
+is kept, never deleted or changed.
 
 Everything is laid out by one pure function, `buildDay` (`src/modules/rota/shared/day.ts`), so Plan,
 Today, the home card and Turnfin Me agree. The rules are in `cover.ts`, `shifts.ts` and
@@ -175,10 +190,34 @@ and two 15 paid, by the length of each part of a shift. **Under-18s** (Protectio
 Persons (Employment) Act 1996) get at least 30 minutes unpaid after 4.5 hours at 16 and 17,
 or 4 hours under 16 (`youngBand`, from the optional date of birth; the rota reads only the
 band). Breaks are placed on quarter hours in time the person has nothing on, aimed at the
-middle (one), a third and three fifths (two), or quarters (three). A break never takes
-someone off an activity: with no free time, the shift says so and the planner leaves a gap
-(which then needs cover) or the duty manager arranges it on the day. Unpaid breaks come off
-the paid hours whether placed or not.
+middle (one), a third and three fifths (two), or quarters (three). With no free time, a
+break is suggested during the person's activity only where that area has a **minimum staff**
+(below): at the time the area stays at its minimum without them, else where it is least short,
+so the gap shows. Elsewhere a break never takes someone off an activity: the shift says
+"Breaks to place" and the planner leaves a gap (which then needs cover) or the duty manager
+arranges it on the day. Unpaid breaks come off the paid hours whether placed or not.
+
+## Minimum staff for each area (owner request, 16 October 2026)
+
+"Define a minimum of staffing for each area, and what type of staff that is, so when planning
+breaks (and activities), if one area needs to be in use and creates a gap, that should be
+highlighted so a staff member can be assigned." Admin, Areas sets each area's minimum as lines
+of how many and which type of staff (`SiteAreaStaffing`: a qualification they hold, or anyone),
+and optional daily opening hours (`SiteArea.openFrom`, `openUntil`). An area is **in use** while
+anything is on in it (an activity, a booking, a swim class, another module's session) and
+through its opening hours. Everyone on something in it counts there, unless they are off or on a
+break; a qualified line counts only people holding it in date, matched so a lifeguard is never
+spent on "anyone" while a lifeguard place is empty (`shared/staffing.ts`, pure, tested).
+
+`buildDay` returns `staffing`: each area with a minimum, stretch by stretch, with how many of
+the places are filled and which lines are short. The Plan shows a row per area (where the
+department has something on, or every area with "Show other departments") above the
+activities: green at its minimum, amber where short. An amber stretch opens **Who can join**:
+best fit for the type of staff it is short of, put on an activity there for the time
+(`putOnActivity`; one needing that qualification first). Short stretches count as gaps on the
+day and the week. Today lists the areas short for the rest of the day with the best free and
+suited people. A break during an activity in an area that keeps its minimum is marked covered
+and needs nobody; otherwise "Find cover for the break" stays.
 
 ## Shifts first (owner decision, 8 October 2026)
 

@@ -11,7 +11,7 @@ import { weekdayOfIso } from "@/modules/activities/shared/attendance/dates";
 import { getCoversForDay } from "@/modules/activities/shared/attendance/data/cover";
 import { getCancellationsForDay } from "@/modules/activities/shared/cancellations/data";
 import { courseName } from "@/modules/activities/shared/courses/constants";
-import { getCoursesOnDate } from "@/modules/activities/shared/courses/planned";
+import { USUAL_INSTRUCTOR_UNTIL, getCoursesOnDate } from "@/modules/activities/shared/courses/planned";
 import { getAwaitingEnrolment } from "@/modules/activities/features/enrolment";
 import { getTodayAssessments } from "@/modules/activities/shared/today/assessments";
 import { sessionState } from "@/modules/activities/shared/today/calendar";
@@ -19,8 +19,9 @@ import { sessionState } from "@/modules/activities/shared/today/calendar";
 
 /** Who teaches which class when, for the rota's plan and its clash check: each class on each
  *  date in the range, taught by that day's cover (it has started), else the teacher planned for
- *  that date on the rota, else its instructor; cancelled sessions left out. Times and labels only.
- *  The rota plans a date's teacher through `plan` (owner decision, 6 October 2026). */
+ *  that date on the rota, else nobody (owner decision, 16 October 2026: no class has a set
+ *  instructor; during the grace, `USUAL_INSTRUCTOR_UNTIL`, the one stored on it); cancelled
+ *  sessions left out. Times and labels only. The rota plans a date's teacher through `plan`. */
 registerCommitments({
   id: "activities.classes",
   async list({ siteIds, userIds, from, to }) {
@@ -54,7 +55,7 @@ registerCommitments({
       for (const c of courses) {
         const k = `${c.id}|${date}`;
         if (c.dayOfWeek !== weekday || off.has(k)) continue;
-        const userId = coverBy.has(k) ? coverBy.get(k) ?? null : plannedBy.has(k) ? plannedBy.get(k) ?? null : c.instructorId;
+        const userId = coverBy.has(k) ? coverBy.get(k) ?? null : plannedBy.has(k) ? plannedBy.get(k) ?? null : date <= USUAL_INSTRUCTOR_UNTIL ? c.instructorId : null;
         if (userIds && (!userId || !userIds.includes(userId))) continue;
         out.push({ source: "activities.classes", userId, siteId: c.clubId, date, startMinutes: c.startMinutes, endMinutes: c.startMinutes + c.durationMinutes,
           label: [courseName(c), c.location].filter(Boolean).join(", "), href: `/schedule?date=${date}`, ref: c.id, planned: !coverBy.has(k) && plannedBy.has(k),
@@ -63,8 +64,8 @@ registerCommitments({
     }
     return out;
   },
-  /** Plan who teaches a class on a date. Planning its usual instructor clears the plan. The
-   *  class's start record (ClassCover) is never written here: it is made when the class starts. */
+  /** Plan who teaches a class on a date: the plan is the class's teacher that day. The class's
+   *  start record (ClassCover) is never written here: it is made when the class starts. */
   async plan({ ref, siteId, date, userId, by }) {
     if (!isDateOnly(date)) return { ok: false, error: "Choose a date." };
     const course = await prisma.course.findFirst({ where: { id: ref, clubId: siteId, archivedAt: null }, select: { id: true, dayOfWeek: true, instructorId: true, name: true, level: { select: { name: true } } } });
@@ -77,14 +78,13 @@ registerCommitments({
     if (userId && !teacher) return { ok: false, error: "That person is no longer active." };
     const label = `${courseName(course)} on ${date}`;
     await prisma.$transaction(async (tx) => {
-      if (userId === course.instructorId) await tx.classPlannedTeacher.deleteMany({ where: { courseId: ref, date: on } });
-      else await tx.classPlannedTeacher.upsert({
+      await tx.classPlannedTeacher.upsert({
         where: { courseId_date: { courseId: ref, date: on } },
         create: { courseId: ref, date: on, teacherId: userId, teacherName: teacher?.name ?? null, setById: by.id, setByName: by.name },
         update: { teacherId: userId, teacherName: teacher?.name ?? null, setById: by.id, setByName: by.name },
       });
       await logAudit({ actorId: by.id, actorName: by.name, action: "update", entity: "ClassPlannedTeacher", entityId: ref, clubId: siteId,
-        summary: userId === course.instructorId ? `Planned ${label} with its usual instructor` : `Planned ${label} with ${teacher?.name ?? "nobody yet"}` }, tx);
+        summary: `Planned ${label} with ${teacher?.name ?? "nobody yet"}` }, tx);
     });
     return { ok: true };
   },

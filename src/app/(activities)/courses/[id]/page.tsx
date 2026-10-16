@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
-  ClassDetailView, classReturnHref, courseName, getClassCover, getCourse, getInstructorOptions, getLevelOptions, getRoster, getTransferTargets, scheduleHref, weekdayOfIso,
+  ClassDetailView, classReturnHref, courseName, getClassCover, getCourse, getLevelOptions, getRoster, getTransferTargets, nextLessonTeacher, scheduleHref, weekdayOfIso,
 } from "@/modules/activities/features/courses";
 import { CurriculumImage } from "@/modules/activities/features/curriculum";
 import { can, canSee } from "@/lib/authz";
-import { today } from "@/lib/format";
+import { formatDay, today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
 import { getCurrentClub } from "@/lib/clubs/current";
 
@@ -29,17 +29,17 @@ export default async function CoursePage(props: PageProps<"/courses/[id]">) {
   const params = await props.searchParams;
   const fromSchedule = params.from === "schedule" && canSee(session, "calendar");
   const iso = today();
-  const [course, roster, targets, levels, instructors, cover, sites] = await Promise.all([
+  const [course, roster, targets, levels, cover, sites] = await Promise.all([
     getCourse(id),
     getRoster(id),
     access.manage ? getTransferTargets(id) : Promise.resolve([]),
     access.admin ? getLevelOptions() : Promise.resolve([]),
-    access.admin ? getInstructorOptions() : Promise.resolve([]),
     getClassCover(id, iso),
     access.admin ? getCurrentClub().then((current) => current.clubs) : Promise.resolve([]),
   ]);
   if (!course) notFound();
-  return <ClassDetailView course={course} roster={roster} targets={targets} levels={levels} instructors={instructors} sites={sites}
+  const next = course.archivedAt ? null : await nextLessonTeacher(course, iso);
+  return <ClassDetailView course={course} roster={roster} targets={targets} levels={levels} sites={sites} nextTeacher={next ? { day: next.iso === iso ? "Today" : formatDay(next.iso), name: next.name } : undefined}
     access={access} backHref={fromSchedule ? scheduleHref(params.date) : classReturnHref(params.returnTo)} backLabel={fromSchedule ? "Schedule" : "Classes"}
     coverName={!course.archivedAt && course.dayOfWeek === weekdayOfIso(iso) && cover?.coverById !== cover?.instructorId ? cover?.coverByName : undefined}
     levelImage={<CurriculumImage kind="level" id={course.levelId} name={course.level.name} />} />;

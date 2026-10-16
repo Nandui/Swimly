@@ -179,6 +179,26 @@ test("putting people on: warnings never refuse; one person at a time on a place;
   assert.equal(await fixture.prisma.rotaLog.count(), 0, "days ahead change freely, nothing logged");
 });
 
+test("in and out: someone covers part of an activity and the first person keeps the rest (owner request, 16 October 2026)", async () => {
+  as("maya", [at("rota.plan")]);
+  const day = addDaysIso(today(), 60);
+  assert.equal((await actions.saveNeed(null, need(day, { start: "09:00", end: "14:00", places: 1 }))).ok, true);
+  const zone = await fixture.prisma.rotaNeed.findFirstOrThrow({ where: { siteId: churchfield, date: new Date(`${day}T00:00:00Z`), startMinutes: 9 * 60 } });
+  assert.equal((await actions.assign(null, { needId: zone.id, place: 1, userId: "ava", start: "09:00", end: "14:00" })).ok, true);
+  const first = await fixture.prisma.rotaAssignment.findFirstOrThrow({ where: { needId: zone.id } });
+  assert.equal((await actions.handOver(first.id, { userId: "ava", start: "10:00", end: "11:00" })).ok, false, "someone else covers");
+  assert.equal((await actions.handOver(first.id, { userId: "sam", start: "08:00", end: "11:00" })).ok, false, "inside their own time");
+  assert.equal((await actions.handOver(first.id, { userId: "sam", start: "10:00", end: "11:00" })).ok, true);
+  const rows = await fixture.prisma.rotaAssignment.findMany({ where: { needId: zone.id }, orderBy: { startMinutes: "asc" } });
+  assert.deepEqual(rows.map((r) => [r.userId, r.startMinutes / 60, r.endMinutes / 60]), [["ava", 9, 10], ["sam", 10, 11], ["ava", 11, 14]]);
+  const plan = await data.planWeek({ site: churchfield, day, dept: "d-pool" });
+  assert.equal(plan.day!.gapCount, 0, "no gap: someone is on it all day");
+  const sam = rows.find((r) => r.userId === "sam")!;
+  assert.equal((await actions.handOver(sam.id, { userId: "riley", start: "10:00", end: "11:00" })).ok, true, "all of it is a swap");
+  assert.equal((await fixture.prisma.rotaAssignment.findUniqueOrThrow({ where: { id: sam.id } })).userId, "riley");
+  assert.equal((await actions.removeNeed(zone.id)).ok, true);
+});
+
 test("shifts first: put someone on a shift, give them the day's gaps, and place their breaks", async () => {
   const shift = (extra: Partial<{ userId: string; start: string; end: string }> = {}) => ({ siteId: churchfield, departmentId: "d-pool", date: tomorrow(), userId: "ava", start: "07:00", end: "15:00", ...extra });
   as("lee", [at("rota.view")]);
@@ -355,7 +375,7 @@ test("changing a booking: kept days take what changed, dropped days leave with a
   assert.equal((await actions.cancelRepeat(repeat.id)).ok, true);
 });
 
-test("swim classes are Teaching; the rota plans their teacher through the swim school", async () => {
+test("swim classes fill the Plan by themselves, even with an old Teaching activity; the rota plans their teacher through the swim school", async () => {
   as("maya", [at("rota.plan")]);
   const day = addDaysIso(nextMonday(), 1);
   classes.push(
@@ -364,10 +384,17 @@ test("swim classes are Teaching; the rota plans their teacher through the swim s
   );
   let plan = await data.planWeek({ site: churchfield, day, dept: "d-pool" });
   const teaching = plan.day!.groups.find((g) => g.fromClasses)!;
-  assert.deepEqual([teaching.name, teaching.place, teaching.gapCount], ["Teaching", "Learner pool", 1]);
-  assert.equal((await actions.planTeacher({ siteId: churchfield, date: day, classRef: "c2", userId: "lee" })).ok, true);
+  assert.deepEqual([teaching.name, teaching.place, teaching.gapCount], ["Swim classes", "Learner pool", 1]);
+  assert.equal((await actions.planTeacher({ siteId: churchfield, date: day, classRef: "c2", userId: "lee", departmentId: "d-pool" })).ok, true);
   plan = await data.planWeek({ site: churchfield, day, dept: "d-pool" });
   assert.equal(plan.day!.groups.find((g) => g.fromClasses)!.gapCount, 0);
+  // Given from the Plan, the class goes on their shift there: a new one holding Lee's run of classes
+  // (Stage 1 is theirs already), then stretched by the next class.
+  const shifts = () => fixture.prisma.rotaPlanShift.findMany({ where: { userId: "lee", siteId: churchfield, date: new Date(`${day}T00:00:00Z`) }, select: { departmentId: true, startMinutes: true, endMinutes: true } });
+  assert.deepEqual(await shifts(), [{ departmentId: "d-pool", startMinutes: 960, endMinutes: 1020 }]);
+  classes.push({ source: "activities.classes", userId: null, siteId: churchfield, date: day, startMinutes: 1020, endMinutes: 1050, label: "Stage 3, Learner pool", ref: "c3", title: "Stage 3", place: "Learner pool" });
+  assert.equal((await actions.planTeacher({ siteId: churchfield, date: day, classRef: "c3", userId: "lee", departmentId: "d-pool" })).ok, true);
+  assert.deepEqual(await shifts(), [{ departmentId: "d-pool", startMinutes: 960, endMinutes: 1050 }]);
   as("sam", [at("rota.manage", bishopstown)]);
   assert.equal((await actions.planTeacher({ siteId: churchfield, date: day, classRef: "c2", userId: null })).ok, false, "another site's duty manager");
   classes.length = 0;

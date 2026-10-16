@@ -7,7 +7,8 @@ export { classReturnHref } from "@/modules/activities/features/courses/server/br
 export { getClassCover } from "@/modules/activities/shared/attendance/data/cover";
 export { weekdayOfIso } from "@/modules/activities/shared/attendance/dates";
 export { courseName } from "@/modules/activities/shared/courses/constants";
-export { getCourse, getCourses, getInstructorOptions, getRoster } from "@/modules/activities/shared/courses/data/courses";
+export { getCourse, getCourses, getRoster } from "@/modules/activities/shared/courses/data/courses";
+export { nextLessonTeacher } from "@/modules/activities/shared/courses/planned";
 export { getLevelOptions } from "@/modules/activities/shared/curriculum/data/curriculum";
 export { type EnrolInput, enrolStudent } from "@/modules/activities/shared/enrolment/actions/enrolment";
 export { getTransferTargets } from "@/modules/activities/shared/enrolment/data/enrolments";

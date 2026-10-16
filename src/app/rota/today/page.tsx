@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Plus, UserX } from "lucide-react";
+import { MapPin, Plus, UserX } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import {
-  ABSENCE_REASON_META, type AbsenceReason, activityIcon, clock, dayGaps, DayNote, duration, fitsFor, NeedDialog, ROTA_CHANGE_REASON_META, ROTA_DAY_META, ROTA_TIMEPOINT_META, type RotaChangeReason, TimepointDone, todayAt, type TodayGap, TodayGaps,
+  ABSENCE_REASON_META, type AbsenceReason, activityIcon, clock, dayGaps, minimumWords, qualificationShort, DayNote, duration, fitsFor, NeedDialog, ROTA_CHANGE_REASON_META, ROTA_DAY_META, ROTA_TIMEPOINT_META, type RotaChangeReason, TimepointDone, todayAt, type TodayGap, TodayGaps,
 } from "@/modules/rota/features/today";
 import { formatDayMonth, formatWeekday, minutesNow } from "@/lib/format";
 
@@ -44,6 +44,12 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
         caption: `${f.day.length ? `On ${f.day[0].label} until ${clock(Math.max(...f.day.map((w) => w.end)))}` : "Free"} · ${f.weekMinutes ? `${duration(f.weekMinutes)} this week` : "no hours this week"}` })),
     };
   }));
+  // Areas in use with fewer than their minimum staff for the rest of today, with who could join.
+  const short = await Promise.all(day.staffing.flatMap((a) => a.spans.filter((c) => c.short.length && c.end > nowMinutes).map((c) => ({ a, c }))).slice(0, FITTED).map(async ({ a, c }) => {
+    const line = [...c.short].sort((x, y) => Number(!x.typeId) - Number(!y.typeId))[0];
+    const fits = run ? (await fitsFor({ siteId: site.id, date: now, start: c.start, end: c.end, requiredTypeId: line.typeId })).filter((f) => !f.issues.length && !c.userIds.includes(f.userId)).slice(0, 3) : [];
+    return { key: `${a.key}-${c.start}`, name: a.name, start: c.start, end: c.end, have: c.have, want: c.want, needs: minimumWords(c.short, qualificationShort), fits: fits.map((f) => f.name) };
+  }));
   const blocks = day.groups.flatMap((g) => g.lanes.flat().map((b) => ({ ...b, group: g })));
   const onNow = day.groups.map((g) => ({ g, who: [...new Set(g.lanes.flat().filter((b) => b.kind === "on" && b.start <= nowMinutes && nowMinutes < b.end && !b.warnings.includes("off")).map((b) => b.name))] }))
     .filter((x) => x.who.length);
@@ -73,6 +79,21 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
             })}</ul>
           )}
       </section>
+      {short.length ? (
+        <section className="pc-panel" aria-labelledby="today-areas">
+          <div className="pc-panel-head"><div><h2 id="today-areas">Areas short of minimum staff</h2>
+            <p className="text-sm text-ui-muted-foreground">In use with fewer staff than Admin, Areas asks for. Put someone on from the full day.</p></div>
+            <Button asChild variant="ghost"><Link href={`/rota?${new URLSearchParams({ site: site.id, day: now })}`}>Full day</Link></Button></div>
+          <ul className="pc-rows">{short.map((x) => (
+            <li key={x.key} className="pc-row" data-first="">
+              <span className="pc-tile-icon" aria-hidden="true"><MapPin /></span>
+              <span className="pc-row-body"><span className="pc-row-title">{x.name}, {clock(x.start)} to {clock(x.end)}</span>
+                <span className="pc-row-hint">{x.have} of {x.want} · needs {x.needs}{x.start <= nowMinutes ? " · now" : ` · in ${duration(x.start - nowMinutes)}`}{x.fits.length ? ` · free and suited: ${x.fits.join(", ")}` : ""}</span></span>
+              <Tag meta={ROTA_DAY_META.gaps} label="Short" />
+            </li>
+          ))}</ul>
+        </section>
+      ) : null}
       <div className="rota-two">
         <section className="pc-panel" aria-labelledby="today-now">
           <div className="pc-panel-head"><h2 id="today-now">On now · {clock(nowMinutes)}</h2><Button asChild variant="ghost"><Link href={`/rota?${new URLSearchParams({ site: site.id, day: now })}`}>Full day</Link></Button></div>

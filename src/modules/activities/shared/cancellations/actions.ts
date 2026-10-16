@@ -1,5 +1,6 @@
 "use server";
 
+import { dayTeacherId, plannedTeachers } from "@/modules/activities/shared/courses/planned";
 import { withOneStaff } from "@/lib/directory";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -58,12 +59,15 @@ export async function cancelClassSession(input: z.infer<typeof cancelSchema>): P
       tx.attendanceRecord.count({ where: { courseId, date } }),
     ]);
     const swimmers = [...new Map(enrolments.map(row => [row.student.id, row.student])).values()];
+    // That day's teacher, from the rota's plan (`dayTeacherId`).
+    const planned = (await plannedTeachers([courseId], iso, tx)).get(courseId);
+    const dayTeacher = planned ? planned.teacherName : dayTeacherId(raw.instructorId, undefined, iso) ? course.instructor?.name : null;
     const cancelledByName = session.user.name ?? "Unknown";
     const cancellation = await tx.classCancellation.create({ data: {
       courseId, clubId, date, className: courseName(course), levelName: course.level.name,
       programmeName: course.level.programme.name, startMinutes: course.startMinutes,
       durationMinutes: course.durationMinutes, location: course.location,
-      instructorName: cover?.coverByName ?? course.instructor?.name ?? null,
+      instructorName: cover?.coverByName ?? dayTeacher ?? null,
       reason, cancelledById: session.user.id, cancelledByName, attendanceRecorded,
       swimmers: { create: swimmers.map(swimmer => ({ studentId: swimmer.id, swimmerName: fullName(swimmer), memberNumber: swimmer.memberNumber })) },
     } });

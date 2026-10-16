@@ -1,4 +1,5 @@
 import { classPage } from "@/modules/activities/shared/attendance/page-guard";
+import { plannedTeachers, withPlanned } from "@/modules/activities/shared/courses/planned";
 import { getCourse } from "@/modules/activities/shared/courses/data/courses";
 import { courseName } from "@/modules/activities/shared/courses/constants";
 import { getCurrentClub } from "@/lib/clubs/current";
@@ -35,7 +36,9 @@ export async function getInstructorClass(id: string, requestedDate: unknown) {
     weekdayOf(parseDateOnly(requested)) === course.dayOfWeek
       ? requested
       : mostRecentOccurrence(course.dayOfWeek);
-  const base = { course, session, iso };
+  // That day's teacher, from the rota's plan (`withPlanned`): no class has a set instructor.
+  const [dayCourse] = withPlanned([course], await plannedTeachers([id], iso), iso);
+  const base = { course: dayCourse, session, iso };
   if (course.clubId !== club.id)
     return { ...base, state: "wrong-site" as const, club };
   if (course.archivedAt) return { ...base, state: "archived" as const };

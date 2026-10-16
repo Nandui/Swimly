@@ -37,15 +37,6 @@ export async function activityTypesByIds(ids: readonly (string | null | undefine
   return new Map(rows.map((row) => [row.id, row]));
 }
 
-/** The activity that swim classes arrive as (one per organisation): the live one, or any when
- *  `liveOnly` is false; narrowed to a department when one is given. Null when there is none. */
-export async function classesActivity(orgId: string | null, opts: { departmentId?: string; liveOnly?: boolean } = {}, db?: Db): Promise<ActivityTypeRef | null> {
-  return (await client(db)).activityType.findFirst({
-    where: { orgId: orgId ?? undefined, fromClasses: true, ...(opts.liveOnly === false ? {} : { archivedAt: null }), ...(opts.departmentId ? { departmentId: opts.departmentId } : {}) },
-    select,
-  });
-}
-
 /** The ids of a department's activities, archived ones too unless `liveOnly`. */
 export async function activityTypeIdsIn(departmentId: string, opts: { liveOnly?: boolean } = {}, db?: Db): Promise<string[]> {
   const rows = await (await client(db)).activityType.findMany({ where: { departmentId, ...(opts.liveOnly ? { archivedAt: null } : {}) }, select: { id: true } });

@@ -1,0 +1,211 @@
+/* ── An incident report, redesigned (high-end-visual-design skill, 16 October 2026) ────────────
+   A report is read by the person who wrote it, the one who triages it and the manager who signs
+   it off, so it opens like a case file: what it is, how serious, where it has got to and whose
+   move it is, then the account as written, the people, triage and the working, with the history
+   alongside. Soft structuralism with an asymmetric bento (like the rota Plan and the refund
+   request): every card is a double bezel, a tinted shell ring with a hairline around a white core
+   with a concentric radius, drawn with shadows so the existing form panels take it too. Motion is
+   a spring on transform and opacity only, and stops for reduced motion. On phones it is one
+   column in reading order: the case, what happens next, the account and the working, history. */
+.turnfin-app .inc-file {
+  --inc-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --inc-shell: 6px;
+  --inc-radius: 26px;
+  --inc-hair: color-mix(in srgb, var(--pc-ink) 8%, transparent);
+  --inc-tint: color-mix(in srgb, var(--pc-ink) 3.5%, var(--pc-canvas, transparent));
+  --inc-ring: 0 0 0 var(--inc-shell) var(--inc-tint), 0 0 0 calc(var(--inc-shell) + 1px) var(--inc-hair), 0 30px 60px -36px color-mix(in srgb, var(--pc-ink) 22%, transparent);
+  display: flex; flex-direction: column; gap: 24px; min-width: 0;
+}
+.turnfin-app .inc-file svg { stroke-width: 1.6; }
+
+/* The double bezel, on our own cards and on the forms the page passes in. */
+.turnfin-app .inc-file .inc-card, .turnfin-app .inc-file .inc-forms > .pc-panel {
+  display: flex; flex-direction: column; gap: 20px; min-width: 0; padding: 28px;
+  border-radius: var(--inc-radius); background: var(--pc-surface);
+  box-shadow: inset 0 0 0 1px var(--inc-hair), var(--inc-ring);
+  animation: inc-rise 900ms var(--inc-spring) both;
+}
+.turnfin-app .inc-file .inc-card h2, .turnfin-app .inc-file .inc-forms > .pc-panel h2 { margin: 0; letter-spacing: -0.01em; }
+@keyframes inc-rise { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+.turnfin-app .inc-file .inc-next-slot > .inc-card { animation-delay: 80ms; }
+.turnfin-app .inc-file .inc-main > .inc-card { animation-delay: 140ms; }
+.turnfin-app .inc-file .inc-forms > .pc-panel { animation-delay: 200ms; }
+.turnfin-app .inc-file .inc-history-card, .turnfin-app .inc-file .inc-reads-card { animation-delay: 240ms; }
+
+/* The bento: the case across the top, the working wide on the left, what happens next and the
+   history narrow on the right. One column, in that reading order, below 1024px. */
+.turnfin-app .inc-file .inc-bento { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; align-items: start; padding: 7px; }
+.turnfin-app .inc-file .inc-main, .turnfin-app .inc-file .inc-forms { display: flex; flex-direction: column; gap: 28px; min-width: 0; }
+.turnfin-app .inc-file .inc-forms:empty { display: none; }
+@media (min-width: 1024px) {
+  .turnfin-app .inc-file .inc-bento { grid-template-columns: minmax(0, 1fr) minmax(300px, 360px); grid-template-areas: "hero hero" "main next" "main history" "main reads"; grid-template-rows: auto auto auto 1fr; }
+  .turnfin-app .inc-file .inc-hero { grid-area: hero; }
+  .turnfin-app .inc-file .inc-next-slot { grid-area: next; }
+  .turnfin-app .inc-file .inc-main { grid-area: main; }
+  .turnfin-app .inc-file .inc-history-card { grid-area: history; }
+  .turnfin-app .inc-file .inc-reads-card { grid-area: reads; }
+}
+
+/* Small type: eyebrows, labels, muted lines. */
+.turnfin-app .inc-file .inc-eyebrow { align-self: flex-start; display: inline-flex; align-items: center; min-height: 24px; padding: 0 12px; border-radius: 999px; background: color-mix(in srgb, var(--pc-primary) 10%, transparent); color: var(--pc-primary-ink, var(--pc-primary)); font-size: 10px; line-height: 1; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
+.turnfin-app .inc-file .inc-eyebrow[data-kind='accident'] { background: var(--pc-danger-soft); color: var(--pc-danger); }
+.turnfin-app .inc-file .inc-eyebrow[data-kind='near_miss'] { background: var(--pc-warning-soft); color: var(--pc-warning); }
+.turnfin-app .inc-file .inc-label { margin: 0; color: var(--pc-ink-muted); font-size: 11px; line-height: 16px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+.turnfin-app .inc-file .inc-muted { color: var(--pc-ink-muted); font-size: var(--pc-text-body); }
+.turnfin-app .inc-file .inc-card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.turnfin-app .inc-file .inc-kept { display: inline-flex; align-items: center; gap: 6px; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
+.turnfin-app .inc-file .inc-kept > svg { width: 14px; height: 14px; }
+.turnfin-app .inc-file .inc-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* The case: kind and what it was, where and when, the level it is handled at, the four steps. */
+.turnfin-app .inc-file .inc-hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; padding: 36px; }
+@media (min-width: 768px) {
+  .turnfin-app .inc-file .inc-hero { grid-template-columns: minmax(0, 1fr) minmax(240px, 300px); grid-template-areas: "main sev" "stages stages"; }
+  .turnfin-app .inc-file .inc-hero-main { grid-area: main; }
+  .turnfin-app .inc-file .inc-severity { grid-area: sev; }
+  .turnfin-app .inc-file .inc-stages { grid-area: stages; }
+}
+.turnfin-app .inc-file .inc-hero-main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.turnfin-app .inc-file .inc-headline { margin: 0; font-size: 44px; line-height: 1.05; font-weight: 800; letter-spacing: -0.035em; overflow-wrap: anywhere; text-wrap: balance; }
+.turnfin-app .inc-file .inc-where { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 4px 0 0; padding: 0; list-style: none; color: var(--pc-ink-muted); }
+.turnfin-app .inc-file .inc-where > li { display: inline-flex; align-items: center; gap: 8px; }
+.turnfin-app .inc-file .inc-where svg { width: 18px; height: 18px; color: var(--pc-primary); }
+
+.turnfin-app .inc-file .inc-severity { --inc-level: var(--pc-ink-muted); display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 20px; border-radius: 20px; background: var(--pc-surface-sunken); box-shadow: inset 0 0 0 1px var(--inc-hair); }
+.turnfin-app .inc-file [data-level='1'], .turnfin-app .inc-file [data-level='2'] { --inc-level: var(--pc-success); }
+.turnfin-app .inc-file [data-level='3'] { --inc-level: var(--pc-warning); }
+.turnfin-app .inc-file [data-level='4'], .turnfin-app .inc-file [data-level='5'] { --inc-level: var(--pc-danger); }
+.turnfin-app .inc-file .inc-level { display: flex; align-items: baseline; gap: 10px; margin: 0 0 4px; color: var(--inc-level); }
+.turnfin-app .inc-file .inc-level-n { font-size: 56px; line-height: 0.9; font-weight: 800; letter-spacing: -0.05em; font-variant-numeric: tabular-nums; }
+.turnfin-app .inc-file .inc-level-word { font-size: 22px; line-height: 1.2; font-weight: 700; letter-spacing: -0.02em; }
+.turnfin-app .inc-file .inc-severity[data-level='0'] .inc-level-word { color: var(--pc-ink-muted); font-weight: 600; }
+.turnfin-app .inc-file .inc-meter-row { display: grid; grid-template-columns: 76px minmax(0, 1fr); grid-template-areas: "label value" "meter meter"; gap: 6px 8px; align-items: center; }
+.turnfin-app .inc-file .inc-meter-label { grid-area: label; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); font-weight: 600; }
+.turnfin-app .inc-file .inc-meter-value { grid-area: value; justify-self: end; font-size: var(--pc-text-caption); font-weight: 700; color: var(--pc-ink); }
+.turnfin-app .inc-file .inc-meter { grid-area: meter; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.turnfin-app .inc-file .inc-meter > span { height: 6px; border-radius: 999px; background: var(--inc-hair); }
+.turnfin-app .inc-file .inc-meter > span[data-on] { background: var(--inc-level); }
+
+/* The four steps: a rail filled behind the report, a pulsing dot where it is now. */
+.turnfin-app .inc-file .inc-stages { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; padding: 24px 0 0; list-style: none; border-top: 1px solid var(--inc-hair); }
+.turnfin-app .inc-file .inc-stages > li { position: relative; display: flex; flex-direction: column; gap: 2px; min-width: 0; padding-right: 12px; }
+.turnfin-app .inc-file .inc-stages > li:not(:last-child)::after { content: ""; position: absolute; top: 13px; left: 36px; right: 8px; height: 2px; border-radius: 999px; background: var(--inc-hair); }
+.turnfin-app .inc-file .inc-stages > li[data-state='done']:not(:last-child)::after { background: var(--pc-primary); }
+.turnfin-app .inc-file .inc-stage-dot { display: grid; place-items: center; width: 28px; height: 28px; margin-bottom: 8px; border-radius: 999px; background: var(--pc-surface-sunken); color: var(--pc-ink-muted); box-shadow: inset 0 0 0 1px var(--inc-hair); }
+.turnfin-app .inc-file .inc-stage-dot > svg { width: 14px; height: 14px; stroke-width: 2.6; }
+.turnfin-app .inc-file [data-state='done'] > .inc-stage-dot { background: var(--pc-primary); color: var(--pc-on-primary); box-shadow: none; }
+.turnfin-app .inc-file [data-state='current'] > .inc-stage-dot { background: var(--pc-surface); box-shadow: inset 0 0 0 2px var(--pc-primary), 0 0 0 5px color-mix(in srgb, var(--pc-primary) 14%, transparent); }
+.turnfin-app .inc-file [data-state='current'] > .inc-stage-dot::after { content: ""; width: 8px; height: 8px; border-radius: 999px; background: var(--pc-primary); animation: inc-pulse 2.4s var(--inc-spring) infinite; }
+@keyframes inc-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.6); opacity: 0.6; } }
+.turnfin-app .inc-file [data-state='skipped'] > .inc-stage-dot { background: transparent; box-shadow: inset 0 0 0 2px var(--inc-hair); }
+.turnfin-app .inc-file .inc-stage-label { font-weight: 650; }
+.turnfin-app .inc-file :is([data-state='todo'], [data-state='skipped']) > .inc-stage-label { color: var(--pc-ink-muted); font-weight: 500; }
+.turnfin-app .inc-file .inc-stage-hint { overflow-wrap: anywhere; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
+
+/* What happens next: the blue-edged card while it is this person's move. */
+.turnfin-app .inc-file .inc-next { gap: 12px; }
+.turnfin-app .inc-file .inc-next[data-tone='act'] { --inc-tint: color-mix(in srgb, var(--pc-primary) 22%, var(--pc-canvas, transparent)); --inc-hair: color-mix(in srgb, var(--pc-primary) 26%, transparent); }
+.turnfin-app .inc-file .inc-next[data-tone='done'] { --inc-tint: color-mix(in srgb, var(--pc-success) 12%, var(--pc-canvas, transparent)); }
+.turnfin-app .inc-file .inc-next-title { margin: 4px 0 0; font-size: 26px; line-height: 1.15; font-weight: 750; letter-spacing: -0.025em; }
+.turnfin-app .inc-file .inc-next-body { margin: 0; color: var(--pc-ink-muted); line-height: var(--pc-leading-body); }
+.turnfin-app .inc-file .inc-checklist { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 0; padding: 0; list-style: none; }
+.turnfin-app .inc-file .inc-checklist > li { display: flex; align-items: center; gap: 10px; font-size: var(--pc-text-body); }
+.turnfin-app .inc-file .inc-check { display: grid; place-items: center; flex: none; width: 22px; height: 22px; border-radius: 999px; box-shadow: inset 0 0 0 1.5px var(--pc-line-strong, var(--inc-hair)); }
+.turnfin-app .inc-file .inc-checklist > li[data-done] > .inc-check { background: var(--pc-success); color: var(--pc-surface); box-shadow: none; }
+.turnfin-app .inc-file .inc-check > svg { width: 13px; height: 13px; stroke-width: 3; }
+.turnfin-app .inc-file .inc-hsa { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; padding: 16px; border-radius: 18px; background: var(--pc-warning-soft); color: var(--pc-ink); }
+.turnfin-app .inc-file .inc-hsa > p { margin: 0; }
+.turnfin-app .inc-file .inc-hsa-head { display: flex; align-items: flex-start; gap: 8px; font-weight: 700; }
+.turnfin-app .inc-file .inc-hsa-head > svg { flex: none; width: 18px; height: 18px; margin-top: 2px; color: var(--pc-warning); }
+.turnfin-app .inc-file .inc-hsa-count { color: var(--pc-warning); font-size: 22px; line-height: 1.2; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.turnfin-app .inc-file .inc-hsa-count[data-late] { color: var(--pc-danger); }
+.turnfin-app .inc-file .inc-hsa-body { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
+.turnfin-app .inc-file .inc-next-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+/* Island pills with the icon in its own circle, pressed on click. */
+.turnfin-app .inc-file .inc-next-actions [data-slot='button'] { justify-content: flex-start; min-height: 48px; padding-inline: 6px 20px; border-radius: 999px; transition: transform 400ms var(--inc-spring), background-color 300ms var(--inc-spring); }
+.turnfin-app .inc-file .inc-next-actions [data-slot='button']:active { transform: scale(0.98); }
+.turnfin-app .inc-file .inc-next-actions [data-slot='button'] > svg { box-sizing: content-box; width: 16px; height: 16px; padding: 10px; border-radius: 999px; background: color-mix(in srgb, var(--pc-primary) 10%, transparent); color: var(--pc-primary); transition: transform 500ms var(--inc-spring); }
+.turnfin-app .inc-file .inc-next-actions [data-slot='button']:hover > svg { transform: translateY(2px) scale(1.05); }
+.turnfin-app .inc-file .inc-next-actions [data-variant='default'] { box-shadow: inset 0 1px 0 color-mix(in srgb, white 25%, transparent), 0 14px 28px -16px color-mix(in srgb, var(--pc-primary) 80%, transparent); }
+.turnfin-app .inc-file .inc-next-actions [data-variant='default'] > svg { background: color-mix(in srgb, currentColor 18%, transparent); color: inherit; }
+
+/* The account as written: the reporter's words large, what was done straight away in a well. */
+.turnfin-app .inc-file .inc-quote { margin: 0; padding-left: 18px; border-left: 3px solid color-mix(in srgb, var(--pc-primary) 40%, transparent); font-size: 19px; line-height: 1.6; letter-spacing: -0.008em; white-space: pre-wrap; overflow-wrap: anywhere; }
+.turnfin-app .inc-file .inc-well { display: flex; flex-direction: column; gap: 8px; min-width: 0; padding: 18px 20px; border-radius: 18px; background: var(--pc-surface-sunken); box-shadow: inset 0 0 0 1px var(--inc-hair); }
+.turnfin-app .inc-file .inc-well-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: var(--pc-leading-body); }
+.turnfin-app .inc-file .inc-byline { display: flex; align-items: flex-start; gap: 8px; margin: 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
+.turnfin-app .inc-file .inc-byline > svg { flex: none; width: 16px; height: 16px; }
+.turnfin-app .inc-file .inc-byline strong { color: var(--pc-ink); font-weight: 650; }
+
+/* Facts in a grid, and the people as wells. */
+.turnfin-app .inc-file .inc-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 16px 24px; }
+.turnfin-app .inc-file .inc-fact { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.turnfin-app .inc-file .inc-fact-value { white-space: pre-line; overflow-wrap: anywhere; font-size: var(--pc-text-body); line-height: var(--pc-leading-body); }
+.turnfin-app .inc-file .inc-people { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.turnfin-app .inc-file .inc-person { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 768px) { .turnfin-app .inc-file .inc-person { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); } }
+.turnfin-app .inc-file .inc-person-head { display: flex; gap: 12px; min-width: 0; }
+.turnfin-app .inc-file .inc-avatar { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 999px; background: var(--pc-surface); color: var(--pc-primary); box-shadow: inset 0 0 0 1px var(--inc-hair); }
+.turnfin-app .inc-file .inc-avatar > svg { width: 20px; height: 20px; }
+.turnfin-app .inc-file .inc-person-name { min-width: 0; }
+.turnfin-app .inc-file .inc-person-name > h3 { margin: 0; font-size: var(--pc-text-body); font-weight: 700; overflow-wrap: anywhere; }
+.turnfin-app .inc-file .inc-person-name > p { margin: 2px 0 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); overflow-wrap: anywhere; }
+.turnfin-app .inc-file .inc-person-name > .inc-person-contact { color: var(--pc-ink); }
+.turnfin-app .inc-file .inc-person-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); gap: 14px 20px; }
+.turnfin-app .inc-file .inc-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; white-space: normal; }
+.turnfin-app .inc-file .inc-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 10px; border-radius: 999px; font-size: var(--pc-text-caption); font-weight: 650; }
+.turnfin-app .inc-file .inc-chip > svg { width: 14px; height: 14px; }
+.turnfin-app .inc-file .inc-chip[data-tone='danger'] { background: var(--pc-danger-soft); color: var(--pc-danger); }
+.turnfin-app .inc-file .inc-chip[data-tone='warning'] { background: var(--pc-warning-soft); color: var(--pc-warning); }
+.turnfin-app .inc-file .inc-witnesses { display: flex; flex-direction: column; gap: 8px; }
+.turnfin-app .inc-file .inc-witnesses > ul, .turnfin-app .inc-file .inc-reads { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.turnfin-app .inc-file :is(.inc-witnesses, .inc-reads-card) li { display: flex; align-items: flex-start; gap: 10px; font-size: var(--pc-text-body); overflow-wrap: anywhere; }
+.turnfin-app .inc-file :is(.inc-witnesses, .inc-reads-card) li > svg { flex: none; width: 16px; height: 16px; margin-top: 3px; color: var(--pc-ink-muted); }
+.turnfin-app .inc-file .inc-witnesses strong { font-weight: 650; }
+
+/* Triage and closing notes as soft bubbles. */
+.turnfin-app .inc-file .inc-note { padding: 14px 18px; border-radius: 4px 18px 18px 18px; background: var(--pc-surface-sunken); }
+.turnfin-app .inc-file .inc-note[data-tone='done'] { background: var(--pc-success-soft); }
+.turnfin-app .inc-file .inc-note > p { margin: 0; }
+.turnfin-app .inc-file .inc-note-by { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); font-weight: 650; }
+.turnfin-app .inc-file .inc-note-text { margin-top: 4px !important; white-space: pre-wrap; overflow-wrap: anywhere; line-height: var(--pc-leading-body); }
+
+/* Statements under the investigation read as quotes in wells. */
+.turnfin-app .inc-file .inc-statement { border: 0; border-radius: 18px; background: var(--pc-surface-sunken); box-shadow: inset 0 0 0 1px var(--inc-hair); }
+
+/* The history: a quiet vertical timeline, each note in a bubble. */
+.turnfin-app .inc-file .inc-history { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.turnfin-app .inc-file .inc-history > li { position: relative; display: flex; gap: 14px; min-width: 0; padding-bottom: 18px; }
+.turnfin-app .inc-file .inc-history > li:last-child { padding-bottom: 0; }
+.turnfin-app .inc-file .inc-history > li:not(:last-child)::before { content: ""; position: absolute; top: 18px; bottom: 0; left: 5px; width: 2px; border-radius: 999px; background: var(--inc-hair); }
+.turnfin-app .inc-file .inc-history-dot { flex: none; width: 12px; height: 12px; margin-top: 5px; border-radius: 999px; background: var(--pc-surface); box-shadow: inset 0 0 0 3px var(--pc-primary); }
+.turnfin-app .inc-file .inc-history > li:is([data-action='close'], [data-action='action_done']) > .inc-history-dot { background: var(--pc-success); box-shadow: none; }
+.turnfin-app .inc-file .inc-history > li:is([data-action='reopen'], [data-action='action_cancel'], [data-action='file_remove']) > .inc-history-dot { box-shadow: inset 0 0 0 3px var(--pc-warning); }
+.turnfin-app .inc-file .inc-history > li[data-action='addendum'] > .inc-history-dot { background: var(--pc-primary); box-shadow: none; }
+.turnfin-app .inc-file .inc-history-title { margin: 0; font-weight: 650; }
+.turnfin-app .inc-file .inc-history-meta { margin: 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
+.turnfin-app .inc-file .inc-history-note { margin: 8px 0 0; padding: 10px 14px; border-radius: 4px 16px 16px 16px; background: var(--pc-surface-sunken); white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--pc-text-body); }
+
+@media (max-width: 767px) {
+  .turnfin-app .inc-file { --inc-radius: 22px; --inc-shell: 4px; gap: 16px; }
+  .turnfin-app .inc-file .inc-bento, .turnfin-app .inc-file .inc-main, .turnfin-app .inc-file .inc-forms { gap: 20px; }
+  .turnfin-app .inc-file .inc-bento { padding: 5px; }
+  .turnfin-app .inc-file .inc-card, .turnfin-app .inc-file .inc-forms > .pc-panel { padding: 20px; gap: 16px; }
+  .turnfin-app .inc-file .inc-hero { padding: 22px; gap: 20px; }
+  .turnfin-app .inc-file .inc-headline { font-size: 32px; }
+  .turnfin-app .inc-file .inc-level-n { font-size: 44px; }
+  .turnfin-app .inc-file .inc-quote { font-size: var(--pc-text-body); padding-left: 14px; }
+  .turnfin-app .inc-file .inc-well { padding: 16px; }
+  /* The steps stack on phones, the rail running down the dots. */
+  .turnfin-app .inc-file .inc-stages { grid-template-columns: minmax(0, 1fr); gap: 12px; padding-top: 20px; }
+  .turnfin-app .inc-file .inc-stages > li { display: grid; grid-template-columns: 28px minmax(0, 1fr); column-gap: 12px; padding-right: 0; }
+  .turnfin-app .inc-file .inc-stage-dot { grid-row: 1 / span 2; margin-bottom: 0; }
+  .turnfin-app .inc-file .inc-stages > li:not(:last-child)::after { top: 32px; bottom: -10px; left: 13px; right: auto; width: 2px; height: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .turnfin-app .inc-file :is(.inc-card, .pc-panel, [data-slot='button'], [data-slot='button'] > svg) { animation: none !important; transition: none !important; }
+  .turnfin-app .inc-file [data-state='current'] > .inc-stage-dot::after { animation: none; }
+}
+@media print {
+  .turnfin-app .inc-file .inc-card, .turnfin-app .inc-file .inc-forms > .pc-panel { box-shadow: inset 0 0 0 1px var(--inc-hair); animation: none; }
+}

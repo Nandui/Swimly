@@ -4,7 +4,7 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.24.0 · 16 October 2026 · Training: a deeper course builder
+## 1.28.0 · 16 October 2026 · Training: a deeper course builder
 
 - Four new kinds of lesson. **Sort into groups**: people sort things into the right group, like which chemicals are stored together. **Explore a picture**: people tap numbered spots on a photo, like the plant room or a first aid kit, to read about each part. **Hand in work**: people write an answer or send a photo or PDF from their phone, and you can have a trainer check it before the lesson counts. **Slides or interactive**: show Google Slides, a Google Form, Canva, Genially, H5P or Microsoft Forms right inside the lesson.
 - Two new kinds of question. **Number**: the answer is a number, right within a margin you choose, like 1.5 mg/l give or take 0.2. **Short answer**: people type a word or two, and you list every answer you accept. Both can be pasted in from Excel.
@@ -13,14 +13,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - A **Make it better** list on each course gives tips while you build: pictures with no description, readings that are too long, recordings with no transcript, sections with nothing that checks understanding, and more. It never stops you publishing.
 - Work handed in waits on the **Sign-off** page. Accept it and the lesson is done, or send it back with what to change.
 
-## 1.23.0 · 15 October 2026 · Training: insight, reports and audit packs
+## 1.27.0 · 16 October 2026 · Training: insight, reports and audit packs
 
 - Every course has an **Insight** page: how many people have started and finished it, **where people stop** (the lesson most people don't get past is marked), how long it takes, how many pass the exam first time, its rating, and how each site is doing. Filter it by site and by when people were given it, and download it for Excel.
 - A new **Reports** page in Training shows what is overdue **by site** and **by manager**, everything that is late with the longest late first, and how each course is going. Both lists download for Excel.
 - **Audit packs** to print or save as a PDF: open **Audit pack** on someone's training record for everything about their training in one place (each lesson they finished and when, every exam score, the practical checklist, certificates, hours and the full history of changes), or on a course's Insight page for everyone who took it and the version they were taught. Ready for an inspector, an insurer or after an incident.
 - You only ever see the people your role covers.
 
-## 1.22.0 · 15 October 2026 · Training: your own space in Turnfin Me
+## 1.26.0 · 16 October 2026 · Training: your own space in Turnfin Me
 
 - **Search** all your courses and lessons from the top of My training, and jump straight to the lesson that mentions it.
 - **Bookmark** any lesson and write **your own notes** under it. Find them again under **Saved**. Only you can see your notes.
@@ -31,7 +31,7 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - When you finish a course you can **rate it** and say what was unclear. Whoever builds the course sees **What learners said** under the builder, without names.
 - **Larger text** and **read aloud**: choose the text size and reading speed under More, and tap Read aloud on any lesson to hear it in your phone's own voice.
 
-## 1.21.0 · 15 October 2026 · Training: practical checklists, learning paths, sessions and in-service hours
+## 1.25.0 · 16 October 2026 · Training: practical checklists, learning paths, sessions and in-service hours
 
 - Courses signed off in person can have a **practical checklist**: the steps the trainer watches for, with the ones that **must be seen** marked. Staff see the list in Turnfin Me before the day.
 - In **Sign-off**, choose **Observe** to go through the checklist on a tablet at the poolside: Met, Not yet or Not needed for each step, a note on any step, and photos if you want them. If something is not met yet, **Send back** tells them exactly what to practise.
@@ -40,7 +40,7 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - **In-service hours** keep track of training hours against what each qualification needs, for example 20 hours a year for a pool lifeguard. Hours come from sessions, or you can log them for a group after a drill. Staff see their own hours in Turnfin Me.
 - Each person's training record now shows their paths, sessions, hours and how their practical went. Trainers see **Registers to close** on the home page.
 
-## 1.20.0 · 15 October 2026 · Training: rules that assign courses for you, a training matrix and certificates
+## 1.24.0 · 16 October 2026 · Training: rules that assign courses for you, a training matrix and certificates
 
 - **Training rules** say who must take a course and how often: for example every lifeguard at Bishopstown, or everyone in Aquatics, once a year. Turnfin assigns it to them every morning, including new starters as soon as they get a matching position, role, department or site, and anyone due to take it again.
 - Refreshers are assigned a set number of days before they run out, so there is time to do them.
@@ -48,7 +48,7 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - The new **Matrix** shows everyone you look after against every course they need: done, due again soon, overdue, out of date or excused, with how many are in date. Filter by site, department or course, and download it for Excel.
 - Staff get a **certificate** in Turnfin Me for every course they finish, with a code they can print or save. Use **Check a certificate** in Training to confirm a code is real.
 
-## 1.19.0 · 15 October 2026 · Training: richer lessons and a faster course builder
+## 1.23.0 · 16 October 2026 · Training: richer lessons and a faster course builder
 
 - Four new kinds of lesson. A **Scenario** puts staff in a situation and lets them choose what to do, scene by scene, until they reach the best outcome. **Flashcards** go round until every card is known. A **Checklist** is ticked off on the phone, for walk-rounds and equipment checks. **Audio** plays a recording, with the words underneath for anyone who can't listen.
 - Lesson text can now have coloured boxes (note, tip, take care, danger), **tap to reveal** answers, **flip cards**, **step by step** instructions, and a **knowledge check**: one question asked right there in the middle of the reading.
@@ -59,7 +59,7 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - Trainers can leave **comments** on a course while it is being built, and mark them done.
 - When you publish a change, say **what changed**: staff taking the course see it. You can also **ask everyone who finished to take it again**, with a due date.
 
-## 1.18.0 · 15 October 2026 · Training: quizzes and final exams
+## 1.22.0 · 16 October 2026 · Training: quizzes and final exams
 
 - Course builders can now write **questions** for each section of a course: one right answer, several right answers, true or false, put steps in order, or match pairs. A question can have a picture, and a short "why" that explains the answer.
 - A new **Quiz** lesson lets staff practise a section's questions in Turnfin Me. They find out straight away if they got each one right, and can see why. Practice is never marked.
@@ -67,6 +67,55 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - Answers save as people go, so nothing is lost if their phone locks. Passing the exam finishes the course, or sends it to a trainer for sign-off if it is a practical course. After a pass they see every answer explained; after a fail they see which parts of the course to go over again.
 - When someone has used all their attempts, a trainer can give them **another attempt** from their training page, where their scores now show too.
 - Under **Final exam** in the course builder you can see how many people passed and which questions people get wrong most, which often means a lesson needs to explain something better.
+## 1.21.1 · 16 October 2026 · Incidents: a clearer incident report page
+
+- An incident report now opens like a case file. At the top: what kind it is and what it was about in large type, where and when, the level it is handled at with two bars for what happened and what could have, and a progress line showing how far it has got: reported, triaged, investigating and closed.
+- A **What happens next** card says whose move it is: triage it, investigate it, waiting for someone else, or closed. When it is your move, a button takes you straight to the right part of the page. During an investigation it ticks off statements, the root cause and open actions.
+- When the report must go to the HSA, the same card shows the date and how many days are left.
+- The reporter's words read as a quote, kept as written. People involved show as cards, with an ambulance or a hospital visit picked out, and the history reads as a timeline beside the report.
+- On phones everything stacks in reading order, with what happens next straight after the summary.
+- Nothing about what you can do on a report, or who can do it, has changed.
+
+## 1.21.0 · 16 October 2026 · The rota Plan chooses who teaches each swim class
+
+- Swim classes no longer have a set instructor. Whoever you choose for a class on the rota **Plan** teaches it that day, and the swim school follows: the pool deck, the schedule, starting the class, the register and what parents see.
+- **Two weeks to switch over:** up to Sunday 1 November, a class nobody has been chosen for on the Plan is still taught by its current instructor. From Monday 2 November, a class with nobody chosen has no teacher until someone is picked on the Plan.
+- Adding or changing a swim class no longer asks for an instructor, and the class list no longer shows one. A class's page now shows who teaches its next lesson.
+- Activities can no longer be set to take the swim classes. The classes fill the Plan by themselves. An activity that used to take them is marked on the activity list and stays off the Plan; saving it makes it an ordinary activity.
+
+## 1.20.0 · 16 October 2026 · Minimum staff for each area
+
+- In **Admin > Areas**, each area now has a **Minimum staff** button. Say how many staff it needs and what type: for example 2 holding the lifeguard qualification and 1 anyone. You can also give the hours it is open every day.
+- An area counts as in use whenever something is on in it (an activity, a booking or a swim class) and during the hours you gave.
+- On the rota **Plan**, each area with a minimum gets its own row at the top of **What needs people**. It is green while the area has enough staff and amber wherever breaks or activities leave it short, with what is missing.
+- Click an amber stretch to see who could join the area then, best fit first, and put them on.
+- Staff on an activity all day used to have their breaks left for you to place. Now, where the area has a minimum, Turnfin suggests a time when the area still has enough people without them. If there is no such time, it picks the least short time and the gap shows in amber.
+- A break that leaves the area with enough people no longer asks you to find cover.
+- **Today** lists the areas short of their minimum for the rest of the day, with who is free and suited.
+
+## 1.19.0 · 16 October 2026 · Swim classes fill the rota by themselves
+
+- Every swim class running that day now shows on the rota **Plan** by itself, straight from the swim school's timetable. You no longer need a booking or an activity to put swim teachers on.
+- Under **What needs people**, each class is its own block with its level and who teaches it. Classes with nobody teaching them are amber, so they stand out.
+- **Click a class** to choose who teaches it, best fit first. Click a class that already has a teacher to change them, or to take them off.
+- The person you choose gets the class on their shift for that department: it joins the shift it sits next to, or starts a new part of their day.
+- This changes that day only. The class keeps its usual instructor in the swim school.
+- Bookings and activities you already made for swim lessons stay on the rota as they are. Cancel them yourself once you are happy with the classes showing.
+
+## 1.18.1 · 16 October 2026 · Swim levels on the rota
+
+- Swim school lessons on the rota now show their **level** (Dolphins, Sharks, Penguins and so on) as the main name on the block, with the pool and time underneath. The green colour still tells you it is the swim school.
+- When back-to-back lessons are joined into one block, it lists each level once ("Dolphins, Sharks").
+- A person's day, the list of lessons under each pool and the "what they could take" options name the level too.
+
+## 1.18.0 · 16 October 2026 · Split shifts, and covering part of an activity
+
+- On the rota Plan, someone can now work a **split shift**: open their name and choose **Add another part** to give them a second stretch of work the same day. Add staff does the same when you add someone already on that day at times that do not overlap.
+- A split shift shows its time off between the parts on their row ("Off 4h"). That time is unpaid; paid hours add up across the day, and breaks are worked out for each part.
+- Staff can now go **in and out** of an activity. Open the person on it, choose **Hand over part of it**, set the time (for example 10:00 to 11:00 of a 09:00 to 14:00 Functional Zone) and pick who covers. They cover that hour on the same place, and the first person keeps the time before and after it, so the activity never shows a gap.
+- The activity's row shows each person's stretch with their name, so you can see who is on it when.
+- When someone's break falls during an activity, their shift now has **Find cover for the break**, which hands over just that time.
+
 ## 1.17.9 · 15 October 2026 · Sites have an address, and supplier emails use it
 
 - Each site now has an **Address** under Admin, Sites. Open a site with the pencil, type its address with the Eircode, and choose Save changes.

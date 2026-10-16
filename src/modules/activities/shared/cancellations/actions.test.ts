@@ -1,3 +1,4 @@
+import { plannedDouble } from "@/test/planned-double";
 import { directoryDouble } from "@/test/directory-double";
 import assert from "node:assert/strict";
 import { test } from "node:test";
@@ -29,7 +30,7 @@ function fixture() {
     classCover: { findUnique: async () => ({ coverByName: "Cover teacher" }) },
     attendanceRecord: { count: async () => 2 },
   };
-  const actions = serverModule<typeof import("@/modules/activities/shared/cancellations/actions")>("src/modules/activities/shared/cancellations/actions.ts", { "@/lib/directory": directoryDouble({ people: [{ id: "scheduled", name: "Scheduled teacher" }] }),
+  const actions = serverModule<typeof import("@/modules/activities/shared/cancellations/actions")>("src/modules/activities/shared/cancellations/actions.ts", { "@/modules/activities/shared/courses/planned": plannedDouble(), "@/lib/directory": directoryDouble({ people: [{ id: "scheduled", name: "Scheduled teacher" }] }),
     "@/lib/authz": { requirePermission: async (key: string) => { permissions.push(key); if (!allowed) throw Error("denied"); return { user: { id: "manager", name: "Duty Manager" } }; }, canSee: () => screen, AuthorizationError: Error },
     "@/lib/clubs/current": { currentClubId: async () => club },
     "@/modules/activities/shared/curriculum/data/shared": { readSharedCurriculum: async () => ({}), sharedCourse: (course: unknown) => course },

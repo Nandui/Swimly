@@ -3,7 +3,8 @@ import { MapPin } from "lucide-react";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
-import { ArchiveArea, MoveArea, SaveArea } from "@/components/setup/areas";
+import { ArchiveArea, AreaStaffing, MoveArea, SaveArea } from "@/components/setup/areas";
+import { staffingWords } from "@/lib/setup/area-staffing";
 import { screenPage } from "@/lib/page-guards";
 import { areasPage } from "@/lib/setup/data";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
@@ -15,10 +16,10 @@ export const metadata: Metadata = { title: "Areas" };
  *  assessments pick from, in this order. */
 export default async function AreasPage() {
   await screenPage("areas", "setup.view");
-  const { sites, canKeep } = await areasPage();
+  const { sites, canKeep, qualifications } = await areasPage();
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Areas" description="Where work happens at each site, and how many lanes a pool has. The rota, bookings and swim classes pick from these, in this order." />
+      <PageHeader title="Areas" description="Where work happens at each site, how many lanes a pool has and the fewest staff each needs. The rota, bookings and swim classes pick from these, in this order." />
       {sites.length === 0 ? <EmptyState icon="building" title="No open sites" hint="Add a site under Sites first." /> : sites.map((site) => {
         const live = site.areas.filter((a) => !a.archivedAt);
         return (
@@ -37,12 +38,14 @@ export default async function AreasPage() {
                     <li key={area.id} className="pc-row" {...(area.archivedAt ? { "data-muted": "" } : {})}>
                       <span className="pc-tile-icon" aria-hidden="true"><MapPin /></span>
                       <span className="pc-row-body"><span className="pc-row-title">{area.name}</span>
-                        {area.lanes ? <span className="pc-row-hint">{area.lanes} {area.lanes === 1 ? "lane" : "lanes"}, booked whole or by lane</span> : null}</span>
+                        {area.lanes ? <span className="pc-row-hint">{area.lanes} {area.lanes === 1 ? "lane" : "lanes"}, booked whole or by lane</span> : null}
+                        {staffingWords(area) ? <span className="pc-row-hint">{staffingWords(area)}</span> : null}</span>
                       <span className="pc-row-trail">
                         {area.archivedAt ? <Tag meta={ARCHIVAL_STATUS_META.archived} /> : null}
                         {canKeep ? <>
                           {!area.archivedAt ? <MoveArea id={area.id} name={area.name} first={at === 0} last={at === live.length - 1} /> : null}
                           <SaveArea siteId={site.id} siteName={site.name} area={area} />
+                          {!area.archivedAt ? <AreaStaffing area={area} qualifications={qualifications} /> : null}
                           <ArchiveArea id={area.id} name={area.name} archived={!!area.archivedAt} />
                         </> : null}
                       </span>

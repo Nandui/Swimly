@@ -25,11 +25,12 @@ const typeSchema = z.object({
   departmentId: z.string().min(1, "Choose the department that plans it."),
   icon: z.enum(ACTIVITY_ICON_KEYS as [string, ...string[]]),
   requiredTypeId: z.string().trim().max(64).default("").transform((v) => v || null),
-  fromClasses: z.boolean().default(false),
 });
 export type ActivityTypeInput = z.input<typeof typeSchema>;
 
-/** Add an activity to the organisation's list, or change one. One activity takes the swim classes. */
+/** Add an activity to the organisation's list, or change one. No activity takes the swim classes
+ *  any more (owner decision, 16 October 2026: they fill the rota Plan by themselves), so saving
+ *  one that used to makes it an ordinary activity. */
 export async function saveActivityType(id: string | null, input: ActivityTypeInput): Promise<ActionResult> {
   const session = await requirePermission("setup.activities");
   const orgId = session.user.orgId;
@@ -41,12 +42,9 @@ export async function saveActivityType(id: string | null, input: ActivityTypeInp
   if (data.requiredTypeId && !(await prisma.qualificationType.findFirst({ where: { id: data.requiredTypeId, orgId }, select: { id: true } }))) return fail("That qualification is no longer offered.");
   const clash = await prisma.activityType.findFirst({ where: { orgId, name: { equals: data.name, mode: "insensitive" }, ...(id ? { id: { not: id } } : {}) }, select: { id: true } });
   if (clash) return fail("There is already an activity with that name.");
-  if (data.fromClasses && (await prisma.activityType.findFirst({ where: { orgId, fromClasses: true, archivedAt: null, ...(id ? { id: { not: id } } : {}) }, select: { name: true } }))) {
-    return fail("Another activity already takes the swim classes.");
-  }
   if (id && !(await prisma.activityType.findFirst({ where: { id, orgId }, select: { id: true } }))) return fail("That activity is no longer on the list.");
   await prisma.$transaction(async (tx) => {
-    const row = id ? await tx.activityType.update({ where: { id }, data }) : await tx.activityType.create({ data: { ...data, orgId } });
+    const row = id ? await tx.activityType.update({ where: { id }, data: { ...data, fromClasses: false } }) : await tx.activityType.create({ data: { ...data, orgId } });
     await logAudit({ actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: id ? "update" : "create", entity: "ActivityType", entityId: row.id, clubId: null, summary: `${id ? "Changed" : "Added"} the activity ${data.name}` }, tx);
   });
   refresh("/activity-list");
@@ -105,6 +103,50 @@ export async function saveArea(siteId: string, id: string | null, input: { name:
       summary: !id ? `Added the area ${name} at ${site.name}, ${laneWords}`
         : [renamed ? `Renamed ${site.name}'s area ${existing!.name} to ${name}${moved ? `, and ${moved} ${moved === 1 ? "record" : "records"} that use it` : ""}` : null,
           existing!.lanes !== lanes ? `${renamed ? "gave it" : `Gave ${site.name}'s area ${name}`} ${laneWords}` : null].filter(Boolean).join("; ") }, tx);
+  });
+  refresh("/areas");
+  return ok();
+}
+
+const clockTime = z.string().trim().max(5).refine((v) => !v || /^([01]\d|2[0-3]):[0-5]\d$/.test(v), "Use times like 07:00.");
+const staffingSchema = z.object({
+  lines: z.array(z.object({
+    count: z.coerce.number().int("Give a whole number of staff.").min(1, "Give at least 1 staff, or remove the line.").max(30, "Up to 30 staff."),
+    typeId: z.string().trim().max(64).default("").transform((v) => v || null),
+  })).max(8, "Up to 8 lines."),
+  openFrom: clockTime.default(""),
+  openUntil: clockTime.default(""),
+});
+export type AreaStaffingInput = z.input<typeof staffingSchema>;
+const minutesOf = (v: string) => (v ? Number(v.slice(0, 2)) * 60 + Number(v.slice(3, 5)) : null);
+
+/** Set an area's minimum staff and the daily hours it is open (owner request, 16 October 2026):
+ *  "define a minimum of staffing for each area, and what type of staff that is". The rota then
+ *  shows any time the area is in use with fewer. No lines takes the minimum away. */
+export async function saveAreaStaffing(id: string, input: AreaStaffingInput): Promise<ActionResult> {
+  const session = await requirePermission("setup.areas");
+  const orgId = session.user.orgId;
+  const parsed = staffingSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const { lines } = parsed.data;
+  const openFrom = minutesOf(parsed.data.openFrom), openUntil = minutesOf(parsed.data.openUntil);
+  if ((openFrom === null) !== (openUntil === null)) return fail("Give both opening times, or leave both empty.");
+  if (openFrom !== null && openUntil !== null && openUntil <= openFrom) return fail("It has to close after it opens, on the same day.");
+  const area = await prisma.siteArea.findFirst({ where: { id, orgId: orgId ?? undefined }, select: { name: true, siteId: true, site: { select: { name: true } } } });
+  if (!area) return fail("That area no longer exists.");
+  const typeIds = [...new Set(lines.flatMap((l) => (l.typeId ? [l.typeId] : [])))];
+  const types = typeIds.length ? await prisma.qualificationType.findMany({ where: { id: { in: typeIds }, orgId: orgId ?? undefined }, select: { id: true, name: true } }) : [];
+  if (types.length !== typeIds.length) return fail("That qualification is no longer offered.");
+  if (new Set(lines.map((l) => l.typeId ?? "")).size !== lines.length) return fail("Each type of staff once: add to its number instead.");
+  const name = new Map(types.map((t) => [t.id, t.name]));
+  const words = lines.length ? lines.map((l) => `${l.count} ${l.typeId ? name.get(l.typeId) : "anyone"}`).join(", ") : "no minimum";
+  const hours = openFrom !== null && openUntil !== null ? `, open ${parsed.data.openFrom} to ${parsed.data.openUntil}` : "";
+  await prisma.$transaction(async (tx) => {
+    await tx.siteAreaStaffing.deleteMany({ where: { areaId: id } });
+    if (lines.length) await tx.siteAreaStaffing.createMany({ data: lines.map((l, i) => ({ areaId: id, count: l.count, qualificationTypeId: l.typeId, sortOrder: i })) });
+    await tx.siteArea.update({ where: { id }, data: { openFrom, openUntil } });
+    await logAudit({ actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: "update", entity: "SiteArea", entityId: id, clubId: area.siteId,
+      summary: `Set ${area.site.name}'s area ${area.name} to ${words}${hours}` }, tx);
   });
   refresh("/areas");
   return ok();
