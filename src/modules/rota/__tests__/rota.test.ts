@@ -377,7 +377,7 @@ test("changing a booking: kept days take what changed, dropped days leave with a
 
 test("swim classes fill the Plan by themselves, even with an old Teaching activity; the rota plans their teacher through the swim school", async () => {
   as("maya", [at("rota.plan")]);
-  const day = addDaysIso(nextMonday(), 1);
+  const day = addDaysIso(nextMonday(), 15);
   classes.push(
     { source: "activities.classes", userId: "lee", siteId: churchfield, date: day, startMinutes: 960, endMinutes: 990, label: "Stage 1, Learner pool", ref: "c1", title: "Stage 1", place: "Learner pool" },
     { source: "activities.classes", userId: null, siteId: churchfield, date: day, startMinutes: 990, endMinutes: 1020, label: "Stage 2, Learner pool", ref: "c2", title: "Stage 2", place: "Learner pool" },
@@ -410,4 +410,26 @@ test("the personal file keeps the changes to their activities on days that had c
   const file = serverModule<typeof import("@/modules/rota/features/person-file/server/file")>("src/modules/rota/features/person-file/server/file.ts", doubles());
   const riley = await file.dutyChangeFile("riley", ORG);
   assert.ok(riley.entries.some((e) => /riley put on Lifeguarding/.test(e.title) && /Covering an absence · by sam/.test(e.detail)));
+});
+
+test("every department on one Plan (owner, 16 October 2026): all their work and staff, changes for the viewer's own", async () => {
+  as("maya", [at("rota.plan")]);
+  const day = addDaysIso(today(), 61);
+  assert.equal((await actions.saveNeed(null, need(day, { start: "09:00", end: "12:00", places: 1 }))).ok, true);
+  assert.equal((await actions.saveNeed(null, { ...need(day, { start: "09:00", end: "12:00", places: 1 }), typeId: "t-desk", place: "Desk" })).ok, false, "Plan still changes only Maya's own department");
+  as("maya", [at("rota.manage")]);
+  assert.equal((await actions.saveNeed(null, { ...need(day, { start: "09:00", end: "12:00", places: 1 }), typeId: "t-desk", place: "Desk" })).ok, true);
+  assert.equal((await actions.savePlanShift(null, { siteId: churchfield, departmentId: "d-desk", date: day, userId: "sam", start: "09:00", end: "12:00" })).ok, true);
+  as("maya", [at("rota.plan")]);
+  const pool = await data.planWeek({ site: churchfield, day, dept: "d-pool" });
+  assert.ok(!pool.everyDepartment && !pool.day!.groups.some((g) => g.departmentId === "d-desk"), "one department shows only its own");
+  const all = await data.planWeek({ site: churchfield, day, dept: "all" });
+  assert.ok(all.everyDepartment);
+  assert.equal(all.department?.id, "d-pool", "changes are made for Maya's own department");
+  assert.ok(all.day!.groups.some((g) => g.departmentId === "d-desk") && all.day!.groups.some((g) => g.departmentId === "d-pool"), "every department's work");
+  assert.ok(all.day!.people.some((p) => p.userId === "sam"), "and everyone on a shift");
+  assert.deepEqual(all.changeable.map((d) => d.id), ["d-pool"]);
+  assert.ok(all.types.every((t) => t.departmentId === "d-pool"), "new activities only where Maya may plan");
+  assert.equal(all.canShare, false, "sharing, copying and exporting stay a department's");
+  assert.equal(all.canChange, true);
 });

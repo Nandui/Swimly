@@ -16,7 +16,7 @@ import { fitsFor } from "@/modules/rota/shared/data";
 import { notifyShiftChange } from "@/lib/staff-api/notify";
 import { commitmentsFor, planCommitment } from "@/modules/contributions";
 import { ANY_DEPARTMENT, areaAssignmentRow, areaNeedName, areaNeedOf, isAreaNeed } from "@/modules/rota/shared/day";
-import { hoursOn } from "@/lib/setup/area-staffing";
+import { areaNeedsOn } from "@/modules/rota/shared/area-needs";
 import type { Prisma } from "@/generated/prisma/client";
 import { type Allowed, CLASSES, NEEDS_REASON, allowedFor, allowedForPerson, changeSchema, iso, logLive, refresh, shared } from "@/modules/rota/shared/writes";
 
@@ -427,14 +427,13 @@ async function areaNeedFor(needId: string) {
   if (!ref || !isDateOnly(ref.date)) return null;
   const area = await areaById(ref.areaId);
   if (!area) return null;
-  const hours = hoursOn(area, ref.date);
-  const lines = area.minimums.filter((m) => m.typeId === ref.typeId);
-  const places = lines.reduce((n, m) => n + m.count, 0);
-  if (!hours || !places) return null;
+  // The same need the Plan draws, an area covered from another included (area-needs.ts).
+  const need = areaNeedsOn(await areasAt(area.siteId), ref.date).find((n) => n.id === needId);
+  if (!need) return null;
   const rows = await prisma.rotaAreaAssignment.findMany({ where: { areaId: area.id, date: parseDateOnly(ref.date), qualificationTypeId: ref.typeId },
     select: { id: true, place: true, userId: true, startMinutes: true, endMinutes: true } });
-  return { id: needId, area, date: ref.date, typeId: ref.typeId, what: `${areaNeedName(ref.typeId ? lines[0].typeName ?? "Qualified" : null)}, ${area.name}`,
-    startMinutes: hours.start, endMinutes: hours.end, places, rows: rows.map((r) => ({ ...r, needId })) };
+  return { id: needId, area, date: ref.date, typeId: ref.typeId, what: `${areaNeedName(ref.typeId ? need.typeName ?? "Qualified" : null)}, ${area.name}`,
+    startMinutes: need.startMinutes, endMinutes: need.endMinutes, places: need.places, rows: rows.map((r) => ({ ...r, needId })) };
 }
 
 /** "Pool Lifeguard on duty, Main pool" for a stored row, even once the area has changed. */

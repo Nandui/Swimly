@@ -603,6 +603,11 @@ model SiteArea {
   /// A weekday's own hours, Monday first: `[{ "day": 6, "from": 540, "until": 1080 }]`, or no
   /// times for closed that day. A weekday not listed keeps every day's hours.
   weekHours  Json?
+  /// Staff in another area covering this one while both are open (owner request, 16 October
+  /// 2026: one lifeguard by the door between the main hall and the 18 m pool):
+  /// `[{ "withAreaId": "...", "count": 2, "typeId": "..." }]`. While both are open this area's
+  /// staff of that type are left off and the other area needs `count` of them in all.
+  together   Json?
   sortOrder  Int       @default(0)
   archivedAt DateTime?
   createdAt  DateTime  @default(now())

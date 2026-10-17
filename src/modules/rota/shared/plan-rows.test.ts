@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { buildDay, type DayType } from "@/modules/rota/shared/day";
-import { coverOf, freeTime, needRows, partPaid, personBlocks } from "@/modules/rota/shared/plan-rows";
+import { byArea, coverOf, freeTime, needRows, partPaid, personBlocks } from "@/modules/rota/shared/plan-rows";
 
 /** The shift-first Plan (owner, 13 October 2026). Invented site and people. */
 const h = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3));
@@ -29,6 +29,15 @@ test("one row per activity and per booking, swim classes together", () => {
     ["activity", "Lifeguarding", 1],
     ["classes", "Swim classes", 1],
     ["activity", "Reception", 1],
+  ]);
+});
+
+test("what needs people goes area by area, in the site's order, each area's things by start", () => {
+  const areas = byArea(needRows(day.groups), ["Front desk", "Learner pool", "Main pool"]);
+  assert.deepEqual(areas.map((a) => [a.place, a.rows.map((r) => r.label), a.gaps]), [
+    ["Front desk", ["Reception"], 1],
+    ["Learner pool", ["Swim classes"], 1],
+    ["Main pool", ["Lifeguarding", "St Joseph's NS"], 2],
   ]);
 });
 

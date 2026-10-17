@@ -43,7 +43,11 @@ export type TypeOption = { id: string; name: string; departmentId: string; depar
   requiredTypeId?: string | null };
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? "");
 
-export function PeoplePlan({ people, ...ctx }: Ctx & { people: Person[] }) {
+/** The department a person's changes are made for when every department shows on one Plan: the
+ *  one their shift that day is on, else the viewer's (`fallback`). */
+export const departmentFor = (p: Person, fallback: string) => p.planned[0]?.departmentId ?? fallback;
+
+export function PeoplePlan({ people, everyDepartment, ...ctx }: Ctx & { people: Person[]; everyDepartment?: boolean }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const open = people.find((p) => p.userId === openId) ?? null;
   return (
@@ -59,7 +63,7 @@ export function PeoplePlan({ people, ...ctx }: Ctx & { people: Person[] }) {
           </li>
         ))}
       </ul>
-      <ShiftSheet person={open} onClose={() => setOpenId(null)} {...ctx} />
+      <ShiftSheet person={open} onClose={() => setOpenId(null)} {...ctx} departmentId={open && everyDepartment ? departmentFor(open, ctx.departmentId) : ctx.departmentId} />
     </>
   );
 }
@@ -351,7 +355,10 @@ function ShiftTimes({ title, description, submitLabel, start, end, live, fid, tr
 }
 
 /** "Add staff": choose the shift's times, then who, best fit first (free, not off, shortest week). */
-export function AddShiftSheet({ siteId, departmentId, date, dateLabel, live }: Omit<Ctx, "canChange">) {
+export function AddShiftSheet({ siteId, departmentId, departments, date, dateLabel, live }: Omit<Ctx, "canChange"> & {
+  /** With every department on the Plan: the ones the shift may be on, to choose from. */
+  departments?: { id: string; name: string }[];
+}) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -362,15 +369,16 @@ export function AddShiftSheet({ siteId, departmentId, date, dateLabel, live }: O
             <SheetTitle>Add staff to this day</SheetTitle>
             <SheetDescription>{dateLabel}. Choose their shift, then who. It starts as No activity, and you give its time to the day&apos;s work on the plan. Someone already on that day gets a split shift when the times do not overlap.</SheetDescription>
           </SheetHeader>
-          {open ? <AddShiftBody siteId={siteId} departmentId={departmentId} date={date} live={live} onClose={() => setOpen(false)} /> : null}
+          {open ? <AddShiftBody siteId={siteId} departmentId={departmentId} departments={departments} date={date} live={live} onClose={() => setOpen(false)} /> : null}
         </SheetContent>
       </Sheet>
     </>
   );
 }
 
-function AddShiftBody({ siteId, departmentId, date, live, onClose }: { siteId: string; departmentId: string; date: string; live: boolean; onClose: () => void }) {
+function AddShiftBody({ siteId, departmentId: first, departments, date, live, onClose }: { siteId: string; departmentId: string; departments?: { id: string; name: string }[]; date: string; live: boolean; onClose: () => void }) {
   const router = useRouter();
+  const [departmentId, setDepartmentId] = useState(first);
   const [times, setTimes] = useState({ start: "15:00", end: "21:00" });
   const [fits, setFits] = useState<Fit[] | null>(null);
   const [query, setQuery] = useState("");
@@ -408,6 +416,13 @@ function AddShiftBody({ siteId, departmentId, date, live, onClose }: { siteId: s
           <Field label="Starts" htmlFor="rota-add-start"><Input id="rota-add-start" type="time" step={300} value={times.start} onChange={(ev) => setTimes((t) => ({ ...t, start: ev.target.value }))} className="min-h-11" /></Field>
           <Field label="Ends" htmlFor="rota-add-end"><Input id="rota-add-end" type="time" step={300} value={times.end} onChange={(ev) => setTimes((t) => ({ ...t, end: ev.target.value }))} className="min-h-11" /></Field>
         </div>
+        {departments && departments.length > 1 ? (
+          <Field label="Department" htmlFor="rota-add-department">
+            <NativeSelect id="rota-add-department" value={departmentId} onChange={(ev) => setDepartmentId(ev.target.value)} className="min-h-11 w-full">
+              {departments.map((d) => <NativeSelectOption key={d.id} value={d.id}>{d.name}</NativeSelectOption>)}
+            </NativeSelect>
+          </Field>
+        ) : null}
         {live ? <ChangeFields id="rota-add" /> : null}
       </form>
       <SearchField label="Search people" value={query} onValueChange={setQuery} placeholder="Search people at this site" />

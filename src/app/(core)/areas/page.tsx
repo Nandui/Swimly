@@ -39,13 +39,18 @@ export default async function AreasPage() {
                       <span className="pc-tile-icon" aria-hidden="true"><MapPin /></span>
                       <span className="pc-row-body"><span className="pc-row-title">{area.name}</span>
                         {area.lanes ? <span className="pc-row-hint">{area.lanes} {area.lanes === 1 ? "lane" : "lanes"}, booked whole or by lane</span> : null}
-                        {staffingWords(area) ? <span className="pc-row-hint">{staffingWords(area)}</span> : null}</span>
+                        {staffingWords(area) ? <span className="pc-row-hint">{staffingWords(area)}</span> : null}
+                        {area.together.map((t) => {
+                          const other = site.areas.find((a) => a.id === t.withAreaId);
+                          const type = t.typeId ? area.minimums.find((m) => m.typeId === t.typeId)?.typeName ?? "qualified" : "anyone";
+                          return other ? <span key={`${t.withAreaId}-${t.typeId ?? ""}`} className="pc-row-hint">Covered from {other.name} while both are open: {t.count} {type} in all</span> : null;
+                        })}</span>
                       <span className="pc-row-trail">
                         {area.archivedAt ? <Tag meta={ARCHIVAL_STATUS_META.archived} /> : null}
                         {canKeep ? <>
                           {!area.archivedAt ? <MoveArea id={area.id} name={area.name} first={at === 0} last={at === live.length - 1} /> : null}
                           <SaveArea siteId={site.id} siteName={site.name} area={area} />
-                          {!area.archivedAt ? <AreaStaffing area={area} qualifications={qualifications} /> : null}
+                          {!area.archivedAt ? <AreaStaffing area={area} qualifications={qualifications} others={live.filter((a) => a.id !== area.id)} /> : null}
                           <ArchiveArea id={area.id} name={area.name} archived={!!area.archivedAt} />
                         </> : null}
                       </span>
