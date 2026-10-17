@@ -377,7 +377,7 @@ test("changing a booking: kept days take what changed, dropped days leave with a
 
 test("swim classes fill the Plan by themselves, even with an old Teaching activity; the rota plans their teacher through the swim school", async () => {
   as("maya", [at("rota.plan")]);
-  const day = addDaysIso(nextMonday(), 1);
+  const day = addDaysIso(nextMonday(), 15);
   classes.push(
     { source: "activities.classes", userId: "lee", siteId: churchfield, date: day, startMinutes: 960, endMinutes: 990, label: "Stage 1, Learner pool", ref: "c1", title: "Stage 1", place: "Learner pool" },
     { source: "activities.classes", userId: null, siteId: churchfield, date: day, startMinutes: 990, endMinutes: 1020, label: "Stage 2, Learner pool", ref: "c2", title: "Stage 2", place: "Learner pool" },
