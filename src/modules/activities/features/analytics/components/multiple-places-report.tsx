@@ -37,7 +37,10 @@ export function MultiplePlacesReport({ data }: { data: MultiplePlacesAnalyticsDa
   const where = data.allSites ? "across your sites" : "at this site";
 
   return <div className="flex min-w-0 flex-col gap-6">
-    <PageHeader title="Multiple enrolments" description={`${data.siteName} · Swimmers enrolled more than once, waitlist places included`} actions={<AnalyticsRefresh />} />
+    <div className="ins-hero">
+      <span className="ins-eyebrow">Swim school analytics</span>
+      <PageHeader title="Multiple enrolments" description={`${data.siteName} · Swimmers enrolled more than once, waitlist places included`} actions={<AnalyticsRefresh />} />
+    </div>
     <AnalyticsNav active="multiple" />
     {data.multipleSites ? <SegmentedLinks label="Sites to include" items={[
       { href: "/analytics/multiple-places", label: "This site", current: !data.allSites },

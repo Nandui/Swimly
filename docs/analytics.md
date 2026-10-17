@@ -12,6 +12,33 @@ Every report takes `?range=4w|13w|26w|52w` (default 13 weeks, starting on a Mond
 and `?sites=all` (every site the person works at; default the working site), and
 compares with the same length of time just before.
 
+## The suite (16 October 2026)
+
+The pages are one suite (`components/navigation.tsx`, `ANALYTICS_GROUPS`): **The
+business** (Overview, Classes, Swimmers, Progression), **Our people** (Teachers,
+Reception) and **Checks** (Registers, Multiple enrolments). Each page opens with one
+filter tray (`components/insights/filters.tsx`) and is split into named sections
+(`Section` in `kit.tsx`) with "On this page" links. The look follows the
+high-end-visual-design skill: ringed trays around white panels, spring easing and a
+rise-in on load (switched off for reduced motion), all in `analytics.css`.
+
+Filters, all carried from page to page by `reportQuery` (`server/period.ts`):
+
+- **Custom dates**: `?from=YYYY-MM-DD&to=YYYY-MM-DD` beside the presets, with quick
+  picks (last 30 days, this and last month, this and last school year from
+  1 September, this and last year). The end is never after today, the period is at
+  most three years, and it is compared with the same number of days just before.
+  Weekly figures use the Mondays the period touches.
+- When a custom period ends before today, "now" figures (swimmers, places filled,
+  ages, stay curves) are read on its last day (`period.today`; `period.now` is the
+  real today). Waiting lists, the next four weeks, swimmers who may leave and jobs
+  still waiting are always as of today.
+- **Programme**: `?programme=<id>` keeps one shared programme's classes, places,
+  waiting lists, lessons, passes and skills (`server/programme-filter.ts`); a move
+  into another programme reads as leaving this one. Assessment sessions are not tied
+  to a programme, so only bookings placed elsewhere drop out. A single class's page
+  and Reception ignore it.
+
 - **Overview** (`/analytics`): swimmers now, places filled, waiting list, joined,
   left, stayed, attendance and level passes; a weekly trend with joiners and
   leavers; Needs attention; why swimmers left; ages.

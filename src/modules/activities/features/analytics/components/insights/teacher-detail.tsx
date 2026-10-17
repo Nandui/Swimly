@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatCount, formatDate, formatDayMonth, formatShortDay, formatTime, parseDateOnly } from "@/lib/format";
 import { formatSlotShort } from "@/modules/activities/shared/courses/constants";
 import type { OneTeacherInsights } from "@/modules/activities/features/analytics/server/insights-data";
-import { Bars, decimal, Flag, Kpi, Meter, Panel, percent, ReportShell, reportHref, TrendChart, weeks } from "@/modules/activities/features/analytics/components/insights/kit";
+import { Bars, decimal, Flag, Kpi, KpiStrip, Meter, Panel, percent, reportHref, ReportShell, Section, TrendChart, weeks } from "@/modules/activities/features/analytics/components/insights/kit";
 
 type Detail = NonNullable<OneTeacherInsights["detail"]>;
 
@@ -25,14 +25,17 @@ export function TeacherDetailReport({ data }: { data: OneTeacherInsights & { det
     "Lessons are the ones this teacher started on the pool deck. Left after counts swimmers who left the swim school when this teacher taught the last lesson they came to.",
     "Compared with every lesson at the same sites in the same period.",
   ]}>
-    <ul className="ins-kpis" aria-label={`${t.name} at a glance`}>
+    <Section id="glance" eyebrow="At a glance" title="Their figures">
+    <KpiStrip label={`${t.name} at a glance`}>
       <Kpi label="Lessons" value={formatCount(t.lessons)} note={`${decimal(t.hours)} hours · ${t.classes} classes`} />
       <Kpi label="Cover" value={formatCount(t.cover)} note="Lessons taught for someone else" />
       <Kpi label="Not started" value={formatCount(t.missedStarts)} note="Planned for them, nobody started" />
       <Kpi label="Swimmers taught" value={formatCount(t.swimmers)} />
       <Kpi label="Skills ticked" value={formatCount(t.ticks)} note={t.ticksPerLesson !== null ? `${decimal(t.ticksPerLesson)} a lesson` : undefined} />
       <Kpi label="Level passes" value={formatCount(t.passes)} />
-    </ul>
+    </KpiStrip>
+    </Section>
+    <Section id="detail" eyebrow="In detail" title="Against the school, week by week" intro="Each figure beside the school's, their classes and the swimmers who left after their lessons.">
     <Panel id="compare" title="Against the school" sub="Each figure beside the school's for the same period.">
       <ul className="ins-compare">
         <Compare label="Attendance" mine={t.attendance} school={school.attendance} />
@@ -78,5 +81,6 @@ export function TeacherDetailReport({ data }: { data: OneTeacherInsights & { det
         </ul> : <p className="ins-sub">Every lesson was started on time.</p>}
       </Panel>
     </div>
+    </Section>
   </ReportShell>;
 }

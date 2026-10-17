@@ -6,7 +6,7 @@ import { formatCount, formatShortDay, formatTime, parseDateOnly, formatDate, plu
 import { classTimes, formatSlot } from "@/modules/activities/shared/courses/constants";
 import { leaveReasonLabel } from "@/modules/activities/shared/enrolment/leave-reasons";
 import type { ClassInsights } from "@/modules/activities/features/analytics/server/insights-data";
-import { Flag, Kpi, Meter, Panel, percent, ReportShell, reportHref, weeks } from "@/modules/activities/features/analytics/components/insights/kit";
+import { Flag, Kpi, KpiStrip, Meter, Panel, percent, reportHref, ReportShell, Section, weeks } from "@/modules/activities/features/analytics/components/insights/kit";
 
 const MARK_LABEL = { PRESENT: "Present", LATE: "Late", ABSENT: "Absent" } as const;
 
@@ -19,13 +19,16 @@ export function ClassDetailReport({ data }: { data: ClassInsights }) {
       "Taught by is whoever started the lesson on the pool deck. Planned is who the rota or the class had down to teach it.",
     ]}>
     {data.canOpenClasses ? <Button asChild variant="outline" className="self-start"><Link href={`/courses/${c.id}`}>Open the class</Link></Button> : null}
-    <ul className="ins-kpis" aria-label="This class at a glance">
+    <Section id="glance" eyebrow="At a glance" title="This class in figures">
+    <KpiStrip label="This class at a glance">
       <Kpi label="Swimmers" value={formatCount(c.enrolled)} note={c.capacity !== null ? `${percent(c.capacity ? c.enrolled / c.capacity * 100 : null)} of ${c.capacity} places` : "No limit"} />
       <Kpi label="Waiting" value={formatCount(c.waiting.length)} note={c.waiting[0] ? `Longest ${weeks(c.waiting[0].weeks)}` : "Nobody waiting"} />
       <Kpi label="Attendance" value={percent(c.attendance)} note={`${plural(c.lessonsHeld, "lesson")} held · ${c.cancelled} cancelled`} />
       <Kpi label="Registers complete" value={percent(c.registers)} note="Finished lessons with every swimmer marked" />
       <Kpi label="Left" value={formatCount(c.leavers.length)} note="Left the swim school from this class" />
-    </ul>
+    </KpiStrip>
+    </Section>
+    <Section id="detail" eyebrow="In detail" title="Swimmers, leavers and every lesson" intro="Who is in the class, who is waiting, who left and every lesson with who taught it.">
     <Panel id="roster" title="Swimmers now" sub="Each swimmer's attendance in this class, their last lessons (newest first) and their skills at this level.">
       {c.roster.length ? <div className="ins-table-wrap"><Table>
         <TableHeader><TableRow>
@@ -83,5 +86,6 @@ export function ClassDetailReport({ data }: { data: ClassInsights }) {
       {c.lessons.length === 0 ? <EmptyState compact title="No lessons in this period" /> : null}
       {c.teachers.length ? <p className="ins-sub">Taught this period by {c.teachers.map(t => `${t.key} (${t.count})`).join(", ")}. Starts at {formatTime(c.slot.startMinutes)}.</p> : null}
     </Panel>
+    </Section>
   </ReportShell>;
 }
