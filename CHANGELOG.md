@@ -4,13 +4,21 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.33.0 · 16 October 2026 · Rota: one Plan for every department, area by area
+## 1.34.0 · 17 October 2026 · Rota: one Plan for every department, area by area
 
 - **Plan** can now show **All departments** at once: every area with its activities, bookings and swim classes, and everyone on a shift that day. Choose a department along the top to see just that one, as before.
 - **What needs people** is now grouped by area. Each area has its own heading with how many places are still to fill, and its own staffing need comes first.
 - A new **Area** choice above the timeline shows one area at a time: what it needs, and the people working there or with time still to give.
 - With **All departments**, **Add staff** asks which department the shift is for. You can still change only the departments you plan. To copy, export or share a week, choose that department first.
 - An area can now be **covered from another area** while both are open, such as one lifeguard by the door between the main hall and the 18 m pool. Set it under **Admin > Areas > Staff needed**: choose the other area and how many staff cover both. While both are open, the covered area shows no places to fill and the other area asks for that number in all. Bookings and activities still add their own.
+
+## 1.33.0 · 16 October 2026 · Analytics: one suite, with your own dates
+
+- **Analytics** is now one suite, grouped by what you want to know: **The business** (Overview, Classes, Swimmers, Progression), **Our people** (Teachers, Reception) and **Checks** (Registers, Multiple enrolments).
+- Choose **Custom** beside the periods for any two days, or a quick pick: last 30 days, this or last month, this or last school year (from 1 September), or this or last year. Figures compare with the same number of days just before.
+- When your dates end before today, figures such as swimmers and places filled are as of the last day you chose. Waiting lists and the next four weeks are always as of today.
+- Choose a **programme** to see only its classes, swimmers, waiting lists and passes. **Reset filters** goes back to the last 13 weeks at this site.
+- Each page is split into short sections, such as Capacity, Lessons and Every class, with **On this page** links to jump between them, and has a cleaner, calmer look in light and dark mode.
 
 ## 1.32.0 · 16 October 2026 · Analytics: reception and much more on the swim school
 

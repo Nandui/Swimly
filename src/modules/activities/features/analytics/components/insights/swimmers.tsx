@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatCount, formatDate, formatMonth, parseDateOnly, plural } from "@/lib/format";
 import { formatSlotShort } from "@/modules/activities/shared/courses/constants";
 import type { SwimmerInsights } from "@/modules/activities/features/analytics/server/insights-data";
-import { Attention, Bars, Flag, Kpi, Meter, PairedColumns, Panel, percent, ReportShell, reportHref, weeks, type ReportContext } from "@/modules/activities/features/analytics/components/insights/kit";
+import { asOf, Attention, Bars, Flag, Kpi, KpiStrip, Meter, PairedColumns, Panel, percent, ReportShell, reportHref, Section, weeks, type ReportContext } from "@/modules/activities/features/analytics/components/insights/kit";
 
 type Person = SwimmerInsights["swimmers"]["leavers"][number];
 
@@ -38,19 +38,41 @@ function LeaverTable({ ctx, rows, upcoming }: { ctx: ReportContext; rows: Person
 export function SwimmersReport({ data }: { data: SwimmerInsights }) {
   const s = data.swimmers;
   const dropOff = s.months.filter(m => m.dropOff !== null);
-  return <ReportShell ctx={data} page="swimmers" path="/analytics/swimmers" title="Swimmers" footnotes={[
+  return <ReportShell ctx={data} page="swimmers" path="/analytics/swimmers" title="Swimmers" sections={[
+    { id: "glance", label: "At a glance" }, { id: "keep", label: "Keep them" }, { id: "growth", label: "Growth" }, { id: "leavers-why", label: "Leavers" }, { id: "families", label: "Families" },
+  ]} footnotes={[
     "Joining and leaving count the swim school as a whole: moving class or site, or coming back within two weeks, is not leaving. A leaver is dated the first day without a place.",
     "Came to is the swimmer's last eight marked lessons before leaving. Last taught by is the teacher of the last lesson they came to.",
     "Leave reasons are asked from 16 October 2026; earlier leavers show Not recorded. Finished their class means the place was ended as finished with no other place.",
   ]}>
-    <ul className="ins-kpis" aria-label="Swimmers at a glance">
-      <Kpi label="Swimmers now" value={formatCount(s.swimmers)} note="Each counted once" />
+    <Section id="glance" eyebrow="At a glance" title="Coming, going and staying">
+    <KpiStrip label="Swimmers at a glance">
+      <Kpi label={`Swimmers ${asOf(data.period)}`} value={formatCount(s.swimmers)} note="Each counted once" />
       <Kpi label="Joined" value={formatCount(s.joined)} note={`${formatCount(s.newSwimmers)} new · ${formatCount(s.returning)} came back`} />
       <Kpi label="Left" value={formatCount(s.left)} note={`${formatCount(s.leaving.length)} more have a last lesson booked`} href="#leavers" />
       <Kpi label="Stayed" value={percent(s.retention.rate)} note={`${formatCount(s.retention.stayed)} of ${formatCount(s.retention.start)} here when the period began`} />
       <Kpi label="Monthly drop-off" value={percent(dropOff.length ? dropOff.reduce((t, m) => t + m.dropOff!, 0) / dropOff.length : null, 1)} note="Average share leaving each month, last 12 months" />
       <Kpi label="May leave" value={formatCount(s.atRisk.length)} note="Missing lessons lately" href="#at-risk" />
-    </ul>
+    </KpiStrip>
+    </Section>
+    <Section id="keep" eyebrow="Keep them" title="Swimmers to call this week" intro="Missing lessons lately, or a last lesson already booked. A call now often keeps them.">
+    <Panel id="at-risk" title="May leave" sub="Swimmers here now who missed three lessons in a row, or came to under 60% of their last eight. A call now often keeps them.">
+      {s.atRisk.length ? <div className="ins-table-wrap"><Table>
+        <TableHeader><TableRow><TableHead scope="col">Swimmer</TableHead><TableHead scope="col">Why</TableHead><TableHead scope="col">Class</TableHead><TableHead scope="col">Last came</TableHead><TableHead scope="col">Teacher</TableHead></TableRow></TableHeader>
+        <TableBody>{s.atRisk.map(r => <TableRow key={r.studentId}>
+          <TableHead scope="row" className="whitespace-normal"><SwimmerName ctx={data} id={r.studentId} name={r.name} /></TableHead>
+          <TableCell><div className="ins-flags">{r.reasons.map(x => <Flag key={x} tone="warn">{x}</Flag>)}</div></TableCell>
+          <TableCell className="whitespace-normal">{r.courseId ? <Link href={reportHref(data, `/analytics/classes/${r.courseId}`)} className="text-ui-primary hover:underline">{r.className}{r.slot ? ` · ${formatSlotShort(r.slot)}` : ""}</Link> : "—"}</TableCell>
+          <TableCell>{r.lastAttended ? formatDate(parseDateOnly(r.lastAttended)) : <span className="ins-muted">Not in the last eight</span>}</TableCell>
+          <TableCell>{r.teacher ?? <span className="ins-muted">—</span>}</TableCell>
+        </TableRow>)}</TableBody>
+      </Table></div> : <EmptyState compact title="Nobody looks likely to leave" hint="No swimmer here now has missed three in a row or most of their recent lessons." />}
+    </Panel>
+    <Panel id="leaving" title="Leaving soon" sub="A last lesson is booked in.">
+      {s.leaving.length ? <LeaverTable ctx={data} rows={s.leaving} upcoming /> : <p className="ins-sub">No last lessons booked.</p>}
+    </Panel>
+    </Section>
+    <Section id="growth" eyebrow="Growth" title="Joining, leaving and staying power" intro="Month by month over the last year, and how long each quarter's new swimmers stay.">
     <Panel id="months" title="Joined and left, month by month" sub="The last 12 months, whatever period is chosen above.">
       <PairedColumns label="Joiners and leavers by month" a="Joined" b="Left" rows={s.months.map(m => ({ key: m.month, label: formatMonth(m.month).slice(0, 3), a: m.joined, b: m.left }))} />
       <div className="ins-table-wrap"><Table>
@@ -81,44 +103,36 @@ export function SwimmersReport({ data }: { data: SwimmerInsights }) {
         </TableBody>
       </Table></div>
     </Panel>
-    <div className="ins-grid ins-even">
-      <Panel id="reasons" title="Why they left" sub={`${plural(s.left, "leaver")} in the period.`}>
+    </Section>
+    <Section id="leavers-why" eyebrow="Leavers" title="Why swimmers leave" intro="Reasons from the unenrol form, how long leavers were with us and the level they left from.">
+      <div className="ins-grid ins-thirds">
+        <Panel id="reasons" title="Why they left" sub={`${plural(s.left, "leaver")} in the period.`}>
         {s.reasons.length ? <Bars label="Leavers by reason" rows={s.reasons.map(r => ({ key: r.key, label: r.label, value: r.count, tone: r.key === "teaching" || r.key === "progress" ? "warn" as const : undefined }))} /> : <p className="ins-sub">Nobody left.</p>}
       </Panel>
-      <Panel id="tenure" title="How long they stayed" sub="Time with the swim school before leaving.">
+        <Panel id="tenure" title="How long they stayed" sub="Time with the swim school before leaving.">
         <Bars label="Leavers by time with us" rows={s.tenure.map(t => ({ key: t.label, label: t.label, value: t.count }))} />
       </Panel>
-      <Panel id="by-level" title="The level they left from" sub="Level of their last place.">
+        <Panel id="by-level" title="The level they left from" sub="Level of their last place.">
         {s.byLevel.length ? <Bars label="Leavers by level" rows={s.byLevel.map(l => ({ key: `${l.programmeName}-${l.name}`, label: `${l.name}${l.programmeName ? ` · ${l.programmeName}` : ""}`, value: l.count }))} /> : <p className="ins-sub">Nobody left.</p>}
       </Panel>
-      <Panel id="parents" title="Parents in the app" sub="Swimmers here today with a parent linked in the parents app, where they book, see progress and ask for changes.">
+      </div>
+    <Panel id="leavers" title="Every leaver" sub="Newest first.">
+      {s.leavers.length ? <LeaverTable ctx={data} rows={s.leavers} /> : <EmptyState compact title="Nobody left in this period" />}
+    </Panel>
+    </Section>
+    <Section id="families" eyebrow="Families" title="Who swims with us" intro="Parents using the app, and the ages we teach.">
+      <div className="ins-grid ins-even">
+        <Panel id="parents" title="Parents in the app" sub="Swimmers here today with a parent linked in the parents app, where they book, see progress and ask for changes.">
         <Attention items={[
           { key: "linked", count: data.parents.linked, title: `${percent(data.parents.share)} of swimmers linked`, hint: `Of ${plural(data.parents.swimmers, "swimmer")} here today` },
           { key: "not", count: data.parents.swimmers - data.parents.linked, title: "No parent in the app", hint: "Worth a mention at the desk", tone: "warn" },
           { key: "new", count: data.parents.newLinks, title: "Linked in this period", hint: "Swimmers here today first linked in the period" },
         ]} />
       </Panel>
-      <Panel id="ages" title="Swimmers by age" sub="Swimmers here today.">
+        <Panel id="ages" title="Swimmers by age" sub={`Swimmers here ${asOf(data.period, "today")}.`}>
         <Bars label="Swimmers by age" rows={s.ages.bands.map(b => ({ key: b.label, label: b.label, value: b.count }))} />
       </Panel>
-    </div>
-    <Panel id="at-risk" title="May leave" sub="Swimmers here now who missed three lessons in a row, or came to under 60% of their last eight. A call now often keeps them.">
-      {s.atRisk.length ? <div className="ins-table-wrap"><Table>
-        <TableHeader><TableRow><TableHead scope="col">Swimmer</TableHead><TableHead scope="col">Why</TableHead><TableHead scope="col">Class</TableHead><TableHead scope="col">Last came</TableHead><TableHead scope="col">Teacher</TableHead></TableRow></TableHeader>
-        <TableBody>{s.atRisk.map(r => <TableRow key={r.studentId}>
-          <TableHead scope="row" className="whitespace-normal"><SwimmerName ctx={data} id={r.studentId} name={r.name} /></TableHead>
-          <TableCell><div className="ins-flags">{r.reasons.map(x => <Flag key={x} tone="warn">{x}</Flag>)}</div></TableCell>
-          <TableCell className="whitespace-normal">{r.courseId ? <Link href={reportHref(data, `/analytics/classes/${r.courseId}`)} className="text-ui-primary hover:underline">{r.className}{r.slot ? ` · ${formatSlotShort(r.slot)}` : ""}</Link> : "—"}</TableCell>
-          <TableCell>{r.lastAttended ? formatDate(parseDateOnly(r.lastAttended)) : <span className="ins-muted">Not in the last eight</span>}</TableCell>
-          <TableCell>{r.teacher ?? <span className="ins-muted">—</span>}</TableCell>
-        </TableRow>)}</TableBody>
-      </Table></div> : <EmptyState compact title="Nobody looks likely to leave" hint="No swimmer here now has missed three in a row or most of their recent lessons." />}
-    </Panel>
-    <Panel id="leaving" title="Leaving soon" sub="A last lesson is booked in.">
-      {s.leaving.length ? <LeaverTable ctx={data} rows={s.leaving} upcoming /> : <p className="ins-sub">No last lessons booked.</p>}
-    </Panel>
-    <Panel id="leavers" title="Every leaver" sub="Newest first.">
-      {s.leavers.length ? <LeaverTable ctx={data} rows={s.leavers} /> : <EmptyState compact title="Nobody left in this period" />}
-    </Panel>
+      </div>
+    </Section>
   </ReportShell>;
 }

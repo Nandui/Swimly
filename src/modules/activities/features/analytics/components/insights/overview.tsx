@@ -1,7 +1,7 @@
 import { formatCount, formatDayMonth, plural } from "@/lib/format";
 import { formatSlotShort } from "@/modules/activities/shared/courses/constants";
 import type { OverviewInsights } from "@/modules/activities/features/analytics/server/insights-data";
-import { Attention, Bars, Delta, Kpi, PairedColumns, Panel, PanelLink, percent, ReportShell, reportHref, TrendChart } from "@/modules/activities/features/analytics/components/insights/kit";
+import { asOf, Attention, Bars, Delta, Kpi, KpiStrip, PairedColumns, Panel, PanelLink, percent, ReportShell, reportHref, Section, TrendChart } from "@/modules/activities/features/analytics/components/insights/kit";
 
 export function OverviewReport({ data }: { data: OverviewInsights }) {
   const o = data.overview;
@@ -17,38 +17,50 @@ export function OverviewReport({ data }: { data: OverviewInsights }) {
     { key: "desk", count: data.deskOverdue, title: "Reception jobs past their target", hint: "Parent app requests, billing checks and moves waiting too long", href: reportHref(data, "/analytics/reception") + "#waiting", tone: "warn" as const },
     { key: "registers", count: o.attention.missingRegisters, title: "Registers not complete", hint: "Finished lessons with swimmers left unmarked", href: "/analytics/instructors", tone: "bad" as const },
   ];
-  return <ReportShell ctx={data} page="overview" path="/analytics" title="Analytics" footnotes={[
+  const now = asOf(data.period);
+  return <ReportShell ctx={data} page="overview" path="/analytics" title="Overview" sections={[
+    { id: "glance", label: "At a glance" }, { id: "act", label: "Needs attention" }, { id: "growth", label: "Growth" }, { id: "who", label: "Who we teach" },
+  ]} footnotes={[
     "Swimmers are counted once however many classes they hold. Waiting lists, future starts and archived classes are left out. Moving class or site is not leaving.",
     "Places filled counts classes with a limit. Attendance is swimmers marked present or late out of everyone marked.",
   ]}>
-    <ul className="ins-kpis" aria-label="The swim school at a glance">
-      <Kpi label="Swimmers now" value={formatCount(o.swimmers.current ?? 0)} delta={<Delta change={o.swimmers} better="up" label="since the start of the period" />} note={`In ${plural(o.places, "class place")}. Change since the period began.`} href={swimmersHref} />
-      <Kpi label="Places filled" value={percent(o.fill.rate)} note={`${formatCount(o.fill.enrolled)} of ${formatCount(o.fill.capacity)} places · ${formatCount(o.fill.empty)} free`} href={classesHref} />
-      <Kpi label="Waiting list" value={formatCount(o.waiting.bookings)} note={`${plural(o.waiting.swimmers, "swimmer")} waiting for a place`} href={classesHref} />
-      <Kpi label="Joined" value={formatCount(o.joined.current ?? 0)} delta={<Delta change={o.joined} better="up" label="against the period before" />} note={`${formatCount(o.newSwimmers)} new to the swim school`} href={swimmersHref} />
-      <Kpi label="Left" value={formatCount(o.left.current ?? 0)} delta={<Delta change={o.left} better="down" label="against the period before" />} note="No place left at any site" href={`${swimmersHref}#leavers`} />
-      <Kpi label="Stayed" value={percent(o.retention.rate)} note={`${formatCount(o.retention.stayed)} of the ${formatCount(o.retention.start)} here when the period began`} href={swimmersHref} />
-      <Kpi label="Attendance" value={percent(o.attendance.current)} delta={<Delta change={o.attendance} better="up" unit="pts" label="against the period before" />} note={`${plural(o.lessons.held, "lesson")} held · ${formatCount(o.lessons.cancelled)} cancelled`} href={classesHref} />
-      <Kpi label="Level passes" value={formatCount(o.passes.current ?? 0)} delta={<Delta change={o.passes} better="up" label="against the period before" />} note="Levels completed" href={reportHref(data, "/analytics/progression")} />
-    </ul>
-    <div className="ins-grid">
-      <Panel id="trend" title="Swimmers week by week" sub="Swimmers with a place at the end of each week." action={<PanelLink href={swimmersHref}>Joiners and leavers</PanelLink>}>
-        <TrendChart label="Swimmers week by week" points={o.trend.map(t => ({ x: t.week, y: t.swimmers, label: `Week of ${formatDayMonth(t.week)}` }))} />
-        <h3 className="ins-minor">Joined and left each week</h3>
-        <PairedColumns label="Swimmers who joined and left each week" a="Joined" b="Left" rows={o.trend.map(t => ({ key: t.week, label: formatDayMonth(t.week), a: t.joined, b: t.left }))} />
-      </Panel>
-      <Panel id="attention" title="Needs attention" sub="Open each one to see who and where.">
+    <Section id="glance" eyebrow="At a glance" title="The swim school in eight figures" intro="Each figure opens the page behind it. Arrows compare with the period before.">
+      <KpiStrip label="The swim school at a glance">
+        <Kpi label={`Swimmers ${now}`} value={formatCount(o.swimmers.current ?? 0)} delta={<Delta change={o.swimmers} better="up" label="since the start of the period" />} note={`In ${plural(o.places, "class place")}. Change since the period began.`} href={swimmersHref} />
+        <Kpi label={`Places filled${data.period.current ? "" : ` ${now}`}`} value={percent(o.fill.rate)} note={`${formatCount(o.fill.enrolled)} of ${formatCount(o.fill.capacity)} places · ${formatCount(o.fill.empty)} free`} href={classesHref} />
+        <Kpi label="Waiting list" value={formatCount(o.waiting.bookings)} note={`${plural(o.waiting.swimmers, "swimmer")} waiting for a place today`} href={classesHref} />
+        <Kpi label="Joined" value={formatCount(o.joined.current ?? 0)} delta={<Delta change={o.joined} better="up" label="against the period before" />} note={`${formatCount(o.newSwimmers)} new to the swim school`} href={swimmersHref} />
+        <Kpi label="Left" value={formatCount(o.left.current ?? 0)} delta={<Delta change={o.left} better="down" label="against the period before" />} note="No place left at any site" href={`${swimmersHref}#leavers`} />
+        <Kpi label="Stayed" value={percent(o.retention.rate)} note={`${formatCount(o.retention.stayed)} of the ${formatCount(o.retention.start)} here when the period began`} href={swimmersHref} />
+        <Kpi label="Attendance" value={percent(o.attendance.current)} delta={<Delta change={o.attendance} better="up" unit="pts" label="against the period before" />} note={`${plural(o.lessons.held, "lesson")} held · ${formatCount(o.lessons.cancelled)} cancelled`} href={classesHref} />
+        <Kpi label="Level passes" value={formatCount(o.passes.current ?? 0)} delta={<Delta change={o.passes} better="up" label="against the period before" />} note="Levels completed" href={reportHref(data, "/analytics/progression")} />
+      </KpiStrip>
+    </Section>
+    <Section id="act" eyebrow="Needs attention" title="What to act on" intro="The few things worth a look this week. Open each one to see who and where.">
+      <Panel id="attention" title="Needs attention" className="ins-wide-list">
         <Attention items={attention} />
       </Panel>
-    </div>
-    <div className="ins-grid ins-even">
-      <Panel id="reasons" title="Why swimmers left" sub={o.left.current ? `${plural(o.left.current, "swimmer")} left in this period.` : "Nobody left in this period."} action={<PanelLink href={`${swimmersHref}#leavers`}>Every leaver</PanelLink>}>
-        {o.reasons.length ? <Bars label="Leavers by reason" rows={o.reasons.map(r => ({ key: r.key, label: r.label, value: r.count }))} /> : null}
-        {o.reasons.some(r => r.key === "none") ? <p className="ins-sub">Not recorded: unenrolled before Turnfin asked for a reason (16 October 2026).</p> : null}
-      </Panel>
-      <Panel id="ages" title="Swimmers by age" sub={o.ages.unknown ? `${plural(o.ages.unknown, "swimmer")} with no date of birth left out.` : "Age today."}>
-        <Bars label="Swimmers by age" rows={o.ages.bands.map(b => ({ key: b.label, label: b.label, value: b.count }))} />
-      </Panel>
-    </div>
+    </Section>
+    <Section id="growth" eyebrow="Growth" title="Are we growing?" intro="Swimmers with a place at the end of each week, and who joined and left.">
+      <div className="ins-grid ins-even">
+        <Panel id="trend" title="Swimmers week by week" sub="Swimmers with a place at the end of each week." action={<PanelLink href={swimmersHref}>Swimmers</PanelLink>}>
+          <TrendChart label="Swimmers week by week" points={o.trend.map(t => ({ x: t.week, y: t.swimmers, label: `Week of ${formatDayMonth(t.week)}` }))} />
+        </Panel>
+        <Panel id="flow" title="Joined and left each week" action={<PanelLink href={`${swimmersHref}#leavers`}>Every leaver</PanelLink>}>
+          <PairedColumns label="Swimmers who joined and left each week" a="Joined" b="Left" rows={o.trend.map(t => ({ key: t.week, label: formatDayMonth(t.week), a: t.joined, b: t.left }))} />
+        </Panel>
+      </div>
+    </Section>
+    <Section id="who" eyebrow="Who we teach" title="Who leaves, and who swims with us" intro="Reasons come from the unenrol form. Ages are worked out from each swimmer's date of birth.">
+      <div className="ins-grid ins-even">
+        <Panel id="reasons" title="Why swimmers left" sub={o.left.current ? `${plural(o.left.current, "swimmer")} left in this period.` : "Nobody left in this period."} action={<PanelLink href={`${swimmersHref}#leavers`}>Every leaver</PanelLink>}>
+          {o.reasons.length ? <Bars label="Leavers by reason" rows={o.reasons.map(r => ({ key: r.key, label: r.label, value: r.count }))} /> : null}
+          {o.reasons.some(r => r.key === "none") ? <p className="ins-sub">Not recorded: unenrolled before Turnfin asked for a reason (16 October 2026).</p> : null}
+        </Panel>
+        <Panel id="ages" title="Swimmers by age" sub={o.ages.unknown ? `${plural(o.ages.unknown, "swimmer")} with no date of birth left out.` : `Age ${data.period.current ? "today" : `on ${formatDayMonth(data.period.end)}`}.`}>
+          <Bars label="Swimmers by age" rows={o.ages.bands.map(b => ({ key: b.label, label: b.label, value: b.count }))} />
+        </Panel>
+      </div>
+    </Section>
   </ReportShell>;
 }

@@ -12,22 +12,132 @@
   --ins-second: color-mix(in srgb, var(--pc-ink) 38%, var(--pc-surface));
   --ins-grid: color-mix(in srgb, var(--pc-ink) 8%, transparent);
   --ins-hair: color-mix(in srgb, var(--pc-ink) 8%, transparent);
-  display: flex; flex-direction: column; gap: 24px; min-width: 0;
+  display: flex; flex-direction: column; gap: 28px; min-width: 0;
 }
 
-/* Period and sites: one row of choices under the page tabs. */
-.turnfin-app .ins-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
-.turnfin-app .ins-controls .ins-label { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); font-weight: 600; }
+/* ── The suite (owner request, 16 October 2026: "a proper business analytics intelligence suite",
+   designed with the high-end-visual-design skill: soft structuralism, double-bezel trays, an
+   asymmetric bento of panels, spring easing). Every tray is a hairline-ringed shell holding a
+   white core with concentric corners, so the pages read as one machined instrument. */
+.turnfin-app {
+  --ins-tray: color-mix(in srgb, var(--pc-ink) 4%, transparent);
+  --ins-tray-line: color-mix(in srgb, var(--pc-ink) 7%, transparent);
+  --ins-ambient: color-mix(in srgb, var(--pc-ink) 14%, transparent);
+  --ins-highlight: light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.05));
+  --ins-spring: cubic-bezier(0.32, 0.72, 0, 1);
+}
 
-/* Figures: the value, what it is, and how it moved against the period before. */
-.turnfin-app .ins-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; }
-.turnfin-app .ins-kpi { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 20px 22px; border-radius: var(--pc-radius-panel); background: var(--pc-surface); color: var(--pc-ink); text-decoration: none; }
-a.ins-kpi { transition: box-shadow 160ms var(--pc-ease); }
-@media (max-width: 520px) { .turnfin-app .ins-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .turnfin-app .ins-kpi { padding: 14px 16px; } }
-a.ins-kpi:hover { box-shadow: inset 0 0 0 1px var(--pc-line-strong); }
-a.ins-kpi:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
-.turnfin-app .ins-kpi-label { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
-.turnfin-app .ins-kpi-value { font-size: var(--pc-text-figure); line-height: var(--pc-leading-figure); font-weight: 750; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+/* The opening: a small pill naming the suite above the page's one H1. */
+.turnfin-app .ins-hero { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+.turnfin-app .ins-hero > :last-child { align-self: stretch; }
+.turnfin-app .ins-eyebrow { display: inline-flex; align-items: center; gap: 8px; min-height: 26px; padding: 0 12px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary-ink); font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
+.turnfin-app .ins-eyebrow::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* The suite's pages in three groups: one tray, a white core per group. */
+.turnfin-app .ins-suite { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px; border-radius: 30px; background: var(--ins-tray); box-shadow: inset 0 0 0 1px var(--ins-tray-line); }
+.turnfin-app .ins-suite-group { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; padding: 10px 10px 8px; border-radius: 24px; background: var(--pc-surface); box-shadow: inset 0 1px 0 var(--ins-highlight); }
+.turnfin-app .ins-suite-label { padding: 0 12px; color: var(--pc-ink-muted); font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+.turnfin-app .ins-suite ul { display: flex; flex-wrap: wrap; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.turnfin-app .ins-suite-link { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: 999px; color: var(--pc-ink-muted); font-weight: 600; text-decoration: none; white-space: nowrap; transition: background-color 400ms var(--ins-spring), color 400ms var(--ins-spring), transform 400ms var(--ins-spring); }
+.turnfin-app .ins-suite-link svg { width: 18px; height: 18px; flex: none; transition: transform 500ms var(--ins-spring); }
+.turnfin-app .ins-suite-link:hover { background: var(--pc-hover); color: var(--pc-ink); }
+.turnfin-app .ins-suite-link:hover svg { transform: translateY(-1px) scale(1.06); }
+.turnfin-app .ins-suite-link:active { transform: scale(0.98); }
+.turnfin-app .ins-suite-link[aria-current] { background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.turnfin-app .ins-suite-link:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+@media (min-width: 1100px) { .turnfin-app .ins-suite { flex-wrap: nowrap; } .turnfin-app .ins-suite-group:first-child { flex-grow: 2; } }
+@media (max-width: 640px) { .turnfin-app .ins-suite-group { flex-basis: 100%; } .turnfin-app .ins-suite-link { padding: 0 12px; } }
+
+/* Filters: one tray holding the period, sites and programme, then what the page shows. */
+.turnfin-app .ins-filters { display: flex; flex-direction: column; padding: 6px; border-radius: 30px; background: var(--ins-tray); box-shadow: inset 0 0 0 1px var(--ins-tray-line); transition: opacity 300ms var(--ins-spring); }
+.turnfin-app .ins-filters[data-pending] { opacity: 0.7; }
+.turnfin-app .ins-filters-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px 24px; padding: 16px 18px 18px; border-radius: 24px; background: var(--pc-surface); box-shadow: inset 0 1px 0 var(--ins-highlight); }
+.turnfin-app .ins-filter { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.turnfin-app .ins-filter-grow { flex: 1 1 14rem; max-width: var(--pc-field-min); }
+.turnfin-app .ins-filter .ins-filter-label { display: block; font-size: 11px; line-height: var(--pc-leading-caption); color: var(--pc-ink-muted); font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+.turnfin-app .ins-filter .pc-seg-item svg { width: 16px; height: 16px; }
+.turnfin-app .ins-filter-select { border-radius: 999px; padding-left: 16px; }
+.turnfin-app .ins-filters-summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 16px; padding: 10px 18px 6px; }
+.turnfin-app .ins-filters-summary p { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; margin: 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
+.turnfin-app .ins-filters-summary strong { color: var(--pc-ink); font-size: var(--pc-text-body); font-weight: 650; font-variant-numeric: tabular-nums; }
+.turnfin-app .ins-filters-reset { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border-radius: 999px; color: var(--pc-primary-ink); font-size: var(--pc-text-caption); font-weight: 650; text-decoration: none; transition: background-color 400ms var(--ins-spring); }
+.turnfin-app .ins-filters-reset svg { width: 14px; height: 14px; transition: transform 600ms var(--ins-spring); }
+.turnfin-app .ins-filters-reset:hover { background: var(--pc-primary-soft); }
+.turnfin-app .ins-filters-reset:hover svg { transform: rotate(-120deg); }
+.turnfin-app .ins-filters-reset:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+
+/* The custom dates picker (portalled, so styled from the app root). */
+.turnfin-app .ins-range-pop { display: flex; flex-direction: column; gap: 12px; width: min(23rem, var(--pc-overlay-max-width)); padding: 18px; border: 0; border-radius: 24px; background: var(--pc-surface-raised); box-shadow: var(--pc-shadow-overlay); }
+.turnfin-app .ins-range-title { margin: 0; color: var(--pc-ink-muted); font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+.turnfin-app .ins-range-quick { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.turnfin-app .ins-range-chip { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 999px; background: var(--pc-surface-sunken); color: var(--pc-ink); font-size: var(--pc-text-caption); font-weight: 600; text-decoration: none; transition: background-color 400ms var(--ins-spring), transform 400ms var(--ins-spring); }
+.turnfin-app .ins-range-chip:hover { background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.turnfin-app .ins-range-chip:active { transform: scale(0.97); }
+.turnfin-app .ins-range-chip[aria-current] { background: var(--pc-primary); color: var(--pc-on-primary); }
+.turnfin-app .ins-range-chip:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.turnfin-app .ins-range-form { display: flex; flex-direction: column; gap: 12px; padding-top: 14px; border-top: 1px solid var(--pc-line); }
+.turnfin-app .ins-range-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.turnfin-app .ins-range-fields input { border-radius: 14px; }
+.turnfin-app .ins-range-hint { margin: 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
+
+/* "On this page": quiet anchors to each section. */
+.turnfin-app .ins-jump { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: -8px; }
+.turnfin-app .ins-jump-label { margin-right: 6px; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
+.turnfin-app .ins-jump a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 999px; color: var(--pc-ink); font-size: var(--pc-text-caption); font-weight: 600; text-decoration: none; box-shadow: inset 0 0 0 1px var(--ins-tray-line); transition: background-color 400ms var(--ins-spring), transform 400ms var(--ins-spring); }
+.turnfin-app .ins-jump a:hover { background: var(--pc-surface); transform: translateY(-1px); }
+.turnfin-app .ins-jump a:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+
+/* Sections: a small label, the question the panels answer, and why it matters. */
+.turnfin-app .ins-section { display: flex; flex-direction: column; gap: 20px; min-width: 0; padding-top: 12px; scroll-margin-top: 24px; }
+.turnfin-app .ins-section-head { display: flex; flex-direction: column; gap: 6px; max-width: 72ch; }
+.turnfin-app .ins-section-eyebrow { display: inline-flex; align-items: center; gap: 10px; color: var(--pc-primary-ink); font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
+.turnfin-app .ins-section-eyebrow::after { content: ''; width: 28px; height: 1px; background: currentColor; opacity: 0.5; }
+.turnfin-app .ins-section-head h2 { margin: 0; font-size: 22px; line-height: 28px; font-weight: 700; letter-spacing: -0.015em; }
+.turnfin-app .ins-section-head p { margin: 0; color: var(--pc-ink-muted); font-size: var(--pc-text-body); line-height: var(--pc-leading-body); }
+
+/* Panels and figures sit in a ringed tray (the double bezel), drawn with rings so nothing moves. */
+.turnfin-app .ins .pc-panel, .turnfin-app .ins .ins-kpi {
+  box-shadow: inset 0 1px 0 var(--ins-highlight), 0 0 0 6px var(--ins-tray), 0 0 0 7px var(--ins-tray-line), 0 28px 56px -32px var(--ins-ambient);
+  scroll-margin-top: 24px;
+}
+.turnfin-app .ins .pc-panel { padding: 26px; }
+.turnfin-app .ins .pc-panel h3 { margin: 0; font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 700; letter-spacing: -0.01em; }
+@media (max-width: 640px) { .turnfin-app .ins .pc-panel { padding: 18px; } }
+
+/* Gentle arrival: each block rises into place, one after another. */
+@keyframes ins-rise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+.turnfin-app .ins > * { animation: ins-rise 800ms var(--ins-spring) both; }
+.turnfin-app .ins > :nth-child(2) { animation-delay: 60ms; }
+.turnfin-app .ins > :nth-child(3) { animation-delay: 120ms; }
+.turnfin-app .ins > :nth-child(4) { animation-delay: 180ms; }
+.turnfin-app .ins > :nth-child(5) { animation-delay: 240ms; }
+.turnfin-app .ins > :nth-child(6) { animation-delay: 300ms; }
+.turnfin-app .ins > :nth-child(n + 7) { animation-delay: 360ms; }
+
+/* Figures: the value, what it is, and how it moved against the period before. Rows stay even
+   whatever the number of figures (8 as 4 + 4, 6 as 3 + 3). */
+.turnfin-app .ins-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 28px; margin: 7px; padding: 0; list-style: none; }
+@media (min-width: 1100px) {
+  .turnfin-app .ins-kpis:is([data-count='4'], [data-count='7'], [data-count='8']) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .turnfin-app .ins-kpis:is([data-count='3'], [data-count='6']) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .turnfin-app .ins-kpis[data-count='5'] { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+@media (min-width: 521px) and (max-width: 1099px) {
+  .turnfin-app .ins-kpis:is([data-count='4'], [data-count='8']) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .turnfin-app .ins-kpis:is([data-count='3'], [data-count='5'], [data-count='6'], [data-count='7']) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.turnfin-app .ins-kpi { position: relative; display: flex; flex-direction: column; gap: 6px; min-width: 0; height: 100%; padding: 20px 22px; border-radius: 22px; background: var(--pc-surface); color: var(--pc-ink); text-decoration: none; }
+a.ins-kpi { transition: transform 500ms var(--ins-spring), box-shadow 500ms var(--ins-spring); }
+a.ins-kpi:hover { transform: translateY(-3px); box-shadow: inset 0 1px 0 var(--ins-highlight), 0 0 0 6px var(--ins-tray), 0 0 0 7px color-mix(in srgb, var(--pc-primary) 30%, transparent), 0 32px 56px -28px var(--ins-ambient); }
+a.ins-kpi:active { transform: translateY(-1px) scale(0.99); }
+a.ins-kpi:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 9px; }
+.turnfin-app .ins-kpi-go { position: absolute; top: 14px; right: 14px; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--pc-surface-sunken); color: var(--pc-ink-muted); transition: transform 500ms var(--ins-spring), background-color 500ms var(--ins-spring), color 500ms var(--ins-spring); }
+.turnfin-app .ins-kpi-go svg { width: 14px; height: 14px; }
+a.ins-kpi:hover .ins-kpi-go { transform: translate(2px, -2px) scale(1.06); background: var(--pc-primary); color: var(--pc-on-primary); }
+@media (max-width: 520px) { .turnfin-app .ins-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; } .turnfin-app .ins-kpi { padding: 14px 16px; border-radius: 18px; } .turnfin-app .ins-kpi-go { display: none; } }
+.turnfin-app .ins-kpi-label { padding-right: 32px; color: var(--pc-ink-muted); font-size: 11px; line-height: var(--pc-leading-caption); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+.turnfin-app .ins-kpi-value { font-size: 32px; line-height: 38px; font-weight: 750; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+@media (max-width: 520px) { .turnfin-app .ins-kpi-label { padding-right: 0; } .turnfin-app .ins-kpi-value { font-size: var(--pc-text-figure); line-height: var(--pc-leading-figure); } }
 .turnfin-app .ins-kpi-value small { margin-left: 2px; color: var(--pc-ink-muted); font-size: var(--pc-text-body); font-weight: 600; letter-spacing: 0; }
 .turnfin-app .ins-kpi-note { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
 .turnfin-app .ins-delta { align-self: flex-start; display: inline-flex; align-items: center; gap: 4px; min-height: 24px; padding: 0 10px; border-radius: 999px; font-size: var(--pc-text-caption); font-weight: 650; font-variant-numeric: tabular-nums; background: var(--pc-neutral-soft); color: var(--pc-ink-muted); }
@@ -36,13 +146,17 @@ a.ins-kpi:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2p
 .turnfin-app .ins-delta[data-tone='bad'] { background: var(--pc-danger-soft); color: var(--pc-danger); }
 
 /* Panels: the app's white panels, with a head that can carry a link. */
-.turnfin-app .ins-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+.turnfin-app .ins-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 34px; }
+.turnfin-app .ins-section > .pc-panel + .pc-panel, .turnfin-app .ins-section > .ins-grid + .pc-panel, .turnfin-app .ins-section > .pc-panel + .ins-grid { margin-top: 14px; }
 @media (min-width: 1100px) {
   .turnfin-app .ins-grid { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
   .turnfin-app .ins-grid.ins-even { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .turnfin-app .ins-grid.ins-thirds { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .turnfin-app .ins-wide-list .ins-attention { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 32px; }
+  .turnfin-app .ins-wide-list .ins-attention li:nth-child(2) { border-top: 0; }
 }
 .turnfin-app .ins-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; }
-.turnfin-app .ins-head h2 { margin: 0; }
+.turnfin-app .ins-head :is(h2, h3) { margin: 0; }
 .turnfin-app .ins-minor { margin: 12px 0 0; font-size: var(--pc-text-body); font-weight: 650; }
 .turnfin-app .ins-sub { margin: 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); max-width: 70ch; }
 
@@ -128,6 +242,8 @@ a.ins-kpi:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2p
 
 .turnfin-app .ins-footnote { max-width: 72ch; display: flex; flex-direction: column; gap: 6px; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
 
-@media (prefers-reduced-motion: reduce) { .turnfin-app .ins * { transition: none !important; } }
+@media (prefers-reduced-motion: reduce) {
+  .turnfin-app :is(.ins, .ins-suite, .ins-filters, .ins-range-pop), .turnfin-app :is(.ins, .ins-suite, .ins-filters, .ins-range-pop) * { transition: none !important; animation: none !important; }
+}
 .turnfin-app .ins-heat tr, .turnfin-app .ins-heat tr:hover { border: 0; background: none; }
 .turnfin-app .ins-heat .ins-heat-corner { width: 4rem; height: auto; }
