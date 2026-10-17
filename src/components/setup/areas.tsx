@@ -8,7 +8,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-sel
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { moveArea, saveArea, saveAreaStaffing, setAreaArchived } from "@/lib/setup/actions";
-import { WEEKDAYS, hhmm, type WeekHour } from "@/lib/setup/area-staffing";
+import { WEEKDAYS, hhmm, type AreaTogether, type WeekHour } from "@/lib/setup/area-staffing";
 
 /** Add an area to a site, or change one: its name and how many lanes it has. A rename reaches
  *  every record that uses it; lanes let the rota book a pool whole or by lane. */
@@ -67,9 +67,11 @@ type Minimum = { count: number; typeId: string | null; typeName: string | null }
  *  has a time to be open, and during that time it will need a specific amount of staff with
  *  specific qualifications"): one line per type of staff, a qualification they hold or anyone,
  *  every day's hours and any weekday's own. Each line is a need on the rota Plan to put staff on. */
-export function AreaStaffing({ area, qualifications }: {
-  area: { id: string; name: string; minimums: Minimum[]; openFrom: number | null; openUntil: number | null; weekHours: WeekHour[] };
+export function AreaStaffing({ area, qualifications, others }: {
+  area: { id: string; name: string; minimums: Minimum[]; openFrom: number | null; openUntil: number | null; weekHours: WeekHour[]; together: AreaTogether[] };
   qualifications: { id: string; name: string }[];
+  /** The site's other open areas, to be covered from. */
+  others: { id: string; name: string }[];
 }) {
   const start = area.minimums.length ? area.minimums : [{ count: 1, typeId: null, typeName: null }];
   return (
@@ -84,6 +86,8 @@ export function AreaStaffing({ area, qualifications }: {
         const keys = formData.getAll("line").map(String);
         return saveAreaStaffing(area.id, {
           lines: keys.map((k) => ({ count: Number(formData.get(`count-${k}`) ?? 0), typeId: String(formData.get(`type-${k}`) ?? "") })),
+          together: formData.getAll("with").map(String).map((k) => ({ withAreaId: String(formData.get(`with-area-${k}`) ?? ""), count: Number(formData.get(`with-count-${k}`) ?? 0),
+            typeId: String(formData.get(`with-type-${k}`) ?? "") })),
           openFrom: String(formData.get("openFrom") ?? ""), openUntil: String(formData.get("openUntil") ?? ""),
           days: WEEKDAYS.flatMap((_, day) => {
             const mode = String(formData.get(`mode-${day}`) ?? "same");
@@ -102,6 +106,7 @@ export function AreaStaffing({ area, qualifications }: {
         </div>
       </fieldset>
       <WeekHours id={`staffing-${area.id}`} start={area.weekHours} />
+      {others.length ? <CoveredFrom id={`staffing-${area.id}`} name={area.name} start={area.together} others={others} qualifications={qualifications} /> : null}
     </FormDialog>
   );
 }
@@ -166,6 +171,48 @@ function StaffingLines({ id, start, qualifications }: { id: string; start: Minim
       {lines.length < 8 ? (
         <Button type="button" variant="outline" className="self-start" onClick={() => { setLines((all) => [...all, { key: String(next), count: 1, typeId: null, typeName: null }]); setNext((n) => n + 1); }}>
           <Plus aria-hidden="true" />Add a type of staff
+        </Button>
+      ) : null}
+    </fieldset>
+  );
+}
+
+/** Staff in another area covering this one while both are open (owner request, 16 October 2026:
+ *  one lifeguard by the door between the main hall and the 18 m pool). */
+function CoveredFrom({ id, name, start, others, qualifications }: { id: string; name: string; start: AreaTogether[]; others: { id: string; name: string }[]; qualifications: { id: string; name: string }[] }) {
+  const [rows, setRows] = useState(() => start.map((t, i) => ({ key: String(i), ...t })));
+  const [next, setNext] = useState(start.length);
+  return (
+    <fieldset className="flex flex-col gap-3">
+      <legend className="text-sm font-medium">Covered from another area</legend>
+      <p className="text-sm text-ui-muted-foreground">
+        When staff in another area can watch {name} too, such as a lifeguard by the door between two pools. While both are open, {name} needs none of that type of staff and the other area needs this many in all.
+      </p>
+      {rows.map((r, i) => (
+        <div key={r.key} className="grid grid-cols-1 items-end gap-3 sm:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.5fr)_auto]">
+          <input type="hidden" name="with" value={r.key} />
+          <Field label="While open with" htmlFor={`${id}-with-area-${r.key}`}>
+            <NativeSelect id={`${id}-with-area-${r.key}`} name={`with-area-${r.key}`} defaultValue={r.withAreaId} required className="min-h-11 w-full">
+              {others.map((o) => <NativeSelectOption key={o.id} value={o.id}>{o.name}</NativeSelectOption>)}
+            </NativeSelect>
+          </Field>
+          <Field label="Staff in all" htmlFor={`${id}-with-count-${r.key}`}>
+            <Input id={`${id}-with-count-${r.key}`} name={`with-count-${r.key}`} type="number" inputMode="numeric" min={1} max={30} required defaultValue={r.count} className="min-h-11" />
+          </Field>
+          <Field label="Type of staff" htmlFor={`${id}-with-type-${r.key}`}>
+            <NativeSelect id={`${id}-with-type-${r.key}`} name={`with-type-${r.key}`} defaultValue={r.typeId ?? ""} className="min-h-11 w-full">
+              <NativeSelectOption value="">Anyone</NativeSelectOption>
+              {qualifications.map((q) => <NativeSelectOption key={q.id} value={q.id}>Holds {q.name}</NativeSelectOption>)}
+            </NativeSelect>
+          </Field>
+          <Button type="button" variant="ghost" size="icon" className="size-11" aria-label={`Remove covered from ${i + 1}`} onClick={() => setRows((all) => all.filter((x) => x.key !== r.key))}>
+            <Trash2 aria-hidden="true" />
+          </Button>
+        </div>
+      ))}
+      {rows.length < 4 ? (
+        <Button type="button" variant="outline" className="self-start" onClick={() => { setRows((all) => [...all, { key: String(next), withAreaId: others[0].id, count: 1, typeId: null }]); setNext((n) => n + 1); }}>
+          <Plus aria-hidden="true" />Add an area that covers it
         </Button>
       ) : null}
     </fieldset>

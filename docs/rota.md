@@ -229,6 +229,17 @@ short (`staffing.ts`); each break leaves that place to fill for its time ("Aoife
 the Plan and Today's gaps, and choosing someone for it hands that stretch to them. Turnfin Me,
 the person's file, double bookings, under-18 rest and "Who can fill it" count this time too.
 
+**Covered from another area** (owner request, 16 October 2026: the main and learner pools share
+a hall and the 18 m pool is behind a door; when both are open "we might just need one lifeguard
+sitting between both areas by the door"). In an area's Staff needed dialog, "Covered from another
+area" names the other area, a type of staff this area needs and how many in all
+(`SiteArea.together`, JSON `[{ withAreaId, count, typeId }]`). While both are open that day, this
+area's places of that type are not needed (no gaps) and the other area's need of that type has
+the joint number of places: extra places only for the joint time, or its own extra places left
+off then. Both rows say so on the Plan ("Covered from Main hall 09:00–21:00"). Bookings and
+activities still add their own. `areaNeedsOn` in `shared/area-needs.ts` works this out once, for
+`buildDay`, break placement (`areaMinimumsOver`) and the actions (`areaNeedFor`).
+
 ## Shifts first (owner decision, 8 October 2026)
 
 Plan's **Who's working** is a timeline by person: each row is their shift (solid outline when

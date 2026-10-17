@@ -120,6 +120,12 @@ const staffingSchema = z.object({
   openUntil: clockTime.default(""),
   /** A weekday's own hours, Monday 0; both empty is closed that day. Weekdays left out keep every day's. */
   days: z.array(z.object({ day: z.number().int().min(0).max(6), from: clockTime.default(""), until: clockTime.default("") })).max(7).default([]),
+  /** Staff in another area covering this one while both are open. */
+  together: z.array(z.object({
+    withAreaId: z.string().trim().min(1, "Choose the area that covers it.").max(64),
+    count: z.coerce.number().int("Give a whole number of staff.").min(1, "Give at least 1 staff in all.").max(30, "Up to 30 staff."),
+    typeId: z.string().trim().max(64).default("").transform((v) => v || null),
+  })).max(4, "Up to 4 areas.").default([]),
 });
 export type AreaStaffingInput = z.input<typeof staffingSchema>;
 const minutesOf = (v: string) => (v ? Number(v.slice(0, 2)) * 60 + Number(v.slice(3, 5)) : null);
@@ -148,6 +154,11 @@ export async function saveAreaStaffing(id: string, input: AreaStaffingInput): Pr
   if (lines.length && openFrom === null && !days.some((d) => d.from !== null)) return fail("Give the hours it is open, when it needs these staff.");
   const area = await prisma.siteArea.findFirst({ where: { id, orgId: orgId ?? undefined }, select: { name: true, siteId: true, site: { select: { name: true } } } });
   if (!area) return fail("That area no longer exists.");
+  const { together } = parsed.data;
+  const others = together.length ? await prisma.siteArea.findMany({ where: { siteId: area.siteId, archivedAt: null, id: { in: together.map((t) => t.withAreaId), not: id } }, select: { id: true, name: true } }) : [];
+  if (together.some((t) => !others.some((o) => o.id === t.withAreaId))) return fail("Choose another open area at this site to cover it.");
+  if (together.some((t) => !lines.some((l) => l.typeId === t.typeId))) return fail("It can only be covered for a type of staff it needs. Add that type of staff above first.");
+  if (new Set(together.map((t) => `${t.withAreaId}|${t.typeId ?? ""}`)).size !== together.length) return fail("Each area and type of staff once.");
   const typeIds = [...new Set(lines.flatMap((l) => (l.typeId ? [l.typeId] : [])))];
   const types = typeIds.length ? await prisma.qualificationType.findMany({ where: { id: { in: typeIds }, orgId: orgId ?? undefined }, select: { id: true, name: true } }) : [];
   if (types.length !== typeIds.length) return fail("That qualification is no longer offered.");
@@ -155,12 +166,13 @@ export async function saveAreaStaffing(id: string, input: AreaStaffingInput): Pr
   const name = new Map(types.map((t) => [t.id, t.name]));
   const words = lines.length ? lines.map((l) => `${l.count} ${l.typeId ? name.get(l.typeId) : "anyone"}`).join(", ") : "no minimum";
   const hours = lines.length ? `, ${hoursWords({ openFrom, openUntil, weekHours: days })}` : "";
+  const covered = together.map((t) => `, covered from ${others.find((o) => o.id === t.withAreaId)!.name} while both are open (${t.count} ${t.typeId ? name.get(t.typeId) : "anyone"} in all)`).join("");
   await prisma.$transaction(async (tx) => {
     await tx.siteAreaStaffing.deleteMany({ where: { areaId: id } });
     if (lines.length) await tx.siteAreaStaffing.createMany({ data: lines.map((l, i) => ({ areaId: id, count: l.count, qualificationTypeId: l.typeId, sortOrder: i })) });
-    await tx.siteArea.update({ where: { id }, data: { openFrom, openUntil, weekHours: days.length ? days : Prisma.DbNull } });
+    await tx.siteArea.update({ where: { id }, data: { openFrom, openUntil, weekHours: days.length ? days : Prisma.DbNull, together: together.length ? together : Prisma.DbNull } });
     await logAudit({ actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: "update", entity: "SiteArea", entityId: id, clubId: area.siteId,
-      summary: `Set ${area.site.name}'s area ${area.name} to ${words}${hours}` }, tx);
+      summary: `Set ${area.site.name}'s area ${area.name} to ${words}${hours}${covered}` }, tx);
   });
   refresh("/areas");
   return ok();

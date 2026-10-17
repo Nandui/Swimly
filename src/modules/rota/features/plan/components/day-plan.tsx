@@ -364,6 +364,7 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
       <span className="rota-tl-name"><Icon aria-hidden="true" /><span>{row.label}</span></span>
       <small>{line}</small>
       <small className="rota-tl-kind">{ROW_WORDS[row.kind]}{lent ? ` · ${lent}` : ""}{row.gaps ? ` · ${row.gaps} to fill` : ""}</small>
+      {row.need?.together ? <small className="rota-tl-together">{row.need.together}</small> : null}
     </>;
     const ours = row.need && ourNeeds.has(row.need.id);
     if (canChange && ours) {

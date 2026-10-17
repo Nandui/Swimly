@@ -10,6 +10,7 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - **What needs people** is now grouped by area. Each area has its own heading with how many places are still to fill, and its own staffing need comes first.
 - A new **Area** choice above the timeline shows one area at a time: what it needs, and the people working there or with time still to give.
 - With **All departments**, **Add staff** asks which department the shift is for. You can still change only the departments you plan. To copy, export or share a week, choose that department first.
+- An area can now be **covered from another area** while both are open, such as one lifeguard by the door between the main hall and the 18 m pool. Set it under **Admin > Areas > Staff needed**: choose the other area and how many staff cover both. While both are open, the covered area shows no places to fill and the other area asks for that number in all. Bookings and activities still add their own.
 
 ## 1.32.0 · 16 October 2026 · Analytics: reception and much more on the swim school
 

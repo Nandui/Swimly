@@ -27,6 +27,22 @@ export function weekHoursOf(json: unknown): WeekHour[] {
   return [...out.values()].sort((a, b) => a.day - b.day);
 }
 
+/** Staff in another area covering this one while both are open (owner request, 16 October 2026:
+ *  one lifeguard by the door between the main hall and the 18 m pool): `count` of this type of
+ *  staff (`typeId`, null for anyone) in the other area for both. */
+export type AreaTogether = { withAreaId: string; count: number; typeId: string | null };
+
+/** The stored `together` as a list, ignoring anything that is not one. */
+export function togetherOf(json: unknown): AreaTogether[] {
+  if (!Array.isArray(json)) return [];
+  return json.flatMap((x) => {
+    if (!x || typeof x !== "object") return [];
+    const { withAreaId, count, typeId } = x as Record<string, unknown>;
+    if (typeof withAreaId !== "string" || !withAreaId || typeof count !== "number" || !Number.isInteger(count) || count < 1 || count > 30) return [];
+    return [{ withAreaId, count, typeId: typeof typeId === "string" && typeId ? typeId : null }];
+  });
+}
+
 /** Monday 0 for a date like "2026-10-16". */
 export const weekdayOf = (date: string) => (new Date(`${date}T00:00:00Z`).getUTCDay() + 6) % 7;
 

@@ -166,6 +166,7 @@
 /* Shift-first Plan (owner, 13 October 2026): what needs people, then each person's shift. */
 .turnfin-module .rota-week-sum { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 400; }
 .turnfin-module .rota-tl-label > .rota-tl-kind { color: var(--pc-ink-muted); }
+.turnfin-module .rota-tl-label > .rota-tl-together { color: var(--pc-primary-ink); font-weight: 600; }
 .turnfin-module .rota-tl-track[data-row='need'] { min-height: 48px; }
 .turnfin-module .rota-tl-track > .pc-block.rota-cover[data-ok], .turnfin-module .rota-tl-key i.rota-cover[data-ok] { background: var(--pc-success-soft); color: var(--pc-success); }
 .turnfin-module .rota-tl-track > .pc-block.rota-cover[data-ok].ui-motion-press:hover { background: var(--pc-success-soft); color: var(--pc-success); }

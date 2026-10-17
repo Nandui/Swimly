@@ -1,5 +1,5 @@
 import type { Prisma } from "@/generated/prisma/client";
-import { weekHoursOf, type WeekHour } from "@/lib/setup/area-staffing";
+import { togetherOf, weekHoursOf, type AreaTogether, type WeekHour } from "@/lib/setup/area-staffing";
 import type { SiteFilter, SubjectFilter } from "@/lib/policy/types";
 import { ADMINISTRATOR_PERMISSIONS } from "@/lib/staff/permissions";
 
@@ -83,9 +83,9 @@ export async function areaNamesAt(siteId: string, db?: Pick<Prisma.TransactionCl
  *  book lanes in, and what it checks staffing against. */
 export async function areasAt(siteId: string, db?: Pick<Prisma.TransactionClient, "siteArea">): Promise<AreaAt[]> {
   const rows = await (db ?? (await import("@/lib/prisma")).prisma).siteArea.findMany({ where: { siteId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    select: { id: true, name: true, lanes: true, openFrom: true, openUntil: true, weekHours: true,
+    select: { id: true, name: true, lanes: true, openFrom: true, openUntil: true, weekHours: true, together: true,
       staffing: { orderBy: { sortOrder: "asc" }, select: { count: true, qualificationTypeId: true, qualificationType: { select: { name: true } } } } } });
-  return rows.map(({ staffing, weekHours, ...area }) => ({ ...area, weekHours: weekHoursOf(weekHours),
+  return rows.map(({ staffing, weekHours, together, ...area }) => ({ ...area, weekHours: weekHoursOf(weekHours), together: togetherOf(together),
     minimums: staffing.map((m) => ({ count: m.count, typeId: m.qualificationTypeId, typeName: m.qualificationType?.name ?? null })) }));
 }
 /** One open area with its site, as `areasAt` gives it; null once archived or gone. */
@@ -97,7 +97,9 @@ export async function areaById(id: string, db?: Pick<Prisma.TransactionClient, "
 }
 /** An area as `areasAt` gives it: its hours (`hoursOn`) and the staff it needs then, "2 holding
  *  Pool Lifeguard", `typeId` null for anyone. */
-export type AreaAt = { id: string; name: string; lanes: number; openFrom: number | null; openUntil: number | null; weekHours: WeekHour[]; minimums: { count: number; typeId: string | null; typeName: string | null }[] };
+export type AreaAt = { id: string; name: string; lanes: number; openFrom: number | null; openUntil: number | null; weekHours: WeekHour[]; minimums: { count: number; typeId: string | null; typeName: string | null }[];
+  /** Staff in another area covering this one while both are open. */
+  together: AreaTogether[] };
 
 /** Live sites in the order people see them, e.g. for a public site picker. */
 export async function liveSites(db?: Db): Promise<SiteRef[]> {
