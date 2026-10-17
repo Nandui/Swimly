@@ -18,7 +18,7 @@ function fixture() {
 }
 
 test("every report enforces Analytics access before loading any site or figures", async () => {
-  const reports = [(f: ReturnType<typeof fixture>) => f.getReceptionAnalytics(), (f: ReturnType<typeof fixture>) => f.getInstructorAnalytics(),
+  const reports = [(f: ReturnType<typeof fixture>) => f.getInstructorAnalytics(),
     (f: ReturnType<typeof fixture>) => f.getMultiplePlacesAnalytics("all")];
   for (const load of reports) {
     const f = fixture();
@@ -32,12 +32,10 @@ test("every report enforces Analytics access before loading any site or figures"
 
 test("reports follow the current site and class links require their own screen grant", async () => {
   const f = fixture(), now = new Date("2026-09-17T12:00:00Z");
-  assert.deepEqual((await f.getReceptionAnalytics(now)).people, []);
   assert.equal((await f.getInstructorAnalytics(now)).canOpenClasses, false);
   for (const sql of f.state.queries) { assert(sql.values.includes("site-a")); assert(!sql.values.includes("site-b")); }
   f.state.queries.length = 0; f.state.club = "site-b"; f.state.courses = true;
   assert.equal((await f.getInstructorAnalytics(now)).canOpenClasses, true);
-  await f.getReceptionAnalytics(now);
   for (const sql of f.state.queries) { assert(sql.values.includes("site-b")); assert(!sql.values.includes("site-a")); }
 });
 

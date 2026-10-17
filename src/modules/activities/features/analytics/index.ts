@@ -2,8 +2,7 @@
  *  multiple-places reports. Entry for the module and its routes. */
 export { InstructorReport } from "@/modules/activities/features/analytics/components/instructor-report";
 export { MultiplePlacesReport } from "@/modules/activities/features/analytics/components/multiple-places-report";
-export { ReceptionReport } from "@/modules/activities/features/analytics/components/reception-report";
-export { getInstructorAnalytics, getMultiplePlacesAnalytics, getReceptionAnalytics } from "@/modules/activities/features/analytics/server/report-data";
+export { getInstructorAnalytics, getMultiplePlacesAnalytics } from "@/modules/activities/features/analytics/server/report-data";
 export { OverviewReport } from "@/modules/activities/features/analytics/components/insights/overview";
 export { ClassesReport } from "@/modules/activities/features/analytics/components/insights/classes";
 export { ClassDetailReport } from "@/modules/activities/features/analytics/components/insights/class-detail";

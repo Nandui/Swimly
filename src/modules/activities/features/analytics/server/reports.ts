@@ -1,25 +1,6 @@
 import { minutesNow, today } from "@/lib/format";
 import { CalendarClock, CircleCheck, CircleDashed, Play, TriangleAlert, UserRoundX, XCircle } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
-import { activityTotals, type DailyActivity } from "@/modules/activities/features/analytics/server/rules";
-
-export type StaffActivity = DailyActivity & { actorId: string | null; actorName: string };
-
-export function staffActivityTotals(days: string[], rows: StaffActivity[]) {
-  const people = new Map<string, { id: string; name: string; retainedName: boolean; rows: DailyActivity[] }>();
-  for (const row of rows) {
-    if (!days.includes(row.day)) continue;
-    const id = row.actorId ? `staff:${row.actorId}` : `retained:${row.actorName}`;
-    const person = people.get(id) ?? { id, name: row.actorName, retainedName: row.actorId === null, rows: [] };
-    person.name = row.actorName;
-    const daily = person.rows.find(day => day.day === row.day);
-    if (daily) { daily.enrolled += row.enrolled; daily.withdrawn += row.withdrawn; }
-    else person.rows.push({ day: row.day, enrolled: row.enrolled, withdrawn: row.withdrawn });
-    people.set(id, person);
-  }
-  return [...people.values()].map(({ rows, ...person }) => ({ ...person, ...activityTotals(days, rows) }))
-    .sort((a, b) => b.enrolled + b.withdrawn - a.enrolled - a.withdrawn || a.name.localeCompare(b.name));
-}
 
 export type AttendanceOccurrence = {
   courseId: string; date: string; className: string; location: string | null;
