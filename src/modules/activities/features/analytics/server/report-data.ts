@@ -1,23 +1,17 @@
 import { AuthorizationError, canSee, requireSession } from "@/lib/authz";
 import { getCurrentClub } from "@/lib/clubs/current";
 import { prisma } from "@/lib/prisma";
-import { multiplePlacesQuery, staffActivityQuery } from "@/modules/activities/features/analytics/server/queries";
+import { multiplePlacesQuery } from "@/modules/activities/features/analytics/server/queries";
 import { multiplePlaces, type PlaceRow } from "@/modules/activities/features/analytics/server/multiple-places";
 import { instructorAttendanceQuery } from "@/modules/activities/features/analytics/server/attendance-query";
 import { analyticsPeriod } from "@/modules/activities/features/analytics/server/rules";
-import { instructorAttendanceTotals, staffActivityTotals, type AttendanceOccurrence, type StaffActivity } from "@/modules/activities/features/analytics/server/reports";
+import { instructorAttendanceTotals, type AttendanceOccurrence } from "@/modules/activities/features/analytics/server/reports";
 
 async function reportContext(now: Date) {
   const session = await requireSession();
   if (!canSee(session, "analytics")) throw new AuthorizationError("Analytics access is required.");
   const { club } = await getCurrentClub();
   return { club, session, period: analyticsPeriod(now), updatedAt: now.toISOString() };
-}
-
-export async function getReceptionAnalytics(now = new Date()) {
-  const { club, period, updatedAt } = await reportContext(now);
-  const rows = await prisma.$queryRaw<StaffActivity[]>(staffActivityQuery([club.id], period.weekStart, now));
-  return { siteName: club.name, period, updatedAt, people: staffActivityTotals(period.days, rows) };
 }
 
 export async function getInstructorAnalytics(now = new Date()) {
@@ -42,6 +36,5 @@ export async function getMultiplePlacesAnalytics(scope: "site" | "all", now = ne
   };
 }
 
-export type ReceptionAnalyticsData = Awaited<ReturnType<typeof getReceptionAnalytics>>;
 export type InstructorAnalyticsData = Awaited<ReturnType<typeof getInstructorAnalytics>>;
 export type MultiplePlacesAnalyticsData = Awaited<ReturnType<typeof getMultiplePlacesAnalytics>>;
