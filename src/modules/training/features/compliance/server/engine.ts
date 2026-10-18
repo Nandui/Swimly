@@ -1,9 +1,9 @@
 import "server-only";
 import { logAudit } from "@/lib/audit";
 import { activePlacedStaff } from "@/lib/directory";
-import { parseDateOnly, today } from "@/lib/format";
+import { parseDateOnly, today, toDateOnlyString } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { isoDay, ruleCovers, ruleState } from "@/modules/training/shared/rules";
+import { ruleCovers, ruleState } from "@/modules/training/shared/rules";
 
 /** The compliance autopilot's run (docs/training.md, e-learning phase 4).
  *  For every live rule, everyone it covers who has nothing open on the course
@@ -45,7 +45,7 @@ export async function applyTrainingRules(opts: { orgId?: string | null; ruleId?:
           ruleId: rule.id,
         } });
         await logAudit({ actorId: null, actorName: AUTOPILOT_NAME, action: "assign", entity: "TrainingAssignment", entityId: row.id,
-          summary: `Assigned ${rule.course.title} to ${person.name} by its training rule${state.renewal ? " (due again)" : ""}, due ${isoDay(state.dueOn)}` }, tx);
+          summary: `Assigned ${rule.course.title} to ${person.name} by its training rule${state.renewal ? " (due again)" : ""}, due ${toDateOnlyString(state.dueOn)}` }, tx);
         result.assigned++;
         if (state.renewal) result.renewals++;
       }

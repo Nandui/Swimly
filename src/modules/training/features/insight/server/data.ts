@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import type { Prisma } from "@/generated/prisma/client";
 import { auditTrailFor } from "@/lib/audit";
 import { activePlacedStaff, lineManagersOf, livePositionsOf, organisationChart, type PlacedStaff } from "@/lib/directory";
-import { parseDateOnly, today } from "@/lib/format";
+import { parseDateOnly, today, toDateOnlyString } from "@/lib/format";
 import { qualificationState } from "@/lib/people/data";
 import { staffMember } from "@/lib/people/records";
 import { requireCapFor, subjectsFor } from "@/lib/policy/session";
@@ -66,7 +66,7 @@ async function assignmentsWhere(where: Prisma.TrainingAssignmentWhereInput) {
 const siteKeys = (p: PlacedStaff | undefined) => (p?.siteIds.length ? p.siteIds : [EVERY_SITE]);
 const siteLabel = (id: string, sites: Map<string, string>) => (id === EVERY_SITE ? "Every site" : sites.get(id) ?? "Closed site");
 const sitesInWords = (p: PlacedStaff | undefined, sites: Map<string, string>) => siteKeys(p).map((id) => siteLabel(id, sites)).join(", ");
-const iso = (d: Date | null | undefined) => (d ? d.toISOString().slice(0, 10) : "");
+const iso = (d: Date | null | undefined) => (d ? toDateOnlyString(d) : "");
 
 async function ratings(courseIds: string[]) {
   const rows = courseIds.length ? await prisma.trainingFeedback.groupBy({ by: ["courseId"], where: { courseId: { in: courseIds } }, _avg: { rating: true }, _count: { _all: true } }) : [];

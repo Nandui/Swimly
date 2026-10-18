@@ -1,5 +1,5 @@
 import "server-only";
-import { today } from "@/lib/format";
+import { today, toDateOnlyString } from "@/lib/format";
 import { mayFor } from "@/lib/policy/session";
 import { prisma } from "@/lib/prisma";
 import { qualificationState } from "@/lib/people/data";
@@ -26,7 +26,7 @@ export async function qualificationFile(userId: string, orgId: string) {
   ]);
   const certificate = new Map(evidence.map((e) => [e.qualificationId, e.id]));
   const verifier = new Map(verifiers.map((v) => [v.id, v.name]));
-  const iso = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : null);
+  const iso = (d: Date | null) => (d ? toDateOnlyString(d) : null);
   return {
     position: person?.position?.name ?? null,
     requirements: requirementStates(person?.position?.requires.map((r) => r.type) ?? [], records, today()),

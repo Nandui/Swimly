@@ -1,5 +1,5 @@
-import { addDays, ensureTasksEverywhere, freezeScores } from "@/modules/tasks/features/schedule";
-import { today } from "@/lib/format";
+import { ensureTasksEverywhere, freezeScores } from "@/modules/tasks/features/schedule";
+import { addDaysIso, today } from "@/lib/format";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET ?? "";
   if (secret.length < 16 || request.headers.get("authorization") !== `Bearer ${secret}`) return new Response("Unauthorized", { status: 401 });
-  const day = today(), yesterday = addDays(day, -1);
+  const day = today(), yesterday = addDaysIso(day, -1);
   const made = await ensureTasksEverywhere([yesterday, day]);
   const frozen = await freezeScores(yesterday);
   return Response.json({ made, frozen }, { headers: { "Cache-Control": "no-store" } });
