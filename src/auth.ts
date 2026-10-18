@@ -180,10 +180,11 @@ export const auth = cache(async function auth(): Promise<Session | null> {
   const session = await nextAuth();
 
   if (session?.user?.id) {
-    const current = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: ACCOUNT_SELECT,
-    });
+    // The working site does not depend on the account row, so both are read at once.
+    const [current, siteId] = await Promise.all([
+      prisma.user.findUnique({ where: { id: session.user.id }, select: ACCOUNT_SELECT }),
+      currentSiteForSession(),
+    ]);
     // Deleted or deactivated reads as signed out. The cookie survives; the
     // access does not.
     if (!current?.isActive) return null;
@@ -191,7 +192,6 @@ export const auth = cache(async function auth(): Promise<Session | null> {
     // timer did (a tablet left on the deck overnight).
     if (session.user.sharedDevice && (!session.user.authAt || Date.now() - session.user.authAt > SHARED_SESSION_MAX_MS)) return null;
 
-    const siteId = await currentSiteForSession();
     const user = sessionUserFor(current, siteId);
     if (!user) return null;
 

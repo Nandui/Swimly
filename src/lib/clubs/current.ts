@@ -18,19 +18,21 @@ export type CurrentClub = { id: string; name: string };
  *  site outright and skips the person. */
 export const getCurrentClub = cache(
   async (): Promise<{ club: CurrentClub; clubs: CurrentClub[] }> => {
-    const live = await prisma.club.findMany({
-      where: { archivedAt: null },
-      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-      select: { id: true, name: true },
-    });
-    if (live.length === 0) throw new Error("No club is set up. Run the migrations.");
-
     const operation = operationContext.getStore()?.clubId;
+    // Imported when needed: auth builds its session from this module. `signedInSites` reads
+    // the sign-in cookie alone (never `auth()`), so the two never wait on each other, and
+    // runs alongside the sites query rather than after it.
+    const [live, own] = await Promise.all([
+      prisma.club.findMany({
+        where: { archivedAt: null },
+        orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+        select: { id: true, name: true },
+      }),
+      operation ? null : import("@/auth").then((mod) => mod.signedInSites()).catch(() => null),
+    ]);
+    if (live.length === 0) throw new Error("No club is set up. Run the migrations.");
     if (operation) return { club: live.find((club) => club.id === operation) ?? live[0], clubs: live };
 
-    // Imported when needed: auth builds its session from this module. `signedInSites` reads
-    // the sign-in cookie alone (never `auth()`), so the two never wait on each other.
-    const own = await import("@/auth").then((mod) => mod.signedInSites()).catch(() => null);
     const wanted = (await cookies()).get(CLUB_COOKIE)?.value;
     return pickClub(live, wanted, own);
   }
