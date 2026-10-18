@@ -53,7 +53,7 @@ export async function myLessonNote(userId: string, assignmentId: string, lessonI
   return row && row.userId === userId ? { bookmarked: row.bookmarked, note: row.note } : { bookmarked: false, note: "" };
 }
 
-export const MAX_NOTE = 2000;
+const MAX_NOTE = 2000;
 
 /** Saves a bookmark or private note on a lesson of their own course. Clearing both removes it. */
 export async function saveLessonNote(me: Person, assignmentId: string, lessonId: string, input: { bookmarked?: boolean; note?: string }): Promise<ActionResult> {

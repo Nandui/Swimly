@@ -3,7 +3,7 @@
  *  were done on the phone. Pure and client-safe. */
 
 /** How far back a phone's time is believed. Older work counts from when it arrives. */
-export const OFFLINE_DAYS = 14;
+const OFFLINE_DAYS = 14;
 /** Phones' clocks drift: a time a little ahead is read as now. */
 const AHEAD_MS = 2 * 60_000;
 

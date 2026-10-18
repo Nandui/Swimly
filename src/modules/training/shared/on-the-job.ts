@@ -12,7 +12,7 @@ export type ObservedStep = ObservationStep & { result: ObservationResult; note: 
 export type ObservationRecord = { steps: ObservedStep[]; observedById: string | null; observedByName: string; observedAt: string };
 
 export const MAX_OBSERVATION_STEPS = 40;
-export const OBSERVATION_RESULTS: readonly ObservationResult[] = ["met", "not-yet", "na"];
+const OBSERVATION_RESULTS: readonly ObservationResult[] = ["met", "not-yet", "na"];
 
 /** The checklist as saved: trimmed steps with unique ids, empty ones dropped.
  *  Null when nothing is left, so the course has no checklist. */

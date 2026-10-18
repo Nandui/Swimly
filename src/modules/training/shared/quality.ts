@@ -12,8 +12,8 @@ function imagesWithoutAlt(node: DocNode | null | undefined): number {
   return (node.type === "image" && !String(node.attrs?.alt ?? "").trim() ? 1 : 0) + (node.content ?? []).reduce((n, c) => n + imagesWithoutAlt(c), 0);
 }
 
-export const LONG_LESSON_MINUTES = 10;
-export const LONG_COURSE_MINUTES = 60;
+const LONG_LESSON_MINUTES = 10;
+const LONG_COURSE_MINUTES = 60;
 
 export function qualityTips(outline: Outline): QualityTip[] {
   const tips: QualityTip[] = [];

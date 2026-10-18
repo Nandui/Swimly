@@ -18,7 +18,7 @@ export type BandRow = {
 };
 
 /** Things into as few rows as fit without overlapping, in time order. */
-export function packRows(items: readonly ZoneItem[]): ZoneItem[][] {
+function packRows(items: readonly ZoneItem[]): ZoneItem[][] {
   const rows: ZoneItem[][] = [];
   for (const item of [...items].sort((a, b) => a.start - b.start || b.end - a.end)) {
     const row = rows.find((r) => r[r.length - 1].end <= item.start);

@@ -124,7 +124,6 @@ const ONLINE_HOLD_HOURS = 72;
 /** When they would like a call. */
 export const ACADEMY_CALL_TIMES = { morning: "Morning", afternoon: "Afternoon", evening: "Evening" } as const;
 export type AcademyCallTime = keyof typeof ACADEMY_CALL_TIMES;
-export const ACADEMY_CALL_TIME_KEYS = Object.keys(ACADEMY_CALL_TIMES) as AcademyCallTime[];
 
 /** What came of a call. Paid and not going ahead take them off the list to call. */
 export const ACADEMY_CALL_META = {

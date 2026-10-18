@@ -59,7 +59,7 @@ const END_BEST = "end:best", END = "end";
 const nextValue = (c: ScenarioChoice) => c.next ?? (c.best ? END_BEST : END);
 const fromValue = (value: string): Pick<ScenarioChoice, "next" | "best"> => value === END_BEST ? { next: null, best: true } : value === END ? { next: null, best: false } : { next: value, best: false };
 const newChoice = (): ScenarioChoice => ({ id: id(), text: "", feedback: "", next: null, best: false });
-export const newScene = (): ScenarioStep => ({ id: id(), text: "", imageId: null, choices: [newChoice(), newChoice()] });
+const newScene = (): ScenarioStep => ({ id: id(), text: "", imageId: null, choices: [newChoice(), newChoice()] });
 
 export function ScenarioEditor({ title, data, onChange, images, disabled }: { title: string; data: LessonData | null; onChange: (data: LessonData) => void; images: UploadedFile[]; disabled: boolean }) {
   const steps = data?.steps ?? [];

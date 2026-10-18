@@ -16,7 +16,7 @@ const STAMP = { assigned: "assignedEmailAt", due: "dueEmailAt", overdue: "overdu
 
 const day = (iso: string) => formatDate(new Date(`${iso}T12:00:00Z`));
 
-export function actionEmail(kind: Kind, a: { reportId: string; title: string; dueOn: string; createdByName: string }, number: number, site: string, origin: string) {
+function actionEmail(kind: Kind, a: { reportId: string; title: string; dueOn: string; createdByName: string }, number: number, site: string, origin: string) {
   const reference = incidentNumber(number);
   const subject = {
     assigned: `An action for you from ${reference}`,

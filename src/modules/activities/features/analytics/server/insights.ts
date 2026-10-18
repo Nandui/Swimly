@@ -15,7 +15,7 @@ import { attendanceRate, countBy, heldLessons, registerRate, schoolAverages, tea
 
 /** Weeks at one level after which a swimmer is flagged as stuck (industry
  *  guidance: more than 25 weeks at one level needs a closer look). */
-export const STUCK_WEEKS = 26;
+const STUCK_WEEKS = 26;
 
 type Definition = { id: string; sharedWithId: string | null; name: string; sortOrder: number; archivedAt: Date | null };
 export type Curriculum = {
@@ -43,7 +43,7 @@ function group<T>(rows: T[], key: (row: T) => string) {
 }
 
 /** Labels for leave reasons, including the two Analytics adds itself. */
-export function reasonLabel(key: string) {
+function reasonLabel(key: string) {
   if (key === "finished-class") return "Finished their class";
   if (key === "none") return "Not recorded";
   return isLeaveReason(key) ? LEAVE_REASONS[key] : "Not recorded";

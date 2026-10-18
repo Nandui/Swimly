@@ -66,7 +66,7 @@ export type MatrixCell =
   | { kind: "excused" }
   | { kind: "expired"; on: string };
 
-export const SOON_DAYS = 60;
+const SOON_DAYS = 60;
 
 /** Where someone stands on a course a rule says they need. */
 export function matrixCell(rule: RuleTiming & { id: string }, history: readonly (RuleHistory & { dueOn: Date | null })[], on: Date): MatrixCell {

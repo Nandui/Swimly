@@ -18,7 +18,7 @@ export const DESK_MODULES = ["Swim school", "Short courses", "Refunds"] as const
 
 /** The kinds of desk work, in the order they are shown. Teaching (registers, ticks, starts) and set-up
  *  (programmes, levels, classes) are left out: they are not the desk's. */
-export const WORK_KINDS = [
+const WORK_KINDS = [
   { key: "enrol", label: "Enrolments" },
   { key: "waitlist", label: "Waiting list places" },
   { key: "move", label: "Moves" },
@@ -34,7 +34,6 @@ export const WORK_KINDS = [
   { key: "refund", label: "Refunds" },
 ] as const;
 export type WorkKind = (typeof WORK_KINDS)[number]["key"];
-const WORK_LABEL = new Map<string, string>(WORK_KINDS.map(k => [k.key, k.label]));
 
 /** Which kind of desk work a logged action is, or null when it is not the desk's. */
 export function workKind(module: string | null, entity: string, action: string): WorkKind | null {
@@ -72,7 +71,7 @@ export function workKind(module: string | null, entity: string, action: string):
 }
 
 /** Jobs with a clock on them. `target` is the time the desk should answer within, in minutes. */
-export const JOB_KINDS: Record<string, { label: string; hint: string; target: number | null; href?: string }> = {
+const JOB_KINDS: Record<string, { label: string; hint: string; target: number | null; href?: string }> = {
   "parent.details": { label: "Parent detail changes", hint: "A parent asked in the app to change a swimmer's details", target: 24 * 60, href: "/students/parent-changes" },
   "parent.access": { label: "Parent app links", hint: "A parent asked to see a child in the app", target: 24 * 60, href: "/students/parents" },
   "waitlist.place": { label: "Waiting list to a place", hint: "From joining a waiting list to being given a place", target: null },
@@ -90,7 +89,7 @@ export type Job = {
 };
 
 /** Postgres timestamp text (UTC, no zone) or ISO, to a Date. */
-export function utc(text: string) {
+function utc(text: string) {
   return new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(text) ? text : `${text.replace(" ", "T")}Z`);
 }
 const minutesBetween = (a: Date, b: Date) => Math.max(0, Math.round((b.getTime() - a.getTime()) / 60_000));
@@ -227,7 +226,7 @@ export function corrections(events: AuditEventRow[], from: string, to: string) {
 }
 
 /** Unenrols are asked for a reason from this day (1.30.0); earlier ones had no reason to give. */
-export const REASONS_FROM = "2026-10-16";
+const REASONS_FROM = "2026-10-16";
 const NO_REASON = new Set([null, "", "unknown"]);
 
 type Person = {
@@ -444,4 +443,3 @@ export function buildDeskPerson(desk: DeskTeam, key: string, period: ReportPerio
     corrections: (desk.detail.fixesBy.get(key) ?? []).map(f => ({ at: f.at, hours: f.hours, siteId: f.siteId })),
   };
 }
-export const workLabel = (key: string) => WORK_LABEL.get(key) ?? key;

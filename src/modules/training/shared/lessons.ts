@@ -61,7 +61,7 @@ export const TEMPLATE_MARK = "✎";
 export const MAX_SECTIONS = 30;
 export const MAX_LESSONS = 120;
 /** The serialised size a lesson's text may reach. Text only: images are files. */
-export const MAX_BODY_CHARS = 200_000;
+const MAX_BODY_CHARS = 200_000;
 export const MAX_SCENES = 20;
 export const MAX_CHOICES = 4;
 export const MAX_CARDS = 40;
@@ -243,7 +243,7 @@ export function startingLessonData(kind: LessonKind, newId: () => string = () =>
 }
 
 /** Scenes the learner can get to from the first one. */
-export function reachableScenes(steps: readonly ScenarioStep[]) {
+function reachableScenes(steps: readonly ScenarioStep[]) {
   const byId = new Map(steps.map((s) => [s.id, s]));
   const seen = new Set<string>();
   const queue = steps[0] ? [steps[0].id] : [];
@@ -263,14 +263,14 @@ export const lessonFiles = (lesson: Pick<OutlineLesson, "fileId" | "body" | "dat
 ].filter((id): id is string => !!id);
 
 /** Plain text, for word counts and "is it empty?". */
-export function docText(node: DocNode | null | undefined): string {
+function docText(node: DocNode | null | undefined): string {
   if (!node) return "";
   if (node.type === "text") return node.text ?? "";
   const sep = node.type === "paragraph" || node.type === "heading" || node.type === "listItem" ? "\n" : "";
   return (node.content ?? []).map(docText).join("") + sep;
 }
 
-export function docImages(node: DocNode | null | undefined): string[] {
+function docImages(node: DocNode | null | undefined): string[] {
   if (!node) return [];
   const own = node.type === "image" ? [fileIdFromSrc(node.attrs?.src)].filter((id): id is string => !!id) : [];
   return [...own, ...(node.content ?? []).flatMap(docImages)];

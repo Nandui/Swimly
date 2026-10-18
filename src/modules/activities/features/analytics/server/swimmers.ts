@@ -4,7 +4,7 @@ import { weeksBetween } from "@/modules/activities/features/analytics/server/per
 
 /** A swimmer who comes back within this many days of their last place ending
  *  (a move, a term break, a re-booking) has not left. */
-export const RETURN_GRACE_DAYS = 14;
+const RETURN_GRACE_DAYS = 14;
 
 export type Span = {
   studentId: string; start: string; end: string | null; first: boolean;
@@ -94,7 +94,7 @@ export function tenureBand(weeks: number) {
   return TENURE_BANDS.find(band => weeks < band.maxWeeks)!;
 }
 
-export const AGE_BANDS = [
+const AGE_BANDS = [
   { label: "Under 4", max: 4 }, { label: "4 to 5", max: 6 }, { label: "6 to 7", max: 8 }, { label: "8 to 9", max: 10 },
   { label: "10 to 12", max: 13 }, { label: "13 to 17", max: 18 }, { label: "18 and over", max: Infinity },
 ] as const;
@@ -121,7 +121,7 @@ export function ageProfile(places: PlaceRow[], date: string) {
 
 /** Why a swimmer looks likely to leave: three missed lessons in a row, or
  *  under 60% of their last eight marked lessons (at least four marked). */
-export const RISK_RULES = { missedInARow: 3, recentLessons: 8, minMarked: 4, lowAttendance: 60 } as const;
+const RISK_RULES = { missedInARow: 3, recentLessons: 8, minMarked: 4, lowAttendance: 60 } as const;
 
 export function attendanceRisk(marks: MarkRow[]) {
   const latest = marks.slice(0, RISK_RULES.recentLessons);

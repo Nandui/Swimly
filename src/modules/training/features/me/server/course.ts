@@ -28,7 +28,7 @@ const ROW = {
 } as const satisfies Prisma.TrainingAssignmentSelect;
 
 /** Courses this person still has to complete before this one opens (phase 8), by name. */
-export async function prerequisitesLeft(db: Db, userId: string, courseIds: readonly string[]) {
+async function prerequisitesLeft(db: Db, userId: string, courseIds: readonly string[]) {
   if (!courseIds.length) return [];
   const [courses, done] = await Promise.all([
     db.trainingCourse.findMany({ where: { id: { in: [...courseIds] } }, select: { id: true, title: true } }),
@@ -107,7 +107,7 @@ export async function myCourse(userId: string, assignmentId: string) {
 }
 
 /** A Quiz lesson's questions, without the key, shuffled the same way each time for this learner. */
-export function quizQuestions(outline: Outline, sectionId: string, seed: string) {
+function quizQuestions(outline: Outline, sectionId: string, seed: string) {
   const random = seeded(seed);
   return outline.questions.filter((q) => q.sectionId === sectionId).map((q) => learnerQuestion(q, random));
 }

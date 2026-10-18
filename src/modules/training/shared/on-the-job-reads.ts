@@ -2,7 +2,7 @@ import "server-only";
 import { parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { qualificationsHeldBy, qualificationTypesByIds } from "@/lib/qualifications";
-import { hoursProgress, pathProgress, readObservation, sessionWhen, windowStart } from "@/modules/training/shared/on-the-job";
+import { hoursProgress, pathProgress, sessionWhen, windowStart } from "@/modules/training/shared/on-the-job";
 
 /** One person's skills on the job (phase 5): their hours, sessions and paths.
  *  No access check here: callers check first (the person's Training record
@@ -64,8 +64,3 @@ export async function pathsOf(userId: string) {
   });
 }
 
-/** What a trainer will watch for at a course's practical sign-off. */
-export async function practicalOf(courseId: string) {
-  const row = await prisma.trainingCourse.findUnique({ where: { id: courseId }, select: { observation: true } });
-  return readObservation(row?.observation);
-}

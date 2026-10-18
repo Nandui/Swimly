@@ -32,7 +32,7 @@ export const ANY_DEPARTMENT = "*";
 /** The swim classes (owner decisions, 16 October 2026: the swim school's classes fill the Plan by
  *  themselves, and "no booking option takes the swim school anymore"): on every department's
  *  plan, as booked things are, waiting for a teacher. */
-export const SWIM_CLASSES: DayType = { id: "swim-classes", name: "Swim classes", icon: "teaching", departmentId: ANY_DEPARTMENT, requiredTypeId: null, requiredName: null, fromClasses: true };
+const SWIM_CLASSES: DayType = { id: "swim-classes", name: "Swim classes", icon: "teaching", departmentId: ANY_DEPARTMENT, requiredTypeId: null, requiredName: null, fromClasses: true };
 /** Someone on a place of an area's own need (owner request, 16 October 2026: "in addition to
  *  bookings and activities, each area has their needs"): the need is the area's hours and staff
  *  in Admin, Areas, one per type of staff (`typeId`, the qualification, null for anyone). */

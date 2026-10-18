@@ -77,7 +77,7 @@ export function compareTotals(rows: readonly CompareRow[]) {
 }
 
 /** Category order, then name: how the count sheet and the comparison read. */
-export function byCategoryThenName(a: CompareProduct, b: CompareProduct) {
+function byCategoryThenName(a: CompareProduct, b: CompareProduct) {
   return a.category.sortOrder - b.category.sortOrder || a.category.name.localeCompare(b.category.name) || a.name.localeCompare(b.name);
 }
 

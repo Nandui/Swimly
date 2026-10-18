@@ -2,7 +2,7 @@ import type { CompletionRow, LessonRow, StudentTeacherRow, TickRow } from "@/mod
 import { teacherKey, within, type LeaveEvent } from "@/modules/activities/features/analytics/server/swimmers";
 
 /** A lesson started more than this many minutes after its start time counts as late. */
-export const ON_TIME_MINUTES = 5;
+const ON_TIME_MINUTES = 5;
 
 export type Lesson = LessonRow & {
   /** Finished by `now`: only finished lessons count towards registers and attendance. */

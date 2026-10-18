@@ -70,8 +70,8 @@ export function addWorkingDays(iso: string, days: number): string {
  *  Regulations 2007, Part 14 as replaced by S.I. 370/2016, reg. 225): a written
  *  report within 10 working days, or 5 after a death, which is also told to the
  *  HSA or the Gardaí at once by the quickest means. */
-export const HSA_WORKING_DAYS = 10;
-export const HSA_FATAL_WORKING_DAYS = 5;
+const HSA_WORKING_DAYS = 10;
+const HSA_FATAL_WORKING_DAYS = 5;
 
 const severity = z.coerce.number().int().min(1, "Choose a severity.").max(5, "Choose a severity.");
 export const triageSchema = z.object({
@@ -218,7 +218,7 @@ export const safeFileName = (name: string) => name.replace(/[\x00-\x1f\/\\]/g, "
  *  Nothing is deleted: past this day a report is listed for a Manage holder
  *  to review. */
 export const KEEP_YEARS = 10;
-export const KEEP_YEARS_CHILD = 21;
+const KEEP_YEARS_CHILD = 21;
 export function keepUntil(occurredOn: string, hasChild: boolean): string {
   const years = hasChild ? KEEP_YEARS_CHILD : KEEP_YEARS;
   const [y, m, d] = occurredOn.split("-").map(Number);

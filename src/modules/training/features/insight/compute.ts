@@ -32,7 +32,7 @@ export const daysBetween = (from: Date, to: Date) => Math.max(0, Math.floor((to.
 
 const submitted = (a: LearnerFacts) => a.attempts.filter((t) => t.submittedAt);
 export const started = (a: LearnerFacts) => a.lessons.length > 0 || submitted(a).length > 0 || a.status === "SUBMITTED" || a.status === "COMPLETED";
-export const passedExam = (a: LearnerFacts) => submitted(a).some((t) => t.passed);
+const passedExam = (a: LearnerFacts) => submitted(a).some((t) => t.passed);
 export const isOverdue = (a: LearnerFacts, on: string) => a.status === "ASSIGNED" && !!a.dueOn && isoDay(a.dueOn) < on;
 export function lastActivity(a: LearnerFacts): Date | null {
   const times = [...a.lessons.map((l) => l.at.getTime()), ...submitted(a).map((t) => t.submittedAt!.getTime()), a.completedAt?.getTime() ?? 0].filter(Boolean);
