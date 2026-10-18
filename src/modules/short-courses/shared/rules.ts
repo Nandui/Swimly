@@ -40,7 +40,6 @@ export const SHORT_COURSE_PLACE_META = {
   waiting: { label: "Waiting list", color: "orange", icon: Hourglass },
   withdrawn: { label: "Withdrawn", color: "gray", icon: Ban },
 } as const satisfies Record<string, StatusMeta>;
-export type ShortCoursePlace = keyof typeof SHORT_COURSE_PLACE_META;
 
 /** A course that asks for a health form, from someone who has not handed one in. */
 export const HEALTH_FORM_META = {
@@ -57,7 +56,6 @@ export const SHORT_COURSE_CALL_DUE_META = {
   soon: { label: "Phone within a day", color: "orange", icon: Clock },
   later: { label: "To phone", color: "blue", icon: Clock },
 } as const satisfies Record<string, StatusMeta>;
-export type ShortCourseCallDue = keyof typeof SHORT_COURSE_CALL_DUE_META;
 
 /** When they would like a call, in words. */
 export const SHORT_COURSE_CALL_TIMES: Record<string, string> = { morning: "Morning", afternoon: "Afternoon", evening: "Evening" };

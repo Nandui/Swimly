@@ -40,7 +40,7 @@ export const EMPTY_FILTERS: CourseFilters = {
 
 /** Every key except `q`, which is a text box rather than a picker. */
 export const PICKER_KEYS = ["site", "programme", "level", "day", "time", "location", "places"] as const;
-export type PickerKey = (typeof PICKER_KEYS)[number];
+type PickerKey = (typeof PICKER_KEYS)[number];
 
 const PICKER_LABELS: Record<PickerKey, string> = {
   site: "Site",
@@ -131,7 +131,7 @@ export function filterCourses(courses: CourseRow[], filters: CourseFilters): Cou
   return courses.filter((course) => matchesFilters(course, filters));
 }
 
-export type FilterOption = { value: string; label: string; count: number };
+type FilterOption = { value: string; label: string; count: number };
 
 export type FilterDimension = {
   key: PickerKey;

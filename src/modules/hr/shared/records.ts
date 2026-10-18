@@ -5,7 +5,6 @@ import { type HrSql } from "@/modules/hr/shared/database";
 import { type HrActor } from "@/modules/hr/shared/access";
 import { requireCapFor } from "@/lib/policy/session";
 
-export type { HrNote, HrReview } from "@/modules/hr/shared/columns";
 
 /** HR reads for the workspace. Each resolves who the reader covers through the
  *  policy engine (restricted, so a stale or PIN session is refused), filters

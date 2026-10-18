@@ -80,7 +80,6 @@ function examSummary(found: Found, attempts: Attempt[]) {
     history: attempts.filter((a) => a.submittedAt).map((a) => ({ number: a.number, submittedAt: a.submittedAt!.toISOString(), correct: a.correct ?? 0, total: a.total, percent: a.percent ?? 0, passed: !!a.passed })),
   };
 }
-export type ExamSummary = NonNullable<ReturnType<typeof examSummary>>;
 
 /** The learner's assignment and attempts, read without locking. An attempt
  *  whose time has run out is handed in first, under the assignment's lock. */

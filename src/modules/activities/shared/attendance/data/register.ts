@@ -120,8 +120,6 @@ export async function getRegister(courseId: string, iso: string, surface: Activi
   return { lines: ordered, taken: existing.length > 0, note, revision: saved.revision };
 }
 
-export type Register = Awaited<ReturnType<typeof getRegister>>;
-
 /** Which of today's classes already have a register, so the deck screen can
  *  say what is still outstanding. */
 export async function getRegisterStateForDay(dayOfWeek: DayOfWeek, iso: string) {

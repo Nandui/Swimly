@@ -15,7 +15,7 @@ export const HISTORY_META = {
   completion: { label: "Level milestones", color: "gray", icon: Award }, assessment: { label: "Assessments", color: "gray", icon: ClipboardCheck },
   profile: { label: "Profile", color: "gray", icon: UserRound },
 } as const satisfies Record<string, StatusMeta>;
-export type HistoryEvidence = z.infer<typeof evidenceSchema>;
+type HistoryEvidence = z.infer<typeof evidenceSchema>;
 export type HistoryEvent = {
   id: string; at: string; date: string; kind: Exclude<HistoryKind, "all">; title: string;
   actor: string | null; courseId: string | null; programmeId: string | null; levelId: string | null;

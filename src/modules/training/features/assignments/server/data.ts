@@ -25,7 +25,7 @@ export const OVERVIEW_VIEWS = {
   completed: "Completed in 30 days",
   all: "All training",
 } as const;
-export type OverviewView = keyof typeof OVERVIEW_VIEWS;
+type OverviewView = keyof typeof OVERVIEW_VIEWS;
 
 export async function trainingOverview(input: { view?: string; course?: string; q?: string }) {
   const who = await requireTrainingActor();
@@ -70,7 +70,6 @@ export async function trainingOverview(input: { view?: string; course?: string; 
     rows: rows.map((row) => ({ ...row, state: trainingState(row, on) })),
   };
 }
-export type OverviewRow = Awaited<ReturnType<typeof trainingOverview>>["rows"][number];
 
 // ---------------------------------------------------------------------------
 // One person's training record

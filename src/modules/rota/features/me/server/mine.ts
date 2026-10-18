@@ -110,4 +110,3 @@ export async function myDays(userId: string, days = 28) {
     return { ...d, items: d.items.sort((a, b) => a.start - b.start), shift };
   });
 }
-export type MyDay = Awaited<ReturnType<typeof myDays>>[number];

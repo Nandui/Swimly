@@ -29,7 +29,6 @@ const failed = (message: string) => new StaffApiError(409, "NOT_POSSIBLE", messa
 // ---------------------------------------------------------------------------
 
 const DETAIL_FIELDS = ["phone", "homeAddress", "emergencyName", "emergencyPhone", "emergencyRelationship"] as const;
-type DetailField = (typeof DETAIL_FIELDS)[number];
 
 export async function profile(identity: StaffIdentity) {
   const user = await prisma.user.findUniqueOrThrow({ where: { id: identity.user.id }, select: {
@@ -613,5 +612,3 @@ export async function home(identity: StaffIdentity) {
     reviewsToAcknowledge: reviewsWaiting,
   };
 }
-
-export type DetailChange = Partial<Record<DetailField, string>>;

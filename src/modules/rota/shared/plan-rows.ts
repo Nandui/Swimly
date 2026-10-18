@@ -7,7 +7,7 @@ import { isAreaNeed, type Block, type DayNeed, type Group, type Person } from "@
  *  needs over the day; and each person's shift with the time nothing is given to yet ("No
  *  activity / booking"), ready to give to something. Pure (plan-rows.test.ts). */
 
-export type NeedRowKind = "area" | "activity" | "booking" | "classes" | "booked";
+type NeedRowKind = "area" | "activity" | "booking" | "classes" | "booked";
 /** A stretch of a row's day with the same cover: `have` people on it of `want`. `gap` is the
  *  first place in it nobody is on (or whose person is off), to fill. */
 export type CoverSpan = Span & { have: number; want: number; gap: Block | null };

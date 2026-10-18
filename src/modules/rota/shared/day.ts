@@ -55,7 +55,7 @@ export const areaNeedName = (typeName: string | null) => (typeName ? `${typeName
 export type DayClass = { ref: string; userId: string | null; startMinutes: number; endMinutes: number; title: string; place: string; planned: boolean };
 
 /** Why a block on the timeline needs a second look. */
-export type BlockWarning = "off" | "missing" | "expired" | "overlap" | "break";
+type BlockWarning = "off" | "missing" | "expired" | "overlap" | "break";
 
 export type Block = {
   kind: "on" | "gap";
@@ -72,7 +72,7 @@ export type Block = {
   detail: string | null;
   warnings: BlockWarning[];
 };
-export type Lane = Block[];
+type Lane = Block[];
 export type Group = {
   key: string;
   /** The area it is in (`DayZone.key`). */

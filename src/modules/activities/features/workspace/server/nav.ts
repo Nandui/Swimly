@@ -23,7 +23,7 @@ import type { ScreenKey } from "@/lib/staff/screens";
  *  role that names that screen and holds whatever it requires. That is
  *  courtesy, not security: the page declines to exist and the action
  *  refuses the call, and only the last of those three is load-bearing. */
-export type NavItem = { href: string; label: string; icon: LucideIcon; description?: string };
+type NavItem = { href: string; label: string; icon: LucideIcon; description?: string };
 export type NavGroup = { id: string; label: string; items: NavItem[] };
 
 export type AppNavItem = NavItem & {

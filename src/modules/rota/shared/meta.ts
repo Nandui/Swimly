@@ -34,7 +34,6 @@ export const ROTA_FIT_META = {
   off: { label: "Off", color: "gray", icon: Ban },
   break: { label: "Break during an activity", color: "orange", icon: Coffee },
 } as const satisfies Record<string, StatusMeta>;
-export type RotaFitKey = keyof typeof ROTA_FIT_META;
 
 /** What a person's worked-out shift says about their day. */
 export const ROTA_SHIFT_NOTE_META = {

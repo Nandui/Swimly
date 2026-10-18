@@ -118,8 +118,8 @@ export function findCombinations(
   return { combinations, next: hasMore ? combinations.at(-1)!.map((p) => p.course.id) : null };
 }
 
-export type SlotFit = { startMinutes: number; courses: CourseRow[] };
-export type DayFit = { day: DayOfWeek; together: SlotFit[]; spread: CourseRow[] | null };
+type SlotFit = { startMinutes: number; courses: CourseRow[] };
+type DayFit = { day: DayOfWeek; together: SlotFit[]; spread: CourseRow[] | null };
 export type TogetherResult = { days: DayFit[]; unplaced: FamilyMember[] };
 
 export function findTimesTogether(members: FamilyMember[], courses: CourseRow[]): TogetherResult {

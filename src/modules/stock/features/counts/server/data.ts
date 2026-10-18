@@ -60,4 +60,3 @@ export async function stockTake(id: string) {
     canDelete: canManage,
   };
 }
-export type StockTakeView = Awaited<ReturnType<typeof stockTake>>;

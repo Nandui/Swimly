@@ -27,7 +27,7 @@ export type Reach = "sites" | "team" | "everywhere";
 /** One step on a module's ladder. Levels are cumulative: a level gives its
  *  own permissions plus everything to its left. Pages and actions never ask
  *  for a level; they ask for the named permission. */
-export type ModuleLevel = {
+type ModuleLevel = {
   key: string;
   label: string;
   /** One plain sentence, shown where the level is set. */
@@ -39,7 +39,7 @@ export type ModuleLevel = {
 
 /** A single tick beside a module's levels, kept for the rare power that must
  *  not come with a level (approving your colleagues' documents). */
-export type ModuleExtra = {
+type ModuleExtra = {
   key: string;
   label: string;
   help: string;
@@ -48,7 +48,7 @@ export type ModuleExtra = {
   permissions: readonly PermissionKey[];
 };
 
-export type ModuleAccess = {
+type ModuleAccess = {
   reach: Reach;
   /** Every level above None, lowest first. */
   levels: readonly ModuleLevel[];

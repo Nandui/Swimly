@@ -21,7 +21,6 @@ export async function stockProducts() {
   const sheetMissing = BISHOPSTOWN_SHEET.some((name) => names.has(name.toLowerCase())) ? 0 : BISHOPSTOWN_SHEET.length;
   return { who, products, categories, sheetMissing };
 }
-export type StockProductRow = Awaited<ReturnType<typeof stockProducts>>["products"][number];
 
 export async function stockCategories() {
   const who = await requireStockActor();

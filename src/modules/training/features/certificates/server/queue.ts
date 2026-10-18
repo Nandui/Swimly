@@ -17,4 +17,3 @@ export async function certificateQueue(view: "PENDING" | "DONE" = "PENDING") {
   ]);
   return { who, types, rows: rows.flatMap((r) => (byId.has(r.userId) ? [{ ...r, person: byId.get(r.userId)! }] : [])) };
 }
-export type CertificateRow = Awaited<ReturnType<typeof certificateQueue>>["rows"][number];

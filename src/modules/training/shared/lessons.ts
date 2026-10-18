@@ -38,7 +38,7 @@ export type ScenarioStep = { id: string; text: string; imageId: string | null; c
 export type Flashcard = { id: string; front: string; back: string; imageId: string | null };
 export type ChecklistItem = { id: string; text: string };
 /** Sort into groups: two to four groups, and things that each belong in one. */
-export type SortGroup = { id: string; name: string };
+type SortGroup = { id: string; name: string };
 export type SortItem = { id: string; text: string; group: string };
 /** Explore a picture: numbered spots, in percent of the picture from its top left. */
 export type ExploreSpot = { id: string; x: number; y: number; title: string; text: string };
@@ -50,7 +50,7 @@ export type HandInSettings = { text: HandInPart; photo: HandInPart; review: bool
 export type LessonData = { steps?: ScenarioStep[]; cards?: Flashcard[]; items?: ChecklistItem[]; groups?: SortGroup[]; sorts?: SortItem[]; spots?: ExploreSpot[]; handIn?: HandInSettings };
 
 export type OutlineLesson = { id: string; kind: LessonKind; title: string; body: DocNode | null; videoUrl: string; fileId: string | null; minutes: number | null; data: LessonData | null };
-export type OutlineSection = { id: string; title: string; lessons: OutlineLesson[] };
+type OutlineSection = { id: string; title: string; lessons: OutlineLesson[] };
 /** A course: its sections of lessons, every section's questions, and the final
  *  exam's rules (null when it has none). A version freezes all three. */
 export type Outline = { sections: OutlineSection[]; questions: Question[]; exam: ExamSettings | null };

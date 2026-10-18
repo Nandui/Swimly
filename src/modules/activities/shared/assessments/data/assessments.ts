@@ -196,5 +196,3 @@ export async function getAssessmentTypes(programmeId: string) {
   const curriculum = await getSharedCurriculum();
   return curriculum.types.filter(t => t.programmeId === curriculum.programmeIds.resolve(programmeId));
 }
-
-export type AssessmentTypeRow = Awaited<ReturnType<typeof getAssessmentTypes>>[number];

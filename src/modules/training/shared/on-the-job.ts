@@ -108,7 +108,7 @@ export function hoursInWords(minutes: number) {
 export const MAX_PATH_STEPS = 30;
 export type PathStep = { courseId: string; dueDays: number };
 export type PathHistory = { courseId: string; status: string; dueOn: Date | null; completedAt: Date | null };
-export type PathStepState =
+type PathStepState =
   | { state: "done"; on: Date }
   | { state: "open"; dueOn: Date | null; overdue: boolean; submitted: boolean }
   | { state: "missing" };

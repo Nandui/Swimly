@@ -328,7 +328,6 @@ export function learnerQuestion(q: Question, random: () => number) {
     segments: null as string[] | null,
   };
 }
-export type LearnerQuestion = ReturnType<typeof learnerQuestion>;
 
 // ---------------------------------------------------------------------------
 // The exam

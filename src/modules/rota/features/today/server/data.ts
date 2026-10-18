@@ -3,7 +3,7 @@ import { staffIdsAtSite, withStaff } from "@/lib/directory";
 import { parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { buildDay } from "@/modules/rota/shared/day";
-import { type RotaSite, loadDays, pickSite } from "@/modules/rota/shared/data";
+import { loadDays, pickSite } from "@/modules/rota/shared/data";
 
 /** The duty manager's Today: the whole site, every department. */
 export async function todayAt(siteId: string | undefined) {
@@ -26,4 +26,3 @@ export async function todayAt(siteId: string | undefined) {
   ]);
   return { who, sites, site, now, day, changes, note, off, types: types.filter((t) => !t.archived && !t.fromClasses), places } as const;
 }
-export type TodayAt = Extract<Awaited<ReturnType<typeof todayAt>>, { site: RotaSite }>;

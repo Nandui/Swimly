@@ -15,12 +15,12 @@ import { formatTime, formatTimeRange } from "@/lib/format";
  *  order with the same links and dialog triggers. Server-safe, and free of any module. */
 
 /** A block's state picks its fill (`--pc-block-*`) and text (`--pc-on-block-*`). */
-export type TimelineState = "done" | "now" | "next" | "cover" | "off" | "absent" | "open" | "assessment" | "shift";
+type TimelineState = "done" | "now" | "next" | "cover" | "off" | "absent" | "open" | "assessment" | "shift";
 /** Every block says its state in words and an icon, so colour is never the only signal. */
-export type TimelineTag = { icon: LucideIcon; label: string };
+type TimelineTag = { icon: LucideIcon; label: string };
 /** What a dialog trigger needs to become a block: the caller hands these to its trigger. */
-export type TimelineDensity = "full" | "compact" | "icon" | "mark";
-export type TimelineTriggerParts = { label: string; className: string; style?: CSSProperties; children: ReactNode; block: { state: TimelineState; density: TimelineDensity } };
+type TimelineDensity = "full" | "compact" | "icon" | "mark";
+type TimelineTriggerParts = { label: string; className: string; style?: CSSProperties; children: ReactNode; block: { state: TimelineState; density: TimelineDensity } };
 
 export type TimelineLane = {
   key: string;

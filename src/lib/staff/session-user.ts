@@ -37,7 +37,7 @@ export type Account = {
 
 /** Where part of a role applies beyond the flat checks: at one of the
  *  person's sites, or over their team. Only the policy engine reads these. */
-export type Grant = { roleName: string; permissions: string[]; scopeKind: string; scopeId: string };
+type Grant = { roleName: string; permissions: string[]; scopeKind: string; scopeId: string };
 
 /** An account with no role has no permissions and no way to be given any
  *  without an admin, so it reads as signed out rather than as a person who can

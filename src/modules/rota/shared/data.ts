@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import { parseDateOnly, toDateOnlyString as isoOf } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { mayFor, sitesFor } from "@/lib/policy/session";
-import { requireRotaActor, type RotaActor } from "@/modules/rota/shared/access";
+import { requireRotaActor } from "@/modules/rota/shared/access";
 import { addDaysIso, mondayOf, youngBand, youngRest, type YoungBand } from "@/modules/rota/shared/constants";
 import { type DayBooked, type DayClass, type DayType } from "@/modules/rota/shared/day";
 import { rankFits, type Held } from "@/modules/rota/shared/fit";
@@ -185,4 +185,3 @@ export async function fitsFor(input: { siteId: string; date: string; start: numb
     work, off: new Set(absences.flatMap((a) => (a.userId ? [a.userId] : []))), weekMinutes, young,
   });
 }
-export type { RotaActor };

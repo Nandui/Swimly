@@ -8,7 +8,7 @@ import { covers, inSites, requireIncidentsActor } from "@/modules/incidents/shar
 import { KEEP_YEARS, keepUntil, monthsEnding, summarise } from "@/modules/incidents/shared/rules";
 
 export const PERIODS = [3, 6, 12] as const;
-export type Period = (typeof PERIODS)[number];
+type Period = (typeof PERIODS)[number];
 
 /** Insights for those who triage (docs/incidents.md): what happened over the
  *  last few months at the sites they cover, or one of them. Counts only, never

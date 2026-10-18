@@ -4,7 +4,7 @@
 
 import { toDateOnlyString as isoDay } from "@/lib/format";
 
-export type Attempt = { number: number; percent: number | null; passed: boolean | null; submittedAt: Date | null };
+type Attempt = { number: number; percent: number | null; passed: boolean | null; submittedAt: Date | null };
 export type LearnerFacts = {
   userId: string;
   status: string;

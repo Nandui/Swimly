@@ -19,7 +19,7 @@ export const documentTypeLabels: Record<DocumentType, { one: string; many: strin
   Policy: { one: 'Policy', many: 'Policies', long: 'Policy' },
   Custom: { one: 'Other', many: 'Other', long: 'Custom document' },
 };
-export type Role = string;
+type Role = string;
 export type Member = {
   id: string;
   name: string;

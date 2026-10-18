@@ -6,7 +6,7 @@ import { getSharedCurriculum, sharedCourse } from "@/modules/activities/shared/c
 import { latestSharedMarks } from "@/modules/activities/shared/curriculum/shared";
 import { prisma } from "@/lib/prisma";
 
-export type CompetencyProgress = {
+type CompetencyProgress = {
   id: string;
   name: string;
   description: string | null;
@@ -290,6 +290,3 @@ export async function getClassProgress(courseId: string) {
 
   return { course, swimmers, orderedLevels };
 }
-
-export type ClassProgress = NonNullable<Awaited<ReturnType<typeof getClassProgress>>>;
-export type ClassSwimmer = ClassProgress["swimmers"][number];

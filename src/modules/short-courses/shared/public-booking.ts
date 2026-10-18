@@ -75,7 +75,7 @@ export type PublicHold = {
 };
 
 /** Where a customer's booking stands, for "My bookings". */
-export type CustomerBookingState = "to-pay" | "booked" | "waiting" | "done" | "withdrawn" | "cancelled";
+type CustomerBookingState = "to-pay" | "booked" | "waiting" | "done" | "withdrawn" | "cancelled";
 export type CustomerBooking = {
   id: string;
   source: string;

@@ -15,7 +15,7 @@ const DETAIL_LABELS = {
   emergencyPhone: "Emergency phone",
   emergencyRelationship: "Emergency contact relationship",
 } as const;
-export type DetailField = keyof typeof DETAIL_LABELS;
+type DetailField = keyof typeof DETAIL_LABELS;
 const DETAIL_FIELDS = Object.keys(DETAIL_LABELS) as DetailField[];
 
 export const DETAIL_REQUEST_STATUS_META = {
