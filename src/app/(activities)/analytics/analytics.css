@@ -157,7 +157,6 @@ a.ins-kpi:hover .ins-kpi-go { transform: translate(2px, -2px) scale(1.06); backg
 }
 .turnfin-app .ins-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; }
 .turnfin-app .ins-head :is(h2, h3) { margin: 0; }
-.turnfin-app .ins-minor { margin: 12px 0 0; font-size: var(--pc-text-body); font-weight: 650; }
 .turnfin-app .ins-sub { margin: 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); max-width: 70ch; }
 
 /* The trend: an area under a 2px line, a faint grid, the last value marked. */
