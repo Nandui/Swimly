@@ -1,7 +1,7 @@
 import "server-only";
 import { registerHomeCard, registerPersonFileSection, registerSubjectRecords } from "@/modules/contributions";
-import { incidentHomeItems } from "@/modules/incidents/features/reports";
-import { staffIncidentFile, staffIncidentRecords } from "@/modules/incidents/features/staff";
+import { incidentHomeItems } from "@/modules/incidents/features/reports/server/home";
+import { staffIncidentFile, staffIncidentRecords } from "@/modules/incidents/features/staff/server/file";
 
 /** Incidents' registration plug (CLAUDE.md section 5), loaded by
  *  src/modules/server.ts. Its menu entry, levels and permissions are in manifest.ts. */

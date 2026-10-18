@@ -1,8 +1,8 @@
 import "server-only";
 import { registerAreaRename, registerCommitments, registerDeskMeasures, registerHomeCard } from "@/modules/contributions";
-import { academyCallBacks } from "@/modules/short-courses/features/academy-calls";
-import { ACADEMY_SESSIONS, academyHomeItems, academySessionCommitments } from "@/modules/short-courses/features/academy-courses";
-import { renameShortCoursePlaces, SHORT_COURSE_SESSIONS, shortCourseCommitments, shortCourseHomeItems } from "@/modules/short-courses/features/courses";
+import { academyCallBacks } from "@/modules/short-courses/features/academy-calls/server/desk-measures";
+import { ACADEMY_SESSIONS, academyHomeItems, academySessionCommitments } from "@/modules/short-courses/features/academy-courses/server/contributions";
+import { renameShortCoursePlaces, SHORT_COURSE_SESSIONS, shortCourseCommitments, shortCourseHomeItems } from "@/modules/short-courses/features/courses/server/contributions";
 
 /** Short courses' registration plug (CLAUDE.md section 5), loaded by src/modules/server.ts:
  *  both kinds of course's sessions as commitments (the Rota shows them), area renames, the

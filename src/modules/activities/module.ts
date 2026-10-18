@@ -12,7 +12,7 @@ import { getCoversForDay } from "@/modules/activities/shared/attendance/data/cov
 import { getCancellationsForDay } from "@/modules/activities/shared/cancellations/data";
 import { courseName } from "@/modules/activities/shared/courses/constants";
 import { USUAL_INSTRUCTOR_UNTIL, getCoursesOnDate } from "@/modules/activities/shared/courses/planned";
-import { getAwaitingEnrolment } from "@/modules/activities/features/enrolment";
+import { getAwaitingEnrolment } from "@/modules/activities/features/enrolment/server/data/awaiting-enrolment";
 import { getTodayAssessments } from "@/modules/activities/shared/today/assessments";
 import { sessionState } from "@/modules/activities/shared/today/calendar";
 

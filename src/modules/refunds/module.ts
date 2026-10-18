@@ -1,6 +1,7 @@
 import "server-only";
 import { registerDeskMeasures, registerHomeCard } from "@/modules/contributions";
-import { refundHomeItems, refundsSent } from "@/modules/refunds/features/queue";
+import { refundHomeItems } from "@/modules/refunds/features/queue/server/home";
+import { refundsSent } from "@/modules/refunds/features/queue/server/desk-measures";
 
 /** Refunds' registration plug (CLAUDE.md section 5), loaded by
  *  src/modules/server.ts: the home card, and requests sent for the swim school's reception
