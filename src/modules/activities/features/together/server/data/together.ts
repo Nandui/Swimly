@@ -81,11 +81,10 @@ export async function getGroup(ids: string[]): Promise<{
   await requireSession();
   if (ids.length === 0) return { chosen: [], suggestions: [] };
 
-  const curriculum = await getSharedCurriculum();
-  const rows = await prisma.student.findMany({
+  const [curriculum, rows] = await Promise.all([getSharedCurriculum(), prisma.student.findMany({
     where: { id: { in: ids } },
     select: STUDENT_SELECT,
-  });
+  })]);
 
   // Back into the order they were added, which is the order somebody typed
   // them and therefore the order they expect to read them in.

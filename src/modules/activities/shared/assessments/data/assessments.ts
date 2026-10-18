@@ -108,8 +108,7 @@ export async function getAssessmentSession(id: string, scope?: { clubId: string;
     },
   });
   if (!found) return null;
-  const [row] = await withSessionRefs([found]);
-  const curriculum = await getSharedCurriculum();
+  const [[row], curriculum] = await Promise.all([withSessionRefs([found]), getSharedCurriculum()]);
   const programme = curriculum.programme(row.programmeId);
   return { ...row, programmeId: programme?.id ?? row.programmeId,
     programme: { ...row.programme, id: programme?.id ?? row.programme.id, name: programme?.name ?? row.programme.name,
@@ -149,8 +148,7 @@ export async function getStudentAssessments(studentId: string) {
       },
     },
   });
-  const curriculum = await getSharedCurriculum();
-  const sessions = await withSites(rows.map(row => row.session), "clubId", "club");
+  const [curriculum, sessions] = await Promise.all([getSharedCurriculum(), withSites(rows.map(row => row.session), "clubId", "club")]);
   return rows.map((found, index) => {
     const row = { ...found, session: sessions[index] };
     const programme = curriculum.programme(row.session.programme.id);

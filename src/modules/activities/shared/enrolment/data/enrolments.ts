@@ -9,8 +9,7 @@ import { prisma } from "@/lib/prisma";
 export async function getEnrolmentsForStudent(studentId: string) {
   await requireSession();
 
-  const curriculum = await getSharedCurriculum();
-  const rows = await prisma.enrolment.findMany({
+  const [curriculum, rows] = await Promise.all([getSharedCurriculum(), prisma.enrolment.findMany({
     where: { studentId },
     orderBy: [{ status: "asc" }, { startedOn: "desc" }],
     select: {
@@ -39,7 +38,7 @@ export async function getEnrolmentsForStudent(studentId: string) {
         },
       },
     },
-  });
+  })]);
   const courses = await withClassRefs(rows.map(row => row.course));
   return rows.map((row, index) => ({ ...sharedPlacement(row, curriculum), course: sharedCourse(courses[index], curriculum) }));
 }
@@ -50,8 +49,7 @@ export type StudentEnrolment = Awaited<ReturnType<typeof getEnrolmentsForStudent
 export async function getTransferTargets(excludeCourseId?: string) {
   await requireSession();
 
-  const curriculum = await getSharedCurriculum();
-  const rows = await withClassRefs(await prisma.course.findMany({
+  const classes = async () => withClassRefs(await prisma.course.findMany({
     where: { clubId: { in: await liveSiteIds() }, archivedAt: null, ...(excludeCourseId ? { id: { not: excludeCourseId } } : {}) },
     orderBy: [{ dayOfWeek: "asc" }, { startMinutes: "asc" }],
     select: {
@@ -68,6 +66,7 @@ export async function getTransferTargets(excludeCourseId?: string) {
       _count: { select: { enrolments: { where: { status: "ACTIVE" } } } },
     },
   }));
+  const [curriculum, rows] = await Promise.all([getSharedCurriculum(), classes()]);
   return rows.filter(row => liveSharedLevel(curriculum, row.level.id)).map(row => sharedCourse(row, curriculum));
 }
 
