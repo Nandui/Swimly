@@ -1,7 +1,6 @@
 'use client';
 
 import { type ReactNode } from 'react';
-import { signOut } from 'next-auth/react';
 import { RolePreviewToggle } from '@/components/staff/role-preview';
 import { FrameProvider } from '@/components/ui/frame';
 import { APP_VERSION } from '@/lib/app';
@@ -18,7 +17,8 @@ import { allModules, MODULE_GROUPS } from '@/modules/registry';
 export function YourModulesProvider({ ids, role, site, children }: { ids: readonly string[]; role: string; site: string; children: ReactNode }) {
   const modules = allModules().filter((m) => ids.includes(m.id)).map(({ id, name, href, icon, group }) => ({ id, name, href, icon, group }));
   async function leave() {
-    try { await signOut({ redirectTo: '/sign-in' }); }
+    // Loaded when someone signs out rather than on every page.
+    try { const { signOut } = await import('next-auth/react'); await signOut({ redirectTo: '/sign-in' }); }
     catch (error) { toast.error('Could not sign out. Try again.'); throw error; }
   }
   return (
