@@ -96,8 +96,6 @@ async function feedbackReport(courseId: string, versions: { id: string; number: 
 }
 export type FeedbackReport = Awaited<ReturnType<typeof feedbackReport>>;
 
-export type BuilderCourse = NonNullable<Awaited<ReturnType<typeof courseForBuilder>>>;
-
 /** Categories already in use, to offer when setting a course's. */
 export async function courseCategories(orgId: string | null) {
   const rows = await prisma.trainingCourse.findMany({ where: { orgId: orgId ?? undefined, category: { not: "" } }, distinct: ["category"], select: { category: true }, orderBy: { category: "asc" } });

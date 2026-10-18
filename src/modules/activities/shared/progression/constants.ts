@@ -25,5 +25,3 @@ export const COMPLETION_META = {
 
 /** The order the two choices appear on the competency control. */
 export const ASSESSMENT_CHOICES = ["WORKING_ON", "ACHIEVED"] as const;
-export type AssessmentChoice = (typeof ASSESSMENT_CHOICES)[number];
-

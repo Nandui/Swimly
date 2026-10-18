@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { formatDate, formatDateTime } from "@/lib/format";
 import type { IncidentExport } from "@/modules/incidents/features/export/server/data";
-import { levelOf } from "@/modules/incidents/shared/rules";
+import { levelOf } from "@/modules/incidents/shared/types";
 import { actionStatuses, ageGroups, incidentActions, incidentCategories, incidentKinds, incidentNumber, incidentStatuses, personTypes, severities,
   type AgeGroup, type IncidentCategory, type IncidentKind, type IncidentStatus, type PersonType, type Severity } from "@/modules/incidents/shared/types";
 

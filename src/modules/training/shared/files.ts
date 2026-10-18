@@ -6,7 +6,7 @@ import type { Prisma } from "@/generated/prisma/client";
  *  Vercel's 4.5 MB request limit. Checked by their first bytes, not the name. */
 
 export const MAX_FILE_BYTES = 4 * 1024 * 1024;
-export const FILE_FORMATS = "Use a PDF, a photo (JPEG, PNG or WebP) or a recording (MP3, M4A, OGG or WAV), up to 4 MB.";
+const FILE_FORMATS = "Use a PDF, a photo (JPEG, PNG or WebP) or a recording (MP3, M4A, OGG or WAV), up to 4 MB.";
 
 /** Browsers name some recordings differently; this is the type a file is stored with. */
 export const storedMime = (type: string) => ({ "audio/mp3": "audio/mpeg", "audio/x-m4a": "audio/mp4", "audio/m4a": "audio/mp4", "audio/x-wav": "audio/wav", "audio/wave": "audio/wav" })[type] ?? type;

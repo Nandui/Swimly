@@ -11,8 +11,8 @@ import { PageHeader } from "@/components/ui-kit/page-header";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { Tag } from "@/components/ui-kit/tag";
 import { SiteSettings } from "@/modules/tasks/features/sites";
-import { addDays, AddTask, clockOf, DAY_FILTERS, SITE_STATUS_META, taskDay, type TaskRow, type TaskState, TaskStateTag } from "@/modules/tasks/features/day";
-import { formatDayMonth, formatWeekday } from "@/lib/format";
+import { AddTask, clockOf, DAY_FILTERS, SITE_STATUS_META, taskDay, type TaskRow, type TaskState, TaskStateTag } from "@/modules/tasks/features/day";
+import { addDaysIso, formatDayMonth, formatWeekday } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Today" };
 
@@ -84,14 +84,14 @@ export default async function TasksTodayPage({ searchParams }: { searchParams: P
       <section className="pc-panel" aria-label="Day and filters">
         <div className="flex flex-wrap items-end gap-4">
           <nav aria-label="Day" className="flex items-end gap-2">
-            <Button asChild variant="outline" size="icon"><Link href={dayLink(addDays(date, -1))} aria-label="Previous day"><ChevronLeft aria-hidden="true" /></Link></Button>
+            <Button asChild variant="outline" size="icon"><Link href={dayLink(addDaysIso(date, -1))} aria-label="Previous day"><ChevronLeft aria-hidden="true" /></Link></Button>
             <form method="get" className="flex items-end gap-2" aria-label="Choose a day">
               <input type="hidden" name="site" value={site.id} />
               <div className="space-y-2"><Label htmlFor="task-date" className="block">Day</Label>
                 <Input id="task-date" name="date" type="date" defaultValue={date} className="min-h-11" /></div>
               <Button type="submit" variant="outline">Go</Button>
             </form>
-            <Button asChild variant="outline" size="icon"><Link href={dayLink(addDays(date, 1))} aria-label="Next day"><ChevronRight aria-hidden="true" /></Link></Button>
+            <Button asChild variant="outline" size="icon"><Link href={dayLink(addDaysIso(date, 1))} aria-label="Next day"><ChevronRight aria-hidden="true" /></Link></Button>
             {!isToday ? <Button asChild variant="ghost"><Link href={dayLink(day)}><CalendarDays aria-hidden="true" />Today</Link></Button> : null}
           </nav>
           {date <= day ? (

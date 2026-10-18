@@ -15,7 +15,7 @@ import {
   fileSrc, HAND_IN_PARTS, MAX_CARDS, MAX_CHOICES, MAX_GROUPS, MAX_ITEMS, MAX_SCENES, MAX_SORTS, MAX_SPOTS, scenarioProblems, sortingProblems,
   type ChecklistItem, type ExploreSpot, type Flashcard, type HandInPart, type HandInSettings, type LessonData, type ScenarioChoice, type ScenarioStep, type SortItem,
 } from "@/modules/training/shared/lessons";
-import type { UploadedFile } from "@/modules/training/features/builder/components/rich-text";
+import type { UploadedFile } from "@/modules/training/features/builder/components/upload";
 
 /** Editors for the lesson kinds that aren't text (e-learning phases 3 and 8):
  *  Scenario, Flashcards, Checklist, Sort into groups, Explore a picture and
@@ -59,7 +59,7 @@ const END_BEST = "end:best", END = "end";
 const nextValue = (c: ScenarioChoice) => c.next ?? (c.best ? END_BEST : END);
 const fromValue = (value: string): Pick<ScenarioChoice, "next" | "best"> => value === END_BEST ? { next: null, best: true } : value === END ? { next: null, best: false } : { next: value, best: false };
 const newChoice = (): ScenarioChoice => ({ id: id(), text: "", feedback: "", next: null, best: false });
-export const newScene = (): ScenarioStep => ({ id: id(), text: "", imageId: null, choices: [newChoice(), newChoice()] });
+const newScene = (): ScenarioStep => ({ id: id(), text: "", imageId: null, choices: [newChoice(), newChoice()] });
 
 export function ScenarioEditor({ title, data, onChange, images, disabled }: { title: string; data: LessonData | null; onChange: (data: LessonData) => void; images: UploadedFile[]; disabled: boolean }) {
   const steps = data?.steps ?? [];

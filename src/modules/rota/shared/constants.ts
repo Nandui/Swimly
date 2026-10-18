@@ -200,7 +200,7 @@ export function parseClock(value: string): number | null {
 
 /** Rota times move in 5-minute steps, like breaks, so a booking, activity or shift can last
  *  10, 15, 25 minutes or any other multiple of 5 (owner decision, 11 October 2026). */
-export const SLOT_MINUTES = 5;
+const SLOT_MINUTES = 5;
 
 /** Why a start and end can't go on the rota, or null when both sit on a 5-minute step. */
 export function slotProblem(start: number, end: number): string | null {

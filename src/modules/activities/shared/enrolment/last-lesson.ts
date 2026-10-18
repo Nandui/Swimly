@@ -3,7 +3,7 @@ import { addDaysIso, isDateOnly, parseDateOnly, toDateOnlyString, weekdayOf } fr
 
 /** How far ahead the last-lesson picker reaches: about half a year of a
  *  weekly class. */
-export const LAST_LESSON_WEEKS = 26;
+const LAST_LESSON_WEEKS = 26;
 
 /** A scheduled unenrolment is stored as the first day the swimmer is no
  *  longer in the class (`scheduledEndOn`), so every list that asks "is this

@@ -9,7 +9,7 @@ import { addDaysIso } from "@/lib/format";
 // ---------------------------------------------------------------------------
 
 /** Days until a card is due again, by its box (1 to 5). */
-export const REFRESHER_GAPS = [1, 2, 4, 8, 16] as const;
+const REFRESHER_GAPS = [1, 2, 4, 8, 16] as const;
 /** Questions in a day's refresher: about two minutes. */
 export const REFRESHER_DAILY = 5;
 
@@ -48,7 +48,7 @@ export type LearnerStats = {
   refresherAnswers: number; hoursMet: boolean; pathDone: boolean;
 };
 
-export const BADGES = [
+const BADGES = [
   { id: "first-course", title: "First course", hint: "Finish your first course.", earned: (s: LearnerStats) => s.coursesDone >= 1 },
   { id: "five-courses", title: "Five courses", hint: "Finish five courses.", earned: (s: LearnerStats) => s.coursesDone >= 5 },
   { id: "ten-courses", title: "Ten courses", hint: "Finish ten courses.", earned: (s: LearnerStats) => s.coursesDone >= 10 },

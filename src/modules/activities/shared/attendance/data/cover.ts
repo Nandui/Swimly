@@ -20,8 +20,6 @@ export async function getClassCover(courseId: string, iso: string) {
   });
 }
 
-export type ClassCover = NonNullable<Awaited<ReturnType<typeof getClassCover>>>;
-
 /** Every cover on one day in the current club, by course — for the deck
  *  screen, which lists the day's classes and says who is taking each. */
 export async function getCoversForDay(iso: string) {

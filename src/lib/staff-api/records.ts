@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { logAudit } from "@/lib/audit";
-import { isDateOnly, parseDateOnly, today } from "@/lib/format";
+import { isDateOnly, parseDateOnly, today, toDateOnlyString } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { acknowledgeReviewFor, hrConfigured, logOwnHrRead, mySharedHr } from "@/modules/hr";
 import { myQualifications } from "@/lib/people/mine";
@@ -21,7 +21,7 @@ import { requireConfirmed, type StaffIdentity } from "@/lib/staff-api/auth";
  *  response is built field by field from an allowlist: no swimmers, refunds,
  *  other staff, permissions or internal notes ever leave through here. */
 
-const date = (value: Date | null | undefined) => (value ? value.toISOString().slice(0, 10) : null);
+const date = (value: Date | null | undefined) => (value ? toDateOnlyString(value) : null);
 const failed = (message: string) => new StaffApiError(409, "NOT_POSSIBLE", message);
 
 // ---------------------------------------------------------------------------
@@ -29,7 +29,6 @@ const failed = (message: string) => new StaffApiError(409, "NOT_POSSIBLE", messa
 // ---------------------------------------------------------------------------
 
 const DETAIL_FIELDS = ["phone", "homeAddress", "emergencyName", "emergencyPhone", "emergencyRelationship"] as const;
-type DetailField = (typeof DETAIL_FIELDS)[number];
 
 export async function profile(identity: StaffIdentity) {
   const user = await prisma.user.findUniqueOrThrow({ where: { id: identity.user.id }, select: {
@@ -613,5 +612,3 @@ export async function home(identity: StaffIdentity) {
     reviewsToAcknowledge: reviewsWaiting,
   };
 }
-
-export type DetailChange = Partial<Record<DetailField, string>>;

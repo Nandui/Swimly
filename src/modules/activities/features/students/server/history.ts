@@ -1,4 +1,5 @@
-import { z } from "zod";
+import type { z } from "zod";
+import type { evidenceSchema, historyQuerySchema } from "@/modules/activities/features/students/server/history-schemas";
 import { ArrowRightLeft, Award, ClipboardCheck, ClipboardList, List, ListChecks, UserRound } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 import { DAY_META } from "@/modules/activities/shared/courses/constants";
@@ -14,25 +15,12 @@ export const HISTORY_META = {
   completion: { label: "Level milestones", color: "gray", icon: Award }, assessment: { label: "Assessments", color: "gray", icon: ClipboardCheck },
   profile: { label: "Profile", color: "gray", icon: UserRound },
 } as const satisfies Record<string, StatusMeta>;
-const mark = z.enum(["ACHIEVED", "WORKING_ON"]).nullable();
-export const evidenceSchema = z.object({
-  version: z.literal(1), kind: z.string(), date: z.string().optional(), courseId: z.string().nullable().optional(),
-  levelId: z.string().optional(), before: z.string().nullable().optional(), after: z.string().nullable().optional(),
-  note: z.string().nullable().optional(), previousNote: z.string().nullable().optional(), taughtBy: z.string().nullable().optional(),
-  changes: z.array(z.object({ competencyId: z.string(), name: z.string(), before: mark, after: mark })).optional(),
-});
-export type HistoryEvidence = z.infer<typeof evidenceSchema>;
+type HistoryEvidence = z.infer<typeof evidenceSchema>;
 export type HistoryEvent = {
   id: string; at: string; date: string; kind: Exclude<HistoryKind, "all">; title: string;
   actor: string | null; courseId: string | null; programmeId: string | null; levelId: string | null;
   site: string | null; className: string | null; snapshot: boolean; evidence: HistoryEvidence | null;
 };
-export const historyQuerySchema = z.object({
-  kind: z.enum(HISTORY_KINDS).optional(), courseId: z.string().max(100).optional(),
-  programmeId: z.string().max(100).optional(), competencyId: z.string().max(100).optional(),
-  from: z.string().max(10).optional(), to: z.string().max(10).optional(), q: z.string().max(160).optional(),
-  cursor: z.object({ at: z.iso.datetime(), id: z.string().max(150) }).optional(),
-});
 export type HistoryQuery = z.infer<typeof historyQuerySchema>;
 export type HistoryPage = { events: HistoryEvent[]; next: HistoryQuery["cursor"] | null; canAudit: boolean };
 

@@ -6,7 +6,6 @@ export async function getProgrammes(includeArchived = false) {
   await requireSession();
   return (await getSharedCurriculum()).programmes.filter(p => includeArchived || !p.archivedAt);
 }
-export type ProgrammeRow = Awaited<ReturnType<typeof getProgrammes>>[number];
 
 export async function getProgramme(id: string, includeArchived = false) {
   await requireSession();
@@ -15,7 +14,7 @@ export async function getProgramme(id: string, includeArchived = false) {
     ...l, competencies: l.competencies.filter(c => includeArchived || !c.archivedAt),
   })) } : null;
 }
-export type ProgrammeDetail = NonNullable<Awaited<ReturnType<typeof getProgramme>>>;
+type ProgrammeDetail = NonNullable<Awaited<ReturnType<typeof getProgramme>>>;
 export type LevelDetail = ProgrammeDetail["levels"][number];
 export type CompetencyDetail = LevelDetail["competencies"][number];
 

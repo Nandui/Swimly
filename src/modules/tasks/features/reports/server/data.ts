@@ -2,11 +2,11 @@ import "server-only";
 import { notFound } from "next/navigation";
 import { moduleAuditTrail } from "@/lib/audit";
 import { liveSitesWithin } from "@/lib/directory";
-import { isDateOnly, parseDateOnly, today } from "@/lib/format";
+import { addDaysIso as addDays, isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { sitesFor } from "@/lib/policy/session";
 import { requireTasksActor } from "@/modules/tasks/shared/access";
-import { addDays, dayIn, score, type TaskState } from "@/modules/tasks/shared/rules";
+import { dayIn, score, type TaskState } from "@/modules/tasks/shared/rules";
 import { TASK_ROW, ensureTasks, iso, shape, siteSettings, templateSites, textMatch } from "@/modules/tasks/shared/data";
 
 // ---------------------------------------------------------------------------

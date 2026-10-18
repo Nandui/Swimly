@@ -44,7 +44,7 @@ import {
   riskBandMeta,
   UNCLASSIFIED_RISK_META,
 } from '@/modules/docs/shared/types';
-import { riskBand } from '@/modules/docs/shared/content';
+import { riskBand } from '@/modules/docs/shared/body';
 import { RichEditor } from '@/modules/docs/shared/components/rich-editor';
 import { Notice } from '@/components/ui-kit/notice';
 import { Tag } from '@/components/ui-kit/tag';

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { addDaysIso, isDateOnly, today } from "@/lib/format";
-import { ageGroups, incidentCategories, incidentKinds, MAX_WHYS, personTypes, type IncidentsActor } from "@/modules/incidents/shared/types";
+import { ageGroups, incidentCategories, incidentKinds, levelOf, MAX_WHYS, personTypes, type IncidentsActor } from "@/modules/incidents/shared/types";
 
 /** Incidents' rules, pure so they can be tested without a database
  *  (docs/incidents.md). Actions call these before they write anything. */
@@ -53,9 +53,6 @@ export function isSerious(r: Pick<Report, "category"> & { people: readonly { amb
   return incidentCategories[r.category as keyof typeof incidentCategories]?.serious === true || r.people.some((p) => p.ambulance || p.hospital);
 }
 
-/** The level a report is handled at: the worse of what happened and what could have. */
-export const levelOf = (actual: number, potential: number) => Math.max(actual, potential);
-
 /** Weekdays only. Public holidays are not counted, so the date is never later than the law's. */
 export function addWorkingDays(iso: string, days: number): string {
   let day = iso, left = days;
@@ -70,8 +67,8 @@ export function addWorkingDays(iso: string, days: number): string {
  *  Regulations 2007, Part 14 as replaced by S.I. 370/2016, reg. 225): a written
  *  report within 10 working days, or 5 after a death, which is also told to the
  *  HSA or the Gardaí at once by the quickest means. */
-export const HSA_WORKING_DAYS = 10;
-export const HSA_FATAL_WORKING_DAYS = 5;
+const HSA_WORKING_DAYS = 10;
+const HSA_FATAL_WORKING_DAYS = 5;
 
 const severity = z.coerce.number().int().min(1, "Choose a severity.").max(5, "Choose a severity.");
 export const triageSchema = z.object({
@@ -218,7 +215,7 @@ export const safeFileName = (name: string) => name.replace(/[\x00-\x1f\/\\]/g, "
  *  Nothing is deleted: past this day a report is listed for a Manage holder
  *  to review. */
 export const KEEP_YEARS = 10;
-export const KEEP_YEARS_CHILD = 21;
+const KEEP_YEARS_CHILD = 21;
 export function keepUntil(occurredOn: string, hasChild: boolean): string {
   const years = hasChild ? KEEP_YEARS_CHILD : KEEP_YEARS;
   const [y, m, d] = occurredOn.split("-").map(Number);

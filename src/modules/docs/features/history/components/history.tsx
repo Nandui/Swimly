@@ -4,9 +4,9 @@ import { Button } from '@/components/shadcn/button';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { diffWords } from 'diff';
+import dynamic from 'next/dynamic';
 import { History, RotateCcw, ChevronRight, GitCompareArrows } from 'lucide-react';
-import { plainText } from '@/modules/docs/shared/content';
+import { plainText } from '@/modules/docs/shared/body';
 import {
   DOC_STATUS_META,
   docEventLabel,
@@ -24,6 +24,10 @@ import { startDraftAction } from '@/modules/docs/shared/actions';
 import { DocumentBody, RiskAssessmentView } from '@/modules/docs/shared/components/document-body';
 import { FilterSelect } from '@/modules/docs/shared/components/ui';
 import { Notice } from '@/components/ui-kit/notice';
+
+// The word diff library loads only when someone compares two versions.
+const TextDiff = dynamic(() => import('@/modules/docs/features/history/components/text-diff').then((m) => m.TextDiff));
+
 export function HistoryView({
   workspace: w,
   id,
@@ -93,18 +97,10 @@ export function HistoryView({
                   <span>Removed text is struck through.</span>
                 </p>
                 <div className="text-diff">
-                  {diffWords(
-                    `${a.content.title}\n${a.content.summary}\n${plainText(a.content.body)}`,
-                    `${b.content.title}\n${b.content.summary}\n${plainText(b.content.body)}`,
-                  ).map((part, i) =>
-                    part.added ? (
-                      <ins key={i}>{part.value}</ins>
-                    ) : part.removed ? (
-                      <del key={i}>{part.value}</del>
-                    ) : (
-                      <span key={i}>{part.value}</span>
-                    ),
-                  )}
+                  <TextDiff
+                    before={`${a.content.title}\n${a.content.summary}\n${plainText(a.content.body)}`}
+                    after={`${b.content.title}\n${b.content.summary}\n${plainText(b.content.body)}`}
+                  />
                 </div>
                 <h3>Full documents, side by side</h3>
                 <div className="side-by-side">

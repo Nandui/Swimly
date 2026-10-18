@@ -4,7 +4,7 @@
  *  whole area. Pure, so it is tested on its own (lanes.test.ts). */
 
 /** The most lanes an area may have. */
-export const MAX_LANES = 20;
+const MAX_LANES = 20;
 
 /** The lanes chosen on a form, as a sorted list without repeats. Empty means the whole area. */
 export function lanesFrom(values: readonly unknown[]): number[] {

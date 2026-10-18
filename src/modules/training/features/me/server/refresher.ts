@@ -147,11 +147,11 @@ export async function answerRefresher(userId: string, ref: { cardId?: string; as
     else await tx.trainingRefresherCard.create({ data: { userId, assignmentId, versionId, questionId, ...data, misses: correct ? 0 : 1 } });
     await tx.trainingRefresherDay.upsert({ where: { userId_on: { userId, on: parseDateOnly(on) } },
       update: { answered: { increment: 1 }, correct: correct ? { increment: 1 } : undefined }, create: { userId, on: parseDateOnly(on), answered: 1, correct: correct ? 1 : 0 } });
-    return { done: false as const, correct, explanation: question.explanation, nextIn: addDays(on, moved.dueOn) };
+    return { done: false as const, correct, explanation: question.explanation, nextIn: daysBetween(on, moved.dueOn) };
   });
 }
 
-const addDays = (from: string, to: string) => Math.round((parseDateOnly(to).getTime() - parseDateOnly(from).getTime()) / 86_400_000);
+const daysBetween = (from: string, to: string) => Math.round((parseDateOnly(to).getTime() - parseDateOnly(from).getTime()) / 86_400_000);
 
 /** What the badges are worked out from. */
 async function learnerStats(userId: string, orgId: string | null) {

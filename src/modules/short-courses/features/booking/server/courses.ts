@@ -22,7 +22,7 @@ import {
  *
  *  Nothing here returns staff names, other people or anything entered by staff. */
 
-export const SHORT_COURSES_SOURCE = "short-courses";
+const SHORT_COURSES_SOURCE = "short-courses";
 
 const PUBLIC_COURSE = {
   id: true, siteId: true, status: true, capacity: true, priceCents: true, cancelledAt: true, bookOnline: true,
@@ -60,7 +60,7 @@ function publicCourse(c: PublicRow): PublicCourse {
 }
 
 /** Put online, still planned, and its first session still to come. */
-export function shortCourseOnline(c: { bookOnline: boolean; status: string; cancelledAt: Date | null }, firstDay: string | null, on: string) {
+function shortCourseOnline(c: { bookOnline: boolean; status: string; cancelledAt: Date | null }, firstDay: string | null, on: string) {
   return c.bookOnline && !c.cancelledAt && c.status === "planned" && !!firstDay && firstDay > on;
 }
 

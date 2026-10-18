@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { changeBlocked } from "@/modules/rota/shared/access";
 import { addDaysIso, mondayOf } from "@/modules/rota/shared/constants";
 import { ANY_DEPARTMENT, buildDay, type Day } from "@/modules/rota/shared/day";
-import { type RotaSite, loadDays, pickSite } from "@/modules/rota/shared/data";
+import { loadDays, pickSite } from "@/modules/rota/shared/data";
 
 /** A site's departments: its own and the organisation-wide ones. */
 function siteDepartments(orgId: string | undefined, siteId: string) {
@@ -101,5 +101,3 @@ export function staffOf(day: Day, departmentId: string | null) {
   const mine = day.groups.filter((g) => g.departmentId === departmentId);
   return day.people.filter((p) => p.planned.some((x) => x.departmentId === departmentId) || mine.some((g) => g.lanes.some((l) => l.some((b) => b.kind === "on" && b.userId === p.userId))));
 }
-
-export type PlanWeek = Extract<Awaited<ReturnType<typeof planWeek>>, { site: RotaSite }>;

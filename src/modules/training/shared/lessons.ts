@@ -38,7 +38,7 @@ export type ScenarioStep = { id: string; text: string; imageId: string | null; c
 export type Flashcard = { id: string; front: string; back: string; imageId: string | null };
 export type ChecklistItem = { id: string; text: string };
 /** Sort into groups: two to four groups, and things that each belong in one. */
-export type SortGroup = { id: string; name: string };
+type SortGroup = { id: string; name: string };
 export type SortItem = { id: string; text: string; group: string };
 /** Explore a picture: numbered spots, in percent of the picture from its top left. */
 export type ExploreSpot = { id: string; x: number; y: number; title: string; text: string };
@@ -50,7 +50,7 @@ export type HandInSettings = { text: HandInPart; photo: HandInPart; review: bool
 export type LessonData = { steps?: ScenarioStep[]; cards?: Flashcard[]; items?: ChecklistItem[]; groups?: SortGroup[]; sorts?: SortItem[]; spots?: ExploreSpot[]; handIn?: HandInSettings };
 
 export type OutlineLesson = { id: string; kind: LessonKind; title: string; body: DocNode | null; videoUrl: string; fileId: string | null; minutes: number | null; data: LessonData | null };
-export type OutlineSection = { id: string; title: string; lessons: OutlineLesson[] };
+type OutlineSection = { id: string; title: string; lessons: OutlineLesson[] };
 /** A course: its sections of lessons, every section's questions, and the final
  *  exam's rules (null when it has none). A version freezes all three. */
 export type Outline = { sections: OutlineSection[]; questions: Question[]; exam: ExamSettings | null };
@@ -61,7 +61,7 @@ export const TEMPLATE_MARK = "✎";
 export const MAX_SECTIONS = 30;
 export const MAX_LESSONS = 120;
 /** The serialised size a lesson's text may reach. Text only: images are files. */
-export const MAX_BODY_CHARS = 200_000;
+const MAX_BODY_CHARS = 200_000;
 export const MAX_SCENES = 20;
 export const MAX_CHOICES = 4;
 export const MAX_CARDS = 40;
@@ -243,7 +243,7 @@ export function startingLessonData(kind: LessonKind, newId: () => string = () =>
 }
 
 /** Scenes the learner can get to from the first one. */
-export function reachableScenes(steps: readonly ScenarioStep[]) {
+function reachableScenes(steps: readonly ScenarioStep[]) {
   const byId = new Map(steps.map((s) => [s.id, s]));
   const seen = new Set<string>();
   const queue = steps[0] ? [steps[0].id] : [];
@@ -263,14 +263,14 @@ export const lessonFiles = (lesson: Pick<OutlineLesson, "fileId" | "body" | "dat
 ].filter((id): id is string => !!id);
 
 /** Plain text, for word counts and "is it empty?". */
-export function docText(node: DocNode | null | undefined): string {
+function docText(node: DocNode | null | undefined): string {
   if (!node) return "";
   if (node.type === "text") return node.text ?? "";
   const sep = node.type === "paragraph" || node.type === "heading" || node.type === "listItem" ? "\n" : "";
   return (node.content ?? []).map(docText).join("") + sep;
 }
 
-export function docImages(node: DocNode | null | undefined): string[] {
+function docImages(node: DocNode | null | undefined): string[] {
   if (!node) return [];
   const own = node.type === "image" ? [fileIdFromSrc(node.attrs?.src)].filter((id): id is string => !!id) : [];
   return [...own, ...(node.content ?? []).flatMap(docImages)];

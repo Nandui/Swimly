@@ -12,7 +12,7 @@ export type ObservedStep = ObservationStep & { result: ObservationResult; note: 
 export type ObservationRecord = { steps: ObservedStep[]; observedById: string | null; observedByName: string; observedAt: string };
 
 export const MAX_OBSERVATION_STEPS = 40;
-export const OBSERVATION_RESULTS: readonly ObservationResult[] = ["met", "not-yet", "na"];
+const OBSERVATION_RESULTS: readonly ObservationResult[] = ["met", "not-yet", "na"];
 
 /** The checklist as saved: trimmed steps with unique ids, empty ones dropped.
  *  Null when nothing is left, so the course has no checklist. */
@@ -108,7 +108,7 @@ export function hoursInWords(minutes: number) {
 export const MAX_PATH_STEPS = 30;
 export type PathStep = { courseId: string; dueDays: number };
 export type PathHistory = { courseId: string; status: string; dueOn: Date | null; completedAt: Date | null };
-export type PathStepState =
+type PathStepState =
   | { state: "done"; on: Date }
   | { state: "open"; dueOn: Date | null; overdue: boolean; submitted: boolean }
   | { state: "missing" };

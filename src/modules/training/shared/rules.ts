@@ -1,6 +1,7 @@
 /** Compliance autopilot (docs/training.md, e-learning phase 4): who must take a
  *  course, and when it is due again. Pure, so the rules page can say what a
  *  rule will do before it is saved, and the daily run and the matrix agree. */
+import { toDateOnlyString } from "@/lib/format";
 
 export type RuleAudience = { roleIds: string[]; departmentIds: string[]; siteIds: string[]; positionIds: string[] };
 export type RuleTiming = { dueDays: number; renewMonths: number | null; renewLeadDays: number };
@@ -32,7 +33,6 @@ export function addMonths(d: Date, months: number) {
   const last = new Date(Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0)).getUTCDate();
   return new Date(Date.UTC(target.getUTCFullYear(), target.getUTCMonth(), Math.min(base.getUTCDate(), last)));
 }
-export const isoDay = (d: Date) => d.toISOString().slice(0, 10);
 
 export type RuleState =
   | { state: "open" }
@@ -66,20 +66,20 @@ export type MatrixCell =
   | { kind: "excused" }
   | { kind: "expired"; on: string };
 
-export const SOON_DAYS = 60;
+const SOON_DAYS = 60;
 
 /** Where someone stands on a course a rule says they need. */
 export function matrixCell(rule: RuleTiming & { id: string }, history: readonly (RuleHistory & { dueOn: Date | null })[], on: Date): MatrixCell {
   const today = dateOnly(on);
   const open = history.find((h) => h.status === "ASSIGNED" || h.status === "SUBMITTED");
-  if (open) return { kind: "due", on: open.dueOn ? isoDay(open.dueOn) : null, overdue: !!open.dueOn && open.dueOn < today, submitted: open.status === "SUBMITTED" };
+  if (open) return { kind: "due", on: open.dueOn ? toDateOnlyString(open.dueOn) : null, overdue: !!open.dueOn && open.dueOn < today, submitted: open.status === "SUBMITTED" };
   const state = ruleState(rule, history, on);
   if (state.state === "excused") return { kind: "excused" };
   const lastDone = history.filter((h) => h.status === "COMPLETED" && h.completedAt).sort((a, b) => b.completedAt!.getTime() - a.completedAt!.getTime())[0];
   if (!lastDone) return { kind: "missing" };
   const dueAgain = rule.renewMonths ? addMonths(lastDone.completedAt!, rule.renewMonths) : null;
-  if (dueAgain && dueAgain < today) return { kind: "expired", on: isoDay(dueAgain) };
-  return { kind: "done", on: isoDay(lastDone.completedAt!), dueAgain: dueAgain ? isoDay(dueAgain) : null, soon: !!dueAgain && dueAgain <= addDays(today, SOON_DAYS) };
+  if (dueAgain && dueAgain < today) return { kind: "expired", on: toDateOnlyString(dueAgain) };
+  return { kind: "done", on: toDateOnlyString(lastDone.completedAt!), dueAgain: dueAgain ? toDateOnlyString(dueAgain) : null, soon: !!dueAgain && dueAgain <= addDays(today, SOON_DAYS) };
 }
 
 /** Counts towards "compliant": finished and in date, or excused. */

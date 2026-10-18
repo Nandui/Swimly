@@ -3,7 +3,6 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn, signOut } from "next-auth/react";
 import { Check, ChevronRight, Delete, UserRound } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { AuthFrame } from "@/components/auth-frame";
@@ -15,6 +14,9 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { SHARED_IDLE_MINUTES } from "@/lib/devices/constants";
 import { removeOwnPin, setOwnPin } from "@/lib/devices/actions";
 import { toast } from "sonner";
+
+/** The sign-in client, loaded when it is used: the idle timer below sits on every page. */
+const auth = () => import("next-auth/react");
 
 /** One auth panel: the H1 and its description grouped tight, then the body (AUConfirm, AUSwitch). */
 function Frame({ title, description, fin = false, children }: { title: string; description?: React.ReactNode; fin?: boolean; children: React.ReactNode }) {
@@ -38,7 +40,7 @@ export function QuickSwitch({ device, people }: { device: string; people: { id: 
   const [pending, start] = React.useTransition();
   const submit = (value: string) => start(async () => {
     if (!chosen) return;
-    const result = await signIn("pin", { userId: chosen.id, pin: value, redirect: false }).catch(() => null);
+    const result = await auth().then(({ signIn }) => signIn("pin", { userId: chosen.id, pin: value, redirect: false })).catch(() => null);
     if (!result || result.error) {
       setPin("");
       setError("That PIN did not work. After five wrong tries the PIN locks until you sign in with your password.");
@@ -121,7 +123,7 @@ export function ConfirmPassword({ email, name, next }: { email: string; name: st
       <form method="post" className="flex flex-col gap-4" onSubmit={(e) => {
         e.preventDefault();
         start(async () => {
-          const result = await signIn("credentials", { email, password, redirect: false }).catch(() => null);
+          const result = await auth().then(({ signIn }) => signIn("credentials", { email, password, redirect: false })).catch(() => null);
           if (!result || result.error) { setError("That password is not right."); return; }
           router.push(next);
           router.refresh();
@@ -174,7 +176,7 @@ export function SharedDeviceIdle({ minutes }: { minutes: number }) {
     let timer: ReturnType<typeof setTimeout>;
     const reset = () => {
       clearTimeout(timer);
-      timer = setTimeout(() => { void signOut({ redirectTo: "/switch" }); }, minutes * 60 * 1000);
+      timer = setTimeout(() => { void auth().then(({ signOut }) => signOut({ redirectTo: "/switch" })); }, minutes * 60 * 1000);
     };
     const events = ["pointerdown", "keydown", "scroll", "touchstart"] as const;
     for (const event of events) window.addEventListener(event, reset, { passive: true });

@@ -37,7 +37,7 @@ export const ACTIVITY_TYPES = {
   },
 } as const satisfies Record<string, ActivityType>;
 
-export type ActivityTypeKey = keyof typeof ACTIVITY_TYPES;
+type ActivityTypeKey = keyof typeof ACTIVITY_TYPES;
 
 const DEFAULT_ACTIVITY_TYPE: ActivityTypeKey = "swim-school";
 

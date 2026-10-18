@@ -19,7 +19,7 @@ export const ATTENDANCE_REPORT_META = {
   cancelled: { label: "Cancelled", color: "gray", icon: XCircle },
   empty: { label: "No swimmers", color: "gray", icon: UserRoundX },
 } satisfies Record<string, StatusMeta>;
-export type AttendanceReportStatus = keyof typeof ATTENDANCE_REPORT_META;
+type AttendanceReportStatus = keyof typeof ATTENDANCE_REPORT_META;
 
 export function instructorAttendanceTotals(rows: AttendanceOccurrence[], now: Date) {
   const date = today(now), minutes = minutesNow(now);

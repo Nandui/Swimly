@@ -2,14 +2,8 @@ import { randomUUID } from 'node:crypto';
 import type { Database, Sql } from '@/modules/docs/shared/database';
 import { one, rows, findMember, listMembers } from '@/modules/docs/shared/database';
 import { expandPermissions } from '@/lib/staff/permissions';
-import {
-  contentSchema,
-  validateBody,
-  contentSearch,
-  imageIds,
-  matrixSchema,
-  plainText,
-} from '@/modules/docs/shared/content';
+import { contentSchema, validateBody, contentSearch, matrixSchema } from '@/modules/docs/shared/content';
+import { imageIds, plainText } from '@/modules/docs/shared/body';
 import {
   canWrite,
   canRead,

@@ -1,11 +1,11 @@
 import "server-only";
 import { expandPermissions } from "@/lib/staff/permissions";
 import { registerHomeCard, registerPersonFileSection, registerSubjectRecords, type HomeItem } from "@/modules/contributions";
-import { certificateQueue } from "@/modules/training/features/certificates";
-import { expiringQualifications } from "@/modules/training/features/expiring";
-import { trainingFile, trainingLearnerRecords, trainingOnTheJobRecords, trainingRecords } from "@/modules/training/features/person-file";
-import { registersToClose } from "@/modules/training/features/sessions";
-import { signoffCount } from "@/modules/training/features/sign-off";
+import { certificateQueue } from "@/modules/training/features/certificates/server/queue";
+import { expiringQualifications } from "@/modules/training/features/expiring/server/data";
+import { trainingFile, trainingLearnerRecords, trainingOnTheJobRecords, trainingRecords } from "@/modules/training/features/person-file/server/file";
+import { registersToClose } from "@/modules/training/features/sessions/server/data";
+import { signoffCount } from "@/modules/training/features/sign-off/server/data";
 
 /** Training's registration plug (CLAUDE.md section 5), loaded by
  *  src/modules/server.ts: its home card, its part of a person's file and its

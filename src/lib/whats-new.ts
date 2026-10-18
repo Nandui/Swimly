@@ -9,7 +9,7 @@ export type ReleaseBlock =
   | { kind: "heading"; text: string }
   | { kind: "text"; text: string };
 
-export type Release = { version: string; date: string; title: string; blocks: ReleaseBlock[] };
+type Release = { version: string; date: string; title: string; blocks: ReleaseBlock[] };
 
 export type ReleaseNotes = { intro: string[]; releases: Release[] };
 

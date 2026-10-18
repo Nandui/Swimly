@@ -36,4 +36,3 @@ export async function stockComparison(choice: { from?: string; to?: string }) {
   const rows = compareCounts([...products.values()], qty(from.id), qty(to.id));
   return { options, from, to, problem: null, rows, totals: compareTotals(rows) };
 }
-export type StockComparison = Awaited<ReturnType<typeof stockComparison>>;

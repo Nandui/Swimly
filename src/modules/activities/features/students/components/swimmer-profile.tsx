@@ -38,7 +38,7 @@ import styles from "@/modules/activities/features/students/components/swimmer-pr
 
 type Tab = "journey" | "competencies" | "attendance" | "assessments" | "details" | "parents";
 const JOURNEY_MODES = [{ value: "milestones", label: "Milestones" }, { value: "activity", label: "All activity" }];
-export type ProfileAccess = { edit: boolean; enrol: boolean; assess: boolean; complete: boolean; override: boolean; courses: boolean; assessments: boolean; audit: boolean; parents?: boolean };
+type ProfileAccess = { edit: boolean; enrol: boolean; assess: boolean; complete: boolean; override: boolean; courses: boolean; assessments: boolean; audit: boolean; parents?: boolean };
 export type SwimmerProfileProps = { student: StudentDetail; enrolments: StudentEnrolment[]; programmes: ProgrammeProgress[]; assessments: StudentAssessment[]; targets: TransferTarget[]; history: HistoryPage; access: ProfileAccess; initialTab?: string; returnTo: string; instant: string };
 function profileTab(value?: string, parents = false): Tab {
   if (value === "progress") return "competencies";

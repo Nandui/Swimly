@@ -8,7 +8,7 @@ import { dayShift, type WorkItem } from "@/modules/rota/shared/shifts";
 
 /** `issuedOn` null: the certificate has no issue date on it; it counts as held until it expires. */
 export type Held = { userId: string; typeId: string; issuedOn: string | null; expiresOn: string | null; revoked: boolean };
-export type FitIssue = "off" | "expired" | "missing" | "overlap" | "long";
+type FitIssue = "off" | "expired" | "missing" | "overlap" | "long";
 export type Fit = {
   userId: string;
   name: string;

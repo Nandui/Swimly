@@ -4,8 +4,7 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDate } from "@/lib/format";
 import type { IncidentRow } from "@/modules/incidents/features/reports/server/data";
-import { levelOf } from "@/modules/incidents/shared/rules";
-import { incidentCategories, incidentKinds, incidentNumber, incidentStatuses, seriousMeta, SEVERITY_META, type IncidentCategory, type IncidentKind, type IncidentStatus, type Severity } from "@/modules/incidents/shared/types";
+import { incidentCategories, incidentKinds, incidentNumber, incidentStatuses, levelOf, seriousMeta, SEVERITY_META, type IncidentCategory, type IncidentKind, type IncidentStatus, type Severity } from "@/modules/incidents/shared/types";
 
 /** One panel of reports: each row says what, where and when, never who was hurt. */
 export function ReportPanel({ id, title, rows, empty }: { id: string; title: string; rows: IncidentRow[]; empty: { title: string; hint?: string } }) {

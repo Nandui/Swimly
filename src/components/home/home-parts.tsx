@@ -56,27 +56,6 @@ export function NeedsSummary({ count }: { count: number }) {
     : <Tag meta={HOME_ITEM_META.clear} />;
 }
 
-/** Quick actions as rows: an icon, what it does, and the way in. */
-export function QuickActions({ items }: { items: Placed[] }) {
-  if (!items.length) return null;
-  return (
-    <ul className="pc-rows" aria-label="Quick actions">
-      {items.map((action) => {
-        const Icon = action.icon ? ACTION_ICONS[action.icon] : action.moduleIcon;
-        return (
-          <li key={action.key}>
-            <Link href={action.href} className="pc-row">
-              <span className="pc-tile-icon"><Icon aria-hidden="true" /></span>
-              <span className="pc-row-body"><span className="pc-row-title">{action.label}</span></span>
-              <span className="pc-row-trail"><ChevronRight aria-hidden="true" className="pc-row-chevron" /></span>
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
 /** Today's figures as tiles: an icon (the figure's own, else its module's), the figure, what
  *  it counts and one line more. A figure that needs the person puts its reason in the tag. */
 export function TodayGrid({ items }: { items: Placed[] }) {

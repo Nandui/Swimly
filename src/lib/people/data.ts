@@ -24,7 +24,6 @@ export async function getOrganisation() {
   ]);
   return { organisation, sites, departments, qualificationTypes };
 }
-export type Organisation = Awaited<ReturnType<typeof getOrganisation>>;
 
 export type QualificationState = "valid" | "expiring" | "expired" | "revoked";
 /** Expiring = within 60 days, the usual renewal window for NPLQ and first aid. */

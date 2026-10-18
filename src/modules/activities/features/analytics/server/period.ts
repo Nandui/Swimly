@@ -25,7 +25,7 @@ export function isoDate(value: unknown): string | null {
 }
 
 /** The longest custom period: three years, so a report never reads more than six years of rows. */
-export const MAX_CUSTOM_DAYS = 3 * 366;
+const MAX_CUSTOM_DAYS = 3 * 366;
 
 function daysBetween(from: string, to: string) {
   return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);

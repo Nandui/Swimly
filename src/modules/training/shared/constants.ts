@@ -79,7 +79,6 @@ export const MATRIX_CELL_META = {
   missing: { label: "Not assigned yet", color: "gray", icon: CircleDashed },
   excused: { label: "Excused", color: "gray", icon: CircleMinus },
 } as const satisfies Record<string, StatusMeta>;
-export type MatrixTone = keyof typeof MATRIX_CELL_META;
 
 /** A training rule's state. */
 export const RULE_STATE_META = {

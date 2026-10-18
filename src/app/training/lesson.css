@@ -17,7 +17,7 @@
 .tf-lesson img.ProseMirror-selectednode { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
 .tf-lesson hr { border: 0; border-top: 1px solid var(--pc-line); margin: 8px 0; }
 .tf-lesson code { padding: 1px 6px; border-radius: 6px; background: var(--pc-surface-sunken); font-size: 0.9em; }
-.tf-lesson-table, .tf-lesson .tableWrapper { overflow-x: auto; }
+.tf-lesson .tableWrapper { overflow-x: auto; }
 .tf-lesson table { border-collapse: collapse; min-width: 100%; font-size: var(--pc-text-body); line-height: var(--pc-leading-body); }
 .tf-lesson :is(th, td) { padding: 8px 12px; border: 1px solid var(--pc-line); text-align: left; vertical-align: top; min-width: 6rem; }
 .tf-lesson th { background: var(--pc-surface-sunken); font-weight: 600; }

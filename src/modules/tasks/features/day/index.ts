@@ -6,4 +6,4 @@ export { DAY_FILTERS, taskDay, taskDetail } from "@/modules/tasks/features/day/s
 export { tasksHomeItems } from "@/modules/tasks/features/day/server/home";
 export { TaskStateTag } from "@/modules/tasks/shared/components/status";
 export { type TaskRow } from "@/modules/tasks/shared/data";
-export { ACTION_STATUS_META, addDays, clockOf, dayIn, PRIORITY_META, SITE_STATUS_META, type TaskState } from "@/modules/tasks/shared/rules";
+export { ACTION_STATUS_META, clockOf, dayIn, PRIORITY_META, SITE_STATUS_META, type TaskState } from "@/modules/tasks/shared/rules";

@@ -12,10 +12,10 @@ import { mergeTouching, subtract, type Span } from "@/modules/rota/shared/cover"
 
 export type WorkItem = Span & { label: string };
 /** `pinned`: placed by the manager; otherwise a suggestion. */
-export type PlacedBreak = Span & { paid: boolean; pinned: boolean };
+type PlacedBreak = Span & { paid: boolean; pinned: boolean };
 /** A break the manager placed (`RotaBreak`). */
 export type PinnedBreak = { start: number; minutes: number; paid: boolean };
-export type ShiftPart = Span & {
+type ShiftPart = Span & {
   /** Put on the plan as a shift, rather than worked out from their activities. */
   planned: boolean;
   work: WorkItem[];

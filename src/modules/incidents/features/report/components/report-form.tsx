@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { LifeBuoy, Plus, Send, Trash2 } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
@@ -14,12 +14,16 @@ import { toast } from "@/components/ui/toast";
 import { Notice } from "@/components/ui-kit/notice";
 import { minutesNow, today } from "@/lib/format";
 import { submitReport } from "@/modules/incidents/features/report/server/actions";
-import { reportProblem, reportSchema, type PersonInput, type ReportInput } from "@/modules/incidents/shared/rules";
+import type { PersonInput, ReportInput } from "@/modules/incidents/shared/rules";
 import { ageGroups, incidentCategories, incidentKinds, personTypes, type IncidentKind } from "@/modules/incidents/shared/types";
 
 type Site = { id: string; name: string };
 const blankPerson = (): PersonInput => ({ type: "public", ageGroup: "adult", name: "", userId: "", contact: "", injured: false, bodyPart: "", injury: "", firstAid: "", firstAidBy: "", ambulance: false, hospital: false });
 const clock = () => { const m = minutesNow(); return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`; };
+
+/** The report's checks, loaded with the form rather than with every incident page: the report
+ *  pages share this feature's entry for Add to the report. */
+const loadChecks = () => import("@/modules/incidents/shared/rules");
 
 /** The two-minute report (docs/incidents.md): what kind, where and when, what
  *  happened, who was involved and who saw it. Only the first part is required;
@@ -28,6 +32,7 @@ export function ReportForm({ sites, areas, staff, docs }: { sites: Site[]; areas
   const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  useEffect(() => { loadChecks().catch(() => undefined); }, []);
   const [f, setF] = useState<Omit<ReportInput, "people" | "witnesses">>({
     siteId: sites.length === 1 ? sites[0].id : "", area: "", kind: "" as IncidentKind, category: "" as ReportInput["category"],
     occurredOn: today(), occurredAt: clock(), description: "", immediateAction: "", raisedBy: "",
@@ -37,10 +42,12 @@ export function ReportForm({ sites, areas, staff, docs }: { sites: Site[]; areas
   const set = <K extends keyof typeof f>(key: K, value: (typeof f)[K]) => setF((x) => ({ ...x, [key]: value }));
   const setPerson = (i: number, change: Partial<PersonInput>) => setPeople((list) => list.map((p, j) => (j === i ? { ...p, ...change } : p)));
 
-  function send(event: React.FormEvent) {
+  async function send(event: React.FormEvent) {
     event.preventDefault();
+    if (pending) return;
     setError(null);
     const input: ReportInput = { ...f, people, witnesses };
+    const { reportProblem, reportSchema } = await loadChecks();
     const parsed = reportSchema.safeParse(input);
     const problem = parsed.success ? reportProblem(parsed.data) : parsed.error.issues[0].message;
     if (problem) { setError(problem); return; }

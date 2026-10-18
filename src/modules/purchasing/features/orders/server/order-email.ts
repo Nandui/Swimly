@@ -24,7 +24,7 @@ export type OrderEmailInput = {
 };
 
 /** Where suppliers send invoices for every purchase order (owner decision, 15 October 2026). */
-export const INVOICE_ADDRESS = "invoices@leisureworldcork.com";
+const INVOICE_ADDRESS = "invoices@leisureworldcork.com";
 
 const escape = (value: string) => value.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const oneLine = (value: string) => value.replace(/[\r\n]+/g, " ").trim();

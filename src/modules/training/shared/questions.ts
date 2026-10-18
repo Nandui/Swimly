@@ -20,7 +20,7 @@ export const QUESTION_KIND_META = {
   SHORT_ANSWER: { label: "Short answer", help: "A word or a few words the learner types, with every answer you accept." },
 } as const satisfies Record<QuestionKind, { label: string; help: string }>;
 
-export const isQuestionKind = (value: unknown): value is QuestionKind => QUESTION_KINDS.includes(value as QuestionKind);
+const isQuestionKind = (value: unknown): value is QuestionKind => QUESTION_KINDS.includes(value as QuestionKind);
 
 /** A spot on a picture, in percent of its width and height from the top left. */
 export type Area = { x: number; y: number; w: number; h: number };
@@ -36,7 +36,7 @@ export type ExamSettings = { passMark: number; attempts: number; draw: number | 
 export const EXAM_DEFAULTS: ExamSettings = { passMark: 80, attempts: 3, draw: null, timeLimit: null, testOut: false };
 
 export const MAX_QUESTIONS = 300;
-export const MAX_OPTIONS = 8;
+const MAX_OPTIONS = 8;
 /** Seconds after the time limit in which answers sent on the way still count. */
 export const GRACE_SECONDS = 30;
 
@@ -62,7 +62,7 @@ export function cleanArea(value: unknown): Area | null {
 // ---------------------------------------------------------------------------
 
 const BLANK = /\[([^\[\]]{1,200})\]/g;
-export const MAX_BLANKS = 8;
+const MAX_BLANKS = 8;
 const blankId = (index: number) => `b${index}`;
 
 /** The text around the blanks, and each blank's accepted answers. */
@@ -328,7 +328,6 @@ export function learnerQuestion(q: Question, random: () => number) {
     segments: null as string[] | null,
   };
 }
-export type LearnerQuestion = ReturnType<typeof learnerQuestion>;
 
 // ---------------------------------------------------------------------------
 // The exam

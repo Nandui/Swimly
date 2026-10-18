@@ -9,7 +9,7 @@ import { actorForSession } from "@/lib/policy/session";
  *  site (`mayFor`). The course list is the organisation's, kept with Manage. */
 export type AcademyActor = { id: string; name: string; orgId: string | null; superadmin: boolean; run: boolean; manage: boolean };
 
-export function academyAccess(session: Session): AcademyActor | null {
+function academyAccess(session: Session): AcademyActor | null {
   const actor = actorForSession(session);
   if (!holdsAnywhere(actor, "academy.read")) return null;
   return {

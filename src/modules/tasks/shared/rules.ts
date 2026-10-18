@@ -110,7 +110,6 @@ export type TaskRecord = Record<string, string>;
 
 /** What is stored. Late, early, overdue and missed are worked out from the times. */
 export const TASK_STATUSES = ["open", "done", "not_applicable", "cant_complete"] as const;
-export type TaskStatus = (typeof TASK_STATUSES)[number];
 
 /** What a task shows. Tones come from here, never a call site. */
 export const TASK_STATE_META = {
@@ -199,7 +198,6 @@ const timeWords = (v: string) => (v === "open" ? "opening" : v === "close" ? "cl
 
 export const isClock = (v: string) => /^([01]\d|2[0-3]):[0-5]\d$/.test(v);
 const dayNumber = (iso: string) => Math.round(Date.parse(`${iso}T12:00:00Z`) / 86_400_000);
-export const addDays = addDaysIso;
 
 /** Whether a schedule makes a task on this day. A monthly task on the 31st skips shorter months. */
 export function dueOn(s: TaskSchedule, day: string): boolean {
@@ -237,7 +235,7 @@ export function zonedInstant(day: string, time: string, zone = SCHOOL_TIMEZONE):
 /** When a schedule's task opens and is due on a day at a site. */
 export function windowOn(s: Pick<TaskSchedule, "start" | "due">, day: string, site: SiteClock = DEFAULT_SITE) {
   const start = resolveTime(s.start, site), due = resolveTime(s.due, site);
-  return { startsAt: zonedInstant(day, start, site.timezone), dueAt: zonedInstant(due <= start ? addDays(day, 1) : day, due, site.timezone) };
+  return { startsAt: zonedInstant(day, start, site.timezone), dueAt: zonedInstant(due <= start ? addDaysIso(day, 1) : day, due, site.timezone) };
 }
 
 /** Each task a template's schedules make on a day at a site, keyed by schedule so making them twice is harmless. */

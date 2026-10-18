@@ -18,7 +18,6 @@ export type AnalyticsLevel = Definition & { programmeId: string };
 export type CurrentEnrolment = { studentId: string; levelId: string };
 export type LevelCapacity = { levelId: string; capacity: number | null; classes: number };
 export type DailyActivity = { day: string; enrolled: number; withdrawn: number };
-export type CancellationTotals = { sessions: number; pending: number; notified: number; affectedPlaces: number };
 
 export function enrolmentTotals(enrolments: CurrentEnrolment[], levels: AnalyticsLevel[], programmes: AnalyticsProgramme[], capacities: LevelCapacity[]) {
   const levelIds = sharedIds(levels), programmeIds = sharedIds(programmes);

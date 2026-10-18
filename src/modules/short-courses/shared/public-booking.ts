@@ -15,8 +15,8 @@ export const ONLINE_HOLD_HOURS = 72;
 export const holdDeadline = (heldAt: Date) => new Date(heldAt.getTime() + ONLINE_HOLD_HOURS * 3_600_000);
 
 /** When someone would like a call. */
-export const CALL_TIMES = { morning: "Morning", afternoon: "Afternoon", evening: "Evening" } as const;
-export const CALL_TIME_KEYS = Object.keys(CALL_TIMES) as (keyof typeof CALL_TIMES)[];
+const CALL_TIMES = { morning: "Morning", afternoon: "Afternoon", evening: "Evening" } as const;
+const CALL_TIME_KEYS = Object.keys(CALL_TIMES) as (keyof typeof CALL_TIMES)[];
 
 /** One course as the public see it: never staff names, other people or notes. */
 export type PublicCourse = {
@@ -75,7 +75,7 @@ export type PublicHold = {
 };
 
 /** Where a customer's booking stands, for "My bookings". */
-export type CustomerBookingState = "to-pay" | "booked" | "waiting" | "done" | "withdrawn" | "cancelled";
+type CustomerBookingState = "to-pay" | "booked" | "waiting" | "done" | "withdrawn" | "cancelled";
 export type CustomerBooking = {
   id: string;
   source: string;

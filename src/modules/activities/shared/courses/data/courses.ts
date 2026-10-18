@@ -41,12 +41,12 @@ const COURSE_SELECT = {
 export async function getCourses(includeArchived = false, allSites = false) {
   await requireSession();
 
-  const curriculum = await getSharedCurriculum();
-  const rows = await withClassRefs(await prisma.course.findMany({
+  const classes = async () => withClassRefs(await prisma.course.findMany({
     where: { ...(allSites ? { clubId: { in: await liveSiteIds() } } : { clubId: await currentClubId() }), ...(includeArchived ? {} : { archivedAt: null }) },
     orderBy: [{ dayOfWeek: "asc" }, { startMinutes: "asc" }],
     select: COURSE_SELECT,
   }));
+  const [curriculum, rows] = await Promise.all([getSharedCurriculum(), classes()]);
   // The directory includes historical curriculum; enrolment pickers still
   // exclude retired levels when requesting active classes across sites.
   return rows.filter(row => !allSites || includeArchived || liveSharedLevel(curriculum, row.levelId)).map(row => sharedCourse(row, curriculum));
@@ -58,9 +58,9 @@ export type CourseRow = Awaited<ReturnType<typeof getCourses>>[number];
 export const getCourse = cache(async function getCourse(id: string) {
   await requireSession();
 
-  const found = await prisma.course.findUnique({ where: { id }, select: COURSE_SELECT });
+  const [found, curriculum] = await Promise.all([prisma.course.findUnique({ where: { id }, select: COURSE_SELECT }), getSharedCurriculum()]);
   const row = found ? (await withClassRefs([found]))[0] : null;
-  return row ? sharedCourse(row, await getSharedCurriculum()) : null;
+  return row ? sharedCourse(row, curriculum) : null;
 });
 
 export type CourseDetail = NonNullable<Awaited<ReturnType<typeof getCourse>>>;
@@ -70,8 +70,7 @@ export type CourseDetail = NonNullable<Awaited<ReturnType<typeof getCourse>>>;
 export async function getCoursesOnDay(dayOfWeek: DayOfWeek, instructorId?: string) {
   await requireSession();
 
-  const curriculum = await getSharedCurriculum();
-  const rows = await withClassRefs(await prisma.course.findMany({
+  const classes = async () => withClassRefs(await prisma.course.findMany({
     where: {
       clubId: await currentClubId(),
       dayOfWeek,
@@ -81,6 +80,7 @@ export async function getCoursesOnDay(dayOfWeek: DayOfWeek, instructorId?: strin
     orderBy: [{ startMinutes: "asc" }],
     select: COURSE_SELECT,
   }));
+  const [curriculum, rows] = await Promise.all([getSharedCurriculum(), classes()]);
   return rows.map(row => sharedCourse(row, curriculum));
 }
 
@@ -89,9 +89,7 @@ export async function getCoursesOnDay(dayOfWeek: DayOfWeek, instructorId?: strin
  *  surfaces allowed to see it. */
 export async function getRoster(courseId: string) {
   await requireActivitiesAccess();
-  const curriculum = await getSharedCurriculum();
-
-  const rows = await prisma.enrolment.findMany({
+  const [curriculum, rows] = await Promise.all([getSharedCurriculum(), prisma.enrolment.findMany({
     where: { courseId, status: { in: ["ACTIVE", "WAITLISTED"] } },
     orderBy: [
       { status: "asc" },
@@ -118,7 +116,7 @@ export async function getRoster(courseId: string) {
         },
       },
     },
-  });
+  })]);
   return rows.map(row => {
     const { medicalNotes, ...student } = row.student;
     return sharedPlacement({ ...row, student: { ...student, hasMedicalNotes: !!medicalNotes?.trim() } }, curriculum);

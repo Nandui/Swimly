@@ -54,13 +54,13 @@ const VIEWS = [{ value: "swimmer", label: "By swimmer" }, { value: "competency",
 
 type Choice = CompetencyStatus | null;
 
-export type DeckCompetency = {
+type DeckCompetency = {
   id: string;
   name: string;
   description: string | null;
 };
 
-export type DeckSwimmer = {
+type DeckSwimmer = {
   studentId: string;
   name: string;
   offLevel: boolean;

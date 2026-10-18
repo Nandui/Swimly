@@ -42,7 +42,6 @@ export async function listCourses(options: { archived?: boolean } = {}) {
     }));
   return { who, courses };
 }
-export type CourseRow = Awaited<ReturnType<typeof listCourses>>["courses"][number];
 
 /** Active people the signed-in person may assign training to. */
 export async function assignablePeople() {

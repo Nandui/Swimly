@@ -2,7 +2,9 @@
  *  where they stop, how long they take and how the exam goes. Pure, so it is tested without a
  *  database; the server reads build the rows. Cancelled training never counts. */
 
-export type Attempt = { number: number; percent: number | null; passed: boolean | null; submittedAt: Date | null };
+import { toDateOnlyString as isoDay } from "@/lib/format";
+
+type Attempt = { number: number; percent: number | null; passed: boolean | null; submittedAt: Date | null };
 export type LearnerFacts = {
   userId: string;
   status: string;
@@ -14,7 +16,6 @@ export type LearnerFacts = {
 };
 
 const DAY = 86_400_000;
-const isoDay = (d: Date) => d.toISOString().slice(0, 10);
 
 /** The middle value, or null for none. Halves are rounded to one decimal. */
 export function median(values: number[]): number | null {
@@ -32,7 +33,7 @@ export const daysBetween = (from: Date, to: Date) => Math.max(0, Math.floor((to.
 
 const submitted = (a: LearnerFacts) => a.attempts.filter((t) => t.submittedAt);
 export const started = (a: LearnerFacts) => a.lessons.length > 0 || submitted(a).length > 0 || a.status === "SUBMITTED" || a.status === "COMPLETED";
-export const passedExam = (a: LearnerFacts) => submitted(a).some((t) => t.passed);
+const passedExam = (a: LearnerFacts) => submitted(a).some((t) => t.passed);
 export const isOverdue = (a: LearnerFacts, on: string) => a.status === "ASSIGNED" && !!a.dueOn && isoDay(a.dueOn) < on;
 export function lastActivity(a: LearnerFacts): Date | null {
   const times = [...a.lessons.map((l) => l.at.getTime()), ...submitted(a).map((t) => t.submittedAt!.getTime()), a.completedAt?.getTime() ?? 0].filter(Boolean);

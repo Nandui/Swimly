@@ -5,8 +5,7 @@ import { Notice } from "@/components/ui-kit/notice";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDate, formatDateTime } from "@/lib/format";
 import type { IncidentDetail } from "@/modules/incidents/features/reports/server/data";
-import { levelOf } from "@/modules/incidents/shared/rules";
-import { ageGroups, incidentActions, incidentCategories, incidentKinds, personTypes, severities, SEVERITY_META, type AgeGroup, type IncidentCategory, type IncidentKind, type PersonType, type Severity } from "@/modules/incidents/shared/types";
+import { ageGroups, incidentActions, incidentCategories, incidentKinds, levelOf, personTypes, severities, SEVERITY_META, type AgeGroup, type IncidentCategory, type IncidentKind, type PersonType, type Severity } from "@/modules/incidents/shared/types";
 
 /** History notes everyone who reads the report sees; the rest (statements,
  *  actions, files) only those who triage at the site. */

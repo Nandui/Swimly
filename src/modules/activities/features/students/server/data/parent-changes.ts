@@ -37,4 +37,3 @@ export async function listParentChangeRequests(status: "PENDING" | "DONE" = "PEN
     };
   });
 }
-export type ParentChangeRow = Awaited<ReturnType<typeof listParentChangeRequests>>[number];

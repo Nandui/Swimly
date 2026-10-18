@@ -7,7 +7,7 @@ import { AnalyticsNav, type AnalyticsPage } from "@/modules/activities/features/
 import { AnalyticsRefresh } from "@/modules/activities/features/analytics/components/refresh";
 import { FilterBar, type FilterBarProps } from "@/modules/activities/features/analytics/components/insights/filters";
 export { Meter } from "@/modules/activities/features/analytics/components/insights/meter";
-import { DEFAULT_RANGE, RANGES, reportQuery, type ReportFilters, type ReportPeriod, type SiteScope } from "@/modules/activities/features/analytics/server/period";
+import { DEFAULT_RANGE, RANGES, reportQuery, type ReportFilters, type ReportPeriod } from "@/modules/activities/features/analytics/server/period";
 
 const one = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 1 });
 const whole = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 0 });
@@ -29,9 +29,6 @@ export type ReportContext = {
   canOpenClasses: boolean; canOpenSwimmers: boolean;
 };
 
-export function scopeOf(ctx: ReportContext): SiteScope {
-  return ctx.allSites ? "all" : "site";
-}
 /** The query string that keeps the chosen period, sites and programme. */
 export function filterQuery(ctx: ReportContext, extra: Record<string, string> = {}) {
   return reportQuery(ctx.filters, extra);
@@ -41,7 +38,7 @@ export function reportHref(ctx: ReportContext, path: string, extra: Record<strin
   return `${path}${filterQuery(ctx, extra)}`;
 }
 
-export function periodText(period: ReportPeriod) {
+function periodText(period: ReportPeriod) {
   return period.key === "custom" ? formatDateRange(period.start, period.end) : `Last ${period.label}, ${formatDateRange(period.start, period.end)}`;
 }
 /** "now", or the last day of a custom period that ended before today. */

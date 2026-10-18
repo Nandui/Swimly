@@ -340,7 +340,7 @@ body.turnfin-app { background: var(--pc-outer); }
    radio is hidden (the /roles level picker) keep their text centred. */
 .turnfin-app label:has(:is([data-slot='checkbox'], [data-slot='radio-group-item'], input:is([type='checkbox'], [type='radio']):not([aria-hidden='true'])):not(.sr-only)) { align-items: flex-start; }
 .turnfin-app label:has([type='checkbox'], [data-slot='checkbox']) > :is([type='checkbox'], [data-slot='checkbox']) { margin-top: 0; flex-shrink: 0; }
-.turnfin-app :is([data-slot='field-description'], .field-hint, .hint) { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 400; color: var(--pc-ink-muted); }
+.turnfin-app :is([data-slot='field-description'], .hint) { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 400; color: var(--pc-ink-muted); }
 @media (min-width: 768px) {
   .turnfin-app :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input) { font-size: var(--pc-text-body); }
   .turnfin-app [data-slot='textarea']:not(.title-input) { line-height: var(--pc-leading-body); }

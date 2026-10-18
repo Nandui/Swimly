@@ -15,7 +15,7 @@ import { attendanceRate, countBy, heldLessons, type Lesson } from "@/modules/act
 const pct = (part: number, whole: number) => (whole ? (part / whole) * 100 : null);
 
 /** Weeks after joining at which we look whether a new swimmer is still swimming. */
-export const STAY_MILESTONES = [4, 8, 13, 26, 52] as const;
+const STAY_MILESTONES = [4, 8, 13, 26, 52] as const;
 
 function quarterOf(date: string) {
   const [y, m] = date.split("-").map(Number);

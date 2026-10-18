@@ -21,7 +21,7 @@ import {
  *
  *  Nothing here returns staff names, other candidates or anything entered by staff. */
 
-export const ACADEMY_SOURCE = "academy";
+const ACADEMY_SOURCE = "academy";
 
 const PUBLIC_COURSE = {
   id: true, siteId: true, status: true, capacity: true, priceCents: true, cancelledAt: true, bookOnline: true,

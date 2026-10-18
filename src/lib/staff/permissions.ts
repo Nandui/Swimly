@@ -372,8 +372,6 @@ export const PERMISSIONS = [
 
 export type PermissionKey = (typeof PERMISSIONS)[number]["key"];
 
-export type PermissionGroup = (typeof PERMISSIONS)[number]["group"];
-
 const ALL_KEYS = new Set<string>(PERMISSIONS.map((p) => p.key));
 
 /** Together these keys grant administrator access. Neither key alone does.

@@ -151,7 +151,6 @@ export async function getOneTeacherInsights(key: string, params: ReportParams, n
   return { ...ctx, session: undefined, detail: first ? buildTeacher(ds, key, await names(first.leavers.map(l => l.studentId))) : null };
 }
 
-export type InsightContext = Omit<Awaited<ReturnType<typeof context>>, "session">;
 export type OverviewInsights = Awaited<ReturnType<typeof getOverviewInsights>>;
 export type ClassesInsights = Awaited<ReturnType<typeof getClassesInsights>>;
 export type ClassInsights = Awaited<ReturnType<typeof getClassInsights>>;

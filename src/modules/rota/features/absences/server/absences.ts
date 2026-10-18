@@ -1,6 +1,6 @@
 import "server-only";
 import { activeStaffCards, withStaff } from "@/lib/directory";
-import { parseDateOnly, today } from "@/lib/format";
+import { parseDateOnly, today, toDateOnlyString } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { subjectsFor } from "@/lib/policy/session";
 import { requireRotaActor } from "@/modules/rota/shared/access";
@@ -13,7 +13,7 @@ import { commitmentsFor } from "@/modules/contributions";
  *  personal-file seam). Run (`rota.manage`) records them for the people it covers. An absence
  *  turns the person's activities into gaps on the rota; it never removes them. */
 
-const iso = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : null);
+const iso = (d: Date | null) => (d ? toDateOnlyString(d) : null);
 
 /** Whose absences this person may see and record, as ids (null: everyone in the organisation). */
 async function reach() {

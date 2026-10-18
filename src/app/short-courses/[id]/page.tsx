@@ -10,7 +10,7 @@ import {
   SHORT_COURSE_AREA_META, SHORT_COURSE_CALL_DUE_META, SHORT_COURSE_META, SHORT_COURSE_ONLINE_META, SHORT_COURSE_PAYMENT_META, SHORT_COURSE_PLACE_META, shortCourse,
   type ShortCourseArea, type ShortCoursePayment, type ShortCourseView,
 } from "@/modules/short-courses/features/courses";
-import { formatDate, plural } from "@/lib/format";
+import { addDaysIso, formatDate, plural } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Short course" };
 
@@ -31,7 +31,7 @@ export default async function ShortCoursePage({ params }: { params: Promise<{ id
   const owed = booked.reduce((n, p) => n + p.owed, 0);
   const dates = course.first ? (course.last && course.last !== course.first ? `${day(course.first)} to ${day(course.last)}` : day(course.first)) : "no sessions yet";
   const lastSession = course.sessions[course.sessions.length - 1];
-  const nextWeek = lastSession ? { date: new Date(new Date(`${lastSession.date}T00:00:00Z`).getTime() + 7 * 86_400_000).toISOString().slice(0, 10),
+  const nextWeek = lastSession ? { date: addDaysIso(lastSession.date, 7),
     startMinutes: lastSession.startMinutes, endMinutes: lastSession.endMinutes, place: lastSession.place } : undefined;
   const personDialog = (p?: Person) => (
     <PersonDialog courseId={course.id} priceCents={course.priceCents} full={full} healthForm={course.type.healthForm} minAge={course.type.minAge}

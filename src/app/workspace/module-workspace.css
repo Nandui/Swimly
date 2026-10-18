@@ -3,55 +3,7 @@
    Docs and Refunds in src/app/theme/poolside.css; this file only arranges the screens. */
 .turnfin-module .workspace-page-content > * { max-width: 1200px; }
 
-/* Page heading */
 .turnfin-module .module-content { min-width: 0; }
-.turnfin-module .module-heading { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
-.turnfin-module .module-heading h1 { font-size: var(--pc-text-page); font-weight: 600; line-height: var(--pc-leading-page); letter-spacing: -0.01em; }
-.turnfin-module .module-heading p { margin-top: 4px; color: var(--pc-ink-muted); }
-
-/* Filters */
-.turnfin-module .module-filters { margin-top: 16px; padding: 24px; border: 0; border-radius: var(--pc-radius-panel); background: var(--pc-surface); box-shadow: none; }
-
-/* Results list */
-.turnfin-module .module-results { margin-top: 16px; }
-.turnfin-module .module-results > p { margin-bottom: 8px; font-weight: 600; color: var(--pc-ink-muted); }
-.turnfin-module .module-results ul { margin: 0; padding: 0; list-style: none; }
-/* A white panel of separate rows (DESIGN.md, Poolside Clear v2). */
-.turnfin-module .module-list { display: flex; flex-direction: column; gap: 8px; padding: 8px 16px 16px; border: 0; border-radius: var(--pc-radius-panel); background: var(--pc-surface); box-shadow: none; }
-.turnfin-module .module-list > li { border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); background: var(--pc-surface); overflow: hidden; }
-.turnfin-module .module-row { min-height: 64px; color: inherit; text-decoration: none; transition: background-color 120ms var(--pc-ease); }
-.turnfin-module .module-row:hover { background: var(--pc-surface-sunken); }
-.turnfin-module .module-row:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: -2px; border-radius: var(--pc-radius-card); }
-.turnfin-module .module-row-title { font-size: var(--pc-text-body); line-height: var(--pc-leading-body); font-weight: 600; }
-.turnfin-module .module-row-arrow { color: var(--pc-ink-muted); transition: translate 200ms var(--pc-ease), color 120ms var(--pc-ease); }
-.turnfin-module .module-row:is(:hover, :focus-visible) .module-row-arrow { translate: 2px 0; color: var(--pc-ink); }
-
-/* Panels */
-.turnfin-module .module-panel { padding: 24px; border: 0; border-radius: var(--pc-radius-panel); background: var(--pc-surface); box-shadow: none; }
-.turnfin-module .module-panel h2 { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 600; }
-.turnfin-module .module-panel h2 +:is(div, dl, ol, p) { margin-top: 16px; }
-.turnfin-module .module-panel dt { font-weight: 600; }
-.turnfin-module .module-panel dd { margin-top: 4px; }
-.turnfin-module .module-panel h3 + p { margin-top: 8px; }
-.turnfin-module .module-panel p + p { margin-top: 8px; }
-
-@media (max-width: 767px) {
-  .turnfin-module .module-heading { margin-bottom: 20px; }
-  .turnfin-module .module-panel,
-  .turnfin-module .module-filters { padding: 16px; }
-  .turnfin-module .module-row { align-items: flex-start; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .turnfin-module .module-row-arrow { transition: color 120ms; }
-  .turnfin-module .module-row:is(:hover, :focus-visible) .module-row-arrow { translate: none; }
-}
-/* A person's record: two panels side by side on wide screens. */
-.turnfin-module .module-columns { display: grid; gap: 16px; }
-@media (min-width: 1024px) { .turnfin-module .module-columns { grid-template-columns: minmax(0, 3fr) minmax(280px, 2fr); } }
-.turnfin-module .module-panel ul { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.turnfin-module .module-panel ul > li { padding: 12px 16px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); }
-/* Ghost buttons inside a panel list read as inline actions: their label lines up with the text. */
-.turnfin-module .module-panel li > button[data-variant='ghost'] { margin-inline-start: calc(var(--pc-control-pad) * -1); }
 
 /* Rota (owner decisions, 6 October 2026; DESIGN.md "Rota's day timeline"). Only layout lives here:
    the blocks are the shared `.pc-block` fills (`data-block="next"` someone on it, `"cover"` a gap).
@@ -153,7 +105,7 @@
 
 /* Purchasing: a purchase order prints as the document the supplier gets, without the workspace around it. */
 @media print {
-  body:has(.turnfin-purchasing) :is(.tf-rail, .tf-top, .tf-bottom, .app-footer, [data-print="hide"]) { display: none !important; }
+  body:has(.turnfin-purchasing) :is(.tf-rail, .tf-top, .tf-bottom, [data-print="hide"]) { display: none !important; }
   .turnfin-purchasing :is(.tf-frame, .pc-panel) { box-shadow: none !important; background: #fff !important; color: #000 !important; }
 }
 

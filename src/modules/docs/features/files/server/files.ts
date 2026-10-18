@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { database, one, rows } from '@/modules/docs/shared/database';
 import { actor, DomainError, audit } from '@/modules/docs/shared/domain';
 import { canWrite, type Draft, type Snapshot, type Attachment } from '@/modules/docs/shared/types';
-import { imageIds } from '@/modules/docs/shared/content';
+import { imageIds } from '@/modules/docs/shared/body';
 const MIME = [
   'application/pdf',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',

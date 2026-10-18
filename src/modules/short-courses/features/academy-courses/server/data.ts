@@ -127,4 +127,3 @@ export async function academyCourse(id: string) {
     candidates,
   };
 }
-export type AcademyCourseView = Awaited<ReturnType<typeof academyCourse>>;

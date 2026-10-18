@@ -3,7 +3,8 @@ import { AuthorizationError, can, canSee, requireSession } from "@/lib/authz";
 import { getSharedCurriculum } from "@/modules/activities/shared/curriculum/data/shared";
 import { isDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { evidenceSchema, historyQuerySchema, type HistoryEvent, type HistoryPage, type HistoryQuery } from "@/modules/activities/features/students/server/history";
+import type { HistoryEvent, HistoryPage, HistoryQuery } from "@/modules/activities/features/students/server/history";
+import { evidenceSchema, historyQuerySchema } from "@/modules/activities/features/students/server/history-schemas";
 
 type HistoryRow = { id: string; at: Date; kind: HistoryEvent["kind"]; courseId: string | null; programmeId: string | null; payload: Record<string, unknown> };
 const text = (value: unknown) => typeof value === "string" ? value : null;

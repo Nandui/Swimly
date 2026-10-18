@@ -30,4 +30,3 @@ export async function toCall(now: Date = new Date()) {
   const people = rows.map((r) => ({ ...r, course: courses.get(r.course.id)! })).map((r) => ({ ...r, ...callDue(r.callBy ?? r.createdAt, now), first: r.course.sessions[0] ? iso(r.course.sessions[0].date) : null }));
   return { who, people, overdue: people.filter((p) => p.due === "overdue").length, soon: people.filter((p) => p.due === "soon").length };
 }
-export type ToCall = Awaited<ReturnType<typeof toCall>>["people"][number];

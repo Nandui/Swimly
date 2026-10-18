@@ -2,7 +2,6 @@
  *  take registers. Entry for the module and its routes. */
 export {
   CourseDialog, CourseStatusButton, PersonDialog, PlaceButton, RegisterDialog, SessionDialog,
-  type CourseEdit, type PersonEdit, type SessionEdit,
 } from "@/modules/short-courses/features/courses/components/forms";
 export { newCourseOptions, shortCourse, shortCoursesHome, type CourseRow, type ShortCourseView } from "@/modules/short-courses/features/courses/server/data";
 export { renameShortCoursePlaces, SHORT_COURSE_SESSIONS, shortCourseCommitments, shortCourseHomeItems } from "@/modules/short-courses/features/courses/server/contributions";

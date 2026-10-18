@@ -15,7 +15,7 @@ import { normaliseQuestion, questionProblem, type Question, type QuestionKind } 
  *  skipped. Pure and client-safe, so the builder can show what it found first. */
 
 export const IMPORT_COLUMNS = ["Type", "Question", "Option A", "Option B", "Option C", "Option D", "Option E", "Option F", "Right answer", "Why"];
-export const MAX_IMPORT_ROWS = 100;
+const MAX_IMPORT_ROWS = 100;
 
 const TYPES: Record<string, QuestionKind> = {
   one: "SINGLE", single: "SINGLE", "one right answer": "SINGLE",

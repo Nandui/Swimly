@@ -29,7 +29,7 @@ export async function queueAlerts(tx: Prisma.TransactionClient, report: { id: st
   await tx.incidentNotification.createMany({ data: recipients.map((recipientId) => ({ reportId: report.id, recipientId })) });
 }
 
-export function alertEmail(report: { id: string; number: number; kind: string; category: string; area: string; occurredOn: string; occurredAt: string }, site: string, origin: string) {
+function alertEmail(report: { id: string; number: number; kind: string; category: string; area: string; occurredOn: string; occurredAt: string }, site: string, origin: string) {
   const reference = incidentNumber(report.number);
   const what = incidentCategories[report.category as IncidentCategory]?.label ?? "Incident";
   const kind = incidentKinds[report.kind as IncidentKind]?.label ?? "Incident";

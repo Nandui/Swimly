@@ -59,4 +59,3 @@ export async function findSiteSwimmers(query: string) {
     };
   });
 }
-export type SiteSwimmer = Awaited<ReturnType<typeof findSiteSwimmers>>[number];
