@@ -2,6 +2,12 @@
   "name": "swimly",
   "version": "1.34.0",
   "private": true,
+  "sideEffects": [
+    "*.css",
+    "./src/modules/server.ts",
+    "./src/modules/*/module.ts",
+    "./src/lib/people/home.ts"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "tsx scripts/check-env.ts && tsx scripts/migrate-production.ts && prisma generate && next build && tsx scripts/migrate-docs.ts && tsx scripts/migrate-hr.ts",
