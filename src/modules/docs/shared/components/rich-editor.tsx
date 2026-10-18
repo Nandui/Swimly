@@ -4,7 +4,7 @@ import { Button } from '@/components/shadcn/button';
 import { Input } from '@/components/shadcn/input';
 import { useState, useEffect } from 'react';
 import { useEditor, EditorContent, type JSONContent } from '@tiptap/react';
-import { safeUrl } from '@/modules/docs/shared/content';
+import { safeUrl } from '@/modules/docs/shared/body';
 import { documentWordCount } from '@/modules/docs/shared/formatting';
 import { plural } from '@/lib/format';
 import { documentExtensions } from '@/modules/docs/shared/editor-extensions';

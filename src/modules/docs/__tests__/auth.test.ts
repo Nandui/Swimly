@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { createDocsTestDatabase } from '@/test/docs-database';
 import { serverModule } from '@/test/server-module';
 import * as domain from '@/modules/docs/shared/domain';
-import { imageIds, paragraph } from '@/modules/docs/shared/content';
+import { imageIds } from '@/modules/docs/shared/body';
+import { paragraph } from '@/modules/docs/shared/content';
 import { one, type Database } from '@/modules/docs/shared/database';
 import type { DocumentContent } from '@/modules/docs/shared/types';
 

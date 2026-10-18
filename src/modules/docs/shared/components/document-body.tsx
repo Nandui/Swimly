@@ -2,7 +2,7 @@ import type { JSONContent } from '@tiptap/react';
 import type { ReactNode } from 'react';
 import Image from 'next/image';
 import { AlertTriangle, Info } from 'lucide-react';
-import { safeUrl, riskBand } from '@/modules/docs/shared/content';
+import { safeUrl, riskBand } from '@/modules/docs/shared/body';
 import { headingLevels, safeAlignment, safeColour, safeFontSize, readableColour } from '@/modules/docs/shared/formatting';
 import { formatDate, riskBandMeta, UNCLASSIFIED_RISK_META, type DocumentContent } from '@/modules/docs/shared/types';
 import { Tag } from '@/components/ui-kit/tag';

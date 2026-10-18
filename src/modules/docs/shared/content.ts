@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { JSONContent } from '@tiptap/react';
 import { documentTypes, type DocumentContent, type RiskMatrix } from '@/modules/docs/shared/types';
+import { plainText, safeUrl } from '@/modules/docs/shared/body';
 import { headingLevels, safeAlignment, safeColour, safeFontSize } from '@/modules/docs/shared/formatting';
 
 const date = z
@@ -102,8 +103,6 @@ const allowedNodes = new Set([
   'taskItem',
 ]);
 const allowedMarks = new Set(['bold', 'italic', 'underline', 'strike', 'link', 'code', 'subscript', 'superscript', 'highlight', 'textStyle']);
-export const safeUrl = (url: string) =>
-  /^(https?:\/\/|mailto:|\/api\/docs\/files\/)/i.test(url) && !/[\u0000-\u001f]/.test(url);
 export function validateBody(body: JSONContent): void {
   let count = 0;
   const walk = (node: JSONContent, depth: number) => {
@@ -141,9 +140,6 @@ export function validateBody(body: JSONContent): void {
   if (JSON.stringify(body).length > 800000)
     throw new Error('Document exceeds the 800 KB content limit.');
 }
-export function plainText(node: JSONContent): string {
-  return [node.text || '', ...(node.content || []).map(plainText)].filter(Boolean).join(' ');
-}
 export function contentSearch(content: DocumentContent): string {
   return [
     content.title,
@@ -152,21 +148,6 @@ export function contentSearch(content: DocumentContent): string {
     plainText(content.body),
     ...content.riskRows.map((r) => `${r.hazard} ${r.people} ${r.controls} ${r.actions}`),
   ].join(' ');
-}
-export function imageIds(node: JSONContent): string[] {
-  return [
-    ...(node.type === 'image'
-      ? [
-          String(node.attrs?.src || '')
-            .split('/')
-            .pop() || '',
-        ]
-      : []),
-    ...(node.content || []).flatMap(imageIds),
-  ];
-}
-export function riskBand(matrix: RiskMatrix | null, score: number) {
-  return matrix?.bands.find((b) => score >= b.min && score <= b.max);
 }
 export const paragraph = (text: string): JSONContent => ({
   type: 'paragraph',
