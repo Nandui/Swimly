@@ -1,5 +1,7 @@
 'use client';
+import dynamic from 'next/dynamic';
 import { Card } from '@/components/shadcn/card';
+import { Skeleton } from '@/components/shadcn/skeleton';
 import { Label } from '@/components/shadcn/label';
 import { NativeSelect, NativeSelectOption } from '@/components/shadcn/native-select';
 import { Checkbox } from '@/components/shadcn/checkbox';
@@ -28,7 +30,6 @@ import {
   RISK_BAND_TONE_META,
   DOC_STATUS_META,
 } from '@/modules/docs/shared/types';
-import { RichEditor } from '@/modules/docs/shared/components/rich-editor';
 import { FilterSelect } from '@/modules/docs/shared/components/ui';
 import { Avatar, AvatarFallback } from '@/components/shadcn/avatar';
 import { nameInitials } from '@/lib/format';
@@ -40,6 +41,11 @@ import { SearchField } from '@/components/ui-kit/search-field';
 import { EmptyState } from '@/components/ui-kit/empty-state';
 import { IconButton } from '@/components/ui/icon-button';
 import { FormDialog } from '@/components/form-dialog';
+
+/** The document editor loads only when a template is open, so the rest of Admin stays light. */
+const RichEditor = dynamic(() => import('@/modules/docs/shared/components/rich-editor').then((m) => m.RichEditor), {
+  loading: () => <Skeleton className="h-64" />,
+});
 export type MailItem = {
   id: string;
   recipient: string;

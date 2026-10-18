@@ -1,11 +1,13 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import type { JSONContent } from "@tiptap/react";
 import { ArrowDown, ArrowUp, ChevronDown, CircleCheck, ClipboardCheck, Eye, FilePlus2, FileText, GraduationCap, Headphones, ListChecks, MessageSquare, Pencil, Plus, Sparkles, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
+import { Skeleton } from "@/components/shadcn/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
 import { RadioGroup } from "@/components/shadcn/radio-group";
 import { ConfirmAction } from "@/components/confirm-action";
@@ -24,7 +26,6 @@ import { blankedPrompt } from "@/modules/training/shared/questions";
 import {
   addLesson, addSection, moveLesson, moveSection, removeLesson, removeSection, renameSection, saveLesson, startFromOldText,
 } from "@/modules/training/features/builder/server/actions";
-import { RichText } from "@/modules/training/features/builder/components/rich-text";
 import { uploadCourseFile, type UploadedFile } from "@/modules/training/features/builder/components/upload";
 import { ExamPanel, QuestionsPanel, type ExamReport } from "@/modules/training/features/builder/components/question-bank";
 import { CardsEditor, ChecklistEditor, ExploreEditor, HandInEditor, ScenarioEditor, SortingEditor } from "@/modules/training/features/builder/components/lesson-kinds";
@@ -32,6 +33,12 @@ import { qualityTips } from "@/modules/training/shared/quality";
 import { PracticalPanel } from "@/modules/training/features/builder/components/practical";
 import type { ObservationStep } from "@/modules/training/shared/on-the-job";
 import { CopyIntoSection, CoverPicker, ReviewComments, type ReviewComment, type VersionNote } from "@/modules/training/features/builder/components/library";
+
+/** The lesson editor is the heaviest part of Training, so it loads with the lesson that shows it:
+ *  the Courses list shares this feature's entry and stays light. */
+const RichText = dynamic(() => import("@/modules/training/features/builder/components/rich-text").then((m) => m.RichText), {
+  loading: () => <Skeleton className="h-64" />,
+});
 
 type Props = {
   courseId: string;
