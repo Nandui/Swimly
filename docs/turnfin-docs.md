@@ -15,8 +15,8 @@ the Docs and Refunds layout CSS (`docs.css`, `integration.css`, `editor.css`) an
 wrappers are scoped to `.turnfin-docs`, which `src/app/docs/layout.tsx` and
 `src/app/refunds/layout.tsx` put around the frame; it never restyles shared controls, which
 come from `src/components/shadcn`.
-Every page, the Reception Portal included, gets Poolside Clear from the root layout; the
-earlier Docs theme (`brand.css`) is retired. See docs/reception-portal.md.
+Every page gets Poolside Clear from the root layout; the earlier Docs theme (`brand.css`)
+is retired.
 
 ## Staff access
 

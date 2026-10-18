@@ -1,7 +1,7 @@
 # Turnfin Refunds
 
 Refunds is a separate staff workspace for all LeisureWorld services, reached from
-the general Turnfin portal and Reception Portal. It shares staff identity and the
+the home page. It shares staff identity and the
 main Turnfin database. It never sends money, changes Legend, emails customers or
 requires a swimmer record. Docs retains its separate database. Refunds opens in the
 shared module frame and uses the whole app's Poolside Clear v2 design.
@@ -120,9 +120,7 @@ version.
 3. Through Roles, add the Refunds screen and `refunds.request` to the agreed
    reception staff grants. Add `refunds.review` and/or `refunds.process` to the
    agreed finance staff grants. Preserve every existing grant and role home.
-4. If activating the pending Reception Portal at the same time, set its explicit
-   home preference as described in [Reception Portal](reception-portal.md).
-5. Verify sign-in, grants, a permitted staff-only notification and protected
+4. Verify sign-in, grants, a permitted staff-only notification and protected
    downloads in the published environment. Use an authorised test request;
    do not create fictional customer records in production without agreement.
 
@@ -138,7 +136,7 @@ inheritance, self-review prevention, concurrent decisions, atomic audit rollback
 duplicate operation retries, reduced approvals, returns/resubmission, withdrawal,
 cancelled approvals, final payment records, receipt bytes/access/size/type/count,
 same-origin upload routes, active recipients, revoked access and email failures.
-Parent sign-in/API, role/screen, navigation and Reception Portal regressions run
+Parent sign-in/API, role/screen and navigation regressions run
 alongside Refunds checks.
 
 
