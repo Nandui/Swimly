@@ -24,7 +24,7 @@ import { publishCourse } from "@/modules/training/features/builder/server/action
 import {
   addReviewComment, copyIntoSection, courseToCopyFrom, createFromTemplate, duplicateCourse, importQuestions, resolveReviewComment, setCourseCover,
 } from "@/modules/training/features/builder/server/library";
-import { uploadCourseFile, type UploadedFile } from "@/modules/training/features/builder/components/rich-text";
+import { uploadCourseFile, type UploadedFile } from "@/modules/training/features/builder/components/upload";
 
 /** The builder's library tools (docs/training.md, e-learning phase 3): start
  *  from a template or a copy, copy lessons and questions in, paste questions

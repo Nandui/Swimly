@@ -102,3 +102,7 @@ export const incidentNumber = (n: number) => `INC-${String(n).padStart(5, "0")}`
 /** Who is looking: what they may do anywhere. Each report's own site is still
  *  checked with the policy engine before anything is shown or changed. */
 export type IncidentsActor = { id: string; name: string; orgId: string | null; superadmin: boolean; review: boolean; signoff: boolean };
+
+/** The level a report is handled at: the worse of what happened and what could have. Here rather
+ *  than with the rules so screens that only show the level do not load the form validation. */
+export const levelOf = (actual: number, potential: number) => Math.max(actual, potential);

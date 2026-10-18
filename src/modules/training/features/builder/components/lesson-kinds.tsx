@@ -15,7 +15,7 @@ import {
   fileSrc, HAND_IN_PARTS, MAX_CARDS, MAX_CHOICES, MAX_GROUPS, MAX_ITEMS, MAX_SCENES, MAX_SORTS, MAX_SPOTS, scenarioProblems, sortingProblems,
   type ChecklistItem, type ExploreSpot, type Flashcard, type HandInPart, type HandInSettings, type LessonData, type ScenarioChoice, type ScenarioStep, type SortItem,
 } from "@/modules/training/shared/lessons";
-import type { UploadedFile } from "@/modules/training/features/builder/components/rich-text";
+import type { UploadedFile } from "@/modules/training/features/builder/components/upload";
 
 /** Editors for the lesson kinds that aren't text (e-learning phases 3 and 8):
  *  Scenario, Flashcards, Checklist, Sort into groups, Explore a picture and

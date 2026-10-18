@@ -2,6 +2,8 @@
  *  where they stop, how long they take and how the exam goes. Pure, so it is tested without a
  *  database; the server reads build the rows. Cancelled training never counts. */
 
+import { toDateOnlyString as isoDay } from "@/lib/format";
+
 export type Attempt = { number: number; percent: number | null; passed: boolean | null; submittedAt: Date | null };
 export type LearnerFacts = {
   userId: string;
@@ -14,7 +16,6 @@ export type LearnerFacts = {
 };
 
 const DAY = 86_400_000;
-const isoDay = (d: Date) => d.toISOString().slice(0, 10);
 
 /** The middle value, or null for none. Halves are rounded to one decimal. */
 export function median(values: number[]): number | null {

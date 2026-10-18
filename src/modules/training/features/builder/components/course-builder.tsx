@@ -24,7 +24,8 @@ import { blankedPrompt } from "@/modules/training/shared/questions";
 import {
   addLesson, addSection, moveLesson, moveSection, removeLesson, removeSection, renameSection, saveLesson, startFromOldText,
 } from "@/modules/training/features/builder/server/actions";
-import { RichText, uploadCourseFile, type UploadedFile } from "@/modules/training/features/builder/components/rich-text";
+import { RichText } from "@/modules/training/features/builder/components/rich-text";
+import { uploadCourseFile, type UploadedFile } from "@/modules/training/features/builder/components/upload";
 import { ExamPanel, QuestionsPanel, type ExamReport } from "@/modules/training/features/builder/components/question-bank";
 import { CardsEditor, ChecklistEditor, ExploreEditor, HandInEditor, ScenarioEditor, SortingEditor } from "@/modules/training/features/builder/components/lesson-kinds";
 import { qualityTips } from "@/modules/training/shared/quality";

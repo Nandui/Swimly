@@ -20,7 +20,7 @@ import { Notice } from "@/components/ui-kit/notice";
 import { THEME } from "@/modules/training/shared/components/dialog-kit";
 import { blankedPrompt, EXAM_DEFAULTS, paperSize, QUESTION_KIND_META, QUESTION_KINDS, readBlanks, readNumber, type ExamSettings, type Question, type QuestionKind } from "@/modules/training/shared/questions";
 import { addQuestion, moveQuestion, removeQuestion, saveExam, saveQuestion, type QuestionInput } from "@/modules/training/features/builder/server/actions";
-import { uploadCourseFile, type UploadedFile } from "@/modules/training/features/builder/components/rich-text";
+import { uploadCourseFile, type UploadedFile } from "@/modules/training/features/builder/components/upload";
 import { SpotPicker, type SpotDraft } from "@/modules/training/features/builder/components/spot-picker";
 import { ImportQuestions } from "@/modules/training/features/builder/components/library";
 

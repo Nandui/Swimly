@@ -13,8 +13,7 @@ import { ChoiceRow } from "@/components/ui/choice-row";
 import { toast } from "@/components/ui/toast";
 import { Notice } from "@/components/ui-kit/notice";
 import { closeReport, triageReport } from "@/modules/incidents/features/triage/server/actions";
-import { levelOf } from "@/modules/incidents/shared/rules";
-import { severities, type Severity } from "@/modules/incidents/shared/types";
+import { levelOf, severities, type Severity } from "@/modules/incidents/shared/types";
 
 const LEVELS = Object.keys(severities).map(Number) as Severity[];
 

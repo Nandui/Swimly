@@ -17,12 +17,11 @@ import { CALLOUT_META, CALLOUT_TONES, fileSrc, safeHref, videoFor, type CalloutT
 import {
   addToBlock, BLOCK_META, blockAt, blockExtensions, CheckQuestions, CourseFiles, insertBlock, insertCheck, insertFileButton, insertVideo, removeBlock, setTone,
 } from "@/modules/training/features/builder/components/blocks";
+import { uploadCourseFile, type UploadedFile } from "@/modules/training/features/builder/components/upload";
 
 /** The lesson text editor: what a creator needs and nothing more. Headings,
  *  emphasis, lists, a key-point quote, links, images, tables and a divider.
  *  Saved as Tiptap JSON and cleaned on the server (`cleanDoc`). */
-
-export type UploadedFile = { id: string; name: string; mime: string; size: number };
 
 function extensions() {
   return [
@@ -30,17 +29,6 @@ function extensions() {
     Image, Table.configure({ resizable: false }), TableRow, TableHeader, TableCell,
     ...blockExtensions(),
   ];
-}
-
-/** Sends one file to the course and returns it. Errors are sentences for the author. */
-export async function uploadCourseFile(courseId: string, file: File): Promise<UploadedFile> {
-  const form = new FormData();
-  form.set("courseId", courseId);
-  form.set("file", file);
-  const response = await fetch("/training/files", { method: "POST", body: form }).catch(() => null);
-  const data = await response?.json().catch(() => null);
-  if (!response || !data?.ok) throw new Error(data?.error ?? "Could not add the file. Try again.");
-  return data.file as UploadedFile;
 }
 
 function Tool({ label, icon: Icon, onClick, active, disabled }: { label: string; icon: LucideIcon; onClick: () => void; active?: boolean; disabled?: boolean }) {

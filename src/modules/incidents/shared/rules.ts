@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { addDaysIso, isDateOnly, today } from "@/lib/format";
-import { ageGroups, incidentCategories, incidentKinds, MAX_WHYS, personTypes, type IncidentsActor } from "@/modules/incidents/shared/types";
+import { ageGroups, incidentCategories, incidentKinds, levelOf, MAX_WHYS, personTypes, type IncidentsActor } from "@/modules/incidents/shared/types";
 
 /** Incidents' rules, pure so they can be tested without a database
  *  (docs/incidents.md). Actions call these before they write anything. */
@@ -52,9 +52,6 @@ export function reportProblem(r: Report, now = new Date()): string | null {
 export function isSerious(r: Pick<Report, "category"> & { people: readonly { ambulance: boolean; hospital: boolean }[] }): boolean {
   return incidentCategories[r.category as keyof typeof incidentCategories]?.serious === true || r.people.some((p) => p.ambulance || p.hospital);
 }
-
-/** The level a report is handled at: the worse of what happened and what could have. */
-export const levelOf = (actual: number, potential: number) => Math.max(actual, potential);
 
 /** Weekdays only. Public holidays are not counted, so the date is never later than the law's. */
 export function addWorkingDays(iso: string, days: number): string {
