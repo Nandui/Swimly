@@ -4,6 +4,11 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.36.1 · 19 October 2026 · Swim school analytics: a richer finish
+
+- The **Analytics** pages have a more polished look: a soft wash of colour behind the top of each page, the swimmer count on **Overview** on a deep blue card, and each headline figure on its own card.
+- Charts and bars now run from blue into violet. Nothing has moved, and every figure, filter and link works as before.
+
 ## 1.36.0 · 19 October 2026 · Swim school analytics: a new dashboard look
 
 - Every **Analytics** page has a new, clearer layout: the pages sit along the top as tabs, and the period, site and programme choices stay in view as you scroll, with links to each part of the page.

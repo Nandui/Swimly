@@ -96,12 +96,7 @@ export function AreaChart({ points, label, unit, kind = "count", height = 220, c
     <svg viewBox={`0 0 ${W} ${H}`} className="ins-svg" role="img" aria-label={`${label}. From ${format(points[0].y)} to ${format(last!.y)}${unit ? ` ${unit}` : ""}. Use the arrow keys to read each point.`}
       tabIndex={0} onKeyDown={onKeyDown} onBlur={() => setActive(null)}
       onPointerMove={event => setActive(bandAt(event, points.length, L, R, W, "point"))}>
-      <defs>
-        <linearGradient id={`fill-${id}`} x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" className="ins-fill-top" />
-          <stop offset="100%" className="ins-fill-bottom" />
-        </linearGradient>
-      </defs>
+      <Gradients id={id} />
       {ticks.map(t => <g key={t}>
         <line className={t === 0 ? "ins-baseline" : "ins-gridline"} x1={L} x2={W - R} y1={y(t)} y2={y(t)} />
         <text className="ins-axis" x={L - 8} y={y(t) + 4} textAnchor="end">{format(t)}</text>
@@ -109,7 +104,7 @@ export function AreaChart({ points, label, unit, kind = "count", height = 220, c
       {points.map((p, i) => (i % every === 0 && points.length - 1 - i >= every * 0.6) || i === points.length - 1 ? <text key={p.x} className="ins-axis" x={x(i)} y={H - 6} textAnchor={i === 0 ? "start" : i === points.length - 1 ? "end" : "middle"}>{p.tick}</text> : null)}
       <path d={area} fill={`url(#fill-${id})`} />
       {other ? <path className="ins-line-compare" d={other} /> : null}
-      <path className="ins-line" d={line} />
+      <path className="ins-line" d={line} stroke={`url(#line-${id})`} />
       {shown && active !== null ? <>
         <line className="ins-cross" x1={x(active)} x2={x(active)} y1={T} y2={y(0)} />
         <circle className="ins-dot" cx={x(active)} cy={y(shown.y)} r={5} />
@@ -128,6 +123,7 @@ export function AreaChart({ points, label, unit, kind = "count", height = 220, c
 export function FlowChart({ rows, a, b, label, height = 220 }: { rows: { key: string; tick: string; title: string; a: number; b: number }[]; a: string; b: string; label: string; height?: number }) {
   const [ref, W] = useWidth();
   const H = height, L = 32, R = 8, T = 10, B = 26;
+  const id = React.useId().replace(/:/g, "");
   const { active, setActive, onKeyDown } = useActive(rows.length);
   const { top, ticks } = niceScale(Math.max(...rows.flatMap(r => [r.a, r.b])));
   const band = (W - L - R) / Math.max(1, rows.length);
@@ -141,6 +137,7 @@ export function FlowChart({ rows, a, b, label, height = 220 }: { rows: { key: st
     <svg viewBox={`0 0 ${W} ${H}`} className="ins-svg" role="img" aria-label={`${label}. Use the arrow keys to read each period.`}
       tabIndex={0} onKeyDown={onKeyDown} onBlur={() => setActive(null)}
       onPointerMove={event => setActive(bandAt(event, rows.length, L, R, W, "band"))}>
+      <Gradients id={id} />
       {ticks.filter((_, i) => i === 0 || i === ticks.length - 1 || (ticks.length % 2 === 1 && i === (ticks.length - 1) / 2)).flatMap(t => t === 0 ? [{ t, dy: 0 }] : [{ t, dy: -t * scale }, { t, dy: t * scale }]).map(({ t, dy }) => <g key={dy}>
         <line className={t === 0 ? "ins-baseline" : "ins-gridline"} x1={L} x2={W - R} y1={mid + dy} y2={mid + dy} />
         <text className="ins-axis" x={L - 6} y={mid + dy + 4} textAnchor="end">{count(t)}</text>
@@ -150,8 +147,8 @@ export function FlowChart({ rows, a, b, label, height = 220 }: { rows: { key: st
         const up = r.a * scale, down = r.b * scale;
         return <g key={r.key} data-active={active === i ? "" : undefined} className="ins-band">
           {active === i ? <rect className="ins-band-hover" x={L + band * i} y={T} width={band} height={H - T - B} /> : null}
-          {up ? <path className="ins-col-a" d={roundedUp(cx - bar / 2, mid - 1, bar, up)} /> : null}
-          {down ? <path className="ins-col-b" d={roundedDown(cx - bar / 2, mid + 1, bar, down)} /> : null}
+          {up ? <path className="ins-col-a" d={roundedUp(cx - bar / 2, mid - 1, bar, up)} fill={`url(#col-a-${id})`} /> : null}
+          {down ? <path className="ins-col-b" d={roundedDown(cx - bar / 2, mid + 1, bar, down)} fill={`url(#col-b-${id})`} /> : null}
           {i % every === 0 ? <text className="ins-axis" x={cx} y={H - 6} textAnchor="middle">{r.tick}</text> : null}
         </g>;
       })}
@@ -172,6 +169,7 @@ export function ColumnChart({ rows, label, kind = "count", height = 200 }: {
   const [ref, W] = useWidth();
   const H = height, L = 8, R = 8, T = 22, B = 26;
   const format = FORMATS[kind];
+  const id = React.useId().replace(/:/g, "");
   const { active, setActive, onKeyDown } = useActive(rows.length);
   const top = Math.max(1, ...rows.map(r => r.value));
   const band = (W - L - R) / Math.max(1, rows.length);
@@ -181,12 +179,13 @@ export function ColumnChart({ rows, label, kind = "count", height = 200 }: {
     <svg viewBox={`0 0 ${W} ${H}`} className="ins-svg" role="img" aria-label={`${label}. Use the arrow keys to read each column.`}
       tabIndex={0} onKeyDown={onKeyDown} onBlur={() => setActive(null)}
       onPointerMove={event => setActive(bandAt(event, rows.length, L, R, W, "band"))}>
+      <Gradients id={id} />
       <line className="ins-baseline" x1={L} x2={W - R} y1={y(0)} y2={y(0)} />
       {rows.map((r, i) => {
         const cx = L + band * i + band / 2;
         const h = y(0) - y(r.value);
         return <g key={r.key} className="ins-band" data-active={active === i ? "" : undefined}>
-          {h > 0 ? <path className="ins-col-a" d={roundedUp(cx - bar / 2, y(0), bar, h)} /> : null}
+          {h > 0 ? <path className="ins-col-a" d={roundedUp(cx - bar / 2, y(0), bar, h)} fill={`url(#col-a-${id})`} /> : null}
           <text className="ins-cap" x={cx} y={y(r.value) - 7} textAnchor="middle">{format(r.value)}</text>
           <text className="ins-axis" x={cx} y={H - 6} textAnchor="middle">{band < 72 && r.short ? r.short : r.tick}</text>
         </g>;
@@ -194,6 +193,29 @@ export function ColumnChart({ rows, label, kind = "count", height = 200 }: {
     </svg>
     <Table containerClassName="sr-only"><TableCaption>{label}</TableCaption><TableBody>{rows.map(r => <TableRow key={r.key}><TableHead scope="row">{r.tick}</TableHead><TableCell>{format(r.value)}</TableCell></TableRow>)}</TableBody></Table>
   </figure>;
+}
+
+/** The chart's gradients, coloured from the stylesheet: the area wash, the line running from blue
+ *  into violet, and each series' columns deepening towards the data end. */
+function Gradients({ id }: { id: string }) {
+  return <defs>
+    <linearGradient id={`fill-${id}`} x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" className="ins-fill-top" />
+      <stop offset="100%" className="ins-fill-bottom" />
+    </linearGradient>
+    <linearGradient id={`line-${id}`} x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0%" className="ins-stop-a" />
+      <stop offset="100%" className="ins-stop-v" />
+    </linearGradient>
+    <linearGradient id={`col-a-${id}`} x1="0" x2="0" y1="1" y2="0">
+      <stop offset="0%" className="ins-stop-a" />
+      <stop offset="100%" className="ins-stop-v" />
+    </linearGradient>
+    <linearGradient id={`col-b-${id}`} x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" className="ins-stop-b" />
+      <stop offset="100%" className="ins-stop-b2" />
+    </linearGradient>
+  </defs>;
 }
 
 /** A column rising from `base`: square at the baseline, 4px round at the data end. */
