@@ -5,6 +5,7 @@ import { Button } from "@/components/shadcn/button";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { Tag } from "@/components/ui-kit/tag";
 import { FilesPanel } from "@/modules/incidents/features/files";
+import { FootagePanel, footageOnReport } from "@/modules/incidents/features/footage";
 import { Investigation, ReopenReport } from "@/modules/incidents/features/investigation";
 import { AddAddendum } from "@/modules/incidents/features/report";
 import { incidentNumber, incidentReport, incidentStatuses, ReportView, seriousMeta } from "@/modules/incidents/features/reports";
@@ -12,11 +13,12 @@ import { CloseForm, TriageForm } from "@/modules/incidents/features/triage";
 
 export const metadata: Metadata = { title: "Incident report" };
 
-/** One report: as written, its triage, photos and investigation, its history,
+/** One report: as written, its triage, photos, CCTV footage and investigation, its history,
  *  and what this person may do next. */
 export default async function IncidentPage({ params }: { params: Promise<{ id: string }> }) {
   const data = await incidentReport((await params).id);
   const { report: r, can } = data;
+  const footage = await footageOnReport(r.id);
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title={<span className="tabular-nums">{incidentNumber(r.number)}</span>} back={{ href: "/incidents", label: "Reports" }}
@@ -28,6 +30,7 @@ export default async function IncidentPage({ params }: { params: Promise<{ id: s
         </span>} />
       <ReportView data={data} forms={<>
         <FilesPanel reportId={r.id} files={r.files} userId={data.who.id} canAdd={can.addFiles} canRemoveAny={can.removeFiles} />
+        {footage ? <FootagePanel reportId={r.id} data={footage} /> : null}
         {can.triage ? <TriageForm id={r.id} version={r.version} category={r.category} {...data.triage} /> : null}
         {can.seeInvestigation && r.status !== "reported" && (r.status === "investigating" || r.statements.length || r.actions.length || r.rootCause) ? (
           <Investigation id={r.id} version={r.version} today={data.today} occurredOn={r.occurredOn} statements={r.statements} whys={r.whys} rootCause={r.rootCause}

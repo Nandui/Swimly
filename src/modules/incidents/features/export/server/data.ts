@@ -7,7 +7,7 @@ import { recordEvent, reportRights } from "@/modules/incidents/shared/service";
 
 /** One report in full, for the insurer or a solicitor (docs/incidents.md,
  *  "Export"): everything on it, investigation included, with the file names
- *  but not the files. Manage at the report's site only, never your own, and
+ *  and CCTV video names but not the files. Manage at the report's site only, never your own, and
  *  every opening goes in the report's history and the audit log. */
 export async function incidentExport(id: string) {
   const who = await requireIncidentsActor();
@@ -19,6 +19,7 @@ export async function incidentExport(id: string) {
       statements: { orderBy: { createdAt: "asc" } },
       actions: { orderBy: { createdAt: "asc" } },
       files: { where: { removedAt: null }, orderBy: { createdAt: "asc" }, select: { id: true, name: true, size: true, addedByName: true, createdAt: true } },
+      footage: { where: { removedAt: null, receivedAt: { not: null } }, orderBy: { receivedAt: "asc" }, select: { id: true, name: true, size: true, uploadedBy: true, receivedAt: true } },
       events: { orderBy: { createdAt: "asc" } },
     },
   });
