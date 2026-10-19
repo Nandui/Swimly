@@ -18,16 +18,15 @@ export type FilterBarProps = {
   custom: { current: boolean; start: string; end: string; today: string; label: string; quick: Choice[]; keep: Record<string, string> };
   sites: Choice[] | null;
   programme: { value: string; options: { value: string; label: string; href: string }[] } | null;
-  summary: { range: string; compare: string; asOf: string | null };
   reset: string | null;
-  sections: { id: string; label: string }[];
 };
 
-/** Everything a report is narrowed by, in one toolbar that stays in view: the period (a preset, a
- *  quick pick or any two days), the sites and the programme, then what the page shows and its
- *  sections. Each choice is a link or a navigation, so the address always says what the page shows
- *  and can be shared or bookmarked. */
-export function FilterBar({ path, presets, custom, sites, programme, summary, reset, sections }: FilterBarProps) {
+/** Which report, then everything it is narrowed by, in one toolbar under the page title that stays in view:
+ *  the period (one menu holding the usual lengths, quick picks and any two days), the sites and the
+ *  programme, and a way back to the defaults at the end. What the choices add up to is said once,
+ *  under the title. Each choice is a link or a navigation, so the address always says what the page
+ *  shows and can be shared or bookmarked. */
+export function FilterBar({ path, presets, custom, sites, programme, reset, picker }: FilterBarProps & { picker: React.ReactNode }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
@@ -36,49 +35,55 @@ export function FilterBar({ path, presets, custom, sites, programme, summary, re
   const id = useId();
   const valid = Boolean(from && to && from <= to && to <= custom.today);
   const go = (href: string) => startTransition(() => router.push(href, { scroll: false }));
+  const preset = presets.find(p => p.current);
+  const current = preset ? `Last ${preset.label}` : custom.label;
 
-  return <section className="ins-filters" aria-label="Filters" data-pending={pending ? "" : undefined}>
+  return <section className="ins-filters" aria-label="Report and filters" data-pending={pending ? "" : undefined}>
     <div className="ins-filters-row">
+      {picker}
+      <span className="ins-filters-divider" aria-hidden="true" />
       <div className="ins-filter">
-        <span className="sr-only" id={`${id}-period`}>Period</span>
-        <nav aria-labelledby={`${id}-period`} className="pc-seg">
-          {presets.map(p => <Link key={p.href} href={p.href} scroll={false} className="pc-seg-item" aria-current={p.current ? "true" : undefined}>{p.label}</Link>)}
-          <Popover open={open} onOpenChange={value => { setOpen(value); if (value) { setFrom(custom.start); setTo(custom.end); } }}>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" className="pc-seg-item" aria-pressed={custom.current}>
-                <CalendarRange aria-hidden="true" strokeWidth={1.75} />{custom.current ? custom.label : "Custom"}<ChevronDown aria-hidden="true" strokeWidth={1.75} />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="start" className="ins-range-pop">
-              <p className="ins-range-title">Quick picks</p>
-              <ul className="ins-range-quick">
-                {custom.quick.map(q => <li key={q.href}>
-                  <Link href={q.href} scroll={false} className="ins-range-chip" aria-current={q.current ? "true" : undefined} onClick={() => setOpen(false)}>{q.label}</Link>
-                </li>)}
-              </ul>
-              <form className="ins-range-form" onSubmit={event => {
-                event.preventDefault();
-                if (!valid) return;
-                setOpen(false);
-                go(`${path}?${new URLSearchParams({ ...custom.keep, from, to }).toString()}`);
-              }}>
-                <p className="ins-range-title">Any two days</p>
-                <div className="ins-range-fields">
-                  <div className="flex min-w-0 flex-col gap-1.5">
-                    <Label htmlFor={`${id}-from`}>From</Label>
-                    <Input id={`${id}-from`} type="date" value={from} max={to || custom.today} onChange={e => setFrom(e.target.value)} className="h-(--pc-control-height)" required />
-                  </div>
-                  <div className="flex min-w-0 flex-col gap-1.5">
-                    <Label htmlFor={`${id}-to`}>To</Label>
-                    <Input id={`${id}-to`} type="date" value={to} min={from || undefined} max={custom.today} onChange={e => setTo(e.target.value)} className="h-(--pc-control-height)" required />
-                  </div>
+        <Popover open={open} onOpenChange={value => { setOpen(value); if (value) { setFrom(custom.start); setTo(custom.end); } }}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="ins-filter-button">
+              <CalendarRange aria-hidden="true" strokeWidth={1.75} /><span className="sr-only">Period: </span>{current}<ChevronDown aria-hidden="true" strokeWidth={1.75} />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="ins-range-pop">
+            <p className="ins-range-title" id={`${id}-period`}>Period</p>
+            <ul className="ins-range-quick" aria-labelledby={`${id}-period`}>
+              {presets.map(p => <li key={p.href}>
+                <Link href={p.href} scroll={false} className="ins-range-chip" aria-current={p.current ? "true" : undefined} onClick={() => setOpen(false)}>Last {p.label}</Link>
+              </li>)}
+            </ul>
+            <p className="ins-range-title" id={`${id}-quick`}>Quick picks</p>
+            <ul className="ins-range-quick" aria-labelledby={`${id}-quick`}>
+              {custom.quick.map(q => <li key={q.href}>
+                <Link href={q.href} scroll={false} className="ins-range-chip" aria-current={q.current ? "true" : undefined} onClick={() => setOpen(false)}>{q.label}</Link>
+              </li>)}
+            </ul>
+            <form className="ins-range-form" onSubmit={event => {
+              event.preventDefault();
+              if (!valid) return;
+              setOpen(false);
+              go(`${path}?${new URLSearchParams({ ...custom.keep, from, to }).toString()}`);
+            }}>
+              <p className="ins-range-title">Any two days</p>
+              <div className="ins-range-fields">
+                <div className="flex min-w-0 flex-col gap-1.5">
+                  <Label htmlFor={`${id}-from`}>From</Label>
+                  <Input id={`${id}-from`} type="date" value={from} max={to || custom.today} onChange={e => setFrom(e.target.value)} className="h-(--pc-control-height)" required />
                 </div>
-                <p className="ins-range-hint">Compared with the same number of days just before. Up to three years.</p>
-                <Button type="submit" disabled={!valid} className="h-(--pc-control-height) rounded-full">Show these dates</Button>
-              </form>
-            </PopoverContent>
-          </Popover>
-        </nav>
+                <div className="flex min-w-0 flex-col gap-1.5">
+                  <Label htmlFor={`${id}-to`}>To</Label>
+                  <Input id={`${id}-to`} type="date" value={to} min={from || undefined} max={custom.today} onChange={e => setTo(e.target.value)} className="h-(--pc-control-height)" required />
+                </div>
+              </div>
+              <p className="ins-range-hint">Compared with the same number of days just before. Up to three years.</p>
+              <Button type="submit" disabled={!valid} className="h-(--pc-control-height) rounded-full">Show these dates</Button>
+            </form>
+          </PopoverContent>
+        </Popover>
       </div>
       {sites ? <div className="ins-filter">
         <span className="sr-only" id={`${id}-sites`}>Sites</span>
@@ -95,14 +100,7 @@ export function FilterBar({ path, presets, custom, sites, programme, summary, re
           {programme.options.map(o => <NativeSelectOption key={o.value} value={o.value}>{o.label}</NativeSelectOption>)}
         </NativeSelect>
       </div> : null}
-    </div>
-    <div className="ins-filters-summary">
-      <p aria-live="polite"><strong>{summary.range}</strong><span>{summary.compare}</span>{summary.asOf ? <span>{summary.asOf}</span> : null}</p>
-      {reset ? <Link href={reset} scroll={false} className="ins-filters-reset"><RotateCcw aria-hidden="true" strokeWidth={1.75} />Reset filters</Link> : null}
-      {sections.length ? <nav aria-label="On this page" className="ins-jump">
-        <span className="ins-jump-label">On this page</span>
-        {sections.map(s => <a key={s.id} href={`#${s.id}`}>{s.label}</a>)}
-      </nav> : null}
+      {reset ? <Link href={reset} scroll={false} className="ins-filters-reset"><RotateCcw aria-hidden="true" strokeWidth={1.75} />Reset</Link> : null}
     </div>
   </section>;
 }
