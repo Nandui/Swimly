@@ -6,7 +6,7 @@ import { logAudit } from "@/lib/audit";
 import { staffContact } from "@/lib/directory";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { areaProblem } from "@/lib/setup/data";
+import { placeProblem } from "@/lib/setup/data";
 import { ageOn, centsOf, clockOf, MAX_WEEKS, SHORT_COURSE_PAYMENTS, takesPlace, weeklyDates } from "@/modules/short-courses/shared/rules";
 import { atSite, courseFor, iso, optionalDate, refresh } from "@/modules/short-courses/shared/server";
 
@@ -61,7 +61,7 @@ export async function saveCourse(id: string | null, input: CourseInput): Promise
     const start = clockOf(d.start), end = clockOf(d.end);
     if (start === null || end === null) return fail("Use times like 18:30.");
     if (end <= start) return fail("The session ends before it starts.");
-    const problem = await areaProblem(siteId, d.place);
+    const problem = await placeProblem(siteId, d.place);
     if (problem) return fail(problem);
     schedule = { dates: weeklyDates(d.firstDay, d.weeks), start, end };
   }
@@ -117,7 +117,7 @@ export async function saveSession(courseId: string, id: string | null, input: Se
   if (end <= start) return fail("The session ends before it starts.");
   const before = id ? await prisma.shortCourseSession.findFirst({ where: { id, courseId }, select: { place: true } }) : null;
   if (id && !before) return fail("That session is no longer on the course.");
-  const problem = await areaProblem(at.site.id, d.place, before?.place);
+  const problem = await placeProblem(at.site.id, d.place, before?.place);
   if (problem) return fail(problem);
   const data = { date: parseDateOnly(d.date), startMinutes: start, endMinutes: end, place: d.place, note: d.note };
   await prisma.$transaction(async (tx) => {

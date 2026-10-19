@@ -19,7 +19,7 @@ export default async function AreasPage() {
   const { sites, canKeep, qualifications } = await areasPage();
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Areas" description="Where work happens at each site, how many lanes a pool has, and the staff each needs while it is open. The rota, bookings and swim classes pick from these, in this order." />
+      <PageHeader title="Areas" description="Where work happens at each site, how many lanes a pool has, and the staff each needs while it is open. The rota, bookings, swim classes and short courses pick from these, in this order, and can take a pool whole or by lane." />
       {sites.length === 0 ? <EmptyState icon="building" title="No open sites" hint="Add a site under Sites first." /> : sites.map((site) => {
         const live = site.areas.filter((a) => !a.archivedAt);
         return (
@@ -38,7 +38,8 @@ export default async function AreasPage() {
                     <li key={area.id} className="pc-row" {...(area.archivedAt ? { "data-muted": "" } : {})}>
                       <span className="pc-tile-icon" aria-hidden="true"><MapPin /></span>
                       <span className="pc-row-body"><span className="pc-row-title">{area.name}</span>
-                        {area.lanes ? <span className="pc-row-hint">{area.lanes} {area.lanes === 1 ? "lane" : "lanes"}, booked whole or by lane</span> : null}
+                        {area.lanes ? <span className="pc-row-hint">{area.lanes === 1 ? "Lane 1" : `Lanes 1 to ${area.lanes}`}, booked whole or by lane</span>
+                          : /pool/i.test(area.name) ? <span className="pc-row-hint">No lanes yet. Change it to give the pool its lanes.</span> : null}
                         {staffingWords(area) ? <span className="pc-row-hint">{staffingWords(area)}</span> : null}
                         {area.together.map((t) => {
                           const other = site.areas.find((a) => a.id === t.withAreaId);

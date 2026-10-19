@@ -52,3 +52,9 @@ test("two bookings can't hold the same lane at the same time on a day they both 
   assert.equal(laneClash({ ...school }, [school], 6), null, "a booking never clashes with itself");
   assert.equal(laneClash(lanes([]), [school], 0), null, "areas without lanes are not checked");
 });
+
+test("a location names a set of lanes, in any of the ways people write them (owner request, 19 October 2026)", () => {
+  assert.deepEqual(lanesInPlace("Main pool, lanes 1, 3 and 5"), [1, 3, 5]);
+  assert.deepEqual(lanesInPlace("Main pool, lanes 1 to 2 and 5"), [1, 2, 5]);
+  assert.deepEqual(lanesInPlace("Main pool, lanes 1, 3 and 5, shallow end"), [1, 3, 5]);
+});

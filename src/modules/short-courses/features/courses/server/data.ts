@@ -1,12 +1,11 @@
 import "server-only";
 import { notFound } from "next/navigation";
 import type { Prisma } from "@/generated/prisma/client";
-import { activeStaffAtSite, liveSitesOf, withSites, withStaff } from "@/lib/directory";
+import { activeStaffAtSite, areaLanesAt, liveSitesOf, withSites, withStaff } from "@/lib/directory";
 import { today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { mayFor, sitesFor } from "@/lib/policy/session";
 import { callDue } from "@/modules/short-courses/shared/public-booking";
-import { areaNames } from "@/lib/setup/data";
 import { requireShortCoursesActor } from "@/modules/short-courses/shared/access";
 import { inSites, iso } from "@/modules/short-courses/shared/reads";
 import { courseState, SHORT_COURSE_CALL_TIMES, stillOwed, takesPlace, toPhone, waitingOrder } from "@/modules/short-courses/shared/rules";
@@ -93,7 +92,7 @@ export async function newCourseOptions() {
     prisma.shortCourseType.findMany({ where: { orgId: who.orgId ?? undefined, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       select: { id: true, name: true, weeks: true, sessionMinutes: true } }),
   ]);
-  const perSite = await Promise.all(siteRows.map(async (s) => ({ siteId: s.id, people: await activeStaffAtSite(who.orgId ?? null, s.id), areas: await areaNames(s.id) })));
+  const perSite = await Promise.all(siteRows.map(async (s) => ({ siteId: s.id, people: await activeStaffAtSite(who.orgId ?? null, s.id), areas: await areaLanesAt(s.id) })));
   return { who, sites: siteRows, types, perSite, today: today() };
 }
 
@@ -127,7 +126,7 @@ export async function shortCourse(id: string) {
     owed: stillOwed(course.priceCents, p),
     online: onlineOf(p),
   });
-  const [areas, staff] = await Promise.all([areaNames(course.siteId), manage ? activeStaffAtSite(who.orgId ?? null, course.siteId) : []]);
+  const [areas, staff] = await Promise.all([areaLanesAt(course.siteId), manage ? activeStaffAtSite(who.orgId ?? null, course.siteId) : []]);
   const booked = course.participants.filter((p) => takesPlace(p.status)).map(person);
   return {
     who, canRun: run, canManage: manage, areas, staff, today: on,

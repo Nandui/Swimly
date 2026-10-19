@@ -1,12 +1,11 @@
 import "server-only";
 import { notFound } from "next/navigation";
 import type { Prisma } from "@/generated/prisma/client";
-import { activeStaffAtSite, liveSitesOf, withSites, withStaff } from "@/lib/directory";
+import { activeStaffAtSite, areaLanesAt, liveSitesOf, withSites, withStaff } from "@/lib/directory";
 import { today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { mayFor, sitesFor } from "@/lib/policy/session";
 import { qualificationTypeById } from "@/lib/qualifications";
-import { areaNames } from "@/lib/setup/data";
 import { requireAcademyActor } from "@/modules/short-courses/shared/academy-access";
 import { courseState, readiness, takesPlace } from "@/modules/short-courses/shared/academy-rules";
 
@@ -114,7 +113,7 @@ export async function academyCourse(id: string) {
       resultOn: dateOf(c.resultOn), certificateExpires: dateOf(c.certificateExpires) };
     return { ...cand, attended, readiness: readiness(course.type, cand, first, attended) };
   });
-  const [areas, staff] = await Promise.all([areaNames(course.siteId), run ? staffAt(who.orgId ?? null, course.siteId) : []]);
+  const [areas, staff] = await Promise.all([areaLanesAt(course.siteId), run ? staffAt(who.orgId ?? null, course.siteId) : []]);
   return {
     who, canRun: run, canManage: manage, areas, staff, today: on,
     course: {

@@ -2,11 +2,11 @@
 
 import { requireSession } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
-import { areaNamesAt } from "@/lib/directory";
+import { areaLanesAt } from "@/lib/directory";
 
-/** The working site's areas, for a class's or an assessment's "where" (Admin keeps the list).
- *  Names only, for anyone signed in: the form that asks has checked its own permission. */
-export async function workingSiteAreas(): Promise<string[]> {
+/** The working site's areas and how many lanes each has, for a class's or an assessment's "where"
+ *  (Admin keeps the list). For anyone signed in: the form that asks has checked its own permission. */
+export async function workingSiteAreas(): Promise<{ name: string; lanes: number }[]> {
   await requireSession();
-  return areaNamesAt(await currentClubId());
+  return areaLanesAt(await currentClubId());
 }

@@ -2,6 +2,7 @@ import "server-only";
 import { can, requireSession } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 import { togetherOf, weekHoursOf } from "@/lib/setup/area-staffing";
+import { lanesInPlace } from "@/lib/setup/lanes";
 import type { PermissionKey } from "@/lib/staff/permissions";
 
 /** The shared setup every module uses, read for Admin's pages and for the
@@ -59,6 +60,19 @@ export async function areaProblem(siteId: string, place: string, keep?: string |
   if (!value || (keep && value.toLowerCase() === keep.trim().toLowerCase())) return null;
   const found = await prisma.siteArea.findFirst({ where: { siteId, archivedAt: null, name: { equals: value, mode: "insensitive" } }, select: { id: true } });
   return found ? null : `Choose one of the site's areas. ${value} is not on the list; add it under Admin, Areas.`;
+}
+
+/** `areaProblem` for a "where" that may name lanes after its area ("Main pool, lanes 1 to 3"): the
+ *  area must be one of the site's, and the lanes ones it has. */
+export async function placeProblem(siteId: string, place: string, keep?: string | null) {
+  const value = place.trim();
+  if (!value || (keep && value.toLowerCase() === keep.trim().toLowerCase())) return null;
+  const area = value.split(",")[0].trim();
+  const found = await prisma.siteArea.findFirst({ where: { siteId, archivedAt: null, name: { equals: area, mode: "insensitive" } }, select: { name: true, lanes: true } });
+  if (!found) return `Choose one of the site's areas. ${area} is not on the list; add it under Admin, Areas.`;
+  const over = lanesInPlace(value).filter((l) => l > found.lanes);
+  if (!over.length) return null;
+  return found.lanes ? `${found.name} has ${found.lanes} ${found.lanes === 1 ? "lane" : "lanes"}, so there is no lane ${over.join(", ")}.` : `${found.name} has no lanes. Choose the whole area, or give it lanes in Admin, Areas.`;
 }
 
 /** Every position (archived last) with what it needs and how many hold it, for Admin's Positions page. */

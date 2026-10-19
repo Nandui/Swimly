@@ -104,7 +104,7 @@ function merged(lane: Block[]): Shown[] {
   const out: Shown[] = [];
   for (const b of lane) {
     const last = out[out.length - 1];
-    if (last && b.classRef && last.classRef && last.userId === b.userId && last.end === b.start) {
+    if (last && b.classRef && last.classRef && last.userId === b.userId && last.end === b.start && String(last.lanes ?? []) === String(b.lanes ?? [])) {
       last.end = b.end; last.count += 1; last.refs.push(b.classRef); last.detail = levels(last.detail, b.detail);
       last.warnings = [...new Set([...last.warnings, ...b.warnings])];
     } else out.push({ ...b, warnings: [...b.warnings], count: 1, refs: b.classRef ? [b.classRef] : [] });
@@ -259,9 +259,9 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
   const dragHandlers = { onPointerDown, onPointerMove, onPointerUp: endDrag, onPointerCancel: endDrag, onClickCapture };
 
   /** Where something is, in words: "Main pool, lanes 1 to 2". */
-  const whereOf = (g: Group, need: DayNeed | null | undefined) => {
+  const whereOf = (g: Group, need: DayNeed | null | undefined, b?: Block) => {
     const count = laneCount.get(g.place.toLowerCase()) ?? 0;
-    const lanes = need?.lanes ?? [];
+    const lanes = need?.lanes ?? b?.lanes ?? [];
     return count && lanes.length ? `${g.place}, ${lanesLabel(lanes, count).toLowerCase()}` : g.place;
   };
   const needOf = (b: Block) => (b.needId ? ourNeeds.get(b.needId) ?? null : null);
@@ -273,7 +273,7 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
   const openGap = (g: Group, b: Block, refs: string[]) => {
     if (!canChange) return;
     setSelected(`${g.key}|${b.start}|${b.place ?? refs.join(",")}`);
-    setGap({ siteId, date, typeId: g.typeId, what: `${(refs.length && b.detail) || g.name} in ${g.place}`, dateLabel, start: b.start, end: b.end, requiredName: g.requiredName,
+    setGap({ siteId, date, typeId: g.typeId, what: `${(refs.length && b.detail) || g.name} in ${whereOf(g, needOf(b), b)}`, dateLabel, start: b.start, end: b.end, requiredName: g.requiredName,
       needId: b.needId, place: b.place, classRefs: refs, departmentId: forGroup(g),
       teacher: refs.length && b.kind === "on" && b.userId ? { userId: b.userId, name: b.name ?? "Someone" } : null,
       replace: isOff(b) ? { assignmentId: b.assignmentId, name: b.name ?? "Someone" } : null });
@@ -390,7 +390,7 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
     const lent = theirs(g);
     // A swim class leads with its level; the colour already says it is the swim school.
     const title = b.detail || g.name;
-    const where = whereOf(g, need);
+    const where = whereOf(g, need, b);
     const hint = [where, b.count > 1 ? `${b.count} classes` : null, lent, `${clock(b.start)}–${clock(b.end)}`].filter(Boolean).join(" · ");
     const warn = b.warnings.length ? `. Check: ${b.warnings.map((w) => WARNING_WORDS[w]).join(", ")}` : "";
     const label = `${title}${b.classRef && b.detail ? ` (${g.name})` : ""}${lent ? ` for ${lent}` : ""}, ${where}, ${clock(b.start)} to ${clock(b.end)}${warn}`;

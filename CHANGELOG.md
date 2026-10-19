@@ -9,6 +9,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - **Staff conduct or welfare** is now its own choice when you report an incident, for things that happen on shift such as a procedure not followed, a staff member taken unwell or a dispute between staff.
 - Its triage has its own five levels, and asks what it was about, whether their manager was told, whether it was passed to HR, and what support the staff member was offered.
 - Discipline and grievances themselves still go through HR.
+## 1.38.0 · 19 October 2026 · Pool lanes for classes and courses
+
+- In **Admin, Areas**, a pool shows its lanes ("Lanes 1 to 6"), or says it has none yet. Press the pencil to say how many lanes it has.
+- A **swim class** and an **assessment** can now take the whole pool, one lane or any set of lanes: tick them under Where. There is still a Detail box for anything else, such as "shallow end".
+- **Short course** and **Academy** sessions can take lanes the same way.
+- On the rota **Plan**, a class or course session says which lanes it uses, as rota activities and bookings already did.
 ## 1.37.0 · 19 October 2026 · Incidents: ask for CCTV footage by email
 
 - On an incident report, **CCTV footage > Ask for footage** sends a request to whoever has the recording: someone on the team, or anyone by email, such as the security company.
