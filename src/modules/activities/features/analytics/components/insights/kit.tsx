@@ -3,7 +3,7 @@ import * as React from "react";
 import { ArrowDownRight, ArrowRight, ArrowUpRight } from "lucide-react";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { addDaysIso, formatCount, formatDateRange, formatDateTime, formatDayMonth } from "@/lib/format";
-import { AnalyticsNav, type AnalyticsPage } from "@/modules/activities/features/analytics/components/navigation";
+import { ReportPicker, type AnalyticsPage } from "@/modules/activities/features/analytics/components/navigation";
 import { AnalyticsRefresh } from "@/modules/activities/features/analytics/components/refresh";
 import { FilterBar, type FilterBarProps } from "@/modules/activities/features/analytics/components/insights/filters";
 import { AreaChart, FlowChart, type ChartKind } from "@/modules/activities/features/analytics/components/insights/charts";
@@ -93,22 +93,15 @@ export function ReportShell({ ctx, page, path, title, description, back, childre
       value: ctx.programme?.id ?? "",
       options: [{ value: "", label: "Every programme", href: keep({ programme: null }) }, ...ctx.programmes.map(p => ({ value: p.id, label: p.name, href: keep({ programme: p.id }) }))],
     } : null,
-    summary: {
-      range: `${formatDateRange(period.start, period.end)} · ${period.label}`,
-      compare: `vs ${formatDateRange(period.previousStart, period.previousEnd)}`,
-      asOf: period.current ? null : `"Now" figures as of ${formatDayMonth(period.end)}`,
-    },
     reset: defaults ? null : path,
-    sections: sections ?? [],
   };
   const scope = [ctx.siteName, ctx.programme && programme ? ctx.programme.name : null].filter(Boolean).join(" · ");
+  const context = [scope, periodText(period), `compared with ${formatDateRange(period.previousStart, period.previousEnd)}`, period.current ? null : `"now" figures as of ${formatDayMonth(period.end)}`].filter(Boolean).join(" · ");
   return <div className="ins">
     <div className="ins-top">
-      <p className="ins-kicker">Swim school analytics</p>
-      <PageHeader title={title} back={back} description={description ?? `${scope} · ${periodText(period)}`} actions={<>{actions}<AnalyticsRefresh /></>} />
+      <PageHeader title={title} back={back} description={description ? <>{description}<span className="ins-context">{context}</span></> : context} actions={<>{actions}<AnalyticsRefresh /></>} />
     </div>
-    <AnalyticsNav active={page} query={filterQuery(ctx)} />
-    <FilterBar {...bar} />
+    <FilterBar {...bar} picker={<ReportPicker active={page} query={filterQuery(ctx)} sections={sections} />} />
     <div className="ins-body">{children}</div>
     <footer className="ins-footnote">
       {footnotes?.map((note, i) => <p key={i}>{note}</p>)}

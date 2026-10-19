@@ -4,11 +4,18 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.39.0 · 19 October 2026 · Incidents: staff conduct and welfare reports
+## 1.40.0 · 19 October 2026 · Incidents: staff conduct and welfare reports
 
 - **Staff conduct or welfare** is now its own choice when you report an incident, for things that happen on shift such as a procedure not followed, a staff member taken unwell or a dispute between staff.
 - Its triage has its own five levels, and asks what it was about, whether their manager was told, whether it was passed to HR, and what support the staff member was offered.
 - Discipline and grievances themselves still go through HR.
+## 1.39.0 · 19 October 2026 · Swim school analytics: easier to find your way
+
+- Moving between **Analytics** reports is now one button at the start of the bar under the page title, named after the report you are on. Open it to pick any other report (The business, Our people, Checks) or jump to a part of the page you are on. The separate row of report tabs is gone.
+- The period, site and programme choices sit in that same bar, which stays in view as you scroll. The period is now one button: open it to pick 4 weeks, 13 weeks, 6 months or 12 months, a quick pick such as the school year, or any two days. **Reset** puts everything back.
+- The line under the page title says exactly what you are looking at once: the site, the period and the period it is compared with.
+- A more polished look: a soft wash of colour behind the top of each page, the swimmer count on **Overview** on a deep blue card, each headline figure on its own card, and charts and bars that run from blue into violet. Every figure, filter and link works as before.
+
 ## 1.38.0 · 19 October 2026 · Pool lanes for classes and courses
 
 - In **Admin, Areas**, a pool shows its lanes ("Lanes 1 to 6"), or says it has none yet. Press the pencil to say how many lanes it has.
