@@ -161,6 +161,8 @@ const env = {
   // The Academy booking site (apps/academy, port 3102) against this sandbox. Codes print here.
   ACADEMY_API_ENABLED: "true", ACADEMY_AUTH_SECRET: "sandbox-only-academy-secret-not-for-deployment",
   ACADEMY_API_ALLOWED_ORIGINS: "http://localhost:3102", ACADEMY_EMAIL_DEV_LOG: "true",
+  // Incidents' CCTV footage requests print their link here instead of emailing it.
+  INCIDENTS_EMAIL_DEV_LOG: "true",
 };
 const app = spawn("npx", ["next", "dev", "-p", String(PORTS.app)], { stdio: "inherit", env, shell: true });
 app.on("exit", (code) => process.exit(code ?? 0));

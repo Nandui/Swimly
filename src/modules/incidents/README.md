@@ -9,6 +9,7 @@ The flow, rules and decisions are in [docs/incidents.md](../../../docs/incidents
 - `triage` — rating on the scale for the kind of report (`shared/triage-guides.ts`), its own questions, the HSA questions that fit, closing at triage or sending to investigation, and closing an investigated report (on `/incidents/[id]`).
 - `investigation` — witness statements, the 5 whys and root cause, actions with owners and their reminder emails, Your actions, and reopening (on `/incidents/[id]` and `/incidents`; reminders from `/api/cron/incidents`).
 - `files` — photos and documents on a report (`/api/incidents/files`).
+- `footage` — CCTV footage requests: emailing whoever holds it a link that uploads to the report without signing in (`/footage/[token]`, `/api/incidents/footage/*`), the videos in a private Vercel Blob store, and watching them (on `/incidents/[id]`).
 - `insights` — trends for those who triage and the reports past their keeping period (`/incidents/insights`).
 - `export` — one report's full record to print or save as a PDF for the insurer (`/incidents/[id]/export`, Manage).
 - `staff` — a staff member's incidents and injuries for their HR personal file and subject access export (registered in `module.ts`).
@@ -33,6 +34,8 @@ Declared in `prisma/schema/incidents.prisma`, migrations `20261031120000_inciden
 - `incidents_statements` (`IncidentStatement`) — witness statements taken during investigation.
 - `incidents_actions` (`IncidentAction`) — corrective actions, their owner, due day, outcome and reminder emails.
 - `incidents_files` (`IncidentFile`) — photos and documents, stored as bytes, hidden when removed.
+- `incidents_footage_requests` (`IncidentFootageRequest`) — who was asked for CCTV footage, what for, the link's hashed secret and expiry, and the email's outcome (migration `20261125120000_incident_footage_requests`).
+- `incidents_footage` (`IncidentFootage`) — each video sent through a link: its name, size, who sent it and where it is in the Blob store; hidden when removed.
 
 ## Events
 - Emits: none. Actions stay in Incidents rather than being copied into Tasks (docs/incidents.md).
@@ -48,6 +51,7 @@ Declared in `prisma/schema/incidents.prisma`, migrations `20261031120000_inciden
 
 ## Depends on
 - Platform: auth and the policy engine (`src/lib/policy`), audit (`src/lib/audit`), email (`src/lib/email`), the database client, home cards (`src/modules/contributions`).
+- Vercel Blob (`@vercel/blob`, a private store, `BLOB_READ_WRITE_TOKEN`) for CCTV videos only.
 - Core reads (never Core tables): sites, areas and people through `src/lib/directory.ts` (`liveSitesOf`, `liveSiteById`, `areaNamesAt`, `withSite`, `withSites`, `siteName`, `activeStaffHolding`, `staffSiteIds`, `staffAccess`).
 - The UI kit's workspace frame `ModuleShell`.
 - Other modules: none. The report form links to Docs' emergency plans by URL for people with `docs.read`.
