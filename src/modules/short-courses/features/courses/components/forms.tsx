@@ -10,7 +10,7 @@ import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { Textarea } from "@/components/shadcn/textarea";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { AreaSelect } from "@/components/ui/area-select";
+import { PlaceLanesField, type AreaWithLanes } from "@/components/ui/lane-picker";
 import { removeSession, saveCourse, saveParticipant, saveSession, setCourseStatus, setPlace, takeRegister } from "@/modules/short-courses/features/courses/server/actions";
 import { clock, clockOf, MAX_WEEKS, SHORT_COURSE_PAYMENT_META, SHORT_COURSE_PAYMENTS } from "@/modules/short-courses/shared/rules";
 import { amount, PersonSelect, text, THEME, useRefresh, type Option, type Person } from "@/modules/short-courses/shared/components/form-kit";
@@ -22,7 +22,7 @@ import { amount, PersonSelect, text, THEME, useRefresh, type Option, type Person
 
 export type CourseEdit = { id: string; siteId: string; typeId: string; capacity: number; priceCents: number; instructorId: string; note: string; bookOnline: boolean };
 type TypeOption = Option & { weeks: number; sessionMinutes: number };
-type SiteOptions = { siteId: string; people: Person[]; areas: string[] };
+type SiteOptions = { siteId: string; people: Person[]; areas: AreaWithLanes[] };
 
 /** Put a course on with its weekly sessions, or change its places, price and instructor. */
 export function CourseDialog({ course, sites, types, perSite, today, trigger }: {
@@ -79,7 +79,7 @@ export function CourseDialog({ course, sites, types, perSite, today, trigger }: 
           <Field label="Weeks" htmlFor={`${fid}-weeks`} hint="Same day and time each week."><Input id={`${fid}-weeks`} type="number" min={1} max={MAX_WEEKS} required value={weeks} onChange={(e) => setWeeks(e.target.value)} className="min-h-11" /></Field>
           <Field label="Starts" htmlFor={`${fid}-start`}><Input id={`${fid}-start`} type="time" step={300} required value={start} onChange={(e) => pickStart(e.target.value)} className="min-h-11" /></Field>
           <Field label="Ends" htmlFor={`${fid}-end`}><Input id={`${fid}-end`} type="time" step={300} required value={end} onChange={(e) => setEnd(e.target.value)} className="min-h-11" /></Field>
-          <Field label="Where" htmlFor={`${fid}-place`} optional hint="The site's areas, kept in Admin."><AreaSelect key={siteId} id={`${fid}-place`} name="place" areas={here?.areas ?? []} /></Field>
+          <PlaceLanesField key={siteId} fid={`${fid}-place`} name="place" areas={here?.areas ?? []} hint="The site's areas, kept in Admin. A pool with lanes is booked whole or by lane." />
         </> : null}
         <Field label="Instructor" htmlFor={`${fid}-instructor`}><PersonSelect key={siteId} id={`${fid}-instructor`} name="instructorId" people={here?.people ?? []} defaultValue={course?.instructorId} /></Field>
         <Field label="Places" htmlFor={`${fid}-cap`}><Input id={`${fid}-cap`} name="capacity" type="number" min={1} max={200} required defaultValue={course?.capacity ?? 12} className="min-h-11" /></Field>
@@ -112,7 +112,7 @@ export function CourseStatusButton({ id, to, label, title, description, destruct
 
 export type SessionEdit = { id: string; date: string; startMinutes: number; endMinutes: number; place: string; note: string };
 
-export function SessionDialog({ courseId, session, areas, suggest, trigger }: { courseId: string; session?: SessionEdit; areas: string[]; suggest?: Omit<SessionEdit, "id" | "note">; trigger?: ReactNode }) {
+export function SessionDialog({ courseId, session, areas, suggest, trigger }: { courseId: string; session?: SessionEdit; areas: AreaWithLanes[]; suggest?: Omit<SessionEdit, "id" | "note">; trigger?: ReactNode }) {
   const refresh = useRefresh();
   const fid = session ? `scs-${session.id}` : "scs-new";
   const base = session ?? suggest;
@@ -127,7 +127,7 @@ export function SessionDialog({ courseId, session, areas, suggest, trigger }: { 
         <Field label="Starts" htmlFor={`${fid}-start`}><Input id={`${fid}-start`} name="start" type="time" step={300} required defaultValue={clock(base?.startMinutes ?? 1080)} className="min-h-11" /></Field>
         <Field label="Ends" htmlFor={`${fid}-end`}><Input id={`${fid}-end`} name="end" type="time" step={300} required defaultValue={clock(base?.endMinutes ?? 1140)} className="min-h-11" /></Field>
       </div>
-      <Field label="Where" htmlFor={`${fid}-place`} optional hint="The site's areas, kept in Admin."><AreaSelect id={`${fid}-place`} name="place" areas={areas} defaultValue={base?.place} /></Field>
+      <div className="grid gap-4 sm:grid-cols-2"><PlaceLanesField fid={`${fid}-place`} name="place" areas={areas} defaultValue={base?.place} hint="The site's areas, kept in Admin." /></div>
       <Field label="Note" htmlFor={`${fid}-note`} optional><Input id={`${fid}-note`} name="note" maxLength={200} defaultValue={session?.note} placeholder="Moved for the bank holiday" className="min-h-11" /></Field>
       {session ? (
         <div>
