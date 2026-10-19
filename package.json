@@ -1,6 +1,6 @@
 {
   "name": "swimly",
-  "version": "1.36.0",
+  "version": "1.37.0",
   "private": true,
   "sideEffects": [
     "*.css",
@@ -41,6 +41,7 @@
     "@tiptap/extension-text-style": "^3.31.3",
     "@tiptap/react": "^3.31.3",
     "@tiptap/starter-kit": "^3.31.3",
+    "@vercel/blob": "^2.8.2",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

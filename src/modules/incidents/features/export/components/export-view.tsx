@@ -144,6 +144,15 @@ export function ExportView({ data }: { data: IncidentExport }) {
         <p className="text-xs text-ui-muted-foreground">Send the files themselves from the report page if the insurer asks for them.</p>
       </Section>
 
+      {r.footage.length ? (
+        <Section id="exp-footage" title="CCTV footage">
+          <ul className="flex flex-col gap-1 text-sm">
+            {r.footage.map((f) => <li key={f.id}>{f.name} <span className="text-ui-muted-foreground">· sent by {f.uploadedBy}{f.receivedAt ? `, ${formatDateTime(f.receivedAt)}` : ""}</span></li>)}
+          </ul>
+          <p className="text-xs text-ui-muted-foreground">The videos are kept with the report. Download them from the report page if the insurer asks for them.</p>
+        </Section>
+      ) : null}
+
       <Section id="exp-history" title="History">
         <ol className="flex flex-col gap-1 text-sm">
           {r.events.map((e) => <li key={e.id}>{incidentActions[e.action as keyof typeof incidentActions] ?? e.action} <span className="text-ui-muted-foreground">· {e.actorName} · {formatDateTime(e.createdAt)}</span></li>)}
