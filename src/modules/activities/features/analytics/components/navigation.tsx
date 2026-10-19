@@ -29,14 +29,14 @@ export const ANALYTICS_GROUPS = [
 
 export type AnalyticsPage = typeof ANALYTICS_GROUPS[number]["pages"][number]["key"];
 
-/** The suite's pages in their three groups, the current one raised. */
+/** The suite's pages as one row of tabs in their three groups, the current one underlined. */
 export function AnalyticsNav({ active, query = "" }: { active: AnalyticsPage; query?: string }) {
-  return <nav aria-label="Analytics pages" className="ins-suite">
-    {ANALYTICS_GROUPS.map(group => <div key={group.key} className="ins-suite-group" role="group" aria-labelledby={`ins-suite-${group.key}`}>
-      <span id={`ins-suite-${group.key}`} className="ins-suite-label">{group.label}</span>
+  return <nav aria-label="Analytics pages" className="ins-tabs">
+    {ANALYTICS_GROUPS.map(group => <div key={group.key} className="ins-tab-group" role="group" aria-labelledby={`ins-tabs-${group.key}`}>
+      <span id={`ins-tabs-${group.key}`} className="ins-tab-label">{group.label}</span>
       <ul>{group.pages.map(({ key, href, label, icon: Icon, filtered }) => <li key={key}>
-        <Link href={filtered ? `${href}${query}` : href} className="ins-suite-link" aria-current={active === key ? "true" : undefined}>
-          <Icon aria-hidden="true" strokeWidth={1.6} />{label}
+        <Link href={filtered ? `${href}${query}` : href} className="ins-tab" aria-current={active === key ? "page" : undefined}>
+          <Icon aria-hidden="true" strokeWidth={1.75} />{label}
         </Link>
       </li>)}</ul>
     </div>)}

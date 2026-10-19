@@ -1,5 +1,6 @@
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { formatTime } from "@/lib/format";
+import { HeatLegend } from "@/modules/activities/features/analytics/components/insights/kit";
 import { CONTACT_CHANNELS, CONTACT_OUTCOMES } from "@/modules/activities/shared/enrolment/follow-up";
 
 const one = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 1 });
@@ -39,6 +40,7 @@ export function BusyHours({ rows, caption }: { rows: HeatRow[]; caption: string 
           : <TableCell key={cell.day} data-band={band(cell.share)} title={`${LONG_DAYS[cell.day]} ${formatTime(row.hour * 60)}: ${cell.count} actions`}><strong>{cell.count}</strong></TableCell>)}
       </TableRow>)}</TableBody>
     </Table>
+    <HeatLegend low="Quiet" high="Busiest" />
   </div>;
 }
 

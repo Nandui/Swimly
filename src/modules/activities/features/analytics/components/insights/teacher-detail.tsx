@@ -25,9 +25,9 @@ export function TeacherDetailReport({ data }: { data: OneTeacherInsights & { det
     "Lessons are the ones this teacher started on the pool deck. Left after counts swimmers who left the swim school when this teacher taught the last lesson they came to.",
     "Compared with every lesson at the same sites in the same period.",
   ]}>
-    <Section id="glance" eyebrow="At a glance" title="Their figures">
+    <Section id="glance" title="At a glance">
     <KpiStrip label={`${t.name} at a glance`}>
-      <Kpi label="Lessons" value={formatCount(t.lessons)} note={`${decimal(t.hours)} hours · ${t.classes} classes`} />
+      <Kpi label="Lessons" value={formatCount(t.lessons)} spark={byWeek.map(w => w.lessons)} note={`${decimal(t.hours)} hours · ${t.classes} classes`} />
       <Kpi label="Cover" value={formatCount(t.cover)} note="Lessons taught for someone else" />
       <Kpi label="Not started" value={formatCount(t.missedStarts)} note="Planned for them, nobody started" />
       <Kpi label="Swimmers taught" value={formatCount(t.swimmers)} />
@@ -35,7 +35,7 @@ export function TeacherDetailReport({ data }: { data: OneTeacherInsights & { det
       <Kpi label="Level passes" value={formatCount(t.passes)} />
     </KpiStrip>
     </Section>
-    <Section id="detail" eyebrow="In detail" title="Against the school, week by week" intro="Each figure beside the school's, their classes and the swimmers who left after their lessons.">
+    <Section id="detail" title="In detail" intro="Each figure beside the school's, their classes and the swimmers who left after their lessons.">
     <Panel id="compare" title="Against the school" sub="Each figure beside the school's for the same period.">
       <ul className="ins-compare">
         <Compare label="Attendance" mine={t.attendance} school={school.attendance} />
@@ -46,14 +46,12 @@ export function TeacherDetailReport({ data }: { data: OneTeacherInsights & { det
         <Compare label="Swimmers who left after" mine={t.leaverRate} school={school.leaverRate} lowerBetter />
       </ul>
     </Panel>
-    <div className="ins-grid ins-even">
-      <Panel id="weekly" title="Lessons week by week">
-        <TrendChart label="Lessons taught each week" points={byWeek.map(w => ({ x: w.week, y: w.lessons, label: `Week of ${formatDayMonth(w.week)}` }))} />
+      <Panel span={6} id="weekly" title="Lessons week by week">
+        <TrendChart label="Lessons taught each week" unit="lessons" points={byWeek.map(w => ({ x: w.week, y: w.lessons, label: `Week of ${formatDayMonth(w.week)}` }))} />
       </Panel>
-      <Panel id="weekly-attendance" title="Attendance week by week" sub="In this teacher's lessons. Weeks with no lessons are left out.">
-        <TrendChart label="Attendance each week" format={n => `${Math.round(n)}%`} points={byWeek.filter(w => w.attendance !== null).map(w => ({ x: w.week, y: w.attendance!, label: `Week of ${formatDayMonth(w.week)}` }))} />
+      <Panel span={6} id="weekly-attendance" title="Attendance week by week" sub="In this teacher's lessons. Weeks with no lessons are left out.">
+        <TrendChart label="Attendance each week" kind="percent" unit="attendance" points={byWeek.filter(w => w.attendance !== null).map(w => ({ x: w.week, y: w.attendance!, label: `Week of ${formatDayMonth(w.week)}` }))} />
       </Panel>
-    </div>
     <Panel id="classes" title="Classes taught">
       {classes.length ? <div className="ins-table-wrap"><Table>
         <TableHeader><TableRow><TableHead scope="col">Class</TableHead><TableHead scope="col" className="text-right">Lessons</TableHead><TableHead scope="col" className="text-right">Attendance</TableHead><TableHead scope="col" className="text-right">Registers</TableHead><TableHead scope="col">Last taught</TableHead></TableRow></TableHeader>
@@ -66,21 +64,19 @@ export function TeacherDetailReport({ data }: { data: OneTeacherInsights & { det
         </TableRow>)}</TableBody>
       </Table></div> : <EmptyState compact title="No lessons started in this period" />}
     </Panel>
-    <div className="ins-grid ins-even">
-      <Panel id="leavers" title="Swimmers who left after their lessons" sub={`${t.leavers} in the period.`}>
+      <Panel span={6} id="leavers" title="Swimmers who left after their lessons" sub={`${t.leavers} in the period.`}>
         {t.leaverReasons.length ? <Bars label="Reasons" rows={t.leaverReasons.map(r => ({ key: r.key, label: r.label, value: r.count, tone: r.key === "teaching" ? "warn" as const : undefined }))} /> : null}
         {leavers.length ? <ul className="pc-rows">{leavers.map(l => <li key={`${l.studentId}-${l.date}`} className="pc-row"><div className="pc-row-body">
           <p className="pc-row-title">{data.canOpenSwimmers ? <Link href={`/students/${l.studentId}`} className="text-ui-primary hover:underline">{l.name}</Link> : l.name}</p>
           <p className="pc-row-hint">{formatDate(parseDateOnly(l.date))} · {l.reason} · {l.className} · came to {l.attended} of last {l.marked} · with us {weeks(l.weeks).toLowerCase()}</p>
         </div></li>)}</ul> : <p className="ins-sub">Nobody left after this teacher&apos;s lessons.</p>}
       </Panel>
-      <Panel id="starts" title="Late and missed starts" sub="Started more than 5 minutes late, or not started at all.">
+      <Panel span={6} id="starts" title="Late and missed starts" sub="Started more than 5 minutes late, or not started at all.">
         {late.length || missed.length ? <ul className="pc-rows">
           {missed.map(m => <li key={`m-${m.courseId}-${m.date}`} className="pc-row"><div className="pc-row-body"><p className="pc-row-title">{m.className} · {formatShortDay(m.date)} {formatTime(m.startMinutes)}</p><p className="pc-row-hint">{m.marked ? `Not started · ${m.marked} marked` : "Not started · no register"}</p></div><div className="pc-row-trail"><Flag tone="bad">Not started</Flag></div></li>)}
           {late.map(l => <li key={`l-${l.courseId}-${l.date}`} className="pc-row"><div className="pc-row-body"><p className="pc-row-title">{l.className} · {formatShortDay(l.date)} {formatTime(l.startMinutes)}</p></div><div className="pc-row-trail"><Flag tone="warn">{l.minutes} min late</Flag></div></li>)}
         </ul> : <p className="ins-sub">Every lesson was started on time.</p>}
       </Panel>
-    </div>
     </Section>
   </ReportShell>;
 }

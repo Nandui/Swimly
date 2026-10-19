@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.36.0 · 19 October 2026 · Swim school analytics: a new dashboard look
+
+- Every **Analytics** page has a new, clearer layout: the pages sit along the top as tabs, and the period, site and programme choices stay in view as you scroll, with links to each part of the page.
+- Each page opens with its headline figures side by side. Many now show a small line of the recent weeks under the number, so you can see the trend at a glance. **Overview** leads with the number of swimmers and a larger week-by-week chart.
+- Charts are bigger and easier to read. Hover over a chart, or click it and use the arrow keys, to see the exact figures for any week. **Joined and left** now shows joiners above the line and leavers below it, and **Swimmers by age** is a column chart.
+- The timetable and busy-hours maps have a key showing what each shade means. Tables are tighter, so more fits on the screen.
+- Every figure, filter, list and link is still there and works as before.
+
 ## 1.35.0 · 19 October 2026 · Incidents: triage that fits each kind of report
 
 - **Triage** on an incident report now follows what the report is about. A theft is rated by what was lost, a fight by how threatening it was, a missing child by how long they were missing, a pool contamination by how long the pool was out, and so on. The same five levels still decide whether it can be closed at triage or needs investigating and a manager's sign-off.

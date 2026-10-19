@@ -6,7 +6,9 @@ import { addDaysIso, formatCount, formatDateRange, formatDateTime, formatDayMont
 import { AnalyticsNav, type AnalyticsPage } from "@/modules/activities/features/analytics/components/navigation";
 import { AnalyticsRefresh } from "@/modules/activities/features/analytics/components/refresh";
 import { FilterBar, type FilterBarProps } from "@/modules/activities/features/analytics/components/insights/filters";
+import { AreaChart, FlowChart, type ChartKind } from "@/modules/activities/features/analytics/components/insights/charts";
 export { Meter } from "@/modules/activities/features/analytics/components/insights/meter";
+export { ColumnChart } from "@/modules/activities/features/analytics/components/insights/charts";
 import { DEFAULT_RANGE, RANGES, reportQuery, type ReportFilters, type ReportPeriod } from "@/modules/activities/features/analytics/server/period";
 
 const one = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 1 });
@@ -64,12 +66,13 @@ function quickPicks(ctx: ReportContext) {
   ];
 }
 
-/** Page opening, the suite's grouped pages, then one tray of filters. `programme` is false on pages
- *  the programme does not narrow (reception work is not tied to a programme). */
-export function ReportShell({ ctx, page, path, title, description, back, children, footnotes, sections, programme = true }: {
+/** The suite's frame: the page title, the pages as tabs, then one sticky toolbar of filters that
+ *  scopes everything below it. `programme` is false on pages the programme does not narrow
+ *  (reception work is not tied to a programme). */
+export function ReportShell({ ctx, page, path, title, description, back, children, footnotes, sections, programme = true, actions }: {
   ctx: ReportContext; page: AnalyticsPage; path: string; title: string; description?: string;
   back?: { href: string; label: string }; children: React.ReactNode; footnotes?: React.ReactNode[];
-  sections?: { id: string; label: string }[]; programme?: boolean;
+  sections?: { id: string; label: string }[]; programme?: boolean; actions?: React.ReactNode;
 }) {
   const { period, filters } = ctx;
   const keep = (extra: Partial<ReportFilters>) => `${path}${reportQuery({ ...filters, ...extra })}`;
@@ -92,24 +95,21 @@ export function ReportShell({ ctx, page, path, title, description, back, childre
     } : null,
     summary: {
       range: `${formatDateRange(period.start, period.end)} · ${period.label}`,
-      compare: `Against ${formatDateRange(period.previousStart, period.previousEnd)}`,
+      compare: `vs ${formatDateRange(period.previousStart, period.previousEnd)}`,
       asOf: period.current ? null : `"Now" figures as of ${formatDayMonth(period.end)}`,
     },
     reset: defaults ? null : path,
+    sections: sections ?? [],
   };
   const scope = [ctx.siteName, ctx.programme && programme ? ctx.programme.name : null].filter(Boolean).join(" · ");
   return <div className="ins">
-    <div className="ins-hero">
-      <span className="ins-eyebrow">Swim school analytics</span>
-      <PageHeader title={title} back={back} description={description ?? `${scope} · ${periodText(period)}`} actions={<AnalyticsRefresh />} />
+    <div className="ins-top">
+      <p className="ins-kicker">Swim school analytics</p>
+      <PageHeader title={title} back={back} description={description ?? `${scope} · ${periodText(period)}`} actions={<>{actions}<AnalyticsRefresh /></>} />
     </div>
     <AnalyticsNav active={page} query={filterQuery(ctx)} />
     <FilterBar {...bar} />
-    {sections?.length ? <nav aria-label="On this page" className="ins-jump">
-      <span className="ins-jump-label">On this page</span>
-      {sections.map(s => <a key={s.id} href={`#${s.id}`}>{s.label}</a>)}
-    </nav> : null}
-    {children}
+    <div className="ins-body">{children}</div>
     <footer className="ins-footnote">
       {footnotes?.map((note, i) => <p key={i}>{note}</p>)}
       {programme && ctx.programme ? <p>Only {ctx.programme.name}: its classes, places, waiting lists and passes. A move into another programme counts as leaving this one.</p> : null}
@@ -118,34 +118,46 @@ export function ReportShell({ ctx, page, path, title, description, back, childre
   </div>;
 }
 
-/** A group of panels that answer one question, with a short heading and what it is for. */
-export function Section({ id, eyebrow, title, intro, children }: { id: string; eyebrow: string; title: string; intro?: React.ReactNode; children: React.ReactNode }) {
+/** A group of panels that answer one question, laid out as a bento grid. */
+export function Section({ id, title, intro, children }: { id: string; title: string; intro?: React.ReactNode; children: React.ReactNode }) {
   return <section id={id} className="ins-section" aria-labelledby={`${id}-title`}>
     <header className="ins-section-head">
-      <span className="ins-section-eyebrow">{eyebrow}</span>
       <h2 id={`${id}-title`}>{title}</h2>
       {intro ? <p>{intro}</p> : null}
     </header>
+    <div className="ins-bento">{children}</div>
+  </section>;
+}
+
+/** How many of the bento's twelve columns a panel takes on wide screens. */
+export type Span = 12 | 8 | 7 | 6 | 5 | 4 | 3;
+
+export function Panel({ id, title, sub, action, children, className, span = 12, figure }: {
+  id: string; title: string; sub?: React.ReactNode; action?: React.ReactNode; children: React.ReactNode; className?: string; span?: Span;
+  /** A headline number for the panel, shown beside its title. */
+  figure?: React.ReactNode;
+}) {
+  return <section id={id} className={`pc-panel ins-panel${className ? ` ${className}` : ""}`} data-span={span} aria-labelledby={`${id}-heading`}>
+    <div className="ins-head">
+      <div className="ins-head-text">
+        <h3 id={`${id}-heading`}>{title}</h3>
+        {sub ? <p className="ins-sub">{sub}</p> : null}
+      </div>
+      {action}
+    </div>
+    {figure ? <div className="ins-panel-figure">{figure}</div> : null}
     {children}
   </section>;
 }
 
-export function Panel({ id, title, sub, action, children, className }: { id: string; title: string; sub?: React.ReactNode; action?: React.ReactNode; children: React.ReactNode; className?: string }) {
-  return <section id={id} className={`pc-panel${className ? ` ${className}` : ""}`} aria-labelledby={`${id}-heading`}>
-    <div className="ins-head"><h3 id={`${id}-heading`}>{title}</h3>{action}</div>
-    {sub ? <p className="ins-sub">{sub}</p> : null}
-    {children}
-  </section>;
-}
-
-/** The headline figures, laid out in even rows whatever their number. */
-export function KpiStrip({ label, children }: { label: string; children: React.ReactNode }) {
+/** The headline figures as one strip of cells, in even rows whatever their number. */
+export function KpiStrip({ label, children, span = 12 }: { label: string; children: React.ReactNode; span?: Span }) {
   const count = React.Children.toArray(children).filter(Boolean).length;
-  return <ul className="ins-kpis" aria-label={label} data-count={count}>{children}</ul>;
+  return <ul className="ins-kpis" aria-label={label} data-count={count} data-span={span}>{children}</ul>;
 }
 
 export function PanelLink({ href, children }: { href: string; children: React.ReactNode }) {
-  return <Link href={href} className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-ui-primary hover:underline focus-visible:outline-2 focus-visible:outline-ui-ring">{children}<ArrowRight aria-hidden="true" className="size-4" /></Link>;
+  return <Link href={href} className="ins-panel-link">{children}<ArrowRight aria-hidden="true" /></Link>;
 }
 
 type Change = { current: number | null; previous: number | null; change: number | null };
@@ -162,77 +174,69 @@ export function Delta({ change, better, unit = "", label }: { change: Change; be
   return <span className="ins-delta" data-tone={tone}><Icon aria-hidden="true" />{text}<span className="sr-only"> {label}</span></span>;
 }
 
-export function Kpi({ label, value, unit, note, delta, href }: { label: string; value: React.ReactNode; unit?: string; note?: React.ReactNode; delta?: React.ReactNode; href?: string }) {
+/** A tiny line of the figure's recent history, the latest point marked. Decoration beside the
+ *  number (the full series is on the page it opens), so hidden from screen readers. */
+export function Sparkline({ values, tone }: { values: (number | null)[]; tone?: "good" | "bad" }) {
+  const series = values.map((v, i) => ({ v, i })).filter((p): p is { v: number; i: number } => p.v !== null);
+  if (series.length < 2) return null;
+  const W = 120, H = 32, P = 3;
+  const min = Math.min(...series.map(p => p.v)), max = Math.max(...series.map(p => p.v));
+  const x = (i: number) => P + (i * (W - P * 2)) / (values.length - 1);
+  const y = (v: number) => max === min ? H / 2 : P + (H - P * 2) * (1 - (v - min) / (max - min));
+  const d = series.map((p, k) => `${k ? "L" : "M"}${x(p.i).toFixed(1)} ${y(p.v).toFixed(1)}`).join(" ");
+  const end = series.at(-1)!;
+  return <svg viewBox={`0 0 ${W} ${H}`} className="ins-spark" data-tone={tone} aria-hidden="true" preserveAspectRatio="none">
+    <path d={`${d} L${x(end.i).toFixed(1)} ${H} L${x(series[0].i).toFixed(1)} ${H} Z`} className="ins-spark-area" />
+    <path d={d} className="ins-spark-line" />
+    <circle cx={x(end.i)} cy={y(end.v)} r={2.5} className="ins-spark-end" />
+  </svg>;
+}
+
+/** One headline figure: what it is, the value, how it moved, a note, and optionally its recent
+ *  trend or a fill meter. With `href` the whole cell opens the page behind it. */
+export function Kpi({ label, value, unit, note, delta, href, spark, meter }: {
+  label: string; value: React.ReactNode; unit?: string; note?: React.ReactNode; delta?: React.ReactNode; href?: string;
+  spark?: (number | null)[]; meter?: number | null;
+}) {
   const body = <>
-    <span className="ins-kpi-label">{label}</span>
-    <span className="ins-kpi-value">{value}{unit ? <small>{unit}</small> : null}</span>
-    {delta}
+    <span className="ins-kpi-label">{label}{href ? <ArrowUpRight aria-hidden="true" className="ins-kpi-go" /> : null}</span>
+    <span className="ins-kpi-line">
+      <span className="ins-kpi-value">{value}{unit ? <small>{unit}</small> : null}</span>
+      {delta}
+    </span>
+    {spark ? <Sparkline values={spark} /> : null}
+    {meter !== undefined && meter !== null ? <span className="ins-kpi-meter" aria-hidden="true"><span style={{ width: `${Math.min(100, meter)}%` }} /></span> : null}
     {note ? <span className="ins-kpi-note">{note}</span> : null}
   </>;
-  return <li className="flex min-w-0">{href ? <Link href={href} className="ins-kpi w-full">{body}<span className="ins-kpi-go" aria-hidden="true"><ArrowUpRight strokeWidth={1.8} /></span></Link> : <div className="ins-kpi w-full">{body}</div>}</li>;
+  return <li className="ins-kpi-cell">{href ? <Link href={href} className="ins-kpi">{body}</Link> : <div className="ins-kpi">{body}</div>}</li>;
 }
 
-/** A line over time with its area, to scale from zero, every point hoverable. */
-export function TrendChart({ points, label, format = formatCount }: { points: { x: string; y: number; label: string }[]; label: string; format?: (n: number) => string }) {
-  const W = 640, H = 200, L = 44, R = 16, T = 12, B = 28;
-  const max = niceMax(Math.max(1, ...points.map(p => p.y)));
-  const x = (i: number) => L + (points.length === 1 ? (W - L - R) / 2 : i * (W - L - R) / (points.length - 1));
-  const y = (v: number) => T + (H - T - B) * (1 - v / max);
-  const line = points.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(p.y).toFixed(1)}`).join(" ");
-  const area = `${line} L${x(points.length - 1).toFixed(1)} ${y(0)} L${x(0).toFixed(1)} ${y(0)} Z`;
-  const ticks = [0, max / 2, max];
-  const step = (W - L - R) / Math.max(1, points.length - 1);
-  const labelEvery = Math.ceil(points.length / 6);
-  const last = points.at(-1);
-  return <figure className="m-0 flex flex-col gap-2">
-    <svg viewBox={`0 0 ${W} ${H}`} className="ins-trend" role="img" aria-label={`${label}. ${points.length ? `From ${format(points[0].y)} to ${format(last!.y)}.` : ""}`}>
-      {ticks.map(t => <g key={t}><line className="ins-gridline" x1={L} x2={W - R} y1={y(t)} y2={y(t)} /><text className="ins-axis" x={L - 8} y={y(t) + 4} textAnchor="end">{format(t)}</text></g>)}
-      {points.length ? <><path className="ins-area" d={area} /><path className="ins-line" d={line} /></> : null}
-      {points.map((p, i) => i % labelEvery === 0 || i === points.length - 1 ? <text key={p.x} className="ins-axis" x={x(i)} y={H - 8} textAnchor={i === 0 ? "start" : i === points.length - 1 ? "end" : "middle"}>{formatDayMonth(p.x)}</text> : null)}
-      {last ? <circle className="ins-end" cx={x(points.length - 1)} cy={y(last.y)} r={5} /> : null}
-      {points.map((p, i) => <rect key={`hit-${p.x}`} className="ins-hit" x={x(i) - step / 2} y={T} width={step} height={H - T - B}><title>{`${p.label}: ${format(p.y)}`}</title></rect>)}
-    </svg>
-  </figure>;
+/** A line over time, to scale from zero, every week readable on hover or with the arrow keys. */
+export function TrendChart({ points, label, kind, unit, height, compare }: {
+  points: { x: string; y: number; label: string }[]; label: string; kind?: ChartKind; unit?: string; height?: number;
+  compare?: { label: string; values: (number | null)[] };
+}) {
+  return <AreaChart label={label} unit={unit} kind={kind} height={height} compare={compare} points={points.map(p => ({ x: p.x, tick: formatDayMonth(p.x), y: p.y, title: p.label }))} />;
 }
 
-/** Two series side by side per period (joined and left), to one scale. */
-export function PairedColumns({ rows, a, b, label }: { rows: { key: string; label: string; a: number; b: number }[]; a: string; b: string; label: string }) {
-  const W = 640, H = 200, L = 32, R = 8, T = 12, B = 28;
-  const max = niceMax(Math.max(1, ...rows.flatMap(r => [r.a, r.b])));
-  const band = (W - L - R) / Math.max(1, rows.length);
-  const bar = Math.min(16, band / 3);
-  const labelEvery = Math.ceil(rows.length / 8);
-  const y = (v: number) => T + (H - T - B) * (1 - v / max);
-  return <figure className="m-0 flex flex-col gap-3">
-    <ul className="ins-legend" aria-hidden="true"><li><span className="ins-swatch" />{a}</li><li><span className="ins-swatch" data-series="b" />{b}</li></ul>
-    <svg viewBox={`0 0 ${W} ${H}`} className="ins-trend" role="img" aria-label={label}>
-      {[0, max / 2, max].map(t => <g key={t}><line className="ins-gridline" x1={L} x2={W - R} y1={y(t)} y2={y(t)} /><text className="ins-axis" x={L - 6} y={y(t) + 4} textAnchor="end">{formatCount(t)}</text></g>)}
-      {rows.map((r, i) => {
-        const cx = L + band * i + band / 2;
-        return <g key={r.key}>
-          <rect className="ins-col-a" x={cx - bar - 1} y={y(r.a)} width={bar} height={Math.max(0, y(0) - y(r.a))} rx={3}><title>{`${r.label}: ${r.a} ${a.toLowerCase()}`}</title></rect>
-          <rect className="ins-col-b" x={cx + 1} y={y(r.b)} width={bar} height={Math.max(0, y(0) - y(r.b))} rx={3}><title>{`${r.label}: ${r.b} ${b.toLowerCase()}`}</title></rect>
-          {i % labelEvery === 0 ? <text className="ins-axis" x={cx} y={H - 8} textAnchor="middle">{r.label}</text> : null}
-        </g>;
-      })}
-    </svg>
-  </figure>;
+/** Two series per period (joined and left): the first rises, the second falls below the line. */
+export function PairedColumns({ rows, a, b, label, height }: { rows: { key: string; label: string; title?: string; a: number; b: number }[]; a: string; b: string; label: string; height?: number }) {
+  return <FlowChart label={label} a={a} b={b} height={height} rows={rows.map(r => ({ key: r.key, tick: r.label, title: r.title ?? r.label, a: r.a, b: r.b }))} />;
 }
 
-function niceMax(value: number) {
-  const exp = Math.pow(10, Math.floor(Math.log10(value)));
-  for (const m of [1, 2, 2.5, 5, 10]) if (value <= m * exp) return m * exp;
-  return 10 * exp;
-}
-
-/** Horizontal bars to one scale, with the number at the end. */
-export function Bars({ rows, label, format = formatCount }: { rows: { key: string; label: React.ReactNode; value: number; note?: string; tone?: "warn" }[]; label: string; format?: (n: number) => string }) {
+/** Horizontal bars to one scale, with the number and its share at the end. */
+export function Bars({ rows, label, format = formatCount, share }: {
+  rows: { key: string; label: React.ReactNode; value: number; note?: string; tone?: "warn" }[]; label: string; format?: (n: number) => string;
+  /** Show each row's share of the total beside its value. */
+  share?: boolean;
+}) {
   const max = Math.max(1, ...rows.map(r => r.value));
+  const total = rows.reduce((s, r) => s + r.value, 0);
   return <ul className="ins-bars" aria-label={label}>
     {rows.map(r => <li key={r.key} className="ins-bar-row" data-tone={r.tone}>
-      <span title={typeof r.label === "string" ? r.label : undefined}>{r.label}</span>
+      <span className="ins-bar-label" title={typeof r.label === "string" ? r.label : undefined}>{r.label}</span>
       <span className="ins-bar-track" aria-hidden="true"><span className="ins-bar-fill" data-zero={r.value === 0 ? "" : undefined} style={{ width: `${r.value / max * 100}%` }} /></span>
-      <span className="ins-bar-value">{format(r.value)}{r.note ? <span className="sr-only"> {r.note}</span> : null}</span>
+      <span className="ins-bar-value">{format(r.value)}{share && total ? <span className="ins-bar-share">{whole.format(r.value / total * 100)}%</span> : null}{r.note ? <span className="sr-only"> {r.note}</span> : null}</span>
     </li>)}
   </ul>;
 }
@@ -245,8 +249,18 @@ export function Flag({ tone, children }: { tone?: "warn" | "bad" | "good" | "inf
 export function Attention({ items }: { items: { key: string; count: number; title: string; hint: string; href?: string; tone?: "warn" | "bad" | "good" }[] }) {
   return <ul className="ins-attention">
     {items.map(item => {
-      const body = <><span className="ins-attention-count">{formatCount(item.count)}</span><span><span className="ins-attention-title">{item.title}</span><span className="ins-attention-hint">{item.hint}</span></span>{item.href ? <ArrowRight aria-hidden="true" className="size-4 text-ui-muted-foreground" /> : <span />}</>;
+      const body = <><span className="ins-attention-count">{formatCount(item.count)}</span><span className="min-w-0"><span className="ins-attention-title">{item.title}</span><span className="ins-attention-hint">{item.hint}</span></span>{item.href ? <ArrowRight aria-hidden="true" className="ins-attention-go" /> : <span />}</>;
       return <li key={item.key} data-tone={item.count ? item.tone : "good"}>{item.href ? <Link href={item.href}>{body}</Link> : <div className="ins-attention-row">{body}</div>}</li>;
     })}
   </ul>;
+}
+
+/** The scale under a heat map: from fewest to most, in the map's own shades. */
+export function HeatLegend({ low, high, waiting }: { low: string; high: string; waiting?: string }) {
+  return <div className="ins-heat-legend" aria-hidden="true">
+    <span>{low}</span>
+    <span className="ins-heat-scale">{[1, 2, 3, 4].map(b => <span key={b} data-band={b} />)}</span>
+    <span>{high}</span>
+    {waiting ? <span className="ins-heat-waiting"><span />{waiting}</span> : null}
+  </div>;
 }

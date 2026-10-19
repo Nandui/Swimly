@@ -4,7 +4,7 @@ import { formatCount, formatDayMonth, formatTime, plural } from "@/lib/format";
 import { DAY_META, formatSlotShort } from "@/modules/activities/shared/courses/constants";
 import type { ClassesInsights } from "@/modules/activities/features/analytics/server/insights-data";
 import { ClassTable } from "@/modules/activities/features/analytics/components/insights/class-table";
-import { asOf, Bars, filterQuery, Kpi, KpiStrip, Meter, Panel, percent, ReportShell, reportHref, Section } from "@/modules/activities/features/analytics/components/insights/kit";
+import { asOf, Bars, filterQuery, HeatLegend, Kpi, KpiStrip, Meter, Panel, percent, ReportShell, reportHref, Section } from "@/modules/activities/features/analytics/components/insights/kit";
 
 function band(fill: number | null) {
   if (fill === null) return undefined;
@@ -27,7 +27,7 @@ export function ClassesReport({ data }: { data: ClassesInsights }) {
   ]} footnotes={[
     `Places are as of ${data.period.current ? "today" : formatDayMonth(data.period.end)}; waiting lists and the next four weeks are always as of today. Attendance, joiners and leavers are for the period. Moved on means moved to another class or finished the class.`,
   ]}>
-    <Section id="glance" eyebrow="At a glance" title="Room, demand and lessons">
+    <Section id="glance" title="At a glance">
     <KpiStrip label="Classes at a glance">
       <Kpi label={`Places filled ${now}`} value={percent(c.totals.rate)} note={`${formatCount(c.totals.enrolled)} of ${formatCount(c.totals.capacity)} places`} />
       <Kpi label="Free places" value={formatCount(c.totals.empty)} note={`Across ${plural(c.rows.length, "weekly class", "weekly classes")}`} />
@@ -35,7 +35,7 @@ export function ClassesReport({ data }: { data: ClassesInsights }) {
       <Kpi label="Lessons held" value={formatCount(held)} note={`Average attendance ${percent(marked.length ? marked.reduce((s, r) => s + r.attendance!, 0) / marked.length : null)} per class`} />
     </KpiStrip>
     </Section>
-    <Section id="capacity" eyebrow="Capacity" title="Where there is room, and where there is demand" intro={`The timetable ${now}, each level's places and waiting list, and the places already booked for the coming weeks.`}>
+    <Section id="capacity" title="Capacity" intro={`The timetable ${now}, each level's places and waiting list, and the places already booked for the coming weeks.`}>
     <Panel id="timetable" title="Where the timetable is full" sub="Places filled by day and start time. A gold edge means someone is waiting for a class in that slot.">
       {c.heat.length ? <div className="ins-heat-wrap">
         <Table className="ins-heat" data-layout="grid">
@@ -49,9 +49,9 @@ export function ClassesReport({ data }: { data: ClassesInsights }) {
           </TableRow>)}</TableBody>
         </Table>
       </div> : <p className="ins-sub">No weekly classes at this site.</p>}
+      {c.heat.length ? <HeatLegend low="Under half full" high="Full" waiting="Someone waiting" /> : null}
     </Panel>
-    <div className="ins-grid ins-even">
-    <Panel id="levels" title="Each level" sub="Where swimmers wait and where places sit empty, level by level.">
+    <Panel span={6} id="levels" title="Each level" sub="Where swimmers wait and where places sit empty, level by level.">
       <div className="ins-table-wrap">
         <Table>
           <TableHeader><TableRow>
@@ -71,7 +71,7 @@ export function ClassesReport({ data }: { data: ClassesInsights }) {
         </Table>
       </div>
     </Panel>
-    <Panel id="forecast" title="The next four weeks" sub={`From today, whatever the period. Places already booked on each coming week, with the places starting and ending in between. New joiners are not guessed. ${plural(data.forecast.waiting, "swimmer is", "swimmers are")} on a waiting list.`}>
+    <Panel span={6} id="forecast" title="The next four weeks" sub={`From today, whatever the period. Places already booked on each coming week, with the places starting and ending in between. New joiners are not guessed. ${plural(data.forecast.waiting, "swimmer is", "swimmers are")} on a waiting list.`}>
       <div className="ins-table-wrap"><Table>
         <TableHeader><TableRow>
           <TableHead scope="col">Week of</TableHead>
@@ -89,9 +89,8 @@ export function ClassesReport({ data }: { data: ClassesInsights }) {
         </TableRow>)}</TableBody>
       </Table></div>
     </Panel>
-    </div>
     </Section>
-    <Section id="delivery" eyebrow="Lessons" title="How lessons are going" intro="Who came, which lessons were cancelled, and whether swimmers kept the same teacher.">
+    <Section id="delivery" title="Lessons" intro="Who came, which lessons were cancelled, and whether swimmers kept the same teacher.">
     <Panel id="slots" title="Attendance by time slot" sub="The share of swimmers who came, by day and start time, across the lessons held in the period. Lighter slots lose more swimmers to absence.">
       {data.slots.heat.length ? <div className="ins-heat-wrap">
         <Table className="ins-heat" data-layout="grid">
@@ -105,20 +104,19 @@ export function ClassesReport({ data }: { data: ClassesInsights }) {
           </TableRow>)}</TableBody>
         </Table>
       </div> : <p className="ins-sub">No registers taken in this period.</p>}
+      {data.slots.heat.length ? <HeatLegend low="Under 75% came" high="92% or more" /> : null}
     </Panel>
-    <div className="ins-grid ins-even">
-      <Panel id="cancelled" title="Cancelled lessons" sub={`${plural(data.cancellations.lessons, "lesson")} cancelled (${percent(data.cancellations.share, 1)} of those timetabled), affecting ${plural(data.cancellations.swimmers, "swimmer place", "swimmer places")}. ${formatCount(data.cancellations.previous)} in the period before.`}>
+      <Panel span={5} id="cancelled" title="Cancelled lessons" sub={`${plural(data.cancellations.lessons, "lesson")} cancelled (${percent(data.cancellations.share, 1)} of those timetabled), affecting ${plural(data.cancellations.swimmers, "swimmer place", "swimmer places")}. ${formatCount(data.cancellations.previous)} in the period before.`}>
         {data.cancellations.reasons.length ? <Bars label="Cancelled lessons by reason" rows={data.cancellations.reasons.map(r => ({ key: r.key, label: r.key, value: r.count }))} /> : <p className="ins-sub">No lessons were cancelled.</p>}
       </Panel>
-      <Panel id="continuity" title="Same teacher each week" sub={`${percent(data.continuity.school)} of lessons were taught by the class's usual teacher. Classes with the most changes first.`}>
+      <Panel span={7} id="continuity" title="Same teacher each week" sub={`${percent(data.continuity.school)} of lessons were taught by the class's usual teacher. Classes with the most changes first.`}>
         {data.continuity.classes.length ? <ul className="pc-rows">{data.continuity.classes.slice(0, 6).map(k => <li key={k.courseId} className="pc-row"><div className="pc-row-body">
           <p className="pc-row-title">{k.course ? <Link href={reportHref(data, `/analytics/classes/${k.courseId}`)} className="text-ui-primary hover:underline">{k.course.name} · {formatSlotShort(k.course.slot)}</Link> : "Class removed"}</p>
           <p className="pc-row-hint">{data.allSites && k.course ? `${k.course.siteName} · ` : ""}{plural(k.teachers, "teacher")} over {plural(k.lessons, "lesson")} · usually {k.main}</p>
         </div><div className="pc-row-trail"><Meter value={k.share} tone={k.share < 75 ? "warn" : undefined} /></div></li>)}</ul> : <p className="ins-sub">No lessons started in this period.</p>}
       </Panel>
-    </div>
     </Section>
-    <Section id="all-classes" eyebrow="Every class" title="Class by class" intro="Sort, search and open any class.">
+    <Section id="all-classes" title="Every class" intro="Sort, search and open any class.">
     <Panel id="classes" title="Every class" sub="Open a class for its swimmers, its waiting list and every lesson with who taught it.">
       <ClassTable rows={c.rows} showSite={data.allSites} query={query} />
     </Panel>

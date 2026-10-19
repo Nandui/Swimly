@@ -16,7 +16,7 @@ export function ProgressionReport({ data }: { data: ProgressionInsights }) {
     "Over 6 months counts swimmers here now who have been at their level more than 26 weeks. Hardest skill is the one the fewest swimmers at the level have, with at least three swimmers.",
     "Booked to a place counts swimmers assessed in the period who started a class within 30 days. Assessment sessions are not tied to a programme, so with a programme chosen only bookings placed elsewhere are left out.",
   ]}>
-    <Section id="glance" eyebrow="At a glance" title="Passing levels and starting classes">
+    <Section id="glance" title="At a glance">
     <KpiStrip label="Progression at a glance">
       <Kpi label="Level passes" value={formatCount(p.passes)} note="Levels completed in the period" />
       <Kpi label="Over 6 months at a level" value={formatCount(p.stuck)} note={`Swimmers here ${asOf(data.period)}`} />
@@ -25,12 +25,11 @@ export function ProgressionReport({ data }: { data: ProgressionInsights }) {
       <Kpi label="Assessment to first lesson" value={a.daysToClass !== null ? `${formatCount(a.daysToClass)}` : "—"} unit={a.daysToClass !== null ? (a.daysToClass === 1 ? " day" : " days") : undefined} note="Typical wait for those who started within two months" />
     </KpiStrip>
     </Section>
-    <Section id="pace" eyebrow="Pace" title="How fast swimmers move up" intro="The middle swimmer's time to pass each level, and how assessments turn into places.">
-    <div className="ins-grid ins-even">
-      <Panel id="pass-time" title="Weeks to pass each level" sub="The middle swimmer's time, for levels passed in the period.">
+    <Section id="pace" title="Pace" intro="The middle swimmer's time to pass each level, and how assessments turn into places.">
+      <Panel span={6} id="pass-time" title="Weeks to pass each level" sub="The middle swimmer's time, for levels passed in the period.">
         {timed.length ? <Bars label="Weeks to pass by level" format={n => `${Math.round(n)} wk`} rows={timed.map(l => ({ key: l.levelId, label: `${l.name}${groups.length > 1 ? ` · ${l.programmeName}` : ""}`, value: l.medianWeeks!, tone: l.medianWeeks! > 26 ? "warn" as const : undefined }))} /> : <p className="ins-sub">No level passes in this period.</p>}
       </Panel>
-      <Panel id="assessments" title="Assessments" sub="New swimmer and level assessments in the period.">
+      <Panel span={6} id="assessments" title="Assessments" sub="New swimmer and level assessments in the period.">
         <Bars label="Assessment bookings" rows={[
           { key: "attended", label: "Assessed", value: a.attended },
           { key: "placed", label: "Given a level", value: a.placed },
@@ -40,9 +39,8 @@ export function ProgressionReport({ data }: { data: ProgressionInsights }) {
           { key: "upcoming", label: "Still booked", value: a.upcoming },
         ]} />
       </Panel>
-    </div>
     </Section>
-    <Section id="levels" eyebrow="Level by level" title="Each programme's levels" intro="Swimmers at each level now, passes in the period, skills done and the skill that holds them back.">
+    <Section id="levels" title="Level by level" intro="Swimmers at each level now, passes in the period, skills done and the skill that holds them back.">
     {groups.length === 0 ? <EmptyState title="No levels to show" hint="Levels appear once swimmers are in classes at this site." /> : null}
     {groups.map(group => {
       const levels = p.levels.filter(l => l.programmeName === group);

@@ -13,7 +13,7 @@ export function TeachersReport({ data }: { data: TeacherInsights }) {
     `On time means started no more than 5 minutes after the start time. Skills ticked and passes are the ones each teacher marked. Left after counts swimmers who left the swim school, against the teacher of the last lesson they came to, as a share of the swimmers they taught.`,
     "Figures in gold are more than 10 points worse than the school's. Small numbers move a lot: read a teacher with few lessons with care.",
   ]}>
-    <Section id="glance" eyebrow="At a glance" title="How lessons are taught" intro="Across every lesson at these sites in the period. Each teacher's own figures are below.">
+    <Section id="glance" title="At a glance" intro="Across every lesson at these sites in the period. Each teacher's own figures are below.">
     <KpiStrip label="Teaching at a glance">
       <Kpi label="Lessons taught" value={formatCount(t.lessons - t.notStarted)} note={`${formatCount(t.teachers.length)} teachers`} />
       <Kpi label="Not started" value={formatCount(t.notStarted)} note="Finished lessons with no start record" />
@@ -24,7 +24,7 @@ export function TeachersReport({ data }: { data: TeacherInsights }) {
       <Kpi label="Same teacher each week" value={percent(data.continuity.school)} note="Lessons taught by the class's usual teacher" href={`${reportHref(data, "/analytics/classes")}#continuity`} />
     </KpiStrip>
     </Section>
-    <Section id="team" eyebrow="Every teacher" title="Teacher by teacher" intro="Sort, search and open a teacher for their week-by-week figures, their classes and the swimmers who left after their lessons.">
+    <Section id="team" title="Every teacher" intro="Sort, search and open a teacher for their week-by-week figures, their classes and the swimmers who left after their lessons.">
     <Panel id="teachers" title="Every teacher" sub="Gold figures are more than 10 points worse than the school's.">
       <TeacherTable teachers={t.teachers} school={school} query={filterQuery(data)} />
     </Panel>
