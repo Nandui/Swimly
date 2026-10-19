@@ -4,6 +4,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.37.0 · 19 October 2026 · Incidents: ask for CCTV footage by email
+
+- On an incident report, **CCTV footage > Ask for footage** sends a request to whoever has the recording: someone on the team, or anyone by email, such as the security company.
+- It fills in the day, the time and the place from the report. Add which cameras you need. They see only what you write there, never who was involved or what happened.
+- They get an email with a link to upload the videos straight to the report, without signing in. The link works for 14 days. Videos can be up to 5 GB each, as the recorder exports them.
+- You get an email when a video arrives. It shows under **CCTV footage** on the report, where you can play or download it. Only people who triage reports at that site can see it.
+- **Send again** sends a new link if the first one expired or got lost. **Stop the link** closes it once you have what you need.
+- Every request and every video is in the report's history and listed in the full record.
+
 ## 1.36.0 · 19 October 2026 · Swim school analytics: a new dashboard look
 
 - Every **Analytics** page has a new, clearer layout: the pages sit along the top as tabs, and the period, site and programme choices stay in view as you scroll, with links to each part of the page.

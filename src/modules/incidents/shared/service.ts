@@ -14,11 +14,14 @@ export async function lockReport(tx: Prisma.TransactionClient, id: string) {
 
 type Row = { id: string; number: number; siteId: string; reporterId: string };
 
+/** "Action raised" reads "action raised" mid-sentence; "CCTV footage requested" keeps its capitals. */
+const midSentence = (label: string) => (/^[A-Z]{2}/.test(label) ? label : label.charAt(0).toLowerCase() + label.slice(1));
+
 export async function recordEvent(tx: Prisma.TransactionClient, row: Row, who: Pick<IncidentsActor, "id" | "name">, action: IncidentActionKey, note = "") {
   await tx.incidentEvent.create({ data: { reportId: row.id, actorId: who.id, actorName: who.name, action, note } });
   await logAudit({
     actorId: who.id, actorName: who.name, entity: "IncidentReport", entityId: row.id, clubId: row.siteId, action,
-    summary: `${incidentNumber(row.number)}: ${incidentActions[action].toLowerCase()}.`,
+    summary: `${incidentNumber(row.number)}: ${midSentence(incidentActions[action])}.`,
   }, tx);
 }
 

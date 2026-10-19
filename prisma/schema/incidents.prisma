@@ -79,6 +79,8 @@ model IncidentReport {
   statements    IncidentStatement[]
   actions       IncidentAction[]
   files         IncidentFile[]
+  footageRequests IncidentFootageRequest[]
+  footage       IncidentFootage[]
 
   @@index([siteId, status])
   @@index([reporterId])
@@ -255,4 +257,69 @@ model IncidentFile {
 
   @@index([reportId])
   @@map("incidents_files")
+}
+
+/// A request for CCTV footage (owner request, 19 October 2026): emailed to
+/// whoever holds it, a staff member or anyone with an email address such as
+/// the security company, with a link that uploads to this request and nothing
+/// else. The link's token is kept only as a hash. It stops working when it
+/// expires, is cancelled, is sent again (a new link) or the report closes.
+model IncidentFootageRequest {
+  id              String    @id @default(cuid())
+  reportId        String
+  recipientName   String
+  recipientEmail  String
+  /// The staff member, when it was one of the team.
+  recipientUserId String?
+  /// What is needed: which cameras, where, between which times. The upload
+  /// page shows this and nothing else of the report.
+  details         String
+  tokenHash       String    @unique
+  expiresAt       DateTime
+  /// open | cancelled
+  status          String    @default("open")
+  requestedById   String
+  requestedByName String
+  emailedAt       DateTime?
+  emailError      String?
+  cancelledAt     DateTime?
+  cancelledByName String?
+  createdAt       DateTime  @default(now())
+
+  report  IncidentReport    @relation(fields: [reportId], references: [id], onDelete: Restrict)
+  footage IncidentFootage[]
+
+  @@index([reportId])
+  @@map("incidents_footage_requests")
+}
+
+/// A video sent through a footage request's link. Stored in the private Blob
+/// store (videos are far too big for the database), streamed only to people
+/// who triage at the report's site. A row is written when an upload starts
+/// and marked received once the store has the whole file; removing one hides
+/// it but keeps the record and the video.
+model IncidentFootage {
+  id          String    @id @default(cuid())
+  requestId   String
+  reportId    String
+  name        String
+  mime        String
+  size        BigInt
+  /// Where it is in the Blob store, and its address there once received.
+  pathname    String    @unique
+  url         String    @default("")
+  /// The name the person uploading it gave, and their note.
+  uploadedBy  String
+  note        String    @default("")
+  createdAt   DateTime  @default(now())
+  receivedAt  DateTime?
+  removedAt   DateTime?
+  removedById String?
+
+  request IncidentFootageRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  report  IncidentReport         @relation(fields: [reportId], references: [id], onDelete: Restrict)
+
+  @@index([requestId])
+  @@index([reportId])
+  @@map("incidents_footage")
 }
