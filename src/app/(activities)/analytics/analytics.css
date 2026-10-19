@@ -45,55 +45,68 @@
   -webkit-mask-image: linear-gradient(180deg, black 30%, transparent); mask-image: linear-gradient(180deg, black 30%, transparent); }
 @media (max-width: 767px) { .turnfin-app .ins::before { inset: -16px -16px auto; height: 420px; border-radius: 0; } }
 
-/* ── The opening: a quiet kicker over the page's one H1. */
+/* ── Where things sit (owner, 19 October 2026: "think about the location, where it makes sense and
+   the general flow for the user"). Wide screens get two columns: the suite's own menu on the left
+   (the pages in their groups, and the sections of the page you are on), the page on the right. The
+   page reads top to bottom in the order a manager works: the title and one line saying exactly
+   what is shown, the filters that change it in one sticky bar, then the figures. Narrower screens
+   stack it: the menu becomes a row of tabs, then the same page. */
+@media (min-width: 1100px) {
+  .turnfin-app .ins { display: grid; grid-template-columns: 15rem minmax(0, 1fr); align-items: start; gap: 28px; }
+}
+.turnfin-app .ins-main { display: flex; flex-direction: column; gap: 20px; min-width: 0; container: ins-main / inline-size; }
 .turnfin-app .ins-top { display: flex; flex-direction: column; gap: 6px; }
-.turnfin-app .ins-kicker { display: inline-flex; align-items: center; gap: 8px; margin: 0; color: var(--pc-primary-ink); font-size: 12px; font-weight: 700; letter-spacing: 0.02em; }
-.turnfin-app .ins-kicker::before { content: ''; width: 18px; height: 6px; border-radius: 999px; background: linear-gradient(90deg, var(--ins-a), var(--ins-v)); }
 .turnfin-app .ins-top h1 { letter-spacing: -0.03em; }
+.turnfin-app .ins-context { display: block; margin-top: 2px; }
 
-/* ── The pages as tabs, in their three groups, the current page underlined in blue. */
-.turnfin-app .ins-tabs { display: flex; align-items: center; gap: 0; align-self: flex-start; max-width: 100%; min-width: 0; padding: 4px; border-radius: 999px; background: color-mix(in srgb, var(--pc-surface) 72%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 0 0 1px var(--ins-ring), var(--ins-lift); overflow-x: auto; scrollbar-width: none; }
-.turnfin-app .ins-tabs::-webkit-scrollbar { display: none; }
-.turnfin-app .ins-tab-group { display: flex; align-items: center; flex: none; }
-.turnfin-app .ins-tab-group + .ins-tab-group { margin-left: 6px; padding-left: 6px; box-shadow: inset 1px 0 0 var(--ins-hair); }
-.turnfin-app .ins-tab-group:first-child .ins-tab-label { margin-left: 10px; }
-.turnfin-app .ins-tab-label { margin-right: 4px; color: var(--pc-ink-muted); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; white-space: nowrap; opacity: 0.8; }
-.turnfin-app .ins-tabs ul { display: flex; margin: 0; padding: 0; list-style: none; }
-.turnfin-app .ins-tab { position: relative; display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 14px; border-radius: 999px; color: var(--pc-ink-muted); font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap; transition: color 200ms var(--ins-ease); }
-.turnfin-app .ins-tab svg { width: 16px; height: 16px; flex: none; opacity: 0.85; }
-.turnfin-app .ins-tab:hover { color: var(--pc-ink); background: var(--pc-hover); }
-.turnfin-app .ins-tab[aria-current] { color: var(--pc-on-primary); background: linear-gradient(120deg, var(--pc-primary), var(--ins-v)); box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--ins-v) 70%, transparent); }
-.turnfin-app .ins-tab[aria-current] svg { opacity: 1; }
-.turnfin-app .ins-tab:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
-@media (max-width: 1439px) { .turnfin-app .ins-tab-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; } }
+/* The menu: a card that stays in view, one pill per page, the current page in the blue-to-violet
+   pill with its sections listed under it. */
+.turnfin-app .ins-side { position: sticky; top: 12px; z-index: 21; display: flex; flex-direction: column; gap: 16px; max-height: calc(100dvh - 24px); padding: 18px 12px; overflow-y: auto; border: 1px solid transparent; border-radius: var(--ins-radius); background: linear-gradient(color-mix(in srgb, var(--pc-surface) 82%, transparent), color-mix(in srgb, var(--pc-surface) 82%, transparent)) padding-box, var(--ins-edge) border-box; -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: var(--ins-glow); scrollbar-width: thin; }
+.turnfin-app .ins-side-title { display: flex; align-items: center; gap: 8px; margin: 0 8px; color: var(--pc-primary-ink); font-size: 12px; font-weight: 750; letter-spacing: 0.02em; }
+.turnfin-app .ins-side-title::before { content: ''; width: 18px; height: 6px; border-radius: 999px; background: linear-gradient(90deg, var(--ins-a), var(--ins-v)); }
+.turnfin-app .ins-side-group { display: flex; flex-direction: column; gap: 2px; }
+.turnfin-app .ins-side-label { margin: 0 12px 4px; color: var(--pc-ink-muted); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.turnfin-app .ins-side ul { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.turnfin-app .ins-side-link { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: 14px; color: var(--pc-ink-muted); font-size: 14px; font-weight: 620; text-decoration: none; white-space: nowrap; transition: background-color 200ms var(--ins-ease), color 200ms var(--ins-ease); }
+.turnfin-app .ins-side-link svg { width: 17px; height: 17px; flex: none; }
+.turnfin-app .ins-side-link:hover { color: var(--pc-ink); background: var(--pc-hover); }
+.turnfin-app .ins-side-link[aria-current] { color: var(--pc-on-primary); background: linear-gradient(120deg, var(--pc-primary), var(--ins-v)); box-shadow: 0 8px 18px -10px color-mix(in srgb, var(--ins-v) 75%, transparent); }
+.turnfin-app .ins-side-link:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.turnfin-app .ins-side .ins-side-sections { gap: 0; margin: 4px 0 6px 20px; padding-left: 10px; box-shadow: inset 1px 0 0 var(--ins-hair); }
+.turnfin-app .ins-side-sections a { display: flex; align-items: center; min-height: 44px; padding: 0 10px; border-radius: 10px; color: var(--pc-ink-muted); font-size: 13px; font-weight: 600; text-decoration: none; }
+.turnfin-app .ins-side-sections a:hover { color: var(--pc-primary-ink); background: var(--pc-hover); }
+.turnfin-app .ins-side-sections a:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: -2px; }
+@media (max-width: 1099px) {
+  .turnfin-app .ins-side { position: static; flex-direction: row; align-items: center; gap: 0; max-height: none; padding: 4px; border-radius: 999px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+  .turnfin-app .ins-side::-webkit-scrollbar { display: none; }
+  .turnfin-app .ins-side ul { flex-direction: row; }
+  .turnfin-app .ins-side-group { flex-direction: row; align-items: center; flex: none; }
+  .turnfin-app .ins-side-group + .ins-side-group { margin-left: 6px; padding-left: 6px; box-shadow: inset 1px 0 0 var(--ins-hair); }
+  .turnfin-app .ins-side-link { border-radius: 999px; padding: 0 14px; }
+  .turnfin-app :is(.ins-side-title, .ins-side-label) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .turnfin-app .ins-side .ins-side-sections { display: none; }
+}
 
-/* ── The toolbar: every filter in one row that stays in view, then what the page shows. */
+/* ── The filters: period, sites and programme in one row that stays in view, Reset at its end. */
 .turnfin-app .ins-filters { position: sticky; top: 12px; z-index: 20; display: flex; flex-direction: column; border: 1px solid transparent; border-radius: 22px; background: linear-gradient(color-mix(in srgb, var(--pc-surface) 82%, transparent), color-mix(in srgb, var(--pc-surface) 82%, transparent)) padding-box, var(--ins-edge) border-box; -webkit-backdrop-filter: saturate(1.6) blur(16px); backdrop-filter: saturate(1.6) blur(16px); box-shadow: 0 14px 34px -22px color-mix(in srgb, var(--ins-a) 60%, transparent); transition: opacity 200ms var(--ins-ease); }
 .turnfin-app .ins-filters[data-pending] { opacity: 0.65; }
 .turnfin-app .ins-filters-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 8px; }
 .turnfin-app .ins-filter { display: flex; align-items: center; min-width: 0; }
 .turnfin-app .ins-filter .pc-seg { --pc-seg-thumb: var(--pc-surface); padding: 3px; font-size: 13px; }
 .turnfin-app .ins-filter .pc-seg-item { padding: 0 12px; }
-.turnfin-app .ins-filter .pc-seg-item svg { width: 15px; height: 15px; }
-.turnfin-app .ins-filter-grow { flex: 1 1 12rem; max-width: 18rem; margin-left: auto; }
+.turnfin-app .ins-filter-button { gap: 8px; border-radius: 999px; padding: 0 14px 0 12px; font-size: 13px; font-weight: 650; }
+.turnfin-app .ins-filter-button svg { width: 16px; height: 16px; }
+.turnfin-app .ins-filter-button svg:last-child { color: var(--pc-ink-muted); }
+.turnfin-app .ins-filter-grow { flex: 0 1 16rem; }
 .turnfin-app .ins-filter-select { border-radius: 999px; padding-left: 16px; font-size: 13px; font-weight: 600; }
-.turnfin-app .ins-filters-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 14px; padding: 2px 16px 4px; border-top: 1px solid var(--ins-hair); }
-.turnfin-app .ins-filters-summary p { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; margin: 0; color: var(--pc-ink-muted); font-size: 12px; }
-.turnfin-app .ins-filters-summary strong { color: var(--pc-ink); font-size: 13px; font-weight: 650; font-variant-numeric: tabular-nums; }
-.turnfin-app .ins-filters-reset { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 10px; border-radius: 999px; color: var(--pc-primary-ink); font-size: 12px; font-weight: 650; text-decoration: none; }
+.turnfin-app .ins-filters-reset { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-left: auto; padding: 0 12px; border-radius: 999px; color: var(--pc-primary-ink); font-size: 13px; font-weight: 650; text-decoration: none; }
 .turnfin-app .ins-filters-reset svg { width: 14px; height: 14px; transition: transform 400ms var(--ins-ease); }
 .turnfin-app .ins-filters-reset:hover { background: var(--pc-primary-soft); }
 .turnfin-app .ins-filters-reset:hover svg { transform: rotate(-120deg); }
 .turnfin-app .ins-filters-reset:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
-.turnfin-app .ins-jump { display: flex; flex-wrap: wrap; align-items: center; gap: 0 2px; margin-left: auto; }
-.turnfin-app .ins-jump-label { margin-right: 4px; color: var(--pc-ink-muted); font-size: 12px; }
-.turnfin-app .ins-jump a { display: inline-flex; align-items: center; min-height: 40px; padding: 0 8px; border-radius: 8px; color: var(--pc-ink); font-size: 12px; font-weight: 600; text-decoration: none; }
-.turnfin-app .ins-jump a:hover { background: var(--pc-hover); color: var(--pc-primary-ink); }
-.turnfin-app .ins-jump a:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: -2px; }
 @media (max-width: 767px) {
   .turnfin-app .ins-filters { position: static; }
-  .turnfin-app .ins-filter-grow { flex-basis: 100%; max-width: none; margin-left: 0; }
-  .turnfin-app .ins-jump { margin-left: 0; }
+  .turnfin-app .ins-filter-grow { flex-basis: 100%; }
 }
 
 /* The custom dates picker (portalled, so styled from the app root). */
@@ -118,7 +131,8 @@
 .turnfin-app .ins-section-head p { margin: 0; max-width: 72ch; color: var(--pc-ink-muted); font-size: 13px; line-height: 18px; }
 .turnfin-app .ins-bento { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; min-width: 0; }
 .turnfin-app .ins-bento > * { grid-column: span 12; min-width: 0; }
-@media (min-width: 1100px) {
+/* Spans follow the page column's own width, so the layout holds with or without the menu beside it. */
+@container ins-main (min-width: 760px) {
   .turnfin-app .ins-bento > [data-span='8'] { grid-column: span 8; }
   .turnfin-app .ins-bento > [data-span='7'] { grid-column: span 7; }
   .turnfin-app .ins-bento > [data-span='6'] { grid-column: span 6; }
@@ -126,7 +140,7 @@
   .turnfin-app .ins-bento > [data-span='4'] { grid-column: span 4; }
   .turnfin-app .ins-bento > [data-span='3'] { grid-column: span 3; }
 }
-@media (min-width: 720px) and (max-width: 1099px) {
+@container ins-main (min-width: 540px) and (max-width: 759px) {
   .turnfin-app .ins-bento > :is([data-span='6'], [data-span='4'], [data-span='3']) { grid-column: span 6; }
 }
 
@@ -137,7 +151,7 @@
 .turnfin-app .ins-head-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1 1 14rem; }
 .turnfin-app .ins .ins-panel h3 { margin: 0; font-size: 15px; line-height: 20px; font-weight: 700; letter-spacing: -0.01em; }
 .turnfin-app .ins-sub { margin: 0; max-width: 70ch; color: var(--pc-ink-muted); font-size: 13px; line-height: 18px; }
-.turnfin-app .ins-panel-link { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; margin: -12px -8px -12px 0; padding: 0 8px; border-radius: 10px; color: var(--pc-primary-ink); font-size: 13px; font-weight: 650; text-decoration: none; white-space: nowrap; }
+.turnfin-app .ins-panel-link { display: inline-flex; flex: none; align-items: center; gap: 4px; min-height: 44px; margin: -12px -8px -12px 0; padding: 0 8px; border-radius: 10px; color: var(--pc-primary-ink); font-size: 13px; font-weight: 650; text-decoration: none; white-space: nowrap; }
 .turnfin-app .ins-panel-link svg { width: 14px; height: 14px; transition: transform 200ms var(--ins-ease); }
 .turnfin-app .ins-panel-link:hover { background: var(--pc-primary-soft); }
 .turnfin-app .ins-panel-link:hover svg { transform: translateX(2px); }
@@ -162,10 +176,10 @@
 /* ── Figures: one strip of cells divided by hairlines. Each cell carries its label, the value with
    its change, a trend line or fill meter, and a note. Rows stay even whatever the count. */
 .turnfin-app .ins-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; scroll-margin-top: 140px; }
-@media (min-width: 720px) {
+@container ins-main (min-width: 540px) {
   .turnfin-app .ins-kpis:is([data-count='3'], [data-count='5'], [data-count='6'], [data-count='7'], [data-count='9']) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
-@media (min-width: 1100px) {
+@container ins-main (min-width: 760px) {
   .turnfin-app .ins-kpis:is([data-count='4'], [data-count='7'], [data-count='8']) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .turnfin-app .ins-kpis[data-count='5'] { grid-template-columns: repeat(5, minmax(0, 1fr)); }
   .turnfin-app .ins-kpis[data-count='6'] { grid-template-columns: repeat(6, minmax(0, 1fr)); }
@@ -310,11 +324,11 @@ a.ins-kpi:hover .ins-kpi-go { opacity: 1; color: var(--pc-primary); transform: t
 .turnfin-app .ins-attention-hint { display: block; overflow: hidden; color: var(--pc-ink-muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .turnfin-app .ins-attention-go { width: 16px; height: 16px; color: var(--pc-ink-muted); transition: transform 200ms var(--ins-ease); }
 .turnfin-app .ins-attention a:hover .ins-attention-go { color: var(--pc-primary); transform: translateX(2px); }
-@media (min-width: 1100px) {
+@container ins-main (min-width: 760px) {
   .turnfin-app .ins-wide-list .ins-attention { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 40px; }
   .turnfin-app .ins-wide-list .ins-attention li:nth-child(2) { border-top: 0; }
 }
-@media (min-width: 1100px) and (max-width: 1279px) { .turnfin-app .ins-wide-list .ins-attention-hint { white-space: normal; } }
+@container ins-main (min-width: 760px) and (max-width: 899px) { .turnfin-app .ins-wide-list .ins-attention-hint { white-space: normal; } }
 
 /* One person against the team or school: their value, the reference, a bar each, to one scale. */
 .turnfin-app .ins-compare { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
@@ -352,4 +366,7 @@ a.ins-kpi:hover .ins-kpi-go { opacity: 1; color: var(--pc-primary); transform: t
   .turnfin-app .ins-col-b { fill: CanvasText; }
   .turnfin-app :is(.ins-bar-fill, .ins-kpi-meter > span) { background: Highlight; }
 }
-@media (max-width: 719px) { .turnfin-app .ins-kpis .ins-kpi-cell:last-child:nth-child(odd) { grid-column: span 2; } .turnfin-app .ins-kpis { gap: 10px; } }
+@container ins-main (max-width: 539px) { .turnfin-app .ins-kpis .ins-kpi-cell:last-child:nth-child(odd) { grid-column: span 2; } .turnfin-app .ins-kpis { gap: 10px; } }
+/* Tabs inside a narrow panel scroll sideways instead of wrapping over the rows beneath them. */
+.turnfin-app .ins .ins-panel [data-slot='tabs-list'] { max-width: 100%; flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; scrollbar-width: none; }
+.turnfin-app .ins .ins-panel [data-slot='tabs-trigger'] { flex: none; }

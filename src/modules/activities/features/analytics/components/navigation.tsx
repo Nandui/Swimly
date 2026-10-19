@@ -29,16 +29,31 @@ export const ANALYTICS_GROUPS = [
 
 export type AnalyticsPage = typeof ANALYTICS_GROUPS[number]["pages"][number]["key"];
 
-/** The suite's pages as one row of tabs in their three groups, the current one underlined. */
-export function AnalyticsNav({ active, query = "" }: { active: AnalyticsPage; query?: string }) {
-  return <nav aria-label="Analytics pages" className="ins-tabs">
-    {ANALYTICS_GROUPS.map(group => <div key={group.key} className="ins-tab-group" role="group" aria-labelledby={`ins-tabs-${group.key}`}>
-      <span id={`ins-tabs-${group.key}`} className="ins-tab-label">{group.label}</span>
+/** The suite's own menu, beside the page on wide screens: the pages in their three groups and,
+ *  under the page you are on, its sections. Where you are and where you can go sit in one place,
+ *  apart from the filters that change what the page shows. On narrower screens it becomes a row of
+ *  tabs across the top and the section links drop away (the page is one column to scroll). */
+export function AnalyticsNav({ active, query = "", sections = [] }: { active: AnalyticsPage; query?: string; sections?: { id: string; label: string }[] }) {
+  return <nav aria-label="Analytics pages" className="ins-side">
+    <p className="ins-side-title">Swim school analytics</p>
+    {ANALYTICS_GROUPS.map(group => <div key={group.key} className="ins-side-group" role="group" aria-labelledby={`ins-side-${group.key}`}>
+      <span id={`ins-side-${group.key}`} className="ins-side-label">{group.label}</span>
       <ul>{group.pages.map(({ key, href, label, icon: Icon, filtered }) => <li key={key}>
-        <Link href={filtered ? `${href}${query}` : href} className="ins-tab" aria-current={active === key ? "page" : undefined}>
+        <Link href={filtered ? `${href}${query}` : href} className="ins-side-link" aria-current={active === key ? "page" : undefined}>
           <Icon aria-hidden="true" strokeWidth={1.75} />{label}
         </Link>
+        {active === key && sections.length ? <ul className="ins-side-sections" aria-label="On this page">
+          {sections.map(section => <li key={section.id}><a href={`#${section.id}`}>{section.label}</a></li>)}
+        </ul> : null}
       </li>)}</ul>
     </div>)}
   </nav>;
+}
+
+/** Every analytics page: the suite's menu, then the page itself. */
+export function AnalyticsFrame({ active, query, sections, children }: { active: AnalyticsPage; query?: string; sections?: { id: string; label: string }[]; children: React.ReactNode }) {
+  return <div className="ins">
+    <AnalyticsNav active={active} query={query} sections={sections} />
+    <div className="ins-main">{children}</div>
+  </div>;
 }
