@@ -21,12 +21,12 @@ export type FilterBarProps = {
   reset: string | null;
 };
 
-/** Which report, then everything it is narrowed by, in one toolbar under the page title that stays in view:
+/** Which dashboard, then everything it is narrowed by, in one toolbar under the page title that stays in view:
  *  the period (one menu holding the usual lengths, quick picks and any two days), the sites and the
  *  programme, and a way back to the defaults at the end. What the choices add up to is said once,
  *  under the title. Each choice is a link or a navigation, so the address always says what the page
  *  shows and can be shared or bookmarked. */
-export function FilterBar({ path, presets, custom, sites, programme, reset, picker }: FilterBarProps & { picker: React.ReactNode }) {
+export function FilterBar({ path, presets, custom, sites, programme, reset, switcher }: FilterBarProps & { switcher: React.ReactNode }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
@@ -38,10 +38,10 @@ export function FilterBar({ path, presets, custom, sites, programme, reset, pick
   const preset = presets.find(p => p.current);
   const current = preset ? `Last ${preset.label}` : custom.label;
 
-  return <section className="ins-filters" aria-label="Report and filters" data-pending={pending ? "" : undefined}>
+  return <section className="ins-filters" aria-label="Dashboard and filters" data-pending={pending ? "" : undefined}>
     <div className="ins-filters-row">
-      {picker}
-      <span className="ins-filters-divider" aria-hidden="true" />
+      {switcher}
+      <div className="ins-filters-scope">
       <div className="ins-filter">
         <Popover open={open} onOpenChange={value => { setOpen(value); if (value) { setFrom(custom.start); setTo(custom.end); } }}>
           <PopoverTrigger asChild>
@@ -101,6 +101,7 @@ export function FilterBar({ path, presets, custom, sites, programme, reset, pick
         </NativeSelect>
       </div> : null}
       {reset ? <Link href={reset} scroll={false} className="ins-filters-reset"><RotateCcw aria-hidden="true" strokeWidth={1.75} />Reset</Link> : null}
+      </div>
     </div>
   </section>;
 }

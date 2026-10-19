@@ -1,9 +1,9 @@
 import Link from "next/link";
 import * as React from "react";
-import { ArrowDownRight, ArrowRight, ArrowUpRight } from "lucide-react";
+import { ArrowDownRight, ArrowRight, ArrowUpRight, type LucideIcon } from "lucide-react";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { addDaysIso, formatCount, formatDateRange, formatDateTime, formatDayMonth } from "@/lib/format";
-import { ReportPicker, type AnalyticsPage } from "@/modules/activities/features/analytics/components/navigation";
+import { DashboardSwitch, dashboardOf, type AnalyticsPage } from "@/modules/activities/features/analytics/components/navigation";
 import { AnalyticsRefresh } from "@/modules/activities/features/analytics/components/refresh";
 import { FilterBar, type FilterBarProps } from "@/modules/activities/features/analytics/components/insights/filters";
 import { AreaChart, FlowChart, type ChartKind } from "@/modules/activities/features/analytics/components/insights/charts";
@@ -66,13 +66,16 @@ function quickPicks(ctx: ReportContext) {
   ];
 }
 
-/** The suite's frame: the page title, the pages as tabs, then one sticky toolbar of filters that
- *  scopes everything below it. `programme` is false on pages the programme does not narrow
- *  (reception work is not tied to a programme). */
-export function ReportShell({ ctx, page, path, title, description, back, children, footnotes, sections, programme = true, actions }: {
+/** The frame every analytics page shares: the title with one line saying exactly what is shown, then
+ *  one sticky bar that starts with the three dashboards and carries every filter after it, then the
+ *  figures. A page behind a dashboard (every class, one teacher) gets a link back to it instead of
+ *  the eyebrow. `programme` is false on pages the programme does not narrow (reception work is not
+ *  tied to a programme). */
+export function ReportShell({ ctx, page, path, title, description, back, children, footnotes, programme = true, actions }: {
   ctx: ReportContext; page: AnalyticsPage; path: string; title: string; description?: string;
-  back?: { href: string; label: string }; children: React.ReactNode; footnotes?: React.ReactNode[];
-  sections?: { id: string; label: string }[]; programme?: boolean; actions?: React.ReactNode;
+  /** For a page behind a dashboard: where "back" goes, the dashboard itself unless given. */
+  back?: { href: string; label: string } | true; children: React.ReactNode; footnotes?: React.ReactNode[];
+  programme?: boolean; actions?: React.ReactNode;
 }) {
   const { period, filters } = ctx;
   const keep = (extra: Partial<ReportFilters>) => `${path}${reportQuery({ ...filters, ...extra })}`;
@@ -97,11 +100,14 @@ export function ReportShell({ ctx, page, path, title, description, back, childre
   };
   const scope = [ctx.siteName, ctx.programme && programme ? ctx.programme.name : null].filter(Boolean).join(" · ");
   const context = [scope, periodText(period), `compared with ${formatDateRange(period.previousStart, period.previousEnd)}`, period.current ? null : `"now" figures as of ${formatDayMonth(period.end)}`].filter(Boolean).join(" · ");
-  return <div className="ins">
+  const dashboard = dashboardOf(page);
+  const backTo = back === true ? { href: reportHref(ctx, dashboard.href), label: dashboard.label } : back;
+  return <div className="ins" data-dashboard={dashboard.key}>
     <div className="ins-top">
-      <PageHeader title={title} back={back} description={description ? <>{description}<span className="ins-context">{context}</span></> : context} actions={<>{actions}<AnalyticsRefresh /></>} />
+      {backTo ? null : <p className="ins-eyebrow">Swim school analytics</p>}
+      <PageHeader title={title} back={backTo} description={description ? <>{description}<span className="ins-context">{context}</span></> : context} actions={<>{actions}<AnalyticsRefresh /></>} />
     </div>
-    <FilterBar {...bar} picker={<ReportPicker active={page} query={filterQuery(ctx)} sections={sections} />} />
+    <FilterBar {...bar} switcher={<DashboardSwitch page={page} query={filterQuery(ctx)} />} />
     <div className="ins-body">{children}</div>
     <footer className="ins-footnote">
       {footnotes?.map((note, i) => <p key={i}>{note}</p>)}
@@ -147,6 +153,19 @@ export function Panel({ id, title, sub, action, children, className, span = 12, 
 export function KpiStrip({ label, children, span = 12 }: { label: string; children: React.ReactNode; span?: Span }) {
   const count = React.Children.toArray(children).filter(Boolean).length;
   return <ul className="ins-kpis" aria-label={label} data-count={count} data-span={span}>{children}</ul>;
+}
+
+/** The pages behind a dashboard, as tiles at its end: what each holds and a way in. */
+export function DrillLinks({ label, links }: { label: string; links: { href: string; title: string; hint: string; icon: LucideIcon; count?: string }[] }) {
+  return <ul className="ins-drill" aria-label={label}>
+    {links.map(({ href, title, hint, icon: Icon, count }) => <li key={href}>
+      <Link href={href} className="ins-drill-link">
+        <span className="ins-drill-icon" aria-hidden="true"><Icon strokeWidth={1.75} /></span>
+        <span className="min-w-0"><span className="ins-drill-title">{title}{count ? <span className="ins-drill-count">{count}</span> : null}</span><span className="ins-drill-hint">{hint}</span></span>
+        <ArrowRight aria-hidden="true" className="ins-drill-go" />
+      </Link>
+    </li>)}
+  </ul>;
 }
 
 export function PanelLink({ href, children }: { href: string; children: React.ReactNode }) {

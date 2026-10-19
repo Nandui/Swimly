@@ -15,7 +15,7 @@ import { ATTENDANCE_REPORT_META } from "@/modules/activities/features/analytics/
 import type { InstructorAnalyticsData } from "@/modules/activities/features/analytics/server/report-data";
 import { classTimes } from "@/modules/activities/shared/courses/constants";
 import { formatCount, formatDateTime, formatShortDay, plural } from "@/lib/format";
-import { ReportPicker } from "@/modules/activities/features/analytics/components/navigation";
+import { DashboardSwitch } from "@/modules/activities/features/analytics/components/navigation";
 import { AnalyticsRefresh } from "@/modules/activities/features/analytics/components/refresh";
 import { ReportUpdated, weekLabel } from "@/modules/activities/features/analytics/components/period";
 
@@ -33,11 +33,11 @@ export function InstructorReport({ data }: { data: InstructorAnalyticsData }) {
   const selected = data.instructors.find(person => person.id === instructor);
   const scoped = data.classes.filter(row => !instructor || row.instructorKey === instructor);
   const classes = scoped.filter(row => matches(row.status, filter));
-  return <div className="ins">
+  return <div className="ins" data-dashboard="pool-deck">
     <div className="ins-top">
-      <PageHeader title="Registers" description={`${data.siteName} · This week, Monday to Sunday · ${weekLabel(data.period)}`} actions={<AnalyticsRefresh />} />
+      <PageHeader title="Registers" back={{ href: "/analytics/pool-deck", label: "Pool deck" }} description={`${data.siteName} · This week, Monday to Sunday · ${weekLabel(data.period)}`} actions={<AnalyticsRefresh />} />
     </div>
-    <section className="ins-filters" aria-label="Report"><div className="ins-filters-row"><ReportPicker active="instructors" /></div></section>
+    <section className="ins-filters" aria-label="Dashboards"><div className="ins-filters-row"><DashboardSwitch page="instructors" /></div></section>
     <ul className="ins-kpis" data-count="4" aria-label="Attendance at a glance">
       <StatTile icon={CheckCheck} value={formatCount(data.totals.due)} label="Classes finished" caption="This week" />
       <StatTile icon={CircleCheck} value={formatCount(data.totals.saved)} label="Attendance saved" caption={`Of ${formatCount(data.totals.due)} due`} />

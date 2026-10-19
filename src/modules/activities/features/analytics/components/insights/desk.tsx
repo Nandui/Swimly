@@ -13,15 +13,12 @@ export function DeskReport({ data }: { data: DeskInsights }) {
   const q = d.quality, b = d.bookings, f = d.followUps;
   const query = filterQuery(data);
   const totalChange = { current: d.total, previous: d.previousTotal, change: d.previousTotal ? d.total - d.previousTotal : null };
-  return <ReportShell ctx={data} page="reception" path="/analytics/reception" title="Reception" programme={false} sections={[
-    { id: "glance", label: "At a glance" }, { id: "service", label: "Service" }, { id: "workload", label: "Workload" }, { id: "team", label: "The team" }, { id: "enquiries", label: "Enquiries" },
-  ]} footnotes={[
+  return <ReportShell ctx={data} page="reception" path="/analytics/reception" title="Reception" programme={false} footnotes={[
     "Work done counts what each person recorded in Turnfin for the swim school, short courses, the Academy and refunds: enrolments, moves, unenrols, swimmer records, parent app requests, follow-up calls, billing checks, bookings and refund requests. Phone calls, emails and the till are not in Turnfin, so they are not counted.",
     "Timed jobs run from when the job reached the desk to when it was done, against a target: parent app requests within a day, cancelled classes to billing within two days, billing agreements within a week, swimmers ready to move within two weeks, Academy call backs within 72 hours. Still waiting counts jobs not done yet.",
     "Undone in a day counts places made and then unenrolled within 24 hours by anyone, against whoever made the place: a sign of a mistake or a change of mind. Unenrols with no reason count from 16 October 2026, when the reason was first asked.",
     ...(data.failed.length ? [`Some figures could not be read this time (${data.failed.join(", ")}). Refresh to try again.`] : []),
   ]}>
-    <Section id="glance" title="At a glance" intro="Everything reception recorded in Turnfin in the period.">
     <KpiStrip label="The desk at a glance">
       <Kpi label="Work done" value={formatCount(d.total)} spark={d.weeks.map(w => w.count)} note={`${plural(d.people.filter(p => p.actions).length, "person", "people")} · ${decimal(d.perPerson)} each`} delta={<Delta change={totalChange} better="none" label="against the period before" />} />
       <Kpi label="Jobs on time" value={percent(d.onTime)} note="Timed jobs done within their target" />
@@ -30,7 +27,13 @@ export function DeskReport({ data }: { data: DeskInsights }) {
       <Kpi label="Unenrols with a reason" value={percent(share(q.unenrols - q.noReason, q.unenrols))} note={`${formatCount(q.unenrols)} since reasons were asked`} />
       <Kpi label="Undone in a day" value={formatCount(d.corrections)} note="Places made then unenrolled within 24 hours" />
     </KpiStrip>
+
+    <Section id="team" title="The team" intro="Each person's work, speed and record quality side by side. Open a person for their week by week work, their times against the team and their busy hours.">
+    <Panel id="people" title="Each person" sub="Sort by what you want to talk about. Gold on time is more than 10 points behind the team; red undone in a day is worth a word.">
+      <DeskTable people={d.people} teamOnTime={d.onTime} query={query} />
+    </Panel>
     </Section>
+
     <Section id="service" title="Service" intro="How quickly jobs with a clock on them get done, what is still waiting now, and how complete the records are.">
     <Panel id="times" title="How fast the desk answers" sub="Each kind of job with a clock on it: how many were done, the typical time, the share within target, and what is still waiting.">
       {d.jobs.length ? <div className="ins-table-wrap"><Table>
@@ -57,14 +60,13 @@ export function DeskReport({ data }: { data: DeskInsights }) {
         </TableRow>)}</TableBody>
       </Table></div> : <p className="ins-sub">No timed jobs in this period.</p>}
     </Panel>
-
-      <Panel span={5} id="waiting" title="Still waiting" sub={d.open.count ? `${plural(d.open.count, "job")} not done yet, longest first.` : undefined}>
+      <Panel span={6} id="waiting" title="Still waiting" sub={d.open.count ? `${plural(d.open.count, "job")} not done yet, longest first.` : undefined}>
         {d.open.oldest.length ? <ul className="pc-rows">{d.open.oldest.map((j, i) => <li key={`${j.kind}-${i}`} className="pc-row"><div className="pc-row-body">
           <p className="pc-row-title">{j.href ? <Link href={j.href} className="text-ui-primary hover:underline">{j.label}</Link> : j.label}</p>
           <p className="pc-row-hint">{[`Waiting ${duration(j.minutes)}`, data.allSites ? j.siteName ?? "Every site" : null].filter(Boolean).join(" · ")}</p>
         </div><div className="pc-row-trail">{j.overdue ? <Flag tone="warn">Past target</Flag> : null}</div></li>)}</ul> : <p className="ins-sub">Nothing is waiting for the desk.</p>}
       </Panel>
-      <Panel span={7} id="quality" title="Record quality" sub="New swimmers added without key details, and unenrols with no reason given.">
+      <Panel span={6} id="quality" title="Record quality" sub="New swimmers added without key details, and unenrols with no reason given.">
         <Attention items={[
           { key: "birthday", count: q.noBirthday, title: "No date of birth", hint: `Of ${plural(q.added, "new swimmer")}`, tone: "warn" },
           { key: "phone", count: q.noPhone, title: "No contact phone", hint: `Of ${plural(q.added, "new swimmer")}`, tone: "warn" },
@@ -73,27 +75,20 @@ export function DeskReport({ data }: { data: DeskInsights }) {
           { key: "undone", count: d.corrections, title: "Places undone within a day", hint: "Made then unenrolled within 24 hours", tone: "warn" },
         ]} />
       </Panel>
-
     </Section>
-    <Section id="workload" title="Workload" intro="Use the busy hours to match staff on the desk to the busy times.">
+
+    <Section id="rostering" title="Rostering" intro="Match staff on the desk to the busy times, and see what the desk spends its time on.">
+    <Panel id="busy" title="Busy hours" sub="When the work was recorded, by day of the week and hour (Irish time).">
+      <BusyHours rows={d.heat} caption="Desk work recorded by day of the week and hour" />
+    </Panel>
       <Panel span={5} id="kinds" title="What the desk spent its time on" sub="Each kind of work recorded, with the period before in brackets.">
         {d.kinds.length ? <Bars label="Work by kind" rows={d.kinds.map(k => ({ key: k.key, label: `${k.label} (${formatCount(k.previous)})`, value: k.count }))} /> : <p className="ins-sub">Nothing recorded in this period.</p>}
       </Panel>
       <Panel span={7} id="weekly" title="Work week by week">
         <TrendChart label="Desk work each week" unit="actions" points={d.weeks.map(w => ({ x: w.week, y: w.count, label: `Week of ${formatDayMonth(w.week)}` }))} />
       </Panel>
-
-    <Panel id="busy" title="Busy hours" sub="When the work was recorded, by day of the week and hour (Irish time).">
-      <BusyHours rows={d.heat} caption="Desk work recorded by day of the week and hour" />
-    </Panel>
-
     </Section>
-    <Section id="team" title="The team" intro="Sort, search and open a person for their week-by-week work, their times against the team and their busy hours.">
-    <Panel id="people" title="Every person">
-      <DeskTable people={d.people} teamOnTime={d.onTime} query={query} />
-    </Panel>
 
-    </Section>
     <Section id="enquiries" title="Enquiries" intro="Follow-up calls about enrolment, and assessment bookings that went on to a class.">
       <Panel span={6} id="follow-ups" title="Follow-up calls" sub={`${plural(f.logged, "call or message", "calls and messages")} logged about enrolment. ${f.overdue ? `${f.overdue} swimmers are past their next contact date.` : "No swimmer is past their next contact date."}`}>
         {f.outcomes.length ? <>

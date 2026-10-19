@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.40.0 · 19 October 2026 · Swim school analytics: three dashboards
+
+- **Analytics** is now three dashboards, one for each person who reads it. Switch between them with the three buttons at the start of the bar under the page title: **Business**, **Reception** and **Pool deck**.
+- **Business** is for decisions about the swim school: swimmers week by week, places filled, the waiting list, who joined and left and why, where the timetable is full, each level's free places, the next four weeks, how many assessed swimmers start a class, and ages. Every class, swimmers and leavers, and multiple enrolments open from the end of the page.
+- **Reception** puts the team first, so a supervisor can see each person's work, speed and record quality side by side, then how fast jobs get done, what is still waiting, record quality, busy hours and enquiries.
+- **Pool deck** is new, for the pool deck supervisor: attendance week by week, starts on time, registers this week, the same teacher each week, cancelled lessons, attendance by time slot, every teacher against the school, weeks to pass each level and the skills holding swimmers back. Registers and level by level open from it.
+- A new look: frosted glass panels on a soft background (near black in dark mode), quieter type, and one blue for charts. Every figure, filter and link is still there; old links to the Teachers report now open the pool deck.
+
 ## 1.39.0 · 19 October 2026 · Swim school analytics: easier to find your way
 
 - Moving between **Analytics** reports is now one button at the start of the bar under the page title, named after the report you are on. Open it to pick any other report (The business, Our people, Checks) or jump to a part of the page you are on. The separate row of report tabs is gone.
