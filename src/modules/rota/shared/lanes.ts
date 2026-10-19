@@ -3,8 +3,7 @@
  *  many lanes it has (Admin, Areas); an activity or booking takes some of them, or none for the
  *  whole area. Pure, so it is tested on its own (lanes.test.ts). */
 
-/** The most lanes an area may have. */
-const MAX_LANES = 20;
+import { MAX_LANES } from "@/lib/setup/lanes";
 
 /** The lanes chosen on a form, as a sorted list without repeats. Empty means the whole area. */
 export function lanesFrom(values: readonly unknown[]): number[] {
@@ -33,25 +32,8 @@ export function lanesMeet(a: readonly number[], b: readonly number[], count: num
   return lanesTaken(b, count).some((l) => mine.has(l));
 }
 
-/** "Whole pool", "Lane 3", "Lanes 1 to 3", "Lanes 1, 3 and 5". */
-export function lanesLabel(lanes: readonly number[], count: number) {
-  const real = lanes.filter((l) => l >= 1 && (!count || l <= count));
-  if (!real.length || (count && real.length >= count)) return "Whole pool";
-  if (real.length === 1) return `Lane ${real[0]}`;
-  const run = real.every((l, i) => i === 0 || l === real[i - 1] + 1);
-  return run ? `Lanes ${real[0]} to ${real[real.length - 1]}` : `Lanes ${real.slice(0, -1).join(", ")} and ${real[real.length - 1]}`;
-}
-
-/** The lanes a swim class's location names after its area: "Main pool, lane 3" or
- *  "Main pool, lanes 3-4". None when it names no lane. */
-export function lanesInPlace(place: string): number[] {
-  const detail = place.split(",").slice(1).join(",");
-  const m = /lanes?\s*(\d+)(?:\s*(?:-|–|to|and|&)\s*(\d+))?/i.exec(detail);
-  if (!m) return [];
-  const a = Number(m[1]), b = m[2] ? Number(m[2]) : a;
-  const [lo, hi] = a <= b ? [a, b] : [b, a];
-  return hi - lo > MAX_LANES ? [] : Array.from({ length: hi - lo + 1 }, (_, i) => lo + i).filter((l) => l <= MAX_LANES);
-}
+/** Labels and a swim class's lanes are worded once, in Admin's areas (src/lib/setup/lanes.ts). */
+export { lanesInPlace, lanesLabel } from "@/lib/setup/lanes";
 
 /** Two bookings that hold the same lane at the same time, on a day they both run: the first
  *  clash found, or null (owner default, 13 October 2026: two bookings can't hold the same lane).

@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Checkbox } from "@/components/shadcn/checkbox";
-import { Label } from "@/components/shadcn/label";
 import { Field } from "@/components/form-dialog";
 import { AreaSelect } from "@/components/ui/area-select";
-import { lanesLabel } from "@/modules/rota/shared/lanes";
+import { LanePicker } from "@/components/ui/lane-picker";
 
 /** One of a site's areas and how many lanes it has (Admin, Areas; 0 for none). */
 export type AreaLanes = { name: string; lanes: number };
@@ -21,8 +19,6 @@ export function AreaLanesFields({ fid, areas, place, lanes, hint = "The site's a
   const [chosen, setChosen] = useState<number[]>([...(lanes ?? [])]);
   const count = areas.find((a) => a.name.toLowerCase() === where.trim().toLowerCase())?.lanes ?? 0;
   const shown = chosen.filter((l) => l <= count);
-  const whole = shown.length === 0;
-  const toggle = (lane: number, on: boolean) => setChosen((list) => (on ? [...list.filter((l) => l <= count), lane].sort((a, b) => a - b) : list.filter((l) => l !== lane)));
   return (
     <>
       <div className="contents" onChange={(e) => {
@@ -33,24 +29,8 @@ export function AreaLanesFields({ fid, areas, place, lanes, hint = "The site's a
           <AreaSelect id={`${fid}-place`} name="place" areas={areas.map((a) => a.name)} defaultValue={place} />
         </Field>
       </div>
-      {count ? (
-        <fieldset className="flex min-w-0 flex-col gap-2 sm:col-span-2">
-          <legend className="mb-2 font-semibold">Lanes <span className="font-normal text-ui-muted-foreground">({lanesLabel(shown, count)})</span></legend>
-          <div className="flex flex-wrap gap-x-4 gap-y-1">
-            <div className="flex min-h-11 items-center gap-2">
-              <Checkbox id={`${fid}-whole`} checked={whole} onCheckedChange={(v) => { if (v === true) setChosen([]); }} />
-              <Label htmlFor={`${fid}-whole`} className="font-normal">Whole pool</Label>
-            </div>
-            {Array.from({ length: count }, (_, i) => i + 1).map((lane) => (
-              <div key={lane} className="flex min-h-11 items-center gap-2">
-                <Checkbox id={`${fid}-lane-${lane}`} checked={shown.includes(lane)} onCheckedChange={(v) => toggle(lane, v === true)} />
-                <Label htmlFor={`${fid}-lane-${lane}`} className="font-normal">Lane {lane}</Label>
-              </div>
-            ))}
-          </div>
-          {shown.map((l) => <input key={l} type="hidden" name="lanes" value={l} />)}
-        </fieldset>
-      ) : null}
+      {count ? <LanePicker fid={fid} count={count} chosen={chosen} onChange={setChosen} /> : null}
+      {shown.map((l) => <input key={l} type="hidden" name="lanes" value={l} />)}
     </>
   );
 }

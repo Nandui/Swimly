@@ -176,8 +176,8 @@ function SessionFields({
             defaultValue={session?.capacity ?? ""}
           />
         </Field>
-        <LocationField label="Pool" defaultValue={session?.location} />
       </div>
+      <LocationField label="Pool" defaultValue={session?.location} />
 
       <div
         className={

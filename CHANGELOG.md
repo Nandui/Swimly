@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.37.0 · 19 October 2026 · Pool lanes for classes and courses
+
+- In **Admin, Areas**, a pool shows its lanes ("Lanes 1 to 6"), or says it has none yet. Press the pencil to say how many lanes it has.
+- A **swim class** and an **assessment** can now take the whole pool, one lane or any set of lanes: tick them under Where. There is still a Detail box for anything else, such as "shallow end".
+- **Short course** and **Academy** sessions can take lanes the same way.
+- On the rota **Plan**, a class or course session says which lanes it uses, as rota activities and bookings already did.
+
 ## 1.36.0 · 19 October 2026 · Swim school analytics: a new dashboard look
 
 - Every **Analytics** page has a new, clearer layout: the pages sit along the top as tabs, and the period, site and programme choices stay in view as you scroll, with links to each part of the page.

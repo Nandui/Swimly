@@ -27,17 +27,5 @@ export const ACTIVITY_TAG_META = {
   classes: { label: "Not on the Plan: swim classes fill it by themselves", color: "gray", icon: GraduationCap },
 } as const satisfies Record<string, StatusMeta>;
 
-/** "Learner pool, lane 3" → the area and the detail after it, when the text starts with an area. */
-export function splitLocation(value: string | null | undefined, areas: readonly string[]): { area: string; detail: string } {
-  const text = (value ?? "").trim();
-  if (!text) return { area: "", detail: "" };
-  const lower = text.toLowerCase();
-  const area = [...areas].sort((a, b) => b.length - a.length).find((a) => lower === a.toLowerCase() || lower.startsWith(`${a.toLowerCase()},`));
-  if (!area) return { area: "", detail: text };
-  return { area, detail: text.slice(area.length).replace(/^,\s*/, "") };
-}
-
-/** The area and its detail as one location: "Learner pool, lane 3". */
-export function joinLocation(area: string, detail: string) {
-  return [area.trim(), detail.trim()].filter(Boolean).join(", ");
-}
+/** A location as an area and the detail after it ("Learner pool, lane 3"), kept with the lanes. */
+export { joinLocation, splitLocation } from "@/lib/setup/lanes";

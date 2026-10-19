@@ -10,7 +10,7 @@ import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { Textarea } from "@/components/shadcn/textarea";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { AreaSelect } from "@/components/ui/area-select";
+import { PlaceLanesField, type AreaWithLanes } from "@/components/ui/lane-picker";
 import {
   recordChecks, recordResult, removeSession, saveCandidate, saveCourse, saveSession, setCourseStatus, setWithdrawn, takeRegister,
 } from "@/modules/short-courses/features/academy-courses/server/actions";
@@ -91,7 +91,7 @@ export function CourseStatusButton({ id, to, label, title, description, destruct
 export type SessionEdit = { id: string; date: string; startMinutes: number; endMinutes: number; place: string; note: string };
 const clock = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 
-export function SessionDialog({ courseId, session, areas, suggestDate, trigger }: { courseId: string; session?: SessionEdit; areas: string[]; suggestDate?: string; trigger?: ReactNode }) {
+export function SessionDialog({ courseId, session, areas, suggestDate, trigger }: { courseId: string; session?: SessionEdit; areas: AreaWithLanes[]; suggestDate?: string; trigger?: ReactNode }) {
   const refresh = useRefresh();
   const fid = session ? `s-${session.id}` : "s-new";
   return (
@@ -105,7 +105,7 @@ export function SessionDialog({ courseId, session, areas, suggestDate, trigger }
         <Field label="Starts" htmlFor={`${fid}-start`}><Input id={`${fid}-start`} name="start" type="time" step={900} required defaultValue={clock(session?.startMinutes ?? 540)} className="min-h-11" /></Field>
         <Field label="Ends" htmlFor={`${fid}-end`}><Input id={`${fid}-end`} name="end" type="time" step={900} required defaultValue={clock(session?.endMinutes ?? 1020)} className="min-h-11" /></Field>
       </div>
-      <Field label="Where" htmlFor={`${fid}-place`} optional hint="The site's areas, kept in Admin."><AreaSelect id={`${fid}-place`} name="place" areas={areas} defaultValue={session?.place} /></Field>
+      <div className="grid gap-4 sm:grid-cols-2"><PlaceLanesField fid={`${fid}-place`} name="place" areas={areas} defaultValue={session?.place} hint="The site's areas, kept in Admin." /></div>
       <Field label="Note" htmlFor={`${fid}-note`} optional><Input id={`${fid}-note`} name="note" maxLength={200} defaultValue={session?.note} placeholder="Theory and CPR" className="min-h-11" /></Field>
       {session ? (
         <div>

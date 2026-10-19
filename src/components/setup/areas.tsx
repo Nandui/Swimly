@@ -28,7 +28,7 @@ export function SaveArea({ siteId, siteName, area }: { siteId: string; siteName:
       submit={(formData) => saveArea(siteId, area?.id ?? null, { name: String(formData.get("name") ?? ""), lanes: String(formData.get("lanes") ?? "0") })}
     >
       <Field label="Name" htmlFor={id}><Input id={id} name="name" required maxLength={60} defaultValue={area?.name} autoFocus /></Field>
-      <Field label="Lanes" htmlFor={`${id}-lanes`} hint="For a pool booked by lane. 0 for an area without lanes, such as a gym or reception.">
+      <Field label="Lanes" htmlFor={`${id}-lanes`} hint="For a swimming pool: how many lanes it has, numbered from 1. Rota activities and bookings, swim classes and short courses can then take the whole pool, one lane or a set of lanes. 0 for an area without lanes, such as a gym or reception.">
         <Input id={`${id}-lanes`} name="lanes" type="number" inputMode="numeric" min={0} max={20} required defaultValue={area?.lanes ?? 0} className="min-h-11" />
       </Field>
     </FormDialog>

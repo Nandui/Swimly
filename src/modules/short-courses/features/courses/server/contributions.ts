@@ -32,11 +32,14 @@ export async function shortCourseCommitments(query: CommitmentQuery): Promise<Co
   }));
 }
 
-/** When Admin renames one of a site's areas, the sessions there follow. */
+/** When Admin renames one of a site's areas, the sessions there follow, with any lanes they name
+ *  after it ("Main pool, lane 3"). */
 export async function renameShortCoursePlaces({ siteId, from, to }: AreaRename, tx?: unknown) {
   const db = (tx as Prisma.TransactionClient | undefined) ?? prisma;
   const moved = await db.shortCourseSession.updateMany({ where: { place: { equals: from, mode: "insensitive" }, course: { siteId } }, data: { place: to } });
-  return moved.count;
+  const withLanes = await db.shortCourseSession.findMany({ where: { place: { startsWith: `${from},`, mode: "insensitive" }, course: { siteId } }, select: { id: true, place: true } });
+  for (const s of withLanes) await db.shortCourseSession.update({ where: { id: s.id }, data: { place: `${to}${s.place.slice(from.length)}` } });
+  return moved.count + withLanes.length;
 }
 
 /** Short courses on the home page: registers to take today on the courses someone instructs,

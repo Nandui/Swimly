@@ -70,6 +70,9 @@ export type Block = {
   classRef: string | null;
   /** "Stage 3", "St Mary's NS": what this block is, beyond its activity. */
   detail: string | null;
+  /** The lanes a swim class or another module's session names in its location ("Main pool,
+   *  lanes 2 to 3"; owner request, 19 October 2026); none for the whole area or a planned need. */
+  lanes?: number[];
   warnings: BlockWarning[];
 };
 type Lane = Block[];
@@ -259,7 +262,7 @@ export function buildDay(input: {
       for (const lane of lanes) {
         const blocks = lane.map(({ c }): Block => {
           if (c.userId) add(c.userId, { start: c.startMinutes, end: c.endMinutes, label: c.title || teaching.name });
-          return { ...blank, kind: c.userId ? "on" : "gap", start: c.startMinutes, end: c.endMinutes, userId: c.userId, name: name(c.userId), classRef: c.ref, detail: c.title, warnings: [] };
+          return { ...blank, kind: c.userId ? "on" : "gap", start: c.startMinutes, end: c.endMinutes, userId: c.userId, name: name(c.userId), classRef: c.ref, detail: c.title, lanes: lanesInPlace(c.place), warnings: [] };
         });
         g.lanes.push(blocks);
       }
@@ -274,7 +277,7 @@ export function buildDay(input: {
     addItem(zone, { key: `booked:${b.ref}`, kind: "booked", label: b.title, detail: b.module ? `Planned in ${b.module}` : null, start: b.startMinutes, end: b.endMinutes,
       lanes: lanesInPlace(b.place), departmentId: ANY_DEPARTMENT, groupKey: g.key, needId: null, places: 1, gaps: 0, href: b.href });
     if (b.userId) add(b.userId, { start: b.startMinutes, end: b.endMinutes, label: b.title });
-    const block: Block = { ...blank, kind: b.userId ? "on" : "gap", start: b.startMinutes, end: b.endMinutes, userId: b.userId, name: name(b.userId), detail: b.module ?? "Booked", warnings: [] };
+    const block: Block = { ...blank, kind: b.userId ? "on" : "gap", start: b.startMinutes, end: b.endMinutes, userId: b.userId, name: name(b.userId), detail: b.module ?? "Booked", lanes: lanesInPlace(b.place), warnings: [] };
     const lane = g.lanes.find((l) => l.every((x) => x.userId === b.userId && (x.end <= b.startMinutes || x.start >= b.endMinutes)));
     if (lane) lane.push(block); else g.lanes.push([block]);
   }
