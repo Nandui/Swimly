@@ -8,7 +8,7 @@ import { staffContact } from "@/lib/directory";
 import { isDateOnly, parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { qualificationTypeById, recordQualification, revokeQualification, updateQualification } from "@/lib/qualifications";
-import { areaProblem } from "@/lib/setup/data";
+import { placeProblem } from "@/lib/setup/data";
 import { ACADEMY_OUTCOMES, ACADEMY_PAYMENTS, centsOf, expiryFrom, takesPlace } from "@/modules/short-courses/shared/academy-rules";
 import { atSite, clockOf, courseFor, iso, optionalDate, refresh } from "@/modules/short-courses/shared/academy-server";
 
@@ -103,7 +103,7 @@ export async function saveSession(courseId: string, id: string | null, input: Se
   if (end <= start) return fail("The session ends before it starts.");
   const before = id ? await prisma.academySession.findFirst({ where: { id, courseId }, select: { place: true } }) : null;
   if (id && !before) return fail("That session is no longer on the course.");
-  const problem = await areaProblem(at.site.id, d.place, before?.place);
+  const problem = await placeProblem(at.site.id, d.place, before?.place);
   if (problem) return fail(problem);
   const data = { date: parseDateOnly(d.date), startMinutes: start, endMinutes: end, place: d.place, note: d.note };
   await prisma.$transaction(async (tx) => {

@@ -78,6 +78,11 @@ export const incidentActions = {
   action_cancel: "Action cancelled",
   file_add: "File added",
   file_remove: "File removed",
+  footage_request: "CCTV footage requested",
+  footage_resend: "CCTV request sent again",
+  footage_cancel: "CCTV request cancelled",
+  footage_received: "CCTV footage received",
+  footage_remove: "CCTV footage removed",
   reopen: "Reopened",
   export: "Opened for the insurer",
 } as const;

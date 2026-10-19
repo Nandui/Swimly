@@ -101,6 +101,45 @@ Investigate at the site except its reporter.
 The reporter sees their report, addenda, files and the closing note, never the statements,
 the whys or the actions.
 
+## CCTV footage (owner request, 19 October 2026)
+
+Fernando asked for a way, while a report is investigated, to ask a particular person for CCTV
+footage, by an email with a direct link to upload it, so the footage is attached to the report.
+
+- **Who asks.** Anyone who triages reports at the site, while the report is open: before
+  triage too, because recorders overwrite within days. Not on your own report, unless you hold
+  Manage, as with triage. On the report: **CCTV footage > Ask for footage**.
+- **Who is asked.** A staff member at the site (their account's email), or anyone by name and
+  email, such as the security company. **What you need** starts with the day, a window of
+  15 minutes either side of the time, and the place, from the report; the investigator adds
+  the cameras. It is the only part of the report the other person sees.
+- **The email** (`incidents_footage_requests.emailedAt`, or `emailError` shown on the request)
+  names who asked, the site and the report number, what is needed and the link. Nothing about
+  who was involved or what happened. Replies go to whoever asked.
+- **The link** (`/footage/<secret>`) needs no sign-in. Its secret is 32 random bytes, kept only
+  as a SHA-256 hash, and opens that one request: the upload page shows what was asked and
+  what has arrived, nothing else. It works for 14 days, and stops when it is cancelled
+  (**Stop the link**), sent again (**Send again** gives a new link for another 14 days) or the
+  report closes. Unknown links are a 404.
+- **The videos.** As the recorder exports them (MP4, MOV, AVI, MKV, WebM, WMV, ASF, MPEG, TS,
+  3GP, Dahua DAV, raw H.264, or a zip with a player), up to 5 GB each and 10 per request. The
+  type comes from the extension, never the browser. Each goes from the browser straight to a
+  **private Vercel Blob store** (too big for the database, unlike photos), in parts above
+  50 MB, with a token for its one path, type and size that can't overwrite anything. Turnfin
+  records it only once the store holds all of it, at the size declared. Each arrival is in the
+  report's history and the audit log under the name the person typed ("Example Security
+  (footage link)"), and the person who asked gets an email.
+- **Watching.** Only those who triage at the report's site see the requests and the videos;
+  the reporter doesn't (statements are the same). Videos stream through
+  `/api/incidents/footage/[id]`, which checks access each time and supports seeking; MP4,
+  WebM and MOV play in the browser, the rest download. Opening one is logged like opening the
+  injury details. The full record lists the videos by name.
+- **Kept.** Like files, a video can be removed (hidden) while the report is open, never
+  deleted; the store keeps it for the report's keeping period.
+- **Storage.** The store is connected to the Vercel project, which sets `BLOB_READ_WRITE_TOKEN`.
+  Without it the panel says footage storage isn't set up and offers nothing to send. The
+  sandbox prints the email instead of sending it (`INCIDENTS_EMAIL_DEV_LOG`).
+
 ## Insights, the full record and HR (phase 3)
 
 - **Insights** (`/incidents/insights`, Investigate and Manage, 404 for everyone else): the last
@@ -160,7 +199,7 @@ investigates it, and a serious one needs another Manage holder at the site to cl
 | Level | Permission | Sees |
 | --- | --- | --- |
 | Report | `incidents.reports.create` | Their own reports, in full, and how they were closed |
-| Investigate | `incidents.reports.review` | Every report at the sites they cover, injury details included; the serious alerts; triage and closing low-risk ones; statements, the root cause and actions |
+| Investigate | `incidents.reports.review` | Every report at the sites they cover, injury details included; the serious alerts; triage and closing low-risk ones; statements, the root cause and actions; CCTV footage requests and videos |
 | Manage | `incidents.reports.signoff` | Also closing serious and moderate reports (only the operations manager holds it, owner decision 12 October 2026), reopening closed ones, the full record for the insurer, reports past their keeping period, and who opened each report's injury details |
 
 Reach is the sites a person works at. Opening someone else's report that names people writes
@@ -173,7 +212,9 @@ Manage), Overview (`/incidents/overview`, the starter page: reports to triage, s
 investigations, Report an incident), Report (`/incidents/new`), Reports (`/incidents`: your
 actions, to triage, under investigation, your reports, recently closed) and a report
 (`/incidents/[id]`). Files are served by `/api/incidents/files/[id]` and added through
-`/api/incidents/files`.
+`/api/incidents/files`. CCTV videos are served by `/api/incidents/footage/[id]`; the emailed
+link's page is `/footage/[token]`, which uploads through `/api/incidents/footage/upload` and
+`/api/incidents/footage/received`.
 
 ## Decided (11 October 2026)
 

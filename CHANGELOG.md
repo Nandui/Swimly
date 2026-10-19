@@ -4,12 +4,27 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.37.0 · 19 October 2026 · Swim school analytics: easier to find your way
+## 1.39.0 · 19 October 2026 · Swim school analytics: easier to find your way
 
 - Moving between **Analytics** reports is now one button at the start of the bar under the page title, named after the report you are on. Open it to pick any other report (The business, Our people, Checks) or jump to a part of the page you are on. The separate row of report tabs is gone.
 - The period, site and programme choices sit in that same bar, which stays in view as you scroll. The period is now one button: open it to pick 4 weeks, 13 weeks, 6 months or 12 months, a quick pick such as the school year, or any two days. **Reset** puts everything back.
 - The line under the page title says exactly what you are looking at once: the site, the period and the period it is compared with.
 - A more polished look: a soft wash of colour behind the top of each page, the swimmer count on **Overview** on a deep blue card, each headline figure on its own card, and charts and bars that run from blue into violet. Every figure, filter and link works as before.
+
+## 1.38.0 · 19 October 2026 · Pool lanes for classes and courses
+
+- In **Admin, Areas**, a pool shows its lanes ("Lanes 1 to 6"), or says it has none yet. Press the pencil to say how many lanes it has.
+- A **swim class** and an **assessment** can now take the whole pool, one lane or any set of lanes: tick them under Where. There is still a Detail box for anything else, such as "shallow end".
+- **Short course** and **Academy** sessions can take lanes the same way.
+- On the rota **Plan**, a class or course session says which lanes it uses, as rota activities and bookings already did.
+## 1.37.0 · 19 October 2026 · Incidents: ask for CCTV footage by email
+
+- On an incident report, **CCTV footage > Ask for footage** sends a request to whoever has the recording: someone on the team, or anyone by email, such as the security company.
+- It fills in the day, the time and the place from the report. Add which cameras you need. They see only what you write there, never who was involved or what happened.
+- They get an email with a link to upload the videos straight to the report, without signing in. The link works for 14 days. Videos can be up to 5 GB each, as the recorder exports them.
+- You get an email when a video arrives. It shows under **CCTV footage** on the report, where you can play or download it. Only people who triage reports at that site can see it.
+- **Send again** sends a new link if the first one expired or got lost. **Stop the link** closes it once you have what you need.
+- Every request and every video is in the report's history and listed in the full record.
 
 ## 1.36.0 · 19 October 2026 · Swim school analytics: a new dashboard look
 
