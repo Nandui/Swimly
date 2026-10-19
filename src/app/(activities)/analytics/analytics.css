@@ -34,7 +34,7 @@
   --ins-radius: 24px;
   --ins-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
   position: relative; isolation: isolate;
-  display: flex; flex-direction: column; gap: 20px; min-width: 0;
+  display: flex; flex-direction: column; gap: 20px; min-width: 0; container: ins-main / inline-size;
 }
 /* The aura: three soft pools of colour behind the top of the page, stronger in dark mode. */
 .turnfin-app .ins::before { content: ''; position: absolute; z-index: -1; inset: -24px -24px auto; height: 560px; border-radius: var(--pc-radius-frame) var(--pc-radius-frame) 0 0; pointer-events: none;
@@ -46,46 +46,29 @@
 @media (max-width: 767px) { .turnfin-app .ins::before { inset: -16px -16px auto; height: 420px; border-radius: 0; } }
 
 /* ── Where things sit (owner, 19 October 2026: "think about the location, where it makes sense and
-   the general flow for the user"). Wide screens get two columns: the suite's own menu on the left
-   (the pages in their groups, and the sections of the page you are on), the page on the right. The
-   page reads top to bottom in the order a manager works: the title and one line saying exactly
-   what is shown, the filters that change it in one sticky bar, then the figures. Narrower screens
-   stack it: the menu becomes a row of tabs, then the same page. */
-@media (min-width: 1100px) {
-  .turnfin-app .ins { display: grid; grid-template-columns: 15rem minmax(0, 1fr); align-items: start; gap: 28px; }
-}
-.turnfin-app .ins-main { display: flex; flex-direction: column; gap: 20px; min-width: 0; container: ins-main / inline-size; }
+   the general flow for the user", then "we have 4 menus within the same page, this is not right at
+   all"). The app's own bar and rail are the only menus. The page reads top to bottom in the order
+   a manager works: the title with one line saying exactly what is shown, then one sticky bar that
+   starts with which report this is (a button opening the others) and carries every filter after
+   it, then the figures. */
 .turnfin-app .ins-top { display: flex; flex-direction: column; gap: 6px; }
 .turnfin-app .ins-top h1 { letter-spacing: -0.03em; }
 .turnfin-app .ins-context { display: block; margin-top: 2px; }
 
-/* The menu: a card that stays in view, one pill per page, the current page in the blue-to-violet
-   pill with its sections listed under it. */
-.turnfin-app .ins-side { position: sticky; top: 12px; z-index: 21; display: flex; flex-direction: column; gap: 16px; max-height: calc(100dvh - 24px); padding: 18px 12px; overflow-y: auto; border: 1px solid transparent; border-radius: var(--ins-radius); background: linear-gradient(color-mix(in srgb, var(--pc-surface) 82%, transparent), color-mix(in srgb, var(--pc-surface) 82%, transparent)) padding-box, var(--ins-edge) border-box; -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: var(--ins-glow); scrollbar-width: thin; }
-.turnfin-app .ins-side-title { display: flex; align-items: center; gap: 8px; margin: 0 8px; color: var(--pc-primary-ink); font-size: 12px; font-weight: 750; letter-spacing: 0.02em; }
-.turnfin-app .ins-side-title::before { content: ''; width: 18px; height: 6px; border-radius: 999px; background: linear-gradient(90deg, var(--ins-a), var(--ins-v)); }
-.turnfin-app .ins-side-group { display: flex; flex-direction: column; gap: 2px; }
-.turnfin-app .ins-side-label { margin: 0 12px 4px; color: var(--pc-ink-muted); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
-.turnfin-app .ins-side ul { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }
-.turnfin-app .ins-side-link { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: 14px; color: var(--pc-ink-muted); font-size: 14px; font-weight: 620; text-decoration: none; white-space: nowrap; transition: background-color 200ms var(--ins-ease), color 200ms var(--ins-ease); }
-.turnfin-app .ins-side-link svg { width: 17px; height: 17px; flex: none; }
-.turnfin-app .ins-side-link:hover { color: var(--pc-ink); background: var(--pc-hover); }
-.turnfin-app .ins-side-link[aria-current] { color: var(--pc-on-primary); background: linear-gradient(120deg, var(--pc-primary), var(--ins-v)); box-shadow: 0 8px 18px -10px color-mix(in srgb, var(--ins-v) 75%, transparent); }
-.turnfin-app .ins-side-link:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
-.turnfin-app .ins-side .ins-side-sections { gap: 0; margin: 4px 0 6px 20px; padding-left: 10px; box-shadow: inset 1px 0 0 var(--ins-hair); }
-.turnfin-app .ins-side-sections a { display: flex; align-items: center; min-height: 44px; padding: 0 10px; border-radius: 10px; color: var(--pc-ink-muted); font-size: 13px; font-weight: 600; text-decoration: none; }
-.turnfin-app .ins-side-sections a:hover { color: var(--pc-primary-ink); background: var(--pc-hover); }
-.turnfin-app .ins-side-sections a:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: -2px; }
-@media (max-width: 1099px) {
-  .turnfin-app .ins-side { position: static; flex-direction: row; align-items: center; gap: 0; max-height: none; padding: 4px; border-radius: 999px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
-  .turnfin-app .ins-side::-webkit-scrollbar { display: none; }
-  .turnfin-app .ins-side ul { flex-direction: row; }
-  .turnfin-app .ins-side-group { flex-direction: row; align-items: center; flex: none; }
-  .turnfin-app .ins-side-group + .ins-side-group { margin-left: 6px; padding-left: 6px; box-shadow: inset 1px 0 0 var(--ins-hair); }
-  .turnfin-app .ins-side-link { border-radius: 999px; padding: 0 14px; }
-  .turnfin-app :is(.ins-side-title, .ins-side-label) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .turnfin-app .ins-side .ins-side-sections { display: none; }
-}
+/* The report button: the page's name in the blue-to-violet pill; its menu lists every report in
+   its group and the sections of this one. */
+.turnfin-app .ins-report-button { gap: 8px; border-radius: 999px; padding: 0 14px 0 12px; background: linear-gradient(120deg, var(--pc-primary), var(--ins-v)); color: var(--pc-on-primary); font-size: 14px; font-weight: 700; box-shadow: 0 8px 18px -10px color-mix(in srgb, var(--ins-v) 75%, transparent); }
+.turnfin-app .ins-report-button:hover { filter: brightness(1.06); }
+.turnfin-app .ins-report-button svg { width: 17px; height: 17px; }
+.turnfin-app .ins-filters-divider { width: 1px; height: 28px; background: var(--ins-hair); }
+@media (max-width: 767px) { .turnfin-app .ins-filters-divider { display: none; } }
+.turnfin-app .ins-report-menu { min-width: 16rem; padding: 8px; border: 0; border-radius: 18px; background: var(--pc-surface-raised); box-shadow: 0 0 0 1px color-mix(in srgb, var(--pc-ink) 7%, transparent), var(--pc-shadow-overlay); }
+.turnfin-app .ins-report-label { padding: 8px 10px 4px; color: var(--pc-ink-muted); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.turnfin-app .ins-report-item { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 10px; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; cursor: pointer; }
+.turnfin-app .ins-report-item svg { width: 17px; height: 17px; color: var(--pc-ink-muted); }
+.turnfin-app .ins-report-item[aria-current] { color: var(--pc-primary-ink); background: var(--pc-primary-soft); }
+.turnfin-app .ins-report-item[aria-current] svg { color: var(--pc-primary); }
+.turnfin-app .ins-report-section { padding-left: 37px; color: var(--pc-ink-muted); font-size: 13px; }
 
 /* ── The filters: period, sites and programme in one row that stays in view, Reset at its end. */
 .turnfin-app .ins-filters { position: sticky; top: 12px; z-index: 20; display: flex; flex-direction: column; border: 1px solid transparent; border-radius: 22px; background: linear-gradient(color-mix(in srgb, var(--pc-surface) 82%, transparent), color-mix(in srgb, var(--pc-surface) 82%, transparent)) padding-box, var(--ins-edge) border-box; -webkit-backdrop-filter: saturate(1.6) blur(16px); backdrop-filter: saturate(1.6) blur(16px); box-shadow: 0 14px 34px -22px color-mix(in srgb, var(--ins-a) 60%, transparent); transition: opacity 200ms var(--ins-ease); }

@@ -15,7 +15,7 @@ import { ATTENDANCE_REPORT_META } from "@/modules/activities/features/analytics/
 import type { InstructorAnalyticsData } from "@/modules/activities/features/analytics/server/report-data";
 import { classTimes } from "@/modules/activities/shared/courses/constants";
 import { formatCount, formatDateTime, formatShortDay, plural } from "@/lib/format";
-import { AnalyticsFrame } from "@/modules/activities/features/analytics/components/navigation";
+import { ReportPicker } from "@/modules/activities/features/analytics/components/navigation";
 import { AnalyticsRefresh } from "@/modules/activities/features/analytics/components/refresh";
 import { ReportUpdated, weekLabel } from "@/modules/activities/features/analytics/components/period";
 
@@ -33,10 +33,11 @@ export function InstructorReport({ data }: { data: InstructorAnalyticsData }) {
   const selected = data.instructors.find(person => person.id === instructor);
   const scoped = data.classes.filter(row => !instructor || row.instructorKey === instructor);
   const classes = scoped.filter(row => matches(row.status, filter));
-  return <AnalyticsFrame active="instructors">
+  return <div className="ins">
     <div className="ins-top">
       <PageHeader title="Registers" description={`${data.siteName} · This week, Monday to Sunday · ${weekLabel(data.period)}`} actions={<AnalyticsRefresh />} />
     </div>
+    <section className="ins-filters" aria-label="Report"><div className="ins-filters-row"><ReportPicker active="instructors" /></div></section>
     <ul className="ins-kpis" data-count="4" aria-label="Attendance at a glance">
       <StatTile icon={CheckCheck} value={formatCount(data.totals.due)} label="Classes finished" caption="This week" />
       <StatTile icon={CircleCheck} value={formatCount(data.totals.saved)} label="Attendance saved" caption={`Of ${formatCount(data.totals.due)} due`} />
@@ -104,5 +105,5 @@ export function InstructorReport({ data }: { data: InstructorAnalyticsData }) {
       <p>Schedules and unstarted instructor assignments use the current timetable. Saved by shows the staff named on the latest attendance records, which can include corrections by colleagues.</p>
       <ReportUpdated at={data.updatedAt} />
     </footer>
-  </AnalyticsFrame>;
+  </div>;
 }

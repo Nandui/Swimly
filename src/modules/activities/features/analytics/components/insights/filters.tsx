@@ -21,12 +21,12 @@ export type FilterBarProps = {
   reset: string | null;
 };
 
-/** Everything a report is narrowed by, in one toolbar under the page title that stays in view:
+/** Which report, then everything it is narrowed by, in one toolbar under the page title that stays in view:
  *  the period (one menu holding the usual lengths, quick picks and any two days), the sites and the
  *  programme, and a way back to the defaults at the end. What the choices add up to is said once,
  *  under the title. Each choice is a link or a navigation, so the address always says what the page
  *  shows and can be shared or bookmarked. */
-export function FilterBar({ path, presets, custom, sites, programme, reset }: FilterBarProps) {
+export function FilterBar({ path, presets, custom, sites, programme, reset, picker }: FilterBarProps & { picker: React.ReactNode }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
@@ -38,8 +38,10 @@ export function FilterBar({ path, presets, custom, sites, programme, reset }: Fi
   const preset = presets.find(p => p.current);
   const current = preset ? `Last ${preset.label}` : custom.label;
 
-  return <section className="ins-filters" aria-label="Filters" data-pending={pending ? "" : undefined}>
+  return <section className="ins-filters" aria-label="Report and filters" data-pending={pending ? "" : undefined}>
     <div className="ins-filters-row">
+      {picker}
+      <span className="ins-filters-divider" aria-hidden="true" />
       <div className="ins-filter">
         <Popover open={open} onOpenChange={value => { setOpen(value); if (value) { setFrom(custom.start); setTo(custom.end); } }}>
           <PopoverTrigger asChild>

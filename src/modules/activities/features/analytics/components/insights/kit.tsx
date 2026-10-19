@@ -3,7 +3,7 @@ import * as React from "react";
 import { ArrowDownRight, ArrowRight, ArrowUpRight } from "lucide-react";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { addDaysIso, formatCount, formatDateRange, formatDateTime, formatDayMonth } from "@/lib/format";
-import { AnalyticsFrame, type AnalyticsPage } from "@/modules/activities/features/analytics/components/navigation";
+import { ReportPicker, type AnalyticsPage } from "@/modules/activities/features/analytics/components/navigation";
 import { AnalyticsRefresh } from "@/modules/activities/features/analytics/components/refresh";
 import { FilterBar, type FilterBarProps } from "@/modules/activities/features/analytics/components/insights/filters";
 import { AreaChart, FlowChart, type ChartKind } from "@/modules/activities/features/analytics/components/insights/charts";
@@ -97,18 +97,18 @@ export function ReportShell({ ctx, page, path, title, description, back, childre
   };
   const scope = [ctx.siteName, ctx.programme && programme ? ctx.programme.name : null].filter(Boolean).join(" · ");
   const context = [scope, periodText(period), `compared with ${formatDateRange(period.previousStart, period.previousEnd)}`, period.current ? null : `"now" figures as of ${formatDayMonth(period.end)}`].filter(Boolean).join(" · ");
-  return <AnalyticsFrame active={page} query={filterQuery(ctx)} sections={sections}>
+  return <div className="ins">
     <div className="ins-top">
       <PageHeader title={title} back={back} description={description ? <>{description}<span className="ins-context">{context}</span></> : context} actions={<>{actions}<AnalyticsRefresh /></>} />
     </div>
-    <FilterBar {...bar} />
+    <FilterBar {...bar} picker={<ReportPicker active={page} query={filterQuery(ctx)} sections={sections} />} />
     <div className="ins-body">{children}</div>
     <footer className="ins-footnote">
       {footnotes?.map((note, i) => <p key={i}>{note}</p>)}
       {programme && ctx.programme ? <p>Only {ctx.programme.name}: its classes, places, waiting lists and passes. A move into another programme counts as leaving this one.</p> : null}
       <p>Compared with the {period.label} before, {formatDateRange(period.previousStart, period.previousEnd)}. Updated {formatDateTime(new Date(ctx.updatedAt))} · Europe/Dublin.</p>
     </footer>
-  </AnalyticsFrame>;
+  </div>;
 }
 
 /** A group of panels that answer one question, laid out as a bento grid. */

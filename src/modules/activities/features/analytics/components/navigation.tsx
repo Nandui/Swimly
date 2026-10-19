@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
-import { BookCheck, ChartNoAxesCombined, ClipboardList, Copy, GraduationCap, Headset, LayoutGrid, Users } from "lucide-react";
+import { Button } from "@/components/shadcn/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/shadcn/dropdown-menu";
+import { BookCheck, Check, ChevronDown, ChartNoAxesCombined, ClipboardList, Copy, GraduationCap, Headset, LayoutGrid, Users } from "lucide-react";
 
 /** The analytics suite, grouped by the question a manager brings to it (owner request, 16 October
  *  2026: "a proper business analytics intelligence suite"): how the business is doing, how our people
@@ -29,31 +33,34 @@ export const ANALYTICS_GROUPS = [
 
 export type AnalyticsPage = typeof ANALYTICS_GROUPS[number]["pages"][number]["key"];
 
-/** The suite's own menu, beside the page on wide screens: the pages in their three groups and,
- *  under the page you are on, its sections. Where you are and where you can go sit in one place,
- *  apart from the filters that change what the page shows. On narrower screens it becomes a row of
- *  tabs across the top and the section links drop away (the page is one column to scroll). */
-export function AnalyticsNav({ active, query = "", sections = [] }: { active: AnalyticsPage; query?: string; sections?: { id: string; label: string }[] }) {
-  return <nav aria-label="Analytics pages" className="ins-side">
-    <p className="ins-side-title">Swim school analytics</p>
-    {ANALYTICS_GROUPS.map(group => <div key={group.key} className="ins-side-group" role="group" aria-labelledby={`ins-side-${group.key}`}>
-      <span id={`ins-side-${group.key}`} className="ins-side-label">{group.label}</span>
-      <ul>{group.pages.map(({ key, href, label, icon: Icon, filtered }) => <li key={key}>
-        <Link href={filtered ? `${href}${query}` : href} className="ins-side-link" aria-current={active === key ? "page" : undefined}>
-          <Icon aria-hidden="true" strokeWidth={1.75} />{label}
-        </Link>
-        {active === key && sections.length ? <ul className="ins-side-sections" aria-label="On this page">
-          {sections.map(section => <li key={section.id}><a href={`#${section.id}`}>{section.label}</a></li>)}
-        </ul> : null}
-      </li>)}</ul>
-    </div>)}
-  </nav>;
-}
-
-/** Every analytics page: the suite's menu, then the page itself. */
-export function AnalyticsFrame({ active, query, sections, children }: { active: AnalyticsPage; query?: string; sections?: { id: string; label: string }[]; children: React.ReactNode }) {
-  return <div className="ins">
-    <AnalyticsNav active={active} query={query} sections={sections} />
-    <div className="ins-main">{children}</div>
-  </div>;
+/** The one control for moving around the suite (owner, 19 October 2026: "we have 4 menus within
+ *  the same page, this is not right at all"). The app's own bar and rail stay the only menus on the
+ *  page; the reports are a single button at the start of the filter bar, named after the report you
+ *  are on, opening the reports in their groups and, for the current one, its sections to jump to. */
+export function ReportPicker({ active, query = "", sections = [] }: { active: AnalyticsPage; query?: string; sections?: { id: string; label: string }[] }) {
+  const current = ANALYTICS_GROUPS.flatMap<{ key: AnalyticsPage; label: string; icon: typeof Check }>(group => [...group.pages]).find(page => page.key === active)!;
+  const Icon = current.icon;
+  return <DropdownMenu>
+    <DropdownMenuTrigger asChild>
+      <Button className="ins-report-button"><Icon aria-hidden="true" strokeWidth={1.75} /><span className="sr-only">Report: </span>{current.label}<ChevronDown aria-hidden="true" strokeWidth={1.75} /></Button>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent align="start" className="ins-report-menu">
+      {ANALYTICS_GROUPS.map((group, i) => <DropdownMenuGroup key={group.key}>
+        {i ? <DropdownMenuSeparator /> : null}
+        <DropdownMenuLabel className="ins-report-label">{group.label}</DropdownMenuLabel>
+        {group.pages.map(({ key, href, label, icon: PageIcon, filtered }) => <DropdownMenuItem key={key} asChild className="ins-report-item">
+          <Link href={filtered ? `${href}${query}` : href} aria-current={active === key ? "page" : undefined}>
+            <PageIcon aria-hidden="true" strokeWidth={1.75} />{label}{active === key ? <Check aria-hidden="true" className="ml-auto" /> : null}
+          </Link>
+        </DropdownMenuItem>)}
+      </DropdownMenuGroup>)}
+      {sections.length ? <DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel className="ins-report-label">On this page</DropdownMenuLabel>
+        {sections.map(section => <DropdownMenuItem key={section.id} asChild className="ins-report-item ins-report-section">
+          <a href={`#${section.id}`}>{section.label}</a>
+        </DropdownMenuItem>)}
+      </DropdownMenuGroup> : null}
+    </DropdownMenuContent>
+  </DropdownMenu>;
 }
