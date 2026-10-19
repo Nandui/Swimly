@@ -4,6 +4,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.37.0 · 19 October 2026 · Incidents: staff conduct and welfare reports
+
+- **Staff conduct or welfare** is now its own choice when you report an incident, for things that happen on shift such as a procedure not followed, a staff member taken unwell or a dispute between staff.
+- Its triage has its own five levels, and asks what it was about, whether their manager was told, whether it was passed to HR, and what support the staff member was offered.
+- Discipline and grievances themselves still go through HR.
+
 ## 1.36.0 · 19 October 2026 · Swim school analytics: a new dashboard look
 
 - Every **Analytics** page has a new, clearer layout: the pages sit along the top as tabs, and the period, site and programme choices stay in view as you scroll, with links to each part of the page.
