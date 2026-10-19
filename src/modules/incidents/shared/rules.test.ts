@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { actionProblem, actionSchema, addWorkingDays, keepUntil, monthsEnding, summarise, cleanWhys, closeDecision, fileProblem, isSerious, IncidentError, needsSignoff, reopenDecision, reportProblem, reportSchema, statementProblem, statementSchema, triageDecision, triageSchema } from "./rules";
+import { triageAnswerRows } from "./triage-guides";
 import { actionStatus } from "./types";
 
 const who = { id: "dan", name: "Dan", orgId: null, superadmin: false, review: true, signoff: false };
-const row = { status: "reported", reporterId: "mia", occurredOn: "2026-10-09", serious: false, severityActual: null, severityPotential: null, hsaReportable: null, hasChild: false };
+const row = { status: "reported", reporterId: "mia", occurredOn: "2026-10-09", serious: false, severityActual: null, severityPotential: null, hsaReportable: null, category: "slip_trip_fall", hasChild: false, hasStaff: false };
 const triage = (over: object = {}) => triageSchema.parse({ severityActual: 1, severityPotential: 2, staffOffOver3Days: false, publicToDoctor: false, deathOrDangerous: false, parentInformed: "", outcome: "close", note: "Wet floor sign was back out.", ...over });
 const report = (over: object = {}) => reportSchema.parse({ siteId: "s", area: "", kind: "near_miss", category: "slip_trip_fall", occurredOn: "2026-10-10", occurredAt: "14:30", description: "Puddle by the slide steps, no sign.", immediateAction: "", raisedBy: "", people: [], witnesses: [], ...over });
 const person = { type: "swimmer", ageGroup: "child", name: "", contact: "", injured: true, bodyPart: "", injury: "", firstAid: "", firstAidBy: "", ambulance: false, hospital: false };
@@ -40,6 +41,19 @@ test("triage closes only minimal or minor reports the HSA does not need, and you
   const fatal = triageDecision(row, who, triage({ outcome: "investigate", fatal: true, severityActual: 5 }));
   assert.deepEqual([fatal.hsaReportable, fatal.hsaFatal, fatal.hsaDueOn], [true, true, "2026-10-16"], "a death: 5 working days");
   assert.throws(() => triageDecision({ ...row, status: "investigating" }, who, triage()), IncidentError, "once");
+});
+
+test("triage asks what fits the kind of report, and keeps only those answers", () => {
+  assert.throws(() => triageDecision({ ...row, category: "lost_child" }, who, triage()), /parent or guardian/, "a missing child always needs the parent told");
+  const theft = triageDecision({ ...row, category: "security" }, who, triage({ answers: { whose: "customer", gardaiTold: true, gardaiRef: " 12345678 ", contaminant: "vomit", whose2: "x" } }));
+  assert.deepEqual(theft.triageAnswers, { whose: "customer", gardaiTold: true, gardaiRef: "12345678", cctvKept: false }, "the theft questions only; the insurer only for the centre's property");
+  const noGardai = triageDecision({ ...row, category: "security" }, who, triage({ answers: { gardaiRef: "123" } }));
+  assert.equal("gardaiRef" in noGardai.triageAnswers, false, "no number unless the Gardaí were told");
+  const abuse = triageDecision({ ...row, category: "behaviour" }, who, triage({ answers: { aimedAt: "staff", staffSupport: "Debrief with Sam" } }));
+  assert.equal(abuse.triageAnswers.staffSupport, "Debrief with Sam", "support for a staff member it was aimed at");
+  assert.equal("staffSupport" in triageDecision(row, who, triage({ answers: { staffSupport: "x" } })).triageAnswers, false, "not asked with no staff member");
+  assert.deepEqual(triageDecision(row, who, triage({ answers: { gardaiTold: true } })).triageAnswers, {}, "an injury asks nothing new");
+  assert.deepEqual(triageAnswerRows({ category: "security", hasStaff: false }, theft.triageAnswers), [["Whose property", "A customer's"], ["The Gardaí were told", "Yes"], ["Garda incident number", "12345678"], ["CCTV saved", "No"]]);
 });
 
 test("closing: a manager for serious or moderate, and the HSA reference first", () => {

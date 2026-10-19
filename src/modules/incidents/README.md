@@ -6,7 +6,7 @@ The flow, rules and decisions are in [docs/incidents.md](../../../docs/incidents
 
 ## Features
 - `report` — the two-minute report form, sending it (and the serious alerts), and adding to a report later (`/incidents/new`).
-- `triage` — rating, the HSA questions, closing at triage or sending to investigation, and closing an investigated report (on `/incidents/[id]`).
+- `triage` — rating on the scale for the kind of report (`shared/triage-guides.ts`), its own questions, the HSA questions that fit, closing at triage or sending to investigation, and closing an investigated report (on `/incidents/[id]`).
 - `investigation` — witness statements, the 5 whys and root cause, actions with owners and their reminder emails, Your actions, and reopening (on `/incidents/[id]` and `/incidents`; reminders from `/api/cron/incidents`).
 - `files` — photos and documents on a report (`/api/incidents/files`).
 - `insights` — trends for those who triage and the reports past their keeping period (`/incidents/insights`).

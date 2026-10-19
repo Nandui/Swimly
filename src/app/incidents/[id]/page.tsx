@@ -28,7 +28,7 @@ export default async function IncidentPage({ params }: { params: Promise<{ id: s
         </span>} />
       <ReportView data={data} forms={<>
         <FilesPanel reportId={r.id} files={r.files} userId={data.who.id} canAdd={can.addFiles} canRemoveAny={can.removeFiles} />
-        {can.triage ? <TriageForm id={r.id} version={r.version} hasChild={data.hasChild} /> : null}
+        {can.triage ? <TriageForm id={r.id} version={r.version} category={r.category} {...data.triage} /> : null}
         {can.seeInvestigation && r.status !== "reported" && (r.status === "investigating" || r.statements.length || r.actions.length || r.rootCause) ? (
           <Investigation id={r.id} version={r.version} today={data.today} occurredOn={r.occurredOn} statements={r.statements} whys={r.whys} rootCause={r.rootCause}
             actions={r.actions} owners={data.owners} canWork={can.investigate} needsRootCause={data.needsRootCause} />

@@ -50,6 +50,10 @@ model IncidentReport {
   hsaReference      String    @default("")
   /// Who told a child's parent or guardian, and when, in their words.
   parentInformed    String    @default("")
+  /// The triage questions for this kind of report (owner request, 19 October
+  /// 2026), such as the Garda incident number for a theft: key to a yes/no or
+  /// a short answer. See src/modules/incidents/shared/triage-guides.ts.
+  triageAnswers     Json      @default("{}")
   triageNote        String    @default("")
   triagedById       String?
   triagedByName     String?

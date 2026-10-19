@@ -36,8 +36,33 @@ defaults on 11 October 2026 ([ADR 0008](architecture/decisions/0008-add-incident
    10 working days after the day it happened, or 5 after a death, which must also be phoned
    through to the HSA or the Gardaí at once (weekends skipped, public holidays not, so the
    date is never later than the law's).
-   When a child was involved, who told the parent or guardian and when. Then **Close it now**
+   When a child was involved, or it is a missing child, who told the parent or guardian and
+   when. Then **Close it now**
    (level 1 or 2 and nothing for the HSA) or **Investigate**.
+   **Triage fits the kind of report** (owner request, 19 October 2026: the injury scale and
+   the HSA questions only made sense for accidents). The category picks a guide in
+   `src/modules/incidents/shared/triage-guides.ts`; the 1 to 5 levels and what they decide
+   stay the same for every kind, only what each level means and the questions change:
+
+   | Category | Guide | What a level means | Asked at triage |
+   | --- | --- | --- | --- |
+   | Slip, trip or fall; struck; rescue from the water; illness | Injury or illness | the harm to the person (as before) | nothing new |
+   | Pool contamination | Pool water | how long the pool was out, who was exposed | what was in the water, pool closed and for how long, water tested before reopening |
+   | Chemical leak or exposure | Chemicals | the exposure and the release | which chemical, moved away or evacuated, fire brigade or ambulance, plant checked by |
+   | Theft or security | Theft, loss or damage | the loss and how it happened | whose property, roughly its worth, Gardaí told and their incident number, CCTV saved, the insurer (centre's property) |
+   | Aggressive or unsafe behaviour | Behaviour | how threatening it was | who it was aimed at, warned, asked to leave or barred, Gardaí, CCTV |
+   | Lost or missing child | Missing child | how long and where they were found | how long, where found, the missing child procedure, Gardaí; the parent always |
+   | Equipment or building fault | Equipment or building | the fault and who was at risk | taken out of use, repair logged with |
+   | Fire, alarm or evacuation | Fire, alarm or evacuation | what happened and the evacuation | what set it off, evacuated and how long, fire brigade |
+   | Something else | Something else | a general scale | nothing new |
+
+   Whenever a staff member is named, or behaviour was aimed at one, triage also asks what
+   support they were offered. The HSA questions that fit come first: the injury ones when
+   someone on the report was hurt, the dangerous occurrence for chemicals, equipment, fire and
+   anything else; the rest stay one click away, never removed. When someone was hurt on a
+   non-injury report, the form says to rate by the injury where it is worse. Answers are kept
+   in `triageAnswers` and shown under Triage on the report and in the full record. None of
+   them is required: they are the record, and the note still explains the rating.
 4. **Close** (never your own): what was found and what changed, written for the reporter too,
    who sees it on their report. A serious report or one at level 3 or worse needs **Manage**
    at the site; a reportable one needs the HSA reference (IR1 or IR3) or the date it was sent.

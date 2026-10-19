@@ -94,6 +94,15 @@ test("a near miss: reported at your own site, triaged and closed by someone else
   assert.deepEqual([closed.status, closed.closedByName], ["closed", "dan"]);
 
   reporter();
+  const theft = await report.submitReport({ ...nearMiss(), kind: "incident", category: "security", description: "A phone was taken from an unlocked locker in the changing village." });
+  assert.ok(theft.ok && theft.id);
+  duty();
+  const t = await fixture.prisma.incidentReport.findUniqueOrThrow({ where: { id: theft.id! } });
+  assert.equal((await triage.triageReport(t.id, t.version, { severityActual: 2, severityPotential: 2, staffOffOver3Days: false, publicToDoctor: false, deathOrDangerous: false, parentInformed: "",
+    answers: { whose: "customer", gardaiTold: true, gardaiRef: "20261019-0042", cctvKept: true, poolClosed: true }, outcome: "close", note: "Locker sign checked." })).ok, true);
+  assert.deepEqual((await fixture.prisma.incidentReport.findUniqueOrThrow({ where: { id: t.id } })).triageAnswers, { whose: "customer", gardaiTold: true, gardaiRef: "20261019-0042", cctvKept: true }, "a theft keeps its own questions");
+
+  reporter();
   const mine = await data.incidentReport(row.id);
   assert.equal(mine.report.closeNote, "Sign put back; told the team at the huddle.", "the reporter sees the outcome");
   assert.equal((await report.addAddendum(row.id, "The sign had been moved by a class.")).ok, true, "added to after closing");

@@ -7,7 +7,7 @@ import { requireSession } from "@/lib/authz";
 import { holdsAnywhere } from "@/lib/policy/engine";
 import { actorForSession, sitesFor } from "@/lib/policy/session";
 import { covers, inSites, requireIncidentsActor } from "@/modules/incidents/shared/access";
-import { needsRootCause, needsSignoff } from "@/modules/incidents/shared/rules";
+import { needsParent, needsRootCause, needsSignoff } from "@/modules/incidents/shared/rules";
 import { reportRights } from "@/modules/incidents/shared/service";
 import type { IncidentStatus } from "@/modules/incidents/shared/types";
 
@@ -86,7 +86,12 @@ export async function incidentReport(id: string) {
   const investigate = status === "investigating" && rights.review && !rights.own;
   return {
     who, report: { ...report, status }, reads, today: today(),
-    hasChild: report.people.some((p) => p.ageGroup === "child"),
+    /** What the triage asks depends on who is named (triage-guides.ts). */
+    triage: {
+      injured: report.people.some((p) => p.injured),
+      hasStaff: report.people.some((p) => p.type === "staff"),
+      needsParent: needsParent({ category: report.category, hasChild: report.people.some((p) => p.ageGroup === "child") }),
+    },
     can: {
       triage: status === "reported" && rights.review && (!rights.own || rights.signoff),
       close: investigate && (!needsSignoff(report) || rights.signoff),

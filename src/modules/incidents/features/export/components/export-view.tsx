@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { formatDate, formatDateTime } from "@/lib/format";
 import type { IncidentExport } from "@/modules/incidents/features/export/server/data";
 import { levelOf } from "@/modules/incidents/shared/types";
+import { triageAnswerRows } from "@/modules/incidents/shared/triage-guides";
 import { actionStatuses, ageGroups, incidentActions, incidentCategories, incidentKinds, incidentNumber, incidentStatuses, personTypes, severities,
   type AgeGroup, type IncidentCategory, type IncidentKind, type IncidentStatus, type PersonType, type Severity } from "@/modules/incidents/shared/types";
 
@@ -88,6 +89,7 @@ export function ExportView({ data }: { data: IncidentExport }) {
             ["Handled at", rated(level)],
             ["Health and Safety Authority", r.hsaReportable ? `Reportable${r.hsaFatal ? " (a death)" : ""}, due by ${r.hsaDueOn ? day(r.hsaDueOn) : "the deadline"}${r.hsaReference ? `. Reference: ${r.hsaReference}` : ""}` : "Not reportable"],
             ["Parent or guardian told", r.parentInformed],
+            ...triageAnswerRows({ category: r.category, hasStaff: r.people.some((p) => p.type === "staff") }, r.triageAnswers),
             [`Note from ${r.triagedByName}, ${formatDateTime(r.triagedAt)}`, r.triageNote],
           ]} />
         </Section>
