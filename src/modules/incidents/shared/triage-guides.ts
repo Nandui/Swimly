@@ -13,7 +13,7 @@ export type TriageCheck = {
   label: string;
   hint?: string;
   /** Shown only when another check has this answer (true for a tick). */
-  when?: { key: string; is: true | string | readonly string[] };
+  when?: { key: string; is: true | string };
 } & ({ type: "tick" } | { type: "text"; placeholder?: string } | { type: "choice"; options: Record<string, string> });
 
 export type TriageGuide = {
@@ -205,12 +205,7 @@ export type TriageContext = { category: string; hasStaff: boolean };
 
 export type TriageAnswers = Record<string, boolean | string>;
 
-const shows = (check: TriageCheck, answers: TriageAnswers) => {
-  if (!check.when) return true;
-  const value = answers[check.when.key];
-  const is = check.when.is;
-  return is === true ? value === true : Array.isArray(is) ? is.includes(value as string) : value === is;
-};
+const shows = (check: TriageCheck, answers: TriageAnswers) => !check.when || answers[check.when.key] === check.when.is;
 
 /** The checks to ask for this report, given the answers so far. */
 export function triageChecks(context: TriageContext, answers: TriageAnswers): TriageCheck[] {
