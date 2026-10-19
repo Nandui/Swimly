@@ -7,6 +7,7 @@ The rules for courses, assignments, sign-offs and certificates are in [docs/trai
 ## Features
 - `courses` — training courses: create, change settings, archive, and the qualification each grants (`/training/courses`).
 - `builder` — building a course from sections and lessons (reading, video, file, quiz, scenario, flashcards, checklist, audio, sort into groups, explore a picture, hand in work, slides or interactive) with interactive blocks, tabs, videos, file buttons and knowledge checks, each section's questions (pasted from a spreadsheet too), the final exam and how it has gone, templates, duplicating and copying in, the cover, review comments, preview and publishing numbered versions with a note and optional retake, and the quality check (`/training/courses/[id]`, `/training/files`).
+- `ai-draft` — drafting a course from an SOP, policy or other document with AI: the course lands unpublished with a review comment saying what to check (`/training/courses`, `/training/courses/draft`).
 - `assignments` — assigning training, following and cancelling it, giving another exam attempt, and one person's training and exam scores (`/training`, `/training/people/[id]`).
 - `sign-off` — practical sign-offs: confirming a skill shown in person, or returning it for practice; observing against the course's checklist on a tablet, with photos (`/training/sign-off`, `/training/sign-off/[id]`, `/training/evidence/[id]`).
 - `hand-ins` — work handed in on Hand in work lessons: the queue on the Sign-off page, accepting it (which finishes the lesson) or returning it with feedback, and the file (`/training/sign-off`, `/training/hand-ins/[id]/file`).
@@ -74,6 +75,7 @@ Training also reads and writes Core's qualification records (`Qualification`, `Q
 - Platform: the policy engine (people a trainer may see), audit, the database client, contributions (home card, person file, subject records).
 - Core reads (never Core tables; enforced by the boundary lint): people, positions, sites and line managers through `src/lib/directory.ts`; the audit trail of its own records through `src/lib/audit.ts` (`auditTrailFor`); qualifications, qualification types and uploaded certificates through `src/lib/qualifications.ts` (granting goes through `recordQualification`); the person's record through `src/lib/people/records.ts`.
 - The UI kit's workspace frame `ModuleShell` (`src/components/ui/module-shell.tsx`).
+- Anthropic's API for `ai-draft`, when `ANTHROPIC_API_KEY` is set.
 - Other modules: none. HR reads Training's records through the `subjectRecords` seam.
 
 ## Known gaps
