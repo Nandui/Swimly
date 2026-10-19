@@ -4,6 +4,16 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.35.0 · 19 October 2026 · Incidents: triage that fits each kind of report
+
+- **Triage** on an incident report now follows what the report is about. A theft is rated by what was lost, a fight by how threatening it was, a missing child by how long they were missing, a pool contamination by how long the pool was out, and so on. The same five levels still decide whether it can be closed at triage or needs investigating and a manager's sign-off.
+- Under the two ratings you can see what each level means for that kind of report.
+- Each kind asks the few things worth recording: for a theft, whose property it was, roughly its worth, whether the Gardaí were told and their incident number, and whether CCTV was saved. Behaviour, missing children, chemicals, pool water, equipment faults and fires each have their own. None of them is required.
+- When a staff member is named on a report, or abuse was aimed at one, triage asks what support they were offered.
+- The Health and Safety Authority questions that fit come first: the injury ones only when someone was hurt. The others are still there under **Check the HSA questions anyway**.
+- A missing child report always asks who told the parent or guardian.
+- The answers show under **Triage** on the report and in the full record.
+
 ## 1.34.0 · 17 October 2026 · Rota: one Plan for every department, area by area
 
 - **Plan** can now show **All departments** at once: every area with its activities, bookings and swim classes, and everyone on a shift that day. Choose a department along the top to see just that one, as before.

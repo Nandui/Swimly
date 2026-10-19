@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { addDaysIso, isDateOnly, today } from "@/lib/format";
+import { cleanTriageAnswers } from "@/modules/incidents/shared/triage-guides";
 import { ageGroups, incidentCategories, incidentKinds, levelOf, MAX_WHYS, personTypes, type IncidentsActor } from "@/modules/incidents/shared/types";
 
 /** Incidents' rules, pure so they can be tested without a database
@@ -79,6 +80,8 @@ export const triageSchema = z.object({
   deathOrDangerous: z.boolean(),
   fatal: z.boolean().default(false),
   parentInformed: text(500),
+  /** The questions for this kind of report (triage-guides.ts); unknown ones are dropped. */
+  answers: z.record(z.string(), z.union([z.boolean(), z.string().max(2000)])).default({}),
   outcome: z.enum(["investigate", "close"], { message: "Choose whether to investigate or close it." }),
   note: text(4000).min(3, "Say briefly why you rated it this way."),
 });
@@ -89,10 +92,10 @@ type ReportRow = { status: string; reporterId: string; occurredOn: string; serio
 /** What triage changes, or why it can't. Only a Manage holder at the site
  *  triages their own report (owner decision, 13 October 2026); everyone else's
  *  goes to someone else. Pass `signoff` for the report's site. */
-export function triageDecision(row: ReportRow & { hasChild: boolean }, who: IncidentsActor, t: z.output<typeof triageSchema>) {
+export function triageDecision(row: ReportRow & { category: string; hasChild: boolean; hasStaff: boolean }, who: IncidentsActor, t: z.output<typeof triageSchema>) {
   if (row.status !== "reported") throw new IncidentError("This report has already been triaged. Refresh the page.");
   if (row.reporterId === who.id && !who.signoff) throw new IncidentError("Someone else must triage your own report.");
-  if (row.hasChild && t.parentInformed.length < 3) throw new IncidentError("A child was involved: say who told their parent or guardian, and when.");
+  if (needsParent(row) && t.parentInformed.length < 3) throw new IncidentError("A child was involved: say who told their parent or guardian, and when.");
   const level = levelOf(t.severityActual, t.severityPotential);
   const hsaReportable = t.staffOffOver3Days || t.publicToDoctor || t.deathOrDangerous || t.fatal;
   if (t.outcome === "close" && level >= 3) throw new IncidentError("Moderate and worse need investigating. Choose Investigate; a manager closes it.");
@@ -103,8 +106,13 @@ export function triageDecision(row: ReportRow & { hasChild: boolean }, who: Inci
     hsaReportable, hsaFatal: t.fatal,
     hsaDueOn: hsaReportable ? addWorkingDays(row.occurredOn, t.fatal ? HSA_FATAL_WORKING_DAYS : HSA_WORKING_DAYS) : null,
     parentInformed: t.parentInformed, triageNote: t.note,
+    triageAnswers: cleanTriageAnswers(row, t.answers),
   };
 }
+
+/** A child's parent or guardian must have been told when a child is named, and
+ *  always for a missing child. */
+export const needsParent = (r: { category: string; hasChild: boolean }) => r.hasChild || r.category === "lost_child";
 
 /** Closing needs a manager when the report is serious or rated moderate or worse. */
 export function needsSignoff(row: Pick<ReportRow, "serious" | "severityActual" | "severityPotential">) {

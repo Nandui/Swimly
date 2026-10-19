@@ -16,7 +16,7 @@ const CHANGED = "This report changed while you were working. Refresh the page; y
 
 async function load(id: string) {
   const who = await requireIncidentsActor();
-  const row = await prisma.incidentReport.findFirst({ where: { id, orgId: who.orgId ?? undefined }, include: { people: { select: { ageGroup: true } } } });
+  const row = await prisma.incidentReport.findFirst({ where: { id, orgId: who.orgId ?? undefined }, include: { people: { select: { ageGroup: true, type: true } } } });
   const rights = row ? await reportRights(row, who) : null;
   return { who, row, rights };
 }
@@ -27,7 +27,7 @@ export async function triageReport(id: string, version: number, input: TriageInp
   const parsed = triageSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   try {
-    const change = triageDecision({ ...row, hasChild: row.people.some((p) => p.ageGroup === "child") }, { ...who, signoff: rights.signoff }, parsed.data);
+    const change = triageDecision({ ...row, hasChild: row.people.some((p) => p.ageGroup === "child"), hasStaff: row.people.some((p) => p.type === "staff") }, { ...who, signoff: rights.signoff }, parsed.data);
     const result = await prisma.$transaction(async (tx) => {
       await lockReport(tx, id);
       const changed = await tx.incidentReport.updateMany({

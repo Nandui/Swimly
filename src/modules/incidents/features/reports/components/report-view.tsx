@@ -5,6 +5,7 @@ import { Notice } from "@/components/ui-kit/notice";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDate, formatDateTime } from "@/lib/format";
 import type { IncidentDetail } from "@/modules/incidents/features/reports/server/data";
+import { triageAnswerRows } from "@/modules/incidents/shared/triage-guides";
 import { ageGroups, incidentActions, incidentCategories, incidentKinds, levelOf, personTypes, severities, SEVERITY_META, type AgeGroup, type IncidentCategory, type IncidentKind, type PersonType, type Severity } from "@/modules/incidents/shared/types";
 
 /** History notes everyone who reads the report sees; the rest (statements,
@@ -254,6 +255,7 @@ export function ReportView({ data, forms }: { data: IncidentDetail; forms: React
               <div className="inc-facts">
                 <Fact label="HSA">{r.hsaReportable ? `Reportable, due by ${r.hsaDueOn ? day(r.hsaDueOn) : "the deadline"}${r.hsaReference ? `. Reference: ${r.hsaReference}` : ""}` : "Not reportable"}</Fact>
                 {r.parentInformed ? <Fact label="Parent or guardian told">{r.parentInformed}</Fact> : null}
+                {triageAnswerRows({ category: r.category, hasStaff: r.people.some((p) => p.type === "staff") }, r.triageAnswers).map(([label, text]) => <Fact key={label} label={label}>{text}</Fact>)}
               </div>
               <div className="inc-note">
                 <p className="inc-note-by">Note from {r.triagedByName}</p>
