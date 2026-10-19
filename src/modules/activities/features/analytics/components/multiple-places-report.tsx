@@ -36,9 +36,9 @@ export function MultiplePlacesReport({ data }: { data: MultiplePlacesAnalyticsDa
   const waitlisted = data.swimmers.filter(swimmer => swimmer.waitlisted > 0).length;
   const where = data.allSites ? "across your sites" : "at this site";
 
-  return <div className="flex min-w-0 flex-col gap-6">
-    <div className="ins-hero">
-      <span className="ins-eyebrow">Swim school analytics</span>
+  return <div className="ins">
+    <div className="ins-top">
+      <p className="ins-kicker">Swim school analytics</p>
       <PageHeader title="Multiple enrolments" description={`${data.siteName} · Swimmers enrolled more than once, waitlist places included`} actions={<AnalyticsRefresh />} />
     </div>
     <AnalyticsNav active="multiple" />
@@ -46,11 +46,11 @@ export function MultiplePlacesReport({ data }: { data: MultiplePlacesAnalyticsDa
       { href: "/analytics/multiple-places", label: "This site", current: !data.allSites },
       { href: "/analytics/multiple-places?scope=all", label: "All sites", current: data.allSites },
     ]} /> : null}
-    <ul className="pc-stats" aria-label="Swimmers with more than one enrolment">
+    <ul className="ins-kpis" data-count="2" aria-label="Swimmers with more than one enrolment">
       <StatTile icon={Users} value={formatCount(data.swimmers.length)} label="More than one enrolment" caption={`Swimmers ${where}`} />
       <StatTile icon={Clock3} value={formatCount(waitlisted)} label="Including a waitlist place" caption="Of those swimmers" />
     </ul>
-    <section className="pc-panel" aria-labelledby="multiple-enrolments-list">
+    <section className="pc-panel ins-panel" aria-labelledby="multiple-enrolments-list">
       <div className="pc-panel-head">
         <h2 id="multiple-enrolments-list">Swimmers</h2>
         <Button variant="outline" disabled={swimmers.length === 0} onClick={() => download(`multiple-enrolments-${slug}-${data.date}.csv`, multiplePlacesCsv(swimmers))}>
@@ -85,7 +85,7 @@ export function MultiplePlacesReport({ data }: { data: MultiplePlacesAnalyticsDa
         {swimmers.length === 0 ? <EmptyState role="status" compact title={query ? "No swimmers match your search." : `No swimmers ${where} have more than one enrolment.`} /> : null}
       </div>
     </section>
-    <footer className="max-w-prose space-y-2 text-xs text-ui-muted-foreground">
+    <footer className="ins-footnote">
       <p>Counts current and waitlisted places in live weekly classes: active swimmers only, excluding future starts, scheduled endings that have passed and archived classes. Two enrolments in the same class count as two. This site counts only the selected site; All sites counts a swimmer’s places across every site you work at.</p>
       <ReportUpdated at={data.updatedAt} />
     </footer>

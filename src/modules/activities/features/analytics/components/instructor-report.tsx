@@ -33,19 +33,20 @@ export function InstructorReport({ data }: { data: InstructorAnalyticsData }) {
   const selected = data.instructors.find(person => person.id === instructor);
   const scoped = data.classes.filter(row => !instructor || row.instructorKey === instructor);
   const classes = scoped.filter(row => matches(row.status, filter));
-  return <div className="flex min-w-0 flex-col gap-6">
-    <div className="ins-hero">
-      <span className="ins-eyebrow">Swim school analytics</span>
+  return <div className="ins">
+    <div className="ins-top">
+      <p className="ins-kicker">Swim school analytics</p>
       <PageHeader title="Registers" description={`${data.siteName} · This week, Monday to Sunday · ${weekLabel(data.period)}`} actions={<AnalyticsRefresh />} />
     </div>
     <AnalyticsNav active="instructors" />
-    <ul className="pc-stats" aria-label="Attendance at a glance">
+    <ul className="ins-kpis" data-count="4" aria-label="Attendance at a glance">
       <StatTile icon={CheckCheck} value={formatCount(data.totals.due)} label="Classes finished" caption="This week" />
       <StatTile icon={CircleCheck} value={formatCount(data.totals.saved)} label="Attendance saved" caption={`Of ${formatCount(data.totals.due)} due`} />
       <StatTile icon={ClipboardList} value={formatCount(data.totals.partial)} label="Partly recorded" caption="Some swimmers unmarked" />
       <StatTile icon={TriangleAlert} value={formatCount(data.totals.missing)} label="Not taken" caption={data.totals.missing ? <Tag meta={ATTENDANCE_REPORT_META.missing} label="Needs attendance" /> : "Nothing outstanding"} />
     </ul>
-    <section className="pc-panel" aria-labelledby="instructor-summary">
+    <div className="ins-bento">
+    <section className="pc-panel ins-panel self-start" data-span={5} aria-labelledby="instructor-summary">
       <div className="pc-panel-head"><h2 id="instructor-summary">This week by instructor</h2></div>
       <p className="text-xs text-ui-muted-foreground">Finished classes with swimmers only. Cover belongs to the instructor who started the class. Attendance can be saved by a colleague.</p>
       <SearchField label="Find an instructor" placeholder="Name" value={search} onValueChange={setSearch} className="sm:max-w-md" />
@@ -69,7 +70,7 @@ export function InstructorReport({ data }: { data: InstructorAnalyticsData }) {
         {groups.length === 0 ? <EmptyState role="status" compact title={search ? "No instructors match your search." : "No weekly classes are scheduled at this site this week."} /> : null}
       </div>
     </section>
-    <section className="pc-panel" aria-labelledby="class-detail">
+    <section className="pc-panel ins-panel" data-span={7} aria-labelledby="class-detail">
       <div className="pc-panel-head"><h2 id="class-detail" tabIndex={-1} className="rounded-ui-md focus-visible:outline-2 focus-visible:outline-ui-ring">{selected ? `${selected.name}’s classes` : "Class details"}</h2>{selected ? <Button variant="outline" onClick={() => setInstructor(null)}>Show all instructors</Button> : null}</div>
       <Tabs value={filter} onValueChange={setFilter} className="gap-3">
         <TabsList aria-label="Filter class attendance">
@@ -99,7 +100,8 @@ export function InstructorReport({ data }: { data: InstructorAnalyticsData }) {
         </TabsContent>
       </Tabs>
     </section>
-    <footer className="max-w-prose space-y-2 text-xs text-ui-muted-foreground">
+    </div>
+    <footer className="ins-footnote">
       <p>Attendance is due after the class finishes in Europe/Dublin. Cancelled classes and classes with no swimmers are excluded from completion totals. Saved means every swimmer on the dated roster has a recorded mark, including absent marks. Starting a class alone does not save attendance.</p>
       <p>Schedules and unstarted instructor assignments use the current timetable. Saved by shows the staff named on the latest attendance records, which can include corrections by colleagues.</p>
       <ReportUpdated at={data.updatedAt} />

@@ -146,7 +146,7 @@ export function buildOverview(ds: Dataset) {
   const trend = trendWeeks.map(week => {
     const end = addDaysIso(week, 6) < period.today ? addDaysIso(week, 6) : period.today;
     const count = (events: { date: string }[]) => events.filter(e => within(e.date, week, end)).length;
-    return { week, swimmers: activeAt(ds.places, end).swimmers.size, joined: count(moves.joins), left: count(moves.leaves) };
+    return { week, swimmers: activeAt(ds.places, end).swimmers.size, joined: count(moves.joins), left: count(moves.leaves), attendance: attendanceRate(heldLessons(ds.lessons, week, end)), passes: passes(week, end) };
   });
 
   // Needs attention: the few things worth acting on this week.

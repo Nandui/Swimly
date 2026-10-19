@@ -20,12 +20,14 @@ export type FilterBarProps = {
   programme: { value: string; options: { value: string; label: string; href: string }[] } | null;
   summary: { range: string; compare: string; asOf: string | null };
   reset: string | null;
+  sections: { id: string; label: string }[];
 };
 
-/** Everything a report is narrowed by, in one tray: the period (a preset, a quick pick or any two
- *  days), the sites and the programme. Each choice is a link or a navigation, so the address always
- *  says what the page shows and can be shared or bookmarked. */
-export function FilterBar({ path, presets, custom, sites, programme, summary, reset }: FilterBarProps) {
+/** Everything a report is narrowed by, in one toolbar that stays in view: the period (a preset, a
+ *  quick pick or any two days), the sites and the programme, then what the page shows and its
+ *  sections. Each choice is a link or a navigation, so the address always says what the page shows
+ *  and can be shared or bookmarked. */
+export function FilterBar({ path, presets, custom, sites, programme, summary, reset, sections }: FilterBarProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
@@ -38,13 +40,13 @@ export function FilterBar({ path, presets, custom, sites, programme, summary, re
   return <section className="ins-filters" aria-label="Filters" data-pending={pending ? "" : undefined}>
     <div className="ins-filters-row">
       <div className="ins-filter">
-        <span className="ins-filter-label" id={`${id}-period`}>Period</span>
+        <span className="sr-only" id={`${id}-period`}>Period</span>
         <nav aria-labelledby={`${id}-period`} className="pc-seg">
           {presets.map(p => <Link key={p.href} href={p.href} scroll={false} className="pc-seg-item" aria-current={p.current ? "true" : undefined}>{p.label}</Link>)}
           <Popover open={open} onOpenChange={value => { setOpen(value); if (value) { setFrom(custom.start); setTo(custom.end); } }}>
             <PopoverTrigger asChild>
               <Button variant="ghost" className="pc-seg-item" aria-pressed={custom.current}>
-                <CalendarRange aria-hidden="true" strokeWidth={1.6} />{custom.current ? custom.label : "Custom"}<ChevronDown aria-hidden="true" strokeWidth={1.6} />
+                <CalendarRange aria-hidden="true" strokeWidth={1.75} />{custom.current ? custom.label : "Custom"}<ChevronDown aria-hidden="true" strokeWidth={1.75} />
               </Button>
             </PopoverTrigger>
             <PopoverContent align="start" className="ins-range-pop">
@@ -79,13 +81,13 @@ export function FilterBar({ path, presets, custom, sites, programme, summary, re
         </nav>
       </div>
       {sites ? <div className="ins-filter">
-        <span className="ins-filter-label" id={`${id}-sites`}>Sites</span>
+        <span className="sr-only" id={`${id}-sites`}>Sites</span>
         <nav aria-labelledby={`${id}-sites`} className="pc-seg">
           {sites.map(s => <Link key={s.href} href={s.href} scroll={false} className="pc-seg-item" aria-current={s.current ? "true" : undefined}>{s.label}</Link>)}
         </nav>
       </div> : null}
       {programme ? <div className="ins-filter ins-filter-grow">
-        <Label htmlFor={`${id}-programme`} className="ins-filter-label">Programme</Label>
+        <Label htmlFor={`${id}-programme`} className="sr-only">Programme</Label>
         <NativeSelect id={`${id}-programme`} value={programme.value} onChange={e => {
           const option = programme.options.find(o => o.value === e.target.value);
           if (option) go(option.href);
@@ -96,7 +98,11 @@ export function FilterBar({ path, presets, custom, sites, programme, summary, re
     </div>
     <div className="ins-filters-summary">
       <p aria-live="polite"><strong>{summary.range}</strong><span>{summary.compare}</span>{summary.asOf ? <span>{summary.asOf}</span> : null}</p>
-      {reset ? <Link href={reset} scroll={false} className="ins-filters-reset"><RotateCcw aria-hidden="true" strokeWidth={1.6} />Reset filters</Link> : null}
+      {reset ? <Link href={reset} scroll={false} className="ins-filters-reset"><RotateCcw aria-hidden="true" strokeWidth={1.75} />Reset filters</Link> : null}
+      {sections.length ? <nav aria-label="On this page" className="ins-jump">
+        <span className="ins-jump-label">On this page</span>
+        {sections.map(s => <a key={s.id} href={`#${s.id}`}>{s.label}</a>)}
+      </nav> : null}
     </div>
   </section>;
 }
