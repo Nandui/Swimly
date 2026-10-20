@@ -10,6 +10,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - Each action shows the reading, the range allowed, the task, the site, who recorded it and when, and what the task says to do. **See the task** opens it.
 - Close an action by saying what was done. Closed actions stay listed with who closed them and what they wrote, and can be opened again.
 - Your home page shows how many are waiting. Site Monitoring is hidden until your role is given a level for it.
+## 1.45.2 · 20 October 2026 · Turnfin Me and the Academy site match Turnfin
+
+- **Turnfin Me** on your phone now uses exactly the same buttons, fields, tick boxes and colours as Turnfin at work. Each page opens with its title and a back button in the same place, and progress through a course shows as the same bar.
+- The **Academy** booking site uses the same buttons, fields and colours too. The blue welcome panel, the course filters and the booking form look and work as before.
+- Nothing has moved or gone: every page, course, lesson, question and button is where it was.
+
 ## 1.45.1 · 20 October 2026 · One look on every page
 
 - Every page now opens the same way: the title, one line under it, then the page's buttons on the right. Sign in, Help and a swimmer's profile follow the same pattern as everything else.

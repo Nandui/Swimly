@@ -2,6 +2,10 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore, type RefObject } from "react";
 import { Bookmark, BookmarkCheck, Square, Star, Volume2 } from "lucide-react";
+import { Button } from "@/components/shadcn/button";
+import { Label } from "@/components/shadcn/label";
+import { RadioGroup, RadioGroupItem } from "@/components/shadcn/radio-group";
+import { Textarea } from "@/components/ui/textarea";
 import { Notice } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
 
@@ -85,9 +89,9 @@ export function ReadAloud({ target, label = "Read aloud" }: { target: RefObject<
     setSpeaking(true);
   }
   return (
-    <button type="button" className="button outline" onClick={toggle} aria-pressed={speaking}>
+    <Button type="button" variant="outline" onClick={toggle} aria-pressed={speaking}>
       {speaking ? <Square aria-hidden="true" /> : <Volume2 aria-hidden="true" />}{speaking ? "Stop reading" : label}
-    </button>
+    </Button>
   );
 }
 
@@ -112,9 +116,9 @@ export function BookmarkButton({ assignmentId, lessonId, initial }: { assignment
   }
   return (
     <>
-      <button type="button" className="button outline" onClick={toggle} disabled={busy} aria-pressed={on}>
+      <Button type="button" variant="outline" onClick={toggle} disabled={busy} aria-pressed={on}>
         {on ? <BookmarkCheck aria-hidden="true" /> : <Bookmark aria-hidden="true" />}{on ? "Bookmarked" : "Bookmark"}
-      </button>
+      </Button>
       {failure ? <Notice title={failure} tone="error" live /> : null}
     </>
   );
@@ -138,13 +142,10 @@ export function LessonNote({ assignmentId, lessonId, initial }: { assignmentId: 
   return (
     <section className="pc-panel stack-sm" aria-labelledby={`${id}-title`}>
       <h2 id={`${id}-title`}>My notes</h2>
-      <div className="field">
-        <label htmlFor={id} className="sr-only">My notes on this lesson</label>
-        <textarea id={id} className="input" maxLength={2000} value={text} onChange={(e) => { setText(e.target.value); setStatus(null); }} placeholder="Anything to remember from this lesson" aria-describedby={`${id}-hint`} />
-        <span id={`${id}-hint`} className="hint">Only you can see your notes. Find them again under Saved.</span>
-      </div>
+      <Textarea id={id} aria-label="My notes on this lesson" description="Only you can see your notes. Find them again under Saved." maxLength={2000} value={text}
+        onChange={(e) => { setText(e.target.value); setStatus(null); }} placeholder="Anything to remember from this lesson" />
       {status ? <Notice title={status.title} tone={status.tone} live /> : null}
-      <button type="button" className="button outline block" onClick={save} disabled={busy || text.trim() === saved}>{busy ? "Saving…" : "Save note"}</button>
+      <Button type="button" variant="outline" className="self-start max-md:self-stretch" onClick={save} disabled={busy || text.trim() === saved}>{busy ? "Saving…" : "Save note"}</Button>
     </section>
   );
 }
@@ -163,7 +164,7 @@ export function RateCourse({ assignmentId, initial }: { assignmentId: string; in
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
   const [justSent, setJustSent] = useState(false);
-  const first = useRef<HTMLInputElement>(null);
+  const first = useRef<HTMLButtonElement>(null);
   async function send() {
     setBusy(true); setFailure(null);
     try {
@@ -179,29 +180,26 @@ export function RateCourse({ assignmentId, initial }: { assignmentId: string; in
         <>
           <p role={justSent ? "status" : undefined}><span className="stars-read" aria-label={`${sent.rating} of 5 stars`}>{[1, 2, 3, 4, 5].map((n) => <Star key={n} aria-hidden="true" data-on={n <= sent.rating || undefined} />)}</span> Thanks, your trainer will see this without your name.</p>
           {sent.unclear ? <p className="muted pre">{sent.unclear}</p> : null}
-          <button type="button" className="button ghost block" onClick={() => { setEditing(true); setJustSent(false); setTimeout(() => first.current?.focus(), 0); }}>Change my answer</button>
+          <Button type="button" variant="ghost" className="self-start" onClick={() => { setEditing(true); setJustSent(false); setTimeout(() => first.current?.focus(), 0); }}>Change my answer</Button>
         </>
       ) : (
         <>
           <p className="muted">It helps whoever wrote it make it better. They see your answer without your name.</p>
-          <fieldset className="field">
+          <fieldset className="flex flex-col gap-2">
             <legend>Your rating</legend>
-            <div className="stars">
+            <RadioGroup className="stars" name="rating" value={rating ? String(rating) : ""} onValueChange={(value) => setRating(Number(value))} aria-describedby="rating-hint">
               {[1, 2, 3, 4, 5].map((n) => (
-                <label key={n} className="star" data-on={n <= rating || undefined}>
-                  <input ref={n === 1 ? first : undefined} type="radio" name="rating" value={n} checked={rating === n} onChange={() => setRating(n)} className="sr-only" />
-                  <Star aria-hidden="true" /><span className="sr-only">{n} {n === 1 ? "star" : "stars"}, {STAR_WORDS[n]}</span>
-                </label>
+                <Label key={n} className="star" data-on={n <= rating || undefined}>
+                  <RadioGroupItem ref={n === 1 ? first : undefined} value={String(n)} className="sr-only" aria-label={`${n} ${n === 1 ? "star" : "stars"}, ${STAR_WORDS[n]}`} />
+                  <Star aria-hidden="true" />
+                </Label>
               ))}
-            </div>
-            <span className="hint" aria-live="polite">{rating ? STAR_WORDS[rating] : "Tap a star."}</span>
+            </RadioGroup>
+            <span id="rating-hint" className="caption" aria-live="polite">{rating ? STAR_WORDS[rating] : "Tap a star."}</span>
           </fieldset>
-          <div className="field">
-            <label htmlFor="unclear">Was anything unclear? (optional)</label>
-            <textarea id="unclear" className="input" maxLength={1000} value={unclear} onChange={(e) => setUnclear(e.target.value)} placeholder="A lesson, a question or a word that didn't make sense" />
-          </div>
+          <Textarea id="unclear" label="Was anything unclear?" optional maxLength={1000} value={unclear} onChange={(e) => setUnclear(e.target.value)} placeholder="A lesson, a question or a word that didn't make sense" />
           {failure ? <Notice title={failure} tone="error" live /> : null}
-          <button type="button" className="button block" onClick={send} disabled={busy || !rating}>{busy ? "Sending…" : "Send"}</button>
+          <Button type="button" className="self-start max-md:self-stretch" onClick={send} disabled={busy || !rating}>{busy ? "Sending…" : "Send"}</Button>
         </>
       )}
     </section>

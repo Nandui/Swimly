@@ -2,6 +2,13 @@
 
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
+import { Button } from "@/components/shadcn/button";
+import { Checkbox } from "@/components/shadcn/checkbox";
+import { Input } from "@/components/shadcn/input";
+import { Label } from "@/components/shadcn/label";
+import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
+import { RadioGroup, RadioGroupItem } from "@/components/shadcn/radio-group";
+import { leftOf, topOf } from "@/components/ui-kit/scale";
 import { apiFile } from "@/lib/api";
 
 /** A question as Turnfin sends it: never which answer is right. */
@@ -72,7 +79,7 @@ export function CourseImage({ assignmentId, fileId, alt, className, path }: { as
       .catch(() => { if (live) setFailed(true); });
     return () => { live = false; if (local) URL.revokeObjectURL(local); };
   }, [assignmentId, fileId, path]);
-  if (failed) return <span className="caption muted">This picture didn’t load.</span>;
+  if (failed) return <span className="caption">This picture didn’t load.</span>;
   // eslint-disable-next-line @next/next/no-img-element -- a private image from the staff API
   return url ? <img className={className ?? "question-image"} src={url} alt={alt} /> : <span className="lesson-image-placeholder" role="img" aria-label="Loading picture" />;
 }
@@ -102,8 +109,8 @@ function SpotField({ assignmentId, question, answer, onChange, locked, right }: 
     <div ref={frame} className="spot-frame" data-locked={locked || undefined} onPointerDown={place} onKeyDown={nudge} tabIndex={locked ? -1 : 0} role="application"
       aria-label={`Picture. ${spot ? `Your marker is ${Math.round(spot.x)}% from the left and ${Math.round(spot.y)}% from the top.` : "No marker yet."} Tap the right place, or press Enter and move the marker with the arrow keys.`}>
       <CourseImage assignmentId={assignmentId} fileId={question.imageId} alt="" className="spot-image" />
-      {spot ? <span className="spot-marker" style={{ left: `${spot.x}%`, top: `${spot.y}%` }} aria-hidden="true" /> : null}
-      {mark ? <span className="spot-marker is-right" style={{ left: `${mark.x}%`, top: `${mark.y}%` }} aria-hidden="true" /> : null}
+      {spot ? <span className={`spot-marker ${leftOf(spot.x / 100)} ${topOf(spot.y / 100)}`} aria-hidden="true" /> : null}
+      {mark ? <span className={`spot-marker is-right ${leftOf(mark.x / 100)} ${topOf(mark.y / 100)}`} aria-hidden="true" /> : null}
     </div>
   );
 }
@@ -116,9 +123,9 @@ export function QuestionField({ assignmentId, question, answer, onChange, locked
   const name = `q-${question.id}`;
   const legend = (
     <legend className="question-prompt">
-      {number ? <span className="caption muted tabular">{number}</span> : null}
+      {number ? <span className="caption tabular-nums">{number}</span> : null}
       <span>{question.prompt}</span>
-      <span className="caption muted">{QUESTION_HINT[question.kind]}</span>
+      <span className="caption">{QUESTION_HINT[question.kind]}</span>
     </legend>
   );
   const picture = question.imageId ? <CourseImage assignmentId={assignmentId} fileId={question.imageId} alt="Picture for this question" /> : null;
@@ -140,12 +147,12 @@ export function QuestionField({ assignmentId, question, answer, onChange, locked
         {legend}
         {picture}
         <div className="typed-answer">
-          <input id={`${name}-typed`} className="input" aria-label={question.kind === "NUMBER" ? `Your answer${unit ? ` in ${unit}` : ""}` : "Your answer"} value={value} disabled={locked}
+          <Input id={`${name}-typed`} aria-label={question.kind === "NUMBER" ? `Your answer${unit ? ` in ${unit}` : ""}` : "Your answer"} value={value} disabled={locked}
             inputMode={question.kind === "NUMBER" ? "decimal" : "text"} maxLength={question.kind === "NUMBER" ? 20 : 200} autoComplete="off" autoCapitalize={question.kind === "NUMBER" ? "off" : "sentences"}
             onChange={(e) => onChange(e.target.value ? e.target.value : null)} />
           {unit ? <span className="typed-unit" aria-hidden="true">{unit}</span> : null}
         </div>
-        {question.kind === "NUMBER" && value && !isNumber(value) ? <p className="caption muted">Use only digits, such as 1.5.</p> : null}
+        {question.kind === "NUMBER" && value && !isNumber(value) ? <p className="caption">Use only digits, such as 1.5.</p> : null}
       </fieldset>
     );
   }
@@ -156,9 +163,9 @@ export function QuestionField({ assignmentId, question, answer, onChange, locked
     return (
       <fieldset className="question" disabled={locked}>
         <legend className="question-prompt">
-          {number ? <span className="caption muted tabular">{number}</span> : null}
+          {number ? <span className="caption tabular-nums">{number}</span> : null}
           <span className="sr-only">{question.prompt}</span>
-          <span className="caption muted">{QUESTION_HINT.FILL_BLANK}</span>
+          <span className="caption">{QUESTION_HINT.FILL_BLANK}</span>
         </legend>
         {picture}
         <p className="blank-sentence">
@@ -166,7 +173,7 @@ export function QuestionField({ assignmentId, question, answer, onChange, locked
             <span key={i}>
               {text}
               {question.options[i] ? (
-                <input className="input blank-input" aria-label={`Blank ${i + 1} of ${question.options.length}`} value={typed[question.options[i].id] ?? ""} disabled={locked} maxLength={64}
+                <Input className="blank-input" aria-label={`Blank ${i + 1} of ${question.options.length}`} value={typed[question.options[i].id] ?? ""} disabled={locked} maxLength={64}
                   autoCapitalize="off" autoComplete="off" spellCheck={false}
                   onChange={(e) => {
                     const next = { ...typed, [question.options[i].id]: e.target.value };
@@ -196,17 +203,17 @@ export function QuestionField({ assignmentId, question, answer, onChange, locked
         <ol className="choices">
           {order.map((id, i) => (
             <li key={id} className="choice order-step">
-              <span className="order-number tabular" aria-hidden="true">{i + 1}</span>
+              <span className="order-number tabular-nums" aria-hidden="true">{i + 1}</span>
               <span className="choice-text">{byId.get(id)?.text}</span>
               {locked ? null : <span className="order-moves">
-                <button type="button" className="button ghost icon" onClick={() => move(i, i - 1)} disabled={locked || i === 0} aria-label={`Move “${byId.get(id)?.text}” up`}><ArrowUp aria-hidden="true" /></button>
-                <button type="button" className="button ghost icon" onClick={() => move(i, i + 1)} disabled={locked || i === order.length - 1} aria-label={`Move “${byId.get(id)?.text}” down`}><ArrowDown aria-hidden="true" /></button>
+                <Button type="button" variant="ghost" size="icon" onClick={() => move(i, i - 1)} disabled={locked || i === 0} aria-label={`Move “${byId.get(id)?.text}” up`}><ArrowUp aria-hidden="true" /></Button>
+                <Button type="button" variant="ghost" size="icon" onClick={() => move(i, i + 1)} disabled={locked || i === order.length - 1} aria-label={`Move “${byId.get(id)?.text}” down`}><ArrowDown aria-hidden="true" /></Button>
               </span>}
             </li>
           ))}
         </ol>
         {!locked && !Array.isArray(answer) ? (
-          <button type="button" className="button outline block" onClick={() => onChange(order)}>This order is right</button>
+          <Button type="button" variant="outline" className="self-start max-md:self-stretch" onClick={() => onChange(order)}>This order is right</Button>
         ) : null}
       </fieldset>
     );
@@ -221,16 +228,16 @@ export function QuestionField({ assignmentId, question, answer, onChange, locked
         <ul className="choices">
           {question.options.map((o) => (
             <li key={o.id} className="choice match-pair">
-              <label htmlFor={`${name}-${o.id}`} className="choice-text">{o.text}</label>
-              <select id={`${name}-${o.id}`} className="input" value={pairs[o.id] ?? ""} disabled={locked}
+              <Label htmlFor={`${name}-${o.id}`} className="choice-text">{o.text}</Label>
+              <NativeSelect id={`${name}-${o.id}`} value={pairs[o.id] ?? ""} disabled={locked}
                 onChange={(e) => {
                   const next = { ...pairs };
                   if (e.target.value) next[o.id] = e.target.value; else delete next[o.id];
                   onChange(Object.keys(next).length ? next : null);
                 }}>
-                <option value="">Choose…</option>
-                {question.partners?.map((p) => <option key={p.id} value={p.id}>{p.text}</option>)}
-              </select>
+                <NativeSelectOption value="">Choose…</NativeSelectOption>
+                {question.partners?.map((p) => <NativeSelectOption key={p.id} value={p.id}>{p.text}</NativeSelectOption>)}
+              </NativeSelect>
             </li>
           ))}
         </ul>
@@ -240,29 +247,42 @@ export function QuestionField({ assignmentId, question, answer, onChange, locked
 
   const several = question.kind === "MULTIPLE";
   const chosen = new Set(several ? (Array.isArray(answer) ? answer : []) : typeof answer === "string" ? [answer] : []);
+  const optionText = (o: LearnerQuestion["options"][number]) => (
+    <span className="choice-text">
+      {o.imageId ? <CourseImage assignmentId={assignmentId} fileId={o.imageId} alt={o.text || "Answer picture"} className="choice-image" /> : null}
+      {o.text}
+    </span>
+  );
   return (
     <fieldset className="question" disabled={locked}>
       {legend}
       {picture}
-      <ul className="choices">
-        {question.options.map((o) => (
-          <li key={o.id}>
-            <label className="choice selectable">
-              <input type={several ? "checkbox" : "radio"} name={name} value={o.id} checked={chosen.has(o.id)} disabled={locked}
-                onChange={(e) => {
-                  if (!several) { onChange(o.id); return; }
-                  const next = new Set(chosen);
-                  if (e.target.checked) next.add(o.id); else next.delete(o.id);
-                  onChange(next.size ? [...next] : null);
-                }} />
-              <span className="choice-text">
-                {o.imageId ? <CourseImage assignmentId={assignmentId} fileId={o.imageId} alt={o.text || "Answer picture"} className="choice-image" /> : null}
-                {o.text}
-              </span>
-            </label>
-          </li>
-        ))}
-      </ul>
+      {several ? (
+        <ul className="choices">
+          {question.options.map((o) => (
+            <li key={o.id}>
+              <Label className="choice selectable">
+                <Checkbox name={name} value={o.id} checked={chosen.has(o.id)} disabled={locked}
+                  onCheckedChange={(checked) => {
+                    const next = new Set(chosen);
+                    if (checked === true) next.add(o.id); else next.delete(o.id);
+                    onChange(next.size ? [...next] : null);
+                  }} />
+                {optionText(o)}
+              </Label>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <RadioGroup className="choices" name={name} value={typeof answer === "string" ? answer : ""} disabled={locked} onValueChange={(value) => onChange(value)}>
+          {question.options.map((o) => (
+            <Label key={o.id} className="choice selectable">
+              <RadioGroupItem value={o.id} />
+              {optionText(o)}
+            </Label>
+          ))}
+        </RadioGroup>
+      )}
     </fieldset>
   );
 }

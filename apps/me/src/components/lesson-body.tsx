@@ -3,7 +3,12 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight, CircleHelp, ExternalLink, FileDown, RotateCw } from "lucide-react";
 import { answered, QuestionField, type Answer, type LearnerQuestion } from "@/components/question";
-import { Notice } from "@/components/ui";
+import { Button } from "@/components/shadcn/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
+import { Separator } from "@/components/shadcn/separator";
+import { Table, TableBody, TableCell, TableHead, TableRow } from "@/components/shadcn/table";
+import { Tabs as TabSet, TabsContent, TabsList, TabsTrigger } from "@/components/shadcn/tabs";
+import { Bar, Notice } from "@/components/ui";
 import { ApiError, api, apiFile } from "@/lib/api";
 
 /** Renders a training lesson's text (Tiptap JSON, cleaned by Turnfin) as plain,
@@ -37,12 +42,12 @@ const CALLOUT_LABEL: Record<string, string> = { note: "Note", tip: "Tip", warnin
 function Reveal({ title, children }: { title: ReactNode; children: ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="reveal" data-open={open || undefined}>
-      <button type="button" className="reveal-toggle" aria-expanded={open} onClick={() => setOpen(!open)}>
-        <span>{title}</span><ChevronDown aria-hidden="true" />
-      </button>
-      {open ? <div className="reveal-body">{children}</div> : null}
-    </div>
+    <Collapsible open={open} onOpenChange={setOpen} className="reveal" data-open={open || undefined}>
+      <CollapsibleTrigger asChild>
+        <Button type="button" variant="ghost" className="reveal-toggle"><span>{title}</span><ChevronDown aria-hidden="true" /></Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="reveal-body">{children}</CollapsibleContent>
+    </Collapsible>
   );
 }
 
@@ -50,11 +55,11 @@ function Reveal({ title, children }: { title: ReactNode; children: ReactNode }) 
 function FlipCard({ front, back }: { front: ReactNode; back: ReactNode }) {
   const [flipped, setFlipped] = useState(false);
   return (
-    <button type="button" className="flip-card" aria-pressed={flipped} onClick={() => setFlipped(!flipped)}>
-      <span className="caption muted">{flipped ? "Back" : "Front"} · tap to turn over</span>
+    <Button type="button" variant="outline" className="flip-card" aria-pressed={flipped} onClick={() => setFlipped(!flipped)}>
+      <span className="caption">{flipped ? "Back" : "Front"} · tap to turn over</span>
       <span className="flip-face">{flipped ? back : front}</span>
       <RotateCw aria-hidden="true" className="flip-icon" />
-    </button>
+    </Button>
   );
 }
 
@@ -63,38 +68,26 @@ function Stepper({ steps }: { steps: ReactNode[] }) {
   const [index, setIndex] = useState(0);
   return (
     <div className="stepper" role="group" aria-label="Step by step">
-      <p className="caption tabular" aria-live="polite">Step {index + 1} of {steps.length}</p>
-      <progress className="course-progress" max={steps.length} value={index + 1} aria-hidden="true" />
+      <p className="caption tabular-nums" aria-live="polite">Step {index + 1} of {steps.length}</p>
+      <div aria-hidden="true"><Bar max={steps.length} value={index + 1} label="Steps" /></div>
       <div className="stepper-body">{steps[index]}</div>
       <div className="lesson-nav">
-        {index > 0 ? <button type="button" className="button outline" onClick={() => setIndex(index - 1)}><ChevronLeft aria-hidden="true" />Back</button> : <span />}
-        {index + 1 < steps.length ? <button type="button" className="button outline" onClick={() => setIndex(index + 1)}>Next step<ChevronRight aria-hidden="true" /></button> : null}
+        {index > 0 ? <Button type="button" variant="outline" onClick={() => setIndex(index - 1)}><ChevronLeft aria-hidden="true" />Back</Button> : <span />}
+        {index + 1 < steps.length ? <Button type="button" variant="outline" onClick={() => setIndex(index + 1)}>Next step<ChevronRight aria-hidden="true" /></Button> : null}
       </div>
     </div>
   );
 }
 
-/** Tabs: one panel at a time, switched with the tab buttons or the arrow keys. */
+/** Tabs: one panel at a time, switched with the tabs or the arrow keys (shadcn Tabs). */
 function Tabs({ id, tabs }: { id: string; tabs: { title: ReactNode; body: ReactNode }[] }) {
-  const [index, setIndex] = useState(0);
-  const move = (to: number) => {
-    const next = (to + tabs.length) % tabs.length;
-    setIndex(next);
-    document.getElementById(`${id}-tab-${next}`)?.focus();
-  };
   return (
-    <div className="tabs">
-      <div role="tablist" className="tab-list" aria-label="Tabs">
-        {tabs.map((t, i) => (
-          <button key={i} id={`${id}-tab-${i}`} type="button" role="tab" className="tab-button" aria-selected={i === index} aria-controls={`${id}-panel-${i}`} tabIndex={i === index ? 0 : -1}
-            onClick={() => setIndex(i)}
-            onKeyDown={(e) => { if (e.key === "ArrowRight") { e.preventDefault(); move(i + 1); } else if (e.key === "ArrowLeft") { e.preventDefault(); move(i - 1); } }}>
-            {t.title}
-          </button>
-        ))}
-      </div>
-      {tabs.map((t, i) => <div key={i} id={`${id}-panel-${i}`} role="tabpanel" aria-labelledby={`${id}-tab-${i}`} hidden={i !== index} className="tab-panel">{t.body}</div>)}
-    </div>
+    <TabSet defaultValue="0" className="tabs">
+      <TabsList className="tab-list" aria-label="Tabs">
+        {tabs.map((t, i) => <TabsTrigger key={i} id={`${id}-tab-${i}`} value={String(i)}>{t.title}</TabsTrigger>)}
+      </TabsList>
+      {tabs.map((t, i) => <TabsContent key={i} value={String(i)} className="tab-panel">{t.body}</TabsContent>)}
+    </TabSet>
   );
 }
 
@@ -128,7 +121,7 @@ function FileButton({ assignmentId, fileId, label }: { assignmentId: string; fil
   }
   return (
     <div className="stack-sm">
-      <button type="button" className="button outline block" onClick={open} disabled={busy}><FileDown aria-hidden="true" />{busy ? "Getting it…" : label || "Download"}</button>
+      <Button type="button" variant="outline" className="self-start max-md:self-stretch" onClick={open} disabled={busy}><FileDown aria-hidden="true" />{busy ? "Getting it…" : label || "Download"}</Button>
       {failed ? <p className="caption">That file didn’t open. Check your connection and try again.</p> : null}
     </div>
   );
@@ -162,8 +155,8 @@ function KnowledgeCheck({ checks, questionId }: { checks: Checks; questionId: st
       {failure ? <Notice title={failure} tone="error" live /> : null}
       {settled ? null : (
         <div className="lesson-nav">
-          {result && !result.correct && !result.explanation ? <button type="button" className="button ghost" onClick={() => check(true)} disabled={busy}>Show me why</button> : <span />}
-          <button type="button" className="button outline" onClick={() => check(false)} disabled={busy || !answered(question, answer)}>{busy ? "Checking…" : "Check my answer"}</button>
+          {result && !result.correct && !result.explanation ? <Button type="button" variant="ghost" onClick={() => check(true)} disabled={busy}>Show me why</Button> : <span />}
+          <Button type="button" variant="outline" onClick={() => check(false)} disabled={busy || !answered(question, answer)}>{busy ? "Checking…" : "Check my answer"}</Button>
         </div>
       )}
     </section>
@@ -198,11 +191,11 @@ function render(node: Node, key: string, assignmentId: string, checks: Checks | 
     case "listItem": return <li key={key}>{kids}</li>;
     case "blockquote": return <blockquote key={key}>{kids}</blockquote>;
     case "hardBreak": return <br key={key} />;
-    case "horizontalRule": return <hr key={key} />;
-    case "table": return <table key={key}><tbody>{kids}</tbody></table>;
-    case "tableRow": return <tr key={key}>{kids}</tr>;
-    case "tableHeader": return <th key={key}>{kids}</th>;
-    case "tableCell": return <td key={key}>{kids}</td>;
+    case "horizontalRule": return <Separator key={key} />;
+    case "table": return <Table key={key}><TableBody>{kids}</TableBody></Table>;
+    case "tableRow": return <TableRow key={key}>{kids}</TableRow>;
+    case "tableHeader": return <TableHead key={key}>{kids}</TableHead>;
+    case "tableCell": return <TableCell key={key}>{kids}</TableCell>;
     case "image": {
       const id = fileId(node.attrs?.src);
       return id ? <LessonImage key={key} assignmentId={assignmentId} id={id} alt={String(node.attrs?.alt ?? "")} /> : null;
@@ -232,7 +225,7 @@ function render(node: Node, key: string, assignmentId: string, checks: Checks | 
       if (!video) return null;
       return video.embed
         ? <div key={key} className="lesson-video"><iframe src={video.embed} title={`Video on ${video.provider}`} allow="encrypted-media; picture-in-picture; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" loading="lazy" /></div>
-        : <a key={key} href={video.href} target="_blank" rel="noopener noreferrer" className="button outline block"><ExternalLink aria-hidden="true" />Watch on {video.provider}</a>;
+        : <Button key={key} asChild variant="outline" className="w-full"><a href={video.href} target="_blank" rel="noopener noreferrer"><ExternalLink aria-hidden="true" />Watch on {video.provider}</a></Button>;
     }
     case "fileButton": {
       const id = typeof node.attrs?.fileId === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(node.attrs.fileId) ? node.attrs.fileId : null;

@@ -6,6 +6,9 @@ import { Frame } from "@/components/frame";
 import { EmptyRows, LoadError, Loading, Tag, useLoad } from "@/components/ui";
 import { clock, day } from "@/lib/format";
 import { QUALIFICATION_META, READING_META, SHIFT_WARNING_META, TRAINING_META } from "@/lib/meta";
+import { Button } from "@/components/shadcn/button";
+import { PageShell } from "@/components/ui-kit/page-shell";
+import { PageHeader } from "@/components/ui-kit/page-header";
 
 type Home = {
   name: string;
@@ -23,11 +26,8 @@ export default function HomePage() {
   const todo = data ? data.training.filter((t) => t.state !== "submitted").length + data.reading.length + data.reviewsToAcknowledge + data.qualifications.length : 0;
   return (
     <Frame title="Home">
-      <div className="stack">
-        <div className="stack-sm">
-          <h1>{data ? `Hello, ${data.name.split(" ")[0]}` : "Hello"}</h1>
-          {data ? <p className="muted">{todo === 0 ? "Nothing needs you right now." : `${todo} ${todo === 1 ? "thing needs" : "things need"} you.`}</p> : null}
-        </div>
+      <PageShell header={<PageHeader title={data ? `Hello, ${data.name.split(" ")[0]}` : "Hello"}
+        description={data ? (todo === 0 ? "Nothing needs you right now." : `${todo} ${todo === 1 ? "thing needs" : "things need"} you.`) : undefined} />}>
 
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : (
           <>
@@ -58,7 +58,7 @@ export default function HomePage() {
             ) : null}
 
             <section className="pc-panel" aria-labelledby="home-training">
-              <div className="pc-panel-head"><h2 id="home-training">Training</h2><Link href="/training" className="button ghost">All training<ChevronRight aria-hidden="true" /></Link></div>
+              <div className="pc-panel-head"><h2 id="home-training">Training</h2><Button asChild variant="ghost"><Link href="/training">All training<ChevronRight aria-hidden="true" /></Link></Button></div>
               {data.training.length === 0 ? <EmptyRows>No training to do.</EmptyRows> : (
                 <ul className="pc-rows">{data.training.map((t) => (
                   <li key={t.id}><Link href={`/training/${t.id}`} className="pc-row">
@@ -70,7 +70,7 @@ export default function HomePage() {
             </section>
 
             <section className="pc-panel" aria-labelledby="home-reading">
-              <div className="pc-panel-head"><h2 id="home-reading">Required reading</h2><Link href="/reading" className="button ghost">All reading<ChevronRight aria-hidden="true" /></Link></div>
+              <div className="pc-panel-head"><h2 id="home-reading">Required reading</h2><Button asChild variant="ghost"><Link href="/reading">All reading<ChevronRight aria-hidden="true" /></Link></Button></div>
               {data.reading.length === 0 ? <EmptyRows>Nothing to read.</EmptyRows> : (
                 <ul className="pc-rows">{data.reading.map((r) => (
                   <li key={r.documentId}><Link href={`/reading/${r.documentId}`} className="pc-row">
@@ -83,7 +83,7 @@ export default function HomePage() {
 
             {data.qualifications.length > 0 ? (
               <section className="pc-panel" aria-labelledby="home-quals">
-                <div className="pc-panel-head"><h2 id="home-quals">Qualifications</h2><Link href="/qualifications" className="button ghost">All<ChevronRight aria-hidden="true" /></Link></div>
+                <div className="pc-panel-head"><h2 id="home-quals">Qualifications</h2><Button asChild variant="ghost"><Link href="/qualifications">All<ChevronRight aria-hidden="true" /></Link></Button></div>
                 <ul className="pc-rows">{data.qualifications.map((q) => (
                   <li key={q.id} className="pc-row">
                     <span className="pc-row-body"><span className="pc-row-title">{q.name}</span><span className="pc-row-hint">{q.state === "expired" ? "Expired" : "Expires"} {day(q.expiresOn)}</span></span>
@@ -94,7 +94,7 @@ export default function HomePage() {
             ) : null}
 
             <section className="pc-panel" aria-labelledby="home-shifts">
-              <div className="pc-panel-head"><h2 id="home-shifts">Next shifts</h2><Link href="/shifts" className="button ghost">All shifts<ChevronRight aria-hidden="true" /></Link></div>
+              <div className="pc-panel-head"><h2 id="home-shifts">Next shifts</h2><Button asChild variant="ghost"><Link href="/shifts">All shifts<ChevronRight aria-hidden="true" /></Link></Button></div>
               {data.shifts.length === 0 ? <EmptyRows>No shifts in the next week.</EmptyRows> : (
                 <ul className="pc-rows">{data.shifts.map((s) => (
                   <li key={s.id} className="pc-row">
@@ -106,7 +106,7 @@ export default function HomePage() {
             </section>
           </>
         )}
-      </div>
+      </PageShell>
     </Frame>
   );
 }

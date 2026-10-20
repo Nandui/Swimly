@@ -6,6 +6,8 @@ import { Frame } from "@/components/frame";
 import { EmptyRows, LoadError, Loading, Tag, useLoad } from "@/components/ui";
 import { date, day } from "@/lib/format";
 import { READING_META } from "@/lib/meta";
+import { PageShell } from "@/components/ui-kit/page-shell";
+import { PageHeader } from "@/components/ui-kit/page-header";
 
 type Item = { documentId: string; title: string; reference: string; version: number; dueOn: string | null; status: string; acknowledgedAt: string | null; overdue: boolean };
 
@@ -25,15 +27,14 @@ export default function ReadingPage() {
   );
   return (
     <Frame title="Required reading">
-      <div className="stack">
-        <div className="stack-sm"><h1>Required reading</h1><p className="muted">Procedures and policies you need to read and acknowledge.</p></div>
+      <PageShell header={<PageHeader title="Required reading" description="Procedures and policies you need to read and acknowledge." />}>
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : (
           <>
             <section className="pc-panel" aria-labelledby="r-open"><div className="pc-panel-head"><h2 id="r-open">To read</h2></div>{list(open, "Nothing to read right now.")}</section>
             <section className="pc-panel" aria-labelledby="r-done"><div className="pc-panel-head"><h2 id="r-done">Read</h2></div>{list(done, "Nothing acknowledged yet.")}</section>
           </>
         )}
-      </div>
+      </PageShell>
     </Frame>
   );
 }
