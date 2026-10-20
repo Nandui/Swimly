@@ -8,6 +8,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-sel
 import { assignablePeople, AssignTraining, EXPIRY_WARNING_DAYS, OVERVIEW_VIEWS, TRAINING_STATUS_META, trainingOverview } from "@/modules/training/features/assignments";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDate, nameInitials, plural } from "@/lib/format";
@@ -30,12 +31,11 @@ export default async function TrainingPeoplePage({ searchParams }: { searchParam
     ? { title: "Nothing matches", hint: "Try another name or course, or reset the filters." }
     : EMPTY[data.view];
   return (
-    <>
-      <PageHeader
+    <PageShell header={<PageHeader
         title="Training"
         description="Training for the people you cover: what is due, waiting for sign-off and done."
         actions={data.who.assign && activeCourses.length > 0 && people.length > 0 ? <AssignTraining courses={activeCourses} people={people} /> : null}
-      />
+      />}>
 
       <ul className="pc-stats" aria-label="Training at a glance">
         {tiles.map(({ view, label, hint, value, icon: Icon, href }) => (
@@ -102,7 +102,7 @@ export default async function TrainingPeoplePage({ searchParams }: { searchParam
           </ul>
         )}
       </section>
-    </>
+    </PageShell>
   );
 }
 

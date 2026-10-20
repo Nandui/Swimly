@@ -49,7 +49,7 @@ export function CallDialog({ person, course, priceCents, primary }: { person: Ca
       submit={(fd) => logCall(person.id, { outcome: text(fd, "outcome"), amount: text(fd, "amount"), receipt: text(fd, "receipt"), note: text(fd, "note") })}>
       <dl className="flex flex-col rounded-2xl bg-ui-muted px-4 py-1 text-sm">
         {facts.map(([label, value]) => (
-          <div key={label} className="flex min-h-9 flex-wrap items-center justify-between gap-x-4 py-1"><dt className="text-ui-muted-foreground">{label}</dt><dd className="text-right [overflow-wrap:anywhere]">{value}</dd></div>
+          <div key={label} className="flex min-h-9 flex-wrap items-center justify-between gap-x-4 py-1"><dt className="text-ui-muted-foreground">{label}</dt><dd className="text-right wrap-anywhere">{value}</dd></div>
         ))}
       </dl>
       <RadioGroup name="outcome" value={outcome} onValueChange={setOutcome} className="gap-2" aria-label="How did it go?" required>

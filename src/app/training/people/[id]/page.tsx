@@ -6,6 +6,7 @@ import { Button } from "@/components/shadcn/button";
 import { AssignTraining, CancelTraining, GiveExamAttempt, listCourses, personTraining, TRAINING_STATUS_META } from "@/modules/training/features/assignments";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { QUALIFICATION_STATE_META } from "@/lib/people/constants";
 import { formatDate } from "@/lib/format";
@@ -41,8 +42,7 @@ export default async function TrainingPersonPage({ params }: { params: Promise<{
   ]);
   const person = { id: data.person.id, name: data.person.name, jobTitle: data.person.jobTitle };
   return (
-    <>
-      <PageHeader
+    <PageShell header={<PageHeader
         back={{ href: "/training", label: "People" }}
         title={data.person.name}
         description={data.person.jobTitle || "Training record"}
@@ -52,7 +52,7 @@ export default async function TrainingPersonPage({ params }: { params: Promise<{
             {data.canAssign && courses.length > 0 ? <AssignTraining courses={courses} people={[person]} userIds={[person.id]} /> : null}
           </>
         }
-      />
+      />}>
       <div className="pc-grid">
         <section className="pc-panel" aria-labelledby="training-history">
           <div className="pc-panel-head"><h2 id="training-history">Training</h2></div>
@@ -176,6 +176,6 @@ export default async function TrainingPersonPage({ params }: { params: Promise<{
           )}
         </section>
       </div>
-    </>
+    </PageShell>
   );
 }

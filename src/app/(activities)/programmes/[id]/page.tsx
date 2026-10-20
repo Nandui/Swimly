@@ -11,6 +11,7 @@ import { notFound } from "next/navigation";
 
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
 import { AddAssessmentType, ArchiveAssessmentType, EditAssessmentType } from "@/modules/activities/features/assessments";
@@ -45,8 +46,7 @@ export default async function ProgrammePage(
   );
 
   return (
-    <div className="min-w-0 flex flex-col gap-6">
-      <PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         back={{ href: "/programmes", label: "Programmes" }}
         title={
           <span className="min-w-0 flex gap-2 items-center">
@@ -68,7 +68,7 @@ export default async function ProgrammePage(
             <AddLevel programmeId={programme.id} />
           </>
         }
-      />
+      />}>
 
       <Lead>
         <Num>{liveLevels.length}</Num>{" "}
@@ -119,7 +119,7 @@ export default async function ProgrammePage(
         ) : (
           <ul className="pc-rows">
             {assessmentTypes.map((type) => (
-              <li key={type.id} className="pc-row [overflow-wrap:anywhere]">
+              <li key={type.id} className="pc-row wrap-anywhere">
                 <span className="pc-tile-icon">
                   <ClipboardCheck aria-hidden="true" />
                 </span>
@@ -144,7 +144,7 @@ export default async function ProgrammePage(
           </ul>
         )}
       </section>
-    </div>
+    </PageShell>
   );
 }
 
@@ -243,7 +243,7 @@ function LevelSection({
               ({ competency, position, first, last }) => (
                 <li
                   key={competency.id}
-                  className="pc-row [overflow-wrap:anywhere]"
+                  className="pc-row wrap-anywhere"
                 >
                   {position !== null ? (
                     <span className="pc-tile-icon font-semibold tabular-nums">

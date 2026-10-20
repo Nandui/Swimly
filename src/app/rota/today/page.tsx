@@ -4,6 +4,7 @@ import { Plus, UserX } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import {
   ABSENCE_REASON_META, type AbsenceReason, activityIcon, clock, dayGaps, DayNote, duration, fitsFor, NeedDialog, ROTA_CHANGE_REASON_META, ROTA_DAY_META, ROTA_TIMEPOINT_META, type RotaChangeReason, TimepointDone, todayAt, type TodayGap, TodayGaps,
@@ -23,10 +24,9 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
   const data = await todayAt(input.site);
   if (!data.site) {
     return (
-      <>
-        <PageHeader title="Today" />
+      <PageShell header={<PageHeader title="Today" />}>
         <EmptyState as="h2" icon="calendarDays" title="No sites to show" hint="Your rota role does not cover a site yet." />
-      </>
+      </PageShell>
     );
   }
   const { site, now, day, changes, note, off } = data;
@@ -51,8 +51,7 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
   const todo = changes.filter((c) => !c.timepointAt).length;
   const todayChanges = changes.filter((c) => c.date.toISOString().slice(0, 10) === now || !c.timepointAt);
   return (
-    <>
-      <PageHeader
+    <PageShell header={<PageHeader
         title={`Today: ${site.name}`}
         description={`${formatWeekday(now)} ${formatDayMonth(now)} · ${clock(nowMinutes)} · every department`}
         status={day.groups.length ? <Tag meta={ROTA_DAY_META[gaps.length ? "gaps" : "covered"]} label={gaps.length ? `${gaps.length} ${gaps.length === 1 ? "gap" : "gaps"}` : "No gaps left today"} /> : undefined}
@@ -61,7 +60,7 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
           {data.types.length ? <NeedDialog siteId={site.id} date={now} live types={data.types} areas={data.places}
             trigger={<Button variant="outline"><Plus aria-hidden="true" />Add activity</Button>} /> : null}
         </> : undefined}
-      />
+      />}>
       <section className="pc-panel" aria-labelledby="today-gaps">
         <div className="pc-panel-head"><div><h2 id="today-gaps">Gaps to fill</h2>
           <p className="text-sm text-ui-muted-foreground">{run ? "Best fits first. Putting someone on logs it as covering an absence, or filling a gap." : "The duty manager fills these."}</p></div></div>
@@ -125,6 +124,6 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
         <div className="pc-panel-head"><h2 id="today-note">Day note</h2><span className="text-xs text-ui-muted-foreground">Seen by every duty manager here today</span></div>
         {run ? <DayNote siteId={site.id} date={now} text={note?.text ?? ""} labelledBy="today-note" /> : <p>{note?.text || "No note today."}</p>}
       </section>
-    </>
+    </PageShell>
   );
 }

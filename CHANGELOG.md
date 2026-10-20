@@ -10,6 +10,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - You can add the incident report's number, such as INC-00042, so the record links to the report.
 - A saved record can't be changed or deleted. If something comes to light later, press **Add a note** and it shows under the record with your name and the time.
 - **Record** lets people record viewings and read their own. **Review** also lets them read every viewing at their sites and add notes. Nobody sees the CCTV log until an administrator gives their role a level under **Admin, Roles**.
+## 1.45.1 · 20 October 2026 · One look on every page
+
+- Every page now opens the same way: the title, one line under it, then the page's buttons on the right. Sign in, Help and a swimmer's profile follow the same pattern as everything else.
+- The charts in **Analytics** and the score chart in **Tasks > Reports** are redrawn in Turnfin's standard chart style. Point at a chart, or tab to it and use the arrow keys, to read each value. The second colour on the analytics charts is now amber instead of orange.
+- In **Docs**, coloured text, highlights and text sizes pasted from elsewhere now show in the nearest colour and size from the Docs menus, so every document reads the same in light and dark mode.
+- Nothing has moved or gone: every page, button and figure is where it was.
+
 ## 1.45.0 · 20 October 2026 · Open a timetable slot on the Business dashboard
 
 - On **Analytics > Business**, press any slot in **When classes are full** to see what it holds: each programme and level in that day and time, with places filled, free and waiting, and the classes behind them. Press the slot again, the cross or Escape to close it.

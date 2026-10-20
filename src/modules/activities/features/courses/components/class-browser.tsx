@@ -4,6 +4,7 @@ import { Button } from "@/components/shadcn/button";
 import { Tag } from "@/components/ui-kit/tag";
 import { LinkPagination } from "@/components/ui-kit/link-pagination";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Item, ItemGroup, ItemContent, ItemTitle } from "@/components/shadcn/item";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { AddClass } from "@/modules/activities/features/courses/components/add-class";
@@ -42,9 +43,8 @@ export function ClassBrowser({ courses, params, todayDay, levels, canManage, wor
   const selected = state === "archived" ? "archived" : filters.places === "open" || filters.places === "full" ? filters.places : "all";
   const pages = Math.max(1, Math.ceil(matches.length / CLASS_PAGE_SIZE));
   const resetHref = state === "archived" ? "/courses?state=archived" : "/courses";
-  return <div className="min-w-0 flex flex-col gap-6" data-class-browser>
-    <PageHeader title="Classes" description="Find a weekly class across all sites and see where there’s room"
-      actions={canManage ? <AddClass levels={levels} workingSite={workingSite} /> : undefined} />
+  return <PageShell spacing="roomy" data-class-browser header={<PageHeader title="Classes" description="Find a weekly class across all sites and see where there’s room"
+      actions={canManage ? <AddClass levels={levels} workingSite={workingSite} /> : undefined} />}>
     <section className="pc-panel" aria-label="Classes">
       <CourseFilters dimensions={courseFilterDimensions(collection, filters)} q={filters.q} active={active} state={state} todayDay={todayDay}
         showing={{ first: (page - 1) * CLASS_PAGE_SIZE + 1, last: Math.min(page * CLASS_PAGE_SIZE, matches.length), total: matches.length }}
@@ -73,7 +73,7 @@ export function ClassBrowser({ courses, params, todayDay, levels, canManage, wor
       />}
       <LinkPagination label="Class pages" page={page} pageCount={pages} pathname="/courses" query={Object.fromEntries(new URLSearchParams(classBrowserHref(params, { page: null }).split("?")[1] ?? ""))} />
     </section>
-  </div>;
+  </PageShell>;
 }
 
 /** Availability as one tag (archived, full, over or places left) over the enrolment caption. The

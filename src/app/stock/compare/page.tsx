@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDay, formatShortDay, plural } from "@/lib/format";
 import { CategoryTag, ComparePicker, groupByCategory, STOCK_CHANGE_META, stockComparison, type CompareRow } from "@/modules/stock/features/compare";
@@ -19,8 +20,7 @@ export default async function StockComparePage({ searchParams }: { searchParams:
   const counted = rows.filter((r) => r.change !== "uncounted");
   const missed = rows.filter((r) => r.change === "uncounted");
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title="Compare counts" description="Put two submitted counts at a site side by side and see what left the shelf." />
+    <PageShell spacing="roomy" header={<PageHeader title="Compare counts" description="Put two submitted counts at a site side by side and see what left the shelf." />}>
       {options.length < 2 ? (
         <EmptyState icon="clipboardList" title="Nothing to compare yet" hint="Two submitted counts at the same site, and this fills in." />
       ) : <>
@@ -48,7 +48,7 @@ export default async function StockComparePage({ searchParams }: { searchParams:
           ) : null}
         </> : null}
       </>}
-    </div>
+    </PageShell>
   );
 }
 

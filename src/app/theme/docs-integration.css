@@ -5,6 +5,10 @@
   font-family: var(--font-sans);
   color: var(--ui-foreground);
 }
+/* The reader's A−, A and A+ (data-reading-size on the article). */
+.turnfin-docs [data-reading-size='14'] { --reading-size: 14px; }
+.turnfin-docs [data-reading-size='16'] { --reading-size: 16px; }
+.turnfin-docs [data-reading-size='20'] { --reading-size: 20px; }
 .turnfin-docs input:focus, .turnfin-docs textarea:focus, .turnfin-docs select:focus { outline: none; }
 @media (prefers-reduced-motion: reduce) {
   .turnfin-docs *, .turnfin-docs *::before, .turnfin-docs *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }

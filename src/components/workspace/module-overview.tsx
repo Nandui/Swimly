@@ -3,6 +3,7 @@ import { ChevronRight, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { FiguresFailed } from "@/components/home/figures-failed";
 import { ACTION_ICONS, NeedsSummary, PageList, Section, Timeline, TodayGrid, WaitingList, sortItems, type Placed } from "@/components/home/home-parts";
 import { minutesNow } from "@/lib/format";
@@ -46,8 +47,7 @@ export function ModuleOverview({ name, description, icon, siteName, items, group
   const left = sessions.some((s) => s.state !== "done" && s.state !== "off");
   const pages = groups.filter((group) => group.links.length > 0);
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <PageHeader title={name} description={description} actions={buttons.length ? buttons : undefined} />
+    <PageShell header={<PageHeader title={name} description={description} actions={buttons.length ? buttons : undefined} />}>
       {failed ? <FiguresFailed /> : null}
       {schedule && (
         // Below 1280px the grid becomes the list of what is on now and next, and says so.
@@ -76,6 +76,6 @@ export function ModuleOverview({ name, description, icon, siteName, items, group
           <EmptyState as="h3" icon="layers" title={`Nothing to open at ${siteName ?? "this site"}`} hint="Switch site or ask your manager" />
         )}
       </Section>
-    </div>
+    </PageShell>
   );
 }

@@ -49,7 +49,7 @@ export function CancelOrder({ id }: { id: string }) {
   const router = useRouter();
   return (
     <ConfirmAction
-      trigger={<Button variant="ghost" className="min-h-11 text-[var(--pc-danger)]"><Ban aria-hidden="true" />Cancel order</Button>}
+      trigger={<Button variant="ghost" className="min-h-11 text-ui-destructive"><Ban aria-hidden="true" />Cancel order</Button>}
       title="Cancel this order?"
       description="It stays in the record as cancelled and is never numbered."
       confirmLabel="Cancel order"

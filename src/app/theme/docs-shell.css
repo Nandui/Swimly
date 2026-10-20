@@ -351,7 +351,7 @@
   position: absolute;
   content: '';
   inset: 0;
-  background: color-mix(in srgb, var(--pc-primary) 20%, transparent);
+  background: var(--pc-primary-soft-hover);
   pointer-events: none;
 }
 :where(.turnfin-docs) .risk-rating-grid {
@@ -740,8 +740,8 @@
 }
 @media print {
   :where(.turnfin-docs) :scope {
-    background: white;
-    color: #111;
+    background: var(--pc-surface);
+    color: var(--pc-ink);
     font-size: 11pt;
   }
   :where(.turnfin-docs) [data-slot='alert'],
@@ -755,7 +755,7 @@
   :where(.turnfin-docs) .document-prose {
     max-width: none;
     font-size: 11pt;
-    color: #222;
+    color: var(--pc-ink);
   }
   :where(.turnfin-docs) .document-prose h2 {
     font-size: 14pt;
@@ -766,9 +766,9 @@
     break-after: avoid;
   }
   :where(.turnfin-docs) .document-callout {
-    background: #f7f7f7 !important;
-    border: 1px solid #999;
-    color: #222;
+    background: var(--pc-surface-sunken) !important;
+    border: 1px solid var(--pc-line-strong);
+    color: var(--pc-ink);
     break-inside: avoid;
   }
   :where(.turnfin-docs) .document-prose img {
@@ -788,42 +788,42 @@
     break-inside: avoid;
   }
   :where(.turnfin-docs) .document-prose th {
-    background: #eee !important;
-    color: #111;
+    background: var(--pc-surface-sunken) !important;
+    color: var(--pc-ink);
   }
   :where(.turnfin-docs) .document-prose td,
   :where(.turnfin-docs) .document-prose th {
-    border-color: #999;
+    border-color: var(--pc-line-strong);
   }
   :where(.turnfin-docs) .risk-read-card {
     break-inside: avoid;
-    border-color: #999;
+    border-color: var(--pc-line-strong);
   }
   :where(.turnfin-docs) .risk-read-card dt,
   :where(.turnfin-docs) .risk-read-card dd {
-    color: #222;
+    color: var(--pc-ink);
   }
   :where(.turnfin-docs) [data-slot='badge'] {
-    border: 1px solid #aaa !important;
-    background: white !important;
-    color: #222 !important;
+    border: 1px solid var(--pc-line-strong) !important;
+    background: var(--pc-surface) !important;
+    color: var(--pc-ink) !important;
   }
   :where(.turnfin-docs) .risk-scores {
-    background: white;
+    background: var(--pc-surface);
   }
   :where(.turnfin-docs) .matrix-details {
     display: none;
   }
   :where(.turnfin-docs) .print-footer {
     display: block;
-    border-top: 1px solid #777;
+    border-top: 1px solid var(--pc-line-strong);
     padding-top: 10px;
     margin-top: 25px;
-    color: #555;
+    color: var(--pc-ink-muted);
     font-size: 9pt;
   }
   :where(.turnfin-docs) a {
-    color: #222;
+    color: var(--pc-ink);
   }
   :where(.turnfin-docs) .document-prose a {
     text-decoration: underline;
@@ -1007,15 +1007,15 @@
       border: 0;
       border-radius: 0;
       box-shadow: none;
-      background: white;
+      background: var(--pc-surface);
     }
     :where(.turnfin-docs) .document-prose {
-      color: #222;
+      color: var(--pc-ink);
       font-size: 11pt;
     }
     :where(.turnfin-docs) .document-callout {
-      background: #f7f7f7 !important;
-      color: #222;
+      background: var(--pc-surface-sunken) !important;
+      color: var(--pc-ink);
     }
   }
 }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Package, ReceiptText, ShieldCheck } from "lucide-react";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { AddRule, APPROVAL_LIST_META, euro, RemoveRule, SupplierDialog, SupplierEmailCopy, SupplierEmailsSwitch, SUPPLIER_EMAILS_META, SupplierMonogram, suppliersPage } from "@/modules/purchasing/features/suppliers";
 import { formatDateTime, plural } from "@/lib/format";
@@ -16,8 +17,7 @@ export default async function SuppliersPage() {
   const general = rules.filter((r) => r.supplierId === null);
   const own = new Set(rules.filter((r) => r.supplierId).map((r) => r.supplierId));
   return (
-    <div className="po-desk">
-      <PageHeader title="Suppliers" description="Orders can only be raised with these suppliers, for their approved products." actions={who.manage ? <SupplierDialog /> : null} />
+    <PageShell className="po-desk" header={<PageHeader title="Suppliers" description="Orders can only be raised with these suppliers, for their approved products." actions={who.manage ? <SupplierDialog /> : null} />}>
 
       <section aria-labelledby="sup-list" className="po-card">
         <div className="po-card-head"><h2 id="sup-list">Approved suppliers{suppliers.length ? <span className="po-count">{suppliers.length}</span> : null}</h2></div>
@@ -96,7 +96,7 @@ export default async function SuppliersPage() {
           </ul>
         </section>
       </div>
-    </div>
+    </PageShell>
   );
 }
 

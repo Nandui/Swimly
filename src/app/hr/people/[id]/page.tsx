@@ -11,6 +11,7 @@ import { AddNote, hrConfigured, hrPerson, NOTE_VISIBILITY_META, REVIEW_STATUS_ME
 import { StartReview } from "@/modules/hr/features/reviews";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { requireFreshSession } from "@/lib/policy/session";
@@ -45,8 +46,7 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
   const personLink = (p: { id: string; name: string }) => <Link className="-my-3 inline-flex min-h-11 items-center underline underline-offset-4" href={`/hr/people/${p.id}`}>{p.name}</Link>;
   const quals = await qualificationFile(person.id, who.orgId ?? "");
   return (
-    <>
-      <PageHeader
+    <PageShell header={<PageHeader
         back={{ href: "/hr", label: "People" }}
         title={person.name}
         description={person.jobTitle || "HR record"}
@@ -57,7 +57,7 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
             {data.canWriteNotes ? <AddNote subjectUserId={person.id} name={person.name} /> : null}
           </>
         }
-      />
+      />}>
       <section className="pc-panel" aria-labelledby="hr-profile">
         <div className="pc-panel-head">
           <h2 id="hr-profile">Profile</h2>
@@ -107,7 +107,7 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
               {notes.map((n) => (
                 <li key={n.id} className="pc-row">
                   {/* A note is prose: it keeps a readable width, and the tag and Withdraw wrap under it. */}
-                  <div className="pc-row-body min-w-[min(100%,var(--pc-field-min))]!">
+                  <div className="pc-row-body min-w-field!">
                     <span className="pc-row-title">{n.authorName} · {formatDateTime(new Date(n.createdAt))}</span>
                     <p className="text-sm whitespace-pre-wrap break-words">{n.body}</p>
                   </div>
@@ -201,17 +201,17 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
         </section>
         );
       })}
-    </>
+    </PageShell>
   );
 }
 
 function Facts({ items }: { items: [string, React.ReactNode][] }) {
   return (
-    <dl className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(min(100%,var(--pc-tile-min)),1fr))]">
+    <dl className="grid gap-4 grid-cols-tiles">
       {items.map(([label, value]) => (
         <div key={label} className="min-w-0">
           <dt className="text-xs font-semibold text-ui-muted-foreground">{label}</dt>
-          <dd className="mt-1 [overflow-wrap:anywhere]">{value}</dd>
+          <dd className="mt-1 wrap-anywhere">{value}</dd>
         </div>
       ))}
     </dl>

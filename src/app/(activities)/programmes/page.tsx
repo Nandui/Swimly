@@ -18,6 +18,7 @@ import type { Metadata } from "next";
 
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
 import { screenPage } from "@/lib/page-guards";
@@ -36,12 +37,11 @@ export default async function ProgrammesPage() {
   const archived = programmes.filter((p) => p.archivedAt);
 
   return (
-    <div className="min-w-0 flex flex-col gap-6">
-      <PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         title="Programmes"
         description="The curriculum: what a swimmer works through, in the order they work through it"
         actions={<AddProgramme />}
-      />
+      />}>
 
       {live.length === 0 ? (
         <EmptyState
@@ -75,7 +75,7 @@ export default async function ProgrammesPage() {
           <ProgrammeTable programmes={archived} archived />
         </section>
       ) : null}
-    </div>
+    </PageShell>
   );
 }
 

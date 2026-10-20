@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDate } from "@/lib/format";
 import { hoursInWords } from "@/modules/training/features/hours";
@@ -30,8 +31,7 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
     ["Hours", `${hoursInWords(s.minutes)} towards ${s.typeName ?? "general training hours"}`],
   ];
   return (
-    <>
-      <PageHeader back={{ href: "/training/sessions", label: "Sessions" }} title={s.title}
+    <PageShell header={<PageHeader back={{ href: "/training/sessions", label: "Sessions" }} title={s.title}
         description={s.note || undefined}
         status={<Tag meta={SESSION_STATUS_META[state]} />}
         actions={s.open ? (
@@ -40,7 +40,7 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
             {who.assign ? <CancelSession id={s.id} title={s.title} /> : null}
             {who.assign ? <AddToSession id={s.id} title={s.title} people={assignable} left={left} /> : null}
           </>
-        ) : null} />
+        ) : null} />}>
       <section className="pc-panel" aria-labelledby="facts-heading">
         <h2 id="facts-heading" className="sr-only">About this session</h2>
         <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -84,6 +84,6 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
           </ul>
         </section>
       )}
-    </>
+    </PageShell>
   );
 }

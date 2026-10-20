@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { History } from "lucide-react";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import {
   ABSENCE_REASON_META, BackAtWork, ExtendAbsence, RemoveAbsence, ReportAbsence, requireRotaActor, RETURN_FIT_META, ReturnToWork, type RotaAbsenceRow, rotaAbsences, type RotaReturnRow,
 } from "@/modules/rota/features/absences";
@@ -100,9 +101,8 @@ export default async function AbsencesPage({ searchParams }: { searchParams: Pro
   const report = (await searchParams).report === "1";
   const { today, current, returning, returned, people } = await rotaAbsences();
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title="Absences" description="Who is off, and the days of work that need cover. Only people who run the rota see the reason. Each absence is on the person's HR file."
-        actions={<ReportAbsence people={people} today={today} defaultOpen={report} />} />
+    <PageShell spacing="roomy" header={<PageHeader title="Absences" description="Who is off, and the days of work that need cover. Only people who run the rota see the reason. Each absence is on the person's HR file."
+        actions={<ReportAbsence people={people} today={today} defaultOpen={report} />} />}>
       <Panel id="absences-current" title="Off now or soon">
         {current.length === 0 ? (
           <EmptyState compact icon="userX" title="Nobody you look after is off" hint="Among the people your rota role covers. When someone calls in sick or can’t come in, report it here or from Today." />
@@ -143,6 +143,6 @@ export default async function AbsencesPage({ searchParams }: { searchParams: Pro
           </ul>
         </Panel>
       ) : null}
-    </div>
+    </PageShell>
   );
 }

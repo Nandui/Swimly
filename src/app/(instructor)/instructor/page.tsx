@@ -13,6 +13,7 @@ import {
 import { formatDate, formatDay, minutesNow, parseDateOnly, plural, today } from "@/lib/format";
 import { HOME_SESSION_META } from "@/lib/home-meta";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { screenPage } from "@/lib/page-guards";
 import { can } from "@/lib/authz";
@@ -133,8 +134,7 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
   const cancelledToday = shown.filter((course) => cancellations.has(course.id));
   const earlierCount = earlier.reduce((n, s) => n + s.courses.length, 0);
   return (
-    <>
-      <PageHeader title="Pool deck" description={formatDay(iso)} actions={<RefreshClasses />} />
+    <PageShell header={<PageHeader title="Pool deck" description={formatDay(iso)} actions={<RefreshClasses />} />}>
       <InstructorAssessments sessions={assessments} canRun={can(session, "assessments.run")} params={{ tab, group }} />
       <section className="pc-panel" aria-label="Classes today">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
@@ -185,7 +185,7 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
           </>
         )}
       </section>
-    </>
+    </PageShell>
   );
 }
 

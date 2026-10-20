@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { OrderForm, orderForm } from "@/modules/purchasing/features/orders";
 
 export const metadata: Metadata = { title: "New order" };
@@ -10,9 +11,8 @@ export default async function NewOrderPage({ searchParams }: { searchParams: Pro
   const data = await orderForm();
   if (!data.who.request) notFound();
   return (
-    <div className="po-desk">
-      <PageHeader title="New purchase order" description="Only approved products from approved suppliers, at their agreed prices." />
+    <PageShell className="po-desk" header={<PageHeader title="New purchase order" description="Only approved products from approved suppliers, at their agreed prices." />}>
       <OrderForm sites={data.sites} suppliers={data.suppliers} rules={data.rules} roleNames={data.roleNames} existing={null} initialSupplier={(await searchParams).supplier} />
-    </div>
+    </PageShell>
   );
 }

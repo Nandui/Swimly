@@ -26,12 +26,12 @@ export function HandInQueue({ rows }: { rows: HandInRow[] }) {
                 <Link href={`/training/people/${row.user.id}`} className="pc-row-title -my-3 inline-flex min-h-11 items-center self-start underline-offset-4 hover:underline">{row.user.name}{row.user.jobTitle ? ` · ${row.user.jobTitle}` : ""}</Link>
                 <p className="pc-row-hint">{row.course} · {row.lesson}</p>
                 <p className="pc-row-hint">Handed in {formatDateTime(row.submittedAt)}{row.dueOn ? ` · due ${formatDate(row.dueOn)}` : ""}</p>
-                {row.text ? <blockquote className="rounded-[var(--pc-radius-card)] bg-ui-muted p-3 text-sm whitespace-pre-line">{row.text}</blockquote> : null}
+                {row.text ? <blockquote className="rounded-card bg-ui-muted p-3 text-sm whitespace-pre-line">{row.text}</blockquote> : null}
                 {row.fileName ? (
                   row.isImage ? (
                     <a href={`/training/hand-ins/${row.id}/file`} target="_blank" rel="noopener noreferrer" className="self-start">
                       {/* eslint-disable-next-line @next/next/no-img-element -- a private file served by this app */}
-                      <img src={`/training/hand-ins/${row.id}/file`} alt={`Photo handed in by ${row.user.name}`} loading="lazy" className="max-h-56 w-fit rounded-[var(--pc-radius-card)]" />
+                      <img src={`/training/hand-ins/${row.id}/file`} alt={`Photo handed in by ${row.user.name}`} loading="lazy" className="max-h-56 w-fit rounded-card" />
                     </a>
                   ) : <Button asChild variant="outline" className="min-h-11 self-start"><a href={`/training/hand-ins/${row.id}/file`} target="_blank" rel="noopener noreferrer"><FileText aria-hidden="true" />Open {row.fileName}</a></Button>
                 ) : null}
