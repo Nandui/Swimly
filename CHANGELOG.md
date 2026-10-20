@@ -10,6 +10,10 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - You can add the incident report's number, such as INC-00042, so the record links to the report.
 - A saved record can't be changed or deleted. If something comes to light later, press **Add a note** and it shows under the record with your name and the time.
 - **Record** lets people record viewings and read their own. **Review** also lets them read every viewing at their sites and add notes. Nobody sees the CCTV log until an administrator gives their role a level under **Admin, Roles**.
+## 1.45.3 · 20 October 2026 · Timetable rows match your class times
+
+- On **Analytics**, **When classes are full** (Business) and **Attendance by time slot** (Pool deck) now give each class start time its own row, such as 15:10, 15:45 and 16:20, instead of lumping every class that starts within the same hour together. Each figure now matches the classes that actually run at that time.
+
 ## 1.45.2 · 20 October 2026 · Turnfin Me and the Academy site match Turnfin
 
 - **Turnfin Me** on your phone now uses exactly the same buttons, fields, tick boxes and colours as Turnfin at work. Each page opens with its title and a back button in the same place, and progress through a course shows as the same bar.
