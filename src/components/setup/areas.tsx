@@ -10,10 +10,19 @@ import { Field, FormDialog } from "@/components/form-dialog";
 import { moveArea, saveArea, saveAreaStaffing, setAreaArchived } from "@/lib/setup/actions";
 import { WEEKDAYS, hhmm, type AreaTogether, type WeekHour } from "@/lib/setup/area-staffing";
 
-/** Add an area to a site, or change one: its name and how many lanes it has. A rename reaches
- *  every record that uses it; lanes let the rota book a pool whole or by lane. */
-export function SaveArea({ siteId, siteName, area }: { siteId: string; siteName: string; area?: { id: string; name: string; lanes: number } }) {
+/** Add an area to a site, or change one: its name, how many lanes it has, whose department it
+ *  is and what area it is part of (owner, 20 October 2026: Pool has the 25 m and the 18 m). A
+ *  rename reaches every record that uses it; lanes let the rota book a pool whole or by lane. */
+export function SaveArea({ siteId, siteName, area, departments, parents }: {
+  siteId: string; siteName: string;
+  area?: { id: string; name: string; lanes: number; departmentId: string | null; parentId: string | null; hasSubAreas?: boolean };
+  departments: { id: string; name: string }[];
+  /** The site's open top-level areas it could be part of. */
+  parents: { id: string; name: string }[];
+}) {
   const id = area ? `area-${area.id}` : `area-new-${siteId}`;
+  const [parentId, setParentId] = useState(area?.parentId ?? "");
+  const choices = parents.filter((p) => p.id !== area?.id);
   return (
     <FormDialog
       trigger={area
@@ -25,9 +34,27 @@ export function SaveArea({ siteId, siteName, area }: { siteId: string; siteName:
         : "A place at the site where work happens, such as 25m pool, Learner pool, Gym or Reception."}
       submitLabel={area ? "Save area" : "Add area"}
       successMessage={area ? "Area saved" : "Area added"}
-      submit={(formData) => saveArea(siteId, area?.id ?? null, { name: String(formData.get("name") ?? ""), lanes: String(formData.get("lanes") ?? "0") })}
+      onOpen={() => setParentId(area?.parentId ?? "")}
+      submit={(formData) => saveArea(siteId, area?.id ?? null, { name: String(formData.get("name") ?? ""), lanes: String(formData.get("lanes") ?? "0"),
+        parentId: String(formData.get("parentId") ?? ""), departmentId: String(formData.get("departmentId") ?? "") })}
     >
       <Field label="Name" htmlFor={id}><Input id={id} name="name" required maxLength={60} defaultValue={area?.name} autoFocus /></Field>
+      {area?.hasSubAreas ? <input type="hidden" name="parentId" value="" /> : (
+        <Field label="Part of" htmlFor={`${id}-parent`} optional hint="For a sub-area, such as the 25 m and 18 m as part of Pool. It belongs to the same department.">
+          <NativeSelect id={`${id}-parent`} name="parentId" value={parentId} onChange={(e) => setParentId(e.target.value)} className="min-h-11 w-full">
+            <NativeSelectOption value="">Not part of another area</NativeSelectOption>
+            {choices.map((p) => <NativeSelectOption key={p.id} value={p.id}>{p.name}</NativeSelectOption>)}
+          </NativeSelect>
+        </Field>
+      )}
+      {parentId ? null : (
+        <Field label="Department" htmlFor={`${id}-department`} optional hint="Whose area it is: its needs show on that department's plan. Leave it for an area every department shares.">
+          <NativeSelect id={`${id}-department`} name="departmentId" defaultValue={area?.departmentId ?? ""} className="min-h-11 w-full">
+            <NativeSelectOption value="">Shared by every department</NativeSelectOption>
+            {departments.map((d) => <NativeSelectOption key={d.id} value={d.id}>{d.name}</NativeSelectOption>)}
+          </NativeSelect>
+        </Field>
+      )}
       <Field label="Lanes" htmlFor={`${id}-lanes`} hint="For a swimming pool: how many lanes it has, numbered from 1. Rota activities and bookings, swim classes and short courses can then take the whole pool, one lane or a set of lanes. 0 for an area without lanes, such as a gym or reception.">
         <Input id={`${id}-lanes`} name="lanes" type="number" inputMode="numeric" min={0} max={20} required defaultValue={area?.lanes ?? 0} className="min-h-11" />
       </Field>
@@ -173,27 +200,29 @@ function StaffingLines({ id, lines, setLines, qualifications, roles }: {
       <legend className="text-sm font-medium">Staff it needs</legend>
       {lines.length === 0 ? <p className="text-sm text-ui-muted-foreground">No staff needed. Save to take it off the rota, or add a line.</p> : null}
       {lines.map((l, i) => (
-        <div key={l.key} className="grid grid-cols-two-fields-action items-end gap-3">
+        <div key={l.key} className="grid grid-cols-fill-auto items-start gap-3">
           <input type="hidden" name="line" value={l.key} />
-          <Field label="How many" htmlFor={`${id}-count-${l.key}`}>
-            <Input id={`${id}-count-${l.key}`} name={`count-${l.key}`} type="number" inputMode="numeric" min={1} max={30} required value={l.count}
-              onChange={(e) => change(l.key, { count: Number(e.target.value) })} className="min-h-11" />
-          </Field>
-          <Field label="Role" htmlFor={`${id}-role-${l.key}`}>
-            <NativeSelect id={`${id}-role-${l.key}`} name={`role-${l.key}`} value={l.roleId} onChange={(e) => change(l.key, { roleId: e.target.value, typeId: e.target.value ? typeOf(e.target.value) : l.typeId })} className="min-h-11 w-full">
-              <NativeSelectOption value="">Any role</NativeSelectOption>
-              {roles.filter((r) => !r.archived || r.id === l.roleId).map((r) => <NativeSelectOption key={r.id} value={r.id}>{r.name}</NativeSelectOption>)}
-            </NativeSelect>
-          </Field>
-          <Button type="button" variant="ghost" size="icon" className="size-11" aria-label={`Remove line ${i + 1}`} onClick={() => setLines((all) => all.filter((x) => x.key !== l.key))}>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <Field label="How many" htmlFor={`${id}-count-${l.key}`}>
+              <Input id={`${id}-count-${l.key}`} name={`count-${l.key}`} type="number" inputMode="numeric" min={1} max={30} required value={l.count}
+                onChange={(e) => change(l.key, { count: Number(e.target.value) })} className="min-h-11" />
+            </Field>
+            <div className="sm:col-span-2"><Field label="Role" htmlFor={`${id}-role-${l.key}`}>
+              <NativeSelect id={`${id}-role-${l.key}`} name={`role-${l.key}`} value={l.roleId} onChange={(e) => change(l.key, { roleId: e.target.value, typeId: e.target.value ? typeOf(e.target.value) : l.typeId })} className="min-h-11 w-full">
+                <NativeSelectOption value="">Any role</NativeSelectOption>
+                {roles.filter((r) => !r.archived || r.id === l.roleId).map((r) => <NativeSelectOption key={r.id} value={r.id}>{r.name}</NativeSelectOption>)}
+              </NativeSelect>
+            </Field></div>
+            <div className="sm:col-span-3"><Field label="Who can fill it" htmlFor={`${id}-type-${l.key}`} hint={l.roleId ? "Set from what the role needs in Admin > Positions. Change it only if this area needs something else." : undefined}>
+              <NativeSelect id={`${id}-type-${l.key}`} name={`type-${l.key}`} value={l.typeId} onChange={(e) => change(l.key, { typeId: e.target.value })} className="min-h-11 w-full">
+                <NativeSelectOption value="">Anyone</NativeSelectOption>
+                {qualifications.map((q) => <NativeSelectOption key={q.id} value={q.id}>Holds {q.name}</NativeSelectOption>)}
+              </NativeSelect>
+            </Field></div>
+          </div>
+          <Button type="button" variant="ghost" size="icon" className="mt-6 size-11" aria-label={`Remove line ${i + 1}`} onClick={() => setLines((all) => all.filter((x) => x.key !== l.key))}>
             <Trash2 aria-hidden="true" />
           </Button>
-          <div className="col-span-2"><Field label="Who can fill it" htmlFor={`${id}-type-${l.key}`} hint={l.roleId ? "Set from what the role needs in Admin > Positions. Change it only if this area needs something else." : undefined}>
-            <NativeSelect id={`${id}-type-${l.key}`} name={`type-${l.key}`} value={l.typeId} onChange={(e) => change(l.key, { typeId: e.target.value })} className="min-h-11 w-full">
-              <NativeSelectOption value="">Anyone</NativeSelectOption>
-              {qualifications.map((q) => <NativeSelectOption key={q.id} value={q.id}>Holds {q.name}</NativeSelectOption>)}
-            </NativeSelect>
-          </Field></div>
         </div>
       ))}
       {roles.length === 0 ? <p className="text-sm text-ui-muted-foreground">Add roles such as Lifeguard under Admin &gt; Positions to ask for them here.</p> : null}

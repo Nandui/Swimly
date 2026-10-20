@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { BookmarkCheck, ChevronLeft, ChevronRight, NotebookPen } from "lucide-react";
+import { BookmarkCheck, ChevronRight, NotebookPen } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { EmptyRows, LoadError, Loading, useLoad } from "@/components/ui";
 import { date } from "@/lib/format";
+import { PageShell } from "@/components/ui-kit/page-shell";
+import { PageHeader } from "@/components/ui-kit/page-header";
 
 type Saved = { items: { assignmentId: string; lessonId: string; course: string; section: string; title: string; bookmarked: boolean; note: string; updatedAt: string }[] };
 
@@ -13,9 +15,7 @@ export default function SavedPage() {
   const { data, error, reload } = useLoad<Saved>("training/saved");
   return (
     <Frame title="Saved">
-      <div className="stack">
-        <Link href="/training" className="button ghost back-link"><ChevronLeft aria-hidden="true" />My training</Link>
-        <div className="stack-sm"><h1>Saved</h1><p className="muted">Lessons you bookmarked or wrote a note on. Only you can see these.</p></div>
+      <PageShell header={<PageHeader back={{ href: "/training", label: "My training" }} title="Saved" description="Lessons you bookmarked or wrote a note on. Only you can see these." />}>
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : (
           <section className="pc-panel" aria-label="Saved lessons">
             {data.items.length === 0 ? <EmptyRows>Nothing saved yet. Tap Bookmark on a lesson, or write a note under it.</EmptyRows> : (
@@ -33,7 +33,7 @@ export default function SavedPage() {
             )}
           </section>
         )}
-      </div>
+      </PageShell>
     </Frame>
   );
 }

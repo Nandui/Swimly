@@ -23,8 +23,11 @@ test("a timetable slot opens into its levels, in curriculum order, with their cl
     waitlist: [{ id: "w", studentId: "x", courseId: "b", levelId: "otters", since: "2026-01-01" }],
     lessons: [], studentTeachers: [], marks: [], studentCourses: [], completions: [], ticks: [], results: [], assessments: [], curriculum,
   } as unknown as Dataset;
-  const nine = buildClasses(ds).heat.find(r => r.hour === 9)!.cells[0];
-  assert.deepEqual(nine.levels.map(l => [l.name, l.programmeName, l.enrolled, l.capacity, l.waiting]), [["Otters", "Learn to swim", 3, 12, 1], ["Seals", "Learn to swim", 2, 8, 0]]);
-  assert.deepEqual(nine.levels[0].classes.map(c => c.id), ["c", "b"]);
+  const heat = buildClasses(ds).heat;
+  assert.deepEqual(heat.map(r => r.start), [9 * 60, 9 * 60 + 30, 10 * 60], "one row per real start time, not per clock hour");
+  const nine = heat[0].cells[0];
+  assert.deepEqual(nine.levels.map(l => [l.name, l.programmeName, l.enrolled, l.capacity, l.waiting]), [["Otters", "Learn to swim", 2, 6, 0], ["Seals", "Learn to swim", 2, 8, 0]]);
+  assert.deepEqual(nine.levels[0].classes.map(c => c.id), ["c"]);
   assert.equal(nine.enrolled, nine.levels.reduce((s, l) => s + l.enrolled, 0));
+  assert.deepEqual([heat[1].cells[0].enrolled, heat[1].cells[0].capacity, heat[1].cells[0].waiting], [1, 6, 1]);
 });

@@ -30,7 +30,7 @@ Declared in `prisma/schema/tasks.prisma` (table names kept, ADR 0002):
 Tasks also reads Core's `Club`, `StaffRole` and `User` directly (sites, roles a task is aimed at, the person's role). Moving those reads onto Core functions is phase 3 of [MIGRATION.md](../../../docs/architecture/MIGRATION.md).
 
 ## Events
-- Emits: none.
+- Emits: `tasks.reading.out_of_range` — after a task is completed with readings outside their range (Site Monitoring raises an action for managers from each).
 - Listens to: none.
 
 ## Registration (module.ts)

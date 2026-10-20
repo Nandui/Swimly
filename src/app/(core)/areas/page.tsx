@@ -22,11 +22,13 @@ export default async function AreasPage() {
     <PageShell spacing="roomy" header={<PageHeader title="Areas" description="Where work happens at each site, how many lanes a pool has, and the staff each needs while it is open. The rota, bookings, swim classes and short courses pick from these, in this order, and can take a pool whole or by lane." />}>
       {sites.length === 0 ? <EmptyState icon="building" title="No open sites" hint="Add a site under Sites first." /> : sites.map((site) => {
         const live = site.areas.filter((a) => !a.archivedAt);
+        const parents = live.filter((a) => !a.parentId).map((a) => ({ id: a.id, name: a.name }));
+        const departmentName = (id: string | null) => site.departments.find((d) => d.id === id)?.name ?? null;
         return (
           <section key={site.id} className="pc-panel" aria-labelledby={`areas-${site.id}`}>
             <div className="pc-panel-head">
               <h2 id={`areas-${site.id}`}>{site.name}{site.code ? <span className="font-normal text-ui-muted-foreground"> · {site.code}</span> : null}</h2>
-              {canKeep ? <SaveArea siteId={site.id} siteName={site.name} /> : null}
+              {canKeep ? <SaveArea siteId={site.id} siteName={site.name} departments={site.departments} parents={parents} /> : null}
             </div>
             {site.areas.length === 0 ? (
               <EmptyState compact icon="building" title="No areas yet" hint="Add its pools, gym, reception and any other place work is planned." />
@@ -34,10 +36,13 @@ export default async function AreasPage() {
               <ul className="pc-rows">
                 {site.areas.map((area) => {
                   const at = live.findIndex((a) => a.id === area.id);
+                  const parent = area.parentId ? site.areas.find((a) => a.id === area.parentId) ?? null : null;
+                  const home = parent ? `Part of ${parent.name}${departmentName(parent.departmentId) ? `, ${departmentName(parent.departmentId)}` : ""}` : departmentName(area.departmentId);
                   return (
-                    <li key={area.id} className="pc-row" {...(area.archivedAt ? { "data-muted": "" } : {})}>
+                    <li key={area.id} className={parent ? "pc-row pl-10" : "pc-row"} {...(area.archivedAt ? { "data-muted": "" } : {})}>
                       <span className="pc-tile-icon" aria-hidden="true"><MapPin /></span>
                       <span className="pc-row-body"><span className="pc-row-title">{area.name}</span>
+                        {home ? <span className="pc-row-hint">{home}</span> : null}
                         {area.lanes ? <span className="pc-row-hint">{area.lanes === 1 ? "Lane 1" : `Lanes 1 to ${area.lanes}`}, booked whole or by lane</span>
                           : /pool/i.test(area.name) ? <span className="pc-row-hint">No lanes yet. Change it to give the pool its lanes.</span> : null}
                         {staffingWords(area) ? <span className="pc-row-hint">{staffingWords(area)}</span> : null}
@@ -50,7 +55,8 @@ export default async function AreasPage() {
                         {area.archivedAt ? <Tag meta={ARCHIVAL_STATUS_META.archived} /> : null}
                         {canKeep ? <>
                           {!area.archivedAt ? <MoveArea id={area.id} name={area.name} first={at === 0} last={at === live.length - 1} /> : null}
-                          <SaveArea siteId={site.id} siteName={site.name} area={area} />
+                          <SaveArea siteId={site.id} siteName={site.name} departments={site.departments} parents={parents}
+                            area={{ ...area, hasSubAreas: live.some((a) => a.parentId === area.id) }} />
                           {!area.archivedAt ? <AreaStaffing area={area} qualifications={qualifications} roles={roles} others={live.filter((a) => a.id !== area.id)} /> : null}
                           <ArchiveArea id={area.id} name={area.name} archived={!!area.archivedAt} />
                         </> : null}

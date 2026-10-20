@@ -3,12 +3,16 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { Award, BookOpen, ChevronLeft, ChevronRight, CircleCheck, ClipboardCheck, Columns3, FileText, GitBranch, GraduationCap, Headphones, Layers, ListChecks, ListTodo, Lock, MonitorPlay, PlayCircle, ScanSearch, Send, Upload } from "lucide-react";
+import { Award, BookOpen, ChevronRight, CircleCheck, ClipboardCheck, Columns3, FileText, GitBranch, GraduationCap, Headphones, Layers, ListChecks, ListTodo, Lock, MonitorPlay, PlayCircle, ScanSearch, Send, Upload } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { OfflineCourse } from "@/components/offline";
 import { RateCourse } from "@/components/learner";
 import { CourseImage, type ExamInfo } from "@/components/question";
-import { LoadError, Loading, Notice, Tag, useLoad } from "@/components/ui";
+import { Bar, LoadError, Loading, Notice, Tag, useLoad } from "@/components/ui";
+import { Button } from "@/components/shadcn/button";
+import { PageShell } from "@/components/ui-kit/page-shell";
+import { PageHeader } from "@/components/ui-kit/page-header";
+import { Textarea } from "@/components/ui/textarea";
 import { ApiError, api } from "@/lib/api";
 import { date, day } from "@/lib/format";
 import { EXAM_RESULT_META, TRAINING_META } from "@/lib/meta";
@@ -81,11 +85,11 @@ function ExamCard({ id, exam, open }: { id: string; exam: ExamInfo; open: boolea
       <p className="muted tabular">{facts}</p>
       {open && !exam.passed ? (
         exam.open ? (
-          <Link href={`/training/${id}/exam`} className="button block">Carry on with the exam: {exam.open.answered} of {exam.open.total} answered<ChevronRight aria-hidden="true" /></Link>
+          <Button asChild className="w-full"><Link href={`/training/${id}/exam`}>Carry on with the exam: {exam.open.answered} of {exam.open.total} answered<ChevronRight aria-hidden="true" /></Link></Button>
         ) : exam.canStart ? (
           <>
             {exam.testOut && !exam.lessonsDone ? <p className="caption">Already know this? Pass the exam now and you can skip the lessons.</p> : null}
-            <Link href={`/training/${id}/exam`} className="button block">{exam.attempts.used ? "Try the exam again" : "Start the exam"}<ChevronRight aria-hidden="true" /></Link>
+            <Button asChild className="w-full"><Link href={`/training/${id}/exam`}>{exam.attempts.used ? "Try the exam again" : "Start the exam"}<ChevronRight aria-hidden="true" /></Link></Button>
           </>
         ) : <p className="caption">{exam.reason}</p>
       ) : null}
@@ -128,24 +132,18 @@ export default function TrainingDetailPage() {
   const minutesLeft = lessons.filter((l) => !l.done).reduce((n, l) => n + (l.minutes ?? 0), 0);
   return (
     <Frame title="My training">
-      <div className="stack">
-        <Link href="/training" className="button ghost back-link"><ChevronLeft aria-hidden="true" />My training</Link>
+      <PageShell header={<PageHeader back={{ href: "/training", label: "My training" }} eyebrow={data?.category || undefined} title={data?.title ?? "My training"}
+        status={data ? <Tag meta={TRAINING_META[data.state]} /> : undefined}
+        description={data ? <>{data.summary ? <>{data.summary}<br /></> : null}
+          {[`Assigned by ${data.assignedBy} on ${date(data.assignedAt)}`, data.dueOn ? `due ${day(data.dueOn)}` : null,
+            data.requiresSignoff ? "a trainer signs this off in person" : null, data.grants ? `records your ${data.grants}` : null].filter(Boolean).join(" · ")}</> : undefined} />}>
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : (
           <>
             {data.coverId ? <CourseImage assignmentId={data.id} fileId={data.coverId} alt="" className="course-cover" /> : null}
-            <div className="stack-sm">
-              {data.category ? <p className="caption eyebrow">{data.category}</p> : null}
-              <div className="row"><h1>{data.title}</h1><Tag meta={TRAINING_META[data.state]} /></div>
-              {data.summary ? <p className="muted">{data.summary}</p> : null}
-              <p className="caption">
-                {[`Assigned by ${data.assignedBy} on ${date(data.assignedAt)}`, data.dueOn ? `due ${day(data.dueOn)}` : null,
-                  data.requiresSignoff ? "a trainer signs this off in person" : null, data.grants ? `records your ${data.grants}` : null].filter(Boolean).join(" · ")}
-              </p>
-            </div>
             {open && data.whatsNew ? <Notice title={`What’s new in version ${data.whatsNew.number}`}>{data.whatsNew.note}</Notice> : null}
             {data.state === "submitted" ? <Notice title="Waiting for sign-off" live={justDone}>A trainer will watch you do it and sign it off.</Notice> : null}
             {data.state === "completed" ? <Notice title={`Completed ${date(data.completedAt)}`} live={justDone}>{data.signedOffBy ? `Signed off by ${data.signedOffBy}.${data.trainerNote ? ` ${data.trainerNote}` : ""}` : "Well done."}</Notice> : null}
-            {data.state === "completed" ? <Link href={`/training/${data.id}/certificate`} className="button outline block"><Award aria-hidden="true" />Your certificate</Link> : null}
+            {data.state === "completed" ? <Button asChild variant="outline" className="w-full"><Link href={`/training/${data.id}/certificate`}><Award aria-hidden="true" />Your certificate</Link></Button> : null}
             {open && data.waitingOn?.length ? <Notice title="Finish these first" tone="warning">{`Finish ${data.waitingOn.map((t) => `“${t}”`).join(" and ")} to open this course.`}</Notice> : null}
             {open && data.trainerNote ? <Notice title={`Not signed off yet${data.signedOffBy ? ` by ${data.signedOffBy}` : ""}`} tone="warning">{data.trainerNote}</Notice> : null}
 
@@ -156,11 +154,11 @@ export default function TrainingDetailPage() {
                     <div className="stack-sm">
                       <h2 id="continue-title">{data.progress.done === 0 ? "Ready when you are" : "Pick up where you left off"}</h2>
                       <p className="muted tabular">{data.progress.done} of {data.progress.total} lessons done{minutesLeft ? ` · about ${minutesLeft} min left` : ""}</p>
-                      <progress className="course-progress" max={data.progress.total} value={data.progress.done} aria-label="Lessons done" />
+                      <Bar value={data.progress.done} max={data.progress.total} label="Lessons done" />
                     </div>
-                    <Link href={`/training/${data.id}/${next.id}`} className="button block">
+                    <Button asChild className="w-full"><Link href={`/training/${data.id}/${next.id}`}>
                       {data.progress.done === 0 ? "Start" : "Continue"}: {next.title}<ChevronRight aria-hidden="true" />
-                    </Link>
+                    </Link></Button>
                   </section>
                 ) : null}
                 {data.exam && examFirst ? <ExamCard id={data.id} exam={data.exam} open={open} /> : null}
@@ -199,20 +197,17 @@ export default function TrainingDetailPage() {
             {open && allDone ? (
               <section className="pc-panel" aria-labelledby="done-title">
                 <h2 id="done-title">{data.sections ? (data.requiresSignoff ? "All lessons done. Ready to show your trainer?" : "All lessons done") : data.requiresSignoff ? "Ready for sign-off?" : "Done it?"}</h2>
-                <div className="field">
-                  <label htmlFor="note">{data.requiresSignoff ? "Note for your trainer (optional)" : "Note (optional)"}</label>
-                  <textarea id="note" className="input" maxLength={1000} value={note} onChange={(e) => setNote(e.target.value)} />
-                  {data.requiresSignoff ? <span className="hint">For example, when you are next on shift to show it.</span> : null}
-                </div>
+                <Textarea id="note" label={data.requiresSignoff ? "Note for your trainer" : "Note"} optional maxLength={1000} value={note} onChange={(e) => setNote(e.target.value)}
+                  description={data.requiresSignoff ? "For example, when you are next on shift to show it." : undefined} />
                 {failure ? <Notice title={failure} tone="error" live /> : null}
-                <button type="button" className="button block" onClick={complete} disabled={busy}>
+                <Button type="button" className="w-full" onClick={complete} disabled={busy}>
                   {data.requiresSignoff ? <><Send aria-hidden="true" />Ask for sign-off</> : <><CircleCheck aria-hidden="true" />{data.sections ? "Finish the course" : "Mark as done"}</>}
-                </button>
+                </Button>
               </section>
             ) : null}
           </>
         )}
-      </div>
+      </PageShell>
     </Frame>
   );
 }

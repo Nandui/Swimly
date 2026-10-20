@@ -16,9 +16,10 @@ export const metadata: Metadata = { title: "Today" };
 /** How many gaps get their best fits worked out on the page; the rest open "Everyone who could". */
 const FITTED = 8;
 
-/** The duty manager's Today (owner decisions, 6 October 2026, from the approved mockup): the
- *  whole site, every department. Gaps first, each with its best fits; then who is on now and
- *  next, who is off, today's changes with what is still to update in Timepoint, and the day note. */
+/** The duty manager's Today (owner decisions, 6 October 2026; laid out again 20 October 2026): the
+ *  whole site, every department. The day in five figures, then two columns: what needs doing
+ *  (gaps first, each with its best fits; who is on now and next) beside what to know (who is
+ *  off, today's changes with what is still to update in Timepoint, and the day note). */
 export default async function TodayPage({ searchParams }: { searchParams: Promise<{ site?: string }> }) {
   const input = await searchParams;
   const data = await todayAt(input.site);
@@ -61,6 +62,15 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
             trigger={<Button variant="outline"><Plus aria-hidden="true" />Add activity</Button>} /> : null}
         </> : undefined}
       />}>
+      <dl className="rota-kpis tabular-nums">
+        <div data-tone={gaps.length ? "warning" : "success"}><dt>Gaps left today</dt><dd>{gaps.length}</dd></div>
+        <div><dt>On now</dt><dd>{new Set(onNow.flatMap((x) => x.who)).size}</dd></div>
+        <div><dt>Starting in 3 hours</dt><dd>{soon.length}</dd></div>
+        <div><dt>Off today</dt><dd>{off.length}</dd></div>
+        <div data-tone={todo ? "warning" : undefined}><dt>To update in Timepoint</dt><dd>{todo}</dd></div>
+      </dl>
+      <div className="rota-today">
+      <div className="rota-today-main">
       <section className="pc-panel" aria-labelledby="today-gaps">
         <div className="pc-panel-head"><div><h2 id="today-gaps">Gaps to fill</h2>
           <p className="text-sm text-ui-muted-foreground">{run ? "Best fits first. Putting someone on logs it as covering an absence, or filling a gap." : "The duty manager fills these."}</p></div></div>
@@ -72,7 +82,6 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
             })}</ul>
           )}
       </section>
-      <div className="rota-two">
         <section className="pc-panel" aria-labelledby="today-now">
           <div className="pc-panel-head"><h2 id="today-now">On now · {clock(nowMinutes)}</h2><Button asChild variant="ghost"><Link href={`/rota?${new URLSearchParams({ site: site.id, day: now })}`}>Full day</Link></Button></div>
           {onNow.length === 0 ? <EmptyState compact icon="calendarDays" title="Nobody is on right now" /> : (
@@ -95,6 +104,8 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
             ))}</ul>
           )}
         </section>
+      </div>
+      <div className="rota-today-side">
         <section className="pc-panel" aria-labelledby="today-off">
           <div className="pc-panel-head"><h2 id="today-off">Off today</h2>{run ? <Button asChild variant="ghost"><Link href="/rota/absences">Absences</Link></Button> : null}</div>
           {off.length === 0 ? <EmptyState compact icon="calendarDays" title="Nobody is recorded as off" /> : (
@@ -119,11 +130,12 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
             ))}</ul>
           )}
         </section>
-      </div>
       <section className="pc-panel" aria-labelledby="today-note">
         <div className="pc-panel-head"><h2 id="today-note">Day note</h2><span className="text-xs text-ui-muted-foreground">Seen by every duty manager here today</span></div>
         {run ? <DayNote siteId={site.id} date={now} text={note?.text ?? ""} labelledBy="today-note" /> : <p>{note?.text || "No note today."}</p>}
       </section>
+      </div>
+      </div>
     </PageShell>
   );
 }

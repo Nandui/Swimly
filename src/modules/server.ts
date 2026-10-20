@@ -12,6 +12,8 @@ import "@/modules/incidents/module";
 import "@/modules/tasks/module";
 import "@/modules/short-courses/module";
 import "@/modules/stock/module";
+import "@/modules/cctv/module";
+import "@/modules/site-monitoring/module";
 import "@/lib/people/home";
 import "@/modules/hr/module";
 

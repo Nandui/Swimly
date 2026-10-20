@@ -4,11 +4,50 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.46.0 · 20 October 2026 · Rota: areas ask for a role, not a certificate
+## 1.49.0 · 20 October 2026 · Rota: areas ask for a role, not a certificate
 
 - On the rota **Plan**, an area's own staff now show by the role it needs, such as **Lifeguard on duty** in the main pool, instead of the name of the certificate.
 - The certificate still decides who can fill the place, and still shows in small print, so anyone without it gets the same warning as before.
 - In **Admin, Areas**, each line in **Staff needed** now has a **Role** (from Admin, Positions) and **Who can fill it**. Choosing a role fills in the qualification it needs; change it only if that area needs something else. Areas you set up before already show the role that needs their certificate, so nothing needs entering again. Open them once to check the role is right.
+
+## 1.48.0 · 20 October 2026 · Rota: a new Plan, the day's diary
+
+- **Plan** is new, built from the start as the day's diary: open a day and anyone can see who is where, when they change, their breaks and what still needs someone. Everything already planned is still there.
+- It opens on your own department and on today. Pick another department, or **Every department**, and any day of the week from the bar under the title. Each day says how many things are still to fill, or **Done**.
+- **Not covered yet** comes first: everything that needs people and has nobody, or too few, soonest first, with the reason ("Nobody yet", "1 more needed", "Riley is off", "Liam is on a break"). An area's own lifeguards and the activities in it add up: someone teaching aqua-fit is not one of the pool's lifeguards then.
+- **Choose someone** shows the best fits first: free then, able to do it and from your department, then people from other departments you can borrow straight away, then who can't and why. Each says what it does to their day, such as "On shift then" or "Their day becomes 07:00–16:00", and their hours this week. You can give part of the time.
+- **Who's where** shows, at any time of the day (now, on today), each area and activity with who is on it, anything short of people, who is on a break and the next change.
+- **The day, person by person** has one line for each person: covering an area is blue, activities and classes green, bookings violet, breaks dashed, time not given yet dotted, and what is not covered sits in red at the top. On a phone each person's day is a short list.
+- Choose a person to see their day from start to finish, with what to look at (breaks still to place, a qualification, two things at once). From there change their times, take them off something, give their free time to something not covered, place their breaks and change their shifts.
+- **Areas** (Admin) can now belong to a department and have parts of their own: the 25 m and 18 m as part of Pool, or Till 1 and Till 2 as part of Front desk. An area's needs show on its department's Plan, and **Who's where** lists people under each area and its parts.
+- **Activities** (Admin) can have **sub-activities**: the smaller jobs done by whoever is on it, such as open the cash till at the start, a cash drop at 12:00, answer the phone any time, and close the cash till at the end. The usual ones come with the activity when you put someone on it.
+- A person's day lists their sub-activities under each thing they are on, with their times. **Sub-activities** there ticks or unticks any of them for that day and changes a set time. They never need anyone extra.
+- **Add someone** brings a person into the day before anything is given to them, and **Add to the day** adds something that needs people. Copy, Export week and Share with staff work as before.
+- **Bookings** has **Staff each kind needs**: how many staff a party, school lessons, lane hire and so on need. A new booking starts with that number, and 0 means it needs nobody, so lane hire stays off **Not covered yet**.
+- **Today** opens with five figures: gaps left, who is on now, what starts in the next three hours, who is off and changes to update in Timepoint.
+- **Bookings** opens with three figures, splits running bookings from finished ones and shows how many places on each booking are filled.
+
+## 1.47.0 · 20 October 2026 · Site Monitoring: readings out of range go to managers
+
+- There is a new **Site Monitoring** page for managers, in the **Managers** group. When someone completes a task and a reading is outside its allowed range, such as a chlorine reading that is too low, an action appears there straight away. Nobody has to raise it.
+- Each action shows the reading, the range allowed, the task, the site, who recorded it and when, and what the task says to do. **See the task** opens it.
+- Close an action by saying what was done. Closed actions stay listed with who closed them and what they wrote, and can be opened again.
+- Your home page shows how many are waiting. Site Monitoring is hidden until your role is given a level for it.
+## 1.46.0 · 20 October 2026 · Managers: a CCTV log
+
+- There is a new **Managers** group of modules, and the first one is the **CCTV log**. Each time someone checks CCTV footage, they record it: who checked it and when, anyone else watching, why it was checked, what they were looking for, which cameras and times they watched, what they saw, and any copy saved or handed over.
+- You can add the incident report's number, such as INC-00042, so the record links to the report.
+- A saved record can't be changed or deleted. If something comes to light later, press **Add a note** and it shows under the record with your name and the time.
+- **Record** lets people record viewings and read their own. **Review** also lets them read every viewing at their sites and add notes. Nobody sees the CCTV log until an administrator gives their role a level under **Admin, Roles**.
+## 1.45.3 · 20 October 2026 · Timetable rows match your class times
+
+- On **Analytics**, **When classes are full** (Business) and **Attendance by time slot** (Pool deck) now give each class start time its own row, such as 15:10, 15:45 and 16:20, instead of lumping every class that starts within the same hour together. Each figure now matches the classes that actually run at that time.
+
+## 1.45.2 · 20 October 2026 · Turnfin Me and the Academy site match Turnfin
+
+- **Turnfin Me** on your phone now uses exactly the same buttons, fields, tick boxes and colours as Turnfin at work. Each page opens with its title and a back button in the same place, and progress through a course shows as the same bar.
+- The **Academy** booking site uses the same buttons, fields and colours too. The blue welcome panel, the course filters and the booking form look and work as before.
+- Nothing has moved or gone: every page, course, lesson, question and button is where it was.
 
 ## 1.45.1 · 20 October 2026 · One look on every page
 

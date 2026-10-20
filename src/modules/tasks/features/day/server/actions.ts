@@ -7,9 +7,10 @@ import { siteName, staffRoleIdOf } from "@/lib/directory";
 import { isDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { mayFor } from "@/lib/policy/session";
+import { announce } from "@/modules/contributions";
 import { requireTasksActor, type TasksActor } from "@/modules/tasks/shared/access";
 import { asDefinition, isMine, siteSettings } from "@/modules/tasks/shared/data";
-import { completionProblems, dayIn, exceptions, type TaskRecord } from "@/modules/tasks/shared/rules";
+import { completionProblems, dayIn, exceptions, outOfRange, type TaskRecord } from "@/modules/tasks/shared/rules";
 import { allowedAt, json, loadTask, makeTaskNow, refresh } from "@/modules/tasks/shared/writes";
 
 /** Tasks' writes (docs/tasks.md). Doing a task needs `tasks.complete` at its
@@ -103,17 +104,28 @@ export async function completeTask(id: string, version: number, input: TaskAnswe
   const problems = completionProblems(def, answers.checks, answers.records, comments > 0, actions > 0);
   if (problems.length) return fail(problems.join(" "));
   const found = exceptions(def, answers.records);
+  const completedAt = new Date();
   const result = await prisma.$transaction(async (tx) => {
     const moved = await tx.task.updateMany({
       where: { id, version, status: "open" },
-      data: { status: "done", checks: answers.checks, records: json(answers.records), exceptions: found, completedAt: new Date(), completedById: who.id, completedByName: who.name, version: { increment: 1 } },
+      data: { status: "done", checks: answers.checks, records: json(answers.records), exceptions: found, completedAt, completedById: who.id, completedByName: who.name, version: { increment: 1 } },
     });
     if (moved.count !== 1) return fail(STALE);
     await logAudit({ actorId: who.id, actorName: who.name, action: "complete", entity: "Task", entityId: id, clubId: task.siteId,
       summary: `Completed ${def.title} at ${task.site.name}${found.length ? ` with ${found.length} ${found.length === 1 ? "reading" : "readings"} out of range` : ""}` }, tx);
     return ok();
   });
-  if (result.ok) refresh(id);
+  if (result.ok) {
+    refresh(id);
+    // Site Monitoring raises an action for the site's managers from each reading out of range.
+    const readings = outOfRange(def, answers.records);
+    if (readings.length) {
+      await announce("tasks.reading.out_of_range", {
+        orgId: who.orgId ?? "", siteId: task.siteId, taskId: id, task: def.title, recordedById: who.id, recordedByName: who.name, recordedAt: completedAt.toISOString(),
+        readings: readings.map((r) => ({ key: `${r.record}:${r.fieldId}`, reading: r.reading, value: r.value, unit: r.unit, allowed: r.allowed, guidance: r.guidance })),
+      });
+    }
+  }
   return result;
 }
 

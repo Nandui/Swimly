@@ -22,16 +22,16 @@ function band(fill: number | null) {
   return fill >= 100 ? "4" : fill >= 80 ? "3" : fill >= 50 ? "2" : "1";
 }
 
-/** Places filled by day and start hour, an orange dot where someone waits for that slot. Picking a slot
+/** Places filled by day and start time, an orange dot where someone waits for that slot. Picking a slot
  *  opens what it holds beneath the grid, programme by programme and level by level (owner, 20 October
  *  2026: "make it able to expand so i can see the programme / levels when i click on one of them"). */
 export function TimetableHeat({ capacity, classHrefs, legend }: { capacity: Capacity; classHrefs: Record<string, string>; legend: React.ReactNode }) {
-  const [open, setOpen] = React.useState<{ day: string; hour: number } | null>(null);
+  const [open, setOpen] = React.useState<{ day: string; start: number } | null>(null);
   const id = React.useId();
   const triggers = React.useRef(new Map<string, HTMLButtonElement>());
   const close = React.useCallback(() => {
     setOpen(current => {
-      if (current) triggers.current.get(`${current.day}-${current.hour}`)?.focus();
+      if (current) triggers.current.get(`${current.day}-${current.start}`)?.focus();
       return null;
     });
   }, []);
@@ -43,29 +43,29 @@ export function TimetableHeat({ capacity, classHrefs, legend }: { capacity: Capa
   }, [open, close]);
 
   if (!capacity.heat.length) return <p className="ins-sub">No weekly classes at this site.</p>;
-  const cell = open ? capacity.heat.find(r => r.hour === open.hour)?.cells.find(c => c.day === open.day) : undefined;
-  const slotName = (day: string, hour: number) => `${DAY_META[day as Day].label} ${formatTime(hour * 60)}`;
+  const cell = open ? capacity.heat.find(r => r.start === open.start)?.cells.find(c => c.day === open.day) : undefined;
+  const slotName = (day: string, start: number) => `${DAY_META[day as Day].label} ${formatTime(start)}`;
 
   return <>
     <div className="ins-heat-wrap">
       <Table className="ins-heat" data-layout="grid">
-        <TableCaption className="sr-only">Places filled by day and start hour. Pick a slot to see its programmes and levels.</TableCaption>
+        <TableCaption className="sr-only">Places filled by day and start time. Pick a slot to see its programmes and levels.</TableCaption>
         <TableHeader><TableRow><TableCell aria-hidden="true" data-empty="" className="ins-heat-corner" />{capacity.days.map(day => <TableHead key={day} scope="col">{DAY_META[day as Day].short}</TableHead>)}</TableRow></TableHeader>
-        <TableBody>{capacity.heat.map(row => <TableRow key={row.hour}>
-          <TableHead scope="row">{formatTime(row.hour * 60)}</TableHead>
+        <TableBody>{capacity.heat.map(row => <TableRow key={row.start}>
+          <TableHead scope="row">{formatTime(row.start)}</TableHead>
           {row.cells.map(c => {
             if (c.classes === 0) return <TableCell key={c.day} data-empty=""><span className="sr-only">No classes</span></TableCell>;
-            const key = `${c.day}-${row.hour}`;
-            const selected = open?.day === c.day && open.hour === row.hour;
+            const key = `${c.day}-${row.start}`;
+            const selected = open?.day === c.day && open.start === row.start;
             const summary = `${plural(c.classes, "class", "classes")}, ${c.enrolled} enrolled${c.capacity ? ` of ${c.capacity}` : ""}${c.waiting ? `, ${c.waiting} waiting` : ""}`;
             return <TableCell key={c.day} data-band={band(c.fill)} data-waiting={c.waiting ? "" : undefined} data-selected={selected ? "" : undefined}>
               <Button
                 type="button" variant="ghost" className="ins-heat-cell"
                 ref={el => { if (el) triggers.current.set(key, el); else triggers.current.delete(key); }}
                 aria-expanded={selected} aria-controls={selected ? id : undefined}
-                aria-label={`${slotName(c.day, row.hour)}: ${percent(c.fill)} full, ${summary}. ${selected ? "Close" : "Show"} its programmes and levels.`}
-                title={`${slotName(c.day, row.hour)}: ${summary}`}
-                onClick={() => setOpen(selected ? null : { day: c.day, hour: row.hour })}
+                aria-label={`${slotName(c.day, row.start)}: ${percent(c.fill)} full, ${summary}. ${selected ? "Close" : "Show"} its programmes and levels.`}
+                title={`${slotName(c.day, row.start)}: ${summary}`}
+                onClick={() => setOpen(selected ? null : { day: c.day, start: row.start })}
               >
                 {c.waiting ? <i className="ins-heat-dot" aria-hidden="true" /> : null}<strong>{percent(c.fill)}</strong><span>{c.enrolled}{c.capacity ? ` of ${c.capacity}` : ""}{c.waiting ? `, ${c.waiting} waiting` : ""}</span>
               </Button>
@@ -74,7 +74,7 @@ export function TimetableHeat({ capacity, classHrefs, legend }: { capacity: Capa
         </TableRow>)}</TableBody>
       </Table>
     </div>
-    {open && cell ? <SlotDetail id={id} title={slotName(open.day, open.hour)} cell={cell} classHrefs={classHrefs} onClose={close} /> : null}
+    {open && cell ? <SlotDetail id={id} title={slotName(open.day, open.start)} cell={cell} classHrefs={classHrefs} onClose={close} /> : null}
     {legend}
   </>;
 }

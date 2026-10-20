@@ -59,10 +59,12 @@ export const MODULE_OF_ENTITY: Readonly<Record<string, string>> = {
   TaskTemplate: "Tasks", Task: "Tasks", TaskAction: "Tasks", TaskSite: "Tasks",
   IncidentReport: "Incidents",
   StockCategory: "Stock", StockProduct: "Stock", StockTake: "Stock", StockTakeLine: "Stock",
+  CctvViewing: "CCTV log", CctvViewingNote: "CCTV log",
+  MonitoringAction: "Site Monitoring",
   ShortCourseType: "Short courses", ShortCourse: "Short courses", ShortCourseSession: "Short courses", ShortCourseParticipant: "Short courses",
   ActivityType: "Admin", SiteArea: "Admin", Position: "Admin",
   RotaShift: "Rota", RotaDayNote: "Rota", RotaActivity: "Rota", RotaAbsence: "Rota", RotaImport: "Rota", RotaDepartment: "Rota",
-  RotaNeed: "Rota", RotaAssignment: "Rota", RotaAreaAssignment: "Rota", RotaWeekShare: "Rota", RotaLog: "Rota", RotaRepeat: "Rota", RotaActivityType: "Rota", RotaPlanShift: "Rota", RotaBreak: "Rota",
+  RotaNeed: "Rota", RotaAssignment: "Rota", RotaAreaAssignment: "Rota", RotaWeekShare: "Rota", RotaLog: "Rota", RotaRepeat: "Rota", RotaActivityType: "Rota", RotaPlanShift: "Rota", RotaBreak: "Rota", RotaBookingKind: "Rota",
   // Planned from the rota, kept by the swim school.
   ClassPlannedTeacher: "Swim school",
 };

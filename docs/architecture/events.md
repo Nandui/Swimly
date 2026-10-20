@@ -4,7 +4,7 @@ The bus is `src/platform/events` (typed, in-process; CLAUDE.md section 6). Every
 
 | Event | Emitted by | Payload | Listeners |
 | --- | --- | --- | --- |
-| (none yet) | | | |
+| `tasks.reading.out_of_range` | Tasks, after a task is completed with readings outside their range (`completeTask`, sent through `announce` in `src/modules/contributions.ts`, which loads every module's listeners first) | `orgId`, `siteId`, `taskId`, `task` (title), `recordedById`, `recordedByName`, `recordedAt` (ISO), `readings[]`: `key` ("record:field"), `reading`, `value`, `unit`, `allowed`, `guidance` | Site Monitoring raises one action per reading for the site's managers (`raiseFromTaskReadings`); the same reading again raises nothing new |
 
 ## Candidates from today's seams
 

@@ -1,0 +1,207 @@
+/* Neutral surfaces with the logo's blue accent. light-dark() follows the device/theme. */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(html:not([data-theme="light"]), html:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+}
+
+:root {
+  --ui-background: light-dark(oklch(1 0 0), oklch(0.145 0 0));
+  --ui-workspace: light-dark(oklch(0.97 0 0), oklch(0.145 0 0));
+  --ui-foreground: light-dark(oklch(0.145 0 0), oklch(0.985 0 0));
+  --ui-card: light-dark(oklch(1 0 0), oklch(0.205 0 0));
+  --ui-popover: light-dark(oklch(1 0 0), oklch(0.205 0 0));
+  /* Deeper logo blue for white labels; lighter blue with dark ink at night. */
+  --ui-primary: light-dark(oklch(0.52181 0.21509 260.64375), oklch(0.74923 0.13165 253.85631));
+  --ui-primary-hover: light-dark(oklch(0.49 0.2 260.64375), oklch(0.79 0.11 253.85631));
+  --ui-primary-foreground: light-dark(oklch(1 0 0), oklch(0.2212 0.05334 255.42033));
+  --ui-brand-soft: light-dark(oklch(0.96778 0.01535 257.19609), oklch(0.28924 0.05974 253.64609));
+  --ui-brand-soft-hover: light-dark(oklch(0.94791 0.02515 255.55971), oklch(0.35115 0.07558 253.02485));
+  --ui-brand-ink: light-dark(oklch(0.44542 0.15183 259.50977), oklch(0.84182 0.07957 255.587));
+  --ui-brand-border: light-dark(oklch(0.61512 0.12177 253.91527), oklch(0.67492 0.1137 253.08737));
+  --ui-muted: light-dark(oklch(0.97 0 0), oklch(0.269 0 0));
+  --ui-muted-foreground: light-dark(oklch(0.45 0 0), oklch(0.75 0 0));
+  --ui-border: light-dark(oklch(0.88 0 0), oklch(0.36 0 0));
+  --ui-input: light-dark(oklch(0.6 0 0), oklch(0.57 0 0));
+  --ui-ring: var(--ui-primary);
+  --ui-destructive: light-dark(oklch(0.48 0.18 27), oklch(0.75 0.14 27));
+  --ui-sidebar: light-dark(oklch(0.985 0 0), oklch(0.18 0 0));
+  --ui-sidebar-hover: light-dark(oklch(0.925 0 0), oklch(0.28 0 0));
+  --ui-status-green: light-dark(oklch(0.37 0.08 155), oklch(0.84 0.1 155));
+  --ui-status-green-bg: light-dark(oklch(0.95 0.03 155), oklch(0.28 0.04 155));
+  --ui-status-blue: light-dark(oklch(0.38 0.1 255), oklch(0.85 0.08 255));
+  --ui-status-blue-bg: light-dark(oklch(0.95 0.02 255), oklch(0.28 0.04 255));
+  --ui-status-red: light-dark(oklch(0.4 0.14 25), oklch(0.84 0.09 25));
+  --ui-status-red-bg: light-dark(oklch(0.96 0.02 25), oklch(0.28 0.05 25));
+  --ui-status-orange: light-dark(oklch(0.4 0.1 50), oklch(0.85 0.09 50));
+  --ui-status-orange-bg: light-dark(oklch(0.96 0.03 50), oklch(0.28 0.04 50));
+  --ui-status-yellow: light-dark(oklch(0.4 0.08 85), oklch(0.86 0.09 85));
+  --ui-status-yellow-bg: light-dark(oklch(0.96 0.04 85), oklch(0.28 0.04 85));
+  --ui-status-purple: light-dark(oklch(0.4 0.12 300), oklch(0.85 0.08 300));
+  --ui-status-purple-bg: light-dark(oklch(0.96 0.02 300), oklch(0.28 0.04 300));
+  --ui-radius: 0.625rem;
+}
+
+@theme inline {
+  --color-ui-background: var(--ui-background);
+  --color-ui-workspace: var(--ui-workspace);
+  --color-ui-foreground: var(--ui-foreground);
+  --color-ui-card: var(--ui-card);
+  --color-ui-card-foreground: var(--ui-foreground);
+  --color-ui-popover: var(--ui-popover);
+  --color-ui-popover-foreground: var(--ui-foreground);
+  --color-ui-primary: var(--ui-primary);
+  --color-ui-primary-hover: var(--ui-primary-hover);
+  --color-ui-primary-foreground: var(--ui-primary-foreground);
+  --color-ui-brand-soft: var(--ui-brand-soft);
+  --color-ui-brand-ink: var(--ui-brand-ink);
+  --color-ui-brand-border: var(--ui-brand-border);
+  --color-ui-secondary: var(--ui-muted);
+  --color-ui-secondary-foreground: var(--ui-foreground);
+  --color-ui-muted: var(--ui-muted);
+  --color-ui-muted-foreground: var(--ui-muted-foreground);
+  --color-ui-accent: var(--ui-muted);
+  --color-ui-accent-foreground: var(--ui-foreground);
+  --color-ui-destructive: var(--ui-destructive);
+  --color-ui-border: var(--ui-border);
+  --color-ui-input: var(--ui-input);
+  --color-ui-ring: var(--ui-ring);
+  --radius-ui-xs: calc(var(--ui-radius) * 0.5);
+  --radius-ui-sm: calc(var(--ui-radius) * 0.6);
+  --radius-ui-md: calc(var(--ui-radius) * 0.8);
+  --radius-ui-lg: var(--ui-radius);
+  --radius-ui-xl: calc(var(--ui-radius) * 1.4);
+  --radius-ui-2xl: calc(var(--ui-radius) * 1.8);
+  /* Poolside corners (poolside.css): rounded-control (pills), rounded-card (16px, inside a
+     panel), rounded-panel (24px) and rounded-frame. */
+  --radius-control: var(--pc-radius-control);
+  --radius-card: var(--pc-radius-card);
+  --radius-panel: var(--pc-radius-panel);
+  --radius-frame: var(--pc-radius-frame);
+}
+
+/* Sizes and positions that come from data (src/components/ui-kit/scale.ts): bar lengths in
+   hundredths, places along a timeline or picture in five-hundredths, and grid lines for
+   timelines. Pages never set them inline (owner rule, 20 October 2026). */
+@source inline("{w,h}-{0..100}/100");
+@source inline("{left,right,top}-{0..500}/500");
+/* Timeline grid places (TimelineGrid): 5-minute columns over a day and its lanes. */
+@source inline("tl-cols-{1..300}");
+@source inline("{col-start,col-end,row-start,row-end}-{1..300}");
+@source inline("row-span-{1..20}");
+
+/* Layout utilities from the Poolside layout sizes (owner decision, 10 October 2026), so pages
+   never need an arbitrary value (owner rule, 20 October 2026). Auto-fit grids of tiles, cards
+   and wide columns; a side rail beside the main column; search fields and the page title. */
+@utility grid-cols-tiles { grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--pc-tile-min)), 1fr)); }
+@utility grid-cols-cards { grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--pc-card-min)), 1fr)); }
+@utility grid-cols-columns { grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--pc-column-min)), 1fr)); }
+@utility grid-cols-main-rail { grid-template-columns: minmax(0, 1fr) min(100%, var(--pc-rail-width)); }
+@utility grid-cols-rail-main { grid-template-columns: min(100%, var(--pc-rail-width)) minmax(0, 1fr); }
+/* One growing column and one sized to its content (a row's text and its actions), and back. */
+@utility grid-cols-fill-auto { grid-template-columns: minmax(0, 1fr) auto; }
+@utility grid-cols-auto-fill { grid-template-columns: auto minmax(0, 1fr); }
+@utility grid-rows-auto-fill { grid-template-rows: auto minmax(0, 1fr); }
+@utility grid-rows-auto-auto-fill { grid-template-rows: auto auto minmax(0, 1fr); }
+@utility grid-rows-auto-auto { grid-template-rows: auto auto; }
+/* A row of two or three fields with its actions at the end (witnesses, area lines). */
+@utility grid-cols-two-fields-action { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; }
+@utility grid-cols-three-fields-action { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto; }
+/* Alerts: an icon column (none without an icon) beside the text. */
+@utility grid-cols-alert { grid-template-columns: 0 minmax(0, 1fr); }
+@utility grid-cols-alert-icon { grid-template-columns: calc(var(--spacing) * 4) minmax(0, 1fr); }
+@utility basis-field { flex-basis: min(100%, var(--pc-field-min)); }
+@utility min-w-field { min-width: min(100%, var(--pc-field-min)); }
+@utility basis-column { flex-basis: min(100%, var(--pc-column-min)); }
+@utility max-w-deck { max-width: var(--pc-deck-width); }
+/* A heading that takes its container's type size, such as an empty state's title. */
+@utility tl-cols-* { --tl-cols: --value(integer); }
+@utility text-inherit { font-size: inherit; line-height: inherit; }
+
+@layer base {
+  [data-slot] {
+    border-color: var(--ui-border);
+  }
+}
+[data-slot="select-trigger"] {
+  border-color: var(--ui-input);
+}
+[data-slot][aria-invalid="true"] {
+  border-color: var(--ui-destructive);
+}
+/* Fields own their focus treatment; don't add a second outline over it. */
+[data-slot]:not([data-slot="input"], [data-slot="textarea"], [data-slot="command-input"]):focus-visible,
+.shadcn-workspace a:focus-visible {
+  outline: 2px solid var(--ui-ring);
+  outline-offset: 2px;
+}
+/* Command searches share one row with an icon, inside a clipped popover/dialog. */
+[data-slot="command-input-wrapper"]:has(> [data-slot="command-input"]:focus-visible) {
+  border-bottom-color: var(--ui-ring);
+  box-shadow: inset 0 -1px 0 var(--ui-ring);
+}
+@media (forced-colors: active) {
+  [data-slot="command-input-wrapper"]:has(> [data-slot="command-input"]:focus-visible),
+  [data-slot="input"]:focus-visible,
+  [data-slot="textarea"]:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}
+[data-slot="badge"][data-tone="green"] {
+  color: var(--ui-status-green);
+  background: var(--ui-status-green-bg);
+}
+[data-slot="badge"][data-tone="blue"] {
+  color: var(--ui-status-blue);
+  background: var(--ui-status-blue-bg);
+}
+[data-slot="badge"][data-tone="red"] {
+  color: var(--ui-status-red);
+  background: var(--ui-status-red-bg);
+}
+[data-slot="badge"][data-tone="orange"] {
+  color: var(--ui-status-orange);
+  background: var(--ui-status-orange-bg);
+}
+[data-slot="badge"][data-tone="purple"] {
+  color: var(--ui-status-purple);
+  background: var(--ui-status-purple-bg);
+}
+
+@media (max-width: 48rem), (pointer: coarse) {
+  [data-variant][data-size]:is(button, [role="combobox"]) {
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+  }
+  [data-slot="button"],
+  [data-slot="select-trigger"],
+  [data-slot="command-input-wrapper"],
+  [data-slot="tabs-trigger"] {
+    min-height: 2.75rem;
+  }
+  [data-slot="button"],
+  [data-slot="tabs-trigger"] {
+    min-width: 2.75rem;
+  }
+  [data-slot="command-input"],
+  [data-slot="input"],
+  [data-slot="textarea"] {
+    min-height: 2.75rem;
+    /* Deliberate off-scale 16px: below it iOS zooms on focus. The only 16px rule for
+       command-input (swimmer and instructor search); poolside.css restores 14px on desktops. */
+    font-size: 1rem;
+  }
+  [data-slot="command-input-wrapper"] {
+    /* Keep the 44px input inside the row, including its bottom divider. */
+    min-height: calc(2.75rem + 1px);
+  }
+  [data-slot="tabs-list"] {
+    height: auto;
+  }
+}

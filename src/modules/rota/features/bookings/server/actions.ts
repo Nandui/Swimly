@@ -14,6 +14,9 @@ import { areasAt } from "@/lib/directory";
 import { laneClash, lanesFrom, lanesLabel, lanesProblem } from "@/modules/rota/shared/lanes";
 import { notifyShiftChange } from "@/lib/staff-api/notify";
 import { allowedFor, refresh } from "@/modules/rota/shared/writes";
+import { liveSiteById } from "@/lib/directory";
+import { currentActor, mayFor } from "@/lib/policy/session";
+import { BOOKING_KIND_META } from "@/modules/rota/shared/constants";
 
 /* ---------- Repeating bookings ---------- */
 
@@ -25,7 +28,8 @@ const repeatSchema = z.object({
   place: z.string().trim().max(60, "Keep the place under 60 characters."),
   start: z.string(),
   end: z.string(),
-  places: z.coerce.number().int().min(1, "It needs at least one member of staff.").max(20, "Up to 20 staff at once."),
+  /** 0 for a booking that needs no staff, such as lane hire (owner, 20 October 2026). */
+  places: z.coerce.number().int().min(0, "Use 0 when it needs no staff.").max(20, "Up to 20 staff at once."),
   weekdays: z.array(z.number().int().min(0).max(6)).min(1, "Choose at least one day.").max(7),
   firstDay: z.string().refine(isDateOnly, "Choose the first day."),
   lastDay: z.string().refine(isDateOnly, "Choose the last day."),
@@ -214,5 +218,36 @@ export async function cancelRepeat(id: string): Promise<ActionResult> {
   refresh();
   revalidatePath("/rota/bookings");
   for (const userId of [...new Set(future.flatMap((n) => n.assignments.map((a) => a.userId)))]) await notifyShiftChange(userId, `${repeat.title} at ${at.site.name} is cancelled, so you are no longer on it.`);
+  return ok();
+}
+
+/* ---------- Staff each kind of booking needs ---------- */
+
+const kindStaffSchema = z.object({
+  siteId: z.string().min(1),
+  staff: z.record(z.enum(BOOKING_KINDS), z.coerce.number().int().min(0, "Use 0 when it needs no staff.").max(20, "Up to 20 staff at once.")),
+});
+
+/** How many staff each kind of booking needs (owner, 20 October 2026: a party yes, lane hire
+ *  none), for the whole organisation. A new booking of a kind starts with its number; bookings
+ *  already made keep theirs. For people who plan or run the rota. */
+export async function saveKindStaff(input: z.input<typeof kindStaffSchema>): Promise<ActionResult> {
+  const parsed = kindStaffSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const site = await liveSiteById(parsed.data.siteId);
+  if (!site?.orgId) return fail("That site is not open.");
+  const resource = { siteId: site.id, orgId: site.orgId };
+  if (!(await mayFor("rota.plan", resource)) && !(await mayFor("rota.manage", resource))) return fail("Setting this needs the Plan level for Rota.");
+  const actor = await currentActor();
+  const orgId = site.orgId;
+  const entries = Object.entries(parsed.data.staff) as [keyof typeof BOOKING_KIND_META, number][];
+  await prisma.$transaction(async (tx) => {
+    for (const [kind, staff] of entries) {
+      await tx.rotaBookingKind.upsert({ where: { orgId_kind: { orgId, kind } }, create: { orgId, kind, staff, updatedByName: actor.name }, update: { staff, updatedByName: actor.name } });
+    }
+    await logAudit({ actorId: actor.id, actorName: actor.name, action: "update", entity: "RotaBookingKind", entityId: null, clubId: site.id,
+      summary: `Staff each booking needs: ${entries.map(([k, n]) => `${BOOKING_KIND_META[k].label} ${n}`).join(", ")}` }, tx);
+  });
+  revalidatePath("/rota/bookings");
   return ok();
 }

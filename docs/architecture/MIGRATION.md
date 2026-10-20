@@ -64,3 +64,5 @@ The app frame (`ModuleShell`, the account menu, the site switcher) is in the UI 
 - 2026-10-10 — Lean refactor: each module's description moved from Core's registry into its own `manifest.ts`, listed once in `src/app/modules.ts` (ADR 0006); module diagram redrawn; dead code, duplicate date helpers and unused packages removed.
 - 2026-10-10 — Fernando chose "Delete all": one-off import scripts, broken browser-check harnesses, pre-restart handovers and audits, the old design-system file and three unused source files removed.
 - 2026-10-15 — The Academy merged into Short courses (owner decision, ADR 0011): one module, tables and permissions unchanged, old Academy levels count through `formerly`.
+- 2026-10-20 — The Managers group and the CCTV log module added (owner request, ADR 0012), in the module shape from the start.
+- 2026-10-20 — Site Monitoring added (ADR 0013) in the new Managers group; the first event on the bus, `tasks.reading.out_of_range`, raises its actions.

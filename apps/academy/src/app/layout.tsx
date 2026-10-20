@@ -4,6 +4,8 @@ import "@fontsource/plus-jakarta-sans/400.css";
 import "@fontsource/plus-jakarta-sans/600.css";
 import "@fontsource/plus-jakarta-sans/700.css";
 import "./globals.css";
+import "./theme/poolside.css";
+import "./academy.css";
 
 /** No title here: each page renders its own `<title>` (Frame), so there is exactly one. */
 export const metadata: Metadata = {

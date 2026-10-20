@@ -124,5 +124,30 @@ const pageHeaderInShell = {
   },
 };
 
-const designTokens = { rules: { "no-literal-styles": noLiteralStyles, "no-inline-styles": noInlineStyles, "page-header-in-shell": pageHeaderInShell } };
+// Shared UI rules: primitives come from the local shadcn components, in Work, Turnfin Me and
+// the Academy site alike.
+export const uiImports = {
+  paths: [{ name: "radix-ui", message: "Use the local shadcn component so theme, touch sizes and accessibility stay consistent." }],
+  patterns: [{ group: ["@radix-ui/*", "@mui/*", "@mantine/*", "@headlessui/*", "antd", "antd/*"], message: "Use src/components/shadcn for UI primitives." }],
+};
+export const uiSyntax = [
+  {
+    selector: "JSXOpeningElement[name.name=/^(button|select|textarea|label|details|summary|dialog|progress|meter|table|thead|tbody|tfoot|tr|th|td|hr)$/]",
+    message: "Use the installed shadcn primitive (or a shared ui composition) for this control.",
+  },
+  {
+    selector: "JSXOpeningElement[name.name='svg']",
+    message: "Draw charts with the shadcn Chart component (src/components/shadcn/chart.tsx) and icons with lucide-react, never hand-drawn SVG.",
+  },
+  {
+    selector: "JSXOpeningElement[name.name='input']:not(:has(JSXAttribute[name.name='type'][value.value='hidden']))",
+    message: "Use shadcn Input, Checkbox, RadioGroup or Switch. Native hidden inputs are reserved for FormData bridges.",
+  },
+  {
+    selector: "JSXOpeningElement[name.name=/^(div|span|a)$/]:has(JSXAttribute[name.name='role'][value.value=/^(button|checkbox|radio|switch|tab|tablist|dialog|alertdialog|progressbar|menu|menuitem|combobox|listbox)$/])",
+    message: "Compose the matching shadcn component instead of building a custom interactive primitive.",
+  },
+];
+
+const designTokens = { uiImports, uiSyntax, rules: { "no-literal-styles": noLiteralStyles, "no-inline-styles": noInlineStyles, "page-header-in-shell": pageHeaderInShell } };
 export default designTokens;

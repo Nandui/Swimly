@@ -90,11 +90,17 @@ export async function areaLanesAt(siteId: string, db?: Pick<Prisma.TransactionCl
 export async function areasAt(siteId: string, db?: Pick<Prisma.TransactionClient, "siteArea" | "position">): Promise<AreaAt[]> {
   const client = db ?? (await import("@/lib/prisma")).prisma;
   const rows = await client.siteArea.findMany({ where: { siteId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    select: { id: true, name: true, lanes: true, openFrom: true, openUntil: true, weekHours: true, together: true, orgId: true,
+    select: { id: true, name: true, lanes: true, openFrom: true, openUntil: true, weekHours: true, together: true, departmentId: true, parentId: true, orgId: true,
       staffing: { orderBy: { sortOrder: "asc" }, select: { count: true, positionId: true, qualificationTypeId: true, qualificationType: { select: { name: true } } } } } });
+  const byId = new Map(rows.map((r) => [r.id, r]));
   const roles = rows.length ? await rolesNeeding(rows[0].orgId, client) : [];
-  return rows.map(({ staffing, weekHours, together, orgId: _org, ...area }) => { void _org; return { ...area, weekHours: weekHoursOf(weekHours), together: togetherOf(together),
-    minimums: staffing.map((m) => staffLine(m, roles)) }; });
+  return rows.map(({ staffing, weekHours, together, departmentId, parentId, orgId: _org, ...area }) => {
+    void _org;
+    const parent = parentId ? byId.get(parentId) ?? null : null;
+    return { ...area, weekHours: weekHoursOf(weekHours), together: togetherOf(together),
+      minimums: staffing.map((m) => staffLine(m, roles)),
+      parentId: parent?.id ?? null, parentName: parent?.name ?? null, departmentId: parent ? parent.departmentId : departmentId };
+  });
 }
 /** Every role (Admin, Positions) with the qualifications it needs, in Admin's order: what names
  *  an area's staff lines. */
@@ -120,7 +126,10 @@ export async function areaById(id: string, db?: Pick<Prisma.TransactionClient, "
 export type AreaMinimumAt = { count: number; typeId: string | null; typeName: string | null; roleId: string | null; roleName: string | null };
 export type AreaAt = { id: string; name: string; lanes: number; openFrom: number | null; openUntil: number | null; weekHours: WeekHour[]; minimums: AreaMinimumAt[];
   /** Staff in another area covering this one while both are open. */
-  together: AreaTogether[] };
+  together: AreaTogether[];
+  /** The area it is part of (Pool for the 25 m), and the department whose area it is (a
+   *  sub-area's is its parent's); null for none. */
+  parentId: string | null; parentName: string | null; departmentId: string | null };
 
 /** Live sites in the order people see them, e.g. for a public site picker. */
 export async function liveSites(db?: Db): Promise<SiteRef[]> {

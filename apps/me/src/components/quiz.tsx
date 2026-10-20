@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { ChevronRight, RotateCcw } from "lucide-react";
-import { Notice } from "@/components/ui";
+import { Button } from "@/components/shadcn/button";
+import { Bar, Notice } from "@/components/ui";
 import { answered, QuestionField, type Answer, type LearnerQuestion } from "@/components/question";
 import { ApiError, api } from "@/lib/api";
 
@@ -50,15 +51,15 @@ export function QuizRunner({ assignmentId, lessonId, questions, onFinished }: {
     return (
       <section className="pc-panel quiz-done" aria-labelledby="quiz-done-title">
         <h2 id="quiz-done-title" role="status">You got {firstTime} of {questions.length} right first time</h2>
-        <p className="muted">{firstTime === questions.length ? "Spot on. You're ready to move on." : "Have another go if you like, or carry on. Practice is never marked."}</p>
-        <button type="button" className="button outline block" onClick={again}><RotateCcw aria-hidden="true" />Practise again</button>
+        <p className="text-ui-muted-foreground">{firstTime === questions.length ? "Spot on. You're ready to move on." : "Have another go if you like, or carry on. Practice is never marked."}</p>
+        <Button type="button" variant="outline" className="self-start max-md:self-stretch" onClick={again}><RotateCcw aria-hidden="true" />Practise again</Button>
       </section>
     );
   }
   const settled = !!checked && (checked.correct || gaveUp);
   return (
-    <section className="pc-panel stack" aria-label={`Practice question ${index + 1} of ${questions.length}`}>
-      <progress className="course-progress" max={questions.length} value={index + (settled ? 1 : 0)} aria-label="Through the questions" />
+    <section className="pc-panel" aria-label={`Practice question ${index + 1} of ${questions.length}`}>
+      <Bar max={questions.length} value={index + (settled ? 1 : 0)} label="Through the questions" />
       <QuestionField key={question.id} assignmentId={assignmentId} question={question} answer={answer} number={`Question ${index + 1} of ${questions.length}`}
         onChange={(value) => { setAnswer(value); if (checked && !settled) setChecked(null); }} locked={settled || busy} />
       {checked ? (
@@ -70,10 +71,10 @@ export function QuizRunner({ assignmentId, lessonId, questions, onFinished }: {
       ) : null}
       {failure ? <Notice title={failure} tone="error" live /> : null}
       <div className="lesson-nav">
-        {checked && !settled ? <button type="button" className="button outline" onClick={() => check(true)} disabled={busy}>Show me why</button> : <span />}
+        {checked && !settled ? <Button type="button" variant="outline" onClick={() => check(true)} disabled={busy}>Show me why</Button> : <span />}
         {settled
-          ? <button type="button" className="button" onClick={next}>{index + 1 < questions.length ? "Next question" : "See how I did"}<ChevronRight aria-hidden="true" /></button>
-          : <button type="button" className="button" onClick={() => check(false)} disabled={busy || !answered(question, answer)}>{busy ? "Checking…" : "Check"}</button>}
+          ? <Button type="button" onClick={next}>{index + 1 < questions.length ? "Next question" : "See how I did"}<ChevronRight aria-hidden="true" /></Button>
+          : <Button type="button" onClick={() => check(false)} disabled={busy || !answered(question, answer)}>{busy ? "Checking…" : "Check"}</Button>}
       </div>
     </section>
   );

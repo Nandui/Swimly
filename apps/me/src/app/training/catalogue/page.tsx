@@ -3,11 +3,15 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, GraduationCap, Plus, Star } from "lucide-react";
+import { ChevronRight, GraduationCap, Plus, Star } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { CourseImage } from "@/components/question";
 import { EmptyRows, LoadError, Loading, Notice, useLoad } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
+import { Button } from "@/components/shadcn/button";
+import { PageShell } from "@/components/ui-kit/page-shell";
+import { PageHeader } from "@/components/ui-kit/page-header";
+import { Input } from "@/components/ui/input";
 
 type Course = {
   id: string; title: string; summary: string; category: string; tags: string[]; hasCover: boolean; requiresSignoff: boolean; grants: string | null;
@@ -35,21 +39,16 @@ export default function CataloguePage() {
   const groups = [...new Set(shown.map((c) => c.category))].map((category) => ({ category, courses: shown.filter((c) => c.category === category) }));
   return (
     <Frame title="Find a course">
-      <div className="stack">
-        <Link href="/training" className="button ghost back-link"><ChevronLeft aria-hidden="true" />My training</Link>
-        <div className="stack-sm"><h1>Find a course</h1><p className="muted">Courses open to everyone. Enrol to take one when it suits you; there is no deadline.</p></div>
+      <PageShell header={<PageHeader back={{ href: "/training", label: "My training" }} title="Find a course" description="Courses open to everyone. Enrol to take one when it suits you; there is no deadline." />}>
         {failure ? <Notice title={failure} tone="error" live /> : null}
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : data.items.length === 0 ? (
           <section className="pc-panel"><EmptyRows>No courses are open to everyone yet.</EmptyRows></section>
         ) : (
           <>
             {data.items.length > 4 ? (
-              <div className="field">
-                <label htmlFor="catalogue-filter" className="sr-only">Filter courses</label>
-                <input id="catalogue-filter" type="search" className="input" value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter by name, category or tag" maxLength={60} />
-              </div>
+              <Input id="catalogue-filter" type="search" aria-label="Filter courses" value={filter} onChange={setFilter} placeholder="Filter by name, category or tag" maxLength={60} />
             ) : null}
-            {shown.length === 0 ? <p className="muted" role="status">No course matches “{filter}”.</p> : null}
+            {shown.length === 0 ? <p className="text-ui-muted-foreground" role="status">No course matches “{filter}”.</p> : null}
             {groups.map((group) => (
               <section key={group.category || "other"} className="pc-panel" aria-label={group.category || "Other courses"}>
                 {group.category ? <h2>{group.category}</h2> : null}
@@ -67,11 +66,11 @@ export default function CataloguePage() {
                     </span>
                     <span className="pc-row-trail">
                       {c.mine?.state === "open" ? (
-                        <Link href={`/training/${c.mine.assignmentId}`} className="button outline">Continue<ChevronRight aria-hidden="true" /></Link>
+                        <Button asChild variant="outline"><Link href={`/training/${c.mine.assignmentId}`}>Continue<ChevronRight aria-hidden="true" /></Link></Button>
                       ) : (
-                        <button type="button" className="button" onClick={() => enrol(c)} disabled={!!busy} aria-label={`${c.mine ? "Take again" : "Enrol on"} ${c.title}`}>
+                        <Button type="button" onClick={() => enrol(c)} disabled={!!busy} aria-label={`${c.mine ? "Take again" : "Enrol on"} ${c.title}`}>
                           <Plus aria-hidden="true" />{busy === c.id ? "Enrolling…" : c.mine ? "Take again" : "Enrol"}
-                        </button>
+                        </Button>
                       )}
                     </span>
                   </li>
@@ -80,7 +79,7 @@ export default function CataloguePage() {
             ))}
           </>
         )}
-      </div>
+      </PageShell>
     </Frame>
   );
 }

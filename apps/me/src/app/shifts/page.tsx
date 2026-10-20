@@ -4,6 +4,8 @@ import { Frame } from "@/components/frame";
 import { EmptyRows, LoadError, Loading, Notice, Tag, useLoad } from "@/components/ui";
 import { clock, day } from "@/lib/format";
 import { DAY_META, SHIFT_WARNING_META } from "@/lib/meta";
+import { PageShell } from "@/components/ui-kit/page-shell";
+import { PageHeader } from "@/components/ui-kit/page-header";
 
 type Block = { kind: "activity" | "break"; startMinutes: number; endMinutes: number; label: string; place: string; needs: string | null; warning: string | null };
 type Day = { id: string; date: string; site: string; changed: boolean; startMinutes: number; endMinutes: number; paidMinutes: number; breaksToArrange: number; blocks: Block[] };
@@ -18,8 +20,7 @@ export default function ShiftsPage() {
   const problems = data?.items.filter((d) => d.blocks.some((b) => b.warning)).length ?? 0;
   return (
     <Frame title="My shifts">
-      <div className="stack">
-        <div className="stack-sm"><h1>My shifts</h1><p className="muted">The next four weeks, as your days are shared.</p></div>
+      <PageShell header={<PageHeader title="My shifts" description="The next four weeks, as your days are shared." />}>
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : (
           <>
             {problems > 0 ? <Notice title="An activity needs a qualification you don't hold" tone="warning">Tell your manager before the day, or upload your new certificate under More, then Qualifications.</Notice> : null}
@@ -27,7 +28,7 @@ export default function ShiftsPage() {
               <section key={d.id} className="pc-panel" aria-labelledby={`day-${d.id}`}>
                 <div className="stack-sm">
                   <h2 id={`day-${d.id}`}>{day(d.date)}</h2>
-                  <p className="muted">{clock(d.startMinutes)} to {clock(d.endMinutes)} · {hours(d.paidMinutes)} paid · {d.site}</p>
+                  <p className="text-ui-muted-foreground">{clock(d.startMinutes)} to {clock(d.endMinutes)} · {hours(d.paidMinutes)} paid · {d.site}</p>
                   {d.changed || d.breaksToArrange ? <p>{d.changed ? <Tag meta={DAY_META.changed} /> : null} {d.breaksToArrange ? <Tag meta={DAY_META.breaks} /> : null}</p> : null}
                 </div>
                 <ul className="pc-rows">{d.blocks.map((b, i) => (
@@ -39,12 +40,12 @@ export default function ShiftsPage() {
                     {b.warning ? <span className="pc-row-trail"><Tag meta={SHIFT_WARNING_META[b.warning]} /></span> : null}
                   </li>
                 ))}</ul>
-                {d.breaksToArrange ? <p className="muted">You are owed {d.breaksToArrange} minutes of breaks with no free time planned for them. Your duty manager arranges them on the day.</p> : null}
+                {d.breaksToArrange ? <p className="text-ui-muted-foreground">You are owed {d.breaksToArrange} minutes of breaks with no free time planned for them. Your duty manager arranges them on the day.</p> : null}
               </section>
             ))}
           </>
         )}
-      </div>
+      </PageShell>
     </Frame>
   );
 }

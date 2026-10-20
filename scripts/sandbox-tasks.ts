@@ -1,5 +1,5 @@
 import type { PrismaClient } from "../src/generated/prisma/client";
-import { exceptions, score, taskState, tasksOn, type TaskDefinition, type TaskSchedule, type TaskState, type TemplateKind } from "../src/modules/tasks/shared/rules";
+import { exceptions, outOfRange, score, taskState, tasksOn, type TaskDefinition, type TaskSchedule, type TaskState, type TemplateKind } from "../src/modules/tasks/shared/rules";
 import { addDaysIso as addDays } from "../src/lib/format";
 
 /** The sandbox's Tasks (docs/tasks.md): both sites' settings, five templates (scheduled, ad hoc
@@ -73,6 +73,15 @@ export async function seedTasks(prisma: PrismaClient, ORG: string, roles: Record
             approvedAt: approved ? completedAt : null, approvedById: approved ? "sbx_maya" : null, approvedByName: approved ? "Maya Example" : null,
           }, select: { id: true } });
           states.push(taskState({ status: finished ? "done" : "open", date: d, startsAt: slot.startsAt, dueAt: slot.dueAt, completedAt, approvedAt: approved ? completedAt : null, requiresApproval: def.requiresApproval }, now, dayNow));
+          // Site Monitoring raises one action per reading out of range, as Tasks' event does.
+          for (const r of finished ? outOfRange(def, records) : []) {
+            const closed = back > 2;
+            await prisma.monitoringAction.create({ data: {
+              orgId: ORG, siteId, source: "tasks", sourceKey: `tasks:${task.id}:${r.record}:${r.fieldId}:${r.value}`, sourceHref: `/tasks/${task.id}`, title: def.title,
+              reading: r.reading, value: r.value, unit: r.unit, allowed: r.allowed, guidance: r.guidance, recordedById: who[0], recordedByName: who[1], recordedAt: completedAt!,
+              ...(closed ? { status: "closed", closedAt: new Date(completedAt!.getTime() + 90 * 60_000), ...(siteId === "club_churchfield" ? { closedById: "sbx_orla", closedByName: "Orla Example" } : { closedById: "sbx_owen", closedByName: "Owen Example" }), resolution: "Dosing adjusted and retested an hour later at 7.4. Plant room log updated." } : {}),
+            } });
+          }
           if (found.length) {
             await prisma.taskAction.create({ data: { orgId: ORG, siteId, taskId: task.id, title: "Retest after adjusting the dosing", dueOn: new Date(`${d}T00:00:00Z`), raisedById: who[0], raisedByName: who[1],
               ...(back > 2 ? { status: "resolved", resolvedAt: completedAt, resolvedByName: "Sam Example", resolution: "Dosing adjusted; retested at 7.4." } : {}) } });

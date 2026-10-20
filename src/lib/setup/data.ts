@@ -22,7 +22,8 @@ export async function activityListPage() {
   const [types, departments, qualifications] = await Promise.all([
     prisma.activityType.findMany({
       where: { orgId }, orderBy: [{ archivedAt: { sort: "asc", nulls: "first" } }, { sortOrder: "asc" }, { name: "asc" }],
-      select: { id: true, name: true, icon: true, departmentId: true, requiredTypeId: true, fromClasses: true, archivedAt: true, department: { select: { name: true } }, requiredType: { select: { name: true } } },
+      select: { id: true, name: true, icon: true, departmentId: true, requiredTypeId: true, fromClasses: true, archivedAt: true, department: { select: { name: true } }, requiredType: { select: { name: true } },
+        subs: { where: { archivedAt: null }, orderBy: { sortOrder: "asc" }, select: { id: true, name: true, when: true, atMinutes: true, usual: true } } },
     }),
     prisma.department.findMany({ where: { orgId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
     prisma.qualificationType.findMany({ where: { orgId, archivedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
@@ -30,7 +31,7 @@ export async function activityListPage() {
   return {
     canKeep: keeps("setup.activities"), departments, qualifications,
     types: types.map((t) => ({ id: t.id, name: t.name, icon: t.icon, departmentId: t.departmentId, departmentName: t.department.name, requiredTypeId: t.requiredTypeId,
-      requiredName: t.requiredType?.name ?? null, fromClasses: t.fromClasses, archived: !!t.archivedAt })),
+      requiredName: t.requiredType?.name ?? null, fromClasses: t.fromClasses, archived: !!t.archivedAt, subs: t.subs })),
   };
 }
 
@@ -40,15 +41,23 @@ export async function areasPage() {
   const sites = await prisma.club.findMany({
     where: { orgId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     select: { id: true, name: true, code: true, areas: { orderBy: [{ archivedAt: { sort: "asc", nulls: "first" } }, { sortOrder: "asc" }, { name: "asc" }],
-      select: { id: true, name: true, lanes: true, archivedAt: true, openFrom: true, openUntil: true, weekHours: true, together: true,
+      select: { id: true, name: true, lanes: true, archivedAt: true, openFrom: true, openUntil: true, weekHours: true, together: true, departmentId: true, parentId: true,
         staffing: { orderBy: { sortOrder: "asc" }, select: { count: true, positionId: true, qualificationTypeId: true, qualificationType: { select: { name: true } } } } } } },
   });
+  // Departments for every site (none tied to a site) as well as each site's own.
+  const departments = await prisma.department.findMany({ where: { orgId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true, clubId: true } });
   const [qualifications, roles] = await Promise.all([
     prisma.qualificationType.findMany({ where: { orgId, archivedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
     orgId ? rolesNeeding(orgId) : [],
   ]);
-  return { canKeep: keeps("setup.areas"), qualifications, roles, sites: sites.map((site) => ({ ...site, areas: site.areas.map(({ staffing, weekHours, together, ...area }) => ({ ...area, weekHours: weekHoursOf(weekHours), together: togetherOf(together),
-    minimums: staffing.map((m) => staffLine(m, roles)) })) })) };
+  return { canKeep: keeps("setup.areas"), qualifications, roles, sites: sites.map((site) => {
+    const areas = site.areas.map(({ staffing, weekHours, together, ...area }) => ({ ...area, weekHours: weekHoursOf(weekHours), together: togetherOf(together),
+      minimums: staffing.map((m) => staffLine(m, roles)) }));
+    // Each top-level area followed by its sub-areas (owner, 20 October 2026).
+    const top = areas.filter((a) => !a.parentId || !areas.some((p) => p.id === a.parentId));
+    return { ...site, departments: departments.filter((d) => !d.clubId || d.clubId === site.id).map(({ id, name }) => ({ id, name })),
+      areas: top.flatMap((a) => [a, ...areas.filter((c) => c.parentId === a.id)]) };
+  }) };
 }
 
 /** A site's open areas, in order: what a module's place field offers. */

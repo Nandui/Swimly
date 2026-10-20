@@ -8,12 +8,12 @@ Turnfin is **one Next.js app** made of **modules** on a shared **Core**, plus **
 | --- | --- | --- |
 | **Core** | What every module shares: sign-in, people, roles, sites (`Club`), departments and qualifications, the audit log, the module catalogue and the home page, and the shared plumbing (public APIs, email). | `src/app/(core)`, `src/lib/{staff,policy,people,clubs,devices,email,public-api,audit,directory,...}`, `src/modules/{registry,contributions}.ts` |
 | **Swim school** (Activities) | Running what the centre sells. Swim school is the first activity type: office (curriculum set-up), desk (enrolments, moves, waitlists, assessments), deck (attendance, competencies) and the parent API. | `src/app/(activities)`, `src/app/(instructor)`, the parent and operations APIs, and `src/modules/activities` (`features/` and `shared/`) |
-| **Work modules** | Refunds, Docs, Training, Rota, HR, Purchasing, Stock, Academy, Short courses, Tasks and Incidents. | `src/modules/<id>`, each with `index.ts`, `module.ts`, `shared/` and `features/` (see docs/architecture/MIGRATION.md) and its routes in `src/app/<id>` (and `src/app/api/<id>`) |
+| **Work modules** | Refunds, Docs, Training, Rota, HR, Purchasing, Stock, Academy, Short courses, Tasks, Incidents, the CCTV log and Site Monitoring. | `src/modules/<id>`, each with `index.ts`, `module.ts`, `shared/` and `features/` (see docs/architecture/MIGRATION.md) and its routes in `src/app/<id>` (and `src/app/api/<id>`) |
 
 ## Every module describes itself
 
 Each module's `manifest.ts` holds its description, and `src/app/modules.ts` lists them all (Admin's, which is Core's own, is in `src/modules/registry.ts`):
-- its name, icon, link and **group** (Front of house, Poolside, Team or Back office; presentation only);
+- its name, icon, link and **group** (Front of house, Poolside, Team, Managers or Back office; presentation only);
 - its **levels** (None, then for example Use and Manage), each with one plain sentence, the permissions it gives, and where it applies;
 - up to two **extras** across the app (Docs "Can approve", Swim school "Can cancel classes");
 - its **log name**.
@@ -23,7 +23,7 @@ A role holds one level for each module (`StaffRole.levels`). `src/lib/staff/leve
 ## The rules
 
 1. **Core never imports a module.** Modules import Core; Core does not import them.
-2. **A module never imports another module.** The swim school and each Work module (Docs, Refunds, Training, HR, Rota, Purchasing, Stock, Academy, Short courses, Tasks, Incidents) depend on Core and themselves only.
+2. **A module never imports another module.** The swim school and each Work module (Docs, Refunds, Training, HR, Rota, Purchasing, Stock, Academy, Short courses, Tasks, Incidents, CCTV log, Site Monitoring) depend on Core and themselves only.
 3. **Cross-module needs go through a seam**, never a direct import:
    - **Contributions** (`src/modules/contributions.ts`): a module registers read-only summaries that Core pages show, and its full records about a person for HR's subject export (`registerSubjectRecords`; Training adds its assignments). The swim school adds each site's *programmes · swimmers · classes* line on Sites (`/clubs`). What a module keeps about a person goes to their personal file (the HR record and its export), never Admin's Staff pages: Rota adds what they are planned on, *Absences and returns to work* and changes to their activities; Training adds what they have to do; Incidents adds their incidents and injuries at work, and its subject records (reports they filed, their part in others). **Commitments** (who is busy when): the swim school reports each class, its time and who teaches it that day (`activities.classes`), so Rota shows the day's classes as Teaching and warns when someone is double-booked, without importing the swim school. A source may also offer `plan` (`planCommitment`): the rota plans a class's teacher on a date, and the swim school writes its own `ClassPlannedTeacher` record and audit. **Desk measures** (`registerDeskMeasures`, `deskMeasuresFor`): a module reports its timed desk jobs (when each arrived, who finished it and when, against its target), so the swim school's Reception analytics can time them without reading the module's tables: Short courses adds Academy call backs, Refunds adds refund requests sent. A failing source is named on the page, never fatal.
    - **Session hooks** (`src/modules/session-hooks.ts`): per-request work a module needs. The swim school applies due scheduled unenrolments before any read. `requireSession` loads the hook file lazily.

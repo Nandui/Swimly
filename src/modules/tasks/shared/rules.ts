@@ -301,14 +301,23 @@ function answerProblem(f: TaskField, value: string | undefined): string | null {
 }
 
 /** Readings outside their range, in words: "Record 1 · pH 8 (7.2 to 7.6). Check dosing." */
-export function exceptions(def: Pick<TaskDefinition, "fields">, records: readonly TaskRecord[]): string[] {
-  const out: string[] = [];
+/** One reading outside its range: which record and field, what was read and the range allowed. */
+export type OutOfRange = { record: number; fieldId: string; reading: string; value: string; unit: string; allowed: string; guidance: string };
+
+/** Every reading outside its range, record by record. */
+export function outOfRange(def: Pick<TaskDefinition, "fields">, records: readonly TaskRecord[]): OutOfRange[] {
+  const out: OutOfRange[] = [];
   records.forEach((row, i) => def.fields.forEach((f) => {
     if (!outside(f, row[f.id])) return;
-    const range = f.min != null && f.max != null ? `${f.min} to ${f.max}` : f.min != null ? `at least ${f.min}` : `at most ${f.max}`;
-    out.push(`${records.length > 1 ? `Record ${i + 1} · ` : ""}${f.label} ${row[f.id]}${f.unit ? ` ${f.unit}` : ""} (${range}).${f.warning ? ` ${f.warning}` : ""}`);
+    const allowed = f.min != null && f.max != null ? `${f.min} to ${f.max}` : f.min != null ? `at least ${f.min}` : `at most ${f.max}`;
+    out.push({ record: i, fieldId: f.id, reading: `${records.length > 1 ? `Record ${i + 1} · ` : ""}${f.label}`, value: row[f.id].trim(), unit: f.unit ?? "", allowed, guidance: f.warning ?? "" });
   }));
   return out;
+}
+
+/** Readings outside their range, in words, as kept on the task. */
+export function exceptions(def: Pick<TaskDefinition, "fields">, records: readonly TaskRecord[]): string[] {
+  return outOfRange(def, records).map((r) => `${r.reading} ${r.value}${r.unit ? ` ${r.unit}` : ""} (${r.allowed}).${r.guidance ? ` ${r.guidance}` : ""}`);
 }
 
 /** Whether a reading that must be followed up is out of range. */
