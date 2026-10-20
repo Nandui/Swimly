@@ -143,11 +143,27 @@ export function buildOverview(ds: Dataset) {
   const waitingSwimmers = new Set(ds.waitlist.map(w => w.studentId));
   const filled = fill(ds);
   const trendWeeks = period.weeks.length >= 13 ? period.weeks : Array.from({ length: 13 }, (_, i) => addDaysIso(period.weeks[period.weeks.length - 1], (i - 12) * 7));
-  const trend = trendWeeks.map(week => {
+  // Each week's figures, and the same week one period earlier for the dashed comparison line.
+  const shift = Math.round(weeksBetween(period.previousStart, period.start) * 7);
+  const capped = new Map(liveCourses(ds).filter(c => c.capacity !== null).map(c => [c.id, c.capacity!]));
+  const capacity = [...capped.values()].reduce((s, n) => s + n, 0);
+  const schoolCourses = new Set(ds.courses.map(c => c.id));
+  const figures = (week: string) => {
     const end = addDaysIso(week, 6) < period.today ? addDaysIso(week, 6) : period.today;
     const count = (events: { date: string }[]) => events.filter(e => within(e.date, week, end)).length;
-    return { week, swimmers: activeAt(ds.places, end).swimmers.size, joined: count(moves.joins), left: count(moves.leaves), attendance: attendanceRate(heldLessons(ds.lessons, week, end)), passes: passes(week, end) };
-  });
+    const lessons = heldLessons(ds.lessons, week, end);
+    const timed = lessons.filter(l => l.onTime !== null);
+    const filled = ds.places.filter(p => p.inScope && capped.has(p.courseId) && p.startedOn <= end && (p.endOn === null || p.endOn > end)).length;
+    return {
+      swimmers: activeAt(ds.places, end).swimmers.size, joined: count(moves.joins), left: count(moves.leaves),
+      attendance: attendanceRate(lessons), passes: passes(week, end), registers: registerRate(lessons),
+      onTime: timed.length ? timed.filter(l => l.onTime).length / timed.length * 100 : null,
+      ticks: ds.ticks.filter(t => t.courseId !== null && schoolCourses.has(t.courseId) && within(t.assessedOn, week, end)).length,
+      // Against today's classes: the timetable's own history is not kept.
+      fill: capacity ? Math.min(100, filled / capacity * 100) : null,
+    };
+  };
+  const trend = trendWeeks.map(week => ({ week, ...figures(week), before: figures(addDaysIso(week, -shift)) }));
 
   // Needs attention: the few things worth acting on this week.
   const classes = buildClassRows(ds);
@@ -180,6 +196,7 @@ export function buildOverview(ds: Dataset) {
       fullCount: fullWithWaiting.length, quietCount: quiet.length,
     },
     reasons: countBy(inPeriod(moves.leaves).map(e => e.reason ?? "none")).map(r => ({ ...r, label: reasonLabel(r.key) })),
+    leftByLevel: countBy(inPeriod(moves.leaves).map(e => index.level(e.place.levelId)?.name ?? "No level")).map(r => ({ key: r.key, label: r.key, count: r.count })),
   };
 }
 

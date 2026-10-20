@@ -4,13 +4,36 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.40.0 · 19 October 2026 · Swim school analytics: three dashboards
+## 1.44.0 · 20 October 2026 · Swim school analytics: three clearer dashboards
 
-- **Analytics** is now three dashboards, one for each person who reads it. Switch between them with the three buttons at the start of the bar under the page title: **Business**, **Reception** and **Pool deck**.
-- **Business** is for decisions about the swim school: swimmers week by week, places filled, the waiting list, who joined and left and why, where the timetable is full, each level's free places, the next four weeks, how many assessed swimmers start a class, and ages. Every class, swimmers and leavers, and multiple enrolments open from the end of the page.
-- **Reception** puts the team first, so a supervisor can see each person's work, speed and record quality side by side, then how fast jobs get done, what is still waiting, record quality, busy hours and enquiries.
-- **Pool deck** is new, for the pool deck supervisor: attendance week by week, starts on time, registers this week, the same teacher each week, cancelled lessons, attendance by time slot, every teacher against the school, weeks to pass each level and the skills holding swimmers back. Registers and level by level open from it.
-- A new look: frosted glass panels on a soft background (near black in dark mode), quieter type, and one blue for charts. Every figure, filter and link is still there; old links to the Teachers report now open the pool deck.
+- **Analytics** is now three dashboards, one for each person who reads it: **Business**, **Reception** and **Pool deck**. Switch between them with the buttons under the page title.
+- Each one opens with **Worth a look first**: the few things to decide on or follow up, each with a count and a link.
+- The headline figures are now tiles. Press one to see it week by week, with the same weeks of the period before as a dashed line or a grey bar, and one plain sentence saying what it means.
+- **The team** on Reception and **The teachers** on Pool deck show one thing at a time. Pick what to compare, such as Jobs a day or Attendance, and everyone gets one bar against the team or school average. A bar turns orange, with a short reason, when it is worth a word. Every figure is still there, and **Show everyone as a table** opens the full table.
+- Business now shows who left by reason or by level, places at each level as one bar each, and an orange dot on the timetable where someone is waiting for a class. Everything that was on these pages before is still there, in Turnfin's usual look.
+
+## 1.43.0 · 20 October 2026 · Training: turn an SOP into a course with AI
+
+- In **Training, Courses**, people who build courses now have **Draft from a document**. Give it an SOP, a policy or a handbook section (a PDF, a Word document, a text file or a photo of the pages), or paste the text, and the AI writes a course from it: lessons, flashcards, checklists, practice questions and a final exam.
+- The new course is never live straight away. It opens in the builder unpublished, with a comment listing what to check, such as gaps or unclear steps in the document. Read it, fix anything, then publish it as usual.
+- Names, phone numbers and emails in the document are swapped for the role, such as "the duty manager". Leave out anything personal before you send a document.
+
+## 1.42.0 · 20 October 2026 · Swim school: a check when enrolling at another centre
+
+- When you enrol a swimmer in a class at a different centre from where they were assessed, Turnfin now stops and asks you to check first. Parents are told lessons are only at the centre where their child was assessed.
+- You can still go ahead. The activity log notes that they were enrolled at another centre after the check.
+
+## 1.41.0 · 20 October 2026 · Add a swimmer to Awaiting enrolment yourself
+
+- Reception can now put a swimmer on **Awaiting enrolment** by hand, for when they need a class but have not been placed by an assessment (for example, they moved from another swim school). Press **Add a swimmer** at the top of the page, pick the swimmer, the level they should start at, and say why.
+- They then appear on the list like a swimmer placed by an assessment, marked **Added by hand** with who added them, when and why, and **Find a class** offers classes at that level. They leave the list once they have a class.
+- If they were added by mistake or the family is no longer looking, open them and press **Take off the list**. Adding and taking off both show in the swimmer's history.
+
+## 1.40.0 · 19 October 2026 · Incidents: staff conduct and welfare reports
+
+- **Staff conduct or welfare** is now its own choice when you report an incident, for things that happen on shift such as a procedure not followed, a staff member taken unwell or a dispute between staff.
+- Its triage has its own five levels, and asks what it was about, whether their manager was told, whether it was passed to HR, and what support the staff member was offered.
+- Discipline and grievances themselves still go through HR.
 
 ## 1.39.0 · 19 October 2026 · Swim school analytics: easier to find your way
 

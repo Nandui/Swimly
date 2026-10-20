@@ -15,12 +15,12 @@ import { AwaitingNavigation } from "@/modules/activities/features/enrolment/comp
 
 /** One list panel (V2Awaiting): the two queues with counts beside the search, the caption, the
  *  rows and the pager. */
-export function AwaitingQueue({ view, total, q, counts, page, pageSize, children }: {
-  view: "enrolment" | "moves"; total: number; q: string; counts?: { enrolment: number; moves: number }; page: number; pageSize: number; children: ReactNode;
+export function AwaitingQueue({ view, total, q, counts, page, pageSize, actions, children }: {
+  view: "enrolment" | "moves"; total: number; q: string; counts?: { enrolment: number; moves: number }; page: number; pageSize: number; actions?: ReactNode; children: ReactNode;
 }) {
   const moves = view === "moves";
   return <div className="min-w-0 flex flex-col gap-6">
-    <PageHeader title="Awaiting enrolment" description="Select a swimmer to arrange a class or update their follow-up" />
+    <PageHeader title="Awaiting enrolment" description="Select a swimmer to arrange a class or update their follow-up" actions={actions} />
     <section className="pc-panel" aria-label={moves ? "Move queue" : "Enrolment queue"}>
       <div className="min-w-0 flex flex-wrap items-end gap-3">
         <AwaitingNavigation active={view} q={q} counts={counts} />

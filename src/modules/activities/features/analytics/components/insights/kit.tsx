@@ -258,8 +258,8 @@ export function Flag({ tone, children }: { tone?: "warn" | "bad" | "good" | "inf
 }
 
 /** Attention rows: a count, what it is, where to go. */
-export function Attention({ items }: { items: { key: string; count: number; title: string; hint: string; href?: string; tone?: "warn" | "bad" | "good" }[] }) {
-  return <ul className="ins-attention">
+export function Attention({ items, columns }: { items: { key: string; count: number; title: string; hint: string; href?: string; tone?: "warn" | "bad" | "good" }[]; columns?: boolean }) {
+  return <ul className="ins-attention" data-columns={columns ? "" : undefined}>
     {items.map(item => {
       const body = <><span className="ins-attention-count">{formatCount(item.count)}</span><span className="min-w-0"><span className="ins-attention-title">{item.title}</span><span className="ins-attention-hint">{item.hint}</span></span>{item.href ? <ArrowRight aria-hidden="true" className="ins-attention-go" /> : <span />}</>;
       return <li key={item.key} data-tone={item.count ? item.tone : "good"}>{item.href ? <Link href={item.href}>{body}</Link> : <div className="ins-attention-row">{body}</div>}</li>;

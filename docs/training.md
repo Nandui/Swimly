@@ -431,6 +431,41 @@ with no signal. No migration.
   `/offline`). It never touches the staff API. Saving a course loads its pages
   once so they are kept.
 
+## Drafting a course from a document with AI
+
+Owner ask, 19 October 2026: turn SOPs and other documents into training. No
+migration. Feature `ai-draft`; switched on by `ANTHROPIC_API_KEY` (unset, the
+button explains it isn't switched on and nothing is sent).
+
+- **Where**: Training > Courses > **Draft from a document**, beside Start from
+  a template, for the Author level (`who.manage`). The person gives a PDF, a
+  Word file (.docx), a text file or a photo of the pages (up to 4 MB), or
+  pastes the text, and can name the course and turn off the practice questions
+  or the final exam.
+- **What happens**: `src/app/training/courses/draft/route.ts` (a route handler,
+  so documents can be larger than a server action allows and the call can run
+  up to five minutes) passes it to `draftCourse`. Claude Sonnet 5.5 (only that model, no fallback;
+  owner decision, 20 October 2026) reads the document and
+  answers in a fixed JSON shape (`server/schema.ts`): sections of reading,
+  flashcard and checklist lessons, and single, multiple and true-or-false
+  questions. `toCourse` turns that into the builder's own lessons through the
+  same cleaning an author's edit goes through, drops anything incomplete and
+  lists it, adds a "Check yourself" quiz after each section with two or more
+  questions, and the exam (the usual defaults) when there are five or more.
+- **It is never live by itself**: the course is created unpublished, with a
+  review comment from "<name> (AI draft)" saying to read every lesson against
+  the document, plus the AI's own notes (gaps, unclear steps, names replaced
+  by roles) and anything left out. Publishing works as for any course.
+- **Rules kept**: the prompt keeps every rule, number and step as written,
+  never invents, and swaps named people, phone numbers and emails for roles.
+  Each draft writes an audit row (`ai-draft`). Ten drafts an hour per person,
+  counted from those review comments.
+- **Privacy**: the document goes to Anthropic's API only (which doesn't train
+  on API data); Turnfin keeps the course, not the document. The dialog asks
+  people to leave out anything personal.
+- **Setup**: add `ANTHROPIC_API_KEY` (from console.anthropic.com) to the Work
+  project's environment variables for Production and Preview.
+
 ## Expiring qualifications
 
 `/training/expiring` lists qualifications that have expired or expire within 60

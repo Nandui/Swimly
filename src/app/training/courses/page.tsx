@@ -11,6 +11,7 @@ import { ARCHIVAL_STATUS_META } from "@/lib/status";
 import { ArchiveCourse, assignablePeople, CourseDialog, listCourses, listQualificationTypeOptions } from "@/modules/training/features/courses";
 import { AssignTraining } from "@/modules/training/features/assignments";
 import { StartFromTemplate } from "@/modules/training/features/builder";
+import { aiDraftingOn, DraftFromDocument } from "@/modules/training/features/ai-draft";
 
 export const metadata: Metadata = { title: "Courses" };
 
@@ -37,6 +38,7 @@ export default async function TrainingCoursesPage({ searchParams }: { searchPara
               { href: "/training/courses", label: "Current", current: !archived },
               { href: "/training/courses?view=retired", label: "Retired", current: archived },
             ]} />
+            {who.manage && !archived ? <DraftFromDocument enabled={aiDraftingOn()} /> : null}
             {who.manage && !archived ? <StartFromTemplate courses={all.map((c) => ({ id: c.id, title: c.title, isTemplate: c.isTemplate }))} /> : null}
             {who.manage && !archived ? <CourseDialog qualificationTypes={types} categories={categories} /> : null}
           </>

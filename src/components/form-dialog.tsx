@@ -58,6 +58,8 @@ export function FormDialog({
   defaultOpen = false,
   destructive = false,
   cancelLabel = "Cancel",
+  pendingLabel,
+  timeoutMs,
 }: {
   trigger: React.ReactNode;
   title: string;
@@ -84,6 +86,10 @@ export function FormDialog({
   onClose?: () => void;
   /** Open on arrival (initial state only), e.g. a home page quick action's `?add=1`. */
   defaultOpen?: boolean;
+  /** The submit's label while it runs, when "Saving…" would mislead (the AI writing a course). */
+  pendingLabel?: string;
+  /** How long to wait for a slow save before saying it couldn't be confirmed. */
+  timeoutMs?: number;
 }) {
   const [open, setOpen] = React.useState(defaultOpen);
   const rememberTrigger = useDialogTriggerFocus(open);
@@ -134,7 +140,7 @@ export function FormDialog({
 
     startTransition(async () => {
       try {
-        const result = await withTimeout(submit(formData, reply));
+        const result = await withTimeout(submit(formData, reply), timeoutMs);
         if (result.ok) {
           toast.success(successMessage);
           startTransition(() => {
@@ -252,7 +258,7 @@ export function FormDialog({
                     </Button>
                   ))
                 ) : (
-                  <LoadingButton type="submit" variant={destructive ? "destructive" : "default"} pending={pending}>{submitLabel}</LoadingButton>
+                  <LoadingButton type="submit" variant={destructive ? "destructive" : "default"} pending={pending} pendingLabel={pendingLabel}>{submitLabel}</LoadingButton>
                 )}
                 {confirmation && pending ? <span role="status" className="text-sm text-ui-muted-foreground">Saving change…</span> : null}
               </DialogFooter>

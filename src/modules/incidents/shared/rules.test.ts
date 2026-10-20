@@ -53,6 +53,8 @@ test("triage asks what fits the kind of report, and keeps only those answers", (
   assert.equal(abuse.triageAnswers.staffSupport, "Debrief with Sam", "support for a staff member it was aimed at");
   assert.equal("staffSupport" in triageDecision(row, who, triage({ answers: { staffSupport: "x" } })).triageAnswers, false, "not asked with no staff member");
   assert.deepEqual(triageDecision(row, who, triage({ answers: { gardaiTold: true } })).triageAnswers, {}, "an injury asks nothing new");
+  const staff = triageDecision({ ...row, category: "staff" }, who, triage({ answers: { matter: "welfare", hrTold: true, staffSupport: "Sent home early; manager rang next day" } }));
+  assert.deepEqual(staff.triageAnswers, { matter: "welfare", managerTold: false, hrTold: true, staffSupport: "Sent home early; manager rang next day" }, "a staff matter always asks about support, once");
   assert.deepEqual(triageAnswerRows({ category: "security", hasStaff: false }, theft.triageAnswers), [["Whose property", "A customer's"], ["The Gardaí were told", "Yes"], ["Garda incident number", "12345678"], ["CCTV saved", "No"]]);
 });
 

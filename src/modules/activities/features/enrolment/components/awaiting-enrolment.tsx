@@ -11,19 +11,21 @@ import { ClipboardCheck } from "lucide-react";
 import { formatDate } from "@/lib/format";
 import { fullName } from "@/modules/activities/shared/students/constants";
 import { AwaitingQueue, QueueContact, QueueList, QueueRow } from "@/modules/activities/features/enrolment/components/awaiting-queue";
+import { AddManualPlacement, RemoveManualPlacement } from "@/modules/activities/features/enrolment/components/manual-placement";
+import type { LevelOption } from "@/modules/activities/shared/curriculum/data/curriculum";
 
 type QueueItem = AwaitingEnrolmentResult["items"][number];
 
-export function AwaitingEnrolment({ result, enrol, profiles, assessments, courses, counts }: {
-  result: AwaitingEnrolmentResult; enrol: boolean; profiles: boolean; assessments: boolean; courses: TransferTarget[]; counts?: { enrolment: number; moves: number };
+export function AwaitingEnrolment({ result, enrol, profiles, assessments, courses, levels = [], counts }: {
+  result: AwaitingEnrolmentResult; enrol: boolean; profiles: boolean; assessments: boolean; courses: TransferTarget[]; levels?: LevelOption[]; counts?: { enrolment: number; moves: number };
 }) {
   const { items, total, page, pageSize, q } = result;
-  return <AwaitingQueue view="enrolment" total={total} q={q} counts={counts} page={page} pageSize={pageSize}>
+  return <AwaitingQueue view="enrolment" total={total} q={q} counts={counts} page={page} pageSize={pageSize} actions={enrol && levels.length ? <AddManualPlacement levels={levels} /> : undefined}>
     {items.length ? <QueueList>{items.map(row => {
       const meta = FOLLOW_UP_META[row.waitlists.length ? "waitlisted" : "awaiting"];
       const name = fullName(row.student);
       const options = courses.filter(course => course.level.id === row.outcomeLevel?.id && !row.waitlists.some(waiting => waiting.course.id === course.id));
-      return <QueueRow key={row.id} name={name} contactSummary={row.followUp} description={`${row.programme.name}${row.outcomeLevel ? ` · ${row.outcomeLevel.name}` : ""}`} status={<Tag meta={meta} />} nextContactOn={row.followUp?.latest?.nextContactOn ?? undefined} identity={<>
+      return <QueueRow key={row.id} name={name} contactSummary={row.followUp} description={`${row.programme.name}${row.outcomeLevel ? ` · ${row.outcomeLevel.name}` : ""}${row.manual ? " · Added by hand" : ""}`} status={<Tag meta={meta} />} nextContactOn={row.followUp?.latest?.nextContactOn ?? undefined} identity={<>
         <div>
           {profiles ? <Link className="inline-flex min-h-11 items-center rounded-ui-sm font-semibold text-ui-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-ui-ring focus-visible:outline-offset-2" href={`/students/${row.student.id}`}>{name}</Link> : <p className="font-semibold">{name}</p>}
           {row.student.memberNumber && <p className="break-all text-xs text-ui-muted-foreground">{row.student.memberNumber}</p>}
@@ -32,7 +34,10 @@ export function AwaitingEnrolment({ result, enrol, profiles, assessments, course
         <QueueContact student={row.student} />
       </>} placement={<>
         <div className="min-w-0 flex gap-3 items-start rounded-ui-lg border border-ui-border p-4"><span className="pc-tile-icon" aria-hidden="true"><ClipboardCheck /></span><div className="min-w-0"><p className="font-semibold">{row.programme.name}{row.outcomeLevel ? ` · ${row.outcomeLevel.name}` : ""}</p>
-          {row.outcomeLevel && <><p className="text-xs text-ui-muted-foreground">Assessed level</p><AssessmentDate row={row} linked={assessments} /></>}
+          {row.manual ? <>
+            <p className="text-xs text-ui-muted-foreground">Added by hand by {row.manual.addedByName} on {formatDate(row.manual.addedOn)}, not from an assessment</p>
+            <p className="mt-2 break-words text-sm">{row.manual.reason}</p>
+          </> : row.outcomeLevel && <><p className="text-xs text-ui-muted-foreground">Assessed level</p><AssessmentDate row={row} linked={assessments} /></>}
         </div></div>
         {row.waitlists.length > 0 && <ul className="flex flex-col gap-3" aria-label={`Class waitlists for ${name}`}>
           {row.waitlists.map(waiting => {
@@ -52,9 +57,10 @@ export function AwaitingEnrolment({ result, enrol, profiles, assessments, course
           {options.length ? <EnrolInCourseForStudent student={{ id: row.student.id, firstName: row.student.firstName, lastName: row.student.lastName }} courses={options} variant={row.waitlists.length ? "outline" : "default"} label={row.waitlists.length ? "Choose another class" : "Find a class"} />
             : !row.waitlists.length ? <p className="text-sm text-ui-muted-foreground">No classes set up at this level. Record what the family needs in a follow-up.</p> : null}
         </div>}
+        {enrol && row.manual && <div className="[&_button]:h-auto [&_button]:min-h-11 [&_button]:max-w-full [&_button]:whitespace-normal"><RemoveManualPlacement id={row.manual.id} name={name} /></div>}
       </>} followUp={<FollowUpHistory studentId={row.student.id} name={name} canRecord={enrol} summary={row.followUp} presentation="queue" />} />;
     })}</QueueList> : <EmptyState icon="users" title={q ? "No matching swimmers" : "No swimmers awaiting enrolment"}
-      hint={q ? "Try another name or member number, or clear the search." : "Swimmers appear here after an assessment placement or when added to a class waitlist at this site."} />}
+      hint={q ? "Try another name or member number, or clear the search." : enrol && levels.length ? "Swimmers appear here after an assessment placement, when added to a class waitlist at this site, or when you add them with Add a swimmer." : "Swimmers appear here after an assessment placement or when added to a class waitlist at this site."} />}
   </AwaitingQueue>;
 }
 

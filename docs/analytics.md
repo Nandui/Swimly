@@ -31,9 +31,17 @@ link back to it:
   (`/analytics/instructors`). `/analytics/teachers` redirects to the pool deck's teacher
   table, keeping its filters.
 
-All three need Swim school Manage (the `analytics` screen). The look is Linear / Vercel
-with frosted glass panels (`analytics.css`): neutral ink, one blue for data, a second
-orange series validated against it, glass that turns solid with reduced transparency.
+All three need Swim school Manage (the `analytics` screen). They follow the mockups the
+owner approved on 20 October 2026, in Turnfin's Poolside look (`analytics.css`: white
+panels, pills, one blue for data, an orange second series validated against it). Each
+opens with Worth a look first, then headline tiles that each switch one chart
+(`components/insights/switches.tsx`, `TileSwitch`) with the same weeks of the period
+before (`overview.trend[].before`, `desk.weekly[].before`) and a plain sentence. People
+are compared one measure at a time (`PillSwitch` + `CompareList` in `blocks.tsx`): a bar
+each against the team or school average, orange with a reason when worth a word; the
+full table stays under "Show everyone as a table". Places filled week by week is
+measured against today's classes; the waiting list has no history, so its tile shows
+today's list by level.
 
 Filters, all carried from page to page by `reportQuery` (`server/period.ts`):
 
@@ -52,11 +60,17 @@ Filters, all carried from page to page by `reportQuery` (`server/period.ts`):
   to a programme, so only bookings placed elsewhere drop out. A single class's page
   and Reception ignore it.
 
-- **Business** (`/analytics`): swimmers now, places filled, waiting list, joined, left,
-  stayed; swimmers week by week; decisions to make (full classes with a waiting list,
-  classes under half full, swimmers who may leave, leaving soon); joined and left each
-  week; why swimmers left; a day × start-hour heat map of places filled; each level;
-  the next four weeks; assessments to places; ages.
+- **Business** (`/analytics`): worth a look first (full classes with a waiting list,
+  classes under half full, swimmers who may leave, leaving soon); tiles for swimmers,
+  joined, left, places filled and waiting, each with its chart; a day × start-hour heat
+  map of places filled with a dot where someone waits, beside the full and nearly empty
+  classes; places at each level; who left by reason or level; assessments to places;
+  the next four weeks; ages.
+- **Reception** (`/analytics/reception`): worth a look first; tiles for jobs done, on
+  time, still waiting, new swimmers complete, unenrols with a reason and undone in a
+  day; the team one measure at a time; how fast the desk answers; still waiting; record
+  quality; work by kind against the period before; busy hours; follow-up calls;
+  assessment bookings.
 - **Every class** (`/analytics/classes`, `/analytics/classes/[id]`): fill, free places,
   waiting list and lessons held, then every class; a class shows its swimmers'
   attendance, last lessons and skills, its waiting list, leavers and every lesson with
@@ -64,12 +78,12 @@ Filters, all carried from page to page by `reportQuery` (`server/period.ts`):
 - **Swimmers and leavers** (`/analytics/swimmers`): month-by-month joiners and leavers
   and drop-off, reasons, tenure, level left from, ages, parents in the app, swimmers who
   may leave, leaving soon and every leaver.
-- **Pool deck** (`/analytics/pool-deck`): attendance, started on time, registers
-  complete, same teacher each week, skills ticked and level passes; attendance week by
-  week; to sort out (registers not done this week, lessons with no start record,
+- **Pool deck** (`/analytics/pool-deck`): tiles for attendance, started on time,
+  registers complete, same teacher each week, skills ticked and level passes, each with
+  its chart; worth a look first (registers not done this week, lessons with no start record,
   teachers more than 10 points worse than the school, swimmers over 6 months at a
   level); registers this week; attendance by time slot; same teacher each week;
-  cancelled lessons; every teacher against the school; weeks to pass each level; the
+  cancelled lessons; every teacher one measure at a time against the school; weeks to pass each level; the
   skill holding each level back.
 - **Level by level** (`/analytics/progression`): per level the swimmers, passes, the
   median weeks to pass, skills done, the hardest skill and swimmers over 26 weeks at

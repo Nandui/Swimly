@@ -16,7 +16,7 @@ function attendanceBand(rate: number | null) {
   return rate >= 92 ? "4" : rate >= 85 ? "3" : rate >= 75 ? "2" : "1";
 }
 
-/** Places filled by day and start hour, a gold edge where someone waits for that slot. */
+/** Places filled by day and start hour, an orange dot where someone waits for that slot. */
 export function TimetableHeat({ capacity }: { capacity: Pick<BusinessInsights["capacity"], "heat" | "days"> }) {
   if (!capacity.heat.length) return <p className="ins-sub">No weekly classes at this site.</p>;
   return <>
@@ -27,7 +27,7 @@ export function TimetableHeat({ capacity }: { capacity: Pick<BusinessInsights["c
         <TableBody>{capacity.heat.map(row => <TableRow key={row.hour}>
           <TableHead scope="row">{formatTime(row.hour * 60)}</TableHead>
           {row.cells.map(cell => cell.classes === 0 ? <TableCell key={cell.day} data-empty=""><span className="sr-only">No classes</span></TableCell> : <TableCell key={cell.day} data-band={band(cell.fill)} data-waiting={cell.waiting ? "" : undefined} title={`${DAY_META[cell.day as Day].label} ${formatTime(row.hour * 60)}: ${plural(cell.classes, "class", "classes")}, ${cell.enrolled} enrolled${cell.capacity ? ` of ${cell.capacity}` : ""}${cell.waiting ? `, ${cell.waiting} waiting` : ""}`}>
-            <strong>{percent(cell.fill)}</strong><span>{cell.enrolled}{cell.capacity ? `/${cell.capacity}` : ""}{cell.waiting ? ` · ${cell.waiting} waiting` : ""}</span>
+            {cell.waiting ? <i className="ins-heat-dot" aria-hidden="true" /> : null}<strong>{percent(cell.fill)}</strong><span>{cell.enrolled}{cell.capacity ? ` of ${cell.capacity}` : ""}{cell.waiting ? `, ${cell.waiting} waiting` : ""}</span>
           </TableCell>)}
         </TableRow>)}</TableBody>
       </Table>
