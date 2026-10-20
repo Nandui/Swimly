@@ -6,6 +6,7 @@ import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { Tag } from "@/components/ui-kit/tag";
 import {
@@ -25,12 +26,11 @@ export default async function TaskTemplatesPage({ searchParams }: { searchParams
   const roleName = new Map(roles.map((r) => [r.id, r.name]));
   const filtered = !!(filters.q || filters.tag || filters.state !== "all");
   return (
-    <>
-      <PageHeader title="Manage tasks" description="Build, schedule and assign the work that keeps your sites running. Changing a template never rewrites a task already made."
+    <PageShell header={<PageHeader title="Manage tasks" description="Build, schedule and assign the work that keeps your sites running. Changing a template never rewrites a task already made."
         actions={<>
           <Button asChild variant="outline"><a href="/tasks/export.json"><Download aria-hidden="true" />Export everything</a></Button>
           <Button asChild><Link href="/tasks/templates/new"><Plus aria-hidden="true" />Create task</Link></Button>
-        </>} />
+        </>} />}>
       <section className="pc-panel" aria-labelledby="tpl-library">
         <div className="pc-panel-head">
           <div className="flex flex-col gap-1"><h2 id="tpl-library">Task library <span className="text-ui-muted-foreground tabular-nums">· {templates.length}{filtered ? ` of ${total}` : ""}</span></h2><p className="pc-row-hint">Reusable routines, built for your team.</p></div>
@@ -78,6 +78,6 @@ export default async function TaskTemplatesPage({ searchParams }: { searchParams
           </ul>
         )}
       </section>
-    </>
+    </PageShell>
   );
 }

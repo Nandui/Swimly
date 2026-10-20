@@ -18,6 +18,7 @@ import { DocumentList } from '@/modules/docs/shared/components/document-list';
 import { FilterPicker } from '@/modules/docs/shared/components/ui';
 import { EmptyState } from '@/components/ui-kit/empty-state';
 import { PageHeader } from '@/components/ui-kit/page-header';
+import { PageShell } from '@/components/ui-kit/page-shell';
 import { SegmentedLinks } from '@/components/ui-kit/segmented-links';
 
 /** The type filter always offers these four (V2Docs); Operations and Other join them only
@@ -76,8 +77,7 @@ export function LibraryView({
   ];
 
   return (
-    <>
-      <PageHeader
+    <PageShell header={<PageHeader
         title={archived ? 'Document archive' : 'Document library'}
         description={
           archived
@@ -94,7 +94,7 @@ export function LibraryView({
             </Button>
           ) : undefined
         }
-      />
+      />}>
       <section className="pc-panel" aria-label={archived ? 'Archived documents' : 'Documents'}>
         <div className="flex flex-wrap items-end gap-3">
           <form
@@ -221,6 +221,6 @@ export function LibraryView({
           )}
         </div>
       </section>
-    </>
+    </PageShell>
   );
 }

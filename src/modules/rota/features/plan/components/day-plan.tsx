@@ -20,7 +20,8 @@ import { ROTA_DAY_META, activityIcon, qualificationShort } from "@/modules/rota/
 import { byArea, freeTime, needRows, personBlocks, type CoverSpan, type NeedRow } from "@/modules/rota/shared/plan-rows";
 import { duration } from "@/modules/rota/shared/shifts";
 import { AnyActivity, OptionRow, ShiftSheet, checkLabel, departmentFor, warned, type TypeOption } from "@/modules/rota/features/plan/components/people-plan";
-import { MIN_SPAN, firstTick, panView, sameView, tickStep, ticks as ticksOf, zoomView, type View } from "@/modules/rota/features/plan/server/view";
+import { leftOf, stretchOf, widthOf } from "@/components/ui-kit/scale";
+import { MIN_SPAN, panView, sameView, ticks as ticksOf, zoomView, type View } from "@/modules/rota/features/plan/server/view";
 
 /** One day of a department's plan, shift first (owner, 13 October 2026: "we need to produce shifts
  *  for them, these will also be done to allocate staff during those shifts to activities, bookings,
@@ -190,10 +191,9 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
   const span = to - from;
   const perHour = trackPx / (span / 60);
   const ticks = ticksOf(view);
-  const step = tickStep(span);
   const zoomed = !sameView(view, bounds);
   // Hour lines on every track, on the labels' step, wherever the view starts.
-  const gridStyle = { ["--rota-step" as string]: `${(step / span) * trackPx}px`, ["--rota-offset" as string]: `${((firstTick(view) - from) / span) * trackPx}px` };
+  const gridLines = ticks.map((t) => <span key={`line${t}`} aria-hidden="true" className={`rota-tl-line ${leftOf((t - from) / span)}`} />);
 
   // Scrolling never zooms (owner request, 15 October 2026). Up and down always scroll the page;
   // sideways (or with Shift) moves a zoomed-in day, and at either end the page has it instead.
@@ -289,7 +289,7 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
     const a = Math.max(start, from), e = Math.min(end, to);
     if (e <= a) return null;
     const px = trackPx * (e - a) / span;
-    return { px, style: { left: `calc(${(a - from) / span * 100}% + 2px)`, width: `calc(${(e - a) / span * 100}% - 4px)` } };
+    return { px, place: stretchOf((a - from) / span, (e - from) / span) };
   };
   const densityOf = (px: number) => (px >= 120 ? "full" : px >= 56 ? "compact" : "icon");
 
@@ -307,7 +307,7 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
         {density === "full" && onIt.length ? <span className="pc-block-hint">{[...new Set(onIt)].join(", ")}</span> : null}
       </span>
     );
-    const common = { className: "pc-block rota-cover", "data-block": short ? "cover" : "done", "data-ok": short ? undefined : "", "data-density": density, style: pos.style, title: label };
+    const common = { className: `pc-block rota-cover ${pos.place}`, "data-block": short ? "cover" : "done", "data-ok": short ? undefined : "", "data-density": density, title: label };
     if (short && c.gap && canChange && !row.group.href) {
       const refs = row.kind === "classes" ? row.blocks.filter((b) => needsCover(b) && b.classRef && b.start >= c.start && b.end <= c.end).map((b) => b.classRef!) : [];
       const id = `${row.group.key}|${c.gap.start}|${c.gap.place ?? refs.join(",")}`;
@@ -339,7 +339,7 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
             {density === "full" ? <span className="pc-block-hint">{who} · {clock(b.start)}–{clock(b.end)}</span> : null}
           </span>
         </>;
-    const common = { className: "pc-block", "data-block": isOff(b) ? "absent" : open ? "cover" : "now", "data-density": density, style: pos.style, title: label };
+    const common = { className: `pc-block ${pos.place}`, "data-block": isOff(b) ? "absent" : open ? "cover" : "now", "data-density": density, title: label };
     if (!canChange || !b.classRef) return <span key={key} {...common} role="img" aria-label={label}>{words}</span>;
     const id = `${row.group.key}|${b.start}|${b.classRef}`;
     return <Button key={key} type="button" variant="link" {...common} aria-label={`${label}. ${open ? "Choose who teaches it" : "Change who teaches it"}`} aria-pressed={selected === id}
@@ -405,13 +405,13 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
           </span>
         </>;
     const kind = isOff(b) ? "absent" : g.fromClasses ? "now" : b.detail ? "assessment" : "next";
-    const common = { "data-block": kind, "data-density": density, "data-lent": lent ? "" : undefined, style: pos.style, title: label };
-    if (!canChange || g.href) return <span key={key} className="pc-block" {...common} role="img" aria-label={label}>{words}</span>;
-    if (b.classRef) return <Button key={key} type="button" variant="link" className="pc-block" {...common} aria-label={`${label}. Change who teaches`} onClick={() => openGap(g, b, b.refs)}>{words}</Button>;
+    const common = { className: `pc-block ${pos.place}`, "data-block": kind, "data-density": density, "data-lent": lent ? "" : undefined, title: label };
+    if (!canChange || g.href) return <span key={key} {...common} role="img" aria-label={label}>{words}</span>;
+    if (b.classRef) return <Button key={key} type="button" variant="link" {...common} aria-label={`${label}. Change who teaches`} onClick={() => openGap(g, b, b.refs)}>{words}</Button>;
     return b.assignmentId ? (
       <AssignmentDialog key={key} live={live} assignment={{ id: b.assignmentId, needId: b.needId!, place: b.place!, userId: b.userId!, name: b.name ?? "", start: b.start, end: b.end, what: `${g.name} in ${g.place}` }}
-        change={changeOf(b)} onHandOver={handOverOf(g, b)} trigger={<Button type="button" variant="link" className="pc-block" {...common} aria-label={`${label}. Change their time, hand part of it over or take them off`}>{words}</Button>} />
-    ) : <span key={key} className="pc-block" {...common} role="img" aria-label={label}>{words}</span>;
+        change={changeOf(b)} onHandOver={handOverOf(g, b)} trigger={<Button type="button" variant="link" {...common} aria-label={`${label}. Change their time, hand part of it over or take them off`}>{words}</Button>} />
+    ) : <span key={key} {...common} role="img" aria-label={label}>{words}</span>;
   };
 
   const person = people.find((p) => p.userId === openPerson) ?? null;
@@ -471,7 +471,7 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
           <span />
           <div className="rota-tl-hours" ref={track} {...dragHandlers}>{ticks.map((t) => {
             const pos = (t - from) / span;
-            return <span key={t} style={{ left: `${pos * 100}%`, translate: pos < 0.03 ? "0 0" : pos > 0.97 ? "-100% 0" : "-50% 0" }}>{clock(t)}</span>;
+            return <span key={t} className={`${leftOf(pos)} ${pos < 0.03 ? "" : pos > 0.97 ? "-translate-x-full" : "-translate-x-1/2"}`}>{clock(t)}</span>;
           })}</div>
         </div>
 
@@ -488,7 +488,8 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
                   {pack(row.blocks).map((line, li) => (
                     <div key={li} className="rota-tl-row">
                       {li === 0 ? rowLabel(row) : <span aria-hidden="true" />}
-                      <div className="rota-tl-track" data-row="need" style={gridStyle} {...dragHandlers}>
+                      <div className="rota-tl-track" data-row="need" {...dragHandlers}>
+                        {gridLines}
                         {line.map((b, i) => classFor(row, b, `${row.key}-${li}-${i}`))}
                       </div>
                     </div>
@@ -497,7 +498,8 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
               ) : (
                 <div key={row.key} className="rota-tl-row">
                   {rowLabel(row)}
-                  <div className="rota-tl-track" data-row="need" style={gridStyle} {...dragHandlers}>
+                  <div className="rota-tl-track" data-row="need" {...dragHandlers}>
+                        {gridLines}
                     {row.cover.map((c, i) => coverFor(row, c, `${row.key}-${i}`))}
                   </div>
                 </div>
@@ -531,20 +533,21 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
                       <span className="rota-tl-name"><span>{p.name}</span></span>
                       <small className="tabular-nums">{p.shift.parts.length > 1 ? "Split · " : ""}{times}</small>
                       <small className={`tabular-nums${over(p) ? " rota-people-warn" : ""}`}>{duration(p.shift.paidMinutes)} paid{week ? ` · ${week}` : ""}</small>
-                      {hours[p.userId]?.contract ? <span className="rota-meter" data-over={over(p) ? "" : undefined} aria-hidden="true"><span style={{ inlineSize: `${Math.min(100, Math.round((hours[p.userId].week / hours[p.userId].contract!) * 100))}%` }} /></span> : null}
+                      {hours[p.userId]?.contract ? <span className="rota-meter" data-over={over(p) ? "" : undefined} aria-hidden="true"><span className={widthOf(hours[p.userId].week / hours[p.userId].contract!)} /></span> : null}
                       {warned(p) ? <small className="rota-people-warn"><TriangleAlert aria-hidden="true" />{checkLabel(p)}</small> : null}
                     </Button>
                   ) : <span aria-hidden="true" />}
-                  <div className="rota-tl-track rota-tl-staff" data-row="person" style={gridStyle} {...dragHandlers}>
+                  <div className="rota-tl-track rota-tl-staff" data-row="person" {...dragHandlers}>
+                        {gridLines}
                     {ri === 0 ? p.shift.parts.map((x) => {
                       const pos = at(x.start, x.end);
-                      return pos ? <span key={`s${x.start}`} className="rota-people-shift" data-planned={x.planned ? "" : undefined} style={pos.style} /> : null;
+                      return pos ? <span key={`s${x.start}`} className={`rota-people-shift ${pos.place}`} data-planned={x.planned ? "" : undefined} /> : null;
                     }) : null}
                     {ri === 0 ? splitGaps(p).map((x) => {
                       const pos = at(x.start, x.end);
                       if (!pos) return null;
                       const label = `Off between ${firstName(p.name)}'s shifts, ${clock(x.start)} to ${clock(x.end)}, unpaid`;
-                      return <span key={`o${x.start}`} className="rota-split-gap" data-density={densityOf(pos.px)} style={pos.style} role="img" aria-label={label} title={label}><span>Off {duration(x.end - x.start)}</span></span>;
+                      return <span key={`o${x.start}`} className={`rota-split-gap ${pos.place}`} data-density={densityOf(pos.px)} role="img" aria-label={label} title={label}><span>Off {duration(x.end - x.start)}</span></span>;
                     }) : null}
                     {ri === 0 ? open.map((f) => {
                       const pos = at(f.start, f.end);
@@ -552,7 +555,7 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
                       const density = densityOf(pos.px);
                       const label = `${p.name}, ${clock(f.start)} to ${clock(f.end)}: no activity or booking yet`;
                       const words = density === "icon" ? null : <span className="pc-block-body"><span className="pc-block-title">No activity</span>{density === "full" ? <span className="pc-block-hint tabular-nums">{clock(f.start)}–{clock(f.end)}</span> : null}</span>;
-                      const common = { className: "pc-block rota-free-time", "data-block": "done", "data-density": density, style: pos.style, title: label };
+                      const common = { className: `pc-block rota-free-time ${pos.place}`, "data-block": "done", "data-density": density, title: label };
                       return canChange
                         ? <Button key={`f${f.start}`} type="button" variant="link" {...common} aria-label={`${label}. Give this time to something`} onClick={() => setFree({ userId: p.userId, start: f.start, end: f.end })}>{words}</Button>
                         : <span key={`f${f.start}`} {...common} role="img" aria-label={label}>{words}</span>;
@@ -561,7 +564,7 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
                     {ri === 0 ? breaks.map((b) => {
                       const pos = at(b.start, b.end);
                       return pos ? (
-                        <span key={`b${b.start}`} className="rota-people-break" data-pinned={b.pinned ? "" : undefined} style={pos.style}
+                        <span key={`b${b.start}`} className={`rota-people-break ${pos.place}`} data-pinned={b.pinned ? "" : undefined}
                           role="img" aria-label={`${b.pinned ? "Break" : "Suggested break"}, ${b.paid ? "paid" : "unpaid"}, ${clock(b.start)} to ${clock(b.end)}`} title={`${b.paid ? "Paid" : "Unpaid"} break ${clock(b.start)}–${clock(b.end)}`}>
                           <Coffee aria-hidden="true" />
                         </span>
@@ -582,10 +585,10 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
 
         <div className="rota-tl-key">
           <span><i className="pc-block rota-cover" data-block="done" data-ok="" />Enough people</span>
-          <span><i style={{ background: "var(--pc-block-cover)" }} />Short of people</span>
-          <span><i style={{ background: "var(--pc-block-next)" }} />Activity</span>
-          <span><i style={{ background: "var(--pc-block-assess)" }} />Booking</span>
-          <span><i style={{ background: "var(--pc-block-now)" }} />Swim classes</span>
+          <span><i className="pc-block" data-block="cover" />Short of people</span>
+          <span><i className="pc-block" data-block="next" />Activity</span>
+          <span><i className="pc-block" data-block="assessment" />Booking</span>
+          <span><i className="pc-block" data-block="now" />Swim classes</span>
           <span><i className="pc-block rota-free-time" data-block="done" />No activity yet</span>
           <span><i className="rota-people-shift" data-planned="" />Shift</span>
           <span><i className="rota-split-gap" />Off between split shifts</span>

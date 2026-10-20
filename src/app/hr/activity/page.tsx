@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { LinkPagination } from "@/components/ui-kit/link-pagination";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { formatDateTime, plural } from "@/lib/format";
 import { HR_ACTIVITY_PAGE_SIZE, hrActivity } from "@/modules/hr/features/activity";
 import { requireFreshSession } from "@/lib/policy/session";
@@ -14,8 +15,7 @@ export default async function HrActivityPage({ searchParams }: { searchParams: P
   const page = Math.max(1, Math.floor(Number((await searchParams).page)) || 1);
   const { reads, changes, readsTotal, changesTotal } = await hrActivity(page);
   return (
-    <>
-      <PageHeader title="Who read what" description="Every time someone opened an HR record, and every change, newest first." />
+    <PageShell header={<PageHeader title="Who read what" description="Every time someone opened an HR record, and every change, newest first." />}>
       <div className="pc-grid">
         <section className="pc-panel" aria-labelledby="hr-reads">
           <div className="pc-panel-head"><h2 id="hr-reads">Reads</h2></div>
@@ -50,7 +50,7 @@ export default async function HrActivityPage({ searchParams }: { searchParams: P
         </section>
       </div>
       <LinkPagination label="Activity pages" page={page} totalItems={Math.max(readsTotal, changesTotal)} pageSize={HR_ACTIVITY_PAGE_SIZE} pathname="/hr/activity" query={{}} />
-    </>
+    </PageShell>
   );
 }
 

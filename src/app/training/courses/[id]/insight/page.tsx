@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Download, FileText } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { courseInsight, CourseInsightView, filterQuery, InsightFilterForm, readFilters } from "@/modules/training/features/insight";
 
 export const metadata: Metadata = { title: "Course insight" };
@@ -17,8 +18,7 @@ export default async function CourseInsightPage({ params, searchParams }: { para
   if (!data) notFound();
   const q = filterQuery(data.filters);
   return (
-    <>
-      <PageHeader
+    <PageShell header={<PageHeader
         back={{ href: `/training/courses/${id}`, label: "The course" }}
         title={data.course.title}
         description="How it is going for the people you cover."
@@ -28,9 +28,9 @@ export default async function CourseInsightPage({ params, searchParams }: { para
             <Button asChild variant="outline" className="min-h-11"><Link href={`/training/courses/${id}/audit${q}`}><FileText aria-hidden="true" />Audit pack</Link></Button>
           </>
         }
-      />
+      />}>
       <InsightFilterForm action={`/training/courses/${id}/insight`} label="Filter this course's numbers" filters={data.filters} sites={data.sites} period />
       <CourseInsightView data={data} />
-    </>
+    </PageShell>
   );
 }

@@ -117,7 +117,7 @@ export function ReportForm({ sites, areas, staff, docs }: { sites: Site[]; areas
           <p className="text-sm text-ui-muted-foreground">Anyone hurt, or at the centre of it. A near miss needs nobody named. Injury details are seen only by the people who triage reports.</p>
         </div>
         {people.map((p, i) => (
-          <fieldset key={i} className="flex flex-col gap-4 rounded-[var(--pc-radius-inner)] border border-ui-border p-4">
+          <fieldset key={i} className="flex flex-col gap-4 rounded-card border border-ui-border p-4">
             <legend className="px-1 text-sm font-semibold">Person {i + 1}</legend>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Who they are" htmlFor={`inc-p${i}-type`}>
@@ -166,7 +166,7 @@ export function ReportForm({ sites, areas, staff, docs }: { sites: Site[]; areas
           <p className="text-sm text-ui-muted-foreground">Who saw it, and how to reach them if a statement is needed.</p>
         </div>
         {witnesses.map((w, i) => (
-          <div key={i} className="grid items-end gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+          <div key={i} className="grid items-end gap-4 sm:grid-cols-two-fields-action">
             <Field label={`Witness ${i + 1}`} htmlFor={`inc-w${i}-name`}><Input id={`inc-w${i}-name`} value={w.name} onChange={(e) => setWitnesses((l) => l.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} maxLength={200} autoComplete="off" /></Field>
             <Field label="Phone or email" htmlFor={`inc-w${i}-contact`} optional><Input id={`inc-w${i}-contact`} value={w.contact} onChange={(e) => setWitnesses((l) => l.map((x, j) => (j === i ? { ...x, contact: e.target.value } : x)))} maxLength={200} autoComplete="off" /></Field>
             <Button type="button" variant="ghost" className="min-h-11" onClick={() => setWitnesses((l) => l.filter((_, j) => j !== i))}><Trash2 aria-hidden="true" /><span className="sr-only">Remove witness {i + 1}</span></Button>

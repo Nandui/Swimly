@@ -7,6 +7,9 @@
    portalled dialog gets them. Rules for the Docs/Refunds shell and their pages stay scoped to
    .turnfin-docs. It re-points the shared --ui-* tokens, so shadcn primitives follow without
    per-page work. The approved mockups and component sheet: DESIGN.md, "Poolside Clear v2". */
+/* Printed pages use the light values of every token. */
+@media print { :root { color-scheme: light !important; } }
+
 .turnfin-app {
   /* The ground pair. The viewport themeColor in src/app/layout.tsx repeats these values. */
   --pc-outer: light-dark(#f7f9fb, #070c14);
@@ -48,6 +51,19 @@
   --pc-on-yellow: light-dark(#3a2a00, #fbe7a8);
   /* Ink on a light pastel a writer chose (Docs highlights): dark in both themes. */
   --pc-on-pastel: #172033;
+  /* The Docs content palette: text colours a writer picks (lighter in dark mode) and highlights. */
+  --pc-docs-blue: light-dark(#2563eb, #93c5fd);
+  --pc-docs-teal: light-dark(#0f766e, #5eead4);
+  --pc-docs-green: light-dark(#15803d, #86efac);
+  --pc-docs-purple: light-dark(#9333ea, #d8b4fe);
+  --pc-docs-red: light-dark(#dc2626, #fca5a5);
+  --pc-docs-orange: light-dark(#c2410c, #fdba74);
+  --pc-docs-mark-yellow: #fef08a;
+  --pc-docs-mark-green: #bbf7d0;
+  --pc-docs-mark-blue: #bfdbfe;
+  --pc-docs-mark-pink: #fbcfe8;
+  --pc-docs-mark-purple: #e9d5ff;
+  --pc-docs-mark-orange: #fed7aa;
   --pc-hatch: light-dark(#e3e8ef, #1f2b3f);
   /* Time blocks (timelines, schedule cells, shifts): soft single-hue gradients, text 4.5:1 on both ends. */
   --pc-block-now: linear-gradient(135deg, light-dark(#c8f2da, #1f6040), light-dark(#9fe3bd, #184d33));
@@ -557,6 +573,8 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
    canvas: borderless white 24px tiles that fill the row (V2Refunds, TROverview, SSAnalytics).
    A tile that filters shows a soft fill on hover and a 2px blue edge when open (aria-current). */
 .turnfin-app .pc-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+/* Figure tiles that fit as many to a row as the tile size allows (`grid-cols-tiles`). */
+.turnfin-app .pc-stats.grid-cols-tiles { grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--pc-tile-min)), 1fr)); }
 .turnfin-app .pc-stat { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; padding: 16px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); color: var(--pc-ink); text-decoration: none; }
 .turnfin-app .pc-stats:not(:is([data-slot='card'], [role='dialog'], .pc-panel) .pc-stats) { grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); gap: 16px; }
 .turnfin-app .pc-stats:not(:is([data-slot='card'], [role='dialog'], .pc-panel) .pc-stats) > .pc-stat, .turnfin-app .pc-stats:not(:is([data-slot='card'], [role='dialog'], .pc-panel) .pc-stats) > * > .pc-stat { padding: 24px; border-color: transparent; border-radius: var(--pc-radius-panel); background: var(--pc-surface); }
@@ -655,13 +673,19 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
    row (its name, then its track with faint hour lines and the past shaded), hours read along
    the top, blocks sit to the minute on 5-minute columns, and a "now" pill heads the dashed
    line at the time now. */
-.turnfin-app .pc-timeline { --tl-lane: 240px; --tl-head: 32px; --tl-row: minmax(60px, auto); display: grid; grid-template-columns: var(--tl-lane) repeat(var(--tl-cols), minmax(0, 1fr)); column-gap: 0; row-gap: 8px; min-width: 0; }
+.turnfin-app .pc-timeline { --tl-lane: 240px; --tl-head: 32px; --tl-row: minmax(60px, auto); display: grid; grid-template-columns: var(--tl-lane) repeat(var(--tl-cols), minmax(0, 1fr)); grid-template-rows: var(--tl-head); grid-auto-rows: var(--tl-row); column-gap: 0; row-gap: 8px; min-width: 0; }
 .turnfin-app .pc-timeline > .pc-block { min-height: 0; margin: 6px 4px; }
 .turnfin-app .pc-timeline-row { border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); background: var(--pc-surface); }
-/* Hour lines every --tl-hour of the track, the past to --tl-past in the sunken fill. */
-.turnfin-app .pc-timeline-track { margin: 1px 1px 1px 0; border-radius: 0 15px 15px 0; background:
-  repeating-linear-gradient(to right, var(--pc-line) 0 1px, transparent 1px var(--tl-hour)),
-  linear-gradient(to right, var(--pc-surface-sunken) var(--tl-past), transparent var(--tl-past)); }
+/* Hour lines (`.pc-timeline-line`) and the past (`.pc-timeline-past`) are placed by TimelineGrid. */
+.turnfin-app .pc-timeline-track { position: relative; overflow: hidden; margin: 1px 1px 1px 0; border-radius: 0 15px 15px 0; }
+.turnfin-app .pc-timeline-past { position: absolute; inset-block: 0; background: var(--pc-surface-sunken); }
+.turnfin-app .pc-timeline-line { position: absolute; inset-block: 0; width: 1px; background: var(--pc-line); }
+/* Where now sits inside its 5-minute column, in fifths. */
+.turnfin-app :is(.pc-timeline-now-label, .pc-timeline-now) { --at: 0%; }
+.turnfin-app :is(.pc-timeline-now-label, .pc-timeline-now)[data-at='1'] { --at: 20%; }
+.turnfin-app :is(.pc-timeline-now-label, .pc-timeline-now)[data-at='2'] { --at: 40%; }
+.turnfin-app :is(.pc-timeline-now-label, .pc-timeline-now)[data-at='3'] { --at: 60%; }
+.turnfin-app :is(.pc-timeline-now-label, .pc-timeline-now)[data-at='4'] { --at: 80%; }
 .turnfin-app .pc-timeline > .pc-timeline-lane { position: relative; z-index: 1; border-color: transparent; }
 /* A person's shift on the planner: the frame their duties sit in. Its free time is a soft blue
    with a dashed edge, to drag across and plan; what they do sits inside it as blocks. */

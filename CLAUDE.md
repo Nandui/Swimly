@@ -393,19 +393,24 @@ Do this in phases. **Do not attempt a big-bang rewrite.** Behaviour must stay id
 
 ---
 
-## 14. UI rule (owner rule, 10 October 2026)
+## 14. UI rules (owner rules, 20 October 2026)
 
-Build UI with shadcn/ui themed with the app's design tokens. **Only compose existing components and existing tokens.**
+Fernando's hard rules for the whole app, existing and new features, in his words:
 
-- No literal colours: no hex, `rgb()`, `hsl()` or `oklch()` values. Use the `ui-` colour utilities and the `--pc-*` tokens.
-- No one-off lengths: no pixel numbers and no Tailwind arbitrary values such as `w-[137px]` or `text-[#1a2b3c]`. Use the Tailwind scale and the tokens (`--pc-text-*`, `--pc-control-height`, `--pc-radius-*`, for example `rounded-[var(--pc-radius-card)]`).
-- Layout sizes are tokens too, in `src/app/theme/poolside.css`: `--pc-overlay-max-width` and `--pc-overlay-max-height` for menus, pickers and dialogs, `--pc-tile-min`, `--pc-card-min` and `--pc-column-min` for auto-fit grids, `--pc-rail-width` for a side column, `--pc-field-min` for search fields and `--pc-deck-width` for the pool deck. Use them as `max-h-(--pc-overlay-max-height)` or inside an arbitrary value, such as `grid-cols-[minmax(0,1fr)_var(--pc-rail-width)]`.
-- If something can't be built from existing components and tokens, **ask the user before adding a new token or component.** Never invent one to get past the lint.
+- Only use components from `Shadcn`.
+- No arbitrary Tailwind values like `p-[13px]` or `text-[#333]`.
+- No inline styles or new colours.
+- Every page uses `PageShell` and `PageHeader`.
+
+No skill, taste or otherwise, overrules them (they replace the 11 and 13 October exceptions). What they mean in practice:
+
+- **Components:** controls come from `src/components/shadcn`; the frame pieces in `src/components/ui-kit` and `src/components/ui` are built from them. Charts use the shadcn Chart (`src/components/shadcn/chart.tsx`, recharts) and bars use `Progress`; never hand-drawn `<svg>`. Icons are lucide-react.
+- **No arbitrary values:** use the Tailwind scale, the named theme utilities in `src/app/shadcn.css` (`rounded-card`, `grid-cols-tiles`, `basis-field`, `max-w-deck`…) or a theme variable as `(--name)`, such as `max-h-(--pc-overlay-max-height)`. Variants such as `data-[state=open]:` are selectors, not values, and stay allowed.
+- **No inline styles:** no `style` attribute in any page or component (only the vendored shadcn source keeps its own). A size or place that comes from data uses the safelisted fraction and grid classes through `src/components/ui-kit/scale.ts` (`widthOf`, `leftOf`, `stretchOf`, `col-start-12`), a data attribute styled in CSS, or a shadcn component.
+- **No new colours:** colours are defined only in `src/app/theme/poolside.css` and `src/app/shadcn.css`; everything else uses their tokens (`ui-` utilities, `--pc-*`). No hex, `rgb()`, `hsl()`, `oklch()` or `color-mix()` anywhere else, in TSX or CSS.
+- **Every page:** `<PageShell header={<PageHeader … />}>` is each page's body, with its one H1 in the PageHeader. A page's own layout class goes on PageShell (`className="po-desk"`); `spacing="roomy"` gives 24px between blocks.
+- If something can't be built from existing components and tokens, **ask Fernando before adding a token or component.** Never invent one to get past the lint.
 
 Why: most "AI ugliness" comes from inconsistency, not bad taste.
 
-Exception (owner decision, 11 October 2026): the taste skills (Leonxlnx/taste-skill, such as `design-taste-frontend`) may overrule this rule where they are the better call for the screen, including adding a `--pc-*` token for a value they need. Say which rule a skill overrode and why. The lint still applies, so a needed value becomes a token, never a literal. See [SKILLS.md](SKILLS.md).
-
-`npm run lint` enforces this for `src/**/*.{ts,tsx}` with `turnfin/no-literal-styles` (`scripts/lint/design-tokens.mjs`). Tests, email templates, the browser theme colour in `src/app/layout.tsx` and the Docs content palette are exempt, because they need literal values. Existing cases waiting for a token decision are listed in `eslint-suppressions.json`. That list only shrinks: when you fix one, run `npx eslint --prune-suppressions`. Never add to it, and never disable the rule inline, without the user's approval.
-
-The rule applies to stylesheets too. Tokens are defined only in `src/app/theme/poolside.css` and `src/app/shadcn.css`; other CSS uses them. The lint does not check CSS files yet.
+`npm run lint` enforces all four: `turnfin/no-literal-styles`, `turnfin/no-inline-styles` and `turnfin/page-header-in-shell` (`scripts/lint/design-tokens.mjs`), the `<svg>` ban in `eslint.config.mjs`, and `scripts/lint/ui-rules.mjs` (every page reaches a PageShell; colour literals only in the two theme files). Tests, email templates and the browser theme colour in `src/app/layout.tsx` are exempt, because they need literal values. `eslint-suppressions.json` is empty and stays empty; never add to it, and never disable a rule inline, without Fernando's approval. `scripts/ui-rules/check-pages.mjs` opens every page in a running app and checks each has one PageShell with its PageHeader and H1.

@@ -42,7 +42,7 @@ export function ImageThumbnail({ src, name }: { src: string; name: string }) {
           width={640}
           height={640}
           unoptimized
-          className="max-h-[60dvh] w-full object-contain"
+          className="max-h-128 w-full object-contain"
         />
       </DialogContent>
     </Dialog>

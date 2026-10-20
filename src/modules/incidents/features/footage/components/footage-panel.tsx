@@ -94,7 +94,7 @@ function RequestRow({ request: r, canChange }: { request: Request; canChange: bo
   const router = useRouter();
   const meta = REQUEST_STATES[r.state];
   return (
-    <li className="flex flex-col gap-3 rounded-[var(--pc-radius-inner)] border border-ui-border p-4">
+    <li className="flex flex-col gap-3 rounded-card border border-ui-border p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
           <p className="text-sm font-semibold">{r.recipientName} <span className="font-normal text-ui-muted-foreground break-all">{r.recipientEmail}</span></p>

@@ -4,6 +4,7 @@ import { FilePlus2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { AddRule, APPROVAL_LIST_META, ArchiveProduct, ArchiveSupplier, euro, ProductDialog, RemoveRule, SupplierDialog, SupplierMonogram, supplierPage } from "@/modules/purchasing/features/suppliers";
 
@@ -22,14 +23,13 @@ export default async function SupplierPage({ params }: { params: Promise<{ id: s
     ["Phone", s.phone],
   ].filter(([, v]) => v);
   return (
-    <div className="po-desk">
-      <PageHeader title={s.name} back={{ href: "/purchasing/suppliers", label: "Suppliers" }}
+    <PageShell className="po-desk" header={<PageHeader title={s.name} back={{ href: "/purchasing/suppliers", label: "Suppliers" }}
         status={s.archivedAt ? <Tag meta={APPROVAL_LIST_META.removed} /> : undefined}
         description={s.note || (contact.length ? undefined : "No contact details yet.")}
         actions={<>
           {who.manage ? <><ArchiveSupplier id={s.id} name={s.name} archived={!!s.archivedAt} /><SupplierDialog supplier={s} /></> : null}
           {who.request && !s.archivedAt && live.length ? <Button asChild><Link href={`/purchasing/new?supplier=${s.id}`}><FilePlus2 aria-hidden="true" />New order</Link></Button> : null}
-        </>} />
+        </>} />}>
 
       {contact.length ? (
         <section aria-labelledby="sup-who" className="po-card po-supplier-hero">
@@ -102,6 +102,6 @@ export default async function SupplierPage({ params }: { params: Promise<{ id: s
         ) : null}
         {who.manage ? <AddRule supplierId={s.id} roles={roles} /> : null}
       </section>
-    </div>
+    </PageShell>
   );
 }

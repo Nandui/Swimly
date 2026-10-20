@@ -129,7 +129,7 @@ export function TaskWork({ id, version, definition: def, checks: initialChecks, 
                     <TableCell className="tabular-nums">{i + 1}</TableCell>
                     {asked.map((f) => {
                       const value = row[f.id] ?? "";
-                      return <TableCell key={f.id} className="whitespace-normal [overflow-wrap:anywhere]">{!value ? "Not answered" : f.type === "file"
+                      return <TableCell key={f.id} className="whitespace-normal wrap-anywhere">{!value ? "Not answered" : f.type === "file"
                         ? <a className="inline-flex min-h-11 items-center gap-2 underline underline-offset-4" href={`/tasks/files/${value}`} target="_blank" rel="noopener noreferrer"><FileText aria-hidden="true" className="size-4" />{fileName(value)}</a>
                         : `${value}${f.type === "number" && f.unit ? ` ${f.unit}` : ""}`}</TableCell>;
                     })}
@@ -138,7 +138,7 @@ export function TaskWork({ id, version, definition: def, checks: initialChecks, 
               </TableBody>
             </Table>
           ) : records.map((row, i) => (
-            <fieldset key={i} className="flex flex-col gap-4 rounded-[var(--pc-radius-card)] border border-[var(--pc-line)] p-4">
+            <fieldset key={i} className="flex flex-col gap-4 rounded-card border border-ui-border p-4">
               {log ? (
                 <legend className="flex w-full items-center justify-between gap-2 px-1">
                   <span className="font-semibold">Record {i + 1}</span>
@@ -155,7 +155,7 @@ export function TaskWork({ id, version, definition: def, checks: initialChecks, 
                   return (
                     <div key={key} className="min-w-0">
                       <p className="text-xs font-semibold text-ui-muted-foreground">{f.label}</p>
-                      <p className="mt-1 [overflow-wrap:anywhere]">
+                      <p className="mt-1 wrap-anywhere">
                         {!value ? "Not answered" : f.type === "file"
                           ? <a className="inline-flex min-h-11 items-center gap-2 underline underline-offset-4" href={`/tasks/files/${value}`} target="_blank" rel="noopener noreferrer"><FileText aria-hidden="true" className="size-4" />{fileName(value)}</a>
                           : `${value}${f.type === "number" && f.unit ? ` ${f.unit}` : ""}`}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { CircleCheck, ShieldCheck } from "lucide-react";
 
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { ChangePasswordForm } from "@/components/staff/change-password-form";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -37,8 +38,7 @@ export default async function AccountPage() {
   const reach = roleReach(session.user.permissions ?? []);
 
   return (
-    <div className="min-w-0 flex flex-col gap-4">
-      <PageHeader
+    <PageShell header={<PageHeader
         title="Account"
         description={
           <>
@@ -46,9 +46,9 @@ export default async function AccountPage() {
             <Tag meta={reach} label={session.user.roleName} /> role.
           </>
         }
-      />
+      />}>
 
-      <div className="grid gap-4 items-start grid-cols-[repeat(auto-fit,minmax(min(100%,var(--pc-column-min)),1fr))]">
+      <div className="grid gap-4 items-start grid-cols-columns">
         <section className="pc-panel" aria-labelledby="password-heading">
           <div className="pc-panel-head">
             <h2 id="password-heading" className="text-lg font-semibold">Change your password</h2>
@@ -122,6 +122,6 @@ export default async function AccountPage() {
           your role or your email.
         </p>
       </section>
-    </div>
+    </PageShell>
   );
 }

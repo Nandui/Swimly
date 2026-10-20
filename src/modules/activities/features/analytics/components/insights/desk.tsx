@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatCount, formatDayMonth, plural } from "@/lib/format";
+import { Progress } from "@/components/shadcn/progress";
 import type { DeskInsights } from "@/modules/activities/features/analytics/server/desk-data";
 import { AreaChart, CompareColumns } from "@/modules/activities/features/analytics/components/insights/charts";
 import { ChartHead, CompareList, MiniList, Sentence, SplitBar, BarsVersus, type CompareRow } from "@/modules/activities/features/analytics/components/insights/blocks";
@@ -123,7 +124,7 @@ export function DeskReport({ data }: { data: DeskInsights }) {
             <span className="ins-jobs-hint">{[`${formatCount(j.done)} done`, j.median !== null ? `usually ${duration(j.median)}` : null, j.target !== null ? `target ${duration(j.target)}` : null].filter(Boolean).join(", ")}.{j.open ? ` ${formatCount(j.open)} waiting now${j.overdue ? `, ${j.overdue} late` : ""}, the longest ${duration(j.oldest)}.` : ""}{j.hint ? ` ${j.hint}` : ""}</span>
           </span>
           <span className="ins-jobs-bar" data-tone={j.onTime !== null && j.onTime < 80 ? "warn" : undefined}>
-            <span className="ins-bar-track" aria-hidden="true"><span className="ins-bar-fill" style={{ width: `${Math.min(100, j.onTime ?? 0)}%` }} /></span>
+            <Progress value={Math.min(100, j.onTime ?? 0)} aria-hidden="true" className="ins-bar-track" />
             <strong>{j.onTime !== null ? `${percent(j.onTime)} on time` : "No target"}</strong>
           </span>
         </li>)}</ul> : <p className="ins-sub">No timed jobs in this period.</p>}

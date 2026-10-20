@@ -1,6 +1,6 @@
 {
   "name": "swimly",
-  "version": "1.45.0",
+  "version": "1.45.1",
   "private": true,
   "sideEffects": [
     "*.css",
@@ -12,7 +12,7 @@
     "dev": "next dev",
     "build": "tsx scripts/check-env.ts && tsx scripts/migrate-production.ts && prisma generate && next build && tsx scripts/migrate-docs.ts && tsx scripts/migrate-hr.ts",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint && node scripts/lint/ui-rules.mjs",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "tsx --test \"src/**/*.test.ts\"",
     "postinstall": "prisma generate",
@@ -57,6 +57,7 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "read-excel-file": "^9.3.10",
+    "recharts": "^3.10.1",
     "sharp": "0.35.3",
     "sonner": "^2.0.8",
     "tailwind-merge": "^3.6.0",

@@ -4,6 +4,7 @@ import { ActivityTable } from "@/components/activity-table";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { LinkPagination } from "@/components/ui-kit/link-pagination";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { ACTIVITY_PER_PAGE, getActivity } from "@/lib/activity/data/audit-log";
 import { formatCount } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
@@ -28,8 +29,7 @@ export default async function ActivityPage(props: PageProps<"/activity">) {
   const last = first + entries.length - 1;
 
   return (
-    <div className="min-w-0 flex flex-col gap-4">
-      <PageHeader title="Activity" description="Who changed what, and when." />
+    <PageShell header={<PageHeader title="Activity" description="Who changed what, and when." />}>
 
       <section className="pc-panel" aria-label="Activity">
         <SegmentedLinks label="Filter by module" items={[undefined, ...modules].map((name) => ({ href: name ? `/activity?module=${encodeURIComponent(name)}` : "/activity", label: name ?? "Every module", current: name === moduleName }))} />
@@ -61,6 +61,6 @@ export default async function ActivityPage(props: PageProps<"/activity">) {
           </>
         )}
       </section>
-    </div>
+    </PageShell>
   );
 }

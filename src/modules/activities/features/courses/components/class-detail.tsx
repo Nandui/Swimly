@@ -22,6 +22,7 @@ import {
 import { AppIcon } from "@/components/ui-kit/app-icon";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import {
   capacityLabel,
@@ -89,8 +90,7 @@ export function ClassDetailView({
   const tone = capacityTone(active.length, course.capacity);
   const available = placesLeft(active.length, course.capacity);
   return (
-    <div className="min-w-0 flex flex-col gap-6">
-      <PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         back={{ href: backHref, label: backLabel }}
         title={
           <span className="min-w-0 flex gap-2 items-center flex-wrap">
@@ -114,7 +114,7 @@ export function ClassDetailView({
             <EnrolIntoCourse course={course} taken={active.length} />
           ) : undefined
         }
-      />
+      />}>
 
       <section aria-label="Class details" className="min-w-0">
         <div className="min-w-0 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -228,7 +228,7 @@ export function ClassDetailView({
           </p>
         </section>
       ) : null}
-    </div>
+    </PageShell>
   );
 }
 

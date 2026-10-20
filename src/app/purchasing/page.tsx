@@ -5,6 +5,7 @@ import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { euro, type OrderRow, PO_STATUS_META, type PoStatus, PoStatusTag, purchasingHome } from "@/modules/purchasing/features/orders";
 import { formatDate, plural } from "@/lib/format";
 
@@ -19,13 +20,12 @@ export default async function PurchasingPage() {
   const toChange = mine.filter((o) => o.status === "draft" || o.status === "rejected").length;
   const showMine = who.request || mine.length > 0;
   return (
-    <div className="po-desk">
-      <PageHeader title="Purchase orders"
+    <PageShell className="po-desk" header={<PageHeader title="Purchase orders"
         description="Orders from approved suppliers, approved by role and amount, then numbered for the supplier."
         actions={<>
           <Button asChild variant="outline"><Link href="/purchasing/suppliers"><Truck aria-hidden="true" />Suppliers</Link></Button>
           {who.request ? <Button asChild><Link href="/purchasing/new"><FilePlus2 aria-hidden="true" />New order</Link></Button> : null}
-        </>} />
+        </>} />}>
 
       <div className="po-stats">
         <Stat href={waiting.length ? "#po-waiting" : undefined} tone={waiting.length ? "act" : undefined} icon={Hourglass} n={waiting.length}
@@ -44,7 +44,7 @@ export default async function PurchasingPage() {
             : { title: "No approved suppliers yet", hint: "Whoever manages Purchasing adds them, with their products and who approves." }} />
       ) : null}
       <Panel id="po-recent" title="Latest at your sites" orders={others} empty={{ title: "No orders at your sites yet" }} />
-    </div>
+    </PageShell>
   );
 }
 

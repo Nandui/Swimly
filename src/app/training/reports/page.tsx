@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { InsightFilterForm, readFilters, ReportView, trainingReport } from "@/modules/training/features/insight";
 
 export const metadata: Metadata = { title: "Training reports" };
@@ -10,10 +11,9 @@ export default async function TrainingReportsPage({ searchParams }: { searchPara
   const filters = readFilters(await searchParams);
   const report = await trainingReport({ site: filters.site, department: filters.department });
   return (
-    <>
-      <PageHeader title="Reports" description="Where training stands for everyone you cover, and who is late." />
+    <PageShell header={<PageHeader title="Reports" description="Where training stands for everyone you cover, and who is late." />}>
       <InsightFilterForm action="/training/reports" label="Filter the reports" filters={report.filters} sites={report.sites} departments={report.departments} />
       <ReportView report={report} />
-    </>
+    </PageShell>
   );
 }

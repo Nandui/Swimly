@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { plural } from "@/lib/format";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
@@ -14,12 +15,11 @@ export default async function StockProductsPage() {
   const live = products.filter((p) => !p.archivedAt).length;
   const archived = products.length - live;
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title="Products" description={products.length ? `${plural(live, "product")} to count at every site${archived ? `, and ${archived} archived: still on old counts, not offered on new ones` : ""}.` : "One list for every site."}
+    <PageShell spacing="roomy" header={<PageHeader title="Products" description={products.length ? `${plural(live, "product")} to count at every site${archived ? `, and ${archived} archived: still on old counts, not offered on new ones` : ""}.` : "One list for every site."}
         actions={who.manage && categories.length ? <>
           {sheetMissing ? <AddSheetProducts missing={sheetMissing} /> : null}
           <ProductDialog categories={categories} />
-        </> : undefined} />
+        </> : undefined} />}>
       <section className="pc-panel" aria-label="Products">
         {products.length === 0 ? <EmptyState compact icon="layers" title="No products yet" hint={who.manage ? "Add what you sell or use, and it is ready to count." : "Whoever manages Stock adds them."} /> : (
           <ul className="pc-rows">
@@ -41,6 +41,6 @@ export default async function StockProductsPage() {
           </ul>
         )}
       </section>
-    </div>
+    </PageShell>
   );
 }

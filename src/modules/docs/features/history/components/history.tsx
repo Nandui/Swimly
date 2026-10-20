@@ -20,6 +20,7 @@ import {
 import { Tag } from '@/components/ui-kit/tag';
 import { EmptyState } from '@/components/ui-kit/empty-state';
 import { PageHeader } from '@/components/ui-kit/page-header';
+import { PageShell } from '@/components/ui-kit/page-shell';
 import { startDraftAction } from '@/modules/docs/shared/actions';
 import { DocumentBody, RiskAssessmentView } from '@/modules/docs/shared/components/document-body';
 import { FilterSelect } from '@/modules/docs/shared/components/ui';
@@ -55,8 +56,7 @@ export function HistoryView({
   const currentId = w.documents.find((document) => document.id === id)?.currentVersionId;
   const name = (member: string | null) => w.members.find((m) => m.id === member)?.name;
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <PageHeader
+    <PageShell header={<PageHeader
         back={{ href: `/docs/documents/${id}`, label: 'Document' }}
         title="Version history"
         description="Every submission and publication, with the people and decisions behind it"
@@ -68,7 +68,7 @@ export function HistoryView({
             </Button>
           ) : undefined
         }
-      />
+      />}>
       {error ? <Notice tone="error" live="alert" title={error} /> : null}
       <div className="docs-split">
         <div className="flex min-w-0 flex-col gap-4">
@@ -223,6 +223,6 @@ export function HistoryView({
           </section>
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }

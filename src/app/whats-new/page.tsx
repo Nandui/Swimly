@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Sparkles } from "lucide-react";
 
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag, type TagMeta } from "@/components/ui-kit/tag";
 import { boldRuns, releaseNotes, type ReleaseBlock } from "@/lib/whats-new";
 
@@ -28,11 +29,10 @@ export default async function WhatsNewPage() {
   const { intro, releases } = await releaseNotes();
   const latest = releases[0];
   return (
-    <div className="min-w-0 flex flex-col gap-4">
-      <PageHeader
+    <PageShell header={<PageHeader
         title="What's new"
         description={latest ? <>Turnfin is on version {latest.version}, updated {latest.date}. The newest changes come first.</> : "Changes to Turnfin, newest first."}
-      />
+      />}>
 
       {releases.map((release, index) => (
         <section key={release.version} className="pc-panel" aria-labelledby={`release-${release.version}`}>
@@ -59,6 +59,6 @@ export default async function WhatsNewPage() {
           </div>
         </section>
       ) : null}
-    </div>
+    </PageShell>
   );
 }
