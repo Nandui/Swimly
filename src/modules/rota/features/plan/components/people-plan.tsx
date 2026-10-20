@@ -16,14 +16,15 @@ import { FillSheet, handOverGap, type GapRef } from "@/modules/rota/shared/compo
 import { assign, planTeacher, putOnActivity } from "@/modules/rota/shared/actions";
 import { AreaLanesFields, type AreaLanes } from "@/modules/rota/shared/components/area-lanes";
 import { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from "@/components/shadcn/native-select";
-import { freeTime } from "@/modules/rota/shared/plan-rows";
+import { daySteps, freeTime, personBlocks, type DayStep } from "@/modules/rota/shared/plan-rows";
 import { removePlanShift, saveBreaks, savePlanShift, whoForShift } from "@/modules/rota/features/plan/server/actions";
 import { clock, parseClock, slotProblem } from "@/modules/rota/shared/constants";
-import { ANY_DEPARTMENT, type Person, type ShiftOption } from "@/modules/rota/shared/day";
+import { ANY_DEPARTMENT, isAreaNeed, type Group, type Person, type ShiftOption } from "@/modules/rota/shared/day";
 import type { Fit } from "@/modules/rota/shared/fit";
 import { ROTA_FIT_META, ROTA_SHIFT_NOTE_META, qualificationShort } from "@/modules/rota/shared/meta";
 import { duration } from "@/modules/rota/shared/shifts";
 import { toast } from "@/components/ui/toast";
+import { useNowMinute } from "@/modules/rota/features/plan/components/now";
 
 /** Who's working, by person (owner decision, 8 October 2026): put someone on a shift, then give
  *  them activities from the day's gaps that fit it and that they are qualified for. On a wide
@@ -41,13 +42,16 @@ type Ctx = { siteId: string; departmentId: string; date: string; dateLabel: stri
 export type TypeOption = { id: string; name: string; departmentId: string; departmentName: string;
   /** The qualification it needs, to offer it first for an area short of that type of staff. */
   requiredTypeId?: string | null };
+/** The day everyone is on (every department's groups), to read one person's day as a list, and
+ *  whether it is today, to say what they are on now. */
+type Day = { groups: readonly Group[]; today?: boolean };
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? "");
 
 /** The department a person's changes are made for when every department shows on one Plan: the
  *  one their shift that day is on, else the viewer's (`fallback`). */
 export const departmentFor = (p: Person, fallback: string) => p.planned[0]?.departmentId ?? fallback;
 
-export function PeoplePlan({ people, everyDepartment, ...ctx }: Ctx & { people: Person[]; everyDepartment?: boolean }) {
+export function PeoplePlan({ people, everyDepartment, ...ctx }: Ctx & Day & { people: Person[]; everyDepartment?: boolean }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const open = people.find((p) => p.userId === openId) ?? null;
   return (
@@ -69,7 +73,7 @@ export function PeoplePlan({ people, everyDepartment, ...ctx }: Ctx & { people: 
 }
 
 /** One person's day in a sheet: their shift, breaks and what they could take. */
-export function ShiftSheet({ person, onClose, ...ctx }: Ctx & { person: Person | null; onClose: () => void }) {
+export function ShiftSheet({ person, onClose, ...ctx }: Ctx & Day & { person: Person | null; onClose: () => void }) {
   return (
     <Sheet open={!!person} onOpenChange={(o) => { if (!o) onClose(); }}>
       <SheetContent portalClassName={THEME} className="flex w-full flex-col gap-0 overflow-y-auto sm:max-w-lg">
@@ -77,6 +81,26 @@ export function ShiftSheet({ person, onClose, ...ctx }: Ctx & { person: Person |
       </SheetContent>
     </Sheet>
   );
+}
+
+/** One line of someone's day in words: what, then where and until when. */
+function stepWords(s: DayStep, p: Person, next: number | undefined): { title: string; hint: string; tone: string } {
+  const until = `until ${clock(s.end)}`;
+  if (s.kind === "work") {
+    const area = isAreaNeed(s.group.typeId);
+    const booking = s.group.needs.some((n) => n.id === s.block.needId && n.repeatTitle);
+    const title = area ? s.group.place || s.group.name : s.block.detail || s.group.name;
+    const what = area ? s.group.name : [s.block.detail && s.block.detail !== s.group.name ? s.group.name : null, s.group.place].filter(Boolean).join(", ");
+    return { title, hint: [what, s.count > 1 ? `${s.count} classes` : null, until].filter(Boolean).join(" · "), tone: area ? "area" : booking ? "booking" : "activity" };
+  }
+  if (s.kind === "break") {
+    const clash = p.breakClashes.find((c) => c.start < s.end && s.start < c.end);
+    return { title: "Break", tone: "break",
+      hint: [`${s.end - s.start} minutes, ${s.paid ? "paid" : "unpaid"}`, s.pinned ? null : "suggested time", clash ? `${clash.label} needs cover` : null].filter(Boolean).join(" · ") };
+  }
+  if (s.kind === "free") return { title: "Nothing given yet", hint: `${until} · paid time to give to something`, tone: "free" };
+  if (s.kind === "off") return { title: "Off", hint: `${until}, unpaid`, tone: "off" };
+  return { title: "Finish", hint: next === undefined ? `${duration(p.shift.paidMinutes)} paid today` : "", tone: "finish" };
 }
 
 /** Whether someone's day has something to look at, and that in a few words. */
@@ -94,9 +118,11 @@ function summary(p: Person) {
   return `${p.shift.parts.length > 1 ? "Split shift: " : ""}${parts} · ${duration(p.shift.paidMinutes)} paid · ${p.activities.length ? p.activities.join(", ") : "no activities yet"}`;
 }
 
-/** One person's day: shift, breaks, what they could take. */
-function ShiftBody({ person: p, siteId, departmentId, date, dateLabel, live, canChange, departmentNames, anyTypes = [], areaList = [] }: Ctx & { person: Person }) {
+/** One person's day: the day read top to bottom, then their shift, breaks and what they could take. */
+function ShiftBody({ person: p, siteId, departmentId, date, dateLabel, live, canChange, departmentNames, anyTypes = [], areaList = [], groups, today = false }: Ctx & Day & { person: Person }) {
   const router = useRouter();
+  const now = useNowMinute(today);
+  const steps = daySteps(p, personBlocks(groups, p.userId));
   const done = () => router.refresh();
   const [cover, setCover] = useState<GapRef | null>(null);
   const breaks = p.shift.parts.flatMap((x) => x.breaks);
@@ -113,6 +139,28 @@ function ShiftBody({ person: p, siteId, departmentId, date, dateLabel, live, can
       </SheetHeader>
       <div className="flex flex-col gap-6 px-6 pb-6">
         {p.rest.map((w) => <Notice key={w} tone="warning" title="Under-18 rest">{w}</Notice>)}
+
+        {steps.length ? (
+          <section aria-labelledby="their-day" className="flex flex-col gap-2">
+            <h3 id="their-day" className="font-semibold">{p.name.split(" ")[0]}&apos;s day</h3>
+            <ol className="rota-steps">
+              {steps.map((s, i) => {
+                const isNow = now !== null && (s.kind === "finish" ? false : s.start <= now && now < s.end);
+                const { title, hint, tone } = stepWords(s, p, steps[i + 1]?.start);
+                return (
+                  <li key={`${s.kind}${s.start}${i}`} data-tone={tone} data-now={isNow ? "" : undefined}>
+                    <span className="rota-step-time tabular-nums">{clock(s.start)}</span>
+                    <span className="rota-step-card">
+                      <span className="rota-step-title">{isNow ? <span className="rota-step-now">Now</span> : null}{title}</span>
+                      {hint ? <span className="rota-step-hint">{hint}</span> : null}
+                    </span>
+                  </li>
+                );
+              })}
+            </ol>
+            {p.warnings.length ? <span className="rota-tags">{p.warnings.map((w) => <Tag key={w} meta={ROTA_FIT_META[w]} />)}</span> : null}
+          </section>
+        ) : null}
 
         <section aria-labelledby="shift-parts" className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -224,16 +272,6 @@ function ShiftBody({ person: p, siteId, departmentId, date, dateLabel, live, can
             </Notice>
           ))}
         </section>
-
-        {p.shift.parts.some((x) => x.work.length) ? (
-          <section aria-labelledby="shift-on" className="flex flex-col gap-2">
-            <h3 id="shift-on" className="font-semibold">On now</h3>
-            <ul className="pc-rows">{p.shift.parts.flatMap((x) => x.work).map((w, i) => (
-              <li key={i} className="pc-row"><span className="pc-row-body"><span className="pc-row-title">{w.label}</span><span className="pc-row-hint tabular-nums">{clock(w.start)} to {clock(w.end)}</span></span></li>
-            ))}</ul>
-            {p.warnings.length ? <span className="rota-tags">{p.warnings.map((w) => <Tag key={w} meta={ROTA_FIT_META[w]} />)}</span> : null}
-          </section>
-        ) : null}
 
         <section aria-labelledby="shift-take" className="flex flex-col gap-2">
           <h3 id="shift-take" className="font-semibold">Activities they could take</h3>

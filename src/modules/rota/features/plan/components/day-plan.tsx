@@ -3,11 +3,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, CircleCheck, CircleDashed, Clock3, Coffee, Info, LayoutList, MapPin, Plus, TriangleAlert, Users, ZoomIn, ZoomOut } from "lucide-react";
+import { ChevronLeft, ChevronRight, CircleCheck, CircleDashed, Clock3, Coffee, LayoutList, MapPin, Plus, TriangleAlert, Users, ZoomIn, ZoomOut } from "lucide-react";
 import { Avatar, AvatarFallback, initials } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
 import { Label } from "@/components/shadcn/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/shadcn/popover";
 import { Progress } from "@/components/shadcn/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/shadcn/sheet";
@@ -22,28 +21,27 @@ import { clock } from "@/modules/rota/shared/constants";
 import { ANY_DEPARTMENT, isAreaNeed, type Block, type DayNeed, type DayZone, type Group, type Person } from "@/modules/rota/shared/day";
 import { lanesLabel } from "@/modules/rota/shared/lanes";
 import { ROTA_DAY_META, ROTA_SHIFT_NOTE_META, activityIcon, qualificationShort } from "@/modules/rota/shared/meta";
-import { byArea, freeTime, needRows, partPaid, personBlocks, type CoverSpan, type NeedRow } from "@/modules/rota/shared/plan-rows";
+import { byArea, freeTime, needRows, nextChange, partPaid, personBlocks, whoIsWhere, type CoverSpan, type NeedRow } from "@/modules/rota/shared/plan-rows";
 import { duration } from "@/modules/rota/shared/shifts";
 import { AnyActivity, OptionRow, PeoplePlan, ShiftSheet, checkLabel, departmentFor, warned, type TypeOption } from "@/modules/rota/features/plan/components/people-plan";
 import { leftOf, stretchOf } from "@/components/ui-kit/scale";
+import { useNowMinute } from "@/modules/rota/features/plan/components/now";
 import { MIN_SPAN, panView, sameView, ticks as ticksOf, zoomView, type View } from "@/modules/rota/features/plan/server/view";
 
-/** One day of a department's plan, shift first (owner, 13 October 2026: "we need to produce shifts
- *  for them, these will also be done to allocate staff during those shifts to activities, bookings,
- *  classes"), as a board with two views (redesign, 20 October 2026, from scheduling tools such as
- *  7shifts, Deputy and Square):
- *  - **People** (the default): an Open needs row with every place still to fill on the clock,
- *    then one row per person: their shift outlined, what they are on inside it, their breaks, and
- *    every stretch nothing is given to yet as Free, which opens what that time could go to, from any
- *    department (lending). Each person shows their week against their contract as a bar.
- *  - **Needs**: area by area, each thing that needs people with how many it has against how many
- *    it needs, stretch by stretch; a short stretch opens Who can fill it.
- *  Above both, the day's figures and two lists that fix the day one item at a time: the places to
- *  fill and the people to check. Under the clock, how many are on (People) or short (Needs) each
- *  hour. "Time of day" and the zoom buttons zoom (owner request, 15 October 2026: never on
- *  scroll); dragging, sideways scrolling or Earlier and Later move a zoomed-in day, and the zoom
- *  and the view stay on this device. Area narrows the day to one area. Below 1024px each view
- *  is a list. */
+/** One day of a department's plan as the day's diary (owner, 20 October 2026: "It's the plan, the
+ *  diary, the actual guide for the day ... readable and understood by anyone"). From the top:
+ *  - **Not covered yet**: every place still to fill, soonest first, each with Choose someone
+ *    (best fits first, from any department).
+ *  - **Who's where**: at one moment (now, on today), each area and activity with who is on it,
+ *    what is short, and the next change ("15:00 · Cian starts, Aoife finishes").
+ *  - **The day, person by person** (the default): one line per person with what they are on in
+ *    plain words ("Main pool 07:00-10:00", "Break", "Aqua-fit"), coloured by kind, a Not covered
+ *    line on top, and a now line. A name opens their day as a list; an empty stretch gives that
+ *    time to something; a block changes it.
+ *  - **By area**: each thing that needs people with how many it has against how many it needs.
+ *  "Time of day" and the zoom buttons zoom (owner request, 15 October 2026: never on scroll);
+ *  dragging, sideways scrolling or Earlier and Later move a zoomed-in day, and the zoom and the
+ *  view stay on this device. Area narrows the day to one area. Below 1024px each view is a list. */
 
 type Option = { id: string; name: string };
 type Props = {
@@ -77,6 +75,8 @@ type Props = {
   areaList: AreaLanes[];
   /** "Tuesday 20 October": the day's heading. */
   heading: string;
+  /** The day is today: a now line, and Who's where starts on now. */
+  today?: boolean;
   /** Add staff and Add activity, when the viewer may change the day. */
   actions?: ReactNode;
   /** Why the viewer can't change the day, when they can't. */
@@ -146,16 +146,22 @@ function pack<T extends { start: number; end: number }>(list: T[]): T[][] {
   return rows;
 }
 
+/** The colour of something someone is on (the diary's key): covering an area blue, a booking
+ *  violet, an activity or a swim class green. */
+const blockKind = (g: Group, b: Block) => (isAreaNeed(g.typeId) ? "next" : !g.fromClasses && g.needs.some((n) => n.id === b.needId && n.repeatTitle) ? "assessment" : "now");
+
 /** An agenda row that opens something: the shared Button drawn as a list row. */
 const ROW = "pc-row h-auto w-full justify-start whitespace-normal text-start font-normal";
 const nameInitials = (name: string) => name.split(" ").filter(Boolean).map((p) => p[0]).slice(0, 2).join("");
 const firstName = (name: string | null) => (name ?? "Someone").split(" ")[0];
+/** "Aoife", "Aoife and Liam", "Aoife, Liam and Niamh". */
+const listWords = (names: readonly string[]) => (names.length < 2 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`);
 const WARNING_WORDS: Record<string, string> = { off: "off that day", missing: "qualification not recorded", expired: "qualification expired", overlap: "double-booked", break: "on a break during it" };
 const isOff = (b: Block) => b.kind === "on" && b.warnings.includes("off");
 const needsCover = (b: Block) => b.kind === "gap" || isOff(b);
 const ROW_WORDS: Record<NeedRow["kind"], string> = { area: "Area needs", activity: "Needed", booking: "Booking", classes: "Swim classes", booked: "Booked" };
 
-export function DayPlan({ siteId, departmentId, everyDepartment = false, departmentNames, date, dateLabel, live, canChange, zones, groups, allGroups, people, hours, types, anyTypes, areaList, heading, actions, note }: Props) {
+export function DayPlan({ siteId, departmentId, everyDepartment = false, departmentNames, date, dateLabel, live, canChange, zones, groups, allGroups, people, hours, types, anyTypes, areaList, heading, today = false, actions, note }: Props) {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("people");
   const [sheet, setSheet] = useState<"gaps" | "checks" | null>(null);
@@ -214,6 +220,7 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
   const [selected, setSelected] = useState<string | null>(null);
   const [openPerson, setOpenPerson] = useState<string | null>(null);
   const [free, setFree] = useState<Free | null>(null);
+  const [whereAt, setWhereAt] = useState<number | null>(null);
   const [trackPx, setTrackPx] = useState(900);
   const track = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -228,8 +235,14 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
   const perHour = trackPx / (span / 60);
   const ticks = ticksOf(view);
   const zoomed = !sameView(view, bounds);
-  // Hour lines on every track, on the labels' step, wherever the view starts.
-  const gridLines = ticks.map((t) => <span key={`line${t}`} aria-hidden="true" className={`rota-tl-line ${leftOf((t - from) / span)}`} />);
+  const nowMin = useNowMinute(today);
+  const nowShown = nowMin !== null && nowMin >= from && nowMin <= to;
+  // Hour lines on every track, on the labels' step, wherever the view starts, and on today the
+  // line that says where the day has got to.
+  const gridLines = [
+    ...ticks.map((t) => <span key={`line${t}`} aria-hidden="true" className={`rota-tl-line ${leftOf((t - from) / span)}`} />),
+    nowShown ? <span key="now" aria-hidden="true" className={`rota-now-line ${leftOf((nowMin - from) / span)}`} /> : null,
+  ];
 
   // Scrolling never zooms (owner request, 15 October 2026). Up and down always scroll the page;
   // sideways (or with Shift) moves a zoomed-in day, and at either end the page has it instead.
@@ -417,18 +430,19 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
     return need ? changeActivity(need, <Button type="button" variant="ghost">Change the activity</Button>) : undefined;
   };
 
-  /** What a person is on, on their row: its activity, booking or class, and the department when
-   *  it is another's (lent). */
+  /** What a person is on, on their row, in the words anyone reads it in: an area they cover by
+   *  the area ("Main pool"), anything else by what it is ("Aqua-fit", a class by its level), then
+   *  when, and the department when it is another's (lent). */
   const workFor = (g: Group, b: Shown, key: string) => {
     const pos = at(b.start, b.end);
     if (!pos) return null;
     const density = densityOf(pos.px);
     const need = needOf(b);
     const lent = theirs(g);
-    // A swim class leads with its level; the colour already says it is the swim school.
-    const title = b.detail || g.name;
+    const area = isAreaNeed(g.typeId);
+    const title = area ? g.place || g.name : b.detail || g.name;
     const where = whereOf(g, need, b);
-    const hint = [where, b.count > 1 ? `${b.count} classes` : null, lent, `${clock(b.start)}–${clock(b.end)}`].filter(Boolean).join(" · ");
+    const hint = [`${clock(b.start)}–${clock(b.end)}`, area ? g.name : where, b.count > 1 ? `${b.count} classes` : null, lent].filter(Boolean).join(" · ");
     const warn = b.warnings.length ? `. Check: ${b.warnings.map((w) => WARNING_WORDS[w]).join(", ")}` : "";
     const label = `${title}${b.classRef && b.detail ? ` (${g.name})` : ""}${lent ? ` for ${lent}` : ""}, ${where}, ${clock(b.start)} to ${clock(b.end)}${warn}`;
     const Icon = activityIcon(g.icon);
@@ -441,7 +455,7 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
             {density === "full" ? <span className="pc-block-hint">{hint}</span> : null}
           </span>
         </>;
-    const kind = isOff(b) ? "absent" : g.fromClasses ? "now" : b.detail ? "assessment" : "next";
+    const kind = isOff(b) ? "absent" : blockKind(g, b);
     const common = { className: `pc-block ${pos.place}`, "data-block": kind, "data-density": density, "data-lent": lent ? "" : undefined, title: label };
     if (!canChange || g.href) return <span key={key} {...common} role="img" aria-label={label}>{words}</span>;
     if (b.classRef) return <Button key={key} type="button" variant="link" {...common} aria-label={`${label}. Change who teaches`} onClick={() => openGap(g, b, b.refs)}>{words}</Button>;
@@ -489,18 +503,6 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
   const paid = shownPeople.reduce((n, p) => n + p.shift.paidMinutes, 0);
   const unpaid = shownPeople.reduce((n, p) => n + p.shift.parts.reduce((m, x) => m + partPaid(x).unpaid, 0), 0);
 
-  /** How many are on, and how many places are short, hour by hour: the row under the clock. */
-  const hourly = useMemo(() => {
-    const out: { start: number; end: number; on: number; short: number }[] = [];
-    for (let h = Math.floor(bounds.from / 60) * 60; h < bounds.to; h += 60) {
-      const end = h + 60;
-      const on = shownPeople.filter((p) => p.shift.parts.some((x) => x.start < end && h < x.end)).length;
-      const short = shownRows.filter((r) => !r.group.href).reduce((n, r) => n + Math.max(0, ...r.cover.filter((c) => c.start < end && h < c.end).map((c) => c.want - c.have)), 0);
-      out.push({ start: h, end, on, short });
-    }
-    return out;
-  }, [bounds, shownPeople, shownRows]);
-
   const addHere = (name: string) => canChange && types.length ? (
     <NeedDialog siteId={siteId} date={date} live={live} types={types} areas={areaList} place={name}
       trigger={<Button type="button" variant="ghost" size="icon" aria-label={`Add an activity in ${name}`}><Plus aria-hidden="true" /></Button>} />
@@ -513,7 +515,7 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
   const over = (p: Person) => { const h = week(p); return !!h?.contract && h.week > h.contract; };
   const fillOpen = (x: OpenGap) => { setSheet(null); openGap(x.row.group, x.block, x.refs); };
 
-  /** The hours across the top, and under them how many are on and short each hour. */
+  /** The hours across the top, and on today where the day has got to. */
   const ruler = (
     <div className="rota-tl-head rota-tl-sticky">
       <div className="rota-tl-row" aria-hidden="true">
@@ -521,34 +523,21 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
         <div className="rota-tl-hours" ref={track} {...dragHandlers}>{ticks.map((t) => {
           const pos = (t - from) / span;
           return <span key={t} className={`${leftOf(pos)} ${pos < 0.03 ? "" : pos > 0.97 ? "-translate-x-full" : "-translate-x-1/2"}`}>{clock(t)}</span>;
-        })}</div>
-      </div>
-      <div className="rota-tl-row">
-        <span className="rota-tl-corner">{mode === "people" ? "Staff on each hour" : "Places short each hour"}</span>
-        <div className="rota-tl-pulse" {...dragHandlers}>
-          {hourly.map((h) => {
-            const pos = at(h.start, h.end);
-            if (!pos) return null;
-            const label = `${clock(h.start)} to ${clock(h.end)}: ${h.on} on${h.short ? `, ${h.short} short` : ""}`;
-            return <span key={h.start} className={pos.place} data-short={h.short ? "" : undefined} data-empty={!h.on && !h.short ? "" : undefined} role="img" aria-label={label} title={label}>
-              <span className="tabular-nums">{mode === "people" ? h.on || "" : h.short ? `−${h.short}` : ""}</span>
-            </span>;
-          })}
-        </div>
+        })}{nowShown ? <span className={`rota-now-tag ${leftOf((nowMin - from) / span)} -translate-x-1/2`}>Now</span> : null}</div>
       </div>
     </div>
   );
 
-  /** The People board's first row: every place still to fill, on the clock, ready to give. */
+  /** The first line of the day by person: every place still to fill, on the clock, ready to give. */
   const openRow = (
-    <section aria-label="Open needs" className="rota-tl-band rota-open">
+    <section aria-label="Not covered yet" className="rota-tl-band rota-open">
       {(openGaps.length ? pack(openGaps) : [[]]).map((line, li) => (
         <div key={li} className="rota-tl-row">
           {li === 0 ? (
             <Button type="button" variant="ghost" className="rota-tl-label rota-open-label h-auto items-stretch whitespace-normal" onClick={() => setSheet("gaps")} disabled={!openGaps.length}
-              aria-label={openGaps.length ? `${openGaps.length} open ${openGaps.length === 1 ? "need" : "needs"}. List them` : "Nothing open"}>
-              <span className="rota-tl-name"><CircleDashed aria-hidden="true" /><span>Open needs</span></span>
-              <small>{openGaps.length ? `${openGaps.length} to fill · list them` : "Everything is covered"}</small>
+              aria-label={openGaps.length ? `Not covered yet: ${openGaps.length} to fill. List them` : "Every need is filled"}>
+              <span className="rota-tl-name"><CircleDashed aria-hidden="true" /><span>Not covered</span></span>
+              <small>{openGaps.length ? `${openGaps.length} to fill · list them` : "Every need is filled"}</small>
             </Button>
           ) : <span aria-hidden="true" />}
           <div className="rota-tl-track" data-row="open" {...dragHandlers}>
@@ -591,7 +580,7 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
           <div key={ri} className="rota-tl-row">
             {ri === 0 ? (
               <Button type="button" variant="ghost" className="rota-tl-label rota-tl-person h-auto items-stretch whitespace-normal" onClick={() => setOpenPerson(p.userId)}
-                aria-label={`${p.name}: ${p.shift.parts.length > 1 ? "split shift, " : ""}${times}, ${duration(p.shift.paidMinutes)} paid today${weekWords ? `, ${weekWords}` : ""}${warned(p) ? `. ${checkLabel(p)}` : ""}. Open their shift`}>
+                aria-label={`${p.name}: ${p.shift.parts.length > 1 ? "split shift, " : ""}${times}, ${duration(p.shift.paidMinutes)} paid today${weekWords ? `, ${weekWords}` : ""}${warned(p) ? `. ${checkLabel(p)}` : ""}. Open their day`}>
                 <Avatar size="lg" aria-hidden="true"><AvatarFallback>{initials(p.name)}</AvatarFallback></Avatar>
                 <span className="rota-tl-name"><span>{p.name}</span>{warned(p) ? <TriangleAlert aria-hidden="true" className="rota-warn-icon" /> : null}</span>
                 <small className="tabular-nums">{times} · {duration(p.shift.paidMinutes)}</small>
@@ -624,12 +613,21 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
               {row.map((x, i) => workFor(x.g, x.b, `${p.userId}-${ri}-${i}`))}
               {ri === 0 ? breaks.map((b) => {
                 const pos = at(b.start, b.end);
-                return pos ? (
-                  <span key={`b${b.start}`} className={`rota-people-break ${pos.place}`} data-pinned={b.pinned ? "" : undefined}
-                    role="img" aria-label={`${b.pinned ? "Break" : "Suggested break"}, ${b.paid ? "paid" : "unpaid"}, ${clock(b.start)} to ${clock(b.end)}`} title={`${b.paid ? "Paid" : "Unpaid"} break ${clock(b.start)}–${clock(b.end)}`}>
-                    <Coffee aria-hidden="true" />
-                  </span>
-                ) : null;
+                if (!pos) return null;
+                // A break is a line of the diary like anything else: "Break", and its time when it fits.
+                const density = pos.px >= 96 ? "full" : pos.px >= 40 ? "compact" : "icon";
+                const label = `${firstName(p.name)}'s ${b.pinned ? "break" : "suggested break"}, ${b.end - b.start} minutes ${b.paid ? "paid" : "unpaid"}, ${clock(b.start)} to ${clock(b.end)}. Open their day`;
+                return (
+                  <Button key={`b${b.start}`} type="button" variant="link" className={`pc-block rota-break ${pos.place}`} data-block="done" data-density={density} data-pinned={b.pinned ? "" : undefined}
+                    aria-label={label} title={label} onClick={() => setOpenPerson(p.userId)}>
+                    {density === "icon" ? <Coffee aria-hidden="true" /> : (
+                      <span className="pc-block-body">
+                        <span className="pc-block-title">Break</span>
+                        {density === "full" ? <span className="pc-block-hint tabular-nums">{clock(b.start)}–{clock(b.end)}</span> : null}
+                      </span>
+                    )}
+                  </Button>
+                );
               }) : null}
             </div>
           </div>
@@ -678,31 +676,81 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
     </>
   );
 
-  /** The key, kept out of the way until asked for. */
+  /** The key, in a line beside the day: what each colour means. */
   const key = (
-    <Popover>
-      <PopoverTrigger asChild><Button type="button" variant="ghost"><Info aria-hidden="true" />Key</Button></PopoverTrigger>
-      <PopoverContent portalClassName="turnfin-module" align="end" className="w-80">
-        <ul className="rota-tl-key">
-          {mode === "people" ? <>
-            <li><i className="pc-block" data-block="cover" />A place still to fill</li>
-            <li><i className="rota-people-shift" data-planned="" />Their shift</li>
-            <li><i className="pc-block rota-free-time" data-block="done" />Free: shift time not given to anything yet</li>
-            <li><i className="pc-block" data-block="next" />An activity</li>
-            <li><i className="pc-block" data-block="assessment" />A booking</li>
-            <li><i className="pc-block" data-block="now" />Swim classes</li>
-            <li><i className="pc-block" data-block="absent" />Off that day: needs cover</li>
-            <li><i className="rota-people-break" data-pinned="" />Break placed</li>
-            <li><i className="rota-people-break" />Break suggested</li>
-            <li><i className="rota-split-gap" />Off between the parts of a split shift</li>
-          </> : <>
-            <li><i className="pc-block rota-cover" data-block="done" data-ok="" />Enough people</li>
-            <li><i className="pc-block" data-block="cover" />Short of people</li>
-            <li><i className="pc-block" data-block="now" />A swim class with its teacher</li>
-          </>}
-        </ul>
-      </PopoverContent>
-    </Popover>
+    <ul className="rota-key" aria-label="Key">
+      {mode === "people" ? <>
+        <li><i className="pc-block" data-block="next" />Covering an area</li>
+        <li><i className="pc-block" data-block="now" />Classes and activities</li>
+        <li><i className="pc-block" data-block="assessment" />Bookings</li>
+        <li><i className="pc-block rota-break" data-block="done" data-pinned="" />Break</li>
+        <li><i className="pc-block rota-free-time" data-block="done" />Nothing given yet</li>
+        <li><i className="pc-block" data-block="cover" />Not covered</li>
+        <li><i className="pc-block" data-block="absent" />Off that day</li>
+      </> : <>
+        <li><i className="pc-block rota-cover" data-block="done" data-ok="" />Enough people</li>
+        <li><i className="pc-block" data-block="cover" />Short of people</li>
+        <li><i className="pc-block" data-block="now" />A swim class with its teacher</li>
+      </>}
+    </ul>
+  );
+
+  /** The moment Who's where shows: the one chosen, else now on today, else when the day starts. */
+  const dayStart = Math.min(...people.flatMap((p) => p.shift.parts.map((x) => x.start)), ...rows.map((r) => r.start), bounds.to);
+  const nowInDay = nowMin !== null && nowMin >= bounds.from && nowMin < bounds.to ? nowMin : null;
+  const moment = whereAt ?? nowInDay ?? Math.floor(Math.min(dayStart, bounds.to - 30) / 30) * 30;
+  const moments = Array.from({ length: Math.max(0, Math.ceil((bounds.to - bounds.from) / 30)) }, (_, i) => bounds.from + i * 30);
+  const where = whoIsWhere(shownRows, moment);
+  const onBreak = shownPeople.filter((p) => p.shift.parts.some((x) => x.breaks.some((b) => b.start <= moment && moment < b.end)));
+  const next = nextChange(shownPeople, allGroups, moment);
+  const nextWords = next ? [
+    next.starts.length ? `${listWords(next.starts)} ${next.starts.length === 1 ? "starts" : "start"}` : null,
+    next.finishes.length ? `${listWords(next.finishes)} ${next.finishes.length === 1 ? "finishes" : "finish"}` : null,
+    next.breaks.length ? `${listWords(next.breaks)} ${next.breaks.length === 1 ? "goes" : "go"} on a break` : null,
+    ...next.moves.map((m) => `${m.name} moves to ${m.to}`),
+  ].filter(Boolean).join(", ") : "";
+  const SHOW_GAPS = 4;
+
+  /** The top of the day: what is not covered yet, and who's where at one moment. */
+  const glance = (
+    <div className="rota-glance">
+      <section aria-labelledby={`rota-holes-${date}`} className="rota-glance-panel">
+        <h3 id={`rota-holes-${date}`} className="rota-glance-title">
+          {openGaps.length ? <>Not covered yet <span className="rota-count" data-gaps="">{openGaps.length}</span></> : <><CircleCheck aria-hidden="true" className="text-ui-success" />Every need is filled</>}
+        </h3>
+        {openGaps.length ? <>
+          <GapList gaps={openGaps.slice(0, SHOW_GAPS)} canChange={canChange} whereOf={(x) => whereOf(x.row.group, x.row.need, x.block)} onFill={fillOpen} />
+          {openGaps.length > SHOW_GAPS ? <Button type="button" variant="ghost" className="self-start" onClick={() => setSheet("gaps")}>See all {openGaps.length}</Button> : null}
+        </> : <p className="rota-glance-note">{rows.length ? "Everything the day needs has someone on it." : "Nothing needs people on this day yet. Add what it needs with Add activity; bookings, area needs and swim classes appear on their own."}</p>}
+      </section>
+      <section aria-labelledby={`rota-where-${date}`} className="rota-glance-panel">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 id={`rota-where-${date}`} className="rota-glance-title">Who&apos;s where</h3>
+          <Select value={whereAt === null ? (nowInDay !== null ? "now" : String(moment)) : String(whereAt)} onValueChange={(v) => setWhereAt(v === "now" ? null : Number(v))}>
+            <SelectTrigger className="rota-select" aria-label="At what time"><Clock3 aria-hidden="true" /><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {nowInDay !== null ? <SelectItem value="now">Now, {clock(nowInDay)}</SelectItem> : null}
+              {moments.map((m) => <SelectItem key={m} value={String(m)}>At {clock(m)}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        {where.length || onBreak.length ? (
+          <dl className="rota-where">
+            {where.map((x) => (
+              <div key={x.row.key}>
+                <dt>{x.row.kind === "area" ? x.row.group.place || x.row.label : x.row.label}{x.row.kind !== "area" && x.row.group.place ? <small>{x.row.group.place}</small> : null}</dt>
+                <dd>
+                  {x.names.length ? <span>{listWords(x.names)}</span> : null}
+                  {x.short ? <span className="rota-where-short">{x.names.length ? `${x.short} more needed` : x.short === 1 ? "Nobody yet" : `Needs ${x.short}`}</span> : null}
+                </dd>
+              </div>
+            ))}
+            {onBreak.length ? <div><dt>On a break</dt><dd><span>{listWords(onBreak.map((p) => p.name))}</span></dd></div> : null}
+          </dl>
+        ) : <p className="rota-glance-note">Nobody is on anything at {clock(moment)}.</p>}
+        {next ? <p className="rota-where-next"><strong>Next change</strong><span className="tabular-nums">{clock(next.at)} · {nextWords}</span></p> : null}
+      </section>
+    </div>
   );
 
   return (
@@ -717,10 +765,6 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
           </dl>
         </div>
         <div className="rota-day-actions">
-          <Button type="button" variant="outline" data-tone={openGaps.length ? "warning" : "success"} onClick={() => setSheet("gaps")}>
-            {openGaps.length ? <TriangleAlert aria-hidden="true" /> : <CircleCheck aria-hidden="true" />}
-            {openGaps.length ? `${openGaps.length} to fill` : "All covered"}
-          </Button>
           {toCheck.length ? (
             <Button type="button" variant="outline" data-tone="warning" onClick={() => setSheet("checks")}><Coffee aria-hidden="true" />{toCheck.length} to check</Button>
           ) : null}
@@ -729,9 +773,15 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
         {note ? <p className="rota-day-note">{note}</p> : null}
       </header>
 
+      {glance}
+
+      <div className="rota-sheet-head">
+        <h3 className="rota-glance-title">{mode === "people" ? "The day, person by person" : "The day, area by area"}</h3>
+        <span className="rota-wide-only">{key}</span>
+      </div>
       <div className="rota-toolbar">
         <SegmentedChoice aria-label="Show the day by" value={mode} onValueChange={(v) => chooseMode(v as Mode)}
-          options={[{ value: "people", label: "People", icon: Users, count: shownPeople.length }, { value: "needs", label: "Needs", icon: LayoutList, count: openGaps.length || undefined }]} />
+          options={[{ value: "people", label: "By person", icon: Users, count: shownPeople.length }, { value: "needs", label: "By area", icon: LayoutList, count: openGaps.length || undefined }]} />
         {areas.length > 1 ? (
           <Select value={areaKey || ALL} onValueChange={(v) => setArea(v === ALL ? "" : v)}>
             <SelectTrigger className="rota-select" aria-label="Area"><MapPin aria-hidden="true" /><SelectValue /></SelectTrigger>
@@ -766,7 +816,6 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
               <Label htmlFor={`rota-others-${date}`} className="font-normal">Other departments</Label>
             </span>
           ) : null}
-          <span className="rota-wide-only">{key}</span>
         </span>
       </div>
 
@@ -781,16 +830,10 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
 
       <div className="rota-agenda">
         {mode === "people" ? <>
-          {openGaps.length ? (
-            <section aria-labelledby={`rota-open-${date}`} className="flex flex-col gap-3">
-              <h3 id={`rota-open-${date}`} className="rota-agenda-title">Open needs <span className="rota-count" data-gaps="">{openGaps.length}</span></h3>
-              <GapList gaps={openGaps} canChange={canChange} whereOf={(x) => whereOf(x.row.group, x.row.need, x.block)} onFill={fillOpen} />
-            </section>
-          ) : null}
           <section aria-labelledby={`rota-people-${date}`} className="flex flex-col gap-3">
             <h3 id={`rota-people-${date}`} className="rota-agenda-title">Who&apos;s working <span className="rota-count">{shownPeople.length}</span></h3>
             {shownPeople.length ? (
-              <PeoplePlan people={shownPeople} siteId={siteId} departmentId={departmentId} everyDepartment={everyDepartment} departmentNames={departmentNames} date={date} dateLabel={dateLabel} live={live} canChange={canChange} anyTypes={anyTypes} areaList={areaList} />
+              <PeoplePlan people={shownPeople} groups={allGroups} today={today} siteId={siteId} departmentId={departmentId} everyDepartment={everyDepartment} departmentNames={departmentNames} date={date} dateLabel={dateLabel} live={live} canChange={canChange} anyTypes={anyTypes} areaList={areaList} />
             ) : <EmptyState compact icon="users" title="Nobody on a shift yet" hint="Add staff gives someone a shift; then give its time to what needs people." />}
           </section>
         </> : zones.length ? zones.map((z) => (
@@ -875,7 +918,7 @@ export function DayPlan({ siteId, departmentId, everyDepartment = false, departm
         </SheetContent>
       </Sheet>
       <FillSheet gap={gap} live={live} onClose={() => { setGap(null); setSelected(null); }} />
-      <ShiftSheet person={person} onClose={() => setOpenPerson(null)} siteId={siteId} departmentId={person ? forPerson(person) : departmentId} departmentNames={departmentNames} date={date} dateLabel={dateLabel} live={live} canChange={canChange} anyTypes={anyTypes} areaList={areaList} />
+      <ShiftSheet person={person} groups={allGroups} today={today} onClose={() => setOpenPerson(null)} siteId={siteId} departmentId={person ? forPerson(person) : departmentId} departmentNames={departmentNames} date={date} dateLabel={dateLabel} live={live} canChange={canChange} anyTypes={anyTypes} areaList={areaList} />
       <Sheet open={!!free && !!freePerson} onOpenChange={(o) => { if (!o) setFree(null); }}>
         <SheetContent portalClassName="turnfin-module" className="flex w-full flex-col gap-0 overflow-y-auto sm:max-w-lg">
           {free && freePerson ? (

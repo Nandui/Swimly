@@ -90,7 +90,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
             </ul>
           </nav>
           <DayPlan siteId={site.id} departmentId={department.id} everyDepartment={everyDepartment} departmentNames={departmentNames} date={date} dateLabel={dateLabel} live={live}
-            heading={`${formatWeekday(date)} ${formatDayMonth(date)}${date === now ? ", today" : ""}`}
+            heading={`${formatWeekday(date)} ${formatDayMonth(date)}${date === now ? ", today" : ""}`} today={date === now}
             actions={data.canChange ? <>
               <AddShiftSheet siteId={site.id} departmentId={department.id} departments={everyDepartment ? data.changeable : undefined} date={date} dateLabel={dateLabel} live={live} />
               {data.types.length ? <NeedDialog siteId={site.id} date={date} live={live} types={data.types} areas={data.areas} /> : null}

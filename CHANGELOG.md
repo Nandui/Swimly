@@ -4,13 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.48.0 · 20 October 2026 · Rota: a clearer Plan, Today and Bookings
+## 1.48.0 · 20 October 2026 · Rota: the Plan reads like the day's diary
 
-- **Plan** has a new look. The week is a slim bar of days, and each day shows how many places are still to fill. Choose a day and its figures sit above the plan: who is on, paid hours and unpaid breaks.
-- Two buttons show what needs your attention that day: **to fill** lists every place nobody is on yet, soonest first, and **to check** lists the people with breaks to place, under-18 rest or another warning. Choose an item to sort it out there and then.
-- The day has two views. **People** opens with an **Open needs** row showing every gap on the clock, then each person's shift, what they are on, their breaks and any **free** time still to give. Each person has a bar for their hours this week against their contract. **Needs** shows each area with what needs people and how covered it is, and now says "Needs 1 more" instead of "1/2".
-- Under the clock, each hour shows how many people are on (People) or how many places are short (Needs).
-- Area, time of day and zoom sit in one bar, and the colour key is behind **Key**. On a phone, People and Needs become simple lists.
+- **Plan** now reads like a diary of the day, so anyone can open it and see who is where. The week is a slim bar of days, and each day shows how many places are still to fill.
+- At the top of the day, **Not covered yet** lists every place nobody is on, soonest first, each with **Choose someone**. When there is nothing left, it says **Every need is filled**.
+- Beside it, **Who's where** shows each area and activity with who is on it, anyone on a break, anything short of people, and the next change, such as "15:00 · Cian starts, Aoife finishes". On today it opens on now; choose any other time of the day.
+- **The day, person by person** has one line for each person, in plain words: "Main pool 07:00–10:00", "Break", "Aqua-fit". Covering an area is blue, classes and activities green, bookings violet, breaks dashed, and places not covered sit on a line at the top. On today a line shows where the day has got to.
+- Choose a name, or a break, to see that person's day as a list from start to finish, with what they are on now. Choose an empty stretch to give that time to something, or a block to change it.
+- **By area** shows each area with what needs people and how covered it is. On a phone, the day becomes simple lists.
 - **Today** opens with five figures: gaps left, who is on now, what starts in the next three hours, who is off and changes to update in Timepoint. Gaps and who is on sit on the left, and who is off, the changes and the day note on the right.
 - **Bookings** opens with three figures, splits running bookings from finished ones and shows how many places on each booking are filled.
 - Nothing works differently: shifts, breaks, lending, copying, sharing and Export week work as before.

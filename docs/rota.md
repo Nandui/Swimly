@@ -106,22 +106,38 @@ it.
   design", from scheduling tools on Mobbin: 7shifts' day view, Deputy's open shifts row, Square's
   workday): one surface with a **week bar** (arrows, Today, and a tab per day with what is still to
   fill), then the open day (`DayPlan`):
-  - **The day's head**: its figures (on, paid, unpaid breaks), **N to fill** (a sheet listing every
-    place nobody is on, soonest first, each opening Who can fill it) and **N to check** (a sheet of
-    the people with breaks to place, a break needing cover, under-18 rest or a warning, each
-    opening their shift), then Add staff and Add activity, or why the viewer can't change the day.
-  - **One toolbar**: People or Needs (kept on the device), Area, Time of day and the zoom buttons
-    (owner, 15 October 2026: never on scroll), Other departments (Needs) and the Key, in a popover.
-  - Under the clock, each hour's **staff on** (People) or **places short** (Needs), amber where short.
-  - **People** (the default): an **Open needs** row with every place to fill on the clock (choose
-    one to fill it), then each person (`savePlanShift` from Add staff): name, shift, paid today and a
-    bar of the week's paid hours at this site against their contract (`User.contractMinutes`; over
-    it turns amber). Across it, the shift's outline, what they are on (from every department, so
-    lending shows), their breaks, and every stretch nothing is given to yet as **Free** (`freeTime`),
-    where every new shift starts. Choosing Free lists what needs someone then, from any department,
-    and puts them on it for that stretch; choosing what they are on changes their time or takes them
-    off; choosing the name opens their shift and breaks.
-  - **Needs**: area by area, one row per thing that needs people (`needRows`, `shared/plan-rows.ts`):
+  Rebuilt again the same evening as **the day's diary** (owner, 20 October 2026: "It's the plan,
+  the diary, the actual guide for the day ... readable and understood by anyone"; test: anyone can
+  say who's where at 14:30 without help):
+  - **The day's head**: its figures (on, paid, unpaid breaks) and **N to check** (a sheet of the
+    people with breaks to place, a break needing cover, under-18 rest or a warning, each opening
+    their day), then Add staff and Add activity, or why the viewer can't change the day.
+  - **Not covered yet**: the first places nobody is on, soonest first, each with Choose someone
+    (Who can fill it, best fits first, any department), and See all for the rest; "Every need is
+    filled" when there are none (the day is done; warnings never block).
+  - **Who's where** (`whoIsWhere`, `nextChange`, `shared/plan-rows.ts`): at one moment (now on
+    today, `useNowMinute`; else when the day starts; any half hour from a select), each area's need
+    and each activity, booking or class running then, with who is on it and how many more it
+    needs, who is on a break, and the next change (who starts, finishes, goes on a break or moves).
+  - **The day, person by person** (the default; By person or By area kept on the device), with a
+    short colour key beside it: covering an area blue (`next`), classes and activities green
+    (`now`), bookings violet (`assessment`), breaks dashed, Not covered amber with a dashed edge,
+    Off that day red. One toolbar holds the view, Area, Time of day and the zoom buttons (owner, 15
+    October 2026: never on scroll) and Other departments (By area). On today a now line crosses
+    every row.
+  - A **Not covered** line on top with every place to fill on the clock, then one line per person
+    (`savePlanShift` from Add staff): name, shift, paid today and a bar of the week's paid hours at
+    this site against their contract (`User.contractMinutes`; over it turns amber). Across it, the
+    shift's outline and, in plain words, what they are on (an area by its name, "Main pool", then
+    its time and role; anything else by what it is, "Aqua-fit", a class by its level; from every
+    department, so lending shows), each **Break** as its own block, and every stretch nothing is
+    given to yet (`freeTime`), where every new shift starts. Choosing an empty stretch lists what
+    needs someone then, from any department, and puts them on it for that stretch; choosing what
+    they are on changes their time or takes them off; choosing the name or a break opens **their
+    day as a list** (`daySteps`): each line with its time, what, where and until when, breaks
+    (and any cover they need), time not given yet, time off between split parts and Finish, with
+    Now marked on today; then their shift, breaks and what they could take.
+  - **By area**: area by area, one row per thing that needs people (`needRows`, `shared/plan-rows.ts`):
     each area's own need, each activity, each booking, the swim classes in an area, and other
     modules' sessions, with how many people it has against how many it needs, stretch by stretch
     (`coverOf`): green with the names when there are enough, amber "Needs 1 more" where it is short,
@@ -133,8 +149,8 @@ it.
   shift with name, date, start, end, paid hours, unpaid break minutes and the shift's department;
   each export is in the activity log. Dragging or sideways scrolling moves a zoomed-in day
   (`view.ts`). **Copy** fills empty days from an earlier day or week (people optional); **Share
-  week** shares it. Below 1024px People is the open needs and a list of who's working, and Needs an
-  agenda by area. The lanes of 1.11.0 stay on bookings and activities (`lanes.ts`); the zone rows
+  week** shares it. Below 1024px Not covered yet and Who's where stay on top, By person is a list of who's
+  working (each opening their day as a list), and By area an agenda by area. The lanes of 1.11.0 stay on bookings and activities (`lanes.ts`); the zone rows
   (`zones.ts`) are no longer drawn on the Plan.
 - **Today** (`/rota/today`, duty managers): the whole site, every department. Five figures
   (gaps left, on now, starting in three hours, off today, to update in Timepoint), then **Gaps to
