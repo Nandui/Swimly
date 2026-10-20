@@ -4,6 +4,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.40.0 · 20 October 2026 · Add a swimmer to Awaiting enrolment yourself
+
+- Reception can now put a swimmer on **Awaiting enrolment** by hand, for when they need a class but have not been placed by an assessment (for example, they moved from another swim school). Press **Add a swimmer** at the top of the page, pick the swimmer, the level they should start at, and say why.
+- They then appear on the list like a swimmer placed by an assessment, marked **Added by hand** with who added them, when and why, and **Find a class** offers classes at that level. They leave the list once they have a class.
+- If they were added by mistake or the family is no longer looking, open them and press **Take off the list**. Adding and taking off both show in the swimmer's history.
+
 ## 1.39.0 · 19 October 2026 · Swim school analytics: easier to find your way
 
 - Moving between **Analytics** reports is now one button at the start of the bar under the page title, named after the report you are on. Open it to pick any other report (The business, Our people, Checks) or jump to a part of the page you are on. The separate row of report tabs is gone.

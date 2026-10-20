@@ -39,6 +39,7 @@ The swim school is one tightly linked domain, so about 90 of its 280 files are s
 - `Course`, `Enrolment`, `AttendanceRecord`, `ClassNote`, `ClassCancellation`, `CancelledClassSwimmer`, `ClassCover`, `ClassPlannedTeacher`
 - `CompetencyResult`, `LevelCompletion`
 - `AssessmentSession`, `AssessmentType`, `AssessmentBooking`
+- `ManualPlacement` — swimmers the desk put on Awaiting enrolment by hand, without an assessment
 - `LegendAgreementPrice`
 - the `Parent*` tables of the parent app
 

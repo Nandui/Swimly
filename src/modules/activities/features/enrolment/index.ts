@@ -6,5 +6,6 @@ export { LegendAgreements } from "@/modules/activities/features/enrolment/compon
 export { getAwaitingEnrolment } from "@/modules/activities/features/enrolment/server/data/awaiting-enrolment";
 export { getAwaitingMoves } from "@/modules/activities/features/enrolment/server/data/awaiting-moves";
 export { getLegendAgreements } from "@/modules/activities/features/enrolment/server/data/legend-agreements";
+export { getLevelOptions } from "@/modules/activities/shared/curriculum/data/curriculum";
 export { getTransferTargets } from "@/modules/activities/shared/enrolment/data/enrolments";
 export { processScheduledUnenrolments } from "@/modules/activities/features/enrolment/server/scheduled";
