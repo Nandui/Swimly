@@ -293,6 +293,18 @@ export const PERMISSIONS = [
     description: "Keep the product list and its categories, and delete a count at the sites this role covers. Includes counting.",
   },
   {
+    key: "cctv.record",
+    group: "CCTV log",
+    label: "Record CCTV viewings",
+    description: "Record each time they check CCTV footage at the sites this role covers, and read their own entries.",
+  },
+  {
+    key: "cctv.review",
+    group: "CCTV log",
+    label: "Read every CCTV viewing",
+    description: "Read every CCTV viewing recorded at the sites this role covers and add notes to them. Includes recording.",
+  },
+  {
     key: "hr.records.read",
     group: "HR",
     label: "Read HR records",
@@ -427,6 +439,7 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "short-courses.manage": ["short-courses.run", "short-courses.read"],
   "stock.count": ["stock.read"],
   "stock.manage": ["stock.count", "stock.read"],
+  "cctv.review": ["cctv.record"],
   "hr.notes.write": ["hr.records.read"],
   "hr.reviews.write": ["hr.records.read"],
   "hr.details.write": ["hr.records.read"],

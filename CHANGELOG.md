@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.44.0 · 20 October 2026 · Managers: a CCTV log
+
+- There is a new **Managers** group of modules, and the first one is the **CCTV log**. Each time someone checks CCTV footage, they record it: who checked it and when, anyone else watching, why it was checked, what they were looking for, which cameras and times they watched, what they saw, and any copy saved or handed over.
+- You can add the incident report's number, such as INC-00042, so the record links to the report.
+- A saved record can't be changed or deleted. If something comes to light later, press **Add a note** and it shows under the record with your name and the time.
+- **Record** lets people record viewings and read their own. **Review** also lets them read every viewing at their sites and add notes. Nobody sees the CCTV log until an administrator gives their role a level under **Admin, Roles**.
+
 ## 1.43.0 · 20 October 2026 · Training: turn an SOP into a course with AI
 
 - In **Training, Courses**, people who build courses now have **Draft from a document**. Give it an SOP, a policy or a handbook section (a PDF, a Word document, a text file or a photo of the pages), or paste the text, and the AI writes a course from it: lessons, flashcards, checklists, practice questions and a final exam.

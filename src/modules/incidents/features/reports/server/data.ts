@@ -57,6 +57,16 @@ export async function incidentCounts() {
 
 /** One report, with what this person may do to it. A 404 when they may not see
  *  it. Opening someone else's report with people in it is logged. */
+/** A report's id from its number (INC-00042), for links from other modules that only know the
+ *  number, such as the CCTV log. The report page then checks who may read it. */
+export async function reportIdByNumber(number: number) {
+  const who = await requireIncidentsActor();
+  if (!Number.isSafeInteger(number) || number < 1) notFound();
+  const found = await prisma.incidentReport.findFirst({ where: { number, orgId: who.orgId ?? undefined }, select: { id: true } });
+  if (!found) notFound();
+  return found.id;
+}
+
 export async function incidentReport(id: string) {
   const who = await requireIncidentsActor();
   const found = await prisma.incidentReport.findFirst({
