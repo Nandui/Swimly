@@ -4,11 +4,28 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.40.0 · 19 October 2026 · Training: turn an SOP into a course with AI
+## 1.43.0 · 20 October 2026 · Training: turn an SOP into a course with AI
 
 - In **Training, Courses**, people who build courses now have **Draft from a document**. Give it an SOP, a policy or a handbook section (a PDF, a Word document, a text file or a photo of the pages), or paste the text, and the AI writes a course from it: lessons, flashcards, checklists, practice questions and a final exam.
 - The new course is never live straight away. It opens in the builder unpublished, with a comment listing what to check, such as gaps or unclear steps in the document. Read it, fix anything, then publish it as usual.
 - Names, phone numbers and emails in the document are swapped for the role, such as "the duty manager". Leave out anything personal before you send a document.
+
+## 1.42.0 · 20 October 2026 · Swim school: a check when enrolling at another centre
+
+- When you enrol a swimmer in a class at a different centre from where they were assessed, Turnfin now stops and asks you to check first. Parents are told lessons are only at the centre where their child was assessed.
+- You can still go ahead. The activity log notes that they were enrolled at another centre after the check.
+
+## 1.41.0 · 20 October 2026 · Add a swimmer to Awaiting enrolment yourself
+
+- Reception can now put a swimmer on **Awaiting enrolment** by hand, for when they need a class but have not been placed by an assessment (for example, they moved from another swim school). Press **Add a swimmer** at the top of the page, pick the swimmer, the level they should start at, and say why.
+- They then appear on the list like a swimmer placed by an assessment, marked **Added by hand** with who added them, when and why, and **Find a class** offers classes at that level. They leave the list once they have a class.
+- If they were added by mistake or the family is no longer looking, open them and press **Take off the list**. Adding and taking off both show in the swimmer's history.
+
+## 1.40.0 · 19 October 2026 · Incidents: staff conduct and welfare reports
+
+- **Staff conduct or welfare** is now its own choice when you report an incident, for things that happen on shift such as a procedure not followed, a staff member taken unwell or a dispute between staff.
+- Its triage has its own five levels, and asks what it was about, whether their manager was told, whether it was passed to HR, and what support the staff member was offered.
+- Discipline and grievances themselves still go through HR.
 
 ## 1.39.0 · 19 October 2026 · Swim school analytics: easier to find your way
 
