@@ -12,12 +12,14 @@ import {
   buildClass, buildClasses, buildOverview, buildProgression, buildSwimmers, buildTeacher, buildTeachers, type Dataset, type Names,
 } from "@/modules/activities/features/analytics/server/insights";
 import { parentLinksQuery, type ParentLinkRow } from "@/modules/activities/features/analytics/server/desk-queries";
-import { deskOverdue } from "@/modules/activities/features/analytics/server/desk-overdue";
 import { attendanceBySlot, cancellations, continuity, forecast, parentTakeUp, stayCurves } from "@/modules/activities/features/analytics/server/extras";
 import { swimmerSpans } from "@/modules/activities/features/analytics/server/swimmers";
 import { periodFrom, siteScope, type ReportFilters } from "@/modules/activities/features/analytics/server/period";
 import { forProgramme, programmeOptions } from "@/modules/activities/features/analytics/server/programme-filter";
 import { readLessons } from "@/modules/activities/features/analytics/server/teaching";
+import { instructorAttendanceQuery } from "@/modules/activities/features/analytics/server/attendance-query";
+import { analyticsPeriod } from "@/modules/activities/features/analytics/server/rules";
+import { instructorAttendanceTotals, type AttendanceOccurrence } from "@/modules/activities/features/analytics/server/reports";
 
 export type ReportParams = { range?: string | string[]; sites?: string | string[]; from?: string | string[]; to?: string | string[]; programme?: string | string[] };
 
@@ -93,23 +95,42 @@ async function names(ids: Iterable<string>): Promise<Names> {
 
 const everything: Need = { lessons: true, teaching: true, marks: true, register: true, progress: true, assessments: true };
 
-export async function getOverviewInsights(params: ReportParams, now = new Date()) {
+/** The business dashboard: growth, capacity, demand and who leaves, for decisions about the
+ *  timetable and the swim school's shape. */
+export async function getBusinessInsights(params: ReportParams, now = new Date()) {
   const ctx = await context(params, now);
-  const ds = await dataset(ctx.clubIds, ctx.period, now, { lessons: true, marks: true, progress: true }, ctx.filters.programme);
-  return { ...ctx, session: undefined, overview: buildOverview(ds), deskOverdue: await deskOverdue(ctx.clubIds, now) };
+  const ds = await dataset(ctx.clubIds, ctx.period, now, { lessons: true, marks: true, progress: true, assessments: true }, ctx.filters.programme);
+  const classes = buildClasses(ds);
+  return {
+    ...ctx, session: undefined, overview: buildOverview(ds),
+    capacity: { heat: classes.heat, days: classes.days, levels: classes.levels },
+    forecast: forecast(ds.places, ds.courses, ds.waitlist, ctx.period.now),
+    assessments: buildProgression(ds).assessments,
+  };
 }
 
+/** The pool deck dashboard: how each teacher's lessons go and the service swimmers get (attendance,
+ *  registers, punctual starts, the same teacher each week, skills and passes). */
+export async function getPoolDeckInsights(params: ReportParams, now = new Date()) {
+  const ctx = await context(params, now);
+  const { period } = ctx;
+  const ds = await dataset(ctx.clubIds, period, now, { ...everything, register: false }, ctx.filters.programme);
+  const week = analyticsPeriod(now);
+  const registerRows = (await Promise.all(ctx.clubIds.map(id => prisma.$queryRaw<AttendanceOccurrence[]>(instructorAttendanceQuery(id, week.weekStart, week.weekEnd, now))))).flat();
+  return {
+    ...ctx, session: undefined, overview: buildOverview(ds), teachers: buildTeachers(ds), progression: buildProgression(ds),
+    continuity: continuity(ds.lessons, ds.courses, period.start, period.end),
+    slots: attendanceBySlot(ds.lessons, ds.courses, period.start, period.end),
+    cancellations: cancellations(ds.lessons, period),
+    registers: { ...instructorAttendanceTotals(registerRows, now).totals, week: { start: week.weekStart, end: week.weekEnd } },
+  };
+}
+
+/** Every class, to sort and open. */
 export async function getClassesInsights(params: ReportParams, now = new Date()) {
   const ctx = await context(params, now);
   const ds = await dataset(ctx.clubIds, ctx.period, now, { lessons: true }, ctx.filters.programme);
-  const { period } = ctx;
-  return {
-    ...ctx, session: undefined, classes: buildClasses(ds),
-    forecast: forecast(ds.places, ds.courses, ds.waitlist, period.now),
-    slots: attendanceBySlot(ds.lessons, ds.courses, period.start, period.end),
-    cancellations: cancellations(ds.lessons, period),
-    continuity: continuity(ds.lessons, ds.courses, period.start, period.end),
-  };
+  return { ...ctx, session: undefined, classes: buildClasses(ds) };
 }
 
 export async function getClassInsights(courseId: string, params: ReportParams, now = new Date()) {
@@ -138,12 +159,6 @@ export async function getProgressionInsights(params: ReportParams, now = new Dat
   return { ...ctx, session: undefined, progression: buildProgression(ds) };
 }
 
-export async function getTeacherInsights(params: ReportParams, now = new Date()) {
-  const ctx = await context(params, now);
-  const ds = await dataset(ctx.clubIds, ctx.period, now, { ...everything, register: false, progress: false, assessments: false }, ctx.filters.programme);
-  return { ...ctx, session: undefined, teachers: buildTeachers(ds), continuity: continuity(ds.lessons, ds.courses, ctx.period.start, ctx.period.end) };
-}
-
 export async function getOneTeacherInsights(key: string, params: ReportParams, now = new Date()) {
   const ctx = await context(params, now);
   const ds = await dataset(ctx.clubIds, ctx.period, now, { ...everything, register: false, progress: false, assessments: false }, ctx.filters.programme);
@@ -151,10 +166,10 @@ export async function getOneTeacherInsights(key: string, params: ReportParams, n
   return { ...ctx, session: undefined, detail: first ? buildTeacher(ds, key, await names(first.leavers.map(l => l.studentId))) : null };
 }
 
-export type OverviewInsights = Awaited<ReturnType<typeof getOverviewInsights>>;
+export type BusinessInsights = Awaited<ReturnType<typeof getBusinessInsights>>;
+export type PoolDeckInsights = Awaited<ReturnType<typeof getPoolDeckInsights>>;
 export type ClassesInsights = Awaited<ReturnType<typeof getClassesInsights>>;
 export type ClassInsights = Awaited<ReturnType<typeof getClassInsights>>;
 export type SwimmerInsights = Awaited<ReturnType<typeof getSwimmerInsights>>;
 export type ProgressionInsights = Awaited<ReturnType<typeof getProgressionInsights>>;
-export type TeacherInsights = Awaited<ReturnType<typeof getTeacherInsights>>;
 export type OneTeacherInsights = Awaited<ReturnType<typeof getOneTeacherInsights>>;

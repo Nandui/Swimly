@@ -195,6 +195,51 @@ export function ColumnChart({ rows, label, kind = "count", height = 200 }: {
   </figure>;
 }
 
+/** Week by week as columns, with the same week one period earlier as a quieter column beside each, and
+ *  a readout of both on hover or with the arrow keys. */
+export function CompareColumns({ rows, label, unit, previousLabel, tone, height = 220 }: {
+  rows: { key: string; tick: string; title: string; value: number; previous: number | null }[];
+  label: string; unit: string; previousLabel: string; tone?: "b"; height?: number;
+}) {
+  const [ref, W] = useWidth();
+  const H = height, L = 36, R = 8, T = 12, B = 26;
+  const id = React.useId().replace(/:/g, "");
+  const { active, setActive, onKeyDown } = useActive(rows.length);
+  const { top, ticks } = niceScale(Math.max(...rows.flatMap(r => [r.value, r.previous ?? 0])));
+  const band = (W - L - R) / Math.max(1, rows.length);
+  const bar = Math.min(16, band * 0.32);
+  const y = (v: number) => T + (H - T - B) * (1 - v / top);
+  const every = Math.max(1, Math.ceil(rows.length / Math.max(2, Math.floor(W / 80))));
+  const shown = active !== null ? rows[active] : null;
+  return <figure ref={ref} className="ins-chart" onPointerLeave={() => setActive(null)}>
+    <ul className="ins-legend" aria-hidden="true"><li><span className="ins-swatch" data-series={tone ?? "a"} />This period</li><li><span className="ins-swatch" data-series="previous" />{previousLabel}</li></ul>
+    <svg viewBox={`0 0 ${W} ${H}`} className="ins-svg" role="img" aria-label={`${label}. Use the arrow keys to read each week.`}
+      tabIndex={0} onKeyDown={onKeyDown} onBlur={() => setActive(null)}
+      onPointerMove={event => setActive(bandAt(event, rows.length, L, R, W, "band"))}>
+      <Gradients id={id} />
+      {ticks.map(t => <g key={t}>
+        <line className={t === 0 ? "ins-baseline" : "ins-gridline"} x1={L} x2={W - R} y1={y(t)} y2={y(t)} />
+        <text className="ins-axis" x={L - 8} y={y(t) + 4} textAnchor="end">{count(t)}</text>
+      </g>)}
+      {rows.map((r, i) => {
+        const cx = L + band * i + band / 2;
+        const h = y(0) - y(r.value), hp = r.previous === null ? 0 : y(0) - y(r.previous);
+        return <g key={r.key} className="ins-band" data-active={active === i ? "" : undefined}>
+          {active === i ? <rect className="ins-band-hover" x={L + band * i} y={T} width={band} height={H - T - B} /> : null}
+          {hp > 0 ? <path className="ins-col-previous" d={roundedUp(cx - bar - 1, y(0), bar, hp)} /> : null}
+          {h > 0 ? <path className={tone === "b" ? "ins-col-b" : "ins-col-a"} d={roundedUp(cx + 1, y(0), bar, h)} fill={`url(#${tone === "b" ? "col-b-up" : "col-a"}-${id})`} /> : null}
+          {i % every === 0 ? <text className="ins-axis" x={cx} y={H - 6} textAnchor="middle">{r.tick}</text> : null}
+        </g>;
+      })}
+    </svg>
+    {shown && active !== null ? <Readout x={((L + band * active + band / 2) / W) * 100} align={tipAlign((L + band * active) / W)} title={shown.title} rows={[
+      { key: "a", label: unit, value: count(shown.value), series: tone ?? "a" },
+      ...(shown.previous !== null ? [{ key: "p", label: previousLabel, value: count(shown.previous), series: "compare" }] : []),
+    ]} /> : null}
+    <Table containerClassName="sr-only"><TableCaption>{label}</TableCaption><TableHeader><TableRow><TableHead scope="col">Week</TableHead><TableHead scope="col">{unit}</TableHead><TableHead scope="col">{previousLabel}</TableHead></TableRow></TableHeader><TableBody>{rows.map(r => <TableRow key={r.key}><TableHead scope="row">{r.title}</TableHead><TableCell>{count(r.value)}</TableCell><TableCell>{r.previous === null ? "" : count(r.previous)}</TableCell></TableRow>)}</TableBody></Table>
+  </figure>;
+}
+
 /** The chart's gradients, coloured from the stylesheet: the area wash, the line running from blue
  *  into violet, and each series' columns deepening towards the data end. */
 function Gradients({ id }: { id: string }) {
@@ -210,6 +255,10 @@ function Gradients({ id }: { id: string }) {
     <linearGradient id={`col-a-${id}`} x1="0" x2="0" y1="1" y2="0">
       <stop offset="0%" className="ins-stop-a" />
       <stop offset="100%" className="ins-stop-v" />
+    </linearGradient>
+    <linearGradient id={`col-b-up-${id}`} x1="0" x2="0" y1="1" y2="0">
+      <stop offset="0%" className="ins-stop-b" />
+      <stop offset="100%" className="ins-stop-b2" />
     </linearGradient>
     <linearGradient id={`col-b-${id}`} x1="0" x2="0" y1="0" y2="1">
       <stop offset="0%" className="ins-stop-b" />

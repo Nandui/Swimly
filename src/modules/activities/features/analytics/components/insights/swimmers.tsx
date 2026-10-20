@@ -38,9 +38,7 @@ function LeaverTable({ ctx, rows, upcoming }: { ctx: ReportContext; rows: Person
 export function SwimmersReport({ data }: { data: SwimmerInsights }) {
   const s = data.swimmers;
   const dropOff = s.months.filter(m => m.dropOff !== null);
-  return <ReportShell ctx={data} page="swimmers" path="/analytics/swimmers" title="Swimmers" sections={[
-    { id: "glance", label: "At a glance" }, { id: "keep", label: "Keep them" }, { id: "growth", label: "Growth" }, { id: "leavers-why", label: "Leavers" }, { id: "families", label: "Families" },
-  ]} footnotes={[
+  return <ReportShell ctx={data} page="swimmers" path="/analytics/swimmers" title="Swimmers and leavers" back footnotes={[
     "Joining and leaving count the swim school as a whole: moving class or site, or coming back within two weeks, is not leaving. A leaver is dated the first day without a place.",
     "Came to is the swimmer's last eight marked lessons before leaving. Last taught by is the teacher of the last lesson they came to.",
     "Leave reasons are asked from 16 October 2026; earlier leavers show Not recorded. Finished their class means the place was ended as finished with no other place.",
