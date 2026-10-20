@@ -36,6 +36,7 @@ import { nameInitials } from '@/lib/format';
 import { Notice } from '@/components/ui-kit/notice';
 import { Tag } from '@/components/ui-kit/tag';
 import { PageHeader } from '@/components/ui-kit/page-header';
+import { PageShell } from '@/components/ui-kit/page-shell';
 import { SegmentedLinks } from '@/components/ui-kit/segmented-links';
 import { SearchField } from '@/components/ui-kit/search-field';
 import { EmptyState } from '@/components/ui-kit/empty-state';
@@ -133,11 +134,10 @@ export function AdminView({
     });
   }
   return (
-    <>
-      <PageHeader
+    <PageShell header={<PageHeader
         title="Administration"
         description="Manage document groups, templates and standards. Staff accounts and permissions are shared with Turnfin"
-      />
+      />}>
       <div className="flex min-w-0 flex-col gap-4">
         <SegmentedLinks
           label="Administration sections"
@@ -604,7 +604,7 @@ export function AdminView({
           )}
         </div>
       </div>
-    </>
+    </PageShell>
   );
 }
 

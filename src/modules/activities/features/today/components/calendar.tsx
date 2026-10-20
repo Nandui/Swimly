@@ -9,6 +9,7 @@ import { Tag } from "@/components/ui-kit/tag";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/shadcn/tabs";
 import { capacityTone, courseName, placesLeft } from "@/modules/activities/shared/courses/constants";
 import { formatDay, formatTime, formatTimeRange, minutesNow, plural, today } from "@/lib/format";
@@ -34,7 +35,7 @@ export function ScheduleCalendar({ courses, assessments, iso, todayIso, initialN
   const now = scheduleNow(iso, clock.date, clock.minutes);
   const isToday = iso === clock.date;
   const [refreshing, startRefresh] = useTransition();
-  const surface = useRef<HTMLElement>(null);
+  const surface = useRef<HTMLDivElement>(null);
   const agendaTrigger = useRef<HTMLButtonElement>(null);
   const [width, setWidth] = useState(0);
 
@@ -84,11 +85,11 @@ export function ScheduleCalendar({ courses, assessments, iso, todayIso, initialN
     heading?.scrollIntoView({ block: "nearest", inline: "center", behavior: "instant" });
   };
 
-  return <section ref={surface} className={styles.calendar} data-schedule-calendar aria-busy={refreshing}>
-    <PageHeader title="Schedule" description={`${formatDay(iso)} · ${clubName}`} actions={<>
+  return <PageShell ref={surface} className={styles.calendar} data-schedule-calendar aria-busy={refreshing}
+    header={<PageHeader title="Schedule" description={`${formatDay(iso)} · ${clubName}`} actions={<>
       <LoadingButton variant="outline" pending={refreshing} pendingLabel="Refreshing…" onClick={refresh}><RefreshCw aria-hidden="true" />Refresh</LoadingButton>
       {target && isToday ? <Button onClick={jump}><Clock aria-hidden="true" />{running ? "Jump to now" : "Jump to next"}</Button> : null}
-    </>} />
+    </>} />}>
     <span className="sr-only" role="status">{refreshing ? "Loading schedule" : `Showing ${formatDay(iso)}`}</span>
     <div className="pc-panel">
     <Tabs value={agenda ? 'agenda' : 'sheet'} onValueChange={next => setView(next as 'sheet' | 'agenda')} className="gap-4">
@@ -153,7 +154,7 @@ export function ScheduleCalendar({ courses, assessments, iso, todayIso, initialN
           </Table>
         </section>}
     </TabsContent></div></Tabs></div>
-  </section>;
+  </PageShell>;
 }
 
 function CalendarEmpty() {

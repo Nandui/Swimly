@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { ACADEMY_CALL_DUE_META, ACADEMY_CALL_META, ACADEMY_CALL_TIMES, type AcademyCallOutcome, type AcademyCallTime, CallDialog, toCall } from "@/modules/short-courses/features/academy-calls";
 import { formatDate, formatDateTime, plural } from "@/lib/format";
@@ -17,14 +18,13 @@ const outcome = (o: string) => (ACADEMY_CALL_META[o as AcademyCallOutcome]?.labe
 export default async function AcademyCallsPage() {
   const { people, overdue, soon } = await toCall();
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title="To call for payment"
+    <PageShell spacing="roomy" header={<PageHeader title="To call for payment"
         description="People who held a place online. Phone them within 72 hours of holding it to take payment, soonest deadline first."
         status={people.length ? <>
           {overdue ? <Tag meta={ACADEMY_CALL_DUE_META.overdue} label={`${overdue} overdue`} /> : null}
           {soon ? <Tag meta={ACADEMY_CALL_DUE_META.soon} label={`${soon} due within a day`} /> : null}
           <Tag meta={ACADEMY_CALL_DUE_META.later} label={plural(people.length, "to call", "to call")} />
-        </> : undefined} />
+        </> : undefined} />}>
       <section className="pc-panel" aria-labelledby="calls-h">
         <div className="pc-panel-head"><h2 id="calls-h">To call</h2></div>
         {people.length === 0 ? <EmptyState compact icon="calendarCheck" title="Nobody to call" hint="When someone holds a place on the booking site, they show here until their payment is recorded." /> : (
@@ -60,6 +60,6 @@ export default async function AcademyCallsPage() {
           </ul>
         )}
       </section>
-    </div>
+    </PageShell>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { hrReview, REVIEW_OVERALL_LABELS, REVIEW_STATUS_META, ReviewEditor } from "@/modules/hr/features/reviews";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDate } from "@/lib/format";
 import { requireFreshSession } from "@/lib/policy/session";
@@ -13,13 +14,12 @@ export default async function HrReviewPage({ params }: { params: Promise<{ id: s
   const { who, person, review, editable } = await hrReview(id);
   const sections = [["Summary", review.summary], ["Strengths", review.strengths], ["Goals for the next period", review.goals]] as const;
   return (
-    <>
-      <PageHeader
+    <PageShell header={<PageHeader
         back={{ href: `/hr/people/${person.id}`, label: person.name }}
         title={review.period}
         description={`For ${person.name} · by ${review.reviewerName}${review.sharedAt ? ` · shared ${formatDate(new Date(review.sharedAt))}` : ` · started ${formatDate(new Date(review.createdAt))}`}`}
         status={<Tag meta={REVIEW_STATUS_META[review.status]} />}
-      />
+      />}>
       {editable ? (
         <ReviewEditor review={review} name={person.name} isReviewer={review.reviewerId === who.id} />
       ) : (
@@ -35,6 +35,6 @@ export default async function HrReviewPage({ params }: { params: Promise<{ id: s
           ) : null}
         </section>
       )}
-    </>
+    </PageShell>
   );
 }

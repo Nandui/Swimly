@@ -4,6 +4,7 @@ import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { ACADEMY_COURSE_META, ACADEMY_KIND_META, academyHome, type AcademyKind, CourseDialog, type CourseRow, hoursLabel, newCourseOptions } from "@/modules/short-courses/features/academy-courses";
 import { formatDate, plural } from "@/lib/format";
@@ -17,15 +18,14 @@ export default async function AcademyPage() {
   const options = who.manage ? await newCourseOptions() : null;
   const canPutOn = !!options && options.sites.length > 0 && options.types.length > 0;
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title="Academy courses"
+    <PageShell spacing="roomy" header={<PageHeader title="Academy courses"
         description="The lifeguard and swim teacher courses we deliver: candidates, pre-course checks, registers and results. Sessions show on the Rota for their tutor."
-        actions={canPutOn ? <CourseDialog sites={options.sites} types={options.types} staff={options.staff} /> : who.manage ? <Button asChild><Link href="/short-courses/academy/types">Add a course to the list</Link></Button> : undefined} />
+        actions={canPutOn ? <CourseDialog sites={options.sites} types={options.types} staff={options.staff} /> : who.manage ? <Button asChild><Link href="/short-courses/academy/types">Add a course to the list</Link></Button> : undefined} />}>
       <Panel id="ac-current" title="Coming up and running" courses={current}
         empty={types ? { title: "No courses on", hint: who.manage ? "Put a course on, then add its sessions and candidates." : "Whoever manages the Academy puts courses on." }
           : { title: "No courses on the list yet", hint: "Whoever manages the Academy adds the courses we deliver first, such as NPLQ." }} />
       {past.length ? <Panel id="ac-past" title="Finished in the last 90 days" courses={past} /> : null}
-    </div>
+    </PageShell>
   );
 }
 

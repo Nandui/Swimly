@@ -26,10 +26,9 @@
 }
 
 /* ── The title: an eyebrow naming the suite (or a link back to the dashboard), the H1, one context line. */
-.turnfin-app .ins-top { display: flex; flex-direction: column; gap: 4px; }
 .turnfin-app .ins-eyebrow { margin: 0; color: var(--pc-ink-muted); font-size: 13px; line-height: 18px; font-weight: 600; }
-.turnfin-app .ins-top h1 { font-size: var(--pc-text-page); line-height: var(--pc-leading-page); font-weight: 700; letter-spacing: -0.02em; }
-.turnfin-app .ins-top p { color: var(--pc-ink-muted); font-size: 15px; line-height: 22px; }
+.turnfin-app .ins [data-page-header] h1 { font-size: var(--pc-text-page); line-height: var(--pc-leading-page); font-weight: 700; letter-spacing: -0.02em; }
+.turnfin-app .ins [data-page-header] p { color: var(--pc-ink-muted); font-size: 15px; line-height: 22px; }
 .turnfin-app .ins-context { display: block; margin-top: 2px; font-size: 13px; line-height: 18px; }
 
 /* ── The bar: the three dashboards as pills, then the filters as pills to the right. */

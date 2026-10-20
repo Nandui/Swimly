@@ -23,6 +23,7 @@ import { Tag } from '@/components/ui-kit/tag';
 import { DocIcon, FilterPicker } from '@/modules/docs/shared/components/ui';
 import { EmptyState } from '@/components/ui-kit/empty-state';
 import { PageHeader } from '@/components/ui-kit/page-header';
+import { PageShell } from '@/components/ui-kit/page-shell';
 import { Button } from '@/components/shadcn/button';
 
 export function WorkView({ workspace: w, drafts }: { workspace: Workspace; drafts: Draft[] }) {
@@ -83,8 +84,7 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
   const queue = queues.find((q) => q.id === params.get('view')) || queues[0];
   if (!queue) {
     return (
-      <>
-        <PageHeader title="My work" description="Authoring, reviews and review dates for people who write documents" />
+      <PageShell header={<PageHeader title="My work" description="Authoring, reviews and review dates for people who write documents" />}>
         <EmptyState
           as="h2"
           icon="book"
@@ -99,7 +99,7 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
             </Button>
           }
         />
-      </>
+      </PageShell>
     );
   }
   function url(key: string, value: string) {
@@ -153,8 +153,7 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
     `${item.title} ${item.reference}`.toLowerCase().includes(search.toLowerCase()),
   );
   return (
-    <>
-      <PageHeader
+    <PageShell header={<PageHeader
         title="My work"
         description="A clear next step for every document"
         actions={
@@ -167,7 +166,7 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
             </Button>
           ) : undefined
         }
-      />
+      />}>
       <div className="grid min-w-0 items-start gap-4 lg:grid-cols-rail-main">
         <nav className="pc-panel" aria-labelledby="queues-heading">
           <h2 id="queues-heading">Queues</h2>
@@ -276,6 +275,6 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
           )}
         </section>
       </div>
-    </>
+    </PageShell>
   );
 }

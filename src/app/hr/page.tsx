@@ -4,6 +4,7 @@ import { ChevronRight, Lock } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDateTime, nameInitials, plural } from "@/lib/format";
@@ -20,8 +21,7 @@ export default async function HrPeoplePage({ searchParams }: { searchParams: Pro
   // Dev sign-ins pass the step-up without a password time, so they get no time sentence.
   const confirmedAt = actor.authMethod === "password" && actor.authAt ? formatDateTime(new Date(actor.authAt)) : null;
   return (
-    <>
-      <PageHeader title="HR" description="The people your HR role covers. Opening a record is logged." />
+    <PageShell header={<PageHeader title="HR" description="The people your HR role covers. Opening a record is logged." />}>
       <div className="pc-note">
         <Lock aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-ui-primary" />
         <p className="text-sm">
@@ -56,6 +56,6 @@ export default async function HrPeoplePage({ searchParams }: { searchParams: Pro
           </ul>
         )}
       </section>
-    </>
+    </PageShell>
   );
 }

@@ -7,6 +7,7 @@ import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { QUALIFICATION_STATE_META } from "@/lib/people/constants";
 import { REQUIREMENT_META } from "@/lib/people/requirements";
@@ -24,8 +25,7 @@ export default async function TrainingExpiringPage({ searchParams }: { searchPar
   const { rows, missing, sites, positions } = await expiringQualifications({ site: input.site || undefined, position: input.position || undefined });
   const filtered = !!(input.site || input.position);
   return (
-    <>
-      <PageHeader title="Expiring qualifications" description={`Expired, or expiring in the next ${EXPIRY_WARNING_DAYS} days. Assign the renewal course so it is done in time.`} />
+    <PageShell header={<PageHeader title="Expiring qualifications" description={`Expired, or expiring in the next ${EXPIRY_WARNING_DAYS} days. Assign the renewal course so it is done in time.`} />}>
       <form method="get" className="pc-panel flex flex-wrap items-end gap-4" role="search" aria-label="Filter expiring qualifications">
         <div className="min-w-0 grow basis-40 space-y-2 sm:grow-0 sm:basis-auto sm:min-w-52"><Label htmlFor="expiring-site" className="block">Site</Label>
           <NativeSelect id="expiring-site" name="site" defaultValue={input.site ?? ""} className="min-h-11 w-full">
@@ -97,6 +97,6 @@ export default async function TrainingExpiringPage({ searchParams }: { searchPar
           </ul>
         </section>
       ) : null}
-    </>
+    </PageShell>
   );
 }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronRight, CircleHelp, ExternalLink } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import type { HelpArticle, HelpScope } from "@/lib/help/types";
 import { clause, helpHref, type HelpFilters } from "@/lib/help/search";
 import { summarizeArticle } from "@/lib/help/catalogue";
@@ -13,13 +14,13 @@ export function HelpArticleView({ article, related, scope, filters, action }: {
   action?: { href: string; label: string };
 }) {
   const contents = [["before-you-start", "Before you start"], ["steps", "Step by step"], ["result", "What happens next"], ...(article.troubleshooting.length ? [["troubleshooting", "If something isn’t right"]] : [])];
-  return <article className="flex min-w-0 flex-col gap-4">
-    <PageHeader
+  return <article className="min-w-0">
+    <PageShell header={<PageHeader
       back={{ href: helpHref(scope, undefined, filters), label: filters.q.trim() ? "Search results" : "All guides" }}
       title={article.title}
       description={`${clause(article.summary)} · ${summarizeArticle(article).minutes} min read · ${scope === "instructor" ? "Instructor guide" : "Staff guide"}`}
       actions={<ArticleTools />}
-    />
+    />}>
     <div className="flex items-start gap-4">
       <div className="pc-panel min-w-0 flex-1 gap-8 lg:p-8">
         <section id="before-you-start" aria-labelledby="before-heading" className="pc-note scroll-mt-6">
@@ -48,5 +49,6 @@ export function HelpArticleView({ article, related, scope, filters, action }: {
         </nav>
       </div>
     </div>
-  </article>;
+  </PageShell>
+</article>;
 }

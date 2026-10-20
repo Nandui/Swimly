@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Pencil } from "lucide-react";
-import { BackLink } from "@/components/ui-kit/back-link";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { CallDialog } from "@/modules/short-courses/features/academy-calls";
 import {
@@ -33,9 +33,7 @@ export default async function AcademyCoursePage({ params }: { params: Promise<{ 
   const grants = course.type.qualificationType?.name ?? null;
   const dates = course.first ? (course.last && course.last !== course.first ? `${day(course.first)} to ${day(course.last)}` : day(course.first)) : "no sessions yet";
   return (
-    <div className="flex flex-col gap-6">
-      <BackLink href="/short-courses/academy" label="Academy courses" />
-      <PageHeader title={course.type.name} description={`${course.site.name} · ${dates}`}
+    <PageShell spacing="roomy" header={<PageHeader back={{ href: "/short-courses/academy", label: "Academy courses" }} title={course.type.name} description={`${course.site.name} · ${dates}`}
         status={<><Tag meta={ACADEMY_COURSE_META[course.state]} /><Tag meta={kind} /></>}
         actions={canManage ? <>
           {options && open ? <CourseDialog course={{ id: course.id, siteId: course.siteId, typeId: course.typeId, capacity: course.capacity, priceCents: course.priceCents, tutorId: course.tutorId, assessorId: course.assessorId, note: course.note, bookOnline: course.bookOnline }}
@@ -44,7 +42,7 @@ export default async function AcademyCoursePage({ params }: { params: Promise<{ 
           {open ? <CourseStatusButton id={course.id} to="completed" label="Complete" title="Mark the course completed?" description="Every candidate needs a result or to have withdrawn first." /> : null}
           {open ? <CourseStatusButton id={course.id} to="cancelled" label="Cancel course" title="Cancel this course?" description="Its sessions leave the Rota. Candidates and their payments stay on the record; refunds are handled where they paid." destructive /> : null}
           {!open ? <CourseStatusButton id={course.id} to="planned" label="Reopen" title="Reopen this course?" description="It goes back to planned, and its sessions to the Rota." /> : null}
-        </> : undefined} />
+        </> : undefined} />}>
 
       <section className="pc-panel" aria-labelledby="ac-facts">
         <div className="pc-panel-head"><h2 id="ac-facts">About the course</h2></div>
@@ -146,6 +144,6 @@ export default async function AcademyCoursePage({ params }: { params: Promise<{ 
         )}
         {active.length ? <p className="text-xs text-ui-muted-foreground">{plural(active.filter((c) => c.readiness.ready && c.status === "booked").length, "candidate")} ready for assessment. A staff member who passes gets {grants ?? "nothing"} on their record.</p> : null}
       </section>
-    </div>
+    </PageShell>
   );
 }

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Pencil } from "lucide-react";
-import { BackLink } from "@/components/ui-kit/back-link";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import {
   clock, CourseDialog, CourseStatusButton, euro, HEALTH_FORM_META, newCourseOptions, PersonDialog, PlaceButton, RegisterDialog, SessionDialog,
@@ -48,9 +48,7 @@ export default async function ShortCoursePage({ params }: { params: Promise<{ id
     ["Online booking", course.bookOnline ? (course.state === "planned" ? "Open until the first session" : "Closed once it started") : "Off"],
   ];
   return (
-    <div className="flex flex-col gap-6">
-      <BackLink href="/short-courses" label="Courses" />
-      <PageHeader title={course.type.name} description={`${course.site.name} · ${dates}`}
+    <PageShell spacing="roomy" header={<PageHeader back={{ href: "/short-courses", label: "Courses" }} title={course.type.name} description={`${course.site.name} · ${dates}`}
         status={<><Tag meta={SHORT_COURSE_META[course.state]} /><Tag meta={area} /></>}
         actions={canManage ? <>
           {options && !closed ? <CourseDialog course={{ id: course.id, siteId: course.siteId, typeId: course.typeId, capacity: course.capacity, priceCents: course.priceCents, instructorId: course.instructorId, note: course.note, bookOnline: course.bookOnline }}
@@ -60,7 +58,7 @@ export default async function ShortCoursePage({ params }: { params: Promise<{ id
           {!closed ? <CourseStatusButton id={course.id} to="finished" label="Finish" title="Mark the course finished?" description="It moves to finished courses. Registers and payments stay on the record." /> : null}
           {!closed ? <CourseStatusButton id={course.id} to="cancelled" label="Cancel course" title="Cancel this course?" description="Its sessions leave the Rota. People and their payments stay on the record; refunds are handled at the till." destructive /> : null}
           {closed ? <CourseStatusButton id={course.id} to="planned" label="Reopen" title="Reopen this course?" description="It goes back on, and its sessions back on the Rota." /> : null}
-        </> : undefined} />
+        </> : undefined} />}>
 
       <section className="pc-panel" aria-labelledby="sc-facts">
         <div className="pc-panel-head"><h2 id="sc-facts">About the course</h2></div>
@@ -178,6 +176,6 @@ export default async function ShortCoursePage({ params }: { params: Promise<{ id
           </ul>
         </section>
       ) : null}
-    </div>
+    </PageShell>
   );
 }

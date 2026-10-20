@@ -9,6 +9,7 @@ import { agreementPriceFor, billingViewOf, getBillingCancellations, getLegendPri
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { LinkPagination } from "@/components/ui-kit/link-pagination";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { ClipboardList, Euro } from "lucide-react";
 
 export const metadata: Metadata = { title: "Cancelled classes" };
@@ -28,13 +29,12 @@ export default async function CancellationsPage({ searchParams }: { searchParams
   const [data, { club }, prices] = await Promise.all([getBillingCancellations(view, page), getCurrentClub(), getLegendPrices()]);
   const fees = new Map(prices.map((p) => [p.name, p.monthlyCents]));
   const missing = [...new Set(data.rows.filter((r) => r.swimmers.length).map((r) => agreementPriceFor(r.programmeName)))].filter((n) => fees.get(n) == null).sort();
-  return <div className="flex min-w-0 flex-col gap-6">
-    <PageHeader title="Cancelled classes"
+  return <PageShell spacing="roomy" header={<PageHeader title="Cancelled classes"
       description={`${club.name} · Billing follow-up across all dates. ${HELP[view]}`}
       actions={<>
         <Button asChild variant="outline"><Link href="/cancellations/prices"><Euro aria-hidden="true" />Billing prices</Link></Button>
         {canSee(session, "duty") ? <Button asChild variant="outline"><Link href="/duty"><ClipboardList aria-hidden="true" />Today&rsquo;s classes</Link></Button> : null}
-      </>} />
+      </>} />}>
     <section className="pc-panel" aria-label="Billing follow-up">
       <SegmentedLinks label="Billing follow-up status" items={[
         { href: "/cancellations", label: "Awaiting billing", count: data.pending, current: view === "awaiting" },
@@ -46,5 +46,5 @@ export default async function CancellationsPage({ searchParams }: { searchParams
         billingNotifiedAt: row.billingNotifiedAt?.toISOString() ?? null, legendProcessedAt: row.legendProcessedAt?.toISOString() ?? null, restoredAt: row.restoredAt?.toISOString() ?? null }))} />
       {data.pages > 1 ? <LinkPagination label="Cancellation pages" page={data.page} totalItems={data.total} pageSize={data.pageSize} pathname="/cancellations" query={view === "awaiting" ? {} : { view }} /> : null}
     </section>
-  </div>;
+  </PageShell>;
 }

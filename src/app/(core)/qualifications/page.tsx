@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { GraduationCap } from "lucide-react";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import {
   ArchiveQualificationType, SaveQualificationType,
@@ -22,8 +23,7 @@ export default async function QualificationsPage() {
   const { qualificationTypes } = await getOrganisation();
 
   return (
-    <div className="min-w-0 flex flex-col gap-4">
-      <PageHeader title="Qualifications" description="The certificates staff can hold, and how long each usually lasts. Recording who holds one is in Training." />
+    <PageShell header={<PageHeader title="Qualifications" description="The certificates staff can hold, and how long each usually lasts. Recording who holds one is in Training." />}>
 
       <section className="pc-panel" aria-labelledby="qualifications-heading">
         <div className="pc-panel-head">
@@ -60,6 +60,6 @@ export default async function QualificationsPage() {
           </>
         )}
       </section>
-    </div>
+    </PageShell>
   );
 }

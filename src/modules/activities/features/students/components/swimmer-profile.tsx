@@ -9,7 +9,8 @@ import { Button } from "@/components/shadcn/button";
 import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { Progress } from "@/components/shadcn/progress";
 import { Tag } from "@/components/ui-kit/tag";
-import { BackLink } from "@/components/ui-kit/back-link";
+import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Notice } from "@/components/ui-kit/notice";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
 import { SearchField } from "@/components/ui-kit/search-field";
@@ -57,11 +58,11 @@ export function SwimmerProfile({ student, enrolments, programmes, assessments, t
   const programmeOptions = [...new Map([...enrolments.map(e => [e.programmeId, e.programme.name] as const), ...programmes.map(p => [p.programmeId, p.programmeName] as const)]).entries()];
   function navigate(next: Tab) { setTab(next); router.replace(swimmerProfileHref(student.id, returnTo, next), { scroll: false }); }
   function showCompetencies(id: string) { setLevel(id); navigate("competencies"); }
-  return <article className={styles.profile} data-swimmer-profile>
-    <header className={styles.header}>
-      <div className="min-w-0 flex flex-col gap-1"><BackLink href={returnTo} label="Swimmers" /><div className={styles.identity}><Avatar size="xl" aria-hidden="true"><AvatarFallback>{student.firstName.slice(0, 1)}{student.lastName.slice(0, 1)}</AvatarFallback></Avatar><div className="min-w-0"><h1 className="wrap-anywhere">{name}</h1><p className="mt-2 text-sm text-ui-muted-foreground">{student.dateOfBirth ? `Age ${ageInYears(student.dateOfBirth, new Date(instant))} · ` : ""}{student.memberNumber ? `Member ${student.memberNumber} · ` : ""}Joined {formatDate(student.joinedOn)}</p>{student.status !== "ACTIVE" ? <Tag meta={STUDENT_STATUS_META[student.status]} /> : null}</div></div></div>
-      <div className="flex flex-wrap gap-2"><FollowUpHistory studentId={student.id} name={fullName(student)} canRecord={access.enrol} />{access.edit ? <AddSwimmer student={student} /> : null}{access.enrol ? <ManageProfileEnrolments studentId={student.id} active={student.status === "ACTIVE"} enrolments={enrolments} targets={targets} /> : null}</div>
-    </header>
+  return <PageShell className={styles.profile} data-swimmer-profile header={<PageHeader back={{ href: returnTo, label: "Swimmers" }} title={name}
+      leading={<Avatar size="xl" aria-hidden="true"><AvatarFallback>{student.firstName.slice(0, 1)}{student.lastName.slice(0, 1)}</AvatarFallback></Avatar>}
+      description={`${student.dateOfBirth ? `Age ${ageInYears(student.dateOfBirth, new Date(instant))} · ` : ""}${student.memberNumber ? `Member ${student.memberNumber} · ` : ""}Joined ${formatDate(student.joinedOn)}`}
+      status={student.status !== "ACTIVE" ? <Tag meta={STUDENT_STATUS_META[student.status]} /> : null}
+      actions={<><FollowUpHistory studentId={student.id} name={fullName(student)} canRecord={access.enrol} />{access.edit ? <AddSwimmer student={student} /> : null}{access.enrol ? <ManageProfileEnrolments studentId={student.id} active={student.status === "ACTIVE"} enrolments={enrolments} targets={targets} /> : null}</>} />}>
     {student.medicalNotes ? <Notice tone="error" icon={TriangleAlert} title="Medical notes: read before swimming"><p className="whitespace-pre-wrap">{student.medicalNotes}</p></Notice> : student.hasMedicalNotes ? <Notice title="Medical notes on file" description="Reception, swim school managers and the instructors teaching this swimmer can read them." /> : null}
     <Tabs value={tab} onValueChange={value => navigate(value as Tab)} className="gap-0">
       <TabsList aria-label="Swimmer profile sections"><TabsTrigger value="journey">Journey</TabsTrigger><TabsTrigger value="competencies">Competencies</TabsTrigger><TabsTrigger value="attendance">Attendance</TabsTrigger><TabsTrigger value="assessments">Assessments</TabsTrigger><TabsTrigger value="details">Details</TabsTrigger>{access.parents ? <TabsTrigger value="parents">Parent access</TabsTrigger> : null}</TabsList>
@@ -136,7 +137,7 @@ export function SwimmerProfile({ student, enrolments, programmes, assessments, t
         </div>
       </div>
     </Tabs>
-  </article>;
+  </PageShell>;
 }
 
 function ProfileDetails({ student }: { student: StudentDetail }) {

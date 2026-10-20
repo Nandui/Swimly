@@ -8,6 +8,7 @@ import { WrongClub } from "@/components/ui/wrong-club";
 import { AssessmentPublicationPanel } from "@/modules/activities/features/parents";
 import { Button } from "@/components/shadcn/button";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { getCurrentClub } from "@/lib/clubs/current";
 import { today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
@@ -21,9 +22,8 @@ export default async function SessionSetupPage({ params }: PageProps<"/assessmen
   if (!session) notFound();
   if (session.clubId !== club.id) return <WrongClub what="This assessment session" owner={session.club} current={club} />;
   const [programmes, types, instructors] = await Promise.all([getAssessmentProgrammeOptions(), getAssessmentTypeOptions(), getInstructorOptions()]);
-  return <div className="min-w-0 flex flex-col gap-6">
-    <PageHeader back={{ href: "/assessments/setup", label: "Assessment setup" }} title={sessionDay(session)} description={`${sessionSpan(session)} · ${session.programme.name} · ${session.type?.name ?? "Kind not set"}`}
-      actions={<Button asChild variant="outline"><Link href={`/assessments/${id}`}>View swimmers</Link></Button>} />
+  return <PageShell spacing="roomy" header={<PageHeader back={{ href: "/assessments/setup", label: "Assessment setup" }} title={sessionDay(session)} description={`${sessionSpan(session)} · ${session.programme.name} · ${session.type?.name ?? "Kind not set"}`}
+      actions={<Button asChild variant="outline"><Link href={`/assessments/${id}`}>View swimmers</Link></Button>} />}>
     <section aria-labelledby="session-details-heading" className="pc-panel">
       <div className="pc-panel-head">
         <h2 id="session-details-heading">Session details</h2>
@@ -40,5 +40,5 @@ export default async function SessionSetupPage({ params }: PageProps<"/assessmen
     <AssessmentPublicationPanel key={`${id}-${session.date.toISOString()}-${session.startMinutes}-${session.cancelledAt}-${session.capacity}-${session.programmeId}-${session.typeId}`}
       sessionId={id} sessionLabel={`${sessionDay(session)} · ${sessionSpan(session)} · ${session.club.name} · ${session.programme.name}`}
       startsAt={(dublinInstant(session.date.toISOString().slice(0, 10), session.startMinutes) ?? session.date).toISOString()} />
-  </div>;
+  </PageShell>;
 }

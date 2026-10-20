@@ -1,5 +1,6 @@
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 
 import { SwitchClubButton } from "@/components/ui/switch-club-button";
 
@@ -39,9 +40,8 @@ export function WrongClub({
   );
   if (!header) return state;
   return (
-    <div className="min-w-0 flex flex-col gap-6">
-      <PageHeader title="Switch site to continue" />
+    <PageShell spacing="roomy" header={<PageHeader title="Switch site to continue" />}>
       {state}
-    </div>
+    </PageShell>
   );
 }

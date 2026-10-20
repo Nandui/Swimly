@@ -7,6 +7,7 @@ import { Button } from "@/components/shadcn/button";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import type { StudentRow } from "@/modules/activities/features/students/server/data/students";
 import { swimmerDirectoryHref, type SwimmerStatusFilter } from "@/modules/activities/features/students/server/directory";
 import { formatCount, plural } from "@/lib/format";
@@ -35,8 +36,7 @@ export function SwimmerBrowser({ students, total, page, pageSize, counts, q, sta
     ? status === "ALL" ? "Try a different spelling, a member number or a contact name." : "Try a different spelling, or search every status."
     : "There are no swimmers with this status.";
   return (
-    <div className="tf-content min-w-0" data-swimmer-browser>
-      <PageHeader title="Swimmers" description="Every swimmer across your sites, sorted by surname" actions={<>{parentAction}{addAction}</>} />
+    <PageShell className="tf-content" data-swimmer-browser header={<PageHeader title="Swimmers" description="Every swimmer across your sites, sorted by surname" actions={<>{parentAction}{addAction}</>} />}>
       <section className="pc-panel" aria-label="Swimmer directory">
         <div className="flex flex-wrap items-end gap-3">
           <Form action="/students" className="min-w-0 grow basis-field max-w-md" role="search" aria-label="Swimmers">
@@ -63,6 +63,6 @@ export function SwimmerBrowser({ students, total, page, pageSize, counts, q, sta
           </p>
         ) : null}
       </section>
-    </div>
+    </PageShell>
   );
 }

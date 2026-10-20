@@ -23,6 +23,7 @@ import { filterReading, type ReportFilters } from '@/modules/docs/features/repor
 import { FilterSelect } from '@/modules/docs/shared/components/ui';
 import { EmptyState } from '@/components/ui-kit/empty-state';
 import { PageHeader } from '@/components/ui-kit/page-header';
+import { PageShell } from '@/components/ui-kit/page-shell';
 
 /** Where one person's required reading stands. */
 const readingStatus = (r: Pick<Requirement, 'status' | 'dueDate'>): DocStatus =>
@@ -104,8 +105,7 @@ export function ReportsView({
   const when = (r: Requirement) =>
     r.acknowledgedAt ? `read ${formatDate(r.acknowledgedAt)}` : r.dueDate ? `due ${formatDate(r.dueDate)}` : 'due date not set';
   return (
-    <>
-      <PageHeader
+    <PageShell header={<PageHeader
         title="Reading reports"
         description="See who has read each version, and where your team needs a reminder"
         actions={
@@ -116,7 +116,7 @@ export function ReportsView({
             </a>
           </Button>
         }
-      />
+      />}>
       <ul className="pc-stats" aria-label="Reading at a glance">
         {tiles.map(({ status, icon: Icon, value, label, caption }) => (
           <li key={label} className="flex min-w-0">
@@ -292,6 +292,6 @@ export function ReportsView({
           )}
         </section>
       </div>
-    </>
+    </PageShell>
   );
 }

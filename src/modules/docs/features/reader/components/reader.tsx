@@ -32,6 +32,7 @@ import {
 import { FormDialog } from '@/components/form-dialog';
 import { SegmentedChoice } from '@/components/ui-kit/segmented-links';
 import { PageHeader } from '@/components/ui-kit/page-header';
+import { PageShell } from '@/components/ui-kit/page-shell';
 import {
   startDraftAction,
   reviewAction,
@@ -155,8 +156,7 @@ export function Reader({
   const totals = readingTotals && readingTotals.assigned > 0 ? readingTotals : null;
   const owns = isOwner && !d.archivedAt;
   return (
-    <div className="reader-workspace flex min-w-0 flex-col gap-4">
-      <PageHeader
+    <PageShell className="reader-workspace" header={<PageHeader
         back={{ href: '/docs/library', label: 'Document library' }}
         title={c.title}
         description={[c.summary.trim().replace(/\.$/, ''), `Owned by ${owner}`].filter(Boolean).join(' · ')}
@@ -194,7 +194,7 @@ export function Reader({
             )}
           </>
         }
-      />
+      />}>
       {error ? (
         <Notice tone="error" live="alert" title={error} />
       ) : success ? (
@@ -525,6 +525,6 @@ export function Reader({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PageShell>
   );
 }

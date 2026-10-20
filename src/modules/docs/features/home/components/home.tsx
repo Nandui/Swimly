@@ -7,6 +7,7 @@ import { Button } from '@/components/shadcn/button';
 import { SearchField } from '@/components/ui-kit/search-field';
 import { EmptyState } from '@/components/ui-kit/empty-state';
 import { PageHeader } from '@/components/ui-kit/page-header';
+import { PageShell } from '@/components/ui-kit/page-shell';
 import { canWrite, documentTypeLabels, type DocumentType, type Workspace } from '@/modules/docs/shared/types';
 import { DocIcon, FilterPicker } from '@/modules/docs/shared/components/ui';
 import { cn } from '@/lib/utils';
@@ -40,8 +41,7 @@ export function HomeView({ workspace: w, description }: { workspace: Workspace; 
   ];
 
   return (
-    <>
-      <PageHeader
+    <PageShell header={<PageHeader
         title="Docs"
         description={description}
         actions={
@@ -52,7 +52,7 @@ export function HomeView({ workspace: w, description }: { workspace: Workspace; 
             options={[{ value: '', label: 'All facilities' }, ...w.facilities.map((item) => ({ value: item.id, label: item.name }))]}
           />
         }
-      />
+      />}>
 
       <section className="pc-panel" aria-label="Find a document">
         <form className="flex flex-wrap items-end gap-3" action="/docs/library" role="search" aria-label="Find a document">
@@ -168,6 +168,6 @@ export function HomeView({ workspace: w, description }: { workspace: Workspace; 
           />
         )}
       </section>
-    </>
+    </PageShell>
   );
 }

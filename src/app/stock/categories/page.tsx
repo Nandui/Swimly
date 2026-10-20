@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { plural } from "@/lib/format";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
@@ -12,8 +13,7 @@ export const metadata: Metadata = { title: "Stock categories" };
 export default async function StockCategoriesPage() {
   const { who, categories } = await stockCategories();
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title="Categories" description="How products are grouped on the count sheet, in this order." actions={who.manage ? <CategoryDialog /> : undefined} />
+    <PageShell spacing="roomy" header={<PageHeader title="Categories" description="How products are grouped on the count sheet, in this order." actions={who.manage ? <CategoryDialog /> : undefined} />}>
       <section className="pc-panel" aria-label="Categories">
         {categories.length === 0 ? <EmptyState compact icon="layers" title="No categories yet" hint={who.manage ? "Add the first, such as Retail or Drink." : "Whoever manages Stock adds them."} /> : (
           <ul className="pc-rows">
@@ -35,6 +35,6 @@ export default async function StockCategoriesPage() {
           </ul>
         )}
       </section>
-    </div>
+    </PageShell>
   );
 }

@@ -49,6 +49,7 @@ import { RichEditor } from '@/modules/docs/shared/components/rich-editor';
 import { Notice } from '@/components/ui-kit/notice';
 import { Tag } from '@/components/ui-kit/tag';
 import { PageHeader } from '@/components/ui-kit/page-header';
+import { PageShell } from '@/components/ui-kit/page-shell';
 import { IconButton } from '@/components/ui/icon-button';
 export function DocumentEditor({
   workspace: w,
@@ -246,7 +247,7 @@ export function DocumentEditor({
       onValueChange={(value) => setEditorView(value as 'write' | 'details')}
       className="authoring-workspace flex min-w-0 flex-col gap-4"
     >
-      <PageHeader
+      <PageShell header={<PageHeader
         back={{ href: `/docs/documents/${initial.documentId}`, label: 'Document' }}
         title="Edit document"
         description="Changes stay in this draft until they are reviewed and approved"
@@ -278,7 +279,7 @@ export function DocumentEditor({
             </Button>
           </>
         }
-      />
+      />}>
       {error ? <Notice tone="error" live="alert" title={error} /> : null}
       {lockError && (
         <Notice
@@ -601,7 +602,8 @@ export function DocumentEditor({
           </div>
         </DialogContent>
       </Dialog>
-    </Tabs>
+    </PageShell>
+</Tabs>
   );
 }
 /** A group of checkboxes for the audience (facilities, teams, related documents): the legend as

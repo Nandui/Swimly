@@ -3,6 +3,7 @@ import Link from "next/link";
 import { FileText } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { FilesPanel } from "@/modules/incidents/features/files";
 import { FootagePanel, footageOnReport } from "@/modules/incidents/features/footage";
@@ -20,14 +21,13 @@ export default async function IncidentPage({ params }: { params: Promise<{ id: s
   const { report: r, can } = data;
   const footage = await footageOnReport(r.id);
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title={<span className="tabular-nums">{incidentNumber(r.number)}</span>} back={{ href: "/incidents", label: "Reports" }}
+    <PageShell spacing="roomy" header={<PageHeader title={<span className="tabular-nums">{incidentNumber(r.number)}</span>} back={{ href: "/incidents", label: "Reports" }}
         status={<span className="flex flex-wrap gap-2">{r.serious ? <Tag meta={seriousMeta} /> : null}<Tag meta={incidentStatuses[r.status]} /></span>}
         description={`${r.site.name}${r.area ? `, ${r.area}` : ""}`}
         actions={<span className="flex flex-wrap gap-2">
           {can.export ? <Button asChild variant="outline" className="min-h-11"><Link href={`/incidents/${r.id}/export`}><FileText aria-hidden="true" />Full record</Link></Button> : null}
           {can.reopen ? <ReopenReport id={r.id} version={r.version} /> : null}<AddAddendum id={r.id} />
-        </span>} />
+        </span>} />}>
       <ReportView data={data} forms={<>
         <FilesPanel reportId={r.id} files={r.files} userId={data.who.id} canAdd={can.addFiles} canRemoveAny={can.removeFiles} />
         {footage ? <FootagePanel reportId={r.id} data={footage} /> : null}
@@ -38,6 +38,6 @@ export default async function IncidentPage({ params }: { params: Promise<{ id: s
         ) : null}
         {can.close ? <CloseForm id={r.id} version={r.version} hsaDue={r.hsaReportable ? r.hsaDueOn : null} openActions={data.openActions} missingRootCause={data.needsRootCause && r.rootCause.length < 3} /> : null}
       </>} />
-    </div>
+    </PageShell>
   );
 }

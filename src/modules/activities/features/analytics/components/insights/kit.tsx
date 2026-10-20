@@ -2,6 +2,7 @@ import Link from "next/link";
 import * as React from "react";
 import { ArrowDownRight, ArrowRight, ArrowUpRight, type LucideIcon } from "lucide-react";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Progress } from "@/components/shadcn/progress";
 import { addDaysIso, formatCount, formatDateRange, formatDateTime, formatDayMonth } from "@/lib/format";
 import { DashboardSwitch, dashboardOf, type AnalyticsPage } from "@/modules/activities/features/analytics/components/navigation";
@@ -103,11 +104,9 @@ export function ReportShell({ ctx, page, path, title, description, back, childre
   const context = [scope, periodText(period), `compared with ${formatDateRange(period.previousStart, period.previousEnd)}`, period.current ? null : `"now" figures as of ${formatDayMonth(period.end)}`].filter(Boolean).join(" · ");
   const dashboard = dashboardOf(page);
   const backTo = back === true ? { href: reportHref(ctx, dashboard.href), label: dashboard.label } : back;
-  return <div className="ins" data-dashboard={dashboard.key}>
-    <div className="ins-top">
-      {backTo ? null : <p className="ins-eyebrow">Swim school analytics</p>}
-      <PageHeader title={title} back={backTo} description={description ? <>{description}<span className="ins-context">{context}</span></> : context} actions={<>{actions}<AnalyticsRefresh /></>} />
-    </div>
+  return <PageShell className="ins" data-dashboard={dashboard.key}
+    header={<PageHeader title={title} back={backTo} eyebrow={backTo ? null : <p className="ins-eyebrow">Swim school analytics</p>}
+      description={description ? <>{description}<span className="ins-context">{context}</span></> : context} actions={<>{actions}<AnalyticsRefresh /></>} />}>
     <FilterBar {...bar} switcher={<DashboardSwitch page={page} query={filterQuery(ctx)} />} />
     <div className="ins-body">{children}</div>
     <footer className="ins-footnote">
@@ -115,7 +114,7 @@ export function ReportShell({ ctx, page, path, title, description, back, childre
       {programme && ctx.programme ? <p>Only {ctx.programme.name}: its classes, places, waiting lists and passes. A move into another programme counts as leaving this one.</p> : null}
       <p>Compared with the {period.label} before, {formatDateRange(period.previousStart, period.previousEnd)}. Updated {formatDateTime(new Date(ctx.updatedAt))} · Europe/Dublin.</p>
     </footer>
-  </div>;
+  </PageShell>;
 }
 
 /** A group of panels that answer one question, laid out as a bento grid. */

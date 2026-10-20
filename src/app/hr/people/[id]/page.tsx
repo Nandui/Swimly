@@ -11,6 +11,7 @@ import { AddNote, hrConfigured, hrPerson, NOTE_VISIBILITY_META, REVIEW_STATUS_ME
 import { StartReview } from "@/modules/hr/features/reviews";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { requireFreshSession } from "@/lib/policy/session";
@@ -45,8 +46,7 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
   const personLink = (p: { id: string; name: string }) => <Link className="-my-3 inline-flex min-h-11 items-center underline underline-offset-4" href={`/hr/people/${p.id}`}>{p.name}</Link>;
   const quals = await qualificationFile(person.id, who.orgId ?? "");
   return (
-    <>
-      <PageHeader
+    <PageShell header={<PageHeader
         back={{ href: "/hr", label: "People" }}
         title={person.name}
         description={person.jobTitle || "HR record"}
@@ -57,7 +57,7 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
             {data.canWriteNotes ? <AddNote subjectUserId={person.id} name={person.name} /> : null}
           </>
         }
-      />
+      />}>
       <section className="pc-panel" aria-labelledby="hr-profile">
         <div className="pc-panel-head">
           <h2 id="hr-profile">Profile</h2>
@@ -201,7 +201,7 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
         </section>
         );
       })}
-    </>
+    </PageShell>
   );
 }
 

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { BackLink } from "@/components/ui-kit/back-link";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { LegendPriceDialog } from "@/modules/activities/features/duty";
 import { screenPage } from "@/lib/page-guards";
 import { can } from "@/lib/authz";
@@ -17,9 +17,7 @@ export default async function BillingPricesPage() {
   const session = await screenPage("cancellations");
   const prices = await getLegendPrices();
   const canEdit = can(session, "curriculum.manage");
-  return <div className="flex min-w-0 flex-col gap-6">
-    <BackLink href="/cancellations" label="Cancelled classes" />
-    <PageHeader title="Billing prices" description="Each agreement price's monthly price in Legend. The price restore export puts it in NewCycleFee, to put members back on it after a cancellation." />
+  return <PageShell spacing="roomy" header={<PageHeader back={{ href: "/cancellations", label: "Cancelled classes" }} title="Billing prices" description="Each agreement price's monthly price in Legend. The price restore export puts it in NewCycleFee, to put members back on it after a cancellation." />}>
     <section className="pc-panel" aria-label="Agreement prices">
       <ul className="pc-rows">
         {prices.map((p) => (
@@ -37,5 +35,5 @@ export default async function BillingPricesPage() {
       </ul>
       {!canEdit ? <p className="text-xs text-ui-muted-foreground">Swim school Manage keeps these prices.</p> : null}
     </section>
-  </div>;
+  </PageShell>;
 }

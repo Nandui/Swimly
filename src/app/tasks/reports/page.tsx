@@ -8,6 +8,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-sel
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { Tag } from "@/components/ui-kit/tag";
@@ -40,12 +41,11 @@ export default async function TaskReportsPage({ searchParams }: { searchParams: 
   const exportHref = `/tasks/reports/export?${new URLSearchParams({ ...base, kind: tab, ...(tab === "tasks" ? { status: r.filters.status, q: r.filters.q, tag: r.filters.tag } : {}) })}`;
   const focus = r.bySite.find((s) => s.id === r.site) ?? r.bySite[0];
   return (
-    <>
-      <PageHeader
+    <PageShell header={<PageHeader
         title="Reports"
         description="Completion, consistency and the details behind every score. Done on time counts in full, done late half, missed or can't complete nothing."
         actions={<Button asChild variant="outline"><a href={exportHref}><Download aria-hidden="true" />Export report</a></Button>}
-      />
+      />}>
       <SegmentedLinks label="Report type" items={[
         { href: href({ tab: "scores" }), label: "Site scores", current: tab === "scores" },
         { href: href({ tab: "tasks" }), label: "Task reports", current: tab === "tasks" },
@@ -165,6 +165,6 @@ export default async function TaskReportsPage({ searchParams }: { searchParams: 
           {r.tasks.length > 300 ? <p className="text-xs text-ui-muted-foreground">Showing the first 300; the export has all {r.tasks.length}.</p> : null}
         </section>
       )}
-    </>
+    </PageShell>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { ActivityDialog, ArchiveActivity } from "@/components/setup/activity-list";
 import { screenPage } from "@/lib/page-guards";
@@ -17,9 +18,8 @@ export default async function ActivityListPage() {
   await screenPage("activity-list", "setup.view");
   const { types, departments, qualifications, canKeep } = await activityListPage();
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title="Activities" description="What the rota plans and covers. Each activity belongs to the department that plans it, and may need a qualification."
-        actions={canKeep && departments.length ? <ActivityDialog departments={departments} qualifications={qualifications} /> : undefined} />
+    <PageShell spacing="roomy" header={<PageHeader title="Activities" description="What the rota plans and covers. Each activity belongs to the department that plans it, and may need a qualification."
+        actions={canKeep && departments.length ? <ActivityDialog departments={departments} qualifications={qualifications} /> : undefined} />}>
       {types.length === 0 ? (
         <EmptyState icon="calendarDays" title="No activities yet" hint={departments.length ? "Add the kinds of work the rota plans, such as Lifeguarding, Teaching and Reception." : "Add departments first: every activity belongs to one."} />
       ) : (
@@ -48,6 +48,6 @@ export default async function ActivityListPage() {
           </ul>
         </section>
       )}
-    </div>
+    </PageShell>
   );
 }

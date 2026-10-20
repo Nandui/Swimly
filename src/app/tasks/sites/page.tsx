@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Building2 } from "lucide-react";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { dayIn, SITE_STATUS_META, SiteSettings, taskSites } from "@/modules/tasks/features/sites";
 import { formatDate, parseDateOnly } from "@/lib/format";
@@ -13,8 +14,7 @@ export const metadata: Metadata = { title: "Sites" };
 export default async function TaskSitesPage() {
   const { who, sites } = await taskSites();
   return (
-    <>
-      <PageHeader title="Your sites" description="Working hours and closed dates for each location. Schedules can start at opening or be due at closing; no tasks are made on a closed date or at a site that is not live." />
+    <PageShell header={<PageHeader title="Your sites" description="Working hours and closed dates for each location. Schedules can start at opening or be due at closing; no tasks are made on a closed date or at a site that is not live." />}>
       <div className="pc-grid">
         {sites.map((s) => {
           const ahead = s.closedDates.filter((d) => d >= dayIn(s.timezone));
@@ -40,6 +40,6 @@ export default async function TaskSitesPage() {
           );
         })}
       </div>
-    </>
+    </PageShell>
   );
 }

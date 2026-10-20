@@ -2,6 +2,7 @@ import Form from "next/form";
 import Link from "next/link";
 import { LinkPagination } from "@/components/ui-kit/link-pagination";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { EmptyState } from "@/components/ui-kit/empty-state";
@@ -47,8 +48,7 @@ export function LegendAgreements({ result, canConfirm, profiles, classes }: {
       action: view !== "done" && canConfirm ? <ConfirmLegendAgreement id={row.id} swimmerName={name} classLabel={`${label} · ${siteName}`} /> : null,
     };
   });
-  return <div className="min-w-0 flex flex-col gap-6">
-    <PageHeader title="Legend agreements" description={`${siteName} · Update the billing agreement in Legend, then confirm it here.`} actions={matchList} />
+  return <PageShell spacing="roomy" header={<PageHeader title="Legend agreements" description={`${siteName} · Update the billing agreement in Legend, then confirm it here.`} actions={matchList} />}>
     <section className="pc-panel" aria-label="Agreements">
       <div className="min-w-0 flex flex-wrap items-end gap-3">
         <Form action="/legend-agreements" className="min-w-0 grow basis-field md:max-w-md" role="search" aria-label="Legend agreements">
@@ -90,5 +90,5 @@ export function LegendAgreements({ result, canConfirm, profiles, classes }: {
       <p className="text-xs text-ui-muted-foreground">Active enrolments only, one check per class place. “Needs checking” means no confirmation has been recorded yet.</p>
       <LinkPagination label="Agreement pages" page={page} totalItems={total} pageSize={pageSize} pathname="/legend-agreements" query={{ ...(view === "done" ? { view: "done" } : {}), ...(q ? { q } : {}) }} />
     </section>
-  </div>;
+  </PageShell>;
 }

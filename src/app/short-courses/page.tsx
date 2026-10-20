@@ -4,6 +4,7 @@ import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { clock, CourseDialog, type CourseRow, newCourseOptions, SHORT_COURSE_AREA_META, SHORT_COURSE_CALL_DUE_META, SHORT_COURSE_META, type ShortCourseArea, shortCoursesHome } from "@/modules/short-courses/features/courses";
 import { formatDate, plural } from "@/lib/format";
@@ -19,11 +20,10 @@ export default async function ShortCoursesPage() {
   const options = who.manage ? await newCourseOptions() : null;
   const canPutOn = !!options && options.sites.length > 0 && options.types.length > 0;
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title="Short courses"
+    <PageShell spacing="roomy" header={<PageHeader title="Short courses"
         description="Six and eight week courses at the pool, the gym or the studio: who is booked, who is waiting, payment and registers. Sessions show on the Rota for their instructor."
         actions={canPutOn ? <CourseDialog sites={options.sites} types={options.types} perSite={options.perSite} today={options.today} />
-          : who.manage ? <Button asChild><Link href="/short-courses/types">Add a course to the list</Link></Button> : undefined} />
+          : who.manage ? <Button asChild><Link href="/short-courses/types">Add a course to the list</Link></Button> : undefined} />}>
       {toPhone.length ? (
         <section aria-labelledby="sc-phone-h" className="pc-panel">
           <div className="pc-panel-head">
@@ -53,7 +53,7 @@ export default async function ShortCoursesPage() {
         empty={types ? { title: "No courses on", hint: who.manage ? "Put a course on; its weekly sessions are made for you." : "Whoever manages Short courses puts them on." }
           : { title: "No courses on the list yet", hint: "Whoever manages Short courses adds what we offer first, such as Couch to 5k." }} />
       {past.length ? <Panel id="sc-past" title="Finished in the last 90 days" courses={past} /> : null}
-    </div>
+    </PageShell>
   );
 }
 

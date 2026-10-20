@@ -4,6 +4,7 @@ import { Tag } from "@/components/ui-kit/tag";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import {
   ACTION_STATUS_META, AddComment, ApproveTask, CantComplete, clockOf, dayIn, NotApplicable, PRIORITY_META, ReopenTask, taskDetail, TaskStateTag, TaskWork,
 } from "@/modules/tasks/features/day";
@@ -36,8 +37,7 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
     ...(task.approvedByName ? [["Approved by", task.approvedByName] as [string, string]] : []),
   ];
   return (
-    <>
-      <PageHeader
+    <PageShell header={<PageHeader
         back={{ href: back, label: isToday ? "Today" : formatDayMonth(task.date) }}
         title={def.title}
         description={def.description || undefined}
@@ -48,7 +48,7 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
           {can.review && closed ? <ReopenTask id={task.id} version={task.version} /> : null}
           {can.approve ? <ApproveTask id={task.id} version={task.version} /> : null}
         </>}
-      />
+      />}>
 
       <section className="pc-panel" aria-labelledby="task-details">
         <div className="pc-panel-head"><h2 id="task-details">Details</h2></div>
@@ -115,6 +115,6 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
           )}
         </section>
       </div>
-    </>
+    </PageShell>
   );
 }

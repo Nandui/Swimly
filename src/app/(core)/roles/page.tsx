@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { plural } from "@/lib/format";
 import { AddRole, DeleteRole, EditRole } from "@/components/staff/role-actions";
@@ -20,12 +21,11 @@ export default async function RolesPage() {
   const assigned = roles.reduce((n, role) => n + role._count.users, 0);
 
   return (
-    <div className="min-w-0 flex flex-col gap-4">
-      <PageHeader
+    <PageShell header={<PageHeader
         title="Roles"
         description="A role is a job, with one level for each module."
         actions={<AddRole canGiveRestricted={canGiveRestricted} />}
-      />
+      />}>
 
       {roles.length === 0 ? (
         <EmptyState
@@ -47,7 +47,7 @@ export default async function RolesPage() {
           </ul>
         </section>
       )}
-    </div>
+    </PageShell>
   );
 }
 

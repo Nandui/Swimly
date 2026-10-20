@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { MonitorSmartphone } from "lucide-react";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { ForgetThisDevice, RegisterThisDevice, RevokeDevice } from "@/components/devices/device-actions";
 import { currentSharedDevice } from "@/lib/devices/shared-device";
@@ -26,13 +27,12 @@ export default async function DevicesPage() {
   ]);
   const siteName = new Map(sites.map((s) => [s.id, s.name]));
   return (
-    <div className="min-w-0 flex flex-col gap-4">
-      <PageHeader
+    <PageShell header={<PageHeader
         back={{ href: "/staff", label: "Staff" }}
         title="Work devices"
         description="The centre's computers and tablets where staff do their work."
         actions={here ? <ForgetThisDevice /> : <RegisterThisDevice sites={sites} />}
-      />
+      />}>
       <section className="pc-panel" aria-label="Work devices">
         <p className="text-sm text-ui-muted-foreground">
           On a work device, staff switch in with their PIN. It signs out after {SHARED_IDLE_MINUTES} idle minutes.
@@ -66,6 +66,6 @@ export default async function DevicesPage() {
           </ul>
         )}
       </section>
-    </div>
+    </PageShell>
   );
 }

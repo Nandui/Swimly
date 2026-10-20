@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
 import { PageHeader } from '@/components/ui-kit/page-header';
+import { PageShell } from '@/components/ui-kit/page-shell';
 import { Input as FieldInput } from '@/components/ui/input';
 import { Textarea as FieldTextarea } from '@/components/ui/textarea';
 import {
@@ -53,12 +54,11 @@ export function NewDocument({ workspace: w }: { workspace: Workspace }) {
   const [busy, setBusy] = useState(false);
   const steps = ['Choose a template', 'Document essentials', 'Write and review'];
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <PageHeader
+    <PageShell header={<PageHeader
         back={{ href: '/docs/library', label: 'Document library' }}
         title="Create a document"
         description="Choose a template, add the essentials, then start writing"
-      />
+      />}>
       <ol className="create-steps" aria-label="Document creation progress">
         {steps.map((label, index) => (
           <li key={label} aria-current={step === index + 1 ? 'step' : undefined}>
@@ -216,6 +216,6 @@ export function NewDocument({ workspace: w }: { workspace: Workspace }) {
             </div>
           </form>
       )}
-    </div>
+    </PageShell>
   );
 }

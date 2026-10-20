@@ -15,6 +15,7 @@ import { notFound } from "next/navigation";
 
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
 import {
@@ -69,8 +70,7 @@ export default async function AssessmentSessionPage(
   const open = !session.cancelledAt;
 
   return (
-    <div className="min-w-0 flex flex-col gap-6">
-      <PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         back={{ href: isPast(session, today()) ? "/assessments?view=past" : "/assessments", label: "Assessments" }}
         title={sessionDay(session)}
         description={
@@ -96,7 +96,7 @@ export default async function AssessmentSessionPage(
             ) : null}
           </>
         }
-      />
+      />}>
 
       <Lead>
         <Num>
@@ -152,7 +152,7 @@ export default async function AssessmentSessionPage(
           ) : null}
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }
 

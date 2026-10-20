@@ -8,6 +8,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-sel
 import { Progress } from "@/components/shadcn/progress";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { Tag } from "@/components/ui-kit/tag";
 import { SiteSettings } from "@/modules/tasks/features/sites";
@@ -31,10 +32,9 @@ export default async function TasksTodayPage({ searchParams }: { searchParams: P
   const data = await taskDay(await searchParams);
   if (!data.site) {
     return (
-      <>
-        <PageHeader title="Today" />
+      <PageShell header={<PageHeader title="Today" />}>
         <EmptyState as="h2" icon="building" title="No sites to show" hint="Your role does not do tasks at a site yet." />
-      </>
+      </PageShell>
     );
   }
   const { site, settings, date, day, tasks, total, figures, planned, addable, openActions, filters, tags, closed } = data;
@@ -43,13 +43,12 @@ export default async function TasksTodayPage({ searchParams }: { searchParams: P
   const isToday = date === day;
   const filtered = !!(filters.q || filters.tag || filters.status !== "all");
   return (
-    <>
-      <PageHeader
+    <PageShell header={<PageHeader
         title={isToday ? `Today: ${site.name}` : `${site.name}: ${formatWeekday(date)} ${formatDayMonth(date)}`}
         description={isToday ? `${formatWeekday(date)} ${formatDayMonth(date)} · a clear view of the day` : date > day ? "Planned from the published schedules" : "An earlier day"}
         status={settings.status !== "live" ? <Tag meta={SITE_STATUS_META[settings.status]} /> : undefined}
         actions={date <= day && addable.length && !closed ? <AddTask siteId={site.id} date={date} templates={addable} /> : undefined}
-      />
+      />}>
 
       {date <= day ? (
         <ul className="pc-stats" aria-label="The day at a glance">
@@ -165,7 +164,7 @@ export default async function TasksTodayPage({ searchParams }: { searchParams: P
           {data.who.manage ? <SiteSettings site={{ ...settings, name: site.name }} /> : null}
         </aside>
       </div>
-    </>
+    </PageShell>
   );
 }
 

@@ -5,6 +5,7 @@ import UiLink from "next/link";
 import { Building2, KeyRound } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { SuperadminToggle, WorksAt } from "@/components/people/people-actions";
 import { EditPerson, ResetPersonPassword, SetPersonActive } from "@/components/staff/person-actions";
@@ -44,8 +45,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
     : null;
 
   return (
-    <div className="min-w-0 flex flex-col gap-4">
-      <PageHeader
+    <PageShell header={<PageHeader
         back={{ href: "/staff", label: "Staff" }}
         title={person.name}
         description={
@@ -64,7 +64,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
             <SetPersonActive person={person} />
           </>
         }
-      />
+      />}>
 
       <section aria-labelledby="roles-heading" className="pc-panel">
         <div className="pc-panel-head">
@@ -95,6 +95,6 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
         </ul>
         <p className="pc-row-hint">Swim school, Training and Rota apply at the sites they work at; everything else applies everywhere.</p>
       </section>
-    </div>
+    </PageShell>
   );
 }

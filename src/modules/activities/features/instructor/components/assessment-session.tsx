@@ -1,6 +1,7 @@
 import { StickyNote } from "lucide-react";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatShortDay } from "@/lib/format";
 import { MarkNoShow, RecordOutcome } from "@/modules/activities/shared/assessments/components/booking-actions";
@@ -25,8 +26,7 @@ export function InstructorAssessmentSession({ session, backHref }: { session: Se
     `${placed} placed`,
   ].join(" · ");
   return (
-    <>
-      <PageHeader back={{ href: backHref, label: "Classes" }} title={<span className="break-words">{title}</span>} description={facts} />
+    <PageShell header={<PageHeader back={{ href: backHref, label: "Classes" }} title={<span className="break-words">{title}</span>} description={facts} />}>
       {session.notes ? (
         <p className="pc-note whitespace-pre-wrap break-words">
           <StickyNote aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
@@ -43,7 +43,7 @@ export function InstructorAssessmentSession({ session, backHref }: { session: Se
           <AssessmentBookings bookings={notComing} session={session} />
         </section>
       ) : null}
-    </>
+    </PageShell>
   );
 }
 

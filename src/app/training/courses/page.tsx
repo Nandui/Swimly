@@ -4,6 +4,7 @@ import { GraduationCap, Hammer } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { Tag } from "@/components/ui-kit/tag";
@@ -28,8 +29,7 @@ export default async function TrainingCoursesPage({ searchParams }: { searchPara
   // Grouped by category, those without one last.
   const groups = [...categories, ""].map((category) => ({ category, courses: courses.filter((c) => c.category === category) })).filter((g) => g.courses.length);
   return (
-    <>
-      <PageHeader
+    <PageShell header={<PageHeader
         title="Courses"
         description={archived ? "Courses that can no longer be assigned. Training already done on them is kept." : "Build each course from lessons, publish it, then assign it. Staff take it in Turnfin Me."}
         actions={
@@ -43,7 +43,7 @@ export default async function TrainingCoursesPage({ searchParams }: { searchPara
             {who.manage && !archived ? <CourseDialog qualificationTypes={types} categories={categories} /> : null}
           </>
         }
-      />
+      />}>
       {all.length > 6 || search ? (
         <form method="get" role="search" aria-label="Find a course" className="pc-panel">
           {archived ? <input type="hidden" name="view" value="retired" /> : null}
@@ -86,6 +86,6 @@ export default async function TrainingCoursesPage({ searchParams }: { searchPara
           </ul>
         </section>
       ))}
-    </>
+    </PageShell>
   );
 }
