@@ -275,12 +275,13 @@ function slotLevels(slot: ClassRow[], index: ReturnType<typeof curriculumIndex>)
 export function buildClasses(ds: Dataset) {
   const rows = buildClassRows(ds);
   const days = (Object.keys(DAY_META) as DayOfWeek[]).filter(day => rows.some(r => r.dayOfWeek === day));
-  const hours = [...new Set(rows.map(r => Math.floor(r.startMinutes / 60)))].sort((a, b) => a - b);
+  // One row per real start time (15:10, 15:45, ...), not per clock hour (owner, 20 October 2026).
+  const starts = [...new Set(rows.map(r => r.startMinutes))].sort((a, b) => a - b);
   const index = curriculumIndex(ds.curriculum);
-  const heat = hours.map(hour => ({
-    hour,
+  const heat = starts.map(start => ({
+    start,
     cells: days.map(day => {
-      const slot = rows.filter(r => r.dayOfWeek === day && Math.floor(r.startMinutes / 60) === hour);
+      const slot = rows.filter(r => r.dayOfWeek === day && r.startMinutes === start);
       const capped = slot.filter(r => r.capacity !== null);
       const capacity = capped.reduce((s, r) => s + r.capacity!, 0);
       const enrolled = capped.reduce((s, r) => s + r.enrolled, 0);

@@ -4,6 +4,10 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.45.3 · 20 October 2026 · Timetable rows match your class times
+
+- On **Analytics**, **When classes are full** (Business) and **Attendance by time slot** (Pool deck) now give each class start time its own row, such as 15:10, 15:45 and 16:20, instead of lumping every class that starts within the same hour together. Each figure now matches the classes that actually run at that time.
+
 ## 1.45.2 · 20 October 2026 · Turnfin Me and the Academy site match Turnfin
 
 - **Turnfin Me** on your phone now uses exactly the same buttons, fields, tick boxes and colours as Turnfin at work. Each page opens with its title and a back button in the same place, and progress through a course shows as the same bar.

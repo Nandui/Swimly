@@ -62,7 +62,7 @@ Filters, all carried from page to page by `reportQuery` (`server/period.ts`):
 
 - **Business** (`/analytics`): worth a look first (full classes with a waiting list,
   classes under half full, swimmers who may leave, leaving soon); tiles for swimmers,
-  joined, left, places filled and waiting, each with its chart; a day × start-hour heat
+  joined, left, places filled and waiting, each with its chart; a day × class start time heat
   map of places filled with a dot where someone waits (pressing a slot opens its levels,
   grouped by programme, with places filled, free and waiting and links to each class),
   beside the full and nearly empty classes; places at each level; who left by reason or level; assessments to places;
