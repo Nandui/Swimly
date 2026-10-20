@@ -73,7 +73,7 @@ export function ScenarioEditor({ title, data, onChange, images, disabled }: { ti
       <legend className="mb-1 text-sm font-semibold">Scenes</legend>
       <p className="text-sm text-ui-muted-foreground">Tell a real situation in scenes. Learners read a scene and choose what to do. Each choice says what happened, then leads to another scene or ends it. Learners finish when they reach an ending you mark as the best outcome; any other ending lets them try again.</p>
       {steps.map((step, si) => (
-        <section key={step.id} className="flex flex-col gap-3 rounded-[var(--pc-radius-card)] bg-ui-muted p-4" aria-label={`Scene ${si + 1}`}>
+        <section key={step.id} className="flex flex-col gap-3 rounded-card bg-ui-muted p-4" aria-label={`Scene ${si + 1}`}>
           <div className="flex items-center gap-2">
             <h3 className="min-w-0 flex-1 font-semibold">Scene {si + 1}{si === 0 ? " (where it starts)" : ""}</h3>
             <RowTools label={`scene ${si + 1}`} index={si} count={steps.length} min={1} onMove={(by) => set(moved(steps, si, by))}
@@ -84,7 +84,7 @@ export function ScenarioEditor({ title, data, onChange, images, disabled }: { ti
           <PictureSelect id={`scene-img-${step.id}`} value={step.imageId} images={images} onChange={(imageId) => setStep(si, { imageId })} />
           <ol className="flex flex-col gap-3">
             {step.choices.map((choice, ci) => (
-              <li key={choice.id} className="flex flex-col gap-2 rounded-[var(--pc-radius-card)] bg-ui-card p-3">
+              <li key={choice.id} className="flex flex-col gap-2 rounded-card bg-ui-card p-3">
                 <div className="flex items-end gap-2">
                   <Input id={`choice-${choice.id}`} label={`Choice ${ci + 1}`} value={choice.text} onChange={(value) => setChoice(si, ci, { text: value })} maxLength={200} className="min-w-0 flex-1" placeholder="Blow your whistle and enter the water" />
                   <RowTools label={`choice ${ci + 1}`} index={ci} count={step.choices.length} min={1} onMove={(by) => setStep(si, { choices: moved(step.choices, ci, by) })}
@@ -134,7 +134,7 @@ export function CardsEditor({ data, onChange, images, disabled }: { data: Lesson
       <p className="text-sm text-ui-muted-foreground">Learners see the front, think of the answer, then flip it. Cards they didn’t know come back at the end until they know them all.</p>
       <ol className="flex flex-col gap-3">
         {cards.map((card, i) => (
-          <li key={card.id} className="flex flex-col gap-2 rounded-[var(--pc-radius-card)] bg-ui-muted p-3">
+          <li key={card.id} className="flex flex-col gap-2 rounded-card bg-ui-muted p-3">
             <div className="flex items-end gap-2">
               <Input id={`front-${card.id}`} label={`Card ${i + 1}: front`} value={card.front} onChange={(value) => setCard(i, { front: value })} maxLength={200} className="min-w-0 flex-1" placeholder="Combined chlorine" />
               <RowTools label={`card ${i + 1}`} index={i} count={cards.length} min={1} onMove={(by) => set(moved(cards, i, by))} onRemove={() => set(cards.filter((c) => c.id !== card.id))} />
@@ -199,7 +199,7 @@ export function SortingEditor({ title, data, onChange, disabled }: { title: stri
       {groups.length < MAX_GROUPS ? <Button type="button" variant="outline" className="min-h-11 self-start" onClick={() => set({ groups: [...groups, { id: id(), name: "" }] })}><Plus aria-hidden="true" />Add a group</Button> : null}
       <ol className="flex flex-col gap-2">
         {sorts.map((item, i) => (
-          <li key={item.id} className="flex flex-wrap items-end gap-2 rounded-[var(--pc-radius-card)] bg-ui-muted p-3">
+          <li key={item.id} className="flex flex-wrap items-end gap-2 rounded-card bg-ui-muted p-3">
             <Input id={`sort-${item.id}`} label={`Thing ${i + 1}`} value={item.text} onChange={(value) => set({ sorts: sorts.map((x) => x.id === item.id ? { ...x, text: value } : x) })} maxLength={200} className="min-w-0 flex-1"
               placeholder="Sodium hypochlorite and acid" />
             <Field label="Belongs in" htmlFor={`sort-group-${item.id}`}>
@@ -249,7 +249,7 @@ export function ExploreEditor({ imageId, data, onChange, disabled }: { imageId: 
       </div>
       <ol className="flex flex-col gap-3">
         {spots.map((sp, i) => (
-          <li key={sp.id} className="flex flex-col gap-2 rounded-[var(--pc-radius-card)] bg-ui-muted p-3">
+          <li key={sp.id} className="flex flex-col gap-2 rounded-card bg-ui-muted p-3">
             <div className="flex flex-wrap items-end gap-2">
               <span className="flex min-h-11 items-center font-semibold tabular-nums">{i + 1}</span>
               <Input id={`explore-${sp.id}-title`} label="Name" value={sp.title} onChange={(value) => update(sp.id, { title: value })} maxLength={120} className="min-w-0 flex-1" placeholder="Chlorine dosing pump" />

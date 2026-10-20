@@ -20,7 +20,7 @@ export function EmailPreview({ html, title }: { html: string; title: string }) {
       title={title}
       srcDoc={html}
       sandbox="allow-same-origin"
-      className="min-h-96 w-full rounded-[var(--pc-radius-inner)] border border-ui-border bg-ui-background"
+      className="min-h-96 w-full rounded-card border border-ui-border bg-ui-background"
       style={height ? { height } : undefined}
       onLoad={measure}
     />

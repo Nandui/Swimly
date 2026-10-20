@@ -29,7 +29,7 @@ export default async function TaskSitesPage() {
               </div>
               <dl className="flex flex-col">
                 {[["Business hours", `${s.opening} to ${s.closing}`], ["Published templates", String(s.templates)], ["Closed dates ahead", String(ahead.length)]].map(([k, v]) => (
-                  <div key={k} className="flex min-h-11 items-center justify-between gap-2 border-b border-[var(--pc-line)] last:border-b-0">
+                  <div key={k} className="flex min-h-11 items-center justify-between gap-2 border-b border-ui-border last:border-b-0">
                     <dt className="text-sm text-ui-muted-foreground">{k}</dt><dd className="font-semibold tabular-nums">{v}</dd>
                   </div>
                 ))}

@@ -21,8 +21,8 @@ export function PageHeader({
   back?: { href: string; label: string };
 }) {
   return (
-    <div className="min-w-0 flex flex-wrap gap-x-6 gap-y-4 items-end justify-between">
-      <div className="min-w-0 flex flex-col gap-1 grow basis-[min(100%,var(--pc-column-min))]">
+    <div data-page-header="" className="min-w-0 flex flex-wrap gap-x-6 gap-y-4 items-end justify-between">
+      <div className="min-w-0 flex flex-col gap-1 grow basis-column">
         {back ? <BackLink href={back.href} label={back.label} /> : null}
         <h1>{title}</h1>
         {description ? (

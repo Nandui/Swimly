@@ -85,7 +85,7 @@ function ClubList({
   return (
     <ul className="pc-rows">
       {clubs.map((club) => (
-        <li key={club.id} className="pc-row [overflow-wrap:anywhere]">
+        <li key={club.id} className="pc-row wrap-anywhere">
           <span className="pc-tile-icon" aria-hidden="true"><Building2 /></span>
           <div className="pc-row-body">
             <span className="pc-row-title">{club.name}</span>

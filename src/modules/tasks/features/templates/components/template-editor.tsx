@@ -147,7 +147,7 @@ export function TemplateEditor({ template, sites, roles, today }: { template: Ed
               ) : null}
             </div>
             {fields.length === 0 ? <p className="text-sm text-ui-muted-foreground">No fields.</p> : fields.map((f, i) => (
-              <fieldset key={f.id} className="flex flex-col gap-4 rounded-[var(--pc-radius-card)] border border-[var(--pc-line)] p-4">
+              <fieldset key={f.id} className="flex flex-col gap-4 rounded-card border border-ui-border p-4">
                 <legend className="px-1 font-semibold">Field {i + 1}</legend>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Input id={`tpl-f-label-${f.id}`} label={f.type === "heading" ? "Section heading" : "Label"} maxLength={200} value={f.label} onChange={(v) => setField(i, { label: v })} />
@@ -196,7 +196,7 @@ export function TemplateEditor({ template, sites, roles, today }: { template: Ed
             <>
               <p className="text-sm text-ui-muted-foreground">Times are each site&apos;s clock. A due time at or before the start is the next morning. Closed dates are skipped; each site&apos;s hours set its opening and closing (Sites).</p>
               {schedules.length === 0 ? <p className="text-sm text-ui-muted-foreground">No schedule yet.</p> : schedules.map((s, i) => (
-                <fieldset key={s.id} className="flex flex-col gap-4 rounded-[var(--pc-radius-card)] border border-[var(--pc-line)] p-4">
+                <fieldset key={s.id} className="flex flex-col gap-4 rounded-card border border-ui-border p-4">
                   <legend className="px-1 font-semibold">{scheduleLabel(t.kind === "once" ? { ...s, repeat: "once" } : s)}</legend>
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {t.kind === "repeat" ? <Select id={`tpl-repeat-${s.id}`} label="Repeats" value={s.repeat} onValueChange={(v) => setSchedule(i, { repeat: v as Repeat })} options={REPEATS.map((r) => ({ value: r, label: REPEAT_LABELS[r] }))} /> : null}
@@ -210,7 +210,7 @@ export function TemplateEditor({ template, sites, roles, today }: { template: Ed
                       <legend className="mb-2 text-sm font-semibold">On</legend>
                       <div className="flex flex-wrap gap-2">
                         {WEEKDAYS.map(([d, label]) => (
-                          <Label key={d} htmlFor={`tpl-day-${s.id}-${d}`} className="flex min-h-11 items-center gap-2 rounded-[var(--pc-radius-control)] border border-[var(--pc-line)] px-4 font-normal">
+                          <Label key={d} htmlFor={`tpl-day-${s.id}-${d}`} className="flex min-h-11 items-center gap-2 rounded-control border border-ui-border px-4 font-normal">
                             <Checkbox id={`tpl-day-${s.id}-${d}`} checked={s.weekdays.includes(d)} onCheckedChange={(v) => setSchedule(i, { weekdays: v === true ? [...s.weekdays, d] : s.weekdays.filter((x) => x !== d) })} />{label}
                           </Label>
                         ))}

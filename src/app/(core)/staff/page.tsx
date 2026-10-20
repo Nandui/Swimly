@@ -148,7 +148,7 @@ function PeopleTable({
             <TableRow key={person.id}>
               <TableCell>
                 <div className="min-w-0 flex gap-3 items-center">
-                  <UiLink href={`/staff/${person.id}`} className="min-w-0 flex gap-3 items-center rounded-[var(--pc-radius-card)] underline-offset-4 hover:[&_.pc-row-title]:underline">
+                  <UiLink href={`/staff/${person.id}`} className="min-w-0 flex gap-3 items-center rounded-card underline-offset-4 hover:[&_.pc-row-title]:underline">
                     <Avatar size="lg" aria-hidden="true"><AvatarFallback>{nameInitials(person.name)}</AvatarFallback></Avatar>
                     <span className="min-w-0 flex flex-col">
                       <span className="pc-row-title inline-flex min-h-6 flex-wrap items-center gap-x-2">
@@ -157,7 +157,7 @@ function PeopleTable({
                           <Tag meta={STAFF_STATUS_META.noPassword} />
                         ) : null}
                       </span>
-                      <span className="pc-row-hint block [overflow-wrap:anywhere]">
+                      <span className="pc-row-hint block wrap-anywhere">
                         {person.email}
                       </span>
                       <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 lg:hidden">

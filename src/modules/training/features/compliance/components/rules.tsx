@@ -39,7 +39,7 @@ function Choices({ group, options, picked, onChange }: { group: (typeof GROUPS)[
   const [open, setOpen] = useState(picked.length > 0);
   if (!options.length) return null;
   return (
-    <Collapsible open={open} onOpenChange={setOpen} className="rounded-[var(--pc-radius-card)] bg-ui-muted">
+    <Collapsible open={open} onOpenChange={setOpen} className="rounded-card bg-ui-muted">
       <CollapsibleTrigger asChild>
         <Button type="button" variant="ghost" className="min-h-11 w-full justify-between">
           <span>{group.label}{picked.length ? `: ${picked.length} chosen` : ": any"}</span>

@@ -50,7 +50,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
         title={person.name}
         description={
           <span className="inline-flex flex-wrap items-center gap-2">
-            <span className="[overflow-wrap:anywhere]">{person.email}</span>
+            <span className="wrap-anywhere">{person.email}</span>
             {person.isSuperadmin ? <Tag meta={PERSON_STATUS_META.superadmin} /> : null}
             {!person.isActive ? <Tag meta={PERSON_STATUS_META.deactivated} /> : null}
             {!person.hasPassword ? <Tag meta={STAFF_STATUS_META.noPassword} /> : null}

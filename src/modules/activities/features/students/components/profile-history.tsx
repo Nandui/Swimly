@@ -40,14 +40,14 @@ function HistoryRows({ events, studentId, showCompetencyLinks = true, brief = fa
       return <li key={event.id} className={styles.briefEvent}>
         <time dateTime={event.date}>{formatDate(parseDateOnly(event.date))}</time>
         <Icon aria-hidden="true" className="size-5" />
-        <div className="min-w-0"><p className="text-sm font-semibold [overflow-wrap:anywhere]">{label}</p><p className="pc-row-hint">{change ? `${mark(change.before)} → ${mark(change.after)} · ` : ""}{event.actor ?? "Saved record"}</p></div>
+        <div className="min-w-0"><p className="text-sm font-semibold wrap-anywhere">{label}</p><p className="pc-row-hint">{change ? `${mark(change.before)} → ${mark(change.after)} · ` : ""}{event.actor ?? "Saved record"}</p></div>
         {change && showCompetencyLinks ? <CompetencyHistory studentId={studentId} id={change.competencyId} name={change.name} /> : null}
       </li>;
     }
     return <li key={event.id} className="pc-row flex-nowrap">
       <Icon className="mt-1 size-4 shrink-0 self-start text-ui-muted-foreground" aria-hidden="true" />
       <div className="min-w-0 flex-1 space-y-1">
-        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1"><p className="font-semibold [overflow-wrap:anywhere]">{title}</p><time dateTime={event.date} className="pc-row-hint">{formatDate(parseDateOnly(event.date))}</time></div>
+        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1"><p className="font-semibold wrap-anywhere">{title}</p><time dateTime={event.date} className="pc-row-hint">{formatDate(parseDateOnly(event.date))}</time></div>
         {changes?.map(change => <div key={change.competencyId} className="flex flex-wrap items-center justify-between gap-2 py-1"><div className="min-w-0 text-sm"><p>{change.name}</p><p className="text-ui-muted-foreground">{mark(change.before)} → {mark(change.after)}</p></div>{showCompetencyLinks ? <CompetencyHistory studentId={studentId} id={change.competencyId} name={change.name} /> : null}</div>)}
         {event.evidence && "after" in event.evidence ? <p className="text-sm">{"before" in event.evidence ? `${mark(event.evidence.before)} → ` : ""}{mark(event.evidence.after)}</p> : null}
         {event.className || event.site ? <p className="text-xs text-ui-muted-foreground">{[event.className, event.site].filter(Boolean).join(" · ")}</p> : null}

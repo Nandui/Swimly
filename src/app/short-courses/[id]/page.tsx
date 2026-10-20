@@ -64,9 +64,9 @@ export default async function ShortCoursePage({ params }: { params: Promise<{ id
 
       <section className="pc-panel" aria-labelledby="sc-facts">
         <div className="pc-panel-head"><h2 id="sc-facts">About the course</h2></div>
-        <dl className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(min(100%,var(--pc-tile-min)),1fr))]">
+        <dl className="grid gap-4 grid-cols-tiles">
           {facts.map(([label, value]) => (
-            <div key={label} className="min-w-0"><dt className="text-xs font-semibold text-ui-muted-foreground">{label}</dt><dd className="mt-1 [overflow-wrap:anywhere]">{value}</dd></div>
+            <div key={label} className="min-w-0"><dt className="text-xs font-semibold text-ui-muted-foreground">{label}</dt><dd className="mt-1 wrap-anywhere">{value}</dd></div>
           ))}
         </dl>
         {course.type.description ? <p className="text-sm text-ui-muted-foreground">{course.type.description}</p> : null}

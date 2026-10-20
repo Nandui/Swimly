@@ -48,7 +48,7 @@ export default async function AcademyCoursePage({ params }: { params: Promise<{ 
 
       <section className="pc-panel" aria-labelledby="ac-facts">
         <div className="pc-panel-head"><h2 id="ac-facts">About the course</h2></div>
-        <dl className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(min(100%,var(--pc-tile-min)),1fr))]">
+        <dl className="grid gap-4 grid-cols-tiles">
           {[
             ["Tutor", course.tutor.name],
             ["Assessor", course.assessor?.name ?? "The tutor"],
@@ -60,7 +60,7 @@ export default async function AcademyCoursePage({ params }: { params: Promise<{ 
             ["Still to pay", owed ? euro(owed) : "Nothing"],
             ["Online booking", course.bookOnline ? (open && course.state === "planned" ? "Open until it starts" : "Closed") : "Not online"],
           ].map(([label, value]) => (
-            <div key={label} className="min-w-0"><dt className="text-xs font-semibold text-ui-muted-foreground">{label}</dt><dd className="mt-1 [overflow-wrap:anywhere]">{value}</dd></div>
+            <div key={label} className="min-w-0"><dt className="text-xs font-semibold text-ui-muted-foreground">{label}</dt><dd className="mt-1 wrap-anywhere">{value}</dd></div>
           ))}
         </dl>
         {course.note ? <p className="text-sm">{course.note}</p> : null}

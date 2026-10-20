@@ -59,14 +59,14 @@ export default async function TrainingCoursesPage({ searchParams }: { searchPara
           : { title: "No courses yet", hint: who.manage ? "Add the first course people should complete, or start from a template." : "Ask whoever builds the training catalogue to add one." })} />
       ) : groups.map((group) => (
         <section key={group.category || "none"} className="pc-panel" aria-label={group.category || (categories.length ? "Other courses" : archived ? "Retired courses" : "Current courses")}>
-          {categories.length ? <h2 className="pc-panel-head text-[length:var(--pc-text-title)] leading-[var(--pc-leading-title)]">{group.category || "Other"}</h2> : null}
+          {categories.length ? <h2 className="pc-panel-head text-lg">{group.category || "Other"}</h2> : null}
           <ul className="pc-rows">
             {group.courses.map((course) => (
               <li key={course.id} className="pc-row">
                 {/* eslint-disable-next-line @next/next/no-img-element -- a private file served by this app */}
                 {course.coverId ? <img src={`/training/files/${course.coverId}`} alt="" className="tf-cover-thumb" loading="lazy" /> : <span className="pc-tile-icon"><GraduationCap aria-hidden="true" /></span>}
                 <div className="pc-row-body">
-                  <h3 className="pc-row-title text-[length:var(--pc-text-body)] leading-[var(--pc-leading-body)]">
+                  <h3 className="pc-row-title text-sm">
                     <Link href={`/training/courses/${course.id}`} className="hover:underline focus-visible:underline">{course.title}</Link>
                   </h3>
                   <p className="pc-row-hint">

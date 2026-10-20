@@ -58,7 +58,7 @@ function RoleRowItem({ role, canGiveRestricted }: { role: RoleRow; canGiveRestri
   const about = [role.description, `Home page: ${role.homeName || "not named yet"}`, plural(role._count.users, "account")].filter(Boolean).join(" · ");
 
   return (
-    <li className="pc-row [overflow-wrap:anywhere]">
+    <li className="pc-row wrap-anywhere">
       <div className="pc-row-body">
         <span className="pc-row-title flex flex-wrap items-center gap-x-2 gap-y-1">
           {role.name}

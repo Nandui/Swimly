@@ -118,7 +118,7 @@ export default async function TasksTodayPage({ searchParams }: { searchParams: P
         {filtered ? <p className="text-xs text-ui-muted-foreground">{tasks.length} of {total} tasks match.</p> : null}
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_var(--pc-rail-width)] lg:items-start">
+      <div className="grid gap-4 lg:grid-cols-main-rail lg:items-start">
         <div className="flex min-w-0 flex-col gap-4">
           {date > day ? (
             <section className="pc-panel" aria-labelledby="tasks-planned">
@@ -157,7 +157,7 @@ export default async function TasksTodayPage({ searchParams }: { searchParams: P
           </div>
           <dl className="flex flex-col">
             {[["Opening", settings.opening], ["Closing", settings.closing], ["High-priority tasks left", String(figures.priorityLeft)], ["Closed dates ahead", String(settings.closedDates.filter((d) => d >= day).length)]].map(([k, v]) => (
-              <div key={k} className="flex min-h-11 items-center justify-between gap-2 border-b border-[var(--pc-line)] last:border-b-0">
+              <div key={k} className="flex min-h-11 items-center justify-between gap-2 border-b border-ui-border last:border-b-0">
                 <dt className="text-sm text-ui-muted-foreground">{k}</dt><dd className="font-semibold tabular-nums">{v}</dd>
               </div>
             ))}

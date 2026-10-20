@@ -119,7 +119,7 @@ export default async function ProgrammePage(
         ) : (
           <ul className="pc-rows">
             {assessmentTypes.map((type) => (
-              <li key={type.id} className="pc-row [overflow-wrap:anywhere]">
+              <li key={type.id} className="pc-row wrap-anywhere">
                 <span className="pc-tile-icon">
                   <ClipboardCheck aria-hidden="true" />
                 </span>
@@ -243,7 +243,7 @@ function LevelSection({
               ({ competency, position, first, last }) => (
                 <li
                   key={competency.id}
-                  className="pc-row [overflow-wrap:anywhere]"
+                  className="pc-row wrap-anywhere"
                 >
                   {position !== null ? (
                     <span className="pc-tile-icon font-semibold tabular-nums">

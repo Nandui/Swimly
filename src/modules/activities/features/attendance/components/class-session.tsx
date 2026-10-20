@@ -328,7 +328,7 @@ export async function ClassSession({
                   <Item
                     key={swimmer.student.id}
                     role="listitem"
-                    className="[overflow-wrap:anywhere]"
+                    className="wrap-anywhere"
                   >
                     <ItemContent className="min-w-0">
                       <ItemTitle className="min-w-0 flex-wrap">

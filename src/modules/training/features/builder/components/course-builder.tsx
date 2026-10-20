@@ -83,7 +83,7 @@ export function CourseBuilder({ courseId, title, hasOldText, draft, files: initi
   const files = [...initialFiles, ...added.filter((a) => !initialFiles.some((f) => f.id === a.id))];
   const addFile = (file: UploadedFile) => setAdded((now) => [...now, file]);
   return (
-    <div className="grid gap-6 lg:grid-cols-[var(--pc-rail-width)_minmax(0,1fr)] items-start">
+    <div className="grid gap-6 lg:grid-cols-rail-main items-start">
       <OutlinePanel courseId={courseId} hasOldText={hasOldText} draft={draft} selected={open?.id ?? (examOpen ? "exam" : practicalOpen ? "practical" : questionSection ? `q:${questionSection.id}` : null)} canEdit={canEdit} comments={comments} courses={courses} practical={practical} requiresSignoff={requiresSignoff} />
       {open ? (
         <div className="flex flex-col gap-6">
@@ -137,7 +137,7 @@ function OutlinePanel({ courseId, hasOldText, draft, selected, canEdit, comments
   return (
     <nav aria-label="Course outline" className="pc-panel flex flex-col gap-4 lg:sticky lg:top-6">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-[length:var(--pc-text-title)] leading-[var(--pc-leading-title)]">Outline</h2>
+        <h2 className="text-lg">Outline</h2>
         <span className="text-sm text-ui-muted-foreground tabular-nums">{lessonCount} {lessonCount === 1 ? "lesson" : "lessons"}</span>
       </div>
       <Link href={hrefFor(courseId)} aria-current={selected ? undefined : "page"} className={cn("tf-outline-row", !selected && "is-current")}>
@@ -294,12 +294,12 @@ function StartPanel({ courseId, title, draft, canEdit, changed, comments }: { co
   }
   return (
     <section className="pc-panel flex flex-col gap-4" aria-labelledby="overview-title">
-      <h2 id="overview-title" className="text-[length:var(--pc-text-title)] leading-[var(--pc-leading-title)]">{title}</h2>
-      <dl className="grid grid-cols-[repeat(auto-fit,minmax(var(--pc-tile-min),1fr))] gap-3">
+      <h2 id="overview-title" className="text-lg">{title}</h2>
+      <dl className="grid grid-cols-tiles gap-3">
         {[["Sections", draft.sections.length], ["Lessons", lessons.length], ["Questions", draft.questions.length], ["Final exam", draft.exam ? `Pass ${draft.exam.passMark}%` : "Off"], ["About", `${minutes} min`]].map(([label, value]) => (
-          <div key={label} className="rounded-[var(--pc-radius-card)] bg-ui-muted p-4">
+          <div key={label} className="rounded-card bg-ui-muted p-4">
             <dt className="text-xs font-semibold uppercase tracking-wide text-ui-muted-foreground">{label}</dt>
-            <dd className="text-[length:var(--pc-text-title)] font-semibold tabular-nums">{value}</dd>
+            <dd className="text-lg font-semibold tabular-nums">{value}</dd>
           </div>
         ))}
       </dl>
@@ -313,7 +313,7 @@ function StartPanel({ courseId, title, draft, canEdit, changed, comments }: { co
         <Notice tone="success" title="Ready to publish">Preview it as a learner first, then publish from the top of the page.</Notice>
       )}
       {tips.length ? (
-        <Collapsible className="flex flex-col gap-2 rounded-[var(--pc-radius-card)] bg-ui-muted p-4">
+        <Collapsible className="flex flex-col gap-2 rounded-card bg-ui-muted p-4">
           <CollapsibleTrigger asChild>
             <Button type="button" variant="ghost" className="min-h-11 justify-between self-stretch">
               <span className="flex items-center gap-2"><Sparkles aria-hidden="true" />Make it better: {tips.length} {tips.length === 1 ? "suggestion" : "suggestions"}</span>
@@ -355,7 +355,7 @@ const BODY_LABEL: Record<LessonKind, string> = {
 function VersionHistory({ versions }: { versions: VersionNote[] }) {
   return (
     <section className="pc-panel flex flex-col gap-3" aria-labelledby="versions-heading">
-      <h2 id="versions-heading" className="text-[length:var(--pc-text-title)] leading-[var(--pc-leading-title)]">Versions</h2>
+      <h2 id="versions-heading" className="text-lg">Versions</h2>
       <ol className="pc-rows">
         {versions.map((v) => (
           <li key={v.id} className="pc-row items-start">
@@ -423,7 +423,7 @@ function LessonEditor({ courseId, lesson, files, onUploaded, canEdit, position, 
         <span className="pc-tile-icon"><Icon aria-hidden="true" /></span>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-ui-muted-foreground">{meta.label} · lesson {position.index + 1} of {position.total}</p>
-          <h2 id="lesson-heading" className="truncate text-[length:var(--pc-text-title)] leading-[var(--pc-leading-title)]">{title || "Untitled lesson"}</h2>
+          <h2 id="lesson-heading" className="truncate text-lg">{title || "Untitled lesson"}</h2>
         </div>
         {canEdit ? (
           <div className="flex gap-1">

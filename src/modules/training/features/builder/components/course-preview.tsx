@@ -26,7 +26,7 @@ function QuestionsPreview({ questions }: { questions: Question[] }) {
                 {q.options.map((o, n) => o.area ? <span key={o.id} className="tf-spot-area" style={{ left: `${o.area.x}%`, top: `${o.area.y}%`, width: `${o.area.w}%`, height: `${o.area.h}%` }}><span className="tf-spot-number">{n + 1}</span></span> : null)}
               </span>
             /* eslint-disable-next-line @next/next/no-img-element -- a private file served by this app */
-            ) : q.imageId ? <img src={fileSrc(q.imageId)} alt="" loading="lazy" className="max-h-48 w-fit rounded-[var(--pc-radius-card)]" /> : null}
+            ) : q.imageId ? <img src={fileSrc(q.imageId)} alt="" loading="lazy" className="max-h-48 w-fit rounded-card" /> : null}
             {q.kind === "NUMBER" ? <span className="text-sm font-semibold">Right: {q.options[0]?.text}{q.options[0]?.unit ? ` ${q.options[0].unit}` : ""}{Number(q.options[0]?.match) ? `, give or take ${q.options[0].match}` : ""}</span> : null}
             {q.kind === "HOTSPOT" || q.kind === "NUMBER" ? null : <ul className="flex flex-col gap-1 text-sm">
               {q.options.map((o, n) => (
@@ -54,11 +54,11 @@ function DataPreview({ kind, data, fileId }: { kind: string; data: LessonData | 
         <Notice title="Learners play this one scene at a time">They choose, see what happened, and carry on until they reach the best outcome. Here you see the whole map.</Notice>
         <ol className="flex flex-col gap-3">
           {steps.map((step, i) => (
-            <li key={step.id} className="rounded-[var(--pc-radius-card)] bg-ui-muted p-4">
+            <li key={step.id} className="rounded-card bg-ui-muted p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-ui-muted-foreground">Scene {i + 1}{i === 0 ? " · start" : ""}</p>
               <p className="whitespace-pre-line">{step.text}</p>
               {/* eslint-disable-next-line @next/next/no-img-element -- a private file served by this app */}
-              {step.imageId ? <img src={fileSrc(step.imageId)} alt="" loading="lazy" className="mt-2 max-h-48 w-fit rounded-[var(--pc-radius-card)]" /> : null}
+              {step.imageId ? <img src={fileSrc(step.imageId)} alt="" loading="lazy" className="mt-2 max-h-48 w-fit rounded-card" /> : null}
               <ul className="mt-2 flex flex-col gap-1 text-sm">
                 {step.choices.map((c) => {
                   const to = c.next ? steps.findIndex((s) => s.id === c.next) + 1 : 0;
@@ -99,7 +99,7 @@ function DataPreview({ kind, data, fileId }: { kind: string; data: LessonData | 
         <Notice title="Learners get these shuffled">They put each one in a group and check. Here you see where each one belongs.</Notice>
         <div className="tf-sort-groups">
           {groups.map((g) => (
-            <section key={g.id} className="flex flex-col gap-2 rounded-[var(--pc-radius-card)] bg-ui-muted p-4" aria-label={g.name}>
+            <section key={g.id} className="flex flex-col gap-2 rounded-card bg-ui-muted p-4" aria-label={g.name}>
               <h3 className="font-semibold">{g.name}</h3>
               <ul className="flex flex-col gap-1 text-sm">{sorts.filter((i) => i.group === g.id).map((i) => <li key={i.id}>{i.text}</li>)}</ul>
             </section>
@@ -153,12 +153,12 @@ export function CoursePreview({ courseId, outline, lessonId, requiresSignoff }: 
   const video = lesson.kind === "VIDEO" ? videoFor(lesson.videoUrl) : null;
   const minutes = lessonMinutes(lesson);
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_var(--pc-rail-width)] items-start">
+    <div className="grid gap-6 lg:grid-cols-main-rail items-start">
       <article className="pc-panel flex flex-col gap-5" aria-labelledby="preview-lesson">
         <div className="flex flex-col gap-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-ui-muted-foreground">{section.title} · lesson {index + 1} of {total}{minutes ? ` · ${minutes} min` : ""}</p>
           <Progress value={Math.round((index / total) * 100)} aria-label="Through the course" />
-          <h2 id="preview-lesson" className="text-[length:var(--pc-text-page)] leading-[var(--pc-leading-page)]">{lesson.title}</h2>
+          <h2 id="preview-lesson" className="text-2xl">{lesson.title}</h2>
         </div>
         {video?.embed ? (
           <div className="tf-video"><iframe src={video.embed} title={`Video: ${lesson.title}`} allow="encrypted-media; picture-in-picture; fullscreen" loading="lazy" referrerPolicy="strict-origin-when-cross-origin" /></div>

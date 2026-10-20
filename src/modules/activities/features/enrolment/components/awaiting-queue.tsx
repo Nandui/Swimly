@@ -24,7 +24,7 @@ export function AwaitingQueue({ view, total, q, counts, page, pageSize, actions,
     <section className="pc-panel" aria-label={moves ? "Move queue" : "Enrolment queue"}>
       <div className="min-w-0 flex flex-wrap items-end gap-3">
         <AwaitingNavigation active={view} q={q} counts={counts} />
-        <form action="/awaiting-enrolment" className="min-w-0 flex-[1_1_var(--pc-field-min)] md:max-w-md" role="search">
+        <form action="/awaiting-enrolment" className="min-w-0 grow basis-field md:max-w-md" role="search">
           {moves && <input type="hidden" name="view" value="moves" />}
           <SearchField id="awaiting-swimmer-search" label="Find a swimmer" defaultValue={q} placeholder="Name or member number" maxLength={100} clearHref={moves ? "/awaiting-enrolment?view=moves" : "/awaiting-enrolment"} />
         </form>
@@ -62,7 +62,7 @@ export function QueueRow({ name, description, status, nextContactOn, contactSumm
         </span>
         <span className="flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:items-center sm:gap-3">{status}<span aria-hidden="true" className={buttonVariants({ variant: "outline" })}><span className="group-data-[state=open]/record:hidden">View</span><span className="hidden group-data-[state=open]/record:inline">Close</span><ChevronDown className="group-data-[state=open]/record:rotate-180" /></span></span>
       </CollapsibleTrigger>
-      <CollapsibleContent forceMount className="mt-3 grid min-w-0 grid-cols-1 gap-6 border-t border-ui-border pt-4 data-[state=closed]:hidden lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <CollapsibleContent forceMount className="mt-3 grid min-w-0 grid-cols-1 gap-6 border-t border-ui-border pt-4 data-[state=closed]:hidden lg:grid-cols-2">
     <div className="min-w-0 flex flex-col gap-3">
       <h3 className="text-xs font-semibold text-ui-muted-foreground">Class placement</h3>{placement}<div className="min-w-0 flex flex-col gap-3 rounded-ui-lg border border-ui-border p-4">{identity}</div>
     </div>

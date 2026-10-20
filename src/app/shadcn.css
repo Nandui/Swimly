@@ -77,7 +77,40 @@
   --radius-ui-lg: var(--ui-radius);
   --radius-ui-xl: calc(var(--ui-radius) * 1.4);
   --radius-ui-2xl: calc(var(--ui-radius) * 1.8);
+  /* Poolside corners (poolside.css): rounded-control (pills), rounded-card (16px, inside a
+     panel), rounded-panel (24px) and rounded-frame. */
+  --radius-control: var(--pc-radius-control);
+  --radius-card: var(--pc-radius-card);
+  --radius-panel: var(--pc-radius-panel);
+  --radius-frame: var(--pc-radius-frame);
 }
+
+/* Layout utilities from the Poolside layout sizes (owner decision, 10 October 2026), so pages
+   never need an arbitrary value (owner rule, 20 October 2026). Auto-fit grids of tiles, cards
+   and wide columns; a side rail beside the main column; search fields and the page title. */
+@utility grid-cols-tiles { grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--pc-tile-min)), 1fr)); }
+@utility grid-cols-cards { grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--pc-card-min)), 1fr)); }
+@utility grid-cols-columns { grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--pc-column-min)), 1fr)); }
+@utility grid-cols-main-rail { grid-template-columns: minmax(0, 1fr) min(100%, var(--pc-rail-width)); }
+@utility grid-cols-rail-main { grid-template-columns: min(100%, var(--pc-rail-width)) minmax(0, 1fr); }
+/* One growing column and one sized to its content (a row's text and its actions), and back. */
+@utility grid-cols-fill-auto { grid-template-columns: minmax(0, 1fr) auto; }
+@utility grid-cols-auto-fill { grid-template-columns: auto minmax(0, 1fr); }
+@utility grid-rows-auto-fill { grid-template-rows: auto minmax(0, 1fr); }
+@utility grid-rows-auto-auto-fill { grid-template-rows: auto auto minmax(0, 1fr); }
+@utility grid-rows-auto-auto { grid-template-rows: auto auto; }
+/* A row of two or three fields with its actions at the end (witnesses, area lines). */
+@utility grid-cols-two-fields-action { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; }
+@utility grid-cols-three-fields-action { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto; }
+/* Alerts: an icon column (none without an icon) beside the text. */
+@utility grid-cols-alert { grid-template-columns: 0 minmax(0, 1fr); }
+@utility grid-cols-alert-icon { grid-template-columns: calc(var(--spacing) * 4) minmax(0, 1fr); }
+@utility basis-field { flex-basis: min(100%, var(--pc-field-min)); }
+@utility min-w-field { min-width: min(100%, var(--pc-field-min)); }
+@utility basis-column { flex-basis: min(100%, var(--pc-column-min)); }
+@utility max-w-deck { max-width: var(--pc-deck-width); }
+/* A heading that takes its container's type size, such as an empty state's title. */
+@utility text-inherit { font-size: inherit; line-height: inherit; }
 
 @layer base {
   [data-slot] {

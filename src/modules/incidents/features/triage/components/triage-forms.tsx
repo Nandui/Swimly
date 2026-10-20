@@ -109,7 +109,7 @@ export function TriageForm({ id, version, category, injured, hasStaff, needsPare
       </div>
       <div className="space-y-2">
         <h3 className="text-sm font-semibold">How to rate {guide.label.toLowerCase()}</h3>
-        <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 text-sm">
+        <dl className="grid grid-cols-auto-fill gap-x-3 gap-y-1 text-sm">
           {LEVELS.map((n) => [
             <dt key={`t${n}`} className="font-semibold tabular-nums">{n} {severities[n].label}</dt>,
             <dd key={`d${n}`} className="text-ui-muted-foreground">{guide.scale[n]}</dd>,
