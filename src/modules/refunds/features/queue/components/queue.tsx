@@ -8,6 +8,7 @@ import { Button } from "@/components/shadcn/button";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/shadcn/select";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { Tag } from "@/components/ui-kit/tag";
 import { LinkPagination } from "@/components/ui-kit/link-pagination";
@@ -67,8 +68,7 @@ export function RefundQueue({ data }: { data: Data }) {
   const site = data.sites.find(item => item.id === f.site)?.name ?? "All sites";
   const title = view === "mine" ? "My requests" : view === "drafts" ? "My drafts" : "Refund requests";
   const create = who.request ? <Button asChild className="refund-new"><Link href="/refunds/new"><ReceiptText aria-hidden="true" />Log a refund request</Link></Button> : null;
-  return <>
-    <PageHeader title={title} description={`${what} · ${site}`} actions={create} />
+  return <PageShell header={<PageHeader title={title} description={`${what} · ${site}`} actions={create} />}>
     <ul className="pc-stats refund-tiles" aria-label="Follow-up queues">
       {TILES.map(tile => {
         const value = count(tile.counts), Icon = tile.icon;
@@ -111,7 +111,7 @@ export function RefundQueue({ data }: { data: Data }) {
         </li>)}</ul>}
       <LinkPagination label="Request pages" page={data.page} pageCount={data.pages} pathname="/refunds" query={query()} />
     </section>
-  </>;
+  </PageShell>;
 }
 
 /** A filter as a pill that applies on change: its name, then the chosen value. */

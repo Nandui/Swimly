@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { AddToGroup, findTimesTogether, getCourses, getGroup, SelectedSwimmer, TogetherResults, toMembers } from "@/modules/activities/features/together";
 import { screenPage } from "@/lib/page-guards";
 import { AppIcon } from "@/components/ui-kit/app-icon";
@@ -36,11 +37,10 @@ export default async function TogetherPage(props: PageProps<"/together">) {
     next.length ? `/together?students=${next.join(",")}` : "/together";
 
   return (
-    <div className="min-w-0 flex flex-col gap-6">
-      <PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         title="Together"
         description="One trip to the pool for more than one child: find a day, or a single slot, that suits all of them"
-      />
+      />}>
 
       <section className="pc-panel" aria-label="Children">
         {/* The group so far: removable selections with profile shortcuts. */}
@@ -129,6 +129,6 @@ export default async function TogetherPage(props: PageProps<"/together">) {
           />
         </>
       )}
-    </div>
+    </PageShell>
   );
 }

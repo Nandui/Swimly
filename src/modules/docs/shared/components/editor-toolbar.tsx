@@ -93,7 +93,7 @@ export function EditorToolbar({ editor, disabled, openLink, openImage }: {
               else editor?.chain().focus().setColor(colour.value).run();
             }
             close();
-          }}><span aria-hidden="true" style={{ backgroundColor: colour.value }} /></Button>)}
+          }}><span aria-hidden="true" data-swatch={`${highlight ? 'mark-' : ''}${colour.name.toLowerCase()}`} /></Button>)}
       </div>
       {menuItem(highlight ? 'Remove highlight' : 'Default text colour', RemoveFormatting, () => {
         if (highlight) editor?.chain().focus().unsetHighlight().run();

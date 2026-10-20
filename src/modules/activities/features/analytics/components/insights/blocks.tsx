@@ -1,5 +1,7 @@
 import Link from "next/link";
 import * as React from "react";
+import { Progress } from "@/components/shadcn/progress";
+import { leftOf, widthOf } from "@/components/ui-kit/scale";
 import { ChevronRight } from "lucide-react";
 import { formatCount, nameInitials } from "@/lib/format";
 
@@ -30,7 +32,7 @@ export function CompareList({ label, help, average, averageText, max, rows, word
   label: string; help: string; average: number | null; averageText: string; max?: number; rows: CompareRow[]; word: "team" | "school";
 }) {
   const top = max ?? Math.max(1, ...rows.map(r => r.value ?? 0), average ?? 0) * 1.1;
-  const at = (v: number) => `${Math.min(100, Math.max(0, v / top * 100)).toFixed(1)}%`;
+  const share = (v: number) => Math.min(1, Math.max(0, v / top));
   const sorted = [...rows].sort((a, b) => (b.value ?? -1) - (a.value ?? -1) || a.name.localeCompare(b.name));
   const flagged = sorted.filter(r => r.note).map(r => r.name.split(" ")[0]);
   const both = flagged.length > 1 ? `${flagged.slice(0, -1).join(", ")} and ${flagged.at(-1)}` : flagged[0];
@@ -39,8 +41,8 @@ export function CompareList({ label, help, average, averageText, max, rows, word
       <p className="ins-board-help">{help}{average !== null ? ` The line is the ${word} average, ${averageText}.` : ""}</p>
       <p className="ins-board-worth" data-tone={flagged.length ? "warn" : undefined}>{flagged.length ? `Worth a word: ${both}` : "Nobody stands out on this one"}</p>
     </div>
-    {sorted.length ? <ul className="ins-board-rows" aria-label={label} style={{ "--ins-avg": average !== null ? at(average) : "-100%" } as React.CSSProperties}>
-      {average !== null ? <li aria-hidden="true" className="ins-board-scale"><span /><span><span className="ins-board-avg-label">{word === "team" ? "Team" : "School"} {averageText}</span></span><span /></li> : null}
+    {sorted.length ? <ul className="ins-board-rows" aria-label={label}>
+      {average !== null ? <li aria-hidden="true" className="ins-board-scale"><span /><span><span className={`ins-board-avg-label ${leftOf(share(average))}`}>{word === "team" ? "Team" : "School"} {averageText}</span></span><span /></li> : null}
       {sorted.map(r => {
         const body = <>
           <span className="ins-board-who">
@@ -48,7 +50,7 @@ export function CompareList({ label, help, average, averageText, max, rows, word
             <span className="min-w-0"><span className="ins-board-name">{r.name}</span>{r.sub ? <span className="ins-board-sub">{r.sub}</span> : null}</span>
           </span>
           <span className="ins-board-bar">
-            <span className="ins-board-track" aria-hidden="true"><span className="ins-board-fill" data-tone={r.note ? "warn" : undefined} style={{ width: r.value === null ? "0%" : at(r.value) }} /><span className="ins-board-line" /></span>
+            <span className="ins-board-track" aria-hidden="true"><Progress value={r.value === null ? 0 : share(r.value) * 100} data-tone={r.note ? "warn" : undefined} className="ins-board-fill" />{average !== null ? <span className={`ins-board-line ${leftOf(share(average))}`} /> : null}</span>
             {r.note ? <span className="ins-board-note">{r.note}</span> : null}
           </span>
           <span className="ins-board-value">{r.text}{r.href ? <ChevronRight aria-hidden="true" /> : null}</span>
@@ -66,7 +68,7 @@ export function SplitBar({ label, parts }: { label: string; parts: { key: string
   const total = parts.reduce((s, p) => s + p.value, 0);
   return <div className="ins-split">
     <div className="ins-split-bar" role="img" aria-label={`${label}: ${parts.map(p => `${p.label} ${formatCount(p.value)}`).join(", ")}`}>
-      {total ? parts.filter(p => p.value).map(p => <span key={p.key} data-tone={p.tone ?? "a"} style={{ flexGrow: p.value }} />) : <span data-tone="muted" style={{ flexGrow: 1 }} />}
+      {total ? parts.filter(p => p.value).map(p => <span key={p.key} data-tone={p.tone ?? "a"} className={widthOf(p.value / total)} />) : <span data-tone="muted" className="w-full" />}
     </div>
     <ul className="ins-split-key">
       {parts.map(p => <li key={p.key}><span className="ins-split-dot" data-tone={p.tone ?? "a"} aria-hidden="true" /><strong>{formatCount(p.value)}</strong>{p.label}</li>)}
@@ -84,9 +86,9 @@ export function LevelPlaces({ rows }: { rows: { key: string; name: string; group
       {rows.map(r => <li key={r.key}>
         <span className="ins-levels-name"><strong>{r.name}</strong>{r.group ? <span>{r.group}</span> : null}</span>
         <span className="ins-levels-bar" aria-hidden="true">
-          {r.filled ? <span data-part="filled" style={{ width: `${r.filled / max * 100}%` }} /> : null}
-          {r.free ? <span data-part="free" style={{ width: `${r.free / max * 100}%` }} /> : null}
-          {r.waiting ? <span data-part="waiting" style={{ width: `${r.waiting / max * 100}%` }} /> : null}
+          {r.filled ? <span data-part="filled" className={widthOf(r.filled / max)} /> : null}
+          {r.free ? <span data-part="free" className={widthOf(r.free / max)} /> : null}
+          {r.waiting ? <span data-part="waiting" className={widthOf(r.waiting / max)} /> : null}
         </span>
         <span className="ins-levels-text">{formatCount(r.filled)} filled, {formatCount(r.free)} free{r.waiting ? <>, <strong>{formatCount(r.waiting)} waiting</strong></> : null}<span className="ins-muted"> · {r.classes} {r.classes === 1 ? "class" : "classes"}</span></span>
       </li>)}
@@ -102,7 +104,7 @@ export function BarsVersus({ label, rows, previousLabel }: { label: string; rows
     <ul className="ins-bars" aria-label={label}>
       {rows.map(r => <li key={r.key} className="ins-bar-row">
         <span className="ins-bar-label">{r.label}</span>
-        <span className="ins-bar-track" aria-hidden="true"><span className="ins-bar-fill" data-zero={r.value === 0 ? "" : undefined} style={{ width: `${r.value / max * 100}%` }} /><span className="ins-bar-marker" style={{ left: `${r.previous / max * 100}%` }} /></span>
+        <span className="ins-bar-versus" aria-hidden="true"><Progress value={Math.min(100, r.value / max * 100)} className="ins-bar-track" /><span className={`ins-bar-marker ${leftOf(r.previous / max)}`} /></span>
         <span className="ins-bar-value">{formatCount(r.value)}<span className="ins-bar-share">was {formatCount(r.previous)}</span></span>
       </li>)}
     </ul>

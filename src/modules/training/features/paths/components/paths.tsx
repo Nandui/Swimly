@@ -59,7 +59,7 @@ export function PathDialog({ courses, path }: {
         <legend className="mb-1 text-sm font-semibold">Courses, in order</legend>
         <ol className="flex flex-col gap-3">
           {steps.map((step, i) => (
-            <li key={step.key} className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2 rounded-[var(--pc-radius-card)] bg-ui-muted p-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]">
+            <li key={step.key} className="grid grid-cols-fill-auto items-end gap-2 rounded-card bg-ui-muted p-3 sm:grid-cols-two-fields-action">
               <Field label={`Course ${i + 1}`} htmlFor={`step-course-${step.key}`}>
                 <NativeSelect id={`step-course-${step.key}`} value={step.courseId} required className="min-h-11 w-full"
                   onChange={(event) => setSteps((now) => now.map((s) => s.key === step.key ? { ...s, courseId: event.target.value } : s))}>

@@ -60,7 +60,7 @@ export function QuestionsPanel({ courseId, section, questions, quizzes, files, o
         <span className="pc-tile-icon"><GraduationCap aria-hidden="true" /></span>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-ui-muted-foreground">Questions · {questions.length}</p>
-          <h2 id="questions-heading" className="truncate text-[length:var(--pc-text-title)] leading-[var(--pc-leading-title)]">{section.title}</h2>
+          <h2 id="questions-heading" className="truncate text-lg">{section.title}</h2>
         </div>
         {canEdit ? (
           <div className="flex flex-wrap gap-2">
@@ -182,7 +182,7 @@ function QuestionDialog({ courseId, sectionId, question, files, onUploaded, onSa
   const single = options.find((o) => o.correct)?.key ?? "";
   const typed = kind === "SHORT_ANSWER";
   const rows = options.map((o, i) => (
-              <div key={o.key} className="flex flex-wrap items-end gap-2 rounded-[var(--pc-radius-card)] bg-ui-muted p-3">
+              <div key={o.key} className="flex flex-wrap items-end gap-2 rounded-card bg-ui-muted p-3">
                 {kind === "SINGLE" ? (
                   <span className="flex min-h-11 items-center"><RadioGroupItem value={o.key} id={`right-${o.key}`} aria-label={`Option ${i + 1} is the right answer`} /></span>
                 ) : kind === "MULTIPLE" ? (
@@ -322,7 +322,7 @@ function BlankPreview({ prompt }: { prompt: string }) {
   const { blanks } = readBlanks(prompt);
   if (!blanks.length) return <p className="text-sm text-ui-muted-foreground">No blanks yet. Put a missing word in [square brackets].</p>;
   return (
-    <div className="flex flex-col gap-1 rounded-[var(--pc-radius-card)] bg-ui-muted p-3 text-sm" aria-live="polite">
+    <div className="flex flex-col gap-1 rounded-card bg-ui-muted p-3 text-sm" aria-live="polite">
       <span className="font-semibold">Learners read: {blankedPrompt(prompt)}</span>
       <ol className="list-decimal pl-5">{blanks.map((accepted, i) => <li key={i}>Accepts {accepted.map((a) => `“${a}”`).join(" or ")}</li>)}</ol>
     </div>
@@ -362,7 +362,7 @@ export function ExamPanel({ courseId, exam, questions, sections, canEdit, report
         <span className="pc-tile-icon"><GraduationCap aria-hidden="true" /></span>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-ui-muted-foreground">End of the course</p>
-          <h2 id="exam-heading" className="text-[length:var(--pc-text-title)] leading-[var(--pc-leading-title)]">Final exam</h2>
+          <h2 id="exam-heading" className="text-lg">Final exam</h2>
         </div>
       </div>
       <Switch id="exam-on" label="Learners sit a final exam" description="Marked on the server. They finish the course once they pass." checked={on} onCheckedChange={change(setOn)} disabled={!canEdit} labelSpacing="spread" />

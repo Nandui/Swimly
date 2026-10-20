@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ChartColumn, Eye } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
 import { COURSE_DRAFT_META, CourseBuilder, CourseFeedback, courseForBuilder, DuplicateCourse, PublishCourse } from "@/modules/training/features/builder";
@@ -21,8 +22,7 @@ export default async function CourseBuilderPage({ params, searchParams }: { para
   const canEdit = who.manage && !course.archivedAt;
   const state = !published ? "draft" : changed ? "changed" : "published";
   return (
-    <>
-      <PageHeader
+    <PageShell header={<PageHeader
         back={{ href: "/training/courses", label: "Courses" }}
         title={course.title}
         description={published
@@ -38,11 +38,11 @@ export default async function CourseBuilderPage({ params, searchParams }: { para
             {canEdit ? <PublishCourse courseId={course.id} title={course.title} changed={changed} published={published} openAssignments={openAssignments} canRetake={who.assign} finished={finished} /> : null}
           </>
         }
-      />
+      />}>
       <CourseBuilder courseId={course.id} title={course.title} hasOldText={!!course.content.trim()} draft={draft} files={files} selected={lesson ?? null}
         panel={exam ? "exam" : practical ? "practical" : questions ?? null} report={report} canEdit={canEdit} canComment={who.manage || who.signoff} changed={changed}
         comments={comments} coverId={course.coverId} versions={versions} courses={courses} practical={checklist} requiresSignoff={course.requiresSignoff} />
       {published ? <CourseFeedback report={feedback} /> : null}
-    </>
+    </PageShell>
   );
 }

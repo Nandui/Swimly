@@ -3,6 +3,7 @@ import { Pencil } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { ArchiveCourseType, CourseTypeDialog, courseTypes, SHORT_COURSE_AREA_META, type ShortCourseArea } from "@/modules/short-courses/features/course-types";
 import { plural } from "@/lib/format";
@@ -15,9 +16,8 @@ export const metadata: Metadata = { title: "Short course list" };
 export default async function ShortCourseTypesPage() {
   const { who, types } = await courseTypes();
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title="Course list" description="The short courses we offer. A new run starts with these weeks and session length."
-        actions={who.manage ? <CourseTypeDialog /> : undefined} />
+    <PageShell spacing="roomy" header={<PageHeader title="Course list" description="The short courses we offer. A new run starts with these weeks and session length."
+        actions={who.manage ? <CourseTypeDialog /> : undefined} />}>
       <section className="pc-panel" aria-label="Courses we offer">
         {types.length === 0 ? <EmptyState compact icon="calendarRange" title="No courses yet" hint={who.manage ? "Add the first, such as Couch to 5k or Adult swim lessons." : "Whoever manages Short courses adds them."} /> : (
           <ul className="pc-rows">
@@ -46,6 +46,6 @@ export default async function ShortCourseTypesPage() {
           </ul>
         )}
       </section>
-    </div>
+    </PageShell>
   );
 }

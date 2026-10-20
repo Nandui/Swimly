@@ -16,6 +16,10 @@ const uiSyntax = [
     message: "Use the installed shadcn primitive (or a shared ui composition) for this control.",
   },
   {
+    selector: "JSXOpeningElement[name.name='svg']",
+    message: "Draw charts with the shadcn Chart component (src/components/shadcn/chart.tsx) and icons with lucide-react, never hand-drawn SVG.",
+  },
+  {
     selector: "JSXOpeningElement[name.name='input']:not(:has(JSXAttribute[name.name='type'][value.value='hidden']))",
     message: "Use shadcn Input, Checkbox, RadioGroup or Switch. Native hidden inputs are reserved for FormData bridges.",
   },
@@ -230,9 +234,10 @@ const layerPolicies = [
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  // The UI rule (CLAUDE.md): tokens and shadcn only, no literal colours or one-off
-  // lengths. Existing cases awaiting a token decision are in eslint-suppressions.json;
-  // fix one, then run `npx eslint --prune-suppressions` so the list only shrinks.
+  // The UI rules (CLAUDE.md, "UI rules"): shadcn components and the theme only. No literal
+  // colours, one-off lengths or Tailwind arbitrary values, no inline styles, and every
+  // PageHeader in its page's PageShell. eslint-suppressions.json stays empty: never suppress
+  // these rules or disable them inline.
   {
     files: ["src/**/*.{ts,tsx}"],
     ignores: [
@@ -245,7 +250,14 @@ const eslintConfig = defineConfig([
       "src/modules/docs/**/formatting.ts",
     ],
     plugins: { turnfin: designTokens },
-    rules: { "turnfin/no-literal-styles": "error" },
+    rules: { "turnfin/no-literal-styles": "error", "turnfin/page-header-in-shell": "error" },
+  },
+  // The shadcn components are the library: they set a few positions the library computes.
+  {
+    files: ["src/**/*.tsx"],
+    ignores: [...tests, "src/components/shadcn/**", "src/generated/**"],
+    plugins: { turnfin: designTokens },
+    rules: { "turnfin/no-inline-styles": "error" },
   },
   {
     files: ["src/**/*.{jsx,tsx}"],

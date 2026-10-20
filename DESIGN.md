@@ -18,10 +18,12 @@ theme describe the retired look. Components live in `src/components/shadcn`.
 
 ## Design rules
 
-- **UI rule (owner rule, 10 October 2026):** compose existing shadcn components and
-  existing tokens only. No literal colours and no one-off lengths, including Tailwind
-  arbitrary values such as `w-[137px]`. Ask the owner before adding a token or component.
-  `npm run lint` enforces it; see CLAUDE.md, section 14.
+- **UI rules (owner rules, 20 October 2026, hard rules for every screen):** only
+  components from shadcn; no arbitrary Tailwind values like `p-[13px]` or `text-[#333]`;
+  no inline styles or new colours; every page uses `PageShell` and `PageHeader`. Charts
+  use the shadcn Chart and bars `Progress`; sizes from data use the classes from
+  `src/components/ui-kit/scale.ts`. Ask the owner before adding a token or component.
+  `npm run lint` enforces them; see CLAUDE.md, section 14.
 - Compose actual shadcn controls; inspect their installed source before use.
   Buttons, dialogs, alerts, tables, items, inputs, selects, checkboxes, switches,
   radio groups, popovers and command lists already have accessible primitives.
@@ -436,13 +438,18 @@ line. Multi-line boxes (textareas, notices) use 16px, never a pill.
   Instructor and Help) is a flex column with a 16px gap. It reaches blocks a page returns
   as direct children (a fragment), not ones inside its own `gap-6`/`space-y-6` wrapper; an
   inline-level child there (a back link, a lone button) needs `self-start`.
+- Page body (`PageShell`): every page renders `<PageShell header={<PageHeader … />}>`,
+  the header first, then the page's blocks 16px apart (`spacing="roomy"`: 24px). A page's
+  own layout class and data attributes go on it. `scripts/ui-rules/check-pages.mjs` opens
+  every page in a running app and checks each has one, with its header and H1.
 - Page header (`PageHeader`): H1 and one line on the left, actions on the right aligned to
   the bottom, the primary action last. The H1 holds the title only: status tags go in
   `status`, first in the actions group before the buttons. On phones (767px and below) the
   actions take their own row and the buttons share it; tags and icon buttons keep their
   width. A child page passes `back={{ href, label }}`: one `BackLink` (the ghost pill,
   chevron plus the parent's name, flush with the page edge, 44px) 4px above the H1. No
-  breadcrumbs, no hand-made back links; a page without PageHeader uses `BackLink` itself.
+  breadcrumbs, no hand-made back links. `eyebrow` adds a short line above the title and
+  `leading` a picture beside it (a swimmer's avatar).
 - Pagination is `LinkPagination` only, at the foot of the list: outline Previous on the
   left, a centred 12px muted caption ("26 to 50 of 1,102", or "Page 2 of 5"), Next on the
   right. Links keep the other search params; client-state lists pass `onPage`.
@@ -1108,7 +1115,8 @@ See [docs/instructor.md](docs/instructor.md) for the flow and verification.
 
 - Actual shadcn controls, semantic headings and Lucide icons; one H1 per page.
 - Every status comes from a domain metadata map and reads in both themes.
-- No undefined theme variables or colours outside the app tokens.
+- No undefined theme variables or colours outside the app tokens; no inline styles, no
+  arbitrary Tailwind values, every page in PageShell (`npm run lint`).
 - Text contrast at least 4.5:1 and control edges at least 3:1.
 - Visible keyboard focus, working skip link, reduced motion, labelled controls. Headings
   and regions focused by script (`tabIndex={-1}`) draw no ring.

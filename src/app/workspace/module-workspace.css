@@ -36,9 +36,11 @@
 .turnfin-module .rota-tl-act-name { font-weight: 600; }
 .turnfin-module .rota-tl-act-meta { color: var(--pc-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .turnfin-module .rota-tl-track { position: relative; min-height: 52px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); overflow: hidden;
-  background-image: linear-gradient(90deg, var(--pc-line) 0 1px, transparent 1px); background-size: var(--rota-step, 60px) 100%; background-position: var(--rota-offset, 0) 0; background-repeat: repeat-x;
   /* A vertical swipe still scrolls the page on touch; a sideways drag moves the view. */
   touch-action: pan-y; }
+/* The hour lines, on the labels' step; blocks sit 2px in from their start and end. */
+.turnfin-module .rota-tl-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--pc-line); pointer-events: none; }
+.turnfin-module .rota-tl-track > :is(.pc-block, .rota-people-shift, .rota-split-gap, .rota-people-break) { margin-inline: 2px; }
 /* Zoomed in: the hours and lanes can be dragged to move the day. */
 .turnfin-module .rota-tl[data-zoomed] :is(.rota-tl-hours, .rota-tl-track) { cursor: grab; }
 .turnfin-module .rota-tl[data-dragging] :is(.rota-tl-hours, .rota-tl-track, .rota-tl-track .pc-block) { cursor: grabbing; user-select: none; }
@@ -74,7 +76,7 @@
 .turnfin-module .rota-agenda { display: none; flex-direction: column; gap: 16px; }
 /* A person's row: the shift's outline under what they are on, and their breaks. */
 .turnfin-module .rota-people-shift { position: absolute; top: 2px; bottom: 2px; border: 1px dashed var(--pc-line-strong, var(--pc-ink-muted)); border-radius: 14px; }
-.turnfin-module .rota-people-shift[data-planned] { border-style: solid; border-color: var(--pc-primary); background: color-mix(in srgb, var(--pc-primary) 6%, transparent); }
+.turnfin-module .rota-people-shift[data-planned] { border-style: solid; border-color: var(--pc-primary); background: var(--pc-primary-soft); }
 .turnfin-module .rota-split-gap { position: absolute; top: 50%; z-index: 1; display: flex; align-items: center; justify-content: center; height: 0; border-top: 2px dotted var(--pc-ink-muted); color: var(--pc-ink-muted); font-size: var(--pc-text-caption); pointer-events: none; }
 .turnfin-module .rota-split-gap > span { padding: 0 8px; border-radius: 999px; background: var(--pc-surface); line-height: var(--pc-leading-caption); white-space: nowrap; translate: 0 -1px; }
 .turnfin-module .rota-split-gap[data-density="icon"] > span { display: none; }
@@ -106,7 +108,7 @@
 /* Purchasing: a purchase order prints as the document the supplier gets, without the workspace around it. */
 @media print {
   body:has(.turnfin-purchasing) :is(.tf-rail, .tf-top, .tf-bottom, [data-print="hide"]) { display: none !important; }
-  .turnfin-purchasing :is(.tf-frame, .pc-panel) { box-shadow: none !important; background: #fff !important; color: #000 !important; }
+  .turnfin-purchasing :is(.tf-frame, .pc-panel) { box-shadow: none !important; background: var(--pc-surface) !important; color: var(--pc-ink) !important; }
 }
 
 /* Academy: the list to call for payment lines its columns up from 1024px (who, course, calls,
@@ -140,16 +142,16 @@
   --rota-shell-pad: 6px;
   --rota-shell-radius: 32px;
   --rota-core-radius: calc(var(--rota-shell-radius) - var(--rota-shell-pad));
-  --rota-hair: color-mix(in srgb, var(--pc-ink) 7%, transparent);
-  --rota-soft-shadow: 0 1px 1px color-mix(in srgb, var(--pc-ink) 3%, transparent), 0 24px 48px -28px color-mix(in srgb, var(--pc-ink) 18%, transparent);
+  --rota-hair: var(--pc-line);
+  --rota-soft-shadow: none;
   display: contents;
 }
 .turnfin-module .rota-plan svg { stroke-width: 1.6; }
 
 /* The double bezel. */
-.turnfin-module .rota-plan .rota-shell { min-width: 0; padding: var(--rota-shell-pad); border-radius: var(--rota-shell-radius); background: color-mix(in srgb, var(--pc-ink) 3%, var(--pc-canvas, transparent)); box-shadow: inset 0 0 0 1px var(--rota-hair), var(--rota-soft-shadow);
+.turnfin-module .rota-plan .rota-shell { min-width: 0; padding: var(--rota-shell-pad); border-radius: var(--rota-shell-radius); background: var(--pc-surface-sunken); box-shadow: inset 0 0 0 1px var(--rota-hair), var(--rota-soft-shadow);
   animation: rota-rise 900ms var(--rota-spring) both; }
-.turnfin-module .rota-plan .rota-core { display: flex; flex-direction: column; gap: 20px; min-width: 0; height: 100%; padding: 28px; border-radius: var(--rota-core-radius); background: var(--pc-surface); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--pc-surface) 88%, white), 0 0 0 1px var(--rota-hair); }
+.turnfin-module .rota-plan .rota-core { display: flex; flex-direction: column; gap: 20px; min-width: 0; height: 100%; padding: 28px; border-radius: var(--rota-core-radius); background: var(--pc-surface); box-shadow: 0 0 0 1px var(--rota-hair); }
 .turnfin-module .rota-plan .rota-core-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 16px; }
 @keyframes rota-rise { from { opacity: 0; transform: translateY(24px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
 .turnfin-module .rota-plan .rota-bento > :nth-child(2) { animation-delay: 90ms; }
@@ -157,7 +159,7 @@
 @media (prefers-reduced-motion: reduce) { .turnfin-module .rota-plan :is(.rota-shell, .rota-week-day, .pc-block, [data-slot='button'], [data-slot='button'] > svg) { animation: none !important; transition: none !important; } }
 
 /* Eyebrows and quiet text. */
-.turnfin-module .rota-plan .rota-eyebrow { align-self: flex-start; display: inline-flex; align-items: center; min-height: 22px; padding: 0 10px; border-radius: 999px; background: color-mix(in srgb, var(--pc-primary) 9%, transparent); color: var(--pc-primary-ink, var(--pc-primary)); font-size: 10px; line-height: 1; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
+.turnfin-module .rota-plan .rota-eyebrow { align-self: flex-start; display: inline-flex; align-items: center; min-height: 22px; padding: 0 10px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary-ink, var(--pc-primary)); font-size: 10px; line-height: 1; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
 .turnfin-module .rota-plan .rota-quiet { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
 .turnfin-module .rota-plan .rota-round { border-radius: 999px; border-color: var(--rota-hair); box-shadow: none; }
 .turnfin-module .rota-plan .rota-round:active { transform: scale(0.96); }
@@ -174,7 +176,7 @@
 .turnfin-module .rota-plan .rota-week > li > .rota-week-day { flex: 1; }
 .turnfin-module .rota-plan .rota-week-day { position: relative; gap: 2px; min-height: 132px; padding: 14px 14px 12px; border: 0; border-radius: 20px; background: var(--pc-surface-sunken); box-shadow: inset 0 0 0 1px var(--rota-hair);
   transition: transform 500ms var(--rota-spring), background-color 300ms var(--rota-spring), box-shadow 300ms var(--rota-spring); }
-.turnfin-module .rota-plan .rota-week-day:hover { background: var(--pc-surface-sunken); transform: translateY(-3px); box-shadow: inset 0 0 0 1px var(--rota-hair), 0 18px 30px -22px color-mix(in srgb, var(--pc-ink) 35%, transparent); }
+.turnfin-module .rota-plan .rota-week-day:hover { background: var(--pc-surface-sunken); transform: translateY(-3px); box-shadow: inset 0 0 0 1px var(--rota-hair); }
 .turnfin-module .rota-plan .rota-week-day:active { transform: scale(0.98); }
 .turnfin-module .rota-plan .rota-week-dow { display: flex; align-items: center; justify-content: space-between; width: 100%; color: var(--pc-ink-muted); font-size: 11px; line-height: 16px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
 .turnfin-module .rota-plan .rota-week-dow > i { padding: 1px 6px; border-radius: 999px; background: var(--pc-surface); color: var(--pc-primary); font-style: normal; font-size: 9px; letter-spacing: 0.1em; }
@@ -184,9 +186,9 @@
 .turnfin-module .rota-plan .rota-week-state::before { content: ""; flex: none; width: 6px; height: 6px; translate: 0 -1px; border-radius: 999px; background: currentColor; }
 .turnfin-module .rota-plan .rota-week-day[data-state='gaps'] .rota-week-state { color: var(--pc-warning); }
 .turnfin-module .rota-plan .rota-week-day[data-state='covered'] .rota-week-state { color: var(--pc-success); }
-.turnfin-module .rota-plan .rota-week-day[aria-current] { background: var(--pc-primary); color: var(--pc-on-primary); box-shadow: inset 0 1px 0 color-mix(in srgb, white 25%, transparent), 0 20px 34px -18px color-mix(in srgb, var(--pc-primary) 75%, transparent); transform: translateY(-3px); }
-.turnfin-module .rota-plan .rota-week-day[aria-current] :is(.rota-week-dow, .rota-week-sum, .rota-week-state) { color: color-mix(in srgb, var(--pc-on-primary) 82%, transparent); }
-.turnfin-module .rota-plan .rota-week-day[aria-current] .rota-week-dow > i { background: color-mix(in srgb, var(--pc-on-primary) 18%, transparent); color: var(--pc-on-primary); }
+.turnfin-module .rota-plan .rota-week-day[aria-current] { background: var(--pc-primary); color: var(--pc-on-primary); box-shadow: none; transform: translateY(-3px); }
+.turnfin-module .rota-plan .rota-week-day[aria-current] :is(.rota-week-dow, .rota-week-sum, .rota-week-state) { color: var(--pc-on-primary); }
+.turnfin-module .rota-plan .rota-week-day[aria-current] .rota-week-dow > i { background: var(--pc-primary-hover); color: var(--pc-on-primary); }
 @media (max-width: 767px) {
   .turnfin-module .rota-plan .rota-week { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: -4px; padding: 4px 4px 8px; }
   .turnfin-module .rota-plan .rota-week > li { flex: 0 0 104px; scroll-snap-align: start; }
@@ -206,17 +208,17 @@
 .turnfin-module .rota-plan .rota-day-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
 .turnfin-module .rota-plan .rota-day-actions [data-slot='button'] { min-height: 44px; padding-inline: 6px 18px; border-radius: 999px; border-color: var(--rota-hair); box-shadow: none; transition: transform 400ms var(--rota-spring), background-color 300ms var(--rota-spring); }
 .turnfin-module .rota-plan .rota-day-actions [data-slot='button']:active { transform: scale(0.98); }
-.turnfin-module .rota-plan .rota-day-actions [data-slot='button'] > svg { box-sizing: content-box; width: 16px; height: 16px; padding: 8px; border-radius: 999px; background: color-mix(in srgb, var(--pc-primary) 10%, transparent); color: var(--pc-primary); transition: transform 500ms var(--rota-spring); }
+.turnfin-module .rota-plan .rota-day-actions [data-slot='button'] > svg { box-sizing: content-box; width: 16px; height: 16px; padding: 8px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); transition: transform 500ms var(--rota-spring); }
 .turnfin-module .rota-plan .rota-day-actions [data-slot='button']:hover > svg { transform: translate(2px, -1px) scale(1.05); }
 .turnfin-module .rota-plan .rota-day-actions > :first-child [data-slot='button'] { background: var(--pc-ink); color: var(--pc-surface); border-color: transparent; }
-.turnfin-module .rota-plan .rota-day-actions > :first-child [data-slot='button'] > svg { background: color-mix(in srgb, var(--pc-surface) 16%, transparent); color: var(--pc-surface); }
+.turnfin-module .rota-plan .rota-day-actions > :first-child [data-slot='button'] > svg { background: transparent; color: var(--pc-surface); }
 
 /* The timeline tray: no boxed labels, lanes as soft wells, a frosted sticky ruler. */
 .turnfin-module .rota-plan .rota-tl { gap: 6px; }
 .turnfin-module .rota-plan .rota-tl-zoom { padding-bottom: 8px; }
 .turnfin-module .rota-plan .rota-tl-hint { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
 .turnfin-module .rota-plan .rota-tl-row { grid-template-columns: 208px minmax(0, 1fr); gap: 16px; }
-.turnfin-module .rota-plan .rota-tl-sticky { top: 0; margin-inline: -12px; padding: 8px 12px; border-radius: 999px; background: color-mix(in srgb, var(--pc-surface) 82%, transparent); backdrop-filter: blur(16px); box-shadow: 0 0 0 1px var(--rota-hair); }
+.turnfin-module .rota-plan .rota-tl-sticky { top: 0; margin-inline: -12px; padding: 8px 12px; border-radius: 999px; background: var(--pc-surface); backdrop-filter: blur(16px); box-shadow: 0 0 0 1px var(--rota-hair); }
 .turnfin-module .rota-plan .rota-tl-hours > span { font-size: 11px; font-weight: 600; letter-spacing: 0.02em; }
 .turnfin-module .rota-plan .rota-tl-sec { gap: 10px; margin: 20px 0 6px; color: var(--pc-ink); font-size: 11px; letter-spacing: 0.16em; }
 .turnfin-module .rota-plan .rota-tl-sec::after { background: var(--rota-hair); }
@@ -235,13 +237,13 @@
 .turnfin-module .rota-plan .rota-tl-label > .rota-tl-name > svg { color: var(--pc-primary); }
 .turnfin-module .rota-plan .rota-tl-person { display: grid; grid-template-columns: 36px minmax(0, 1fr); column-gap: 10px; align-content: center; }
 .turnfin-module .rota-plan .rota-tl-person > :not(.rota-avatar) { grid-column: 2; }
-.turnfin-module .rota-plan .rota-avatar { grid-row: 1 / span 2; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 999px; background: color-mix(in srgb, var(--pc-primary) 12%, var(--pc-surface)); color: var(--pc-primary); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pc-primary) 18%, transparent); font-size: 12px; font-weight: 700; letter-spacing: 0.02em; }
+.turnfin-module .rota-plan .rota-avatar { grid-row: 1 / span 2; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); box-shadow: inset 0 0 0 1px var(--pc-primary-soft-hover); font-size: 12px; font-weight: 700; letter-spacing: 0.02em; }
 .turnfin-module .rota-plan .rota-meter { display: block; height: 4px; margin-top: 4px; overflow: hidden; border-radius: 999px; background: var(--pc-surface-sunken); }
 .turnfin-module .rota-plan .rota-meter > span { display: block; height: 100%; border-radius: inherit; background: var(--pc-primary); }
 .turnfin-module .rota-plan .rota-meter[data-over] > span { background: var(--pc-warning); }
-.turnfin-module .rota-plan .rota-tl-track { border: 0; border-radius: 18px; background-color: color-mix(in srgb, var(--pc-surface-sunken) 70%, transparent); box-shadow: inset 0 0 0 1px var(--rota-hair);
-  background-image: linear-gradient(90deg, color-mix(in srgb, var(--pc-ink) 6%, transparent) 0 1px, transparent 1px); }
-.turnfin-module .rota-plan .rota-tl-track > .pc-block { border-radius: 14px; box-shadow: inset 0 1px 0 color-mix(in srgb, white 22%, transparent), 0 6px 14px -10px color-mix(in srgb, var(--pc-ink) 40%, transparent);
+.turnfin-module .rota-plan .rota-tl-track { border: 0; border-radius: 18px; background-color: var(--pc-surface-sunken); box-shadow: inset 0 0 0 1px var(--rota-hair);
+}
+.turnfin-module .rota-plan .rota-tl-track > .pc-block { border-radius: 14px; box-shadow: none;
   transition: transform 400ms var(--rota-spring), box-shadow 300ms var(--rota-spring); }
 .turnfin-module .rota-plan .rota-tl-track > .pc-block:is(a, button):hover { transform: translateY(-1px); }
 .turnfin-module .rota-plan .rota-tl-track > .pc-block:is(a, button):active { transform: scale(0.98); }

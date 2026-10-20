@@ -11,9 +11,9 @@
   --inc-spring: cubic-bezier(0.32, 0.72, 0, 1);
   --inc-shell: 6px;
   --inc-radius: 26px;
-  --inc-hair: color-mix(in srgb, var(--pc-ink) 8%, transparent);
-  --inc-tint: color-mix(in srgb, var(--pc-ink) 3.5%, var(--pc-canvas, transparent));
-  --inc-ring: 0 0 0 var(--inc-shell) var(--inc-tint), 0 0 0 calc(var(--inc-shell) + 1px) var(--inc-hair), 0 30px 60px -36px color-mix(in srgb, var(--pc-ink) 22%, transparent);
+  --inc-hair: var(--pc-line);
+  --inc-tint: var(--pc-surface-sunken);
+  --inc-ring: 0 0 0 var(--inc-shell) var(--inc-tint), 0 0 0 calc(var(--inc-shell) + 1px) var(--inc-hair);
   display: flex; flex-direction: column; gap: 24px; min-width: 0;
 }
 .turnfin-app .inc-file svg { stroke-width: 1.6; }
@@ -47,7 +47,7 @@
 }
 
 /* Small type: eyebrows, labels, muted lines. */
-.turnfin-app .inc-file .inc-eyebrow { align-self: flex-start; display: inline-flex; align-items: center; min-height: 24px; padding: 0 12px; border-radius: 999px; background: color-mix(in srgb, var(--pc-primary) 10%, transparent); color: var(--pc-primary-ink, var(--pc-primary)); font-size: 10px; line-height: 1; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
+.turnfin-app .inc-file .inc-eyebrow { align-self: flex-start; display: inline-flex; align-items: center; min-height: 24px; padding: 0 12px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary-ink, var(--pc-primary)); font-size: 10px; line-height: 1; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
 .turnfin-app .inc-file .inc-eyebrow[data-kind='accident'] { background: var(--pc-danger-soft); color: var(--pc-danger); }
 .turnfin-app .inc-file .inc-eyebrow[data-kind='near_miss'] { background: var(--pc-warning-soft); color: var(--pc-warning); }
 .turnfin-app .inc-file .inc-label { margin: 0; color: var(--pc-ink-muted); font-size: 11px; line-height: 16px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
@@ -94,7 +94,7 @@
 .turnfin-app .inc-file .inc-stage-dot { display: grid; place-items: center; width: 28px; height: 28px; margin-bottom: 8px; border-radius: 999px; background: var(--pc-surface-sunken); color: var(--pc-ink-muted); box-shadow: inset 0 0 0 1px var(--inc-hair); }
 .turnfin-app .inc-file .inc-stage-dot > svg { width: 14px; height: 14px; stroke-width: 2.6; }
 .turnfin-app .inc-file [data-state='done'] > .inc-stage-dot { background: var(--pc-primary); color: var(--pc-on-primary); box-shadow: none; }
-.turnfin-app .inc-file [data-state='current'] > .inc-stage-dot { background: var(--pc-surface); box-shadow: inset 0 0 0 2px var(--pc-primary), 0 0 0 5px color-mix(in srgb, var(--pc-primary) 14%, transparent); }
+.turnfin-app .inc-file [data-state='current'] > .inc-stage-dot { background: var(--pc-surface); box-shadow: inset 0 0 0 2px var(--pc-primary), 0 0 0 5px var(--pc-primary-soft); }
 .turnfin-app .inc-file [data-state='current'] > .inc-stage-dot::after { content: ""; width: 8px; height: 8px; border-radius: 999px; background: var(--pc-primary); animation: inc-pulse 2.4s var(--inc-spring) infinite; }
 @keyframes inc-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.6); opacity: 0.6; } }
 .turnfin-app .inc-file [data-state='skipped'] > .inc-stage-dot { background: transparent; box-shadow: inset 0 0 0 2px var(--inc-hair); }
@@ -104,8 +104,8 @@
 
 /* What happens next: the blue-edged card while it is this person's move. */
 .turnfin-app .inc-file .inc-next { gap: 12px; }
-.turnfin-app .inc-file .inc-next[data-tone='act'] { --inc-tint: color-mix(in srgb, var(--pc-primary) 22%, var(--pc-canvas, transparent)); --inc-hair: color-mix(in srgb, var(--pc-primary) 26%, transparent); }
-.turnfin-app .inc-file .inc-next[data-tone='done'] { --inc-tint: color-mix(in srgb, var(--pc-success) 12%, var(--pc-canvas, transparent)); }
+.turnfin-app .inc-file .inc-next[data-tone='act'] { --inc-tint: var(--pc-primary-soft-hover); --inc-hair: var(--pc-primary-soft-hover); }
+.turnfin-app .inc-file .inc-next[data-tone='done'] { --inc-tint: var(--pc-success-soft); }
 .turnfin-app .inc-file .inc-next-title { margin: 4px 0 0; font-size: 26px; line-height: 1.15; font-weight: 750; letter-spacing: -0.025em; }
 .turnfin-app .inc-file .inc-next-body { margin: 0; color: var(--pc-ink-muted); line-height: var(--pc-leading-body); }
 .turnfin-app .inc-file .inc-checklist { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 0; padding: 0; list-style: none; }
@@ -124,13 +124,13 @@
 /* Island pills with the icon in its own circle, pressed on click. */
 .turnfin-app .inc-file .inc-next-actions [data-slot='button'] { justify-content: flex-start; min-height: 48px; padding-inline: 6px 20px; border-radius: 999px; transition: transform 400ms var(--inc-spring), background-color 300ms var(--inc-spring); }
 .turnfin-app .inc-file .inc-next-actions [data-slot='button']:active { transform: scale(0.98); }
-.turnfin-app .inc-file .inc-next-actions [data-slot='button'] > svg { box-sizing: content-box; width: 16px; height: 16px; padding: 10px; border-radius: 999px; background: color-mix(in srgb, var(--pc-primary) 10%, transparent); color: var(--pc-primary); transition: transform 500ms var(--inc-spring); }
+.turnfin-app .inc-file .inc-next-actions [data-slot='button'] > svg { box-sizing: content-box; width: 16px; height: 16px; padding: 10px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); transition: transform 500ms var(--inc-spring); }
 .turnfin-app .inc-file .inc-next-actions [data-slot='button']:hover > svg { transform: translateY(2px) scale(1.05); }
-.turnfin-app .inc-file .inc-next-actions [data-variant='default'] { box-shadow: inset 0 1px 0 color-mix(in srgb, white 25%, transparent), 0 14px 28px -16px color-mix(in srgb, var(--pc-primary) 80%, transparent); }
-.turnfin-app .inc-file .inc-next-actions [data-variant='default'] > svg { background: color-mix(in srgb, currentColor 18%, transparent); color: inherit; }
+.turnfin-app .inc-file .inc-next-actions [data-variant='default'] { box-shadow: none; }
+.turnfin-app .inc-file .inc-next-actions [data-variant='default'] > svg { background: transparent; color: inherit; }
 
 /* The account as written: the reporter's words large, what was done straight away in a well. */
-.turnfin-app .inc-file .inc-quote { margin: 0; padding-left: 18px; border-left: 3px solid color-mix(in srgb, var(--pc-primary) 40%, transparent); font-size: 19px; line-height: 1.6; letter-spacing: -0.008em; white-space: pre-wrap; overflow-wrap: anywhere; }
+.turnfin-app .inc-file .inc-quote { margin: 0; padding-left: 18px; border-left: 3px solid var(--pc-primary); font-size: 19px; line-height: 1.6; letter-spacing: -0.008em; white-space: pre-wrap; overflow-wrap: anywhere; }
 .turnfin-app .inc-file .inc-well { display: flex; flex-direction: column; gap: 8px; min-width: 0; padding: 18px 20px; border-radius: 18px; background: var(--pc-surface-sunken); box-shadow: inset 0 0 0 1px var(--inc-hair); }
 .turnfin-app .inc-file .inc-well-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: var(--pc-leading-body); }
 .turnfin-app .inc-file .inc-byline { display: flex; align-items: flex-start; gap: 8px; margin: 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }

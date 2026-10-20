@@ -2,13 +2,15 @@ import Link from "next/link";
 import * as React from "react";
 import { ArrowDownRight, ArrowRight, ArrowUpRight, type LucideIcon } from "lucide-react";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
+import { Progress } from "@/components/shadcn/progress";
 import { addDaysIso, formatCount, formatDateRange, formatDateTime, formatDayMonth } from "@/lib/format";
 import { DashboardSwitch, dashboardOf, type AnalyticsPage } from "@/modules/activities/features/analytics/components/navigation";
 import { AnalyticsRefresh } from "@/modules/activities/features/analytics/components/refresh";
 import { FilterBar, type FilterBarProps } from "@/modules/activities/features/analytics/components/insights/filters";
-import { AreaChart, FlowChart, type ChartKind } from "@/modules/activities/features/analytics/components/insights/charts";
+import { AreaChart, FlowChart, Sparkline, type ChartKind } from "@/modules/activities/features/analytics/components/insights/charts";
 export { Meter } from "@/modules/activities/features/analytics/components/insights/meter";
-export { ColumnChart } from "@/modules/activities/features/analytics/components/insights/charts";
+export { ColumnChart, Sparkline } from "@/modules/activities/features/analytics/components/insights/charts";
 import { DEFAULT_RANGE, RANGES, reportQuery, type ReportFilters, type ReportPeriod } from "@/modules/activities/features/analytics/server/period";
 
 const one = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 1 });
@@ -102,11 +104,9 @@ export function ReportShell({ ctx, page, path, title, description, back, childre
   const context = [scope, periodText(period), `compared with ${formatDateRange(period.previousStart, period.previousEnd)}`, period.current ? null : `"now" figures as of ${formatDayMonth(period.end)}`].filter(Boolean).join(" · ");
   const dashboard = dashboardOf(page);
   const backTo = back === true ? { href: reportHref(ctx, dashboard.href), label: dashboard.label } : back;
-  return <div className="ins" data-dashboard={dashboard.key}>
-    <div className="ins-top">
-      {backTo ? null : <p className="ins-eyebrow">Swim school analytics</p>}
-      <PageHeader title={title} back={backTo} description={description ? <>{description}<span className="ins-context">{context}</span></> : context} actions={<>{actions}<AnalyticsRefresh /></>} />
-    </div>
+  return <PageShell className="ins" data-dashboard={dashboard.key}
+    header={<PageHeader title={title} back={backTo} eyebrow={backTo ? null : <p className="ins-eyebrow">Swim school analytics</p>}
+      description={description ? <>{description}<span className="ins-context">{context}</span></> : context} actions={<>{actions}<AnalyticsRefresh /></>} />}>
     <FilterBar {...bar} switcher={<DashboardSwitch page={page} query={filterQuery(ctx)} />} />
     <div className="ins-body">{children}</div>
     <footer className="ins-footnote">
@@ -114,7 +114,7 @@ export function ReportShell({ ctx, page, path, title, description, back, childre
       {programme && ctx.programme ? <p>Only {ctx.programme.name}: its classes, places, waiting lists and passes. A move into another programme counts as leaving this one.</p> : null}
       <p>Compared with the {period.label} before, {formatDateRange(period.previousStart, period.previousEnd)}. Updated {formatDateTime(new Date(ctx.updatedAt))} · Europe/Dublin.</p>
     </footer>
-  </div>;
+  </PageShell>;
 }
 
 /** A group of panels that answer one question, laid out as a bento grid. */
@@ -186,24 +186,6 @@ export function Delta({ change, better, unit = "", label }: { change: Change; be
   return <span className="ins-delta" data-tone={tone}><Icon aria-hidden="true" />{text}<span className="sr-only"> {label}</span></span>;
 }
 
-/** A tiny line of the figure's recent history, the latest point marked. Decoration beside the
- *  number (the full series is on the page it opens), so hidden from screen readers. */
-export function Sparkline({ values, tone }: { values: (number | null)[]; tone?: "good" | "bad" }) {
-  const series = values.map((v, i) => ({ v, i })).filter((p): p is { v: number; i: number } => p.v !== null);
-  if (series.length < 2) return null;
-  const W = 120, H = 32, P = 3;
-  const min = Math.min(...series.map(p => p.v)), max = Math.max(...series.map(p => p.v));
-  const x = (i: number) => P + (i * (W - P * 2)) / (values.length - 1);
-  const y = (v: number) => max === min ? H / 2 : P + (H - P * 2) * (1 - (v - min) / (max - min));
-  const d = series.map((p, k) => `${k ? "L" : "M"}${x(p.i).toFixed(1)} ${y(p.v).toFixed(1)}`).join(" ");
-  const end = series.at(-1)!;
-  return <svg viewBox={`0 0 ${W} ${H}`} className="ins-spark" data-tone={tone} aria-hidden="true" preserveAspectRatio="none">
-    <path d={`${d} L${x(end.i).toFixed(1)} ${H} L${x(series[0].i).toFixed(1)} ${H} Z`} className="ins-spark-area" />
-    <path d={d} className="ins-spark-line" />
-    <circle cx={x(end.i)} cy={y(end.v)} r={2.5} className="ins-spark-end" />
-  </svg>;
-}
-
 /** One headline figure: what it is, the value, how it moved, a note, and optionally its recent
  *  trend or a fill meter. With `href` the whole cell opens the page behind it. */
 export function Kpi({ label, value, unit, note, delta, href, spark, meter }: {
@@ -217,7 +199,7 @@ export function Kpi({ label, value, unit, note, delta, href, spark, meter }: {
       {delta}
     </span>
     {spark ? <Sparkline values={spark} /> : null}
-    {meter !== undefined && meter !== null ? <span className="ins-kpi-meter" aria-hidden="true"><span style={{ width: `${Math.min(100, meter)}%` }} /></span> : null}
+    {meter !== undefined && meter !== null ? <Progress value={Math.min(100, meter)} aria-hidden="true" className="ins-kpi-meter" /> : null}
     {note ? <span className="ins-kpi-note">{note}</span> : null}
   </>;
   return <li className="ins-kpi-cell">{href ? <Link href={href} className="ins-kpi">{body}</Link> : <div className="ins-kpi">{body}</div>}</li>;
@@ -247,7 +229,7 @@ export function Bars({ rows, label, format = formatCount, share }: {
   return <ul className="ins-bars" aria-label={label}>
     {rows.map(r => <li key={r.key} className="ins-bar-row" data-tone={r.tone}>
       <span className="ins-bar-label" title={typeof r.label === "string" ? r.label : undefined}>{r.label}</span>
-      <span className="ins-bar-track" aria-hidden="true"><span className="ins-bar-fill" data-zero={r.value === 0 ? "" : undefined} style={{ width: `${r.value / max * 100}%` }} /></span>
+      <Progress value={Math.min(100, (r.value / max) * 100)} aria-hidden="true" className="ins-bar-track" />
       <span className="ins-bar-value">{format(r.value)}{share && total ? <span className="ins-bar-share">{whole.format(r.value / total * 100)}%</span> : null}{r.note ? <span className="sr-only"> {r.note}</span> : null}</span>
     </li>)}
   </ul>;

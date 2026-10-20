@@ -3,6 +3,7 @@ import UiLink from "next/link";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { Tag } from "@/components/ui-kit/tag";
 import { ApplyParentChange, DeclineParentChange, listParentChangeRequests, PARENT_CHANGE_STATUS_META } from "@/modules/activities/features/students";
@@ -18,8 +19,7 @@ export default async function ParentChangesPage({ searchParams }: { searchParams
   const done = (await searchParams).view === "done";
   const rows = await listParentChangeRequests(done ? "DONE" : "PENDING");
   return (
-    <div className="tf-content min-w-0">
-      <PageHeader back={{ href: "/students", label: "Swimmers" }} title="Parent updates" description="Check each correction parents send from the parent app, then apply it or decline it with a reply" />
+    <PageShell className="tf-content" header={<PageHeader back={{ href: "/students", label: "Swimmers" }} title="Parent updates" description="Check each correction parents send from the parent app, then apply it or decline it with a reply" />}>
       <SegmentedLinks label="Request status" items={[
         { href: "/students/parent-changes", label: "Waiting", current: !done },
         { href: "/students/parent-changes?view=done", label: "Decided", current: done },
@@ -72,6 +72,6 @@ export default async function ParentChangesPage({ searchParams }: { searchParams
           </section>
         );
       })}
-    </div>
+    </PageShell>
   );
 }

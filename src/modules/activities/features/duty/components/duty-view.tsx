@@ -8,6 +8,7 @@ import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/shadcn/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter, DialogClose } from "@/components/shadcn/dialog";
@@ -41,11 +42,10 @@ export function DutyView({ courses, iso, clubName, initialNow, canCancel, canBil
     const search = [c.name, c.level, c.programme, c.location, c.instructor, formatTime(c.startMinutes)].join(" ").toLowerCase();
     return search.includes(query.trim().toLowerCase()) && (tab === "all" || (tab === "cancelled" ? !!c.cancellation : !c.cancellation && classPhase(c, now) === tab));
   });
-  return <div className="flex min-w-0 flex-col gap-6">
-    <PageHeader title="Duty manager" description={`${formatDay(iso)} · ${clubName} · Today’s classes, at a glance`} actions={<>
+  return <PageShell spacing="roomy" header={<PageHeader title="Duty manager" description={`${formatDay(iso)} · ${clubName} · Today’s classes, at a glance`} actions={<>
       <LoadingButton variant="outline" pending={refreshing} pendingLabel="Refreshing…" onClick={() => startRefresh(() => router.refresh())}><RefreshCw aria-hidden="true" />Refresh</LoadingButton>
       {canBilling ? <Button asChild variant="outline"><Link href="/cancellations" aria-label={pendingBilling > 0 ? `Cancelled classes, ${pendingBilling} awaiting billing` : undefined}><CalendarX2 aria-hidden="true" />Cancelled classes{pendingBilling > 0 ? ` (${pendingBilling})` : ""}</Link></Button> : null}
-    </>} />
+    </>} />}>
     {staleDate ? <Notice tone="warning" title="A new day has started. Refresh before cancelling a session." /> : null}
     <section className="pc-panel" aria-label="Today’s classes">
       <Tabs value={tab} onValueChange={setTab} className="gap-4">
@@ -72,7 +72,7 @@ export function DutyView({ courses, iso, clubName, initialNow, canCancel, canBil
         </TabsContent>
       </Tabs>
     </section>
-  </div>;
+  </PageShell>;
 }
 
 function QuickView({ course, iso }: { course: DutyClass; iso: string }) {

@@ -16,7 +16,7 @@ export function CourseFeedback({ report }: { report: FeedbackReport }) {
       </div>
       {report.count === 0 ? <p className="text-sm text-ui-muted-foreground">No ratings yet.</p> : (
         <div className="flex flex-col gap-6">
-          <div className="grid gap-6 md:grid-cols-[auto_minmax(0,1fr)] md:items-center">
+          <div className="grid gap-6 md:grid-cols-auto-fill md:items-center">
             <div className="flex flex-col gap-1">
               <p className="text-(length:--pc-text-figure) leading-(--pc-leading-figure) font-semibold tabular-nums">{report.average} <span className="text-sm font-normal text-ui-muted-foreground">out of 5</span></p>
               <p className="text-sm text-ui-muted-foreground">{report.count} {report.count === 1 ? "rating" : "ratings"}</p>

@@ -12,6 +12,8 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { HELP_CATEGORIES, type HelpScope } from "@/lib/help/types";
 import type { HelpSummary } from "@/lib/help/catalogue";
 import { clause, helpFilters,helpHref, searchHelp, type HelpFilters } from "@/lib/help/search";
+import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 
 const COMMON_TASKS = {
   desk: ["move-swimmer", "cancel-class-session", "book-assessment", "report-absence"],
@@ -54,11 +56,8 @@ export function HelpBrowser({ articles, scope }: { articles: HelpSummary[]; scop
     {categories.map(category => topicRow(category.id, category.title, articles.filter(article => article.category === category.id).length))}
   </ul>;
 
-  return <>
-    <div className="flex min-w-0 flex-col gap-1">
-      <h1 id="help-title">{scope === "instructor" ? "Help for your teaching day" : "What would you like to do?"}</h1>
-      <p className="text-sm text-ui-muted-foreground">{scope === "instructor" ? "Practical guides for starting a class, taking attendance and recording progress" : "Step-by-step guides for every part of Turnfin"}</p>
-    </div>
+  return <PageShell header={<PageHeader title={scope === "instructor" ? "Help for your teaching day" : "What would you like to do?"}
+    description={scope === "instructor" ? "Practical guides for starting a class, taking attendance and recording progress" : "Step-by-step guides for every part of Turnfin"} />}>
     <form role="search" aria-label="Search the help centre" onSubmit={event => { event.preventDefault(); input.current?.focus(); }} className="pc-panel">
       <div className="flex max-w-xl flex-col gap-2">
         <Label htmlFor="help-search">Search the guides</Label>
@@ -97,5 +96,5 @@ export function HelpBrowser({ articles, scope }: { articles: HelpSummary[]; scop
         </section>
       </div>
     </div>
-  </>;
+  </PageShell>;
 }

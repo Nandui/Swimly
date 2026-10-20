@@ -6,6 +6,7 @@ import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/ui/input";
 import { cleanArea, type Area } from "@/modules/training/shared/questions";
 import { fileSrc } from "@/modules/training/shared/lessons";
+import { heightOf, leftOf, topOf, widthOf } from "@/components/ui-kit/scale";
 
 /** The right spots on a Pick the spot question: drag a box over the picture
  *  for each one. Every box can also be set in numbers, for keyboard users. */
@@ -37,7 +38,7 @@ export function SpotPicker({ imageId, spots, onChange, newKey }: { imageId: stri
         {/* eslint-disable-next-line @next/next/no-img-element -- a private file served by this app */}
         <img src={fileSrc(imageId)} alt="The question's picture" draggable={false} />
         {shown.map((a, i) => (
-          <span key={i} className="tf-spot-area" style={{ left: `${a.x}%`, top: `${a.y}%`, width: `${a.w}%`, height: `${a.h}%` }} aria-hidden="true">
+          <span key={i} className={`tf-spot-area ${leftOf(a.x / 100)} ${topOf(a.y / 100)} ${widthOf(a.w / 100)} ${heightOf(a.h / 100)}`} aria-hidden="true">
             <span className="tf-spot-number">{i + 1}</span>
           </span>
         ))}
@@ -45,7 +46,7 @@ export function SpotPicker({ imageId, spots, onChange, newKey }: { imageId: stri
       {spots.length ? (
         <ol className="flex flex-col gap-2">
           {spots.map((s, i) => (
-            <li key={s.key} className="flex flex-wrap items-end gap-2 rounded-[var(--pc-radius-card)] bg-ui-muted p-3">
+            <li key={s.key} className="flex flex-wrap items-end gap-2 rounded-card bg-ui-muted p-3">
               <span className="flex min-h-11 items-center font-semibold tabular-nums">{i + 1}</span>
               <Input id={`spot-${s.key}-label`} label="Name (optional)" value={s.text} onChange={(value) => update(s.key, { text: value })} maxLength={300} className="min-w-0 flex-1" />
               {(["x", "y", "w", "h"] as const).map((k) => (

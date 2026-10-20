@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { widthOf } from "@/components/ui-kit/scale";
 import * as React from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
@@ -106,9 +107,9 @@ function SlotDetail({ id, title, cell, classHrefs, onClose }: { id: string; titl
               })}</span>
             </span>
             <span className="ins-levels-bar" aria-hidden="true">
-              {filled ? <span data-part="filled" style={{ width: `${filled / max * 100}%` }} /> : null}
-              {free ? <span data-part="free" style={{ width: `${free / max * 100}%` }} /> : null}
-              {l.waiting ? <span data-part="waiting" style={{ width: `${l.waiting / max * 100}%` }} /> : null}
+              {filled ? <span data-part="filled" className={widthOf(filled / max)} /> : null}
+              {free ? <span data-part="free" className={widthOf(free / max)} /> : null}
+              {l.waiting ? <span data-part="waiting" className={widthOf(l.waiting / max)} /> : null}
             </span>
             <span className="ins-levels-text">{l.enrolled}{l.capacity ? ` of ${l.capacity}` : ""} filled{l.capacity ? `, ${free} free` : ""}{l.waiting ? <>, <strong>{l.waiting} waiting</strong></> : null}<span className="ins-muted"> · {percent(l.fill)} full</span></span>
           </li>;

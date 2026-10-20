@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDate } from "@/lib/format";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
@@ -18,8 +19,7 @@ export default async function PathPage({ params }: { params: Promise<{ id: strin
   if (!data) notFound();
   const { who, path, steps, rows, courses, assignable, summary } = data;
   return (
-    <>
-      <PageHeader back={{ href: "/training/paths", label: "Learning paths" }} title={path.title}
+    <PageShell header={<PageHeader back={{ href: "/training/paths", label: "Learning paths" }} title={path.title}
         description={path.summary || `${steps.length} ${steps.length === 1 ? "course" : "courses"} in order.`}
         status={path.archived ? <Tag meta={ARCHIVAL_STATUS_META.archived} /> : null}
         actions={
@@ -28,7 +28,7 @@ export default async function PathPage({ params }: { params: Promise<{ id: strin
             {who.manage ? <ArchivePath id={path.id} title={path.title} archived={path.archived} /> : null}
             {who.assign && !path.archived ? <EnrolInPath pathId={path.id} title={path.title} people={assignable} /> : null}
           </>
-        } />
+        } />}>
       <section className="pc-panel" aria-labelledby="steps-heading">
         <h2 id="steps-heading">Courses</h2>
         <ol className="pc-rows">
@@ -72,6 +72,6 @@ export default async function PathPage({ params }: { params: Promise<{ id: strin
           </ul>
         </section>
       )}
-    </>
+    </PageShell>
   );
 }

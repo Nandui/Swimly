@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { courseAuditPack, CourseAuditPackView, filterQuery, PrintButton, readFilters } from "@/modules/training/features/insight";
 
 export const metadata: Metadata = { title: "Course audit pack" };
@@ -10,9 +11,8 @@ export default async function CourseAuditPackPage({ params, searchParams }: { pa
   const [{ id }, input] = await Promise.all([params, searchParams]);
   const data = await courseAuditPack(id, readFilters(input));
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader back={{ href: `/training/courses/${id}/insight${filterQuery(data.filters)}`, label: "Course insight" }} title={`${data.course.title}: audit pack`} actions={<PrintButton />} />
+    <PageShell spacing="roomy" header={<PageHeader back={{ href: `/training/courses/${id}/insight${filterQuery(data.filters)}`, label: "Course insight" }} title={`${data.course.title}: audit pack`} actions={<PrintButton />} />}>
       <CourseAuditPackView data={data} />
-    </div>
+    </PageShell>
   );
 }

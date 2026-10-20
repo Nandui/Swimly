@@ -27,7 +27,7 @@ export function PracticalPanel({ courseId, steps: saved, requiresSignoff, canEdi
         <span className="pc-tile-icon"><ClipboardCheck aria-hidden="true" /></span>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-ui-muted-foreground">Sign-off</p>
-          <h2 id="practical-heading" className="text-[length:var(--pc-text-title)] leading-[var(--pc-leading-title)]">Practical checklist</h2>
+          <h2 id="practical-heading" className="text-lg">Practical checklist</h2>
         </div>
       </div>
       {!requiresSignoff ? (
@@ -38,7 +38,7 @@ export function PracticalPanel({ courseId, steps: saved, requiresSignoff, canEdi
         <legend className="sr-only">Steps</legend>
         <ol className="flex flex-col gap-3">
           {steps.map((step, i) => (
-            <li key={step.id} className="flex flex-col gap-2 rounded-[var(--pc-radius-card)] bg-ui-muted p-3">
+            <li key={step.id} className="flex flex-col gap-2 rounded-card bg-ui-muted p-3">
               <div className="flex items-end gap-2">
                 <Input id={`step-${step.id}`} label={`Step ${i + 1}`} value={step.text} maxLength={300} className="min-w-0 flex-1"
                   placeholder="Checks the casualty for breathing for 10 seconds" onChange={(value) => set(steps.map((s) => s.id === step.id ? { ...s, text: value } : s))} />
