@@ -4,6 +4,10 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.43.1 · 20 October 2026 · Incidents: a copy of each footage request
+
+- When you **Ask for footage** on an incident report, or use **Send again**, you are now copied in on the email, so you can see it went and what it said.
+
 ## 1.43.0 · 20 October 2026 · Training: turn an SOP into a course with AI
 
 - In **Training, Courses**, people who build courses now have **Draft from a document**. Give it an SOP, a policy or a handbook section (a PDF, a Word document, a text file or a photo of the pages), or paste the text, and the AI writes a course from it: lessons, flashcards, checklists, practice questions and a final exam.

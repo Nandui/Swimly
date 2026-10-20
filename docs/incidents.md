@@ -117,7 +117,8 @@ footage, by an email with a direct link to upload it, so the footage is attached
   the cameras. It is the only part of the report the other person sees.
 - **The email** (`incidents_footage_requests.emailedAt`, or `emailError` shown on the request)
   names who asked, the site and the report number, what is needed and the link. Nothing about
-  who was involved or what happened. Replies go to whoever asked.
+  who was involved or what happened. Whoever asked is copied in, so they can see it
+  went (owner request, 20 October 2026), and replies go to them.
 - **The link** (`/footage/<secret>`) needs no sign-in. Its secret is 32 random bytes, kept only
   as a SHA-256 hash, and opens that one request: the upload page shows what was asked and
   what has arrived, nothing else. It works for 14 days, and stops when it is cancelled
