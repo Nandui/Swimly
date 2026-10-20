@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { MapPin } from "lucide-react";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { ArchiveArea, AreaStaffing, MoveArea, SaveArea } from "@/components/setup/areas";
 import { lineLabel, staffingWords } from "@/lib/setup/area-staffing";
@@ -18,8 +19,7 @@ export default async function AreasPage() {
   await screenPage("areas", "setup.view");
   const { sites, canKeep, qualifications, roles } = await areasPage();
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title="Areas" description="Where work happens at each site, how many lanes a pool has, and the staff each needs while it is open. The rota, bookings, swim classes and short courses pick from these, in this order, and can take a pool whole or by lane." />
+    <PageShell spacing="roomy" header={<PageHeader title="Areas" description="Where work happens at each site, how many lanes a pool has, and the staff each needs while it is open. The rota, bookings, swim classes and short courses pick from these, in this order, and can take a pool whole or by lane." />}>
       {sites.length === 0 ? <EmptyState icon="building" title="No open sites" hint="Add a site under Sites first." /> : sites.map((site) => {
         const live = site.areas.filter((a) => !a.archivedAt);
         return (
@@ -63,6 +63,6 @@ export default async function AreasPage() {
           </section>
         );
       })}
-    </div>
+    </PageShell>
   );
 }

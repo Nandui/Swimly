@@ -105,7 +105,7 @@ export function BookingDialog({ siteId, today, types, areas, booking }: { siteId
           {inRange.length ? (
             <ul className="flex flex-wrap gap-2" aria-label="Dates it does not run">
               {inRange.map((d) => (
-                <li key={d} className="flex items-center gap-1 rounded-[var(--pc-radius-control)] bg-[var(--pc-surface-sunken)] pl-3">
+                <li key={d} className="flex items-center gap-1 rounded-control bg-ui-muted pl-3">
                   <span className="text-sm">{formatDate(new Date(`${d}T00:00:00Z`))}</span>
                   <Button type="button" variant="ghost" size="icon" aria-label={`Run it on ${formatDate(new Date(`${d}T00:00:00Z`))} after all`} onClick={() => setSkip((list) => list.filter((x) => x !== d))}><X aria-hidden="true" /></Button>
                 </li>

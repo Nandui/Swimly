@@ -5,6 +5,7 @@ import { Button } from "@/components/shadcn/button";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { ageLabel, DAY_META, findSiteSwimmers, formatTime, MEDICAL_STATUS_META } from "@/modules/activities/features/instructor";
 import { screenPage } from "@/lib/page-guards";
@@ -20,11 +21,10 @@ export default async function DeckSwimmersPage({ searchParams }: { searchParams:
   const results = await findSiteSwimmers(q);
   const query = q.trim();
   return (
-    <>
-      <PageHeader
+    <PageShell header={<PageHeader
         title="Swimmers at this site"
         description="Find a swimmer by name to see their level and class. Medical notes show for swimmers in classes you teach or are covering today"
-      />
+      />}>
       <section className="pc-panel" aria-label="Find a swimmer">
         {/* An exact lookup by name (DeckSwimmers), so it keeps its visible Find button. */}
         <form className="flex flex-wrap items-end gap-3" role="search" action="/instructor/swimmers">
@@ -64,6 +64,6 @@ export default async function DeckSwimmersPage({ searchParams }: { searchParams:
           </>
         )}
       </section>
-    </>
+    </PageShell>
   );
 }

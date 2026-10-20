@@ -34,7 +34,7 @@ function ClassFilter({ label, value, onChange, children }: {
   </Select>;
 }
 
-const rowLayout = "grid grid-cols-[minmax(0,1fr)] gap-x-3 gap-y-1 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,1fr)] md:items-center";
+const rowLayout = "grid grid-cols-1 gap-x-3 gap-y-1 md:grid-cols-5 md:items-center";
 
 function ClassPicker({ courses, name, selectedId, onSelect, currentEnrolment }: {
   courses: TransferTarget[]; name: string; selectedId: string; onSelect: (id: string) => void;
@@ -74,9 +74,9 @@ function ClassPicker({ courses, name, selectedId, onSelect, currentEnrolment }: 
     </div>
 
     {/* Phones keep Level, Day and Time on one row so the class list stays in reach. */}
-    <div className="grid grid-cols-3 items-end gap-2 sm:gap-3 lg:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]">
+    <div className="grid grid-cols-3 items-end gap-2 sm:gap-3 lg:grid-cols-5">
       {/* Enter in the search box must not submit the dialog's form. */}
-      <div className="col-span-3 lg:col-span-1" onKeyDown={event => { if (event.key === "Enter" && event.target instanceof HTMLInputElement) event.preventDefault(); }}>
+      <div className="col-span-3 lg:col-span-2" onKeyDown={event => { if (event.key === "Enter" && event.target instanceof HTMLInputElement) event.preventDefault(); }}>
         <SearchField label="Search classes" labelHidden placeholder="Class, level or instructor" value={filters.search} onValueChange={value => setFilter("search", value)} />
       </div>
       <ClassFilter label="Level" value={filters.level} onChange={value => setFilter("level", value)}>

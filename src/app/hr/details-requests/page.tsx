@@ -3,6 +3,7 @@ import UiLink from "next/link";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { Tag } from "@/components/ui-kit/tag";
 import { ApplyDetailChange, DeclineDetailChange } from "@/components/people/details-request-actions";
@@ -23,13 +24,12 @@ export default async function DetailRequestsPage({ searchParams }: { searchParam
   const done = (await searchParams).view === "done";
   const rows = await listDetailRequests(done ? "DONE" : "PENDING");
   return (
-    <>
-      <PageHeader
+    <PageShell header={<PageHeader
         title="Details changes"
         description={done
           ? "Recently decided changes to phone, address and emergency contacts"
           : "Phone, address and emergency contacts staff asked to update in Turnfin Me. Check each change, then apply it or decline it with a reply"}
-      />
+      />}>
       <SegmentedLinks label="Which requests" items={[
         { href: "/hr/details-requests", label: "Waiting", current: !done },
         { href: "/hr/details-requests?view=done", label: "Decided", current: done },
@@ -69,6 +69,6 @@ export default async function DetailRequestsPage({ searchParams }: { searchParam
           </section>
         );
       })}
-    </>
+    </PageShell>
   );
 }

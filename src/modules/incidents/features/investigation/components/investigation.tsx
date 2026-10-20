@@ -73,7 +73,7 @@ function Statements({ id, statements, canWork, today, occurredOn }: Investigatio
       {statements.length === 0 ? <p className="text-sm text-ui-muted-foreground">No statements yet.</p> : (
         <ul className="flex flex-col gap-3">
           {statements.map((s) => (
-            <li key={s.id} className="inc-statement flex flex-col gap-2 rounded-[var(--pc-radius-inner)] border border-ui-border p-4">
+            <li key={s.id} className="inc-statement flex flex-col gap-2 rounded-card border border-ui-border p-4">
               <p className="text-sm font-semibold">{s.givenBy}{s.givenAs ? <span className="font-normal text-ui-muted-foreground">, {s.givenAs}</span> : null}</p>
               <p className="text-sm whitespace-pre-line">{s.text}</p>
               <p className="text-xs text-ui-muted-foreground">Given {day(s.takenOn)}. Written down by {s.recordedByName}, {formatDateTime(s.createdAt)}.</p>

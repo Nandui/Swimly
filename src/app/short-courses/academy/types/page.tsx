@@ -3,6 +3,7 @@ import { Pencil } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { ACADEMY_CHECKS, ACADEMY_KIND_META, type AcademyCheck, type AcademyKind, ArchiveCourseType, CourseTypeDialog, courseTypes } from "@/modules/short-courses/features/academy-types";
 import { plural } from "@/lib/format";
@@ -15,9 +16,8 @@ export const metadata: Metadata = { title: "Academy list" };
 export default async function CourseTypesPage() {
   const { who, types, qualifications } = await courseTypes();
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title="Academy list" description="The Academy courses we deliver, and what each asks of a candidate."
-        actions={who.manage ? <CourseTypeDialog qualifications={qualifications} /> : undefined} />
+    <PageShell spacing="roomy" header={<PageHeader title="Academy list" description="The Academy courses we deliver, and what each asks of a candidate."
+        actions={who.manage ? <CourseTypeDialog qualifications={qualifications} /> : undefined} />}>
       <section className="pc-panel" aria-label="Courses we deliver">
         {types.length === 0 ? <EmptyState compact icon="award" title="No courses yet" hint={who.manage ? "Add the first, such as the National Pool Lifeguard Qualification." : "Whoever manages the Academy adds them."} /> : (
           <ul className="pc-rows">
@@ -46,6 +46,6 @@ export default async function CourseTypesPage() {
           </ul>
         )}
       </section>
-    </div>
+    </PageShell>
   );
 }

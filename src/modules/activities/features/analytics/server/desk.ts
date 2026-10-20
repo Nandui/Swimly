@@ -282,11 +282,16 @@ export function buildDesk(input: DeskInput) {
   const teamKinds = new Map<string, number>(), teamWeeks = new Map<string, number>(), previousKinds = new Map<string, number>();
   const teamHeat = emptyHeat();
   let previousTotal = 0;
+  // The period before, laid over this one week by week.
+  const shift = Math.round((Date.parse(`${period.start}T00:00:00Z`) - Date.parse(`${period.previousStart}T00:00:00Z`)) / 86_400_000);
+  const previousWeeks = new Map<string, number>();
   for (const row of input.work) {
     const kind = workKind(row.module, row.entity, row.action);
     if (!kind) continue;
     if (within(row.day, period.previousStart, period.previousEnd)) {
       previousTotal += row.count;
+      const then = weekOf(period, addDaysIso(row.day, shift));
+      if (then) previousWeeks.set(then, (previousWeeks.get(then) ?? 0) + row.count);
       previousKinds.set(kind, (previousKinds.get(kind) ?? 0) + row.count);
       continue;
     }
@@ -371,6 +376,19 @@ export function buildDesk(input: DeskInput) {
     perPerson: rows.length ? total / rows.filter(r => r.actions > 0).length || null : null,
     kinds: WORK_KINDS.map(k => ({ key: k.key, label: k.label, count: teamKinds.get(k.key) ?? 0, previous: previousKinds.get(k.key) ?? 0 })).filter(k => k.count || k.previous),
     weeks: weekSeries(period, teamWeeks),
+    /** Week by week for the headline chart: work against the period before, and each quality figure. */
+    weekly: period.weeks.map(week => {
+      const inWeek = (day: string) => weekOf(period, day) === week;
+      const timed = timedDone.filter(j => inWeek(dublinDay(new Date(j.at))));
+      const a = added.filter(x => inWeek(dublinDay(x.event.at))), u = unenrols.filter(x => inWeek(dublinDay(x.event.at)));
+      return {
+        week, work: teamWeeks.get(week) ?? 0, before: previousWeeks.get(week) ?? 0,
+        onTime: pct(timed.filter(j => j.onTime).length, timed.length),
+        complete: pct(a.filter(x => !missing(x)).length, a.length),
+        reasons: pct(u.filter(x => !noReason(x)).length, u.length),
+        undone: fixes.filter(f => inWeek(dublinDay(new Date(f.at)))).length,
+      };
+    }),
     heat: heatRows(teamHeat),
     jobs, onTime: pct(timedDone.filter(j => j.onTime).length, timedDone.length),
     open: { count: openJobs.length, overdue: openJobs.filter(j => j.onTime === false).length, oldest: openJobs.slice(0, 12).map(j => ({ kind: j.kind, label: j.label, siteId: j.siteId, minutes: j.minutes, overdue: j.onTime === false, href: JOB_KINDS[j.kind]?.href ?? null })) },

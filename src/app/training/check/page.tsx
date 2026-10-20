@@ -4,6 +4,7 @@ import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/ui/input";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { formatDate } from "@/lib/format";
 import { checkCertificate } from "@/modules/training/features/compliance";
 
@@ -15,8 +16,7 @@ export default async function CheckCertificatePage({ searchParams }: { searchPar
   const { code } = await searchParams;
   const result = code?.trim() ? await checkCertificate(code) : null;
   return (
-    <>
-      <PageHeader title="Check a certificate" description="Every certificate from Turnfin Me has a code at the bottom. Type it here to see that it is real." />
+    <PageShell header={<PageHeader title="Check a certificate" description="Every certificate from Turnfin Me has a code at the bottom. Type it here to see that it is real." />}>
       <form method="get" className="pc-panel" role="search" aria-label="Check a certificate">
         <div className="flex flex-wrap items-end gap-4">
         <div className="min-w-0 grow basis-60">
@@ -33,6 +33,6 @@ export default async function CheckCertificatePage({ searchParams }: { searchPar
       ) : (
         <Notice tone="warning" title="No certificate has that code" icon={SearchX}>Check each letter and number. Codes never use the letters O, I or L, or the numbers 0 or 1.</Notice>
       ) : null}
-    </>
+    </PageShell>
   );
 }

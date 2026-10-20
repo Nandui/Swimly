@@ -14,6 +14,7 @@ import type { Metadata } from "next";
 import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import {
   AddPerson,
@@ -50,8 +51,7 @@ export default async function StaffPage(props: PageProps<"/staff">) {
   ).length;
 
   return (
-    <div className="min-w-0 flex flex-col gap-4">
-      <PageHeader
+    <PageShell header={<PageHeader
         title="Staff"
         description="Who can sign in, and what each of them is allowed to change."
         actions={
@@ -65,7 +65,7 @@ export default async function StaffPage(props: PageProps<"/staff">) {
             <AddPerson roles={roles} defaultOpen={params.add === "1"} />
           </>
         }
-      />
+      />}>
 
       {active.length === 0 ? (
         <EmptyState
@@ -103,7 +103,7 @@ export default async function StaffPage(props: PageProps<"/staff">) {
           />
         </section>
       ) : null}
-    </div>
+    </PageShell>
   );
 }
 
@@ -148,7 +148,7 @@ function PeopleTable({
             <TableRow key={person.id}>
               <TableCell>
                 <div className="min-w-0 flex gap-3 items-center">
-                  <UiLink href={`/staff/${person.id}`} className="min-w-0 flex gap-3 items-center rounded-[var(--pc-radius-card)] underline-offset-4 hover:[&_.pc-row-title]:underline">
+                  <UiLink href={`/staff/${person.id}`} className="min-w-0 flex gap-3 items-center rounded-card underline-offset-4 hover:[&_.pc-row-title]:underline">
                     <Avatar size="lg" aria-hidden="true"><AvatarFallback>{nameInitials(person.name)}</AvatarFallback></Avatar>
                     <span className="min-w-0 flex flex-col">
                       <span className="pc-row-title inline-flex min-h-6 flex-wrap items-center gap-x-2">
@@ -157,7 +157,7 @@ function PeopleTable({
                           <Tag meta={STAFF_STATUS_META.noPassword} />
                         ) : null}
                       </span>
-                      <span className="pc-row-hint block [overflow-wrap:anywhere]">
+                      <span className="pc-row-hint block wrap-anywhere">
                         {person.email}
                       </span>
                       <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 lg:hidden">

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
 import { listPaths, PathDialog } from "@/modules/training/features/paths";
@@ -15,9 +16,8 @@ export default async function PathsPage() {
   const [{ who, paths }, catalogue] = await Promise.all([listPaths(), listCourses()]);
   const courses = catalogue.courses.filter((c) => !c.archivedAt).map((c) => ({ id: c.id, title: c.title }));
   return (
-    <>
-      <PageHeader title="Learning paths" description="Courses in order for a new starter or a new role, each due a number of days after they start. Put people on a path to assign them all at once."
-        actions={who.manage ? <PathDialog courses={courses} /> : null} />
+    <PageShell header={<PageHeader title="Learning paths" description="Courses in order for a new starter or a new role, each due a number of days after they start. Put people on a path to assign them all at once."
+        actions={who.manage ? <PathDialog courses={courses} /> : null} />}>
       {paths.length === 0 ? (
         <EmptyState as="h2" icon="graduation" title="No learning paths yet" hint={who.manage ? "Add one for your inductions, for example a new lifeguard's first month." : "Someone with the Author level in Training can add them."} />
       ) : (
@@ -41,6 +41,6 @@ export default async function PathsPage() {
           </ul>
         </section>
       )}
-    </>
+    </PageShell>
   );
 }

@@ -4,6 +4,8 @@ import { Button } from "@/components/shadcn/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Separator } from "@/components/shadcn/separator";
 import { AuthFrame } from "@/components/auth-frame";
+import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -79,10 +81,7 @@ export function SignInForm({ devAdminName, sharedDeviceName = null }: { devAdmin
 
   return (
     <AuthFrame welcome>
-      <div className="flex min-w-0 flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Sign in</h1>
-        <p className="text-sm text-ui-muted-foreground">Use your work email and password.</p>
-      </div>
+      <PageShell header={<PageHeader title="Sign in" description="Use your work email and password." />}>
 
       {sharedDeviceName ? (
         <div className="pc-note flex-wrap">
@@ -153,6 +152,7 @@ export function SignInForm({ devAdminName, sharedDeviceName = null }: { devAdmin
           </div>
         </>
       ) : null}
+      </PageShell>
     </AuthFrame>
   );
 }

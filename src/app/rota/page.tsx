@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { Tag } from "@/components/ui-kit/tag";
 import {
@@ -24,10 +25,9 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
   const data = await planWeek(input);
   if (!data.site) {
     return (
-      <>
-        <PageHeader title="Plan" />
+      <PageShell header={<PageHeader title="Plan" />}>
         <EmptyState as="h2" icon="calendarDays" title="No sites to show" hint="Your rota role does not cover a site yet." />
-      </>
+      </PageShell>
     );
   }
   const { site, monday, now, date, department, departments, everyDepartment, week, share, day } = data;
@@ -45,8 +45,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
   const paid = day.people.reduce((n, p) => n + p.shift.paidMinutes, 0);
   const unpaid = day.people.reduce((n, p) => n + p.shift.parts.reduce((m, x) => m + partPaid(x).unpaid, 0), 0);
   return (
-    <div className="rota-plan">
-      <PageHeader
+    <PageShell className="rota-plan" header={<PageHeader
         title={everyDepartment ? `Plan: ${site.name}` : department ? `Plan: ${department.name}` : "Plan"}
         description={`${formatDateRange(monday, sunday)} at ${site.name}. ${everyDepartment ? "Every department. Choose one to copy, export or share its week." : share ? `Shared with staff by ${share.sharedByName}.` : "A draft: staff see it once you share the week."}`}
         status={department && !everyDepartment ? <Tag meta={ROTA_WEEK_META[share ? "shared" : "draft"]} /> : undefined}
@@ -56,7 +55,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
           {data.canShare ? <Button asChild variant="outline"><a href={`/rota/export?${new URLSearchParams({ site: site.id, dept: department.id, week: monday })}`} download><Download aria-hidden="true" />Export week</a></Button> : null}
           {data.canShare && !share ? <ShareWeek siteId={site.id} departmentId={department.id} monday={monday} department={department.name} gaps={weekGaps} /> : null}
         </> : undefined}
-      />
+      />}>
       {department && departments.length > 1 ? (
         <SegmentedLinks label="Department" className="rota-departments" items={[
           { href: `/rota?${new URLSearchParams({ site: site.id, dept: ALL_DEPARTMENTS, week: monday, day: date })}`, label: "All departments", current: everyDepartment },
@@ -153,6 +152,6 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
           ) : null}
         </>
       )}
-    </div>
+    </PageShell>
   );
 }

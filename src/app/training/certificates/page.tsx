@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { Tag } from "@/components/ui-kit/tag";
 import { CERTIFICATE_STATUS_META, certificateQueue, DeclineCertificate, VerifyCertificate } from "@/modules/training/features/certificates";
@@ -20,11 +21,10 @@ export default async function CertificatesPage({ searchParams }: { searchParams:
   const { who, rows, types } = await certificateQueue(done ? "DONE" : "PENDING");
   if (!who.qualifications) notFound();
   return (
-    <>
-      <PageHeader
+    <PageShell header={<PageHeader
         title="Certificates to check"
         description={done ? "Recently checked certificates" : "Open each file, check it, then record it or decline it with a reason"}
-      />
+      />}>
       <SegmentedLinks label="Certificates" items={[
         { href: "/training/certificates", label: "Waiting", current: !done },
         { href: "/training/certificates?view=done", label: "Checked", current: done },
@@ -66,6 +66,6 @@ export default async function CertificatesPage({ searchParams }: { searchParams:
           </ul>
         </section>
       )}
-    </>
+    </PageShell>
   );
 }

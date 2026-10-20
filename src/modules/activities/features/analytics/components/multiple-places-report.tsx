@@ -8,13 +8,14 @@ import { Button } from "@/components/shadcn/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { Tag } from "@/components/ui-kit/tag";
 import { ENROLMENT_STATUS_META } from "@/modules/activities/shared/enrolment/constants";
 import { formatCount, plural } from "@/lib/format";
 import type { MultiplePlacesAnalyticsData } from "@/modules/activities/features/analytics/server/report-data";
 import { multiplePlacesCsv } from "@/modules/activities/features/analytics/server/multiple-places";
-import { ReportPicker } from "@/modules/activities/features/analytics/components/navigation";
+import { DashboardSwitch } from "@/modules/activities/features/analytics/components/navigation";
 import { AnalyticsRefresh } from "@/modules/activities/features/analytics/components/refresh";
 import { ReportUpdated } from "@/modules/activities/features/analytics/components/period";
 import { StatTile } from "@/modules/activities/features/analytics/components/stat-tile";
@@ -36,16 +37,14 @@ export function MultiplePlacesReport({ data }: { data: MultiplePlacesAnalyticsDa
   const waitlisted = data.swimmers.filter(swimmer => swimmer.waitlisted > 0).length;
   const where = data.allSites ? "across your sites" : "at this site";
 
-  return <div className="ins">
-    <div className="ins-top">
-      <PageHeader title="Multiple enrolments" description={`${data.siteName} · Swimmers enrolled more than once, waitlist places included`} actions={<AnalyticsRefresh />} />
-    </div>
+  return <PageShell className="ins" data-dashboard="business"
+    header={<PageHeader title="Multiple enrolments" back={{ href: "/analytics", label: "Business" }} description={`${data.siteName} · Swimmers enrolled more than once, waitlist places included`} actions={<AnalyticsRefresh />} />}>
     <section className="ins-filters" aria-label="Report and filters"><div className="ins-filters-row">
-      <ReportPicker active="multiple" />
-      {data.multipleSites ? <SegmentedLinks label="Sites to include" items={[
+      <DashboardSwitch page="multiple" />
+      {data.multipleSites ? <div className="ins-filters-scope"><SegmentedLinks label="Sites to include" items={[
         { href: "/analytics/multiple-places", label: "This site", current: !data.allSites },
         { href: "/analytics/multiple-places?scope=all", label: "All sites", current: data.allSites },
-      ]} /> : null}
+      ]} /></div> : null}
     </div></section>
     <ul className="ins-kpis" data-count="2" aria-label="Swimmers with more than one enrolment">
       <StatTile icon={Users} value={formatCount(data.swimmers.length)} label="More than one enrolment" caption={`Swimmers ${where}`} />
@@ -90,5 +89,5 @@ export function MultiplePlacesReport({ data }: { data: MultiplePlacesAnalyticsDa
       <p>Counts current and waitlisted places in live weekly classes: active swimmers only, excluding future starts, scheduled endings that have passed and archived classes. Two enrolments in the same class count as two. This site counts only the selected site; All sites counts a swimmer’s places across every site you work at.</p>
       <ReportUpdated at={data.updatedAt} />
     </footer>
-  </div>;
+  </PageShell>;
 }

@@ -16,7 +16,7 @@ function NativeSelect({
         data-slot="native-select"
         data-size={size}
         className={cn(
-          'h-11 w-full min-w-0 appearance-none rounded-ui-md border border-ui-input bg-transparent px-3 py-2 pr-9 text-sm shadow-xs transition-[color,box-shadow] outline-none selection:bg-ui-primary selection:text-ui-primary-foreground placeholder:text-ui-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed data-[size=sm]:h-11 data-[size=sm]:py-1 dark:bg-ui-input/30 dark:hover:bg-ui-input/50',
+          'h-11 w-full min-w-0 appearance-none rounded-ui-md border border-ui-input bg-transparent px-3 py-2 pr-9 text-sm shadow-xs transition outline-none selection:bg-ui-primary selection:text-ui-primary-foreground placeholder:text-ui-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed data-[size=sm]:h-11 data-[size=sm]:py-1 dark:bg-ui-input/30 dark:hover:bg-ui-input/50',
           'focus-visible:border-ui-ring focus-visible:ring-3 focus-visible:ring-ui-ring/50',
           'aria-invalid:border-ui-destructive aria-invalid:ring-ui-destructive/20 dark:aria-invalid:ring-ui-destructive/40',
           className,
@@ -36,7 +36,7 @@ function NativeSelectOption({ className, ...props }: React.ComponentProps<'optio
   return (
     <option
       data-slot="native-select-option"
-      className={cn('bg-[Canvas] text-[CanvasText]', className)}
+      className={cn('bg-ui-popover text-ui-popover-foreground', className)}
       {...props}
     />
   );
@@ -46,7 +46,7 @@ function NativeSelectOptGroup({ className, ...props }: React.ComponentProps<'opt
   return (
     <optgroup
       data-slot="native-select-optgroup"
-      className={cn('bg-[Canvas] text-[CanvasText]', className)}
+      className={cn('bg-ui-popover text-ui-popover-foreground', className)}
       {...props}
     />
   );

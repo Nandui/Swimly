@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Users } from "lucide-react";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { plural } from "@/lib/format";
 import {
@@ -23,12 +24,11 @@ export default async function DepartmentsPage() {
   const liveDepartments = departments.filter((d) => !d.archivedAt);
 
   return (
-    <div className="min-w-0 flex flex-col gap-4">
-      <PageHeader
+    <PageShell header={<PageHeader
         title="Departments"
         description={`The teams people at ${organisation?.name ?? "the organisation"} work in. Every activity on the rota belongs to one.`}
         actions={canKeep ? <SaveDepartment sites={sites} /> : undefined}
-      />
+      />}>
 
       <section className="pc-panel" aria-labelledby="departments-heading">
         <div className="pc-panel-head">
@@ -66,6 +66,6 @@ export default async function DepartmentsPage() {
           </>
         )}
       </section>
-    </div>
+    </PageShell>
   );
 }

@@ -118,7 +118,7 @@ function SlotList({
           <Item
             key={placement.studentId}
             role="listitem"
-            className="[overflow-wrap:anywhere]"
+            className="wrap-anywhere"
           >
             <ItemContent className="min-w-0">
               <ItemTitle>{placement.name}</ItemTitle>

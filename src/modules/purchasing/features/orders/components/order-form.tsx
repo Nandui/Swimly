@@ -212,8 +212,8 @@ export function OrderForm({ sites, suppliers, rules, roleNames, existing, initia
 
         <section aria-labelledby="po-delivery" className="po-card">
           <div className="po-step-head"><span className="po-step-n" aria-hidden="true">{supplier ? 3 : 2}</span><h2 id="po-delivery">When and anything to add</h2></div>
-        <div className="grid gap-4 sm:grid-cols-[12rem_minmax(0,1fr)]">
-          <div className="space-y-2"><Label htmlFor="po-needed">Needed by (optional)</Label><Input id="po-needed" type="date" value={neededBy} onChange={(e) => setNeededBy(e.target.value)} /></div>
+        <div className="grid gap-4 sm:grid-cols-auto-fill">
+          <div className="space-y-2 sm:w-48"><Label htmlFor="po-needed">Needed by (optional)</Label><Input id="po-needed" type="date" value={neededBy} onChange={(e) => setNeededBy(e.target.value)} /></div>
           <div className="space-y-2"><Label htmlFor="po-note">Note (optional)</Label><Textarea id="po-note" value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} rows={2} placeholder="For the approver or the supplier, for example the delivery entrance." /></div>
         </div>
         </section>

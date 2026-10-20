@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { hrAccess, hrConfigured, HrShell } from "@/modules/hr/features/workspace";
 import { pageSession } from "@/lib/page-guards";
 import { TITLE_TEMPLATE } from "@/lib/app";
@@ -19,11 +20,10 @@ export default async function HrLayout({ children }: { children: ReactNode }) {
   return (
     <HrShell who={who}>
       {hrConfigured() ? children : (
-        <>
-          <PageHeader title="HR" />
+        <PageShell header={<PageHeader title="HR" />}>
           {/* Setup steps live in docs/hr.md; staff only need to know who to ask. */}
           <Notice tone="info" title="HR isn’t switched on yet" description="Ask your Turnfin administrator to turn it on." />
-        </>
+        </PageShell>
       )}
     </HrShell>
   );

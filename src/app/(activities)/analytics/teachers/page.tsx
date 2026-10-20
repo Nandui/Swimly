@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
-import { getTeacherInsights, TeachersReport } from "@/modules/activities/features/analytics";
+import { redirect } from "next/navigation";
 import { screenPage } from "@/lib/page-guards";
 
-export const metadata: Metadata = { title: "Teachers · Analytics" };
-
+/** Every teacher now sits on the pool deck dashboard; old links land there with their filters. */
 export default async function TeachersAnalyticsPage(props: PageProps<"/analytics/teachers">) {
   await screenPage("analytics");
-  return <TeachersReport data={await getTeacherInsights(await props.searchParams)} />;
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(await props.searchParams)) for (const v of [value].flat()) if (v !== undefined) params.append(key, v);
+  const query = params.toString();
+  redirect(`/analytics/pool-deck${query ? `?${query}` : ""}#teachers`);
 }

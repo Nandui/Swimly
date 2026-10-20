@@ -10,6 +10,8 @@ import { Progress } from "@/components/shadcn/progress";
 import { Textarea } from "@/components/shadcn/textarea";
 import { FileField } from "@/components/ui/file-field";
 import { Notice } from "@/components/ui-kit/notice";
+import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { FOOTAGE_ACCEPT, footageProblem, MULTIPART_FROM_BYTES, sizeLabel } from "@/modules/incidents/features/footage/rules";
 import type { FootageLink } from "@/modules/incidents/features/footage/server/uploads";
@@ -65,11 +67,7 @@ export function UploadFootage({ token, link }: { token: string; link: FootageLin
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-6">
-      <div className="flex min-w-0 flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Send CCTV footage</h1>
-        <p className="text-sm text-ui-muted-foreground">{link.requestedByName} at {link.site} asked for it, for incident report {link.reference}.</p>
-      </div>
+    <PageShell spacing="roomy" header={<PageHeader title="Send CCTV footage" description={`${link.requestedByName} at ${link.site} asked for it, for incident report ${link.reference}.`} />}>
 
       <div className="pc-note flex-col items-start gap-1">
         <p className="text-sm font-semibold">What is needed</p>
@@ -120,16 +118,14 @@ export function UploadFootage({ token, link }: { token: string; link: FootageLin
         )}
         <p className="text-xs text-ui-muted-foreground">This link works until {formatDate(link.expiresAt)}. Thank you.</p>
       </div>
-    </div>
+    </PageShell>
   );
 }
 
 /** A link that can't take uploads any more: say why and who to ask, nothing else. */
 export function FootageLinkClosed({ problem, askedBy }: { problem: string; askedBy: string | null }) {
   return (
-    <div className="flex min-w-0 flex-col gap-2">
-      <h1 className="text-2xl font-semibold">This link can&apos;t take footage</h1>
-      <p className="text-sm text-ui-muted-foreground">{problem} {askedBy ? `Reply to the email from ${askedBy} if you still have footage to send.` : "Reply to the email it came in if you still have footage to send."}</p>
-    </div>
+    <PageShell header={<PageHeader title="This link can’t take footage"
+      description={`${problem} ${askedBy ? `Reply to the email from ${askedBy} if you still have footage to send.` : "Reply to the email it came in if you still have footage to send."}`} />} />
   );
 }

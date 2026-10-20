@@ -191,7 +191,7 @@ export function ImportQuestions({ sectionId, sectionTitle }: { sectionId: string
         return { ok: true };
       }}
     >
-      <div className="overflow-x-auto rounded-[var(--pc-radius-card)] bg-ui-muted p-3 text-xs">
+      <div className="overflow-x-auto rounded-card bg-ui-muted p-3 text-xs">
         <p className="mb-2 font-semibold">Columns, in this order</p>
         <p className="tabular-nums">{IMPORT_COLUMNS.join(" · ")}</p>
         <ul className="mt-2 list-disc pl-5">
@@ -246,7 +246,7 @@ export function CoverPicker({ courseId, coverId, files, onUploaded, canEdit }: {
       <div className="flex items-center gap-3">
         <span className="pc-tile-icon"><ImageIcon aria-hidden="true" /></span>
         <div className="min-w-0 flex-1">
-          <h2 id="cover-heading" className="text-[length:var(--pc-text-title)] leading-[var(--pc-leading-title)]">Cover picture</h2>
+          <h2 id="cover-heading" className="text-lg">Cover picture</h2>
           <p className="text-sm text-ui-muted-foreground">Shown on the course in Turnfin Me and the course list. A wide photo of the real place or kit works best.</p>
         </div>
       </div>
@@ -293,7 +293,7 @@ export function ReviewComments({ courseId, lessonId, comments, canComment, lesso
       <div className="flex items-center gap-3">
         <span className="pc-tile-icon"><MessageSquare aria-hidden="true" /></span>
         <div className="min-w-0 flex-1">
-          <h2 id={`comments-${lessonId ?? "course"}`} className="text-[length:var(--pc-text-title)] leading-[var(--pc-leading-title)]">Review comments</h2>
+          <h2 id={`comments-${lessonId ?? "course"}`} className="text-lg">Review comments</h2>
           <p className="text-sm text-ui-muted-foreground">{lessonId ? "Notes on this lesson for whoever builds the course. Learners never see them." : "Every open comment on the course. Learners never see them."}</p>
         </div>
       </div>

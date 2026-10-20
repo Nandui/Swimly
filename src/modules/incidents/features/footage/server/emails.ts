@@ -9,7 +9,8 @@ import { incidentNumber } from "@/modules/incidents/shared/types";
 /** The footage emails (docs/incidents.md, "CCTV footage"). The request goes
  *  to whoever holds the footage, often outside the team, so it says what is
  *  needed and where to send it, and nothing about who was involved or what
- *  happened. Replies go to the person who asked. The confirmation goes to the
+ *  happened. Replies go to the person who asked, who is also copied in, so
+ *  they can see it went (owner request, 20 October 2026). The confirmation goes to the
  *  person who asked when a video arrives. Failures are kept for the report.
  *  Outside production, INCIDENTS_EMAIL_DEV_LOG=true prints the request to the
  *  server console instead of sending it, for the sandbox. */
@@ -33,8 +34,9 @@ export async function sendFootageRequest(requestId: string, token: string, origi
       + "The link only sends footage to this request: it shows nothing else, so please don't forward it.\r\n\r\n"
       + `If you can't get the footage, or it has already been overwritten, reply to this email to tell ${r.requestedByName}.`;
     const subject = `CCTV footage request from ${site}`;
-    if (devLog()) console.info(`[incidents email] to ${r.recipientEmail}: ${subject}\n${text}`);
-    else if (config) await sendGoogleEmail(r.recipientEmail, subject, { text, replyTo: asker?.email ?? undefined }, config);
+    const cc = asker?.email && asker.email.toLowerCase() !== r.recipientEmail.toLowerCase() ? [asker.email] : undefined;
+    if (devLog()) console.info(`[incidents email] to ${r.recipientEmail}, cc ${cc?.join(", ") ?? "nobody"}: ${subject}\n${text}`);
+    else if (config) await sendGoogleEmail(r.recipientEmail, subject, { text, replyTo: asker?.email ?? undefined, cc }, config);
   } catch (failure) {
     error = failure instanceof Error ? failure.message.slice(0, 300) : "Sending failed.";
   }

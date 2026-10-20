@@ -19,6 +19,7 @@ import { formatDate, parseDateOnly, today } from "@/lib/format";
 import { fullName } from "@/modules/activities/shared/students/constants";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { WrongClub } from "@/components/ui/wrong-club";
 import { StartClass } from "@/modules/activities/features/instructor/components/start-class";
 import { InstructorClassNavigation } from "@/modules/activities/features/instructor/components/class-navigation";
@@ -43,22 +44,17 @@ export async function InstructorClassSession({
     instructorClassHref(id, { ...params, date: iso, step });
   // "Sun 16:00 to 16:30 · 4 Oct 2026": this one dated session, not the weekly slot.
   const when = `${formatSessionTime(course)} · ${formatDate(parseDateOnly(iso))}`;
-  const header = (
-    <PageHeader
-      back={{ href: home, label: "Classes" }}
-      title={name}
-      description={`${when}${course.location ? ` · ${course.location}` : ""}`}
-      status={
-        view.state === "ready" ? (
-          <Tag meta={view.register.taken ? ATTENDANCE_RECORD_META.taken : ATTENDANCE_RECORD_META.notTaken} />
-        ) : null
-      }
-    />
-  );
+  const header = {
+    back: { href: home, label: "Classes" },
+    title: name,
+    description: `${when}${course.location ? ` · ${course.location}` : ""}`,
+    status: view.state === "ready" ? (
+      <Tag meta={view.register.taken ? ATTENDANCE_RECORD_META.taken : ATTENDANCE_RECORD_META.notTaken} />
+    ) : null,
+  };
   if (view.state !== "ready")
     return (
-      <>
-        {header}
+      <PageShell header={<PageHeader {...header} />}>
         {view.state === "cancelled" ? <Notice tone="warning" title="This session is cancelled"><p>{view.cancellation.reason}</p><p>Attendance and competencies cannot be saved for this session.</p></Notice> : view.state === "wrong-site" ? (
           <WrongClub header={false} what="This class" noun="this class" owner={course.club} current={view.club} />
         ) : view.state === "archived" ? (
@@ -92,7 +88,7 @@ export async function InstructorClassSession({
             )}
           </section>
         )}
-      </>
+      </PageShell>
     );
   const { register, progress } = view,
     mayAssess = can(session, "progression.assess"),
@@ -111,8 +107,7 @@ export async function InstructorClassSession({
     ? Object.fromEntries(register.lines.map((l) => [l.studentId, l.status]))
     : null;
   return (
-    <>
-      {header}
+    <PageShell header={<PageHeader {...header} />}>
       <InstructorClassNavigation id={id} params={{ ...params, date: iso }} active={overview ? "overview" : competencies ? "competencies" : "attendance"} />
       {overview ? (
         <ClassCompetencyOverview competencies={progress.course.level.competencies} swimmers={swimmers} />
@@ -163,6 +158,6 @@ export async function InstructorClassSession({
           />
         </>
       )}
-    </>
+    </PageShell>
   );
 }

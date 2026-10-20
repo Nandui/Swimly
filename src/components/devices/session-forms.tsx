@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { Check, ChevronRight, Delete, UserRound } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { AuthFrame } from "@/components/auth-frame";
+import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { nameInitials } from "@/lib/format";
 import { Notice } from "@/components/ui-kit/notice";
@@ -22,11 +24,7 @@ const auth = () => import("next-auth/react");
 function Frame({ title, description, fin = false, children }: { title: string; description?: React.ReactNode; fin?: boolean; children: React.ReactNode }) {
   return (
     <AuthFrame fin={fin ? "start" : undefined}>
-      <div className="flex min-w-0 flex-col gap-1">
-        <h1 className="text-2xl font-semibold">{title}</h1>
-        {description ? <p className="text-sm text-ui-muted-foreground">{description}</p> : null}
-      </div>
-      {children}
+      <PageShell header={<PageHeader title={title} description={description} />}>{children}</PageShell>
     </AuthFrame>
   );
 }

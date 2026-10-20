@@ -3,6 +3,7 @@ import { Button } from "@/components/shadcn/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
 import { BadgeCheck, Check, ChevronDown, ChevronLeft, CircleHelp, CreditCard, FileText, MessageSquareQuote, ReceiptText, UserRound, X, type LucideIcon } from "lucide-react";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { Notice } from "@/components/ui-kit/notice";
 import { RefundFinanceActions } from "@/modules/refunds/features/request/components/finance-actions";
@@ -103,9 +104,8 @@ export function RefundDetail({ data, who, sites }: { data: Detail; who: RefundAc
     })}</ol>
   </section>);
   const open = refundNextActions(row, who).length > 0;
-  return <div className="refund-inspect">
-    <PageHeader title={refundNumber(row.number)} description={`${row.customerName || 'New customer refund'} · ${row.clubName}`} status={<Tag meta={refundStatuses[row.status]} />}
-      actions={<Button asChild variant="outline"><Link href="/refunds"><ChevronLeft aria-hidden="true" />Back to requests</Link></Button>} />
+  return <PageShell className="refund-inspect" header={<PageHeader title={refundNumber(row.number)} description={`${row.customerName || 'New customer refund'} · ${row.clubName}`} status={<Tag meta={refundStatuses[row.status]} />}
+      actions={<Button asChild variant="outline"><Link href="/refunds"><ChevronLeft aria-hidden="true" />Back to requests</Link></Button>} />}>
     {query && <Notice tone="warning" title="Finance needs more information" description={query.note} />}
     {editable ? <><Claim row={row} /><RefundRequestForm id={row.id} row={row} sites={sites} actions={finance}>{receipts}{history}</RefundRequestForm></>
       : <div className="refund-bento">
@@ -138,5 +138,5 @@ export function RefundDetail({ data, who, sites }: { data: Detail; who: RefundAc
           {history}
         </div>
       </div>}
-  </div>;
+  </PageShell>;
 }

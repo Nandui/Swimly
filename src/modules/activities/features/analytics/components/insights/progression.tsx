@@ -2,16 +2,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { formatCount, plural } from "@/lib/format";
 import type { ProgressionInsights } from "@/modules/activities/features/analytics/server/insights-data";
-import { asOf, Bars, Flag, Kpi, KpiStrip, Meter, Panel, percent, ReportShell, Section, weeks } from "@/modules/activities/features/analytics/components/insights/kit";
+import { asOf, Bars, Flag, reportHref, Kpi, KpiStrip, Meter, Panel, percent, ReportShell, Section, weeks } from "@/modules/activities/features/analytics/components/insights/kit";
 
 export function ProgressionReport({ data }: { data: ProgressionInsights }) {
   const p = data.progression;
   const a = p.assessments;
   const groups = [...new Set(p.levels.map(l => l.programmeName))];
   const timed = p.levels.filter(l => l.medianWeeks !== null);
-  return <ReportShell ctx={data} page="progression" path="/analytics/progression" title="Progression" sections={[
-    { id: "glance", label: "At a glance" }, { id: "pace", label: "Pace" }, { id: "levels", label: "Level by level" },
-  ]} footnotes={[
+  return <ReportShell ctx={data} page="progression" path="/analytics/progression" title="Level by level" back={{ href: `${reportHref(data, "/analytics/pool-deck")}#progress`, label: "Pool deck" }} footnotes={[
     "Weeks to pass runs from a swimmer's first place at the level to the day the level was completed. The middle value is shown, so one slow or fast swimmer does not skew it.",
     "Over 6 months counts swimmers here now who have been at their level more than 26 weeks. Hardest skill is the one the fewest swimmers at the level have, with at least three swimmers.",
     "Booked to a place counts swimmers assessed in the period who started a class within 30 days. Assessment sessions are not tied to a programme, so with a programme chosen only bookings placed elsewhere are left out.",

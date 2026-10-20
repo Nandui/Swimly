@@ -16,6 +16,7 @@ import { notFound } from "next/navigation";
 
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Lead, Num } from "@/components/ui-kit/prose";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { Tag } from "@/components/ui-kit/tag";
@@ -148,7 +149,7 @@ export async function ClassSession({
     </>
   );
 
-  if (cancellation) return <div className="min-w-0 flex flex-col gap-6"><PageHeader back={{ href: returnTo.href, label: backLabel }} title={courseName(course)} description={`${formatSlot(course)} · ${formatDate(parseDateOnly(iso))}`} actions={weekActions} /><Notice title="This session is cancelled"><p>{cancellation.reason}</p><p>Existing teaching records are kept. Further marks cannot be saved for this session.</p></Notice></div>;
+  if (cancellation) return <PageShell spacing="roomy" header={<PageHeader back={{ href: returnTo.href, label: backLabel }} title={courseName(course)} description={`${formatSlot(course)} · ${formatDate(parseDateOnly(iso))}`} actions={weekActions} />}><Notice title="This session is cancelled"><p>{cancellation.reason}</p><p>Existing teaching records are kept. Further marks cannot be saved for this session.</p></Notice></PageShell>;
 
   const [{ lines, taken, note, revision }, cover, progress, planned] = await Promise.all(
     [getRegister(id, iso, workspace === "instructor" ? "deck" : "desk"), getClassCover(id, iso), getClassProgress(id), plannedTeachers([id], iso)],
@@ -183,10 +184,7 @@ export async function ClassSession({
   const dayPlanned = planned.get(id);
   const teacherName = dayPlanned ? dayPlanned.teacherName : dayTeacherId(course.instructorId, undefined, iso) ? course.instructor?.name ?? null : null;
   return (
-    <div className="min-w-0 flex flex-col gap-6">
-      {/* The tags sit in their own row under the description (SSClassRegister),
-          so the bottom-aligned week actions keep their place. */}
-      <div className="min-w-0 flex flex-col gap-2">
+    <PageShell spacing="roomy" header={
         <PageHeader
           back={{ href: returnTo.href, label: backLabel }}
           actions={step === "attendance" ? weekActions : null}
@@ -199,14 +197,15 @@ export async function ClassSession({
                 ? ` · ${teacherName}`
                 : "")
           }
-        />
-        {taken || covered ? (
-          <div className="min-w-0 flex gap-2 items-center flex-wrap">
-            {taken ? <Tag meta={ATTENDANCE_RECORD_META.taken} /> : null}
-            {covered ? <Tag meta={ATTENDANCE_RECORD_META.covered} /> : null}
-          </div>
-        ) : null}
-      </div>
+        />}>
+      {/* The tags sit in their own row just under the description (SSClassRegister),
+          so the bottom-aligned week actions keep their place. */}
+      {taken || covered ? (
+        <div className="-mt-4 min-w-0 flex gap-2 items-center flex-wrap">
+          {taken ? <Tag meta={ATTENDANCE_RECORD_META.taken} /> : null}
+          {covered ? <Tag meta={ATTENDANCE_RECORD_META.covered} /> : null}
+        </div>
+      ) : null}
 
       <SegmentedLinks
         label="Class steps"
@@ -328,7 +327,7 @@ export async function ClassSession({
                   <Item
                     key={swimmer.student.id}
                     role="listitem"
-                    className="[overflow-wrap:anywhere]"
+                    className="wrap-anywhere"
                   >
                     <ItemContent className="min-w-0">
                       <ItemTitle className="min-w-0 flex-wrap">
@@ -386,6 +385,6 @@ export async function ClassSession({
           />
         </>
       )}
-    </div>
+    </PageShell>
   );
 }

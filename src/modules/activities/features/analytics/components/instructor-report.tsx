@@ -10,12 +10,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/shadcn/ta
 import { SearchField } from "@/components/ui-kit/search-field";
 import { StatTile } from "@/modules/activities/features/analytics/components/stat-tile";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { ATTENDANCE_REPORT_META } from "@/modules/activities/features/analytics/server/reports";
 import type { InstructorAnalyticsData } from "@/modules/activities/features/analytics/server/report-data";
 import { classTimes } from "@/modules/activities/shared/courses/constants";
 import { formatCount, formatDateTime, formatShortDay, plural } from "@/lib/format";
-import { ReportPicker } from "@/modules/activities/features/analytics/components/navigation";
+import { DashboardSwitch } from "@/modules/activities/features/analytics/components/navigation";
 import { AnalyticsRefresh } from "@/modules/activities/features/analytics/components/refresh";
 import { ReportUpdated, weekLabel } from "@/modules/activities/features/analytics/components/period";
 
@@ -33,11 +34,9 @@ export function InstructorReport({ data }: { data: InstructorAnalyticsData }) {
   const selected = data.instructors.find(person => person.id === instructor);
   const scoped = data.classes.filter(row => !instructor || row.instructorKey === instructor);
   const classes = scoped.filter(row => matches(row.status, filter));
-  return <div className="ins">
-    <div className="ins-top">
-      <PageHeader title="Registers" description={`${data.siteName} · This week, Monday to Sunday · ${weekLabel(data.period)}`} actions={<AnalyticsRefresh />} />
-    </div>
-    <section className="ins-filters" aria-label="Report"><div className="ins-filters-row"><ReportPicker active="instructors" /></div></section>
+  return <PageShell className="ins" data-dashboard="pool-deck"
+    header={<PageHeader title="Registers" back={{ href: "/analytics/pool-deck", label: "Pool deck" }} description={`${data.siteName} · This week, Monday to Sunday · ${weekLabel(data.period)}`} actions={<AnalyticsRefresh />} />}>
+    <section className="ins-filters" aria-label="Dashboards"><div className="ins-filters-row"><DashboardSwitch page="instructors" /></div></section>
     <ul className="ins-kpis" data-count="4" aria-label="Attendance at a glance">
       <StatTile icon={CheckCheck} value={formatCount(data.totals.due)} label="Classes finished" caption="This week" />
       <StatTile icon={CircleCheck} value={formatCount(data.totals.saved)} label="Attendance saved" caption={`Of ${formatCount(data.totals.due)} due`} />
@@ -105,5 +104,5 @@ export function InstructorReport({ data }: { data: InstructorAnalyticsData }) {
       <p>Schedules and unstarted instructor assignments use the current timetable. Saved by shows the staff named on the latest attendance records, which can include corrections by colleagues.</p>
       <ReportUpdated at={data.updatedAt} />
     </footer>
-  </div>;
+  </PageShell>;
 }

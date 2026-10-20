@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
+import { Progress } from "@/components/shadcn/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { formatCount, formatDate, formatDayMonth, formatShortDay, formatTime, parseDateOnly } from "@/lib/format";
 import { formatSlotShort } from "@/modules/activities/shared/courses/constants";
@@ -13,15 +14,15 @@ function Compare({ label, mine, school, format = percent, lowerBetter }: { label
   const worse = mine !== null && school !== null && (lowerBetter ? mine > school + 10 : mine < school - 10);
   return <li>
     <span className="ins-kpi-label">{label}</span>
-    <span className="ins-compare-line"><span>This teacher</span><span className="ins-bar-track" aria-hidden="true"><span className="ins-bar-fill" style={{ width: `${(mine ?? 0) / max * 100}%` }} /></span><strong className="ins-num">{format(mine)}</strong></span>
-    <span className="ins-compare-line" data-who="school"><span>School</span><span className="ins-bar-track" aria-hidden="true"><span className="ins-bar-fill" style={{ width: `${(school ?? 0) / max * 100}%` }} /></span><span className="ins-num">{format(school)}</span></span>
+    <span className="ins-compare-line"><span>This teacher</span><Progress value={Math.min(100, (mine ?? 0) / max * 100)} aria-hidden="true" className="ins-bar-track" /><strong className="ins-num">{format(mine)}</strong></span>
+    <span className="ins-compare-line" data-who="school"><span>School</span><Progress value={Math.min(100, (school ?? 0) / max * 100)} aria-hidden="true" className="ins-bar-track" /><span className="ins-num">{format(school)}</span></span>
     {worse ? <Flag tone="warn">Worse than the school</Flag> : null}
   </li>;
 }
 
 export function TeacherDetailReport({ data }: { data: OneTeacherInsights & { detail: Detail } }) {
   const { teacher: t, school, weeks: byWeek, classes, leavers, late, missed } = data.detail;
-  return <ReportShell ctx={data} page="teachers" path={`/analytics/teachers/${encodeURIComponent(t.key)}`} back={{ href: reportHref(data, "/analytics/teachers"), label: "Teachers" }} title={t.name} footnotes={[
+  return <ReportShell ctx={data} page="teachers" path={`/analytics/teachers/${encodeURIComponent(t.key)}`} back={{ href: `${reportHref(data, "/analytics/pool-deck")}#teachers`, label: "Pool deck" }} title={t.name} footnotes={[
     "Lessons are the ones this teacher started on the pool deck. Left after counts swimmers who left the swim school when this teacher taught the last lesson they came to.",
     "Compared with every lesson at the same sites in the same period.",
   ]}>

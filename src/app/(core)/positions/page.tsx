@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { BadgeCheck } from "lucide-react";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { ArchivePosition, PositionDialog } from "@/components/setup/positions";
 import { plural } from "@/lib/format";
@@ -18,9 +19,8 @@ export default async function PositionsPage() {
   await screenPage("positions", "setup.view");
   const { positions, qualifications, canKeep } = await positionsPage();
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title="Positions" description="The jobs people hold, and the qualifications each needs. A position does not give access: that is the person's role."
-        actions={canKeep ? <PositionDialog qualifications={qualifications} /> : undefined} />
+    <PageShell spacing="roomy" header={<PageHeader title="Positions" description="The jobs people hold, and the qualifications each needs. A position does not give access: that is the person's role."
+        actions={canKeep ? <PositionDialog qualifications={qualifications} /> : undefined} />}>
       {positions.length === 0 ? (
         <EmptyState icon="users" title="No positions yet" hint="Add the jobs people do, such as Lifeguard, Swim teacher, Receptionist and Duty manager." />
       ) : (
@@ -42,6 +42,6 @@ export default async function PositionsPage() {
           </ul>
         </section>
       )}
-    </div>
+    </PageShell>
   );
 }
