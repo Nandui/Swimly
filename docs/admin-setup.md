@@ -36,7 +36,12 @@ The lists are organisation-wide, so their actions use the flat permission check.
 - **Activities**: the organisation's one activity list (`ActivityType`, still the table
   `RotaActivityType`, so nothing moved). Each has a department, an icon
   (`src/lib/setup/meta.ts`) and the qualification it needs; one takes the swim classes.
-  Rota reads it; Rota's own copy of the page and its actions are gone.
+  Rota reads it; Rota's own copy of the page and its actions are gone. Each activity may have
+  **sub-activities** (`SubActivity`, `saveSubActivities`, audited; owner, 20 October 2026): the
+  smaller jobs done by whoever is on it, such as open the cash till at the start or a cash drop
+  at 12:00, each with when and whether it is usual. Modules read them through
+  `subActivitiesFor` (`src/lib/setup/activity-types.ts`); the rota Plan gives the usual ones to
+  whoever is put on the activity (docs/rota.md). Removing one archives it.
 - **Areas** (`SiteArea`): each site's pools, gym and reception, in order, and how many **lanes**
   each has (0 for none; owner request, 13 October 2026), numbered from 1, so the rota, swim classes, assessments and short courses take a pool whole or by lane (19 October 2026). A pool without lanes says so on the list. Each area may also have a
   **staff needed** while it is open (`SiteAreaStaffing`, `saveAreaStaffing`; owner requests, 16 October 2026): lines of how many and
@@ -47,7 +52,11 @@ The lists are organisation-wide, so their actions use the flat permission check.
   assessment sessions choose an area and add a detail, saved as before ("Learner pool, lane 3",
   `LocationField`, read through `areaNamesAt` in the directory). No commas in an area's name,
   since the detail follows one. The migration (`20261020120000_site_areas`) made an area of
-  every place already typed at each site.
+  every place already typed at each site. An area may belong to a **department** (its needs show
+  on that department's Plan; none means shared by every department) and be **part of** another
+  top-level area, such as the 25 m and 18 m as part of Pool or Till 1 as part of Front desk
+  (`departmentId`, `parentId`; owner's card, 20 October 2026). A sub-area takes its parent's
+  department and has no parts of its own.
 - **Renaming an area** reaches every record that uses it through the area-rename contribution
   (`registerAreaRename` in `src/modules/contributions.ts`): Rota (`src/modules/rota/shared/areas.ts`) and
   the swim school (`src/modules/activities/module.ts`) each update their own records,

@@ -10,9 +10,9 @@ import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-sel
 import { Field, FormDialog } from "@/components/form-dialog";
 import { Notice } from "@/components/ui-kit/notice";
 import { AreaLanesFields, type AreaLanes } from "@/modules/rota/shared/components/area-lanes";
-import { cancelRepeat, editRepeat, saveRepeat, type RepeatInput } from "@/modules/rota/features/bookings/server/actions";
+import { cancelRepeat, editRepeat, saveKindStaff, saveRepeat, type RepeatInput } from "@/modules/rota/features/bookings/server/actions";
 import { formatDate } from "@/lib/format";
-import { BOOKING_KIND_META, BOOKING_KINDS, WEEKDAY_LABELS, addDaysIso, bookingDates, nextWeekday } from "@/modules/rota/shared/constants";
+import { BOOKING_KIND_META, BOOKING_KINDS, type BookingKind, WEEKDAY_LABELS, addDaysIso, bookingDates, nextWeekday } from "@/modules/rota/shared/constants";
 
 const THEME = "turnfin-module";
 type Option = { id: string; name: string };
@@ -30,7 +30,7 @@ export type BookingValues = {
  *  booking holds then (owner request, 13 October 2026). It is one activity on each of its days, from tomorrow on; each day is then planned and changed
  *  on its own on the Plan. With `booking`, it changes one already made (owner request, 13 October
  *  2026): only its days still to come, and its first day stays once it has started. */
-export function BookingDialog({ siteId, today, types, areas, booking }: { siteId: string; today: string; types: Option[]; areas: AreaLanes[]; booking?: BookingValues }) {
+export function BookingDialog({ siteId, today, types, areas, booking, kindStaff }: { siteId: string; today: string; types: Option[]; areas: AreaLanes[]; booking?: BookingValues; kindStaff: Record<BookingKind, number> }) {
   const tomorrow = addDaysIso(today, 1);
   const start = nextWeekday(tomorrow, WEEKDAYS);
   const started = !!booking && booking.firstDay <= today;
@@ -40,7 +40,10 @@ export function BookingDialog({ siteId, today, types, areas, booking }: { siteId
   const [lastDay, setLastDay] = useState(initial.lastDay);
   const [skip, setSkip] = useState<string[]>(initial.skip);
   const [skipDraft, setSkipDraft] = useState("");
-  const reset = () => { setDays(initial.days); setFirstDay(initial.firstDay); setLastDay(initial.lastDay); setSkip(initial.skip); setSkipDraft(""); };
+  // A new booking starts with the staff its kind needs (owner, 20 October 2026: lane hire none).
+  const startPlaces = String(booking?.places ?? kindStaff.school);
+  const [places, setPlaces] = useState(startPlaces);
+  const reset = () => { setDays(initial.days); setFirstDay(initial.firstDay); setLastDay(initial.lastDay); setSkip(initial.skip); setSkipDraft(""); setPlaces(startPlaces); };
   // Only days still to come are made or changed.
   const from = firstDay > today ? firstDay : tomorrow;
   const inRange = skip.filter((d) => d >= from && d <= lastDay);
@@ -61,7 +64,8 @@ export function BookingDialog({ siteId, today, types, areas, booking }: { siteId
       submit={(formData) => booking ? editRepeat(booking.id, values(formData)) : saveRepeat(values(formData))}>
       <div className="grid items-end gap-4 sm:grid-cols-2">
         <Field label="What it is" htmlFor={id("kind")}>
-          <NativeSelect id={id("kind")} name="kind" defaultValue={booking?.kind ?? "school"} className="min-h-11 w-full">
+          <NativeSelect id={id("kind")} name="kind" defaultValue={booking?.kind ?? "school"} className="min-h-11 w-full"
+            onChange={(e) => { if (!booking) setPlaces(String(kindStaff[e.target.value as BookingKind] ?? 1)); }}>
             {BOOKING_KINDS.map((k) => <NativeSelectOption key={k} value={k}>{BOOKING_KIND_META[k].label}</NativeSelectOption>)}
           </NativeSelect>
         </Field>
@@ -88,7 +92,7 @@ export function BookingDialog({ siteId, today, types, areas, booking }: { siteId
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
         <Field label="Starts" htmlFor={id("start")}><Input id={id("start")} name="start" type="time" required step={300} defaultValue={booking?.start ?? "09:30"} className="min-h-11" /></Field>
         <Field label="Ends" htmlFor={id("end")}><Input id={id("end")} name="end" type="time" required step={300} defaultValue={booking?.end ?? "11:30"} className="min-h-11" /></Field>
-        <Field label="How many staff" htmlFor={id("places")}><Input id={id("places")} name="places" type="number" required min={1} max={20} defaultValue={booking?.places ?? 1} className="min-h-11" /></Field>
+        <Field label="How many staff" htmlFor={id("places")} hint="0 if it needs none."><Input id={id("places")} name="places" type="number" required min={0} max={20} value={places} onChange={(e) => setPlaces(e.target.value)} className="min-h-11" /></Field>
         <Field label="First day" htmlFor={id("first")} hint={started ? "It has started, so this stays." : undefined}><Input id={id("first")} type="date" required disabled={started} min={started ? undefined : tomorrow} value={firstDay} onChange={(e) => { setFirstDay(e.target.value); if (lastDay < e.target.value) setLastDay(e.target.value); }} className="min-h-11" /></Field>
         <Field label="Last day" htmlFor={id("last")}><Input id={id("last")} type="date" required min={started ? today : firstDay} value={lastDay} onChange={(e) => setLastDay(e.target.value)} className="min-h-11" /></Field>
       </div>
@@ -130,6 +134,25 @@ export function CancelBooking({ id, label }: { id: string; label: string }) {
       submitLabel="Cancel booking" successMessage="Booking cancelled"
       submit={() => cancelRepeat(id)}>
       <p className="text-sm text-ui-muted-foreground">People on its days are told if their week is shared.</p>
+    </FormDialog>
+  );
+}
+
+/** How many staff each kind of booking needs (owner, 20 October 2026: a party yes, lane hire
+ *  none). A new booking starts with its kind's number; 0 keeps it off "Not covered yet". */
+export function KindStaffDialog({ siteId, kindStaff }: { siteId: string; kindStaff: Record<BookingKind, number> }) {
+  return (
+    <FormDialog portalClassName={THEME} trigger={<Button variant="outline">Staff each kind needs</Button>}
+      title="Staff each kind of booking needs" description="A new booking starts with this number, and you can change it on the booking. Use 0 for bookings that need no staff, such as lane hire. Bookings already made keep theirs."
+      submitLabel="Save" successMessage="Saved"
+      submit={(formData) => saveKindStaff({ siteId, staff: Object.fromEntries(BOOKING_KINDS.map((k) => [k, Number(formData.get(k) ?? 0)])) as Record<BookingKind, number> })}>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {BOOKING_KINDS.map((k) => (
+          <Field key={k} label={BOOKING_KIND_META[k].label} htmlFor={`kind-staff-${k}`}>
+            <Input id={`kind-staff-${k}`} name={k} type="number" required min={0} max={20} defaultValue={kindStaff[k]} className="min-h-11" />
+          </Field>
+        ))}
+      </div>
     </FormDialog>
   );
 }

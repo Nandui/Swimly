@@ -4,6 +4,23 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.48.0 · 20 October 2026 · Rota: a new Plan, the day's diary
+
+- **Plan** is new, built from the start as the day's diary: open a day and anyone can see who is where, when they change, their breaks and what still needs someone. Everything already planned is still there.
+- It opens on your own department and on today. Pick another department, or **Every department**, and any day of the week from the bar under the title. Each day says how many things are still to fill, or **Done**.
+- **Not covered yet** comes first: everything that needs people and has nobody, or too few, soonest first, with the reason ("Nobody yet", "1 more needed", "Riley is off", "Liam is on a break"). An area's own lifeguards and the activities in it add up: someone teaching aqua-fit is not one of the pool's lifeguards then.
+- **Choose someone** shows the best fits first: free then, able to do it and from your department, then people from other departments you can borrow straight away, then who can't and why. Each says what it does to their day, such as "On shift then" or "Their day becomes 07:00–16:00", and their hours this week. You can give part of the time.
+- **Who's where** shows, at any time of the day (now, on today), each area and activity with who is on it, anything short of people, who is on a break and the next change.
+- **The day, person by person** has one line for each person: covering an area is blue, activities and classes green, bookings violet, breaks dashed, time not given yet dotted, and what is not covered sits in red at the top. On a phone each person's day is a short list.
+- Choose a person to see their day from start to finish, with what to look at (breaks still to place, a qualification, two things at once). From there change their times, take them off something, give their free time to something not covered, place their breaks and change their shifts.
+- **Areas** (Admin) can now belong to a department and have parts of their own: the 25 m and 18 m as part of Pool, or Till 1 and Till 2 as part of Front desk. An area's needs show on its department's Plan, and **Who's where** lists people under each area and its parts.
+- **Activities** (Admin) can have **sub-activities**: the smaller jobs done by whoever is on it, such as open the cash till at the start, a cash drop at 12:00, answer the phone any time, and close the cash till at the end. The usual ones come with the activity when you put someone on it.
+- A person's day lists their sub-activities under each thing they are on, with their times. **Sub-activities** there ticks or unticks any of them for that day and changes a set time. They never need anyone extra.
+- **Add someone** brings a person into the day before anything is given to them, and **Add to the day** adds something that needs people. Copy, Export week and Share with staff work as before.
+- **Bookings** has **Staff each kind needs**: how many staff a party, school lessons, lane hire and so on need. A new booking starts with that number, and 0 means it needs nobody, so lane hire stays off **Not covered yet**.
+- **Today** opens with five figures: gaps left, who is on now, what starts in the next three hours, who is off and changes to update in Timepoint.
+- **Bookings** opens with three figures, splits running bookings from finished ones and shows how many places on each booking are filled.
+
 ## 1.47.0 · 20 October 2026 · Site Monitoring: readings out of range go to managers
 
 - There is a new **Site Monitoring** page for managers, in the **Managers** group. When someone completes a task and a reading is outside its allowed range, such as a chlorine reading that is too low, an action appears there straight away. Nobody has to raise it.

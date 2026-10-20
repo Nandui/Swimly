@@ -27,5 +27,16 @@ export const ACTIVITY_TAG_META = {
   classes: { label: "Not on the Plan: swim classes fill it by themselves", color: "gray", icon: GraduationCap },
 } as const satisfies Record<string, StatusMeta>;
 
+/** When a sub-activity is done while on an activity (owner, 20 October 2026: Till 1's "open the
+ *  cash till" at the start, "close" at the end). The key is stored. */
+export const SUB_WHEN = {
+  start: "At the start",
+  end: "At the end",
+  at: "At a set time",
+  during: "Any time while on it",
+} as const;
+export type SubWhen = keyof typeof SUB_WHEN;
+export const SUB_WHENS = Object.keys(SUB_WHEN) as SubWhen[];
+
 /** A location as an area and the detail after it ("Learner pool, lane 3"), kept with the lanes. */
 export { joinLocation, splitLocation } from "@/lib/setup/lanes";

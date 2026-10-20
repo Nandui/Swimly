@@ -42,3 +42,22 @@ export async function activityTypeIdsIn(departmentId: string, opts: { liveOnly?:
   const rows = await (await client(db)).activityType.findMany({ where: { departmentId, ...(opts.liveOnly ? { archivedAt: null } : {}) }, select: { id: true } });
   return rows.map((row) => row.id);
 }
+
+export type SubActivityRef = { id: string; name: string; when: string; at: number | null; usual: boolean };
+
+/** Each activity's open sub-activities (Admin, Activities; owner, 20 October 2026), in order,
+ *  by activity id: the smaller jobs done by whoever is on it, such as opening the cash till.
+ *  `usualOnly` keeps the ones that come with the activity when someone is put on it. */
+export async function subActivitiesFor(typeIds: readonly (string | null | undefined)[], opts: { usualOnly?: boolean } = {}): Promise<Record<string, SubActivityRef[]>> {
+  const wanted = [...new Set(typeIds.filter((id): id is string => Boolean(id)))];
+  const out: Record<string, SubActivityRef[]> = {};
+  if (wanted.length === 0) return out;
+  const { prisma } = await import("@/lib/prisma");
+  const rows = await prisma.subActivity.findMany({
+    where: { activityTypeId: { in: wanted }, archivedAt: null, ...(opts.usualOnly ? { usual: true } : {}) },
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    select: { id: true, activityTypeId: true, name: true, when: true, atMinutes: true, usual: true },
+  });
+  for (const r of rows) (out[r.activityTypeId] ??= []).push({ id: r.id, name: r.name, when: r.when, at: r.atMinutes, usual: r.usual });
+  return out;
+}

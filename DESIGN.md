@@ -414,6 +414,21 @@ line. Multi-line boxes (textareas, notices) use 16px, never a pill.
   over the whole name tile), so a lane needs no edit icon. A planning grid (`readout`) shows the
   exact quarter hour under the pointer as a pill on the time bar (`TimelineReadout`), so the bar
   keeps to hours; every block also says its times in words.
+- Rota's Plan, rebuilt 20 October 2026 as the day's diary (docs/rota.md, "Plan"; this bullet wins
+  where the next one differs): one white surface (`.rota-surface`) with a week bar of day tabs
+  (shadcn Button links, the open day filled blue, a dot and "N to fill" under each), the day's head
+  (title, figures as a `dl`, "N to check", Add staff and Add activity), then two panels
+  (`.rota-glance`): **Not covered yet** (the gap list, See all) and **Who's where** (a shadcn
+  `Select` of times, a `dl` of area or activity against names, short ones in warning ink, the next
+  change on a sunken strip). Then "The day, person by person" with its key as a short inline list,
+  one toolbar (`SegmentedChoice` By person or By area, `Select` for Area and Time of day, zoom
+  buttons) and the board: a sticky clock (hours only, a Now pill on today), rows on hairlines, the
+  label column 216px, a now line (`.rota-now-line`) across every track on today. Blocks read in
+  plain words: an area by its name, anything else by what it is, then the time; area cover `next`,
+  activities and classes `now`, bookings `assessment`, breaks their own dashed `.rota-break`
+  block, Not covered `cover` with a dashed edge. A person's day as a list (`.rota-steps`) uses the
+  same fills. Each person's week against contract is a shadcn `Progress`. Below 1024px the panels
+  stay and each view is a list.
 - Rota's day timeline (`DayPlan`, `src/modules/rota/features/plan/components/day-plan.tsx`; owner decisions, 6 October
   2026, from approved mockups; docs/rota.md) is its own planning view, not `TimelineGrid`: the day
   across the **full width** of one panel (nothing scrolls sideways), one **tile per area** of the

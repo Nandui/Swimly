@@ -1,0 +1,150 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { buildDiary, candidates, nextChange, stepsOf, whoIsWhere, type DiaryInput } from "@/modules/rota/features/diary/model";
+
+/** The day's diary (owner, 20 October 2026). Invented site and people. */
+const h = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3));
+const DATE = "2026-10-21";
+const NPLQ = "nplq";
+const AREA_NEED = `area:main:${NPLQ}:${DATE}`;
+
+const base: DiaryInput = {
+  date: DATE,
+  departmentId: "aquatics",
+  areas: [{ id: "main", name: "Main pool", openFrom: h("07:00"), openUntil: h("15:00"), minimums: [{ count: 2, typeId: NPLQ, typeName: "Lifeguard" }] }],
+  types: [
+    { id: "aqua", name: "Aqua-fit", departmentId: "aquatics", requiredTypeId: null, requiredName: null, fromClasses: false },
+    { id: "host", name: "Party host", departmentId: "aquatics", requiredTypeId: null, requiredName: null, fromClasses: false },
+    { id: "desk", name: "Reception", departmentId: "front", requiredTypeId: null, requiredName: null, fromClasses: false },
+    { id: "teach", name: "Teaching", departmentId: "aquatics", requiredTypeId: null, requiredName: null, fromClasses: true },
+  ],
+  needs: [
+    { id: "n-aqua", typeId: "aqua", place: "Main pool", start: h("10:30"), end: h("11:30"), places: 1, note: "", bookingTitle: null },
+    { id: "n-party", typeId: "host", place: "Main pool", start: h("13:00"), end: h("15:00"), places: 1, note: "", bookingTitle: "Party: Murphy" },
+    { id: "n-desk", typeId: "desk", place: "Front desk", start: h("07:00"), end: h("15:00"), places: 1, note: "", bookingTitle: null },
+  ],
+  assignments: [{ id: "a1", needId: "n-aqua", place: 1, userId: "aoife", start: h("10:30"), end: h("11:30") }],
+  areaAssignments: [
+    { id: "r1", needId: AREA_NEED, place: 1, userId: "aoife", start: h("07:00"), end: h("10:30") },
+    { id: "r2", needId: AREA_NEED, place: 1, userId: "aoife", start: h("11:30"), end: h("15:00") },
+    { id: "r3", needId: AREA_NEED, place: 2, userId: "liam", start: h("07:00"), end: h("15:00") },
+  ],
+  classes: [
+    { ref: "c1", title: "Sharks 1", place: "Main pool, lanes 1 and 2", start: h("15:10"), end: h("15:40"), userId: "sean" },
+    { ref: "c2", title: "Sharks 2", place: "Main pool, lanes 1 and 2", start: h("15:45"), end: h("16:15"), userId: "sean" },
+  ],
+  shifts: [{ id: "s1", userId: "niamh", departmentId: "aquatics", start: h("09:00"), end: h("17:00") }],
+  breaks: [{ userId: "liam", start: h("12:00"), minutes: 30, paid: false }],
+  staff: [
+    { userId: "aoife", name: "Aoife Murphy", departmentIds: ["aquatics"], young: null },
+    { userId: "liam", name: "Liam Farrell", departmentIds: ["aquatics"], young: null },
+    { userId: "niamh", name: "Niamh Kelly", departmentIds: ["aquatics"], young: null },
+    { userId: "sean", name: "Seán O'Brien", departmentIds: ["aquatics"], young: null },
+    { userId: "ciara", name: "Ciara Walsh", departmentIds: ["front"], young: null },
+  ],
+  held: ["aoife", "liam", "niamh"].map((userId) => ({ userId, typeId: NPLQ, issuedOn: null, expiresOn: null, revoked: false })),
+  off: new Set(),
+  elsewhere: new Map(),
+};
+
+test("an area's own need and the activities in it are separate needs that add up", () => {
+  const d = buildDiary(base);
+  assert.deepEqual(d.needs.filter((n) => n.area === "Main pool").map((n) => [n.kind, n.title]), [
+    ["area", "Lifeguard on duty"], ["activity", "Aqua-fit"], ["booking", "Party: Murphy"], ["class", "Sharks 1"], ["class", "Sharks 2"],
+  ]);
+  // Aoife on aqua-fit is not one of the pool's two lifeguards then.
+  const lifeguardHoles = d.holes.filter((h) => h.needKey === AREA_NEED);
+  assert.ok(lifeguardHoles.some((x) => x.start === h("10:30") && x.end === h("11:30") && x.short === 1));
+});
+
+test("a break during someone's work is a hole, and says so", () => {
+  const d = buildDiary(base);
+  const brk = d.holes.find((x) => x.needKey === AREA_NEED && x.start === h("12:00"))!;
+  assert.deepEqual([brk.end, brk.short, brk.why], [h("12:30"), 1, "Liam is on a break"]);
+});
+
+test("a department's plan shows its own work and the needs its people can do, not other departments' work", () => {
+  const d = buildDiary(base);
+  assert.equal(d.needs.some((n) => n.title === "Reception"), false);
+  const front = buildDiary({ ...base, departmentId: "front" });
+  assert.deepEqual(front.needs.map((n) => n.title), ["Reception"], "nobody on the front desk holds a lifeguard qualification; classes are the pool's");
+});
+
+test("needs first, shifts follow: someone's day is what they are on, with their planned shift", () => {
+  const d = buildDiary(base);
+  const aoife = d.people.find((p) => p.userId === "aoife")!;
+  assert.deepEqual(aoife.parts, [{ start: h("07:00"), end: h("15:00") }]);
+  assert.ok(aoife.warnings.some((w) => w.kind === "unplaced"), "an 8-hour day owes breaks nobody placed");
+  const niamh = d.people.find((p) => p.userId === "niamh")!;
+  assert.deepEqual(niamh.free, [{ start: h("09:00"), end: h("17:00") }], "a shift with nothing given yet is all free");
+  assert.equal(d.done, false);
+});
+
+test("someone's day reads top to bottom, with back-to-back classes as one line", () => {
+  const d = buildDiary(base);
+  const sean = d.people.find((p) => p.userId === "sean")!;
+  const steps = stepsOf(sean);
+  assert.deepEqual(steps.map((s) => s.kind), ["work", "finish"]);
+  assert.equal(steps[0].kind === "work" && steps[0].count, 2);
+  const liam = stepsOf(d.people.find((p) => p.userId === "liam")!);
+  assert.deepEqual(liam.map((s) => s.kind), ["work", "break", "finish"]);
+});
+
+test("who's where at a moment, and the next change", () => {
+  const d = buildDiary(base);
+  const at11 = whoIsWhere(d, h("11:00"));
+  assert.deepEqual(at11.find((x) => x.need.kind === "area")!.names, ["Liam Farrell"]);
+  assert.equal(at11.find((x) => x.need.kind === "area")!.short, 1);
+  assert.deepEqual(at11.find((x) => x.need.title === "Aqua-fit")!.names, ["Aoife Murphy"]);
+  const next = nextChange(d, h("11:00"))!;
+  assert.equal(next.at, h("11:30"));
+  assert.deepEqual(next.moves, [{ name: "Aoife Murphy", to: "Main pool" }]);
+});
+
+test("who could fill a hole: free and qualified first, own department before others, on shift before a longer day", () => {
+  const d = buildDiary(base);
+  const party = d.needs.find((n) => n.title === "Party: Murphy")!;
+  const list = candidates(d, base, party, { start: h("13:00"), end: h("15:00") }, new Map());
+  assert.equal(list[0].userId, "niamh", "on shift then and free");
+  assert.equal(list[0].effect, "On shift then");
+  const ciara = list.find((c) => c.userId === "ciara")!;
+  assert.equal(ciara.own, false, "another department's person can be picked straight away");
+  assert.ok(list.indexOf(ciara) > list.findIndex((c) => c.userId === "sean"), "own people first");
+  assert.equal(list.find((c) => c.userId === "aoife")!.why, "Busy: Main pool 11:30–15:00");
+  const guard = d.needs.find((n) => n.kind === "area")!;
+  assert.equal(candidates(d, base, guard, { start: h("12:00"), end: h("12:30") }, new Map()).find((c) => c.userId === "ciara")!.why, "Needs Lifeguard");
+});
+
+test("a day is done when every need is filled", () => {
+  const filled = buildDiary({
+    ...base,
+    needs: base.needs.filter((n) => n.id === "n-aqua"),
+    areaAssignments: [...base.areaAssignments, { id: "r4", needId: AREA_NEED, place: 3, userId: "niamh", start: h("10:30"), end: h("11:30") }, { id: "r5", needId: AREA_NEED, place: 3, userId: "niamh", start: h("12:00"), end: h("12:30") }],
+  });
+  assert.deepEqual(filled.holes, []);
+  assert.equal(filled.done, true);
+});
+
+test("an area belongs to a department, and a sub-area reads with the area it is part of", () => {
+  const areas = [
+    { id: "pool", name: "Pool", departmentId: "aquatics", parentName: null },
+    { id: "main", name: "Main pool", openFrom: h("07:00"), openUntil: h("15:00"), minimums: [{ count: 2, typeId: NPLQ, typeName: "Lifeguard" }], departmentId: "aquatics", parentName: "Pool" },
+    { id: "desk", name: "Front desk", openFrom: h("07:00"), openUntil: h("15:00"), minimums: [{ count: 1, typeId: null, typeName: null }], departmentId: "front", parentName: null },
+  ];
+  const d = buildDiary({ ...base, areas });
+  const guard = d.needs.find((n) => n.kind === "area")!;
+  assert.deepEqual([guard.area, guard.group, guard.departmentId], ["Main pool", "Pool", "aquatics"]);
+  assert.equal(d.needs.find((n) => n.title === "Aqua-fit")!.group, "Pool", "an activity in a sub-area reads with its parent");
+  assert.equal(d.needs.some((n) => n.area === "Front desk" && n.kind === "area"), false, "another department's area stays on its plan, though anyone could do it");
+  const front = buildDiary({ ...base, areas, departmentId: "front" });
+  assert.ok(front.needs.some((n) => n.area === "Front desk" && n.kind === "area"));
+});
+
+test("sub-activities on someone's line read in order, at the start, any time, at a time and at the end", () => {
+  const d = buildDiary({ ...base, assignments: [{ ...base.assignments[0], subs: [
+    { name: "Close the cash till", when: "end", at: null }, { name: "Cash drop", when: "at", at: h("11:00") },
+    { name: "Answer the phone", when: "during", at: null }, { name: "Open the cash till", when: "start", at: null },
+  ] }] });
+  const line = d.people.find((p) => p.userId === "aoife")!.lines.find((l) => l.title === "Aqua-fit")!;
+  assert.deepEqual(line.subs.map((x) => [x.name, x.at]), [["Open the cash till", h("10:30")], ["Answer the phone", null], ["Cash drop", h("11:00")], ["Close the cash till", h("11:30")]]);
+});
