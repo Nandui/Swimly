@@ -86,6 +86,7 @@ model Programme {
   completions        LevelCompletion[]
   assessmentSessions AssessmentSession[]
   assessmentTypes    AssessmentType[]
+  manualPlacements   ManualPlacement[]
 
   @@unique([clubId, name])
   @@index([clubId, sortOrder])
@@ -117,6 +118,7 @@ model Level {
   enrolments         Enrolment[]
   completions        LevelCompletion[]
   assessmentOutcomes AssessmentBooking[]
+  manualPlacements   ManualPlacement[]
 
   @@unique([programmeId, name])
   @@index([programmeId, sortOrder])
@@ -199,6 +201,7 @@ model Student {
   parentChangeRequests ParentChangeRequest[]
   parentProgress       ParentProgressEvent[]
   enrolmentFollowUps   StudentFollowUp[]
+  manualPlacements     ManualPlacement[]
 
   @@index([clubId, status, lastName, firstName])
   @@index([status, lastName, firstName])
@@ -309,6 +312,37 @@ model Enrolment {
   @@index([programmeId, status])
   @@index([status, legendAgreementStatus, startedOn])
   @@index([status, readyToMoveAt])
+}
+
+/// A swimmer the desk put on Awaiting enrolment by hand, at a level, without an
+/// assessment (owner request, 20 October 2026). It leaves the list the same way
+/// an assessment placement does, by a class place in its programme, or when
+/// someone takes it off; it is never deleted, so `removedAt` marks that.
+/// Ids of people are snapshots, as on every "who did this" here.
+model ManualPlacement {
+  id            String    @id @default(cuid())
+  /// The site whose list it is on. Core's id, stored without a relation.
+  clubId        String
+  studentId     String
+  programmeId   String
+  levelId       String
+  /// Why it was added by hand, shown on the list and in the swimmer's history.
+  reason        String
+  addedById     String?
+  addedByName   String
+  removedAt     DateTime?
+  removedById   String?
+  removedByName String?
+  removedReason String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  student   Student   @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  programme Programme @relation(fields: [programmeId], references: [id], onDelete: Restrict)
+  level     Level     @relation(fields: [levelId], references: [id], onDelete: Restrict)
+
+  @@index([clubId, removedAt])
+  @@index([studentId])
 }
 
 /// Append-only reception contact/work history shared across sites and programmes.

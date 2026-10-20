@@ -7,7 +7,7 @@ sidebar destination, covering assessment follow-up and all class waitlists.
 | --- | --- | --- |
 | `/assessments` | Today/upcoming sessions, booking counts and swimmer rosters; past sessions remain accessible. | Assessments screen |
 | `/assessments/setup` | Create sessions, browse past/cancelled sessions and open setup. | Assessments screen + `courses.manage` |
-| `/awaiting-enrolment` | Assessed swimmers awaiting a class and all class waitlists at the selected site. | Awaiting enrolment screen; actions need `enrolment.manage` |
+| `/awaiting-enrolment` | Assessed swimmers awaiting a class, swimmers the desk added by hand, and all class waitlists at the selected site. | Awaiting enrolment screen; actions need `enrolment.manage` |
 
 `/assessments/[id]` remains the booking roster and placement page. Session editing,
 cancellation and parent publication are at `/assessments/[id]/setup`. Both reject
@@ -20,12 +20,25 @@ search and page number and checking the new grant first.
 
 ## Awaiting enrolment
 
-The queue combines two independent reasons for follow-up for active swimmers:
+The queue combines independent reasons for follow-up for active swimmers:
 
 - An ATTENDED assessment with a saved outcome level and no subsequent class place
   in that shared programme. Use the newest assessment across site aliases; the
   assessment site owns the follow-up. A booking or no-show alone is not a result.
   A recorded outcome survives cancellation of its session.
+- A swimmer added by hand (`ManualPlacement`, owner request 20 October 2026):
+  **Add a swimmer** (needs `enrolment.manage`) takes an existing swimmer, a live
+  level and a required reason, for a swimmer who needs a class without an
+  assessment. It belongs to the working site, is treated exactly like an
+  assessment placement dated the day it was added (the newest of the two for a
+  programme stands, a class place in the programme resolves it), and the row says
+  "Added by hand" with who, when and why. Adding the same swimmer again for the
+  programme replaces the earlier entry. A swimmer who already has a class in the
+  programme is refused (use Awaiting moves). **Take off the list** marks the entry
+  removed, with an optional reason; entries are never deleted. Both actions write
+  `add-awaiting` / `remove-awaiting` audit rows on the swimmer, so they show in
+  the swimmer's history. A hand-added level does not count as earned when
+  enrolling: placing above the levels they have earned still asks for a reason.
 - Every outstanding WAITLISTED enrolment at the requested class's site. No
   assessment is required. A swimmer can already attend another class, or have
   several waitlist requests. Archived class requests stay visible but cannot be
@@ -51,7 +64,7 @@ classes already listed in this row's waitlists. Available waitlisted classes off
 Enrol from waitlist with confirmation. Existing actions recheck permissions,
 status, capacity and locks, and write audit rows. Each request disappears only
 when its enrolment is promoted, transferred or withdrawn. Queue membership is
-derived from these records; it has no manual completion flag.
+derived from these records; only a hand-added entry can be taken off by hand.
 
 Enrolment, assessment, student and class changes invalidate the new page.
 

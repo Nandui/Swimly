@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AwaitingEnrolment, AwaitingMoves, getAwaitingEnrolment, getAwaitingMoves, getTransferTargets } from "@/modules/activities/features/enrolment";
+import { AwaitingEnrolment, AwaitingMoves, getAwaitingEnrolment, getAwaitingMoves, getLevelOptions, getTransferTargets } from "@/modules/activities/features/enrolment";
 import { can, canSee } from "@/lib/authz";
 import { screenPage } from "@/lib/page-guards";
 
@@ -15,10 +15,11 @@ export default async function AwaitingEnrolmentPage({ searchParams }: PageProps<
     const [result, other, courses] = await Promise.all([getAwaitingMoves(input), getAwaitingEnrolment({ q: input.q }), enrol ? getTransferTargets() : Promise.resolve([])]);
     return <AwaitingMoves result={result} courses={courses} enrol={enrol} profiles={canSee(actor, "students")} counts={{ enrolment: other.total, moves: result.total }} />;
   }
-  const [result, other, courses] = await Promise.all([
+  const [result, other, courses, levels] = await Promise.all([
     getAwaitingEnrolment(input),
     getAwaitingMoves({ q: input.q }),
     enrol ? getTransferTargets() : Promise.resolve([]),
+    enrol ? getLevelOptions() : Promise.resolve([]),
   ]);
-  return <AwaitingEnrolment result={result} courses={courses} enrol={enrol} profiles={canSee(actor, "students")} assessments={canSee(actor, "assessments")} counts={{ enrolment: result.total, moves: other.total }} />;
+  return <AwaitingEnrolment result={result} courses={courses} levels={levels} enrol={enrol} profiles={canSee(actor, "students")} assessments={canSee(actor, "assessments")} counts={{ enrolment: result.total, moves: other.total }} />;
 }
