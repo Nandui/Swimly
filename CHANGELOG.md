@@ -4,12 +4,27 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.44.0 · 20 October 2026 · Managers: a CCTV log
+## 1.46.0 · 20 October 2026 · Managers: a CCTV log
 
 - There is a new **Managers** group of modules, and the first one is the **CCTV log**. Each time someone checks CCTV footage, they record it: who checked it and when, anyone else watching, why it was checked, what they were looking for, which cameras and times they watched, what they saw, and any copy saved or handed over.
 - You can add the incident report's number, such as INC-00042, so the record links to the report.
 - A saved record can't be changed or deleted. If something comes to light later, press **Add a note** and it shows under the record with your name and the time.
 - **Record** lets people record viewings and read their own. **Review** also lets them read every viewing at their sites and add notes. Nobody sees the CCTV log until an administrator gives their role a level under **Admin, Roles**.
+## 1.45.0 · 20 October 2026 · Open a timetable slot on the Business dashboard
+
+- On **Analytics > Business**, press any slot in **When classes are full** to see what it holds: each programme and level in that day and time, with places filled, free and waiting, and the classes behind them. Press the slot again, the cross or Escape to close it.
+
+## 1.44.0 · 20 October 2026 · Swim school analytics: three clearer dashboards
+
+- **Analytics** is now three dashboards, one for each person who reads it: **Business**, **Reception** and **Pool deck**. Switch between them with the buttons under the page title.
+- Each one opens with **Worth a look first**: the few things to decide on or follow up, each with a count and a link.
+- The headline figures are now tiles. Press one to see it week by week, with the same weeks of the period before as a dashed line or a grey bar, and one plain sentence saying what it means.
+- **The team** on Reception and **The teachers** on Pool deck show one thing at a time. Pick what to compare, such as Jobs a day or Attendance, and everyone gets one bar against the team or school average. A bar turns orange, with a short reason, when it is worth a word. Every figure is still there, and **Show everyone as a table** opens the full table.
+- Business now shows who left by reason or by level, places at each level as one bar each, and an orange dot on the timetable where someone is waiting for a class. Everything that was on these pages before is still there, in Turnfin's usual look.
+
+## 1.43.1 · 20 October 2026 · Incidents: a copy of each footage request
+
+- When you **Ask for footage** on an incident report, or use **Send again**, you are now copied in on the email, so you can see it went and what it said.
 
 ## 1.43.0 · 20 October 2026 · Training: turn an SOP into a course with AI
 

@@ -12,7 +12,7 @@ const MARK_LABEL = { PRESENT: "Present", LATE: "Late", ABSENT: "Absent" } as con
 
 export function ClassDetailReport({ data }: { data: ClassInsights }) {
   const c = data.course!;
-  const back = { href: `${reportHref(data, "/analytics/classes")}`, label: "Classes" };
+  const back = { href: reportHref(data, "/analytics/classes"), label: "Every class" };
   return <ReportShell ctx={data} page="classes" path={`/analytics/classes/${c.id}`} back={back} title={`${c.name} · ${formatSlot(c.slot)}`} actions={data.canOpenClasses ? <Button asChild variant="outline"><Link href={`/courses/${c.id}`}>Open the class</Link></Button> : null}
     description={[c.programmeName, c.levelName !== c.name ? c.levelName : null, c.siteName, c.location].filter(Boolean).join(" · ")} footnotes={[
       "Attendance and lessons are for the period. Weeks at level count from the first place at this level, through moves between classes.",
