@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Area, Bar, BarChart, CartesianGrid, ComposedChart, LabelList, Line, LineChart, XAxis, YAxis } from "recharts";
+import { Area, Bar, BarChart, CartesianGrid, Cell, ComposedChart, LabelList, Line, LineChart, XAxis, YAxis } from "recharts";
 import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/shadcn/chart";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 
@@ -129,7 +129,9 @@ export function ColumnChart({ rows, label, kind = "count", height = 200 }: {
       <BarChart data={rows} margin={{ top: 22, right: 8, left: 8, bottom: 0 }}>
         <XAxis dataKey="tick" {...axis} interval={0} tickFormatter={(tick: string, i) => rows.length > 6 && rows[i]?.short ? rows[i].short! : tick} />
         <ChartTooltip content={<ChartTooltipContent hideLabel formatter={(value, _name, item) => <ReadoutRow series="a" value={format(Number(value))} label={(item.payload as { tick: string }).tick} />} />} />
-        <Bar dataKey="value" fill="var(--color-a)" radius={[4, 4, 0, 0]} maxBarSize={64} isAnimationActive={false}>
+        {/* A zero still gets its column (a clear one) so its cap reads "0". */}
+        <Bar dataKey="value" fill="var(--color-a)" radius={[4, 4, 0, 0]} maxBarSize={64} minPointSize={1} isAnimationActive={false}>
+          {rows.map(r => <Cell key={r.key} fill={r.value ? "var(--color-a)" : "transparent"} />)}
           <LabelList dataKey="value" position="top" className="fill-ui-foreground font-bold" formatter={(value: unknown) => format(Number(value))} />
         </Bar>
       </BarChart>

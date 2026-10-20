@@ -78,7 +78,8 @@ async function open(page, url) {
 const inspect = (page) => page.evaluate(() => {
   const shells = [...document.querySelectorAll('[data-page-shell]')];
   const headers = [...document.querySelectorAll('[data-page-header]')];
-  const h1s = [...document.querySelectorAll('h1')].filter((h) => !h.closest('[hidden], [aria-hidden="true"]'));
+  // An open dialog hides the page from screen readers (aria-hidden); its H1 still counts.
+  const h1s = [...document.querySelectorAll('h1')].filter((h) => !h.closest('[hidden]'));
   const links = [...document.querySelectorAll('a[href]')].map((a) => a.getAttribute('href')).filter((href) => href.startsWith('/'));
   return {
     shells: shells.length,
