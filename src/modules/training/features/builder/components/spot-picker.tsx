@@ -6,6 +6,7 @@ import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/ui/input";
 import { cleanArea, type Area } from "@/modules/training/shared/questions";
 import { fileSrc } from "@/modules/training/shared/lessons";
+import { heightOf, leftOf, topOf, widthOf } from "@/components/ui-kit/scale";
 
 /** The right spots on a Pick the spot question: drag a box over the picture
  *  for each one. Every box can also be set in numbers, for keyboard users. */
@@ -37,7 +38,7 @@ export function SpotPicker({ imageId, spots, onChange, newKey }: { imageId: stri
         {/* eslint-disable-next-line @next/next/no-img-element -- a private file served by this app */}
         <img src={fileSrc(imageId)} alt="The question's picture" draggable={false} />
         {shown.map((a, i) => (
-          <span key={i} className="tf-spot-area" style={{ left: `${a.x}%`, top: `${a.y}%`, width: `${a.w}%`, height: `${a.h}%` }} aria-hidden="true">
+          <span key={i} className={`tf-spot-area ${leftOf(a.x / 100)} ${topOf(a.y / 100)} ${widthOf(a.w / 100)} ${heightOf(a.h / 100)}`} aria-hidden="true">
             <span className="tf-spot-number">{i + 1}</span>
           </span>
         ))}

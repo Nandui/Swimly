@@ -16,6 +16,7 @@ import {
   type ChecklistItem, type ExploreSpot, type Flashcard, type HandInPart, type HandInSettings, type LessonData, type ScenarioChoice, type ScenarioStep, type SortItem,
 } from "@/modules/training/shared/lessons";
 import type { UploadedFile } from "@/modules/training/features/builder/components/upload";
+import { leftOf, topOf } from "@/components/ui-kit/scale";
 
 /** Editors for the lesson kinds that aren't text (e-learning phases 3 and 8):
  *  Scenario, Flashcards, Checklist, Sort into groups, Explore a picture and
@@ -245,7 +246,7 @@ export function ExploreEditor({ imageId, data, onChange, disabled }: { imageId: 
       <div ref={frame} className="tf-spot-frame" role="presentation" onPointerDown={place}>
         {/* eslint-disable-next-line @next/next/no-img-element -- a private file served by this app */}
         <img src={fileSrc(imageId)} alt="The picture to explore" draggable={false} />
-        {spots.map((sp, i) => <span key={sp.id} className="tf-explore-marker" style={{ left: `${sp.x}%`, top: `${sp.y}%` }} aria-hidden="true">{i + 1}</span>)}
+        {spots.map((sp, i) => <span key={sp.id} className={`tf-explore-marker ${leftOf(sp.x / 100)} ${topOf(sp.y / 100)}`} aria-hidden="true">{i + 1}</span>)}
       </div>
       <ol className="flex flex-col gap-3">
         {spots.map((sp, i) => (

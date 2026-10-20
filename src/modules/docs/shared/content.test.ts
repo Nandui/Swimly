@@ -5,7 +5,7 @@ import type { JSONContent } from '@tiptap/react';
 import { documentExtensions } from '@/modules/docs/shared/editor-extensions';
 import { validateBody } from '@/modules/docs/shared/content';
 import { richDocumentExample } from '@/test/docs-rich-content';
-import { documentWordCount, readableColour } from '@/modules/docs/shared/formatting';
+import { documentWordCount, fontSizeKey, highlightKey, textColourKey } from '@/modules/docs/shared/formatting';
 
 test('all editor formats validate and survive the actual editor schema', () => {
   validateBody(richDocumentExample);
@@ -43,5 +43,10 @@ test('word count ignores mark boundaries and palette ink adapts to either theme'
     { type: 'paragraph', content: [{ type: 'text', text: 'example' }] },
   ] }), 2);
   assert.equal(documentWordCount({ type: 'doc' }), 0);
-  assert.equal(readableColour('rgb(37, 99, 235)'), 'light-dark(#2563eb, #93c5fd)');
+  assert.equal(textColourKey('rgb(37, 99, 235)'), 'blue');
+  assert.equal(textColourKey('#e11d48'), 'red');
+  assert.equal(highlightKey('#fef08a'), 'yellow');
+  assert.equal(textColourKey('red; background: url(x)'), undefined);
+  assert.equal(fontSizeKey('13.5pt'), '18');
+  assert.equal(fontSizeKey('19px'), '18');
 });

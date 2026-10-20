@@ -58,10 +58,11 @@ import { Input as FieldInput } from '@/components/ui/input';
 import { Notice } from '@/components/ui-kit/notice';
 import { Tag } from '@/components/ui-kit/tag';
 
-/** The reader's text sizes (V2Document's A−, A, A+): 16px is the default reading size. */
 /** One fact in the document's meta grid: a box with its caption over the value, or one line on phones. */
 const metaBox =
   'rounded-ui-md border border-ui-border px-4 py-3 max-sm:flex max-sm:flex-wrap max-sm:items-baseline max-sm:justify-between max-sm:gap-x-3 max-sm:py-2';
+/** The reader's text sizes (V2Document's A−, A, A+): 16px is the default reading size
+ *  (`data-reading-size`, docs-integration.css). */
 const SIZES = [
   { value: '14', label: 'A−', name: 'Smaller text' },
   { value: '16', label: 'A', name: 'Default text size' },
@@ -254,7 +255,7 @@ export function Reader({
       <div className="flex min-w-0 flex-wrap items-start gap-4">
         <article
           className="pc-panel document-article min-w-0 grow-999 basis-xl"
-          style={{ '--reading-size': `${size}px` } as React.CSSProperties}
+          data-reading-size={size}
         >
           <div className="flex flex-wrap gap-2">
             <Tag meta={docTypeMeta(c.type)} />

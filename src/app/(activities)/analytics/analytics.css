@@ -13,14 +13,12 @@
 .turnfin-app .ins {
   --ins-a: var(--pc-chart-1);
   --ins-v: var(--ins-a);
-  --ins-b: light-dark(#d9692b, #d97436);
+  --ins-b: var(--pc-warning);
   --ins-b2: var(--ins-b);
-  --ins-compare: light-dark(#77849a, #6b7d99);
-  --ins-previous: light-dark(#d5dbe5, #2c3a52);
+  --ins-compare: var(--pc-line-strong);
+  --ins-previous: var(--pc-line);
   --ins-sunken: var(--pc-surface-sunken);
   --ins-hair: var(--pc-line);
-  --ins-grid: light-dark(rgb(15 27 45 / 0.07), rgb(232 238 247 / 0.07));
-  --ins-axis-line: light-dark(rgb(15 27 45 / 0.22), rgb(232 238 247 / 0.22));
   --ins-track: var(--pc-surface-sunken);
   --ins-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
   display: flex; flex-direction: column; gap: 20px; min-width: 0; color: var(--pc-ink); container: ins-main / inline-size;
@@ -158,7 +156,7 @@
 .turnfin-app .ins-board-scale, .turnfin-app .ins-board-row { display: grid; grid-template-columns: minmax(12rem, 1fr) minmax(0, 3fr) 6rem; align-items: center; gap: 8px 20px; padding: 12px 16px; }
 .turnfin-app .ins-board-scale { padding-top: 0; padding-bottom: 4px; }
 .turnfin-app .ins-board-scale > span:nth-child(2) { position: relative; height: 18px; }
-.turnfin-app .ins-board-scale .ins-board-avg-label { position: absolute; left: var(--ins-avg); bottom: 0; transform: translateX(-50%); white-space: nowrap; color: var(--pc-ink-muted); font-size: 12px; font-weight: 600; }
+.turnfin-app .ins-board-scale .ins-board-avg-label { position: absolute; bottom: 0; transform: translateX(-50%); white-space: nowrap; color: var(--pc-ink-muted); font-size: 12px; font-weight: 600; }
 .turnfin-app .ins-board-rows > li:not(.ins-board-scale) + li > .ins-board-row { border-top: 1px solid var(--pc-line); }
 .turnfin-app .ins-board-row { min-height: 64px; border-radius: 16px; color: var(--pc-ink); text-decoration: none; transition: background-color 150ms var(--ins-ease); }
 a.ins-board-row:hover { background: var(--pc-hover); }
@@ -169,9 +167,10 @@ a.ins-board-row:focus-visible { outline: 2px solid var(--pc-focus); outline-offs
 .turnfin-app .ins-board-sub { display: block; color: var(--pc-ink-muted); font-size: 13px; }
 .turnfin-app .ins-board-bar { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .turnfin-app .ins-board-track { position: relative; display: block; height: 14px; border-radius: 999px; background: var(--pc-surface-sunken); }
-.turnfin-app .ins-board-fill { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--ins-a); transition: width 500ms var(--ins-ease); }
-.turnfin-app .ins-board-fill[data-tone='warn'] { background: var(--ins-b); }
-.turnfin-app .ins-board-line { position: absolute; top: -5px; bottom: -5px; left: var(--ins-avg); width: 2px; margin-left: -1px; border-radius: 2px; background: var(--pc-ink); opacity: 0.55; }
+.turnfin-app .ins-board-fill { position: absolute; inset: 0; height: auto; border-radius: 999px; background: transparent; }
+.turnfin-app .ins-board-fill > [data-slot='progress-indicator'] { border-radius: 999px; background: var(--ins-a); }
+.turnfin-app .ins-board-fill[data-tone='warn'] > [data-slot='progress-indicator'] { background: var(--ins-b); }
+.turnfin-app .ins-board-line { position: absolute; top: -5px; bottom: -5px; width: 2px; margin-left: -1px; border-radius: 2px; background: var(--pc-ink); opacity: 0.55; }
 .turnfin-app .ins-board-note { color: var(--pc-warning); font-size: 13px; line-height: 18px; }
 .turnfin-app .ins-board-value { display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px; font-size: 18px; font-weight: 700; white-space: nowrap; }
 .turnfin-app .ins-board-value svg { width: 18px; height: 18px; color: var(--pc-ink-muted); }
@@ -191,7 +190,7 @@ a.ins-board-row:focus-visible { outline: 2px solid var(--pc-focus); outline-offs
 /* ── A whole split into parts, as one bar with a key. */
 .turnfin-app .ins-split { display: flex; flex-direction: column; gap: 12px; }
 .turnfin-app .ins-split-bar { display: flex; gap: 2px; height: 16px; border-radius: 999px; overflow: hidden; background: var(--pc-surface-sunken); }
-.turnfin-app .ins-split-bar > span { flex-basis: 0; min-width: 4px; }
+.turnfin-app .ins-split-bar > span { min-width: 4px; }
 .turnfin-app .ins-split :is(.ins-split-bar > span, .ins-split-dot)[data-tone='a'] { background: var(--ins-a); }
 .turnfin-app .ins-split :is(.ins-split-bar > span, .ins-split-dot)[data-tone='b'] { background: var(--ins-b); }
 .turnfin-app .ins-split :is(.ins-split-bar > span, .ins-split-dot)[data-tone='warn'] { background: var(--pc-yellow); }
@@ -239,7 +238,7 @@ a.ins-mini-row:focus-visible { outline: 2px solid var(--pc-focus); outline-offse
 .turnfin-app .ins-jobs-hint { color: var(--pc-ink-muted); font-size: 13px; line-height: 18px; }
 .turnfin-app .ins-jobs-bar { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
 .turnfin-app .ins-jobs-bar .ins-bar-track { height: 10px; }
-.turnfin-app .ins-jobs-bar[data-tone='warn'] .ins-bar-fill { background: var(--ins-b); }
+.turnfin-app .ins-jobs-bar[data-tone='warn'] [data-slot='progress-indicator'] { background: var(--ins-b); }
 @container ins-main (max-width: 560px) { .turnfin-app .ins-jobs li { grid-template-columns: minmax(0, 1fr); } }
 
 /* ── Headline figures on the pages behind a dashboard: one strip of cells, rows kept even. */
@@ -267,11 +266,8 @@ a.ins-kpi:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2p
 @media (max-width: 520px) { .turnfin-app .ins-kpi { padding: 14px; } .turnfin-app .ins-kpi-value { font-size: 24px; line-height: 30px; } }
 .turnfin-app .ins-kpi-note { margin-top: auto; color: var(--pc-ink-muted); font-size: 13px; line-height: 18px; }
 .turnfin-app .ins-kpi-meter { position: relative; display: block; height: 6px; margin: 6px 0 2px; border-radius: 999px; background: var(--ins-track); overflow: hidden; }
-.turnfin-app .ins-kpi-meter > span { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--ins-a); }
+.turnfin-app .ins-kpi-meter > [data-slot='progress-indicator'] { border-radius: 999px; background: var(--ins-a); }
 .turnfin-app .ins-spark { display: block; width: 100%; height: 28px; margin: 2px 0; overflow: visible; }
-.turnfin-app .ins-spark-line { fill: none; stroke: var(--ins-a); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
-.turnfin-app .ins-spark-area { fill: color-mix(in srgb, var(--ins-a) 10%, transparent); }
-.turnfin-app .ins-spark-end { fill: var(--ins-a); }
 .turnfin-app .ins-delta { display: inline-flex; align-items: center; gap: 1px; color: var(--pc-ink-muted); font-size: 13px; font-weight: 600; white-space: nowrap; }
 .turnfin-app .ins-delta svg { width: 14px; height: 14px; }
 .turnfin-app .ins-delta[data-tone='good'] { color: var(--pc-success); }
@@ -279,34 +275,6 @@ a.ins-kpi:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2p
 
 /* ── Charts. */
 .turnfin-app .ins-chart { position: relative; display: flex; flex-direction: column; gap: 10px; margin: 0; min-width: 0; }
-.turnfin-app .ins-svg { display: block; width: 100%; height: auto; max-width: 100%; overflow: visible; cursor: crosshair; border-radius: 8px; touch-action: pan-y; }
-.turnfin-app .ins-svg:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 4px; }
-.turnfin-app .ins-gridline { stroke: var(--ins-grid); stroke-width: 1; shape-rendering: crispEdges; }
-.turnfin-app .ins-baseline { stroke: var(--ins-axis-line); stroke-width: 1; shape-rendering: crispEdges; }
-.turnfin-app .ins-axis { fill: var(--pc-ink-muted); font-size: 12px; }
-.turnfin-app .ins-cap { fill: var(--pc-ink); font-size: 12px; font-weight: 700; }
-.turnfin-app .ins-line { fill: none; stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
-.turnfin-app .ins-line-compare { fill: none; stroke: var(--ins-compare); stroke-width: 2; stroke-dasharray: 5 4; stroke-linejoin: round; stroke-linecap: round; }
-.turnfin-app .ins-fill-top { stop-color: var(--ins-a); stop-opacity: 0.16; }
-.turnfin-app .ins-fill-bottom { stop-color: var(--ins-a); stop-opacity: 0; }
-.turnfin-app .ins-stop-a, .turnfin-app .ins-stop-v { stop-color: var(--ins-a); }
-.turnfin-app .ins-stop-b, .turnfin-app .ins-stop-b2 { stop-color: var(--ins-b); }
-.turnfin-app .ins-col-previous { fill: var(--ins-previous); }
-.turnfin-app .ins-cross { stroke: var(--ins-axis-line); stroke-width: 1; }
-.turnfin-app .ins-dot { fill: var(--ins-a); stroke: var(--pc-surface); stroke-width: 2; }
-.turnfin-app .ins-band-hover { fill: var(--pc-hover); }
-.turnfin-app .ins-band[data-active] :is(.ins-col-a, .ins-col-b) { opacity: 0.85; }
-/* One readout per position: dark, like the mockups, in both modes. */
-.turnfin-app .ins-tip { position: absolute; top: 4px; z-index: 2; display: flex; flex-direction: column; gap: 4px; min-width: 10rem; padding: 10px 12px; border-radius: 14px; background: light-dark(#0f1b2d, #e8eef7); color: light-dark(#ffffff, #0f1b2d); font-size: 13px; line-height: 18px; box-shadow: var(--pc-shadow-overlay); pointer-events: none; transform: translateX(-50%); }
-.turnfin-app .ins-tip[data-align='start'] { transform: translateX(-12px); }
-.turnfin-app .ins-tip[data-align='end'] { transform: translateX(calc(-100% + 12px)); }
-.turnfin-app .ins-tip-title { opacity: 0.75; font-weight: 600; }
-.turnfin-app .ins-tip-row { display: grid; grid-template-columns: 10px auto 1fr; align-items: center; gap: 8px; white-space: nowrap; }
-.turnfin-app .ins-tip-row strong { font-size: 14px; font-weight: 700; }
-.turnfin-app .ins-tip-row > span:last-child { opacity: 0.75; }
-.turnfin-app .ins-tip-key { width: 10px; height: 10px; border-radius: 50%; background: light-dark(#78a6ff, #1d5fd1); }
-.turnfin-app .ins-tip-key[data-series='b'] { background: var(--ins-b); }
-.turnfin-app .ins-tip-key[data-series='compare'] { background: light-dark(#9babc2, #77849a); }
 .turnfin-app .ins-legend { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 0; padding: 0; list-style: none; color: var(--pc-ink-muted); font-size: 13px; font-weight: 600; }
 .turnfin-app .ins-legend li { display: inline-flex; align-items: center; gap: 8px; }
 .turnfin-app .ins-swatch { width: 10px; height: 10px; border-radius: 50%; background: var(--ins-a); }
@@ -321,13 +289,13 @@ a.ins-kpi:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2p
 .turnfin-app .ins-bar-row:hover { background: var(--pc-hover); }
 .turnfin-app .ins-bar-label { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .turnfin-app .ins-bar-track { position: relative; display: block; height: 10px; border-radius: 999px; background: var(--ins-track); }
-.turnfin-app .ins-bar-fill { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--ins-a); min-width: 4px; transition: width 600ms var(--ins-ease); }
-.turnfin-app .ins-bar-fill[data-zero] { min-width: 0; }
+.turnfin-app .ins-bar-track > [data-slot='progress-indicator'] { border-radius: 999px; background: var(--ins-a); }
+.turnfin-app .ins-bar-versus { position: relative; display: block; }
 .turnfin-app .ins-bar-marker { position: absolute; top: -4px; bottom: -4px; width: 3px; margin-left: -1.5px; border-radius: 2px; background: var(--pc-ink); opacity: 0.55; }
-.turnfin-app .ins-bar-row[data-tone='warn'] .ins-bar-fill, .turnfin-app .ins-meter[data-tone='warn'] .ins-bar-fill { background: var(--ins-b); }
+.turnfin-app :is(.ins-bar-row, .ins-meter)[data-tone='warn'] [data-slot='progress-indicator'] { background: var(--ins-b); }
 .turnfin-app .ins-bar-value { display: inline-flex; justify-content: flex-end; align-items: baseline; gap: 6px; font-weight: 700; text-align: right; }
 .turnfin-app .ins-bar-share { min-width: 3ch; color: var(--pc-ink-muted); font-size: 12px; font-weight: 600; }
-@media (max-width: 640px) { .turnfin-app .ins-bar-row { grid-template-columns: minmax(0, 1fr) auto; row-gap: 6px; padding: 8px; } .turnfin-app .ins-bar-label { white-space: normal; } .turnfin-app .ins-bar-track { grid-column: 1 / -1; grid-row: 2; } }
+@media (max-width: 640px) { .turnfin-app .ins-bar-row { grid-template-columns: minmax(0, 1fr) auto; row-gap: 6px; padding: 8px; } .turnfin-app .ins-bar-label { white-space: normal; } .turnfin-app :is(.ins-bar-track, .ins-bar-versus) { grid-column: 1 / -1; grid-row: 2; } }
 
 /* Heat maps: days across, start hours down, a deeper blue the fuller, a scale beneath; an orange dot
    where someone waits for that slot. */
@@ -340,10 +308,10 @@ a.ins-kpi:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2p
 .turnfin-app .ins .ins-heat td[data-empty] { background: transparent; box-shadow: inset 0 0 0 1px var(--pc-line); }
 .turnfin-app .ins .ins-heat td strong { display: block; font-size: 14px; font-weight: 700; }
 .turnfin-app .ins .ins-heat td span { display: block; font-size: 11px; opacity: 0.8; }
-.turnfin-app .ins :is(.ins-heat td, .ins-heat-scale span)[data-band='1'] { background: color-mix(in srgb, var(--ins-a) 10%, var(--pc-surface)); }
-.turnfin-app .ins :is(.ins-heat td, .ins-heat-scale span)[data-band='2'] { background: color-mix(in srgb, var(--ins-a) 28%, var(--pc-surface)); }
-.turnfin-app .ins :is(.ins-heat td, .ins-heat-scale span)[data-band='3'] { background: color-mix(in srgb, var(--ins-a) 60%, var(--pc-surface)); color: var(--pc-on-primary); }
-.turnfin-app .ins :is(.ins-heat td, .ins-heat-scale span)[data-band='4'] { background: var(--ins-a); color: var(--pc-on-primary); }
+.turnfin-app .ins :is(.ins-heat td, .ins-heat-scale span)[data-band='1'] { background: var(--pc-primary-soft); }
+.turnfin-app .ins :is(.ins-heat td, .ins-heat-scale span)[data-band='2'] { background: var(--pc-block-next); }
+.turnfin-app .ins :is(.ins-heat td, .ins-heat-scale span)[data-band='3'] { background: var(--ins-a); color: var(--pc-on-primary); }
+.turnfin-app .ins :is(.ins-heat td, .ins-heat-scale span)[data-band='4'] { background: var(--pc-primary-hover); color: var(--pc-on-primary); }
 .turnfin-app .ins .ins-heat .ins-heat-dot { position: absolute; top: 6px; right: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--ins-b); box-shadow: 0 0 0 2px var(--pc-surface); }
 .turnfin-app .ins .ins-heat tr, .turnfin-app .ins .ins-heat tr:hover { border: 0; background: none; }
 .turnfin-app .ins .ins-heat td.ins-heat-corner { width: 4rem; height: auto; background: none; box-shadow: none; }
@@ -432,7 +400,7 @@ a.ins-kpi:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2p
 .turnfin-app .ins-compare .ins-compare-line { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr) 3.5rem; align-items: center; gap: 8px; font-size: 13px; color: var(--pc-ink-muted); }
 .turnfin-app .ins-compare .ins-compare-line strong { color: var(--pc-ink); font-size: 15px; }
 .turnfin-app .ins-compare .ins-compare-line .ins-bar-track { height: 8px; background: var(--pc-surface); }
-.turnfin-app .ins-compare .ins-compare-line[data-who='school'] .ins-bar-fill { background: var(--ins-compare); }
+.turnfin-app .ins-compare .ins-compare-line[data-who='school'] [data-slot='progress-indicator'] { background: var(--ins-compare); }
 .turnfin-app .ins-compare .ins-flag { align-self: flex-start; }
 
 /* Row lists inside panels keep the app's rows, as separate rows. */
@@ -455,12 +423,9 @@ a.ins-kpi:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2p
   .turnfin-app :is(.ins, .ins-range-pop), .turnfin-app :is(.ins, .ins-range-pop) * { transition: none !important; animation: none !important; }
 }
 @media (forced-colors: active) {
-  .turnfin-app :is(.ins-line, .ins-spark-line) { stroke: CanvasText; }
-  .turnfin-app :is(.ins-col-a, .ins-dot) { fill: Highlight; }
   .turnfin-app :is(.ins-panel, .ins-drill-link, .ins-tile, .ins-kpi) { border: 1px solid CanvasText; }
   .turnfin-app :is(.ins-switch-item, .ins-pill, .ins-tile)[aria-current], .turnfin-app :is(.ins-pill, .ins-tile)[aria-pressed='true'] { outline: 2px solid Highlight; }
-  .turnfin-app .ins-col-b { fill: CanvasText; }
-  .turnfin-app :is(.ins-bar-fill, .ins-kpi-meter > span, .ins-board-fill, .ins-split-bar > span, .ins-levels-bar > span) { background: Highlight; }
+  .turnfin-app :is([data-slot='progress-indicator'], .ins-split-bar > span, .ins-levels-bar > span) { background: Highlight; }
 }
 @container ins-main (max-width: 539px) { .turnfin-app .ins-kpis .ins-kpi-cell:last-child:nth-child(odd) { grid-column: span 2; } }
 /* Tabs inside a narrow panel scroll sideways instead of wrapping over the rows beneath them. */

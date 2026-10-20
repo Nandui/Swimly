@@ -8,6 +8,7 @@ import { LessonBody } from "@/modules/training/shared/components/lesson-body";
 import { embedFor, fileSrc, LESSON_KIND_META, lessonMinutes, lessonPlace, outlineLessons, videoFor, type Outline } from "@/modules/training/shared/lessons";
 import { blankedPrompt, paperSize, QUESTION_KIND_META, type Question } from "@/modules/training/shared/questions";
 import type { LessonData } from "@/modules/training/shared/lessons";
+import { heightOf, leftOf, topOf, widthOf } from "@/components/ui-kit/scale";
 
 /** Every question with its right answer, for the author. Learners get one at a time and never the key. */
 function QuestionsPreview({ questions }: { questions: Question[] }) {
@@ -23,7 +24,7 @@ function QuestionsPreview({ questions }: { questions: Question[] }) {
               <span className="tf-spot-frame is-static">
                 {/* eslint-disable-next-line @next/next/no-img-element -- a private file served by this app */}
                 <img src={fileSrc(q.imageId)} alt="" loading="lazy" />
-                {q.options.map((o, n) => o.area ? <span key={o.id} className="tf-spot-area" style={{ left: `${o.area.x}%`, top: `${o.area.y}%`, width: `${o.area.w}%`, height: `${o.area.h}%` }}><span className="tf-spot-number">{n + 1}</span></span> : null)}
+                {q.options.map((o, n) => o.area ? <span key={o.id} className={`tf-spot-area ${leftOf(o.area.x / 100)} ${topOf(o.area.y / 100)} ${widthOf(o.area.w / 100)} ${heightOf(o.area.h / 100)}`}><span className="tf-spot-number">{n + 1}</span></span> : null)}
               </span>
             /* eslint-disable-next-line @next/next/no-img-element -- a private file served by this app */
             ) : q.imageId ? <img src={fileSrc(q.imageId)} alt="" loading="lazy" className="max-h-48 w-fit rounded-card" /> : null}
@@ -116,7 +117,7 @@ function DataPreview({ kind, data, fileId }: { kind: string; data: LessonData | 
           <span className="tf-spot-frame is-static">
             {/* eslint-disable-next-line @next/next/no-img-element -- a private file served by this app */}
             <img src={fileSrc(fileId)} alt="The picture to explore" loading="lazy" />
-            {spots.map((sp, i) => <span key={sp.id} className="tf-explore-marker" style={{ left: `${sp.x}%`, top: `${sp.y}%` }} aria-hidden="true">{i + 1}</span>)}
+            {spots.map((sp, i) => <span key={sp.id} className={`tf-explore-marker ${leftOf(sp.x / 100)} ${topOf(sp.y / 100)}`} aria-hidden="true">{i + 1}</span>)}
           </span>
         ) : null}
         <Notice title="Learners tap each numbered spot to open it">They finish once they have opened them all. Here every spot is open.</Notice>

@@ -21,7 +21,7 @@ export function EmailPreview({ html, title }: { html: string; title: string }) {
       srcDoc={html}
       sandbox="allow-same-origin"
       className="min-h-96 w-full rounded-card border border-ui-border bg-ui-background"
-      style={height ? { height } : undefined}
+      height={height}
       onLoad={measure}
     />
   );

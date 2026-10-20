@@ -85,6 +85,16 @@
   --radius-frame: var(--pc-radius-frame);
 }
 
+/* Sizes and positions that come from data (src/components/ui-kit/scale.ts): bar lengths in
+   hundredths, places along a timeline or picture in five-hundredths, and grid lines for
+   timelines. Pages never set them inline (owner rule, 20 October 2026). */
+@source inline("{w,h}-{0..100}/100");
+@source inline("{left,right,top}-{0..500}/500");
+/* Timeline grid places (TimelineGrid): 5-minute columns over a day and its lanes. */
+@source inline("tl-cols-{1..300}");
+@source inline("{col-start,col-end,row-start,row-end}-{1..300}");
+@source inline("row-span-{1..20}");
+
 /* Layout utilities from the Poolside layout sizes (owner decision, 10 October 2026), so pages
    never need an arbitrary value (owner rule, 20 October 2026). Auto-fit grids of tiles, cards
    and wide columns; a side rail beside the main column; search fields and the page title. */
@@ -110,6 +120,7 @@
 @utility basis-column { flex-basis: min(100%, var(--pc-column-min)); }
 @utility max-w-deck { max-width: var(--pc-deck-width); }
 /* A heading that takes its container's type size, such as an empty state's title. */
+@utility tl-cols-* { --tl-cols: --value(integer); }
 @utility text-inherit { font-size: inherit; line-height: inherit; }
 
 @layer base {
