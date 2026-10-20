@@ -414,6 +414,15 @@ line. Multi-line boxes (textareas, notices) use 16px, never a pill.
   over the whole name tile), so a lane needs no edit icon. A planning grid (`readout`) shows the
   exact quarter hour under the pointer as a pill on the time bar (`TimelineReadout`), so the bar
   keeps to hours; every block also says its times in words.
+- Rota's Plan, rebuilt 20 October 2026 (docs/rota.md, "Plan"; this bullet wins where the next one
+  differs): one white surface (`.rota-surface`) with a week bar of day tabs (shadcn Button links,
+  the open day filled blue, a dot and "N to fill" under each), the day's head (title, figures as a
+  `dl`, "N to fill" and "N to check" buttons opening sheets, then Add staff and Add activity), one
+  toolbar (`SegmentedChoice` People or Needs, shadcn `Select` for Area and Time of day, zoom
+  buttons, the key in a shadcn `Popover`), and the board: a sticky clock with each hour's staff on
+  or places short, rows on hairlines rather than boxes, the label column 216px. People leads with
+  the Open needs row (tinted amber); each person's week against contract is a shadcn `Progress`.
+  Below 1024px each view is a list.
 - Rota's day timeline (`DayPlan`, `src/modules/rota/features/plan/components/day-plan.tsx`; owner decisions, 6 October
   2026, from approved mockups; docs/rota.md) is its own planning view, not `TimelineGrid`: the day
   across the **full width** of one panel (nothing scrolls sideways), one **tile per area** of the

@@ -5,7 +5,7 @@
 See [docs/rota.md](../../../docs/rota.md).
 
 ## Features
-- `plan` — planning the week shift first: what needs people, then each person's shift with what they are on, their breaks and the time still free; putting someone on any activity on the list for part of their shift (`putOnActivity`, which adds it to the day with them on it), the swim school's classes by themselves (no activity takes them), each clicked to choose who teaches it that day (`planTeacher`, which also puts it on their shift), lending to other departments, hours against contract, copying, sharing and exporting a week to Excel (`/rota`, `/rota/export`).
+- `plan` — planning the week shift first, as one board with two views (People: the open needs, then each person's shift; Needs: area by area) and two to-do sheets (places to fill, people to check): what needs people, then each person's shift with what they are on, their breaks and the time still free; putting someone on any activity on the list for part of their shift (`putOnActivity`, which adds it to the day with them on it), the swim school's classes by themselves (no activity takes them), each clicked to choose who teaches it that day (`planTeacher`, which also puts it on their shift), lending to other departments, hours against contract, copying, sharing and exporting a week to Excel (`/rota`, `/rota/export`).
 - `today` — running today: who is on, the gaps left, the day's note and timepoints (`/rota/today`).
 - `bookings` — repeating bookings of areas, the whole pool or chosen lanes: add, change and cancel them (`/rota/bookings`).
 - `absences` — reporting absences, extending them and recording returns to work (`/rota/absences`).
