@@ -197,7 +197,10 @@ export function TaskWork({ id, version, definition: def, checks: initialChecks, 
 
       {warnings.length ? (
         <Notice tone="warning" title={warnings.length === 1 ? "A reading is out of range" : `${warnings.length} readings are out of range`}
-          description={<ul className="list-disc pl-5">{warnings.map((w) => <li key={w}>{w}</li>)}</ul>} />
+          description={<>
+            <ul className="list-disc pl-5">{warnings.map((w) => <li key={w}>{w}</li>)}</ul>
+            {editable ? <p className="mt-2">When you complete the task, the site&rsquo;s managers are sent {warnings.length === 1 ? "this reading" : "these readings"} on Site Monitoring to act on.</p> : null}
+          </>} />
       ) : null}
 
       {editable ? (

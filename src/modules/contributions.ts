@@ -1,4 +1,5 @@
 import "server-only";
+import { emit, type EventName, type PlatformEvents } from "@/platform/events";
 
 /** What a module adds to Core's own screens, without Core importing the module.
  *
@@ -337,4 +338,16 @@ export async function deskMeasuresFor(query: DeskMeasureQuery, except?: string) 
     return [] as DeskMeasure[];
   })));
   return { items: lists.flat(), failed };
+}
+
+// ---------------------------------------------------------------------------
+// Events
+// ---------------------------------------------------------------------------
+
+/** Announce an event once every module has registered its listeners (CLAUDE.md section 6), so a
+ *  listener in a module the emitting page never loaded still hears it. Call it after the change
+ *  is saved; a listener's failure is logged and never reaches the caller. */
+export async function announce<K extends EventName>(name: K, payload: PlatformEvents[K]): Promise<void> {
+  await modulesLoaded();
+  await emit(name, payload);
 }

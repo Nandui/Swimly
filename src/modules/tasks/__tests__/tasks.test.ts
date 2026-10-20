@@ -18,6 +18,8 @@ type GrantRow = { roleName: string; permissions: string[]; screens: string[]; sc
 const state = { id: "gina", permissions: [] as string[], grants: [] as GrantRow[] };
 let bishopstown = "", churchfield = "";
 const day = today();
+/** What Tasks announced to other modules (Site Monitoring listens for readings out of range). */
+const announced: { name: string; payload: Record<string, unknown> }[] = [];
 
 function session() {
   return { user: { id: state.id, name: state.id, orgId: ORG, isSuperadmin: false, roleName: "Role", permissions: state.permissions, primaryPermissions: state.permissions,
@@ -58,6 +60,7 @@ before(async () => {
     "next/navigation": { notFound: () => { throw new NotFound("not found"); } },
     "server-only": {},
     react: { cache: <T,>(fn: T) => fn },
+    "@/modules/contributions": { announce: async (name: string, payload: Record<string, unknown>) => { announced.push({ name, payload }); } },
   };
   actions = Object.assign({}, ...["day", "follow-ups", "templates", "sites"].map((f) => serverModule<object>(`src/modules/tasks/features/${f}/server/actions.ts`, d)));
   data = Object.assign(serverModule<object>("src/modules/tasks/shared/data.ts", d), ...["day", "follow-ups", "workspace", "templates", "sites", "reports", "schedule"].map((f) => serverModule<object>(`src/modules/tasks/features/${f}/server/data.ts`, d)));
@@ -114,6 +117,12 @@ test("doing a task: their sites and roles only, everything answered, an action f
   const done = await fixture.prisma.task.findUniqueOrThrow({ where: { id: task.id } });
   assert.equal(done.status, "done");
   assert.deepEqual(done.exceptions, ["pH 8.2 (7.2 to 7.6)."]);
+  assert.equal(announced.length, 1, "announced once, after it was saved");
+  assert.equal(announced[0].name, "tasks.reading.out_of_range");
+  assert.deepEqual({ ...announced[0].payload, recordedAt: undefined }, {
+    orgId: ORG, siteId: bishopstown, taskId: task.id, task: "Pool water quality", recordedById: "lena", recordedByName: "lena", recordedAt: undefined,
+    readings: [{ key: "0:ph", reading: "pH", value: "8.2", unit: "", allowed: "7.2 to 7.6", guidance: "" }],
+  });
   assert.equal((await data.taskDay({ site: bishopstown })).tasks![0].state, "approval");
   assert.equal((await actions.setTaskActionResolved(action.id, true, "Dosing adjusted, retested 7.4")).ok, false, "resolving needs Review");
 });

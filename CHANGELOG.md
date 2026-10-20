@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.44.0 · 20 October 2026 · Site Monitoring: readings out of range go to managers
+
+- There is a new **Site Monitoring** page for managers, in a new **Managers** group. When someone completes a task and a reading is outside its allowed range, such as a chlorine reading that is too low, an action appears there straight away. Nobody has to raise it.
+- Each action shows the reading, the range allowed, the task, the site, who recorded it and when, and what the task says to do. **See the task** opens it.
+- Close an action by saying what was done. Closed actions stay listed with who closed them and what they wrote, and can be opened again.
+- Your home page shows how many are waiting. Site Monitoring is hidden until your role is given a level for it.
+
 ## 1.43.1 · 20 October 2026 · Incidents: a copy of each footage request
 
 - When you **Ask for footage** on an incident report, or use **Send again**, you are now copied in on the email, so you can see it went and what it said.

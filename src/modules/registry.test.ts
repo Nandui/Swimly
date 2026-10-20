@@ -20,3 +20,9 @@ test("the back office holds purchasing, stock and admin", () => {
   const back = groupModules(allModules()).find((g) => g.key === "back-office")!;
   assert.deepEqual(back.modules.map((m) => m.id), ["purchasing", "stock", "admin"]);
 });
+
+test("the managers group holds site monitoring", () => {
+  const managers = groupModules(allModules()).find((g) => g.key === "managers")!;
+  assert.deepEqual(managers.modules.map((m) => m.id), ["site-monitoring"]);
+  assert.equal(managers.label, "Managers");
+});

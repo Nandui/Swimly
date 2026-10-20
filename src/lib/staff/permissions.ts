@@ -293,6 +293,18 @@ export const PERMISSIONS = [
     description: "Keep the product list and its categories, and delete a count at the sites this role covers. Includes counting.",
   },
   {
+    key: "site-monitoring.read",
+    group: "Site Monitoring",
+    label: "See Site Monitoring",
+    description: "See the actions raised for managers at the sites this role covers, such as a task completed with a reading out of range.",
+  },
+  {
+    key: "site-monitoring.act",
+    group: "Site Monitoring",
+    label: "Close Site Monitoring actions",
+    description: "Close an action by saying what was done, or open it again, at the sites this role covers. Includes seeing them.",
+  },
+  {
     key: "hr.records.read",
     group: "HR",
     label: "Read HR records",
@@ -427,6 +439,7 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "short-courses.manage": ["short-courses.run", "short-courses.read"],
   "stock.count": ["stock.read"],
   "stock.manage": ["stock.count", "stock.read"],
+  "site-monitoring.act": ["site-monitoring.read"],
   "hr.notes.write": ["hr.records.read"],
   "hr.reviews.write": ["hr.records.read"],
   "hr.details.write": ["hr.records.read"],
