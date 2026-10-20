@@ -54,9 +54,11 @@ defaults on 11 October 2026 ([ADR 0008](architecture/decisions/0008-add-incident
    | Lost or missing child | Missing child | how long and where they were found | how long, where found, the missing child procedure, Gardaí; the parent always |
    | Equipment or building fault | Equipment or building | the fault and who was at risk | taken out of use, repair logged with |
    | Fire, alarm or evacuation | Fire, alarm or evacuation | what happened and the evacuation | what set it off, evacuated and how long, fire brigade |
+   | Staff conduct or welfare | Staff conduct or welfare | what happened on shift and the risk it caused | what it was about (conduct, welfare, a dispute), manager told, passed to HR, support offered |
    | Something else | Something else | a general scale | nothing new |
 
-   Whenever a staff member is named, or behaviour was aimed at one, triage also asks what
+   Staff conduct or welfare is its own category (owner decision, 19 October 2026); discipline and
+   grievances themselves stay with HR. Whenever a staff member is named, or behaviour was aimed at one, triage also asks what
    support they were offered. The HSA questions that fit come first: the injury ones when
    someone on the report was hurt, the dangerous occurrence for chemicals, equipment, fire and
    anything else; the rest stay one click away, never removed. When someone was hurt on a

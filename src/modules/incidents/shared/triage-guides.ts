@@ -36,6 +36,12 @@ const gardai: readonly TriageCheck[] = [
 ];
 const cctv: TriageCheck = { key: "cctvKept", type: "tick", label: "CCTV saved", hint: "Saved before it records over, for the Gardaí or the insurer." };
 
+/** Asked on every report that names a staff member, or behaviour aimed at one. */
+export const staffSupportCheck: TriageCheck = {
+  key: "staffSupport", type: "text", label: "Support offered to the staff member",
+  hint: "A word after it, time out, or the employee assistance programme. Say who offered it and when.",
+};
+
 const guides = {
   injury: {
     label: "Injury or illness",
@@ -169,6 +175,24 @@ const guides = {
     ],
     dangerous: true,
   },
+  staff: {
+    label: "Staff conduct or welfare",
+    intro: "Rate what happened on shift and the risk it put people at, and the worst it realistically could have led to. Discipline and grievances themselves go through HR, not this report.",
+    scale: {
+      1: "A small slip, sorted with a word.",
+      2: "Needs a conversation with their manager.",
+      3: "A procedure not followed that put someone at risk, or a staff member unable to finish their shift.",
+      4: "Serious misconduct, or a staff member's health or safety at serious risk.",
+      5: "Gross misconduct, or lasting harm to someone.",
+    },
+    checks: [
+      { key: "matter", type: "choice", label: "What it was about", options: { conduct: "Conduct or a procedure not followed", welfare: "A staff member's health or welfare", conflict: "A dispute between staff", other: "Something else" } },
+      { key: "managerTold", type: "tick", label: "Their manager was told" },
+      { key: "hrTold", type: "tick", label: "Passed to HR", hint: "For anything that may lead to discipline, a grievance or time off." },
+      staffSupportCheck,
+    ],
+    dangerous: false,
+  },
   other: {
     label: "Something else",
     intro: "Rate what happened and the worst it realistically could have led to.",
@@ -189,16 +213,11 @@ export type TriageGuideKey = keyof typeof guides;
 const guideOf: Record<IncidentCategory, TriageGuideKey> = {
   slip_trip_fall: "injury", struck: "injury", water_rescue: "injury", illness: "injury",
   contamination: "water", chemical: "chemical", equipment: "building", behaviour: "behaviour",
-  lost_child: "missing", security: "theft", fire: "fire", other: "other",
+  lost_child: "missing", security: "theft", fire: "fire", staff: "staff", other: "other",
 };
 export const injuryGuide: TriageGuide = guides.injury;
 export const triageGuide = (category: string): TriageGuide => guides[guideOf[category as IncidentCategory] ?? "other"];
 
-/** Asked on every report that names a staff member, or behaviour aimed at one. */
-export const staffSupportCheck: TriageCheck = {
-  key: "staffSupport", type: "text", label: "Support offered to the staff member",
-  hint: "A word after it, time out, or the employee assistance programme. Say who offered it and when.",
-};
 
 /** What a report brings to its triage. */
 export type TriageContext = { category: string; hasStaff: boolean };
@@ -211,7 +230,7 @@ const shows = (check: TriageCheck, answers: TriageAnswers) => !check.when || ans
 export function triageChecks(context: TriageContext, answers: TriageAnswers): TriageCheck[] {
   const guide = triageGuide(context.category);
   const list = guide.checks.filter((c) => shows(c, answers));
-  if (context.hasStaff || answers.aimedAt === "staff") list.push(staffSupportCheck);
+  if ((context.hasStaff || answers.aimedAt === "staff") && !list.includes(staffSupportCheck)) list.push(staffSupportCheck);
   return list;
 }
 
@@ -219,7 +238,7 @@ export function triageChecks(context: TriageContext, answers: TriageAnswers): Tr
  *  yes or no, a choice one of its options, text trimmed and short. */
 export function cleanTriageAnswers(context: TriageContext, input: TriageAnswers): TriageAnswers {
   const out: TriageAnswers = {};
-  for (const check of [...triageGuide(context.category).checks, staffSupportCheck]) {
+  for (const check of new Set([...triageGuide(context.category).checks, staffSupportCheck])) {
     const value = input[check.key];
     if (check.type === "tick") out[check.key] = value === true;
     else if (check.type === "choice") { if (typeof value === "string" && value in check.options) out[check.key] = value; }

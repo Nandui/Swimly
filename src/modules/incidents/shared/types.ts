@@ -33,6 +33,7 @@ export const incidentCategories = {
   lost_child: { label: "Lost or missing child", serious: true },
   security: { label: "Theft or security", serious: false },
   fire: { label: "Fire, alarm or evacuation", serious: false },
+  staff: { label: "Staff conduct or welfare", serious: false },
   other: { label: "Something else", serious: false },
 } as const;
 export type IncidentCategory = keyof typeof incidentCategories;
