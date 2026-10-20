@@ -73,7 +73,8 @@ Sites and Activity.
   records with a minimum.
 - **Completing** needs every checklist item ticked, every required answer valid, the number of
   records, a comment if the template asks for one, and the follow-up for a reading that needs
-  one. Out-of-range readings are kept on the task in words.
+  one. Out-of-range readings are kept on the task in words, and each one raises an action for the
+  site's managers on **Site Monitoring** ([site-monitoring.md](site-monitoring.md)).
 - **Roles**: a template is aimed at roles; with "restrict completion" only they complete it
   (reviewers may always step in); without it the roles are who it is for and anyone may
   complete it. Restricting needs at least one role.

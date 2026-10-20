@@ -4,6 +4,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.47.0 · 20 October 2026 · Site Monitoring: readings out of range go to managers
+
+- There is a new **Site Monitoring** page for managers, in the **Managers** group. When someone completes a task and a reading is outside its allowed range, such as a chlorine reading that is too low, an action appears there straight away. Nobody has to raise it.
+- Each action shows the reading, the range allowed, the task, the site, who recorded it and when, and what the task says to do. **See the task** opens it.
+- Close an action by saying what was done. Closed actions stay listed with who closed them and what they wrote, and can be opened again.
+- Your home page shows how many are waiting. Site Monitoring is hidden until your role is given a level for it.
 ## 1.46.0 · 20 October 2026 · Managers: a CCTV log
 
 - There is a new **Managers** group of modules, and the first one is the **CCTV log**. Each time someone checks CCTV footage, they record it: who checked it and when, anyone else watching, why it was checked, what they were looking for, which cameras and times they watched, what they saw, and any copy saved or handed over.
