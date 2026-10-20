@@ -28,6 +28,7 @@ Each module is a self-contained package under `src/modules/<id>`: its `manifest.
 | purchasing | Raises and approves purchase orders. Features: `orders`, `suppliers`, `workspace` ([README](../../src/modules/purchasing/README.md)). | `purchasing.prisma` | home cards |
 | short-courses | Runs the courses the public book a place on: six and eight week courses and the Academy's lifeguard and swim teacher courses. Features: `courses`, `course-types`, `academy-courses`, `academy-types`, `academy-calls`, `booking`, `workspace` ([README](../../src/modules/short-courses/README.md), [ADR 0009](decisions/0009-add-short-courses-module.md), [ADR 0011](decisions/0011-merge-academy-into-short-courses.md)). | `short-courses.prisma`, `short-courses.academy.prisma` | home cards; Rota commitments; the public booking site's API |
 | stock | Counts the stock on the shelf at each site and compares counts. Features: `counts`, `products`, `compare`, `workspace` ([README](../../src/modules/stock/README.md), [ADR 0010](decisions/0010-add-stock-module.md)). | `stock.prisma` | home cards |
+| cctv | Records every time CCTV footage is checked (Managers group). Features: `viewings`, `workspace` ([README](../../src/modules/cctv/README.md), [ADR 0012](decisions/0012-add-cctv-log-module.md)). | `cctv.prisma` | home cards |
 | tasks | Runs each site's daily checks and logs. Features: `day`, `follow-ups`, `templates`, `sites`, `reports`, `schedule`, `workspace` ([README](../../src/modules/tasks/README.md)). | `tasks.prisma` | home cards |
 | incidents | Records accidents, incidents and near misses from report to a closed record. Features: `report`, `triage`, `reports`, `workspace` ([README](../../src/modules/incidents/README.md), [ADR 0008](decisions/0008-add-incidents-module.md)). | `incidents.prisma` | home cards |
 | training | Assigns courses and records completions. Features: `courses`, `assignments`, `sign-off`, `certificates`, `expiring`, `me`, `person-file`, `workspace` ([README](../../src/modules/training/README.md)). | `training.prisma` | personal file, subject records, Turnfin Me digest |
@@ -50,7 +51,7 @@ flowchart TB
   list["src/app/modules.ts<br/>(every module's manifest.ts)"] --> registry["Core registry<br/>Home, menus, role editor"]
   subgraph Modules
     activities[Swim school and Pool deck]; refunds[Refunds]; tasks[Tasks]
-    rota[Rota]; training[Training]; docs[Docs]; hr[HR]; purchasing[Purchasing]; incidents[Incidents]; shortcourses[Short courses and the Academy]; stock[Stock]
+    rota[Rota]; training[Training]; docs[Docs]; hr[HR]; purchasing[Purchasing]; incidents[Incidents]; shortcourses[Short courses and the Academy]; stock[Stock]; cctv[CCTV log]
   end
   Modules --> core["Core: people, roles, sites, audit, policy<br/>(src/lib, src/modules/contributions.ts)"]
   Modules --> ui["UI kit (src/components/shadcn, ui, ui-kit)"]

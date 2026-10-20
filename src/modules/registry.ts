@@ -63,13 +63,15 @@ type ModuleAccess = {
 /** The part of the centre a module serves. Presentation only: it orders and
  *  heads the module lists (role editor, module bar, home page) and never gives
  *  or checks access, which stays role, then level, then permission. */
-export type ModuleGroup = "front-of-house" | "poolside" | "team" | "back-office";
+export type ModuleGroup = "front-of-house" | "poolside" | "team" | "managers" | "back-office";
 
 /** Every group, in the order lists show them. */
 export const MODULE_GROUPS: readonly { key: ModuleGroup; label: string }[] = [
   { key: "front-of-house", label: "Front of house" },
   { key: "poolside", label: "Poolside" },
   { key: "team", label: "Team" },
+  // Records only managers keep (owner request, 20 October 2026), starting with the CCTV log.
+  { key: "managers", label: "Managers" },
   { key: "back-office", label: "Back office" },
 ];
 

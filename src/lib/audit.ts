@@ -59,6 +59,7 @@ export const MODULE_OF_ENTITY: Readonly<Record<string, string>> = {
   TaskTemplate: "Tasks", Task: "Tasks", TaskAction: "Tasks", TaskSite: "Tasks",
   IncidentReport: "Incidents",
   StockCategory: "Stock", StockProduct: "Stock", StockTake: "Stock", StockTakeLine: "Stock",
+  CctvViewing: "CCTV log", CctvViewingNote: "CCTV log",
   ShortCourseType: "Short courses", ShortCourse: "Short courses", ShortCourseSession: "Short courses", ShortCourseParticipant: "Short courses",
   ActivityType: "Admin", SiteArea: "Admin", Position: "Admin",
   RotaShift: "Rota", RotaDayNote: "Rota", RotaActivity: "Rota", RotaAbsence: "Rota", RotaImport: "Rota", RotaDepartment: "Rota",
