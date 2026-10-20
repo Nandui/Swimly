@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { Bell, ChevronRight, CloudDownload, GraduationCap, MessageCircle, Type, UserRound } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { session } from "@/lib/api";
+import { PageShell } from "@/components/ui-kit/page-shell";
+import { PageHeader } from "@/components/ui-kit/page-header";
 
 const noSubscription = () => () => {};
 
@@ -27,8 +29,7 @@ export default function MorePage() {
   if (!token) return null;
   return (
     <Frame title="More">
-      <div className="stack">
-        <h1>More</h1>
+      <PageShell header={<PageHeader title="More" />}>
         <nav className="pc-panel" aria-label="More in Turnfin Me">
           <ul className="pc-rows">{LINKS.map(({ href, label, hint, icon: Icon }) => (
             <li key={href}><Link href={href} className="pc-row">
@@ -38,7 +39,7 @@ export default function MorePage() {
             </Link></li>
           ))}</ul>
         </nav>
-      </div>
+      </PageShell>
     </Frame>
   );
 }

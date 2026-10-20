@@ -1,14 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { ChevronLeft, CircleCheck } from "lucide-react";
+import { CircleCheck } from "lucide-react";
 import { DocBody } from "@/components/doc-body";
 import { Frame } from "@/components/frame";
 import { LoadError, Loading, Notice, useLoad } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
 import { date, day } from "@/lib/format";
+import { Button } from "@/components/shadcn/button";
+import { PageShell } from "@/components/ui-kit/page-shell";
+import { PageHeader } from "@/components/ui-kit/page-header";
 
 type Doc = { documentId: string; versionId: string; version: number; title: string; reference: string; summary: string; body: unknown; dueOn: string | null; status: string; acknowledgedAt: string | null; current: boolean };
 
@@ -28,15 +30,10 @@ export default function ReadingDetailPage() {
   }
   return (
     <Frame title="Required reading">
-      <div className="stack">
-        <Link href="/reading" className="button ghost back-link"><ChevronLeft aria-hidden="true" />Required reading</Link>
+      <PageShell header={<PageHeader back={{ href: "/reading", label: "Required reading" }} title={data?.title ?? "Required reading"}
+        description={data ? <>{`${data.reference} · version ${data.version}${data.dueOn ? ` · due ${day(data.dueOn)}` : ""}`}{data.summary ? <><br />{data.summary}</> : null}</> : undefined} />}>
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : (
           <>
-            <div className="stack-sm">
-              <h1>{data.title}</h1>
-              <p className="caption">{data.reference} · version {data.version}{data.dueOn ? ` · due ${day(data.dueOn)}` : ""}</p>
-              {data.summary ? <p className="muted">{data.summary}</p> : null}
-            </div>
             <article className="pc-panel"><DocBody body={data.body} /></article>
             {data.acknowledgedAt ? (
               <Notice title={`You read this version on ${date(data.acknowledgedAt)}`} live={justDone} />
@@ -47,12 +44,12 @@ export default function ReadingDetailPage() {
                 <h2 id="ack">All read?</h2>
                 <p>Confirm you have read and understood version {data.version}. It is recorded against your name.</p>
                 {failure ? <Notice title={failure} tone="error" live /> : null}
-                <button type="button" className="button block" onClick={acknowledge} disabled={busy}><CircleCheck aria-hidden="true" />I have read this version</button>
+                <Button type="button" onClick={acknowledge} disabled={busy} className="self-start max-md:self-stretch"><CircleCheck aria-hidden="true" />I have read this version</Button>
               </section>
             )}
           </>
         )}
-      </div>
+      </PageShell>
     </Frame>
   );
 }

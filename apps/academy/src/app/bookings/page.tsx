@@ -7,7 +7,10 @@ import { CalendarDays, LogOut, MapPin } from "lucide-react";
 import { api, message, signOut, type Booking, type BookingState } from "@/lib/api";
 import { BOOKING_META, day, euro, span } from "@/lib/format";
 import { useSession } from "@/lib/use-session";
+import { Button } from "@/components/shadcn/button";
 import { Frame, Loading, Notice, Tag } from "@/components/ui";
+import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 
 const GROUPS: { title: string; states: BookingState[] }[] = [
   { title: "Coming up", states: ["to-pay", "booked"] },
@@ -36,13 +39,9 @@ export default function BookingsPage() {
 
   return (
     <Frame title="My bookings">
-      <div className="page-head">
-        <div className="stack-sm">
-          <h1>My bookings</h1>
-          {who ? <p className="muted">Booked under {who.email}, online or at reception.</p> : null}
-        </div>
-        {who ? <button type="button" className="button outline" onClick={() => void signOut()}><LogOut aria-hidden="true" />Sign out</button> : null}
-      </div>
+      <PageShell spacing="roomy" header={<PageHeader title="My bookings"
+        description={who ? `Booked under ${who.email}, online or at reception.` : undefined}
+        actions={who ? <Button type="button" variant="outline" onClick={() => void signOut()}><LogOut aria-hidden="true" />Sign out</Button> : null} />}>
       {error ? <Notice title="Couldn't load your bookings" tone="error">{error}</Notice> : null}
       {!bookings && !error ? <Loading rows={2} /> : null}
       {bookings && bookings.length === 0 ? (
@@ -52,7 +51,7 @@ export default function BookingsPage() {
         const list = bookings.filter((b) => g.states.includes(b.state));
         if (!list.length) return null;
         return (
-          <section key={g.title} className="stack-sm" aria-label={g.title}>
+          <section key={g.title} className="flex flex-col gap-2" aria-label={g.title}>
             <h2>{g.title}</h2>
             <ul className="pc-rows">
               {list.map((b) => {
@@ -78,6 +77,7 @@ export default function BookingsPage() {
           </section>
         );
       }) : null}
+      </PageShell>
     </Frame>
   );
 }

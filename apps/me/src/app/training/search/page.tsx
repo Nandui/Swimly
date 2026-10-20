@@ -3,9 +3,13 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent } from "react";
-import { BookOpen, ChevronLeft, ChevronRight, GraduationCap, Search } from "lucide-react";
+import { BookOpen, ChevronRight, GraduationCap, Search } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { EmptyRows, LoadError, Loading, useLoad } from "@/components/ui";
+import { Input } from "@/components/shadcn/input";
+import { Button } from "@/components/shadcn/button";
+import { PageShell } from "@/components/ui-kit/page-shell";
+import { PageHeader } from "@/components/ui-kit/page-header";
 
 type Results = {
   courses: { assignmentId: string; title: string; snippet: string }[];
@@ -27,14 +31,13 @@ function SearchResults() {
   return (
     <>
       <form role="search" className="search-row" onSubmit={submit}>
-        <label htmlFor="search-q" className="sr-only">Search my training</label>
-        <input id="search-q" type="search" className="input" value={text} onChange={(e) => setText(e.target.value)} placeholder="Search my courses and lessons" maxLength={80} />
-        <button type="submit" className="button" disabled={text.trim().length < 2}><Search aria-hidden="true" />Search</button>
+        <Input id="search-q" type="search" aria-label="Search my training" value={text} onChange={(e) => setText(e.target.value)} placeholder="Search my courses and lessons" maxLength={80} />
+        <Button type="submit" disabled={text.trim().length < 2}><Search aria-hidden="true" />Search</Button>
       </form>
-      {q.length < 2 ? <p className="muted">Type at least two letters, such as a chemical, a rescue or a procedure.</p>
+      {q.length < 2 ? <p className="text-ui-muted-foreground">Type at least two letters, such as a chemical, a rescue or a procedure.</p>
         : error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : (
           <>
-            <p className="muted" role="status">{total === 0 ? `Nothing in your training mentions “${q}”.` : `${total} ${total === 1 ? "result" : "results"} for “${q}”`}</p>
+            <p className="text-ui-muted-foreground" role="status">{total === 0 ? `Nothing in your training mentions “${q}”.` : `${total} ${total === 1 ? "result" : "results"} for “${q}”`}</p>
             {data.courses.length ? (
               <section className="pc-panel" aria-labelledby="found-courses">
                 <h2 id="found-courses">Courses</h2>
@@ -69,11 +72,9 @@ function SearchResults() {
 export default function SearchPage() {
   return (
     <Frame title="Search my training">
-      <div className="stack">
-        <Link href="/training" className="button ghost back-link"><ChevronLeft aria-hidden="true" />My training</Link>
-        <h1>Search my training</h1>
+      <PageShell header={<PageHeader back={{ href: "/training", label: "My training" }} title="Search my training" />}>
         <Suspense fallback={<Loading />}><SearchResults /></Suspense>
-      </div>
+      </PageShell>
     </Frame>
   );
 }

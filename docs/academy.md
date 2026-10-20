@@ -151,7 +151,9 @@ next two weeks at their sites.
 - `src/modules/short-courses/`: `shared/` (`academy-rules.ts`, pure; `academy-access.ts`; `academy-server.ts`; with the module's `reads.ts` and `components/form-kit.tsx`), and the features `academy-courses`, `academy-types` and `academy-calls`, each with its `components/` and `server/` (`data.ts`, `actions.ts`). See its README.md
 - UI: `src/app/short-courses/academy/` (courses, a course, the course list, to call), each feature's `components/`
 - Online booking: `src/modules/short-courses/features/booking/server/` (`http.ts`, `api.ts`, `email.ts`, `router.ts`, `academy.ts`, `courses.ts`), the shape in `shared/public-booking.ts`,
-  `src/app/api/academy/v1/[[...path]]/route.ts`, and the site in `apps/academy`
+  `src/app/api/academy/v1/[[...path]]/route.ts`, and the site in `apps/academy`. The site follows
+  Work's UI rules (CLAUDE.md, section 14) with its own shadcn components and exact copies of Work's
+  theme files; `npm run lint` in `apps/academy` checks them
 - Tests: `rules.test.ts`, `academy.test.ts`, `booking.test.ts` (the booking API and the call
   list end to end), and the booked-session case in `src/modules/rota/shared/day.test.ts`
 - Sandbox: an NPLQ course at Hillview started yesterday. Sam tutors and Liam assesses.

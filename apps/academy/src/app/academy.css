@@ -1,0 +1,95 @@
+/* The Academy booking site's own layout, on Work's Poolside Clear v2 theme (owner rules, 20 October
+   2026: shadcn components only, no new colours). The tokens, the shadcn controls and the panels,
+   rows, tags and notices come from theme/poolside.css and shadcn.css, exact copies of Work's
+   (scripts/lint/ui-rules.mjs checks they match). Colours here are only those tokens; status colour
+   comes from src/lib/format.ts, always with an icon. */
+
+/* No frame here: the canvas is the page on every screen. */
+body.turnfin-app { min-height: 100dvh; background: var(--pc-canvas); }
+
+.muted { color: var(--pc-ink-muted); }
+.caption { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); color: var(--pc-ink-muted); }
+
+/* Frame: the site's name and the account link on the canvas, then the page. Lists and a course use
+   the wide 1120px column; forms and bookings a 720px one. */
+.frame { min-height: 100dvh; display: flex; flex-direction: column; }
+.skip-link { position: absolute; left: 16px; top: -100px; z-index: 10; padding: 10px 16px; border-radius: var(--pc-radius-control); background: var(--pc-surface); color: var(--pc-ink); font-weight: 600; }
+.skip-link:focus-visible { top: 12px; }
+.topbar { width: 100%; padding: max(12px, env(safe-area-inset-top)) 16px 0; }
+.topbar-inner { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1120px; min-height: 64px; margin: 0 auto; }
+.brand-name { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 700; color: var(--pc-ink); text-decoration: none; letter-spacing: -0.01em; }
+.topnav { display: flex; align-items: center; gap: 4px; }
+.topnav-link { display: inline-flex; align-items: center; min-height: var(--pc-control-height); padding: 0 var(--pc-control-pad); border-radius: var(--pc-radius-control); color: var(--pc-ink); font-weight: 600; text-decoration: none; }
+.topnav-link:hover { background: var(--pc-hover); }
+@media (max-width: 479px) { .topnav > .topnav-link { display: none; } }
+.page { flex: 1; width: 100%; max-width: 752px; margin: 0 auto; padding: 16px 16px calc(48px + env(safe-area-inset-bottom)); }
+.page.wide { max-width: 1152px; }
+.footer { width: 100%; max-width: 1152px; margin: 0 auto; padding: 0 16px calc(24px + env(safe-area-inset-bottom)); }
+
+/* Course facts: an icon beside each line. */
+.facts { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.facts li { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; }
+.facts li + li { border-top: 1px solid var(--pc-line); }
+.facts svg { width: 20px; height: 20px; color: var(--pc-ink-muted); }
+
+/* Home: the page title on the fin's blue (the pool-water band), then how booking works. */
+.academy-home > [data-page-header] { padding: 40px; border-radius: var(--pc-radius-panel); background: linear-gradient(135deg, var(--pc-primary), var(--pc-primary-hover)); }
+.turnfin-app .academy-home > [data-page-header] :is(h1, p) { color: var(--pc-on-primary); }
+.turnfin-app .academy-home > [data-page-header] h1 { font-size: 44px; line-height: 50px; font-weight: 700; letter-spacing: -0.02em; max-width: 16ch; }
+.academy-home > [data-page-header] p { font-size: 16px; line-height: 24px; max-width: 60ch; }
+@media (max-width: 899px) {
+  .academy-home > [data-page-header] { padding: 24px; }
+  .turnfin-app .academy-home > [data-page-header] h1 { font-size: 32px; line-height: 38px; }
+}
+@media (max-width: 479px) { .academy-home > [data-page-header] { padding: 20px; } }
+.how { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 4px; margin: 0; padding: 8px; list-style: none; border-radius: var(--pc-radius-panel); background: var(--pc-surface); color: var(--pc-ink); }
+.how li { display: flex; align-items: flex-start; gap: 12px; padding: 12px; }
+.how li > span:last-child { display: flex; flex-direction: column; gap: 2px; }
+.how-icon { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); }
+.how-icon svg { width: 20px; height: 20px; }
+.section-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; }
+.turnfin-app .section-head h2 { font-size: 22px; line-height: 28px; }
+.filters { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+
+/* A course on the list: the whole card is the link. */
+.course-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; }
+.course-grid > li { display: flex; }
+.course-card { display: flex; flex: 1; flex-direction: column; gap: 12px; padding: 20px; border-radius: var(--pc-radius-panel); background: var(--pc-surface); color: var(--pc-ink); text-decoration: none; transition: background-color 160ms var(--pc-ease), transform 160ms var(--pc-ease); }
+a.course-card:hover { background: var(--pc-hover); }
+a.course-card:active { transform: scale(0.99); }
+a.course-card:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.course-card .title { font-size: 18px; line-height: 24px; font-weight: 700; letter-spacing: -0.01em; }
+.course-top { display: flex; align-items: center; gap: 10px; }
+.course-icon { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); }
+.course-icon svg { width: 18px; height: 18px; }
+.course-facts { display: flex; flex-direction: column; gap: 8px; }
+.course-facts > span, .booking-meta > span { display: flex; align-items: flex-start; gap: 8px; }
+.course-facts svg, .booking-meta svg { width: 16px; height: 16px; margin-top: 2px; color: var(--pc-ink-muted); }
+.course-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--pc-line); }
+.price { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 700; font-variant-numeric: tabular-nums; }
+.price.large { font-size: var(--pc-text-figure); line-height: var(--pc-leading-figure); }
+@media (prefers-reduced-motion: reduce) { .course-card { transition: none; } a.course-card:active { transform: none; } }
+
+/* A course: what it is on the left, booking on the right (it stays in view on wide screens). */
+.course-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 400px); grid-template-areas: "info book" "dates book"; gap: 24px; align-items: start; }
+.course-info { grid-area: info; }
+.course-dates { grid-area: dates; }
+.book-panel { grid-area: book; position: sticky; top: 16px; }
+/* On phones and tablets the booking comes straight after what the course is; the dates after it. */
+@media (max-width: 899px) {
+  .course-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "info" "book" "dates"; }
+  .book-panel { position: static; }
+}
+.dates { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.dates li { display: flex; flex-direction: column; padding: 12px 16px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); }
+.signed-in { overflow-wrap: anywhere; }
+/* The six-digit code reads as spaced figures. */
+.code-field [data-slot='input'] { letter-spacing: 0.3em; font-size: 20px; font-variant-numeric: tabular-nums; }
+.narrow { max-width: 480px; }
+.booking-row .pc-row-body { gap: 6px; }
+.booking-meta { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.summary { display: flex; flex-direction: column; margin: 0; }
+.summary div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; }
+.summary div + div { border-top: 1px solid var(--pc-line); }
+.summary dt { color: var(--pc-ink-muted); }
+.summary dd { margin: 0; font-weight: 600; text-align: right; overflow-wrap: anywhere; }

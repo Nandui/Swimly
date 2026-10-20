@@ -5,7 +5,11 @@ import Link from "next/link";
 import { ArrowRight, BadgeCheck, CalendarDays, Dumbbell, LifeBuoy, MapPin, PhoneCall, Shapes, Ticket, Users, Waves, type LucideIcon } from "lucide-react";
 import { api, message, type Course } from "@/lib/api";
 import { placesMeta, rhythm, span } from "@/lib/format";
+import { Button } from "@/components/shadcn/button";
 import { Frame, Loading, Notice, Tag } from "@/components/ui";
+import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
+import { SegmentedChoice } from "@/components/ui-kit/segmented-links";
 
 /** What a course is about, as an icon: qualifications by kind, short courses by where they run. */
 const ICONS: Record<string, LucideIcon> = { lifeguard: LifeBuoy, "swim-teacher": Users, pool: Waves, gym: Dumbbell, studio: Users };
@@ -36,35 +40,29 @@ export default function CoursesPage() {
 
   return (
     <Frame title="Courses" wide>
-      <section className="hero" aria-labelledby="hero-h">
-        <div className="hero-copy">
-          <h1 id="hero-h">Book a course at LeisureWorld</h1>
-          <p className="lead">Lifeguard and swim teacher qualifications, and six to eight week courses in the pool, the gym and the studio.</p>
-          <a href="#courses" className="button large">See the courses<ArrowRight aria-hidden="true" /></a>
-        </div>
-        <ol className="how" aria-label="How booking works">
-          <li><span className="how-icon" aria-hidden="true"><Ticket /></span><span><strong>Hold your place online</strong><span className="muted">Pick a course and check your email with a code. No account to set up.</span></span></li>
-          <li><span className="how-icon" aria-hidden="true"><PhoneCall /></span><span><strong>We phone you within 72 hours</strong><span className="muted">We take payment over the phone, at the time you choose.</span></span></li>
-          <li><span className="how-icon" aria-hidden="true"><BadgeCheck /></span><span><strong>You&apos;re booked</strong><span className="muted">See your courses, dates and payments any time under My bookings.</span></span></li>
-        </ol>
-      </section>
+      <PageShell spacing="roomy" className="academy-home" header={<PageHeader title="Book a course at LeisureWorld"
+        description="Lifeguard and swim teacher qualifications, and six to eight week courses in the pool, the gym and the studio."
+        actions={<Button asChild variant="outline"><a href="#courses">See the courses<ArrowRight aria-hidden="true" /></a></Button>} />}>
+      <ol className="how" aria-label="How booking works">
+        <li><span className="how-icon" aria-hidden="true"><Ticket /></span><span><strong>Hold your place online</strong><span className="text-ui-muted-foreground">Pick a course and check your email with a code. No account to set up.</span></span></li>
+        <li><span className="how-icon" aria-hidden="true"><PhoneCall /></span><span><strong>We phone you within 72 hours</strong><span className="text-ui-muted-foreground">We take payment over the phone, at the time you choose.</span></span></li>
+        <li><span className="how-icon" aria-hidden="true"><BadgeCheck /></span><span><strong>You&apos;re booked</strong><span className="text-ui-muted-foreground">See your courses, dates and payments any time under My bookings.</span></span></li>
+      </ol>
 
-      <section id="courses" className="stack" aria-labelledby="courses-h">
+      <section id="courses" className="flex flex-col gap-4" aria-labelledby="courses-h">
         <div className="section-head">
           <h2 id="courses-h">Open for booking</h2>
-          {courses && courses.length ? <p className="muted">{shown.length === all.length ? `${all.length} ${all.length === 1 ? "course" : "courses"}, soonest first.` : `${shown.length} of ${all.length} courses.`}</p> : null}
+          {courses && courses.length ? <p className="text-ui-muted-foreground">{shown.length === all.length ? `${all.length} ${all.length === 1 ? "course" : "courses"}, soonest first.` : `${shown.length} of ${all.length} courses.`}</p> : null}
         </div>
         {filters.length > 1 || sites.length > 1 ? (
           <div className="filters">
             {filters.length > 1 ? (
-              <div className="chips" role="group" aria-label="Kind of course">
-                {[["", "All"] as const, ...filters].map(([key, label]) => <button key={key} type="button" className="chip" aria-pressed={filter === key} onClick={() => setFilter(key)}>{label}</button>)}
-              </div>
+              <SegmentedChoice aria-label="Kind of course" value={filter} onValueChange={setFilter}
+                options={[["", "All"] as const, ...filters].map(([value, label]) => ({ value, label }))} />
             ) : null}
             {sites.length > 1 ? (
-              <div className="chips" role="group" aria-label="Centre">
-                {["", ...sites].map((s) => <button key={s || "all"} type="button" className="chip" aria-pressed={site === s} onClick={() => setSite(s)}>{s ? <><MapPin aria-hidden="true" />{s}</> : "Every centre"}</button>)}
-              </div>
+              <SegmentedChoice aria-label="Centre" value={site} onValueChange={setSite}
+                options={["", ...sites].map((s) => ({ value: s, label: s || "Every centre", icon: s ? MapPin : undefined }))} />
             ) : null}
           </div>
         ) : null}
@@ -83,9 +81,9 @@ export default function CoursesPage() {
                     <span className="caption">{c.group === "qualification" ? `${c.categoryLabel} qualification` : c.categoryLabel}</span>
                   </span>
                   <span className="title">{c.name}</span>
-                  {c.description ? <span className="muted clamp">{c.description}</span> : c.awardingBody ? <span className="muted">Awarded by {c.awardingBody}</span> : null}
+                  {c.description ? <span className="text-ui-muted-foreground line-clamp-2">{c.description}</span> : c.awardingBody ? <span className="text-ui-muted-foreground">Awarded by {c.awardingBody}</span> : null}
                   <span className="course-facts">
-                    <span><CalendarDays aria-hidden="true" /><span>{span(c.firstDay, c.lastDay)}<br /><span className="muted">{rhythm(c)}</span></span></span>
+                    <span><CalendarDays aria-hidden="true" /><span>{span(c.firstDay, c.lastDay)}<br /><span className="text-ui-muted-foreground">{rhythm(c)}</span></span></span>
                     <span><MapPin aria-hidden="true" />{c.site}</span>
                   </span>
                   <span className="course-foot">
@@ -98,6 +96,7 @@ export default function CoursesPage() {
           })}
         </ul>
       </section>
+      </PageShell>
     </Frame>
   );
 }

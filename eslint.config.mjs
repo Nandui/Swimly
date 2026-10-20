@@ -5,29 +5,9 @@ import nextTs from "eslint-config-next/typescript";
 import boundaries from "eslint-plugin-boundaries";
 import designTokens from "./scripts/lint/design-tokens.mjs";
 
-// Shared UI rules: primitives come from the local shadcn components.
-const uiImports = {
-  paths: [{ name: "radix-ui", message: "Use the local shadcn component so theme, touch sizes and accessibility stay consistent." }],
-  patterns: [{ group: ["@radix-ui/*", "@mui/*", "@mantine/*", "@headlessui/*", "antd", "antd/*"], message: "The staff app uses src/components/shadcn for UI primitives." }],
-};
-const uiSyntax = [
-  {
-    selector: "JSXOpeningElement[name.name=/^(button|select|textarea|label|details|summary|dialog|progress|meter|table|thead|tbody|tfoot|tr|th|td|hr)$/]",
-    message: "Use the installed shadcn primitive (or a shared ui composition) for this control.",
-  },
-  {
-    selector: "JSXOpeningElement[name.name='svg']",
-    message: "Draw charts with the shadcn Chart component (src/components/shadcn/chart.tsx) and icons with lucide-react, never hand-drawn SVG.",
-  },
-  {
-    selector: "JSXOpeningElement[name.name='input']:not(:has(JSXAttribute[name.name='type'][value.value='hidden']))",
-    message: "Use shadcn Input, Checkbox, RadioGroup or Switch. Native hidden inputs are reserved for FormData bridges.",
-  },
-  {
-    selector: "JSXOpeningElement[name.name=/^(div|span|a)$/]:has(JSXAttribute[name.name='role'][value.value=/^(button|checkbox|radio|switch|tab|tablist|dialog|alertdialog|progressbar|menu|menuitem|combobox|listbox)$/])",
-    message: "Compose the matching shadcn component instead of building a custom interactive primitive.",
-  },
-];
+// Shared UI rules (scripts/lint/design-tokens.mjs): primitives come from the local shadcn
+// components. Turnfin Me and the Academy site use the same ones (apps/*/eslint.config.mjs).
+const { uiImports, uiSyntax } = designTokens;
 
 // Turnfin is a modular monolith: Core (people, roles, sites, audit) and modules
 // (the swim school, called Activities here, and the Work modules). A module may

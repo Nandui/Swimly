@@ -1,9 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Check, CircleCheck, ExternalLink, FileText, ImagePlus, Send, X } from "lucide-react";
 import { CourseImage } from "@/components/question";
-import { Notice } from "@/components/ui";
+import { Button } from "@/components/shadcn/button";
+import { Input } from "@/components/shadcn/input";
+import { Label } from "@/components/shadcn/label";
+import { RadioGroup, RadioGroupItem } from "@/components/shadcn/radio-group";
+import { Textarea } from "@/components/ui/textarea";
+import { leftOf, topOf } from "@/components/ui-kit/scale";
+import { Bar, Notice } from "@/components/ui";
 import { ApiError, api, apiFile } from "@/lib/api";
 
 /** Lessons added in Training e-learning phase 8: sort into groups, explore a
@@ -41,7 +47,7 @@ export function SortBoard({ sorting, onFinished }: { sorting: Sorting; onFinishe
     <section className="pc-panel stack" aria-labelledby="sort-title">
       <div className="stack-sm">
         <h2 id="sort-title">Sort into groups</h2>
-        <p className="caption muted">Choose the group each one belongs in, then check.</p>
+        <p className="caption">Choose the group each one belongs in, then check.</p>
       </div>
       <ul className="stack-sm sort-list">
         {items.map((item) => {
@@ -55,15 +61,15 @@ export function SortBoard({ sorting, onFinished }: { sorting: Sorting; onFinishe
                   {item.text}
                   {state ? <span className="sr-only">{state === "right" ? " (right)" : " (in the wrong group)"}</span> : null}
                 </legend>
-                <div className="sort-groups" role="radiogroup" aria-label={`Group for ${item.text}`}>
+                <RadioGroup className="sort-groups" aria-label={`Group for ${item.text}`} name={`sort-${item.id}`} value={placed[item.id] ?? ""} disabled={locked}
+                  onValueChange={(value) => { setPlaced((now) => ({ ...now, [item.id]: value })); if (checked) setChecked((now) => now && { ...now, [item.id]: false }); }}>
                   {sorting.groups.map((g) => (
-                    <label key={g.id} className="sort-group" data-chosen={placed[item.id] === g.id || undefined}>
-                      <input type="radio" name={`sort-${item.id}`} value={g.id} checked={placed[item.id] === g.id}
-                        onChange={() => { setPlaced((now) => ({ ...now, [item.id]: g.id })); if (checked) setChecked((now) => now && { ...now, [item.id]: false }); }} />
+                    <Label key={g.id} className="sort-group" data-chosen={placed[item.id] === g.id || undefined}>
+                      <RadioGroupItem value={g.id} />
                       <span>{g.name}</span>
-                    </label>
+                    </Label>
                   ))}
-                </div>
+                </RadioGroup>
               </fieldset>
             </li>
           );
@@ -73,9 +79,9 @@ export function SortBoard({ sorting, onFinished }: { sorting: Sorting; onFinishe
         ? <Notice title="All in the right groups" live><Check aria-hidden="true" className="inline-icon" />Well done.</Notice>
         : <Notice title={`${rightCount} of ${items.length} right`} tone="warning" live>Move the ones marked with a cross, then check again.</Notice>) : null}
       {allRight ? null : (
-        <button type="button" className="button" disabled={!ready} onClick={() => setChecked(Object.fromEntries(items.map((i) => [i.id, placed[i.id] === i.group])))}>
+        <Button type="button" className="self-start max-md:self-stretch" disabled={!ready} onClick={() => setChecked(Object.fromEntries(items.map((i) => [i.id, placed[i.id] === i.group])))}>
           {ready ? "Check my groups" : `Place ${items.filter((i) => !placed[i.id]).length} more to check`}
-        </button>
+        </Button>
       )}
     </section>
   );
@@ -97,16 +103,16 @@ export function ExplorePicture({ assignmentId, fileId, title, spots, onFinished 
     <section className="pc-panel stack" aria-labelledby="explore-title">
       <div className="stack-sm">
         <h2 id="explore-title">Explore the picture</h2>
-        <p className="caption tabular" aria-live="polite">{seen.size} of {spots.length} opened</p>
-        <progress className="course-progress" max={spots.length} value={seen.size} aria-hidden="true" />
+        <p className="caption tabular-nums" aria-live="polite">{seen.size} of {spots.length} opened</p>
+        <div aria-hidden="true"><Bar max={spots.length} value={seen.size} label="Spots opened" /></div>
       </div>
       <div className="explore-frame">
         <CourseImage assignmentId={assignmentId} fileId={fileId} alt={`${title}: a picture with ${spots.length} numbered spots`} />
         {spots.map((s, i) => (
-          <button key={s.id} type="button" className="explore-marker" data-seen={seen.has(s.id) || undefined} data-open={open === s.id || undefined}
-            style={{ left: `${s.x}%`, top: `${s.y}%` }} aria-label={`Spot ${i + 1}: ${s.title}${seen.has(s.id) ? ", opened" : ""}`} aria-pressed={open === s.id} onClick={() => show(s.id)}>
+          <Button key={s.id} type="button" size="icon" className={`explore-marker ${leftOf(s.x / 100)} ${topOf(s.y / 100)}`} data-seen={seen.has(s.id) || undefined} data-open={open === s.id || undefined}
+            aria-label={`Spot ${i + 1}: ${s.title}${seen.has(s.id) ? ", opened" : ""}`} aria-pressed={open === s.id} onClick={() => show(s.id)}>
             {i + 1}
-          </button>
+          </Button>
         ))}
       </div>
       {current ? (
@@ -114,15 +120,15 @@ export function ExplorePicture({ assignmentId, fileId, title, spots, onFinished 
           <h3>{spots.indexOf(current) + 1}. {current.title}</h3>
           {current.text ? <p className="pre-line">{current.text}</p> : null}
         </div>
-      ) : <p className="caption muted">Tap a number on the picture, or a spot in the list.</p>}
+      ) : <p className="caption">Tap a number on the picture, or a spot in the list.</p>}
       <ol className="choices">
         {spots.map((s, i) => (
           <li key={s.id}>
-            <button type="button" className="choice selectable explore-row" aria-pressed={open === s.id} onClick={() => show(s.id)}>
-              <span className="order-number tabular" aria-hidden="true">{i + 1}</span>
+            <Button type="button" variant="outline" className="choice selectable explore-row" aria-pressed={open === s.id} onClick={() => show(s.id)}>
+              <span className="order-number tabular-nums" aria-hidden="true">{i + 1}</span>
               <span className="choice-text">{s.title}</span>
               {seen.has(s.id) ? <Check aria-label="Opened" className="inline-icon" /> : null}
-            </button>
+            </Button>
           </li>
         ))}
       </ol>
@@ -138,7 +144,7 @@ export function EmbedFrame({ embed, title }: { embed: Embed; title: string }) {
   return (
     <div className="stack-sm">
       <div className="lesson-embed"><iframe src={embed.src} title={`${embed.provider}: ${title}`} allow="fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" loading="lazy" /></div>
-      <a href={embed.href} target="_blank" rel="noopener noreferrer" className="button ghost"><ExternalLink aria-hidden="true" />Open in {embed.provider}</a>
+      <Button asChild variant="ghost" className="self-start"><a href={embed.href} target="_blank" rel="noopener noreferrer"><ExternalLink aria-hidden="true" />Open in {embed.provider}</a></Button>
     </div>
   );
 }
@@ -184,6 +190,7 @@ export function HandInForm({ assignmentId, lessonId, info, open, onSaved }: { as
   const [editing, setEditing] = useState(!sent || sent.status === "RETURNED");
   const [text, setText] = useState(sent?.text ?? "");
   const [file, setFile] = useState<File | null>(null);
+  const picker = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
   const keep = !file && !!sent?.fileName;
@@ -225,27 +232,24 @@ export function HandInForm({ assignmentId, lessonId, info, open, onSaved }: { as
       {sent && !editing ? (
         <div className="stack-sm">
           {sent.text ? <blockquote className="pre-line">{sent.text}</blockquote> : null}
-          {sent.fileName && !sent.waiting ? <button type="button" className="button outline block" onClick={openFile}><FileText aria-hidden="true" />Open {sent.fileName}</button> : null}
-          {open && sent.status === "SUBMITTED" ? <button type="button" className="button ghost" onClick={() => setEditing(true)}>Change what I handed in</button> : null}
+          {sent.fileName && !sent.waiting ? <Button type="button" variant="outline" className="self-start max-md:self-stretch" onClick={openFile}><FileText aria-hidden="true" />Open {sent.fileName}</Button> : null}
+          {open && sent.status === "SUBMITTED" ? <Button type="button" variant="ghost" className="self-start" onClick={() => setEditing(true)}>Change what I handed in</Button> : null}
         </div>
       ) : open ? (
         <form className="stack" onSubmit={submit}>
           {info.text !== "off" ? (
-            <div className="field">
-              <label htmlFor="hand-in-text">Your answer{info.text === "optional" ? " (optional)" : ""}</label>
-              <textarea id="hand-in-text" className="input" rows={6} maxLength={5000} value={text} onChange={(e) => setText(e.target.value)} />
-            </div>
+            <Textarea id="hand-in-text" label="Your answer" optional={info.text === "optional"} rows={6} maxLength={5000} value={text} onChange={(e) => setText(e.target.value)} />
           ) : null}
           {info.photo !== "off" ? (
-            <div className="field">
-              <span id="hand-in-file-label">A photo or PDF{info.photo === "optional" ? " (optional)" : ""}</span>
-              <input id="hand-in-file" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="sr-only" aria-labelledby="hand-in-file-label" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-              <label className="button outline block" htmlFor="hand-in-file"><ImagePlus aria-hidden="true" />{file ? `Chosen: ${file.name}` : keep ? `Keep ${sent?.fileName}, or choose another` : "Take or choose a photo"}</label>
-              <p className="caption muted">Photos are made smaller before they are sent. PDFs up to 3 MB.</p>
+            <div className="flex flex-col gap-2">
+              <Label id="hand-in-file-label" htmlFor="hand-in-file-button">A photo or PDF{info.photo === "optional" ? " (optional)" : ""}</Label>
+              <Input ref={picker} id="hand-in-file" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="sr-only" tabIndex={-1} aria-hidden="true" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+              <Button id="hand-in-file-button" type="button" variant="outline" className="self-start max-md:self-stretch" aria-describedby="hand-in-file-hint" onClick={() => picker.current?.click()}><ImagePlus aria-hidden="true" />{file ? `Chosen: ${file.name}` : keep ? `Keep ${sent?.fileName}, or choose another` : "Take or choose a photo"}</Button>
+              <p id="hand-in-file-hint" className="caption">Photos are made smaller before they are sent. PDFs up to 3 MB.</p>
             </div>
           ) : null}
           {failure ? <Notice title={failure} tone="error" live /> : null}
-          <button type="submit" className="button" disabled={busy}><Send aria-hidden="true" />{busy ? "Sending…" : sent ? "Hand it in again" : "Hand it in"}</button>
+          <Button type="submit" className="self-start max-md:self-stretch" disabled={busy}><Send aria-hidden="true" />{busy ? "Sending…" : sent ? "Hand it in again" : "Hand it in"}</Button>
         </form>
       ) : null}
       {failure && !editing ? <Notice title={failure} tone="error" live /> : null}

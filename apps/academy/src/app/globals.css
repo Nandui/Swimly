@@ -1,283 +1,57 @@
-/* The Academy booking site in Poolside Clear v2, phone-first. The tokens, panels, rows, controls,
-   tags and notices are copied from Turnfin Me (apps/me/src/app/globals.css), itself copied from
-   Work's src/app/theme/poolside.css; keep them in step. Colours come from these tokens only;
-   status colour comes from src/lib/meta.ts, always with an icon. */
-:root { color-scheme: light dark; }
-.turnfin-app {
-  --pc-canvas: light-dark(#eef2f6, #0c1320);
-  --pc-surface: light-dark(#ffffff, #131c2b);
-  --pc-surface-sunken: light-dark(#f4f6f9, #182334);
-  --pc-ink: light-dark(#0f1b2d, #e8eef7);
-  --pc-ink-muted: light-dark(#56627a, #9babc2);
-  --pc-line: light-dark(#e2e7ef, #24324a);
-  /* Edges of things you type into or choose from: 3:1 against every surface. */
-  --pc-line-strong: light-dark(#77849a, #6b7d99);
-  --pc-primary: light-dark(#1d5fd1, #78a6ff);
-  --pc-primary-hover: light-dark(#174ea8, #9dbfff);
-  --pc-on-primary: light-dark(#ffffff, #081733);
-  --pc-primary-soft: light-dark(#e9f0fd, #17284a);
-  --pc-primary-soft-hover: light-dark(#dde8fc, #1d3360);
-  --pc-primary-ink: light-dark(#174ea8, #a8c5ff);
-  --pc-hover: light-dark(#f4f6f9, #1b2636);
-  --pc-focus: light-dark(#1d5fd1, #78a6ff);
-  --pc-focus-halo: 0 0 0 4px light-dark(rgb(29 95 209 / 0.2), rgb(120 166 255 / 0.28));
-  --pc-success: light-dark(#157046, #7fe0a8);
-  --pc-success-soft: light-dark(#e3f5ec, #10301f);
-  --pc-warning: light-dark(#8a5a00, #f7cf6e);
-  --pc-warning-soft: light-dark(#fdf2dc, #35270b);
-  --pc-danger: light-dark(#b4321f, #ffa395);
-  --pc-danger-soft: light-dark(#fde8e6, #3a1815);
-  --pc-neutral-soft: light-dark(#f4f6f9, #182334);
-  /* The single do-first item on a page. */
-  --pc-yellow: light-dark(#fde9a8, #4a3b10);
-  --pc-on-yellow: light-dark(#3a2a00, #fbe7a8);
-  /* The home page's pool-water band: the fin's blue, deepening to the deep end. */
-  --pc-water: linear-gradient(135deg, light-dark(#1d5fd1, #1a3f86) 0%, light-dark(#0f3f94, #0f2550) 100%);
-  --pc-on-water: light-dark(#ffffff, #eaf1ff);
-  --pc-shadow-card: none;
-  --pc-shadow-overlay: 0 16px 40px -12px light-dark(rgb(15 27 45 / 0.35), rgb(0 0 0 / 0.6)), 0 0 0 1px var(--pc-line);
-  --pc-ease: cubic-bezier(0.2, 0, 0, 1);
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "./shadcn.css";
+@import "./motion.css";
 
-  /* Type scale: five sizes only. Captions and metadata; body, controls and labels; section
-     titles; page titles; large figures (page and figure drop to 24px on phones). Reading text
-     in documents is 16px. */
-  --pc-text-caption: 12px;
-  --pc-leading-caption: 16px;
-  --pc-text-body: 14px;
-  --pc-leading-body: 20px;
-  --pc-text-title: 18px;
-  --pc-leading-title: 24px;
-  --pc-text-page: 28px;
-  --pc-leading-page: 36px;
-  --pc-text-figure: 28px;
-  --pc-leading-figure: 34px;
-
-  /* Control geometry: every button, field, tab and menu item is 44px on every device. Corners:
-     round controls, 16px inside a panel, 24px panels. */
-  --pc-control-height: 44px;
-  --pc-control-pad: 16px;
-  --pc-radius-control: 999px;
-  --pc-radius-card: 16px;
-  --pc-radius-panel: 24px;
+@theme {
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
 }
-@media (max-width: 767px) {
-  .turnfin-app { --pc-text-page: 24px; --pc-leading-page: 30px; --pc-text-figure: 24px; --pc-leading-figure: 30px; }
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+  html[data-theme="light"] {
+    color-scheme: light;
+  }
+  html[data-theme="dark"] {
+    color-scheme: dark;
+  }
+  /* The ground (body background) is set by poolside.css on body.turnfin-app. */
+  body {
+    color: var(--ui-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+  a:focus-visible {
+    outline: 2px solid var(--ui-ring);
+    outline-offset: 2px;
+  }
 }
 
-/* Work gets these from Tailwind preflight. */
-*, *::before, *::after { box-sizing: border-box; }
-html, body { margin: 0; }
-:is(h1, h2, h3, h4, p) { margin: 0; }
-button, input, select, textarea { font: inherit; color: inherit; }
-fieldset { margin: 0; padding: 0; border: 0; min-inline-size: 0; }
-
-.turnfin-app {
-  font-family: var(--font-sans);
-  font-size: var(--pc-text-body);
-  line-height: var(--pc-leading-body);
-  color: var(--pc-ink);
+@media (prefers-reduced-motion: reduce) {
+  .ui-motion-press,
+  [data-motion="sidebar-icon"],
+  [data-motion="direction"],
+  [data-motion="action-label"] {
+    translate: none !important;
+  }
+  [data-motion="selection"] {
+    scale: none !important;
+    rotate: none !important;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
 }
-body.turnfin-app { min-height: 100dvh; background: var(--pc-canvas); -webkit-font-smoothing: antialiased; }
-
-/* Type: one bold page title, 600-weight section titles, sentence-case labels (never capitals). */
-.turnfin-app :is(h1, h2, h3, h4) { font-family: var(--font-sans); color: var(--pc-ink); }
-.turnfin-app h1 { font-size: var(--pc-text-page); font-weight: 600; line-height: var(--pc-leading-page); letter-spacing: -0.01em; }
-.turnfin-app :is(h2, h3, h4) { letter-spacing: 0; }
-.turnfin-app h2 { font-size: var(--pc-text-title); font-weight: 600; line-height: var(--pc-leading-title); }
-.turnfin-app svg { flex-shrink: 0; }
-.turnfin-app :is(h3, h4) { font-size: var(--pc-text-body); font-weight: 600; line-height: var(--pc-leading-body); }
-
-a { color: var(--pc-primary); }
-:is(a, button, input, select, textarea, summary):focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
-.muted { color: var(--pc-ink-muted); }
-.caption { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); color: var(--pc-ink-muted); }
-.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-.stack { display: flex; flex-direction: column; gap: 16px; }
-.stack-sm { display: flex; flex-direction: column; gap: 8px; }
-.row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.pre { white-space: pre-wrap; overflow-wrap: anywhere; }
-.tabular { font-variant-numeric: tabular-nums; }
-
-/* Frame: the site's name and the account link on the canvas, then the page. Lists and a course use
-   the wide 1120px column; forms and bookings a 720px one. */
-.frame { min-height: 100dvh; display: flex; flex-direction: column; }
-.skip-link { position: absolute; left: 16px; top: -100px; z-index: 10; padding: 10px 16px; border-radius: var(--pc-radius-control); background: var(--pc-surface); color: var(--pc-ink); font-weight: 600; }
-.skip-link:focus-visible { top: 12px; }
-.topbar { width: 100%; padding: max(12px, env(safe-area-inset-top)) 16px 0; }
-.topbar-inner { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1120px; min-height: 64px; margin: 0 auto; }
-.brand-name { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 700; color: var(--pc-ink); text-decoration: none; letter-spacing: -0.01em; }
-.topnav { display: flex; align-items: center; gap: 4px; }
-.topnav-link { display: inline-flex; align-items: center; min-height: var(--pc-control-height); padding: 0 var(--pc-control-pad); border-radius: var(--pc-radius-control); color: var(--pc-ink); font-weight: 600; text-decoration: none; }
-.topnav-link:hover { background: var(--pc-hover); }
-@media (max-width: 479px) { .topnav > .topnav-link { display: none; } }
-.page { flex: 1; width: 100%; max-width: 752px; margin: 0 auto; padding: 16px 16px calc(48px + env(safe-area-inset-bottom)); }
-.page.wide { max-width: 1152px; }
-.page > .stack { gap: 24px; }
-.footer { width: 100%; max-width: 1152px; margin: 0 auto; padding: 0 16px calc(24px + env(safe-area-inset-bottom)); }
-.lead { font-size: 16px; line-height: 24px; color: var(--pc-ink-muted); max-width: 60ch; }
-
-.turnfin-app .pc-panel { display: flex; flex-direction: column; gap: 16px; min-width: 0; padding: 24px; border-radius: var(--pc-radius-panel); background: var(--pc-surface); }
-.turnfin-app .pc-panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; min-height: 44px; }
-.turnfin-app .pc-panel-head > h2 { margin: 0; }
-.turnfin-app .pc-rows { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.turnfin-app .pc-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; min-width: 0; min-height: 64px; padding: 12px 16px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); background: var(--pc-surface); color: var(--pc-ink); text-decoration: none; }
-.turnfin-app a.pc-row:hover { background: var(--pc-surface-sunken); }
-.turnfin-app a.pc-row:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
-.turnfin-app .pc-row-body { display: flex; flex: 1 1 140px; flex-direction: column; min-width: 0; }
-.turnfin-app .pc-row-title { font-weight: 600; }
-.turnfin-app .pc-row-hint { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); color: var(--pc-ink-muted); }
-.turnfin-app .pc-row-trail { display: flex; flex: 0 1 auto; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px 12px; max-width: 100%; margin-left: auto; }
-.turnfin-app .pc-row-chevron { width: 16px; height: 16px; color: var(--pc-ink-muted); }
-.turnfin-app .pc-row[data-first] { border-color: transparent; background: var(--pc-yellow); color: var(--pc-on-yellow); }
-.turnfin-app .pc-row[data-first] :is(.pc-row-hint, .pc-row-chevron) { color: inherit; }
-.turnfin-app a.pc-row[data-first]:hover { background: var(--pc-yellow); }
-.turnfin-app .pc-row[data-muted] { color: var(--pc-ink-muted); }
-.turnfin-app label.pc-row { flex-direction: row; flex-wrap: nowrap; align-items: flex-start; min-height: 56px; font-weight: 400; cursor: pointer; }
-.turnfin-app label.pc-row:hover { background: var(--pc-surface-sunken); }
-.turnfin-app label.pc-row:has(:focus-visible) { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
-.turnfin-app label.pc-row:has(:disabled) { cursor: not-allowed; color: var(--pc-ink-muted); }
-.turnfin-app .pc-tile-icon { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); }
-.turnfin-app .pc-tile-icon > svg { width: 20px; height: 20px; }
-@media (max-width: 767px) {
-  .turnfin-app .pc-panel { padding: 16px; gap: 12px; }
-}
-
-/* Controls: one height, radius and weight */
-.button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: var(--pc-control-height); padding: 0 var(--pc-control-pad); border-radius: var(--pc-radius-control); border: 1px solid transparent; font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; background: var(--pc-primary); color: var(--pc-on-primary); }
-.button:not(:disabled):hover { background: var(--pc-primary-hover); }
-.button:disabled, .input:disabled { opacity: 0.5; cursor: not-allowed; }
-.button.outline { background: var(--pc-surface); color: var(--pc-ink); border-color: var(--pc-line-strong); }
-.button.outline:not(:disabled):hover { background: var(--pc-surface-sunken); }
-.button.ghost { background: transparent; color: var(--pc-primary); }
-.button.ghost:not(:disabled):hover { background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
-.button.block { align-self: flex-start; }
-.button.large { min-height: 52px; padding: 0 24px; font-size: 16px; }
-.button.stretch { width: 100%; }
-.button:not(:disabled):active { transform: translateY(1px); }
-/* A text button inside a sentence: "Not you?" */
-.link-button { display: inline-flex; align-items: center; gap: 4px; min-height: 24px; padding: 0; border: 0; background: none; color: var(--pc-primary); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
-.link-button svg { width: 14px; height: 14px; }
-.button svg { width: 16px; height: 16px; }
-/* A back link: a ghost button pulled out so its chevron lines up with the page edge. */
-.back-link { align-self: flex-start; margin-inline-start: -12px; }
-@media (max-width: 767px) {
-  .button.block { width: 100%; align-self: stretch; }
-}
-.field { display: flex; flex-direction: column; gap: 8px; }
-.field :is(label, legend, .label) { font-weight: 600; }
-.field .hint { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); color: var(--pc-ink-muted); }
-/* Fields stay 16px on phones and touch screens so iOS does not zoom on focus: the one literal size. */
-.input { min-height: var(--pc-control-height); width: 100%; padding: 10px 16px; border: 1px solid var(--pc-line-strong); border-radius: var(--pc-radius-control); background: var(--pc-surface); color: var(--pc-ink); font: inherit; font-size: 16px; }
-@media (hover: hover) and (pointer: fine) and (min-width: 48.0625rem) {
-  .input { font-size: var(--pc-text-body); }
-}
-textarea.input { min-height: 96px; resize: vertical; border-radius: var(--pc-radius-card); }
-.input:focus-visible { outline: none; border-color: var(--pc-focus); box-shadow: 0 0 0 1px var(--pc-focus), var(--pc-focus-halo); }
-label.pc-row > input[type='checkbox'] { flex: none; width: 20px; height: 20px; margin: 0; accent-color: var(--pc-primary); }
-/* A file input hidden behind its "Choose a file" button label keeps a visible focus ring. */
-.sr-only:focus-visible + label { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
-
-/* Tags: tone from metadata, always with an icon */
-.tag { display: inline-flex; align-items: center; gap: 4px; min-height: 24px; padding: 0 10px; border-radius: 999px; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; white-space: nowrap; }
-.tag svg { width: 14px; height: 14px; }
-.tone-green { background: var(--pc-success-soft); color: var(--pc-success); }
-.tone-orange { background: var(--pc-warning-soft); color: var(--pc-warning); }
-.tone-red { background: var(--pc-danger-soft); color: var(--pc-danger); }
-.tone-blue { background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
-.tone-gray { background: var(--pc-neutral-soft); color: var(--pc-ink-muted); }
-
-/* Notices: the callout layout (Work's .pc-note shape) with an icon per tone. */
-.notice { display: flex; align-items: flex-start; gap: 12px; padding: 16px; border-radius: var(--pc-radius-card); background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
-.notice > svg { width: 20px; height: 20px; }
-.notice-body { display: flex; flex: 1; flex-direction: column; min-width: 0; }
-.notice strong { font-weight: 600; }
-.notice.error { background: var(--pc-danger-soft); color: var(--pc-danger); }
-.notice.warning { background: var(--pc-warning-soft); color: var(--pc-warning); }
-/* The one do-first item on Home (MeHome's yellow callout), a link. */
-.notice.first { background: var(--pc-yellow); color: var(--pc-on-yellow); text-decoration: none; }
-.notice.first > .pc-row-chevron { margin-top: 2px; color: inherit; }
-
-
-/* The booking site's own small parts, on the same tokens. */
-/* Course facts: an icon beside each line. */
-.facts { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
-.facts li { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; }
-.facts li + li { border-top: 1px solid var(--pc-line); }
-.facts svg { width: 20px; height: 20px; margin-top: 0; color: var(--pc-ink-muted); }
-/* Filter pills and the "best time" choices: 44px round toggles. */
-.chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { display: inline-flex; align-items: center; gap: 8px; min-height: var(--pc-control-height); padding: 0 var(--pc-control-pad); border-radius: var(--pc-radius-control); border: 1px solid var(--pc-line-strong); background: var(--pc-surface); color: var(--pc-ink); font-weight: 600; cursor: pointer; text-decoration: none; }
-.chip[aria-pressed='true'], .chip:has(input:checked) { border-color: var(--pc-primary); background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
-.chip:has(input:focus-visible) { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
-.chip input { width: 18px; height: 18px; margin: 0; accent-color: var(--pc-primary); }
-/* Home: the offer and how booking works, side by side from tablets up. */
-.hero { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 24px; align-items: stretch; padding: 40px; border-radius: var(--pc-radius-panel); background: var(--pc-water); color: var(--pc-on-water); }
-.hero-copy { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 16px; }
-.turnfin-app .hero h1 { font-size: 44px; line-height: 50px; font-weight: 700; letter-spacing: -0.02em; color: inherit; max-width: 16ch; }
-.hero .lead { color: inherit; opacity: 0.88; }
-.hero .button { background: var(--pc-surface); color: var(--pc-ink); }
-.hero .button:not(:disabled):hover { background: var(--pc-surface-sunken); }
-.how { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 8px; list-style: none; border-radius: var(--pc-radius-card); background: var(--pc-surface); color: var(--pc-ink); }
-.how li { display: flex; align-items: flex-start; gap: 12px; padding: 12px; }
-.how li > span:last-child { display: flex; flex-direction: column; gap: 2px; }
-.how-icon { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); }
-.how-icon svg { width: 20px; height: 20px; }
-@media (max-width: 899px) {
-  .hero { grid-template-columns: minmax(0, 1fr); padding: 24px; }
-  .turnfin-app .hero h1 { font-size: 32px; line-height: 38px; }
-}
-@media (max-width: 479px) { .hero { padding: 20px; margin-inline: -4px; } }
-.section-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; }
-.turnfin-app .section-head h2, .turnfin-app .page > .stack > section > h2 { font-size: 22px; line-height: 28px; }
-.filters { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
-.chip svg { width: 16px; height: 16px; }
-
-/* A course on the list: the whole card is the link. */
-.course-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; }
-.course-grid > li { display: flex; }
-.course-card { display: flex; flex: 1; flex-direction: column; gap: 12px; padding: 20px; border-radius: var(--pc-radius-panel); background: var(--pc-surface); color: var(--pc-ink); text-decoration: none; transition: background-color 160ms var(--pc-ease), transform 160ms var(--pc-ease); }
-a.course-card:hover { background: var(--pc-hover); }
-a.course-card:active { transform: scale(0.99); }
-a.course-card:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
-.course-card .title { font-size: 18px; line-height: 24px; font-weight: 700; letter-spacing: -0.01em; }
-.course-top { display: flex; align-items: center; gap: 10px; }
-.course-icon { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); }
-.course-icon svg { width: 18px; height: 18px; }
-.clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.course-facts { display: flex; flex-direction: column; gap: 8px; }
-.course-facts > span, .booking-meta > span { display: flex; align-items: flex-start; gap: 8px; }
-.course-facts svg, .booking-meta svg { width: 16px; height: 16px; margin-top: 2px; color: var(--pc-ink-muted); }
-.course-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--pc-line); }
-.price { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 700; font-variant-numeric: tabular-nums; }
-.price.large { font-size: var(--pc-text-figure); line-height: var(--pc-leading-figure); }
-.placeholder-card { height: 240px; border-radius: var(--pc-radius-panel); background: var(--pc-surface-sunken); }
-@media (prefers-reduced-motion: reduce) { .course-card, .button { transition: none; } a.course-card:active, .button:not(:disabled):active { transform: none; } }
-
-/* A course: what it is on the left, booking on the right (it stays in view on wide screens). */
-.course-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 400px); grid-template-areas: "info book" "dates book"; gap: 24px; align-items: start; }
-.course-info { grid-area: info; }
-.course-dates { grid-area: dates; }
-.book-panel { grid-area: book; position: sticky; top: 16px; }
-/* On phones and tablets the booking comes straight after what the course is; the dates after it. */
-@media (max-width: 899px) {
-  .course-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "info" "book" "dates"; }
-  .book-panel { position: static; }
-}
-.dates { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
-.dates li { display: flex; flex-direction: column; padding: 12px 16px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); }
-.signed-in { overflow-wrap: anywhere; }
-.stack-sm > .tag { align-self: flex-start; }
-.code-input { letter-spacing: 0.3em; font-size: 20px; }
-.narrow { max-width: 480px; }
-.page-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.booking-row .pc-row-body { gap: 6px; }
-.booking-meta { display: flex; flex-wrap: wrap; gap: 4px 16px; }
-.summary { display: flex; flex-direction: column; margin: 0; }
-.summary div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; }
-.summary div + div { border-top: 1px solid var(--pc-line); }
-.summary dt { color: var(--pc-ink-muted); }
-.summary dd { margin: 0; font-weight: 600; text-align: right; overflow-wrap: anywhere; }
-/* Loading: sunken cards the shape of the list that is coming. */
-.placeholder-row { height: 96px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); }
-.stack > .tag { align-self: flex-start; }
