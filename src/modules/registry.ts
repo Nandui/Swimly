@@ -70,6 +70,7 @@ export const MODULE_GROUPS: readonly { key: ModuleGroup; label: string }[] = [
   { key: "front-of-house", label: "Front of house" },
   { key: "poolside", label: "Poolside" },
   { key: "team", label: "Team" },
+  // Records only managers keep (owner request, 20 October 2026), starting with the CCTV log.
   { key: "managers", label: "Managers" },
   { key: "back-office", label: "Back office" },
 ];

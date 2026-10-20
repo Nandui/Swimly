@@ -77,18 +77,18 @@ export function forecast(places: PlaceRow[], courses: CourseRow[], waitlist: Wai
   };
 }
 
-/** Attendance by day and start hour across the lessons held in the period. */
+/** Attendance by day and class start time across the lessons held in the period. */
 export function attendanceBySlot(lessons: Lesson[], courses: CourseRow[], from: string, to: string) {
   const day = new Map(courses.map(c => [c.id, c.dayOfWeek as DayOfWeek]));
   const held = heldLessons(lessons, from, to).filter(l => l.marked > 0 && day.has(l.courseId));
   const days = (Object.keys(DAY_META) as DayOfWeek[]).filter(d => held.some(l => day.get(l.courseId) === d)).sort((a, b) => DAY_META[a].index - DAY_META[b].index);
-  const hours = [...new Set(held.map(l => Math.floor(l.startMinutes / 60)))].sort((a, b) => a - b);
+  const starts = [...new Set(held.map(l => l.startMinutes))].sort((a, b) => a - b);
   return {
     days,
-    heat: hours.map(hour => ({
-      hour,
+    heat: starts.map(start => ({
+      start,
       cells: days.map(d => {
-        const slot = held.filter(l => day.get(l.courseId) === d && Math.floor(l.startMinutes / 60) === hour);
+        const slot = held.filter(l => day.get(l.courseId) === d && l.startMinutes === start);
         return { day: d, lessons: slot.length, rate: attendanceRate(slot) };
       }),
     })),

@@ -4,12 +4,22 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.46.0 · 20 October 2026 · Site Monitoring: readings out of range go to managers
+## 1.47.0 · 20 October 2026 · Site Monitoring: readings out of range go to managers
 
-- There is a new **Site Monitoring** page for managers, in a new **Managers** group. When someone completes a task and a reading is outside its allowed range, such as a chlorine reading that is too low, an action appears there straight away. Nobody has to raise it.
+- There is a new **Site Monitoring** page for managers, in the **Managers** group. When someone completes a task and a reading is outside its allowed range, such as a chlorine reading that is too low, an action appears there straight away. Nobody has to raise it.
 - Each action shows the reading, the range allowed, the task, the site, who recorded it and when, and what the task says to do. **See the task** opens it.
 - Close an action by saying what was done. Closed actions stay listed with who closed them and what they wrote, and can be opened again.
 - Your home page shows how many are waiting. Site Monitoring is hidden until your role is given a level for it.
+## 1.46.0 · 20 October 2026 · Managers: a CCTV log
+
+- There is a new **Managers** group of modules, and the first one is the **CCTV log**. Each time someone checks CCTV footage, they record it: who checked it and when, anyone else watching, why it was checked, what they were looking for, which cameras and times they watched, what they saw, and any copy saved or handed over.
+- You can add the incident report's number, such as INC-00042, so the record links to the report.
+- A saved record can't be changed or deleted. If something comes to light later, press **Add a note** and it shows under the record with your name and the time.
+- **Record** lets people record viewings and read their own. **Review** also lets them read every viewing at their sites and add notes. Nobody sees the CCTV log until an administrator gives their role a level under **Admin, Roles**.
+## 1.45.3 · 20 October 2026 · Timetable rows match your class times
+
+- On **Analytics**, **When classes are full** (Business) and **Attendance by time slot** (Pool deck) now give each class start time its own row, such as 15:10, 15:45 and 16:20, instead of lumping every class that starts within the same hour together. Each figure now matches the classes that actually run at that time.
+
 ## 1.45.2 · 20 October 2026 · Turnfin Me and the Academy site match Turnfin
 
 - **Turnfin Me** on your phone now uses exactly the same buttons, fields, tick boxes and colours as Turnfin at work. Each page opens with its title and a back button in the same place, and progress through a course shows as the same bar.

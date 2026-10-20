@@ -21,6 +21,7 @@ export async function seed(ctx: Ctx) {
   await seedAcademy(ctx.prisma);
   await seedShortCourses(ctx.prisma);
   await seedStock(ctx.prisma);
+  await seedCctv(ctx.prisma);
   await seedSwimHistory(ctx.prisma, ctx.roles.Instructor);
   await seedDeskHistory(ctx.prisma, ctx.roles.Receptionist);
 }
@@ -319,6 +320,26 @@ async function seedShortCourses(db: PrismaClient) {
   const heldAt = new Date(Date.now() - 80 * 3_600_000);
   await db.shortCourseParticipant.create({ data: { courseId: soon.id, name: "Kit Sample", email: "kit@example.invalid", phone: "000 000 0000", payment: "owed", source: "online",
     reference: "SC-SBX42", callTimes: ["evening"], callBy: new Date(heldAt.getTime() + 72 * 3_600_000), createdAt: heldAt, createdByName: "Online booking" } });
+}
+
+/** The CCTV log (docs/cctv.md): three invented viewings at Hillview, one with a note added later. */
+async function seedCctv(db: PrismaClient) {
+  const ORG = "org_leisureworld";
+  const iso = (offset: number) => { const d = new Date(); d.setUTCDate(d.getUTCDate() + offset); return d.toISOString().slice(0, 10); };
+  const base = { orgId: ORG, siteId: "club_churchfield", othersPresent: "", copies: "" };
+  const maya = { recordedById: "sbx_maya", recordedByName: "Maya Example", checkedBy: "Maya Example" };
+  const orla = { recordedById: "sbx_orla", recordedByName: "Orla Example", checkedBy: "Orla Example" };
+  await db.cctvViewing.create({ data: { ...base, ...maya, viewedOn: iso(-9), viewedAt: "16:40", reason: "complaint", background: "A parent said their child was pushed on the poolside steps during the 15:30 class.",
+    purpose: "Whether anyone was pushed on the steps by the learner pool", cameras: "Camera 2, learner pool", footageOn: iso(-9), footageFrom: "15:25", footageTo: "16:05",
+    findings: "Two children reach the steps together and one slips back into the water. Nobody is pushed. The teacher helps the child out within a few seconds." } });
+  const theft = await db.cctvViewing.create({ data: { ...base, ...maya, viewedOn: iso(-4), viewedAt: "11:15", reason: "theft", othersPresent: "Garda Example, Hillview station", incidentNumber: 1,
+    background: "A member reported their bag taken from locker 14 between 07:00 and 08:30.", purpose: "Who opened locker 14 in that time", cameras: "Camera 5, changing village corridor",
+    footageOn: iso(-5), footageFrom: "07:00", footageTo: "08:30", findings: "At 07:52 a person in a grey hoodie opens locker 14 with a key and leaves with a black bag. They come in through the main door at 07:41.",
+    copies: "One clip, 07:40 to 07:55, on a USB key given to Garda Example." } });
+  await db.cctvViewingNote.create({ data: { viewingId: theft.id, text: "The Gardaí confirmed they have the USB key and logged it as evidence.", byId: "sbx_orla", byName: "Orla Example" } });
+  await db.cctvViewing.create({ data: { ...base, ...orla, viewedOn: iso(-1), viewedAt: "09:05", reason: "incident", incidentNumber: 2,
+    background: "A swimmer cut their foot near the deep end on Sunday morning.", purpose: "Whether there was glass or anything sharp on the poolside", cameras: "Camera 1, main pool deep end",
+    footageOn: iso(-2), footageFrom: "10:00", footageTo: "10:45", findings: "Nothing relevant seen: the poolside is clear and nobody drops anything before the swimmer is hurt." } });
 }
 
 /** Stock (docs/stock.md): a dozen invented products in the migration's categories, a submitted

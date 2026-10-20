@@ -1,0 +1,64 @@
+// CCTV log (owner request, 20 October 2026; docs/cctv.md): a record of every
+// time someone checks CCTV footage, the first module in the Managers group.
+// Who checked, why, what they were looking for and what they saw, so each
+// viewing can be accounted for under data protection law. Entries are never
+// edited or deleted once saved; later facts are added as dated notes. Sites
+// and staff are Core's and read only through its functions, so these tables
+// keep plain ids and carry the module prefix (CLAUDE.md section 4).
+
+/// One time footage was checked. Locked once saved.
+model CctvViewing {
+  id             String   @id @default(cuid())
+  /// Shown as CCTV-00042.
+  number         Int      @unique @default(autoincrement())
+  orgId          String?
+  siteId         String
+  /// When the footage was watched: the site's own date and clock.
+  viewedOn       String
+  viewedAt       String
+  /// Who watched it, in the words of the person recording (themselves by default).
+  checkedBy      String
+  /// Anyone else who watched with them, such as "Garda John Ryan" or "Aoife, duty manager".
+  othersPresent  String   @default("")
+  /// Why it was checked. See `CCTV_REASONS` in src/modules/cctv/shared/rules.ts.
+  reason         String
+  /// What led to the check, in their words.
+  background     String
+  /// What they were looking for: the question the footage was meant to answer.
+  purpose        String
+  /// Which cameras, and the stretch of footage looked at (the site's own date and clock).
+  cameras        String
+  footageOn      String
+  footageFrom    String
+  footageTo      String
+  /// What was seen.
+  findings       String
+  /// Any copy saved or handed over, to whom and how. Empty when none was.
+  copies         String   @default("")
+  /// The incident report it belongs to, as its number (INC-00042), when there is one.
+  incidentNumber Int?
+  recordedById   String
+  recordedByName String
+  createdAt      DateTime @default(now())
+
+  notes CctvViewingNote[]
+
+  @@index([siteId, viewedOn])
+  @@index([recordedById])
+  @@map("cctv_viewings")
+}
+
+/// Something added to a saved viewing later, with who added it and when.
+model CctvViewingNote {
+  id        String   @id @default(cuid())
+  viewingId String
+  text      String
+  byId      String
+  byName    String
+  createdAt DateTime @default(now())
+
+  viewing CctvViewing @relation(fields: [viewingId], references: [id], onDelete: Restrict)
+
+  @@index([viewingId])
+  @@map("cctv_viewing_notes")
+}
