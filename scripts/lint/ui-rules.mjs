@@ -6,12 +6,15 @@
 //   2. No new colours in stylesheets: colour literals (hex, rgb(), hsl(), oklch(), color-mix())
 //      live only in the theme files, src/app/theme/poolside.css and src/app/shadcn.css; every
 //      other stylesheet uses their tokens.
-// Run by `npm run lint`. Exits 1 and lists every problem when a rule is broken.
+//   3. Turnfin Me (apps/me) and the Academy site (apps/academy) follow the same rules, with exact
+//      copies of Work's theme (poolside.css, shadcn.css, globals.css, motion.css), so the three apps
+//      share one set of colours.
+// Run by `npm run lint` in each app. Exits 1 and lists every problem when a rule is broken.
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 
 const root = resolve(dirname(new URL(import.meta.url).pathname), "../..");
-const src = join(root, "src");
+const APPS = [".", "apps/me", "apps/academy"];
 const problems = [];
 
 function walk(dir, keep, out = []) {
@@ -23,10 +26,10 @@ function walk(dir, keep, out = []) {
   return out;
 }
 
+function checkApp(app) {
+const src = join(root, app, "src");
 // ── 1. Every page reaches PageShell.
 const IMPORT = /(?:import|export)\s[^'"]*?from\s*["']([^"']+)["']|import\(\s*["']([^"']+)["']\s*\)/g;
-const sources = new Map();
-const read = (file) => { if (!sources.has(file)) sources.set(file, readFileSync(file, "utf8")); return sources.get(file); };
 function resolveImport(from, spec) {
   let base;
   if (spec.startsWith("@/")) base = join(src, spec.slice(2));
@@ -64,7 +67,7 @@ for (const page of walk(join(src, "app"), (path) => /[\\/]page\.tsx$/.test(path)
 }
 
 // ── 2. Colour literals only in the theme files.
-const THEME = new Set(["src/app/theme/poolside.css", "src/app/shadcn.css"]);
+const THEME = new Set(["src/app/theme/poolside.css", "src/app/shadcn.css"].map((file) => join(app, file).split("\\").join("/")));
 const COLOUR = /#[\da-f]{3,8}\b|\b(?:rgba?|hsla?|oklch|oklab|lab|lch|hwb|color-mix)\(/gi;
 for (const sheet of walk(src, (path) => path.endsWith(".css"))) {
   const name = relative(root, sheet).split("\\").join("/");
@@ -78,9 +81,23 @@ for (const sheet of walk(src, (path) => path.endsWith(".css"))) {
   });
 }
 
+}
+
+const sources = new Map();
+const read = (file) => { if (!sources.has(file)) sources.set(file, readFileSync(file, "utf8")); return sources.get(file); };
+for (const app of APPS) checkApp(app);
+
+// ── 3. The other apps' theme is Work's, byte for byte.
+for (const app of APPS.slice(1)) {
+  for (const file of ["src/app/theme/poolside.css", "src/app/shadcn.css", "src/app/globals.css", "src/app/motion.css"]) {
+    const copy = join(root, app, file);
+    if (!existsSync(copy) || read(copy) !== read(join(root, file))) problems.push(`${app}/${file}: must be an exact copy of Work's ${file} (copy it across when Work's changes)`);
+  }
+}
+
 if (problems.length) {
   console.error(problems.join("\n"));
   console.error(`\n✖ ${problems.length} UI rule problem${problems.length === 1 ? "" : "s"} (scripts/lint/ui-rules.mjs)`);
   process.exit(1);
 }
-console.log("UI rules: every page uses PageShell; stylesheets use theme colours only.");
+console.log("UI rules: every page uses PageShell; stylesheets use theme colours only (Work, Turnfin Me, Academy).");

@@ -174,11 +174,15 @@ configuration starts Turnfin Me on :3101 against it.
 - **Review queues:** `src/lib/people/details-*.ts`, `src/modules/training/features/certificates/server/`.
 - **Reminders:** `src/lib/staff-api/reminders.ts` and `src/app/api/cron/reminders/route.ts`.
 - **Work-device rule:** `src/lib/devices/work-device.ts`.
-- **Turnfin Me:** `apps/me/**`. Its tokens and the v2 parts (the fin tile, the bar, the bottom
-  bar, panels, rows and tile icons) are copied verbatim from `src/app/theme/poolside.css` into
-  `apps/me/src/app/globals.css`, scoped to `body.turnfin-app` as Work does, so the two diff 1:1;
-  keep them in step. The one difference is a block marked "Me only": Me has no module rail, so
-  its bottom bar shows at every width, capped to the 720px column, and clears the safe areas.
+- **Turnfin Me:** `apps/me/**`. It follows Work's UI rules (CLAUDE.md, section 14): shadcn
+  components only (`apps/me/src/components/shadcn`, with copies of Work's `ui-kit` and `ui`
+  pieces), no arbitrary Tailwind values, no inline styles or new colours, and every page in
+  `PageShell` with its `PageHeader`. Its theme files (`globals.css`, `shadcn.css`, `motion.css`,
+  `theme/poolside.css`) are exact copies of Work's, checked by `scripts/lint/ui-rules.mjs`; copy
+  them across when Work's change. `me.css` holds only Me's own layout, on those tokens. The one
+  difference from Work is marked "Me only": Me has no module rail, so its bottom bar shows at
+  every width, capped to the 720px column, and clears the safe areas. `npm run lint` in
+  `apps/me` runs the same rules as Work.
   Dates follow Work's format rules (en-GB, "Mon 12 Oct", "20 Sep 2026", never "Sept").
 - **Turnfin Me emails:** the code and reminder templates in `src/lib/staff-api/email.ts`
   (`staffCodeEmail`, `staffReminderEmail`) copy the Poolside Clear v2 light and dark hex values

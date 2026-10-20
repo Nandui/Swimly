@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { CloudDownload, CloudOff, RefreshCw, Trash2, WifiOff } from "lucide-react";
-import { Notice } from "@/components/ui";
+import { Button } from "@/components/shadcn/button";
+import { Bar, Notice } from "@/components/ui";
 import { apiFile, api, ApiError } from "@/lib/api";
 import { date } from "@/lib/format";
 import {
@@ -57,13 +58,13 @@ export function OfflineBar() {
         <div className="offline-bar" role="status">
           <WifiOff aria-hidden="true" />
           <p><strong>You’re offline.</strong> Courses saved on this phone still open{waiting ? `, and ${changes} will be sent when you have signal` : ""}.</p>
-          <Link href="/offline" className="button ghost">Saved</Link>
+          <Button asChild variant="ghost"><Link href="/offline">Saved</Link></Button>
         </div>
       ) : waiting ? (
         <div className="offline-bar" role="status">
           <RefreshCw aria-hidden="true" className={sending ? "spin" : undefined} />
           <p>{sending ? `Sending ${changes}…` : `${changes} waiting to send.`}</p>
-          {!sending ? <button type="button" className="button ghost" onClick={() => void flush()}>Send now</button> : null}
+          {!sending ? <Button type="button" variant="ghost" onClick={() => void flush()}>Send now</Button> : null}
         </div>
       ) : null}
       {failed.length ? (
@@ -71,7 +72,7 @@ export function OfflineBar() {
           <Notice title="Turnfin didn’t take these" tone="warning">
             {failed.map((f) => `${f.label}: ${f.message}`).join(" ")} Open the lesson to do it again.
           </Notice>
-          <button type="button" className="button ghost" onClick={() => void dismissFailures()}>Got it</button>
+          <Button type="button" variant="ghost" className="self-start" onClick={() => void dismissFailures()}>Got it</Button>
         </div>
       ) : null}
     </>
@@ -96,32 +97,32 @@ export function OfflineCourse({ id }: { id: string }) {
     finally { setStep(null); }
   }, [id]);
   return (
-    <section className="pc-panel stack-sm" aria-labelledby="offline-title">
-      <div className="row">
+    <section className="pc-panel" aria-labelledby="offline-title">
+      <div className="flex flex-wrap items-center gap-2">
         <span className="pc-tile-icon">{copy ? <CloudDownload aria-hidden="true" /> : <CloudOff aria-hidden="true" />}</span>
         <h2 id="offline-title">{copy ? "Saved on this phone" : "No signal where you train?"}</h2>
       </div>
-      <p className="muted">
+      <p className="text-ui-muted-foreground">
         {copy
           ? `${copy.lessons} ${copy.lessons === 1 ? "lesson" : "lessons"} · ${size(copy.bytes)} · brought up to date ${date(copy.savedAt)}. Lessons you finish with no signal are sent when you’re back online.`
           : "Save this course and its lessons open with no signal. What you finish is sent to Turnfin when you’re back online."}
       </p>
       <p className="caption">Practice questions, the exam, videos and slides still need a connection. Saved courses are removed after 30 days, and when you sign out.</p>
       {step ? (
-        <div className="stack-sm" role="status">
-          <progress className="course-progress" max={step.total} value={step.done} aria-label="Saving for offline" />
-          <p className="caption tabular">Saving {step.done} of {step.total}…</p>
+        <div className="flex flex-col gap-2" role="status">
+          <Bar max={step.total} value={step.done} label="Saving for offline" />
+          <p className="caption tabular-nums">Saving {step.done} of {step.total}…</p>
         </div>
       ) : null}
       {problem ? <Notice title="Couldn’t save it" tone="error" live>{problem}</Notice> : null}
       {!step && !offline ? (
-        <div className="row">
+        <div className="flex flex-wrap items-center gap-2">
           {copy ? (
             <>
-              <button type="button" className="button outline" onClick={save}><RefreshCw aria-hidden="true" />Bring up to date</button>
-              <button type="button" className="button ghost" onClick={() => void removeCourse(id)}><Trash2 aria-hidden="true" />Remove</button>
+              <Button type="button" variant="outline" onClick={save}><RefreshCw aria-hidden="true" />Bring up to date</Button>
+              <Button type="button" variant="ghost" onClick={() => void removeCourse(id)}><Trash2 aria-hidden="true" />Remove</Button>
             </>
-          ) : <button type="button" className="button outline block" onClick={save}><CloudDownload aria-hidden="true" />Save for offline</button>}
+          ) : <Button type="button" variant="outline" className="max-md:w-full" onClick={save}><CloudDownload aria-hidden="true" />Save for offline</Button>}
         </div>
       ) : null}
     </section>

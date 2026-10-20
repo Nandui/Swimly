@@ -4,6 +4,9 @@ import { useState } from "react";
 import { Frame } from "@/components/frame";
 import { LoadError, Loading, Notice, useLoad } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
+import { ChoiceRow } from "@/components/ui/choice-row";
+import { PageShell } from "@/components/ui-kit/page-shell";
+import { PageHeader } from "@/components/ui-kit/page-header";
 
 const OPTIONS = [
   { key: "trainingDue", label: "Training due soon or overdue" },
@@ -25,21 +28,20 @@ export default function RemindersPage() {
   }
   return (
     <Frame title="Reminders">
-      <div className="stack">
-        <div className="stack-sm"><h1>Reminders</h1><p className="muted">We email you when something needs you. Emails never include HR details.</p></div>
+      <PageShell header={<PageHeader title="Reminders" description="We email you when something needs you. Emails never include HR details." />}>
         {failure ? <Notice title={failure} tone="error" live /> : null}
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading rows={4} /> : (
           <fieldset className="pc-panel" aria-describedby="reminders-saved">
             <legend className="sr-only">Email me when</legend>
             <div className="pc-rows">
               {OPTIONS.map((o) => (
-                <label key={o.key} className="pc-row"><input type="checkbox" checked={data[o.key]} onChange={(e) => toggle(o.key, e.target.checked)} />{o.label}</label>
+                <ChoiceRow key={o.key} type="checkbox" title={o.label} checked={data[o.key]} onCheckedChange={(checked) => toggle(o.key, checked === true)} />
               ))}
             </div>
             <p id="reminders-saved" className="caption">Saved as soon as you change one.</p>
           </fieldset>
         )}
-      </div>
+      </PageShell>
     </Frame>
   );
 }

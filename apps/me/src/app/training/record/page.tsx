@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Award, ChevronLeft, Download, Printer } from "lucide-react";
+import { Award, Download, Printer } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { EmptyRows, LoadError, Loading, Tag, useLoad } from "@/components/ui";
 import { date } from "@/lib/format";
 import { TRAINING_META } from "@/lib/meta";
+import { Button } from "@/components/shadcn/button";
+import { PageShell } from "@/components/ui-kit/page-shell";
+import { PageHeader } from "@/components/ui-kit/page-header";
 
 type MyRecord = {
   name: string;
@@ -48,17 +51,15 @@ export default function RecordPage() {
   const minutes = data?.hours.log.reduce((n, l) => n + l.minutes, 0) ?? 0;
   return (
     <Frame title="My record">
-      <div className="stack">
-        <Link href="/training" className="button ghost back-link no-print"><ChevronLeft aria-hidden="true" />My training</Link>
-        <div className="stack-sm"><h1>My training record</h1><p className="muted">{data ? `${data.name} · ` : ""}every course you have had, with scores and certificates.</p></div>
+      <PageShell className="no-print-back" header={<PageHeader back={{ href: "/training", label: "My training" }} title="My training record" description={<>{data ? `${data.name} · ` : ""}every course you have had, with scores and certificates.</>} />}>
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading rows={4} /> : (
           <>
-            <div className="row no-print">
-              <button type="button" className="button outline" onClick={() => download(data)}><Download aria-hidden="true" />Download (Excel)</button>
-              <button type="button" className="button outline" onClick={() => window.print()}><Printer aria-hidden="true" />Print or save as PDF</button>
+            <div className="flex flex-wrap items-center gap-2 no-print">
+              <Button type="button" variant="outline" onClick={() => download(data)}><Download aria-hidden="true" />Download (Excel)</Button>
+              <Button type="button" variant="outline" onClick={() => window.print()}><Printer aria-hidden="true" />Print or save as PDF</Button>
             </div>
             <section className="pc-panel" aria-labelledby="record-done">
-              <div className="pc-panel-head"><h2 id="record-done">Completed</h2><span className="muted tabular">{done.length} {done.length === 1 ? "course" : "courses"}</span></div>
+              <div className="pc-panel-head"><h2 id="record-done">Completed</h2><span className="text-ui-muted-foreground tabular-nums">{done.length} {done.length === 1 ? "course" : "courses"}</span></div>
               {done.length === 0 ? <EmptyRows>Nothing completed yet.</EmptyRows> : (
                 <ul className="pc-rows">{done.map((c) => (
                   <li key={c.id} className="pc-row">
@@ -66,7 +67,7 @@ export default function RecordPage() {
                       <span className="pc-row-title">{c.title}</span>
                       <span className="pc-row-hint">{[`Completed ${date(c.completedAt)}`, c.signedOffBy ? `signed off by ${c.signedOffBy}` : null, c.exam ? `exam ${c.exam.best}%` : null, c.version ? `version ${c.version}` : null, c.grants ? `records ${c.grants}` : null].filter(Boolean).join(" · ")}</span>
                     </span>
-                    {c.certificate ? <Link href={`/training/${c.id}/certificate`} className="button ghost no-print"><Award aria-hidden="true" />Certificate</Link> : null}
+                    {c.certificate ? <Button asChild variant="ghost" className="no-print"><Link href={`/training/${c.id}/certificate`}><Award aria-hidden="true" />Certificate</Link></Button> : null}
                   </li>
                 ))}</ul>
               )}
@@ -86,7 +87,7 @@ export default function RecordPage() {
               <section className="pc-panel" aria-labelledby="record-paths">
                 <h2 id="record-paths">Learning paths</h2>
                 <ul className="pc-rows">{data.paths.map((p) => (
-                  <li key={`${p.title}-${p.startsOn}`} className="pc-row"><span className="pc-row-body"><span className="pc-row-title">{p.title}</span><span className="pc-row-hint tabular">{p.finishedOn ? `Finished ${date(p.finishedOn)}` : `${p.done} of ${p.total} courses done`} · started {date(p.startsOn)}</span></span></li>
+                  <li key={`${p.title}-${p.startsOn}`} className="pc-row"><span className="pc-row-body"><span className="pc-row-title">{p.title}</span><span className="pc-row-hint tabular-nums">{p.finishedOn ? `Finished ${date(p.finishedOn)}` : `${p.done} of ${p.total} courses done`} · started {date(p.startsOn)}</span></span></li>
                 ))}</ul>
               </section>
             ) : null}
@@ -110,7 +111,7 @@ export default function RecordPage() {
             ) : null}
           </>
         )}
-      </div>
+      </PageShell>
     </Frame>
   );
 }
