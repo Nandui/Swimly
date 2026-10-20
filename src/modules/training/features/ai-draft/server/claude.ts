@@ -7,7 +7,8 @@ import { draftSchema, DRAFT_JSON_SCHEMA, type Draft } from "@/modules/training/f
  *  The document goes to Anthropic's API and nowhere else; Turnfin keeps only
  *  the draft course. Switched on by ANTHROPIC_API_KEY. */
 
-export const MODEL = "claude-opus-5-5";
+// Sonnet 5.5 only, with no fallback to another model (owner decision, 20 October 2026).
+export const MODEL = "claude-sonnet-5-5";
 export const aiDraftingOn = () => !!process.env.ANTHROPIC_API_KEY;
 
 export class DraftError extends Error {}
@@ -69,8 +70,6 @@ export async function draftFromDocument(source: Source, options: { exam: boolean
     message = await client.beta.messages.stream({
       model: MODEL,
       max_tokens: 32_000,
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
       system: SYSTEM,
       output_config: { effort: "medium", format: { type: "json_schema", schema: DRAFT_JSON_SCHEMA } },
       messages: [{ role: "user", content: [...blocks, { type: "text", text: ask }] }],

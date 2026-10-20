@@ -52,7 +52,7 @@ before(async () => {
     "next/cache": { revalidatePath() {} },
     "server-only": {},
     "@/modules/training/features/ai-draft/server/claude": {
-      MODEL: "claude-opus-5-5", DraftError: class extends Error {},
+      MODEL: "claude-sonnet-5-5", DraftError: class extends Error {},
       draftFromDocument: async (source: unknown, options: unknown) => { calls.push({ source, options }); return { draft: DRAFT, name: "backwash-sop.pdf" }; },
     },
   });

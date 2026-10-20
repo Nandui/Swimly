@@ -444,7 +444,8 @@ button explains it isn't switched on and nothing is sent).
   or the final exam.
 - **What happens**: `src/app/training/courses/draft/route.ts` (a route handler,
   so documents can be larger than a server action allows and the call can run
-  up to five minutes) passes it to `draftCourse`. Claude reads the document and
+  up to five minutes) passes it to `draftCourse`. Claude Sonnet 5.5 (only that model, no fallback;
+  owner decision, 20 October 2026) reads the document and
   answers in a fixed JSON shape (`server/schema.ts`): sections of reading,
   flashcard and checklist lessons, and single, multiple and true-or-false
   questions. `toCourse` turns that into the builder's own lessons through the
