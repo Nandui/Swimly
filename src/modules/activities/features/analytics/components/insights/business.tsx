@@ -2,12 +2,12 @@ import { Copy, LayoutGrid, Users } from "lucide-react";
 import { formatCount, formatDayMonth, plural } from "@/lib/format";
 import { formatSlotShort } from "@/modules/activities/shared/courses/constants";
 import type { BusinessInsights } from "@/modules/activities/features/analytics/server/insights-data";
-import { TimetableHeat } from "@/modules/activities/features/analytics/components/insights/heat-maps";
+import { TimetableHeat } from "@/modules/activities/features/analytics/components/insights/timetable-heat";
 import { AreaChart, ColumnChart, CompareColumns } from "@/modules/activities/features/analytics/components/insights/charts";
 import { ChartHead, LevelPlaces, MiniList, Sentence, SplitBar } from "@/modules/activities/features/analytics/components/insights/blocks";
 import { PillSwitch, TileSwitch } from "@/modules/activities/features/analytics/components/insights/switches";
 import { before, busiest, moved, weekOf } from "@/modules/activities/features/analytics/components/insights/words";
-import { asOf, Attention, Bars, DrillLinks, Panel, PanelLink, percent, ReportShell, reportHref, Section } from "@/modules/activities/features/analytics/components/insights/kit";
+import { asOf, Attention, Bars, DrillLinks, HeatLegend, Panel, PanelLink, percent, ReportShell, reportHref, Section } from "@/modules/activities/features/analytics/components/insights/kit";
 
 /** The business dashboard (approved mockup, 20 October 2026): what is worth a look first, how the swim
  *  school is growing as five tiles that each open one chart, where the timetable is full, places at
@@ -19,6 +19,7 @@ export function BusinessReport({ data }: { data: BusinessInsights }) {
   const p = data.period;
   const swimmersHref = reportHref(data, "/analytics/swimmers");
   const classesHref = reportHref(data, "/analytics/classes");
+  const classHrefs = data.canOpenClasses ? Object.fromEntries(data.capacity.heat.flatMap(r => r.cells.flatMap(c => c.levels.flatMap(l => l.classes.map(k => [k.id, reportHref(data, `/analytics/classes/${k.id}`)]))))) : {};
   const now = asOf(p);
   const was = before(p);
   const trend = o.trend;
@@ -108,8 +109,8 @@ export function BusinessReport({ data }: { data: BusinessInsights }) {
     </Section>
 
     <Section id="capacity" title="Where there is room" intro={`Where to add or merge classes: the timetable ${asOf(p, "today")}, each level and the coming weeks.`}>
-      <Panel id="timetable" span={8} title="When classes are full" sub="Places filled by day and start time. An orange dot means someone is waiting for a class in that slot." action={<PanelLink href={`${classesHref}#classes`}>Every class</PanelLink>}>
-        <TimetableHeat capacity={data.capacity} />
+      <Panel id="timetable" span={8} title="When classes are full" sub="Places filled by day and start time. An orange dot means someone is waiting for a class in that slot. Pick a slot to see its programmes and levels." action={<PanelLink href={`${classesHref}#classes`}>Every class</PanelLink>}>
+        <TimetableHeat capacity={data.capacity} classHrefs={classHrefs} legend={<HeatLegend low="Under half full" high="Full" waiting="Someone waiting" />} />
       </Panel>
       <Panel id="extremes" span={4} title="Full, and nearly empty">
         <h4 className="ins-mini-head">Full with a waiting list</h4>

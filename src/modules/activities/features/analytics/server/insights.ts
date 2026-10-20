@@ -256,10 +256,27 @@ export function buildClassRows(ds: Dataset) {
   }).sort((a, b) => DAY_META[a.dayOfWeek].index - DAY_META[b.dayOfWeek].index || a.startMinutes - b.startMinutes || a.name.localeCompare(b.name));
 }
 
+/** What one timetable slot holds, level by level in curriculum order, for the heat map to open. */
+function slotLevels(slot: ClassRow[], index: ReturnType<typeof curriculumIndex>) {
+  const byLevel = new Map<string, ClassRow[]>();
+  for (const r of slot) byLevel.set(r.levelId, [...byLevel.get(r.levelId) ?? [], r]);
+  return [...byLevel.entries()].sort(([a], [b]) => index.compare(a, b)).map(([levelId, list]) => {
+    const capped = list.filter(r => r.capacity !== null);
+    const capacity = capped.reduce((s, r) => s + r.capacity!, 0);
+    return {
+      levelId, name: index.level(levelId)?.name ?? list[0].levelName, programmeName: list[0].programmeName,
+      enrolled: list.reduce((s, r) => s + r.enrolled, 0), capacity, waiting: list.reduce((s, r) => s + r.waiting, 0),
+      fill: pct(capped.reduce((s, r) => s + r.enrolled, 0), capacity),
+      classes: list.map(r => ({ id: r.id, name: r.name, startMinutes: r.startMinutes, enrolled: r.enrolled, capacity: r.capacity, waiting: r.waiting })),
+    };
+  });
+}
+
 export function buildClasses(ds: Dataset) {
   const rows = buildClassRows(ds);
   const days = (Object.keys(DAY_META) as DayOfWeek[]).filter(day => rows.some(r => r.dayOfWeek === day));
   const hours = [...new Set(rows.map(r => Math.floor(r.startMinutes / 60)))].sort((a, b) => a - b);
+  const index = curriculumIndex(ds.curriculum);
   const heat = hours.map(hour => ({
     hour,
     cells: days.map(day => {
@@ -267,10 +284,9 @@ export function buildClasses(ds: Dataset) {
       const capped = slot.filter(r => r.capacity !== null);
       const capacity = capped.reduce((s, r) => s + r.capacity!, 0);
       const enrolled = capped.reduce((s, r) => s + r.enrolled, 0);
-      return { day, classes: slot.length, enrolled: capacity ? enrolled : slot.reduce((s, r) => s + r.enrolled, 0), capacity, waiting: slot.reduce((s, r) => s + r.waiting, 0), fill: pct(enrolled, capacity) };
+      return { day, classes: slot.length, enrolled: capacity ? enrolled : slot.reduce((s, r) => s + r.enrolled, 0), capacity, waiting: slot.reduce((s, r) => s + r.waiting, 0), fill: pct(enrolled, capacity), levels: slotLevels(slot, index) };
     }),
   }));
-  const index = curriculumIndex(ds.curriculum);
   const byLevel = new Map<string, ClassRow[]>();
   for (const r of rows) byLevel.set(r.levelId, [...byLevel.get(r.levelId) ?? [], r]);
   const levels = [...byLevel.entries()].sort(([a], [b]) => index.compare(a, b)).map(([levelId, list]) => {
