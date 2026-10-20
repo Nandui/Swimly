@@ -5,7 +5,8 @@
 See [docs/rota.md](../../../docs/rota.md).
 
 ## Features
-- `plan` — planning the week shift first, as one board with two views (People: the open needs, then each person's shift; Needs: area by area) and two to-do sheets (places to fill, people to check): what needs people, then each person's shift with what they are on, their breaks and the time still free; putting someone on any activity on the list for part of their shift (`putOnActivity`, which adds it to the day with them on it), the swim school's classes by themselves (no activity takes them), each clicked to choose who teaches it that day (`planTeacher`, which also puts it on their shift), lending to other departments, hours against contract, copying, sharing and exporting a week to Excel (`/rota`, `/rota/export`).
+- `diary` — the Plan (`/rota`, `/rota/export`): the day's diary, rebuilt 20 October 2026. A pure model of the day (`model.ts`: needs that add up, holes with reasons, each person's day, who's where, the next change, who could fill a hole), its loader, its actions (`fillNeed`, `changeLine`, `removeLine`, `saveShift`, `removeShift`, `placeBreaks`), the screens and the week export.
+- `plan` — the old Plan, kept but no longer routed (owner's choice, 20 October 2026): planning the week shift first, as one board with two views (People: the open needs, then each person's shift; Needs: area by area) and two to-do sheets (places to fill, people to check): what needs people, then each person's shift with what they are on, their breaks and the time still free; putting someone on any activity on the list for part of their shift (`putOnActivity`, which adds it to the day with them on it), the swim school's classes by themselves (no activity takes them), each clicked to choose who teaches it that day (`planTeacher`, which also puts it on their shift), lending to other departments, hours against contract, copying, sharing and exporting a week to Excel (`/rota`, `/rota/export`).
 - `today` — running today: who is on, the gaps left, the day's note and timepoints (`/rota/today`).
 - `bookings` — repeating bookings of areas, the whole pool or chosen lanes: add, change and cancel them (`/rota/bookings`).
 - `absences` — reporting absences, extending them and recording returns to work (`/rota/absences`).
@@ -23,6 +24,7 @@ See [docs/rota.md](../../../docs/rota.md).
 - `RotaNeed`, `RotaAssignment` — activities planned and who covers them.
 - `RotaAreaAssignment` — who is on each area's own need (its hours and staff come from Admin, Areas).
 - `RotaPlanShift`, `RotaBreak` — planned shifts and breaks.
+- `RotaBookingKind` — how many staff each kind of booking needs (0 for none).
 - `RotaRepeat` — repeating bookings of areas.
 - `RotaAbsence`, `RotaAbsenceUpdate` — absences and returns to work.
 - `RotaDayNote`, `RotaWeekShare`, `RotaLog` — the day's note, shared weeks and the change log.

@@ -4,17 +4,19 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.48.0 · 20 October 2026 · Rota: the Plan reads like the day's diary
+## 1.48.0 · 20 October 2026 · Rota: a new Plan, the day's diary
 
-- **Plan** now reads like a diary of the day, so anyone can open it and see who is where. The week is a slim bar of days, and each day shows how many places are still to fill.
-- At the top of the day, **Not covered yet** lists every place nobody is on, soonest first, each with **Choose someone**. When there is nothing left, it says **Every need is filled**.
-- Beside it, **Who's where** shows each area and activity with who is on it, anyone on a break, anything short of people, and the next change, such as "15:00 · Cian starts, Aoife finishes". On today it opens on now; choose any other time of the day.
-- **The day, person by person** has one line for each person, in plain words: "Main pool 07:00–10:00", "Break", "Aqua-fit". Covering an area is blue, classes and activities green, bookings violet, breaks dashed, and places not covered sit on a line at the top. On today a line shows where the day has got to.
-- Choose a name, or a break, to see that person's day as a list from start to finish, with what they are on now. Choose an empty stretch to give that time to something, or a block to change it.
-- **By area** shows each area with what needs people and how covered it is. On a phone, the day becomes simple lists.
-- **Today** opens with five figures: gaps left, who is on now, what starts in the next three hours, who is off and changes to update in Timepoint. Gaps and who is on sit on the left, and who is off, the changes and the day note on the right.
+- **Plan** is new, built from the start as the day's diary: open a day and anyone can see who is where, when they change, their breaks and what still needs someone. Everything already planned is still there.
+- It opens on your own department and on today. Pick another department, or **Every department**, and any day of the week from the bar under the title. Each day says how many things are still to fill, or **Done**.
+- **Not covered yet** comes first: everything that needs people and has nobody, or too few, soonest first, with the reason ("Nobody yet", "1 more needed", "Riley is off", "Liam is on a break"). An area's own lifeguards and the activities in it add up: someone teaching aqua-fit is not one of the pool's lifeguards then.
+- **Choose someone** shows the best fits first: free then, able to do it and from your department, then people from other departments you can borrow straight away, then who can't and why. Each says what it does to their day, such as "On shift then" or "Their day becomes 07:00–16:00", and their hours this week. You can give part of the time.
+- **Who's where** shows, at any time of the day (now, on today), each area and activity with who is on it, anything short of people, who is on a break and the next change.
+- **The day, person by person** has one line for each person: covering an area is blue, activities and classes green, bookings violet, breaks dashed, time not given yet dotted, and what is not covered sits in red at the top. On a phone each person's day is a short list.
+- Choose a person to see their day from start to finish, with what to look at (breaks still to place, a qualification, two things at once). From there change their times, take them off something, give their free time to something not covered, place their breaks and change their shifts.
+- **Add someone** brings a person into the day before anything is given to them, and **Add to the day** adds something that needs people. Copy, Export week and Share with staff work as before.
+- **Bookings** has **Staff each kind needs**: how many staff a party, school lessons, lane hire and so on need. A new booking starts with that number, and 0 means it needs nobody, so lane hire stays off **Not covered yet**.
+- **Today** opens with five figures: gaps left, who is on now, what starts in the next three hours, who is off and changes to update in Timepoint.
 - **Bookings** opens with three figures, splits running bookings from finished ones and shows how many places on each booking are filled.
-- Nothing works differently: shifts, breaks, lending, copying, sharing and Export week work as before.
 
 ## 1.47.0 · 20 October 2026 · Site Monitoring: readings out of range go to managers
 

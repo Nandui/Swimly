@@ -116,7 +116,7 @@ function WhosWhere() {
           {where.map((w) => (
             <li key={w.need.key} className="diary-where-row" data-tone={toneOf(w.need.kind)}>
               <span className="diary-where-need">{w.need.kind === "area" ? w.need.area : w.need.title}<span className="diary-muted">{w.need.kind === "area" ? w.need.title : w.need.area}</span></span>
-              <span className="diary-where-names">{w.names.length ? listWords(w.names) : "Nobody"}</span>
+              <span className="diary-where-names">{w.names.length ? listWords(w.names) : w.need.wants.length ? "Nobody" : "No staff needed"}</span>
               {w.short ? <span className="diary-short"><TriangleAlert aria-hidden="true" />{w.short} more needed</span> : null}
             </li>
           ))}

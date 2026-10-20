@@ -9,7 +9,7 @@ import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { Progress } from "@/components/shadcn/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
-import { BOOKING_KIND_META, BookingDialog, type BookingKind, CancelBooking, clock, lanesLabel, rotaRepeats, WEEKDAY_LABELS } from "@/modules/rota/features/bookings";
+import { BOOKING_KIND_META, BookingDialog, type BookingKind, CancelBooking, KindStaffDialog, clock, lanesLabel, rotaRepeats, WEEKDAY_LABELS } from "@/modules/rota/features/bookings";
 import { formatDate, formatTimeRange, plural, toDateOnlyString, today } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Bookings" };
@@ -48,7 +48,7 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
   const actions = (b: Repeat) => {
     const first = b.firstDay.toISOString().slice(0, 10);
     return <>
-      {site?.plan && data.types.length ? <BookingDialog siteId={site.id} today={now} types={data.types} areas={areas} booking={{
+      {site?.plan && data.types.length ? <BookingDialog siteId={site.id} today={now} types={data.types} areas={areas} kindStaff={data.kindStaff} booking={{
         id: b.id, kind: b.kind, title: b.title, typeId: b.typeId, place: b.place, lanes: b.lanes, start: clock(b.startMinutes), end: clock(b.endMinutes), places: b.places,
         weekdays: b.weekdays, firstDay: first, lastDay: toDateOnlyString(b.lastDay), skipDates: b.skipDates.map(toDateOnlyString),
       }} /> : null}
@@ -59,7 +59,10 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
   return (
     <PageShell spacing="roomy" header={<PageHeader title={site ? `Bookings: ${site.name}` : "Bookings"}
         description="Schools, parties and lane hire that repeat over weeks. Each adds its activity on its days, ready to plan who."
-        actions={site?.plan && data.types.length ? <BookingDialog siteId={site.id} today={now} types={data.types} areas={areas} /> : undefined} />}>
+        actions={site?.plan && data.types.length ? <>
+          <KindStaffDialog siteId={site.id} kindStaff={data.kindStaff} />
+          <BookingDialog siteId={site.id} today={now} types={data.types} areas={areas} kindStaff={data.kindStaff} />
+        </> : undefined} />}>
       {data.repeats.length === 0 ? (
         <EmptyState icon="calendarRange" title="No bookings yet" hint="When a school, a party or a club books time that needs staff, add it here." />
       ) : (
@@ -92,7 +95,7 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
                         <TableCell className="whitespace-normal"><span className="flex flex-col items-start gap-1"><span className="font-semibold">{b.title}</span><Tag meta={BOOKING_KIND_META[b.kind as BookingKind]} /></span></TableCell>
                         <TableCell className="whitespace-normal tabular-nums"><span className="flex flex-col"><span>{weekdays(b.weekdays)}, {formatTimeRange(b.startMinutes, b.endMinutes)}</span><span className="text-xs text-ui-muted-foreground">{span(b)}</span></span></TableCell>
                         <TableCell className="whitespace-normal">{where(b) || "—"}</TableCell>
-                        <TableCell className="whitespace-normal"><span className="flex flex-col"><span>{b.type.name}</span><span className="text-xs text-ui-muted-foreground">{plural(b.places, "person", "people")} each day</span></span></TableCell>
+                        <TableCell className="whitespace-normal"><span className="flex flex-col"><span>{b.type.name}</span><span className="text-xs text-ui-muted-foreground">{b.places ? `${plural(b.places, "person", "people")} each day` : "No staff needed"}</span></span></TableCell>
                         <TableCell className="min-w-40">{b.needs.length ? (
                           <span className="flex flex-col gap-1"><span className="tabular-nums text-xs">{f.open ? `${plural(f.open, "place")} to fill` : "All filled"} · {plural(b.needs.length, "day")} to come</span>
                             <Progress value={f.total ? Math.round((f.filled / f.total) * 100) : 100} aria-label={`${f.filled} of ${f.total} places filled`} /></span>
@@ -111,7 +114,7 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
                       <span className="pc-row-body">
                         <span className="flex flex-wrap items-center gap-2"><span className="pc-row-title">{b.title}</span><Tag meta={BOOKING_KIND_META[b.kind as BookingKind]} /></span>
                         <span className="pc-row-hint">{weekdays(b.weekdays)}, {formatTimeRange(b.startMinutes, b.endMinutes)} · {span(b)}{where(b) ? ` · ${where(b)}` : ""}</span>
-                        <span className="pc-row-hint">{b.type.name}, {plural(b.places, "person", "people")} each day · {b.needs.length ? `${plural(b.needs.length, "day")} to come, ${f.open ? `${plural(f.open, "place")} still to fill` : "all filled"}` : "no days still to come"}</span>
+                        <span className="pc-row-hint">{b.type.name}, {b.places ? `${plural(b.places, "person", "people")} each day` : "no staff needed"} · {b.needs.length ? `${plural(b.needs.length, "day")} to come, ${f.open ? `${plural(f.open, "place")} still to fill` : "all filled"}` : "no days still to come"}</span>
                       </span>
                       <span className="pc-row-trail">{actions(b)}</span>
                     </li>

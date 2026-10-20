@@ -600,3 +600,18 @@ model RotaRepeat {
 
   @@index([siteId])
 }
+
+/// How many staff a kind of booking needs, for the whole organisation (owner, 20 October 2026:
+/// "bookings need staff per booking type", a party yes, lane hire none). A new booking of that
+/// kind starts with this number; 0 means it needs nobody. Kinds with no row need one.
+model RotaBookingKind {
+  id            String   @id @default(cuid())
+  orgId         String
+  /// A key of BOOKING_KIND_META.
+  kind          String
+  staff         Int      @default(1)
+  updatedAt     DateTime @updatedAt
+  updatedByName String
+
+  @@unique([orgId, kind])
+}
