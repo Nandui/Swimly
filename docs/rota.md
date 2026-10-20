@@ -206,14 +206,22 @@ arranges it on the day. Unpaid breaks come off the paid hours whether placed or 
 
 "In addition to bookings and activities, each area has their needs. For example, the 25 meter
 pool has a time to be open, and during that time it will need a specific amount of staff with
-specific qualifications." Admin, Areas sets each area's needs: lines of how many and which type
-of staff (`SiteAreaStaffing`: a qualification they hold, or anyone), every day's opening hours
+specific qualifications." Admin, Areas sets each area's needs: lines of how many, the role it
+asks for and who can fill it (`SiteAreaStaffing`: a position from Admin, Positions, and a
+qualification they hold, or anyone), every day's opening hours
 (`SiteArea.openFrom`, `openUntil`) and any weekday's own hours or closed (`SiteArea.weekHours`;
 `hoursOn` in `src/lib/setup/area-staffing.ts`). An area with staff lines and no hours needs
 nobody yet.
 
+The need is named by its role, not its certificate (owner request, 20 October 2026: "If its a
+pool, i should need cover from lifeguards, not from RLSS National Pool Lifeguard cert, thats the
+cert required for an activity"). The qualification still decides who can fill it, and still keys
+the need and its people, so roles the same people can fill share one need ("Receptionist or Duty
+manager on duty"). A line from before roles (`positionId` empty) takes the open role needing its
+qualification that most people hold (`roleFor`); saving the dialog stores what it shows.
+
 On each day it is open, `buildDay` turns each line into an activity on the Plan in its own
-right, "NPLQ on duty" in that area for its hours with as many places as the line asks for, on
+right, "Lifeguard on duty" in that area for its hours with as many places as the line asks for, on
 every department's plan (`ANY_DEPARTMENT`) and first in its area. Its ids say whose it is
 (`area:<area>:<qualification or *>`, plus `:<date>` for the need; `areaNeedOf`). Only the
 people put on these places count: staff on a booking, an activity or a swim class in the area

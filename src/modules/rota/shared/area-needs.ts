@@ -1,6 +1,8 @@
 import { subtract, type Span } from "@/modules/rota/shared/cover";
 import type { AreaMinimum } from "@/modules/rota/shared/staffing";
-import { hhmm, hoursOn, type AreaTogether, type WeekHour } from "@/lib/setup/area-staffing";
+import { hhmm, hoursOn, lineLabel, type AreaTogether, type WeekHour } from "@/lib/setup/area-staffing";
+
+export { lineLabel };
 
 /** Each area's own needs on a date (Admin, Areas): one per type of staff while it is open, and
  *  areas covered from another while both are open (owner request, 16 October 2026: the main hall
@@ -14,6 +16,9 @@ export type NeedArea = { id: string; name: string; openFrom?: number | null; ope
 export type OffSpan = Span & { place: number };
 export type AreaNeed = {
   id: string; typeId: string; areaId: string; areaName: string; qualificationTypeId: string | null; typeName: string | null;
+  /** What it is called: the role it asks for ("Lifeguard"), or the qualification no role needs;
+   *  null for anyone. */
+  label: string | null;
   startMinutes: number; endMinutes: number; places: number;
   /** Places not needed for a stretch: a covered area while the other is open, or the other area's
    *  places beyond its joint number (or beyond its own number outside the joint time). */
@@ -38,8 +43,10 @@ export function areaNeedsOn(areas: readonly NeedArea[], date: string): AreaNeed[
     for (const m of a.minimums ?? []) {
       const key = areaTypeId(a.id, m.typeId);
       const had = needs.get(key);
-      if (had) { had.places += m.count; had.own += m.count; continue; }
-      needs.set(key, { id: `${key}:${date}`, typeId: key, areaId: a.id, areaName: a.name, qualificationTypeId: m.typeId, typeName: m.typeName, startMinutes: h.start, endMinutes: h.end,
+      // Two roles that the same people can fill share one need.
+      const label = lineLabel(a.minimums, m.typeId);
+      if (had) { had.places += m.count; had.own += m.count; had.label = lineLabel(a.minimums, m.typeId); continue; }
+      needs.set(key, { id: `${key}:${date}`, typeId: key, areaId: a.id, areaName: a.name, qualificationTypeId: m.typeId, typeName: m.typeName, label, startMinutes: h.start, endMinutes: h.end,
         places: m.count, own: m.count, off: [], together: null });
     }
   }
@@ -56,12 +63,14 @@ export function areaNeedsOn(areas: readonly NeedArea[], date: string): AreaNeed[
         for (let place = 1; place <= covered.places; place++) covered.off.push({ place, ...both });
         covered.together = join(covered.together, `Covered from ${b.name} ${span(both)}`);
       }
-      const typeName = covered?.typeName ?? (a.minimums ?? []).find((m) => m.typeId === r.typeId)?.typeName ?? null;
+      const line = (a.minimums ?? []).find((m) => m.typeId === r.typeId);
+      const typeName = covered?.typeName ?? line?.typeName ?? null;
+      const label = covered?.label ?? (line ? lineLabel(a.minimums, r.typeId) : null);
       const key = areaTypeId(b.id, r.typeId);
       let cover = needs.get(key);
       if (!cover) {
         // The other area needs none of this type of its own: only in the joint time.
-        cover = { id: `${key}:${date}`, typeId: key, areaId: b.id, areaName: b.name, qualificationTypeId: r.typeId, typeName, startMinutes: both.start, endMinutes: both.end,
+        cover = { id: `${key}:${date}`, typeId: key, areaId: b.id, areaName: b.name, qualificationTypeId: r.typeId, typeName, label, startMinutes: both.start, endMinutes: both.end,
           places: 0, own: 0, off: [], together: null };
         needs.set(key, cover);
       }
@@ -87,7 +96,7 @@ export function areaMinimumsOver(needs: readonly AreaNeed[]): (Span & { minimums
   for (let i = 0; i < cuts.length - 1; i++) {
     const start = cuts[i], end = cuts[i + 1];
     const minimums = needs.filter((n) => n.startMinutes <= start && n.endMinutes >= end).map((n) => ({
-      count: n.places - new Set(n.off.filter((o) => o.start <= start && o.end >= end).map((o) => o.place)).size, typeId: n.qualificationTypeId, typeName: n.typeName }))
+      count: n.places - new Set(n.off.filter((o) => o.start <= start && o.end >= end).map((o) => o.place)).size, typeId: n.qualificationTypeId, typeName: n.typeName, roleName: n.label }))
       .filter((m) => m.count > 0);
     if (minimums.length) out.push({ start, end, minimums });
   }

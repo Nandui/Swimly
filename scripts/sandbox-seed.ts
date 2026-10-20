@@ -202,6 +202,13 @@ async function seedRota(db: PrismaClient) {
   for (const siteId of ["club_bishopstown", HILLVIEW]) {
     await db.siteArea.createMany({ data: ["Main pool", "Learner pool", "Front desk", "Gym"].map((name, sortOrder) => ({ orgId: ORG, siteId, name, sortOrder })), skipDuplicates: true });
   }
+  // Hillview's own needs while open (Admin, Areas): two holding NPLQ on the main pool, one anyone
+  // on the front desk. Neither names its role, as lines from before roles did.
+  for (const [name, from, until, typeId] of [["Main pool", "07:00", "21:30", "qt_nplq"], ["Front desk", "07:00", "21:00", null]] as const) {
+    const t = (v: string) => Number(v.slice(0, 2)) * 60 + Number(v.slice(3));
+    await db.siteArea.update({ where: { siteId_name: { siteId: HILLVIEW, name } }, data: { openFrom: t(from), openUntil: t(until),
+      staffing: { create: [{ count: typeId ? 2 : 1, qualificationTypeId: typeId }] } } });
+  }
   // The organisation's activity list: Teaching takes the swim classes.
   await db.activityType.createMany({ data: [
     { id: "rat_guard", orgId: ORG, departmentId: "dept_aquatics", name: "Lifeguarding", icon: "lifeguard", requiredTypeId: "qt_nplq", sortOrder: 0 },

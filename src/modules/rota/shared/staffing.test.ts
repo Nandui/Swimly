@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { hoursOn, staffingWords } from "@/lib/setup/area-staffing";
+import { hoursOn, lineLabel, roleFor, staffingWords } from "@/lib/setup/area-staffing";
 import { ANY_DEPARTMENT, areaNeedOf, buildDay, dayGaps, isAreaNeed, type DayAreaAssignment, type DayType } from "@/modules/rota/shared/day";
 import { needRows } from "@/modules/rota/shared/plan-rows";
 import { shortOf, staffingSpans, type AreaMinimum } from "@/modules/rota/shared/staffing";
@@ -34,7 +34,7 @@ test("an area's hours: its own on a weekday, closed on another, every day's othe
   assert.deepEqual(hoursOn(pool, "2026-10-23"), { start: h("07:00"), end: h("14:00") }, "Friday keeps every day's hours");
   assert.deepEqual(hoursOn(pool, "2026-10-24"), { start: h("09:00"), end: h("13:00") }, "Saturday has its own");
   assert.equal(hoursOn(pool, "2026-10-25"), null, "closed on Sunday");
-  assert.equal(staffingWords(pool), "Needs 2 NPLQ · open 07:00 to 14:00, Saturday 09:00 to 13:00, Sunday closed");
+  assert.equal(staffingWords(pool), "Needs 2 × NPLQ · open 07:00 to 14:00, Saturday 09:00 to 13:00, Sunday closed");
 });
 
 const types: DayType[] = [{ id: "guard", name: "Lifeguarding", icon: "lifeguard", departmentId: "pool", requiredTypeId: "nplq", requiredName: "NPLQ", fromClasses: false }];
@@ -91,4 +91,22 @@ test("breaks on the area's need go in one at a time, each a place to fill for it
   const eoin = buildDay({ date: "2026-10-23", types, names, held, areas: [pool], needs: [], assignments: [], classes: [], areaAssignments: onPool(["aoife", "ciara"]),
     planned: [{ id: "s1", userId: "dara", departmentId: "pool", startMinutes: h("07:00"), endMinutes: h("14:00") }] });
   assert.ok(eoin.people.find((p) => p.userId === "dara")!.options.some((o) => o.ok && o.needId === g.needs[0].id));
+});
+
+const roles = [{ id: "lead", name: "Aquatics lead", typeIds: ["nplq"], holders: 1 }, { id: "guard", name: "Lifeguard", typeIds: ["nplq", "first-aid"], holders: 4 },
+  { id: "teacher", name: "Swim teacher", typeIds: ["nplq", "sti"], holders: 4 }, { id: "desk", name: "Receptionist", typeIds: [], holders: 1 }];
+
+test("an area asks for a role; its qualification only says who can fill it", () => {
+  assert.deepEqual(roleFor({ typeId: "nplq" }, roles), { id: "guard", name: "Lifeguard" }, "a line from before takes the role needing it that most people hold, Admin's order between equals");
+  assert.deepEqual(roleFor({ roleId: "teacher", typeId: "nplq" }, roles), { id: "teacher", name: "Swim teacher" }, "a named role wins");
+  assert.equal(roleFor({ typeId: null }, roles), null, "anyone has no role");
+  assert.equal(roleFor({ typeId: "nplq" }, [{ ...roles[1], archived: true }]), null, "an archived role is not guessed");
+  const named = [{ count: 2, typeId: "nplq", typeName: "NPLQ", roleName: "Lifeguard" }, { count: 1, typeId: null, typeName: null, roleName: "Receptionist" }, { count: 1, typeId: null, typeName: null, roleName: "Duty manager" }];
+  assert.equal(lineLabel(named, "nplq"), "Lifeguard");
+  assert.equal(lineLabel(named, null), "Receptionist or Duty manager", "roles anyone can fill share a need");
+  assert.equal(staffingWords({ ...pool, minimums: named }), "Needs 2 × Lifeguard, 1 × Receptionist and 1 × Duty manager · open 07:00 to 14:00, Saturday 09:00 to 13:00, Sunday closed");
+  const d = buildDay({ date: "2026-10-23", types, names, held, areas: [{ ...pool, minimums: [{ ...pool.minimums[0], roleName: "Lifeguard" }] }], needs: [], assignments: [], classes: [], areaAssignments: [] });
+  const g = d.groups.find((x) => isAreaNeed(x.typeId))!;
+  assert.equal(g.name, "Lifeguard on duty");
+  assert.equal(g.requiredName, "NPLQ", "the qualification still decides who can be put on it");
 });

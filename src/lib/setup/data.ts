@@ -2,6 +2,7 @@ import "server-only";
 import { can, requireSession } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 import { togetherOf, weekHoursOf } from "@/lib/setup/area-staffing";
+import { rolesNeeding, staffLine } from "@/lib/directory";
 import { lanesInPlace } from "@/lib/setup/lanes";
 import type { PermissionKey } from "@/lib/staff/permissions";
 
@@ -40,11 +41,14 @@ export async function areasPage() {
     where: { orgId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     select: { id: true, name: true, code: true, areas: { orderBy: [{ archivedAt: { sort: "asc", nulls: "first" } }, { sortOrder: "asc" }, { name: "asc" }],
       select: { id: true, name: true, lanes: true, archivedAt: true, openFrom: true, openUntil: true, weekHours: true, together: true,
-        staffing: { orderBy: { sortOrder: "asc" }, select: { count: true, qualificationTypeId: true, qualificationType: { select: { name: true } } } } } } },
+        staffing: { orderBy: { sortOrder: "asc" }, select: { count: true, positionId: true, qualificationTypeId: true, qualificationType: { select: { name: true } } } } } } },
   });
-  const qualifications = await prisma.qualificationType.findMany({ where: { orgId, archivedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } });
-  return { canKeep: keeps("setup.areas"), qualifications, sites: sites.map((site) => ({ ...site, areas: site.areas.map(({ staffing, weekHours, together, ...area }) => ({ ...area, weekHours: weekHoursOf(weekHours), together: togetherOf(together),
-    minimums: staffing.map((m) => ({ count: m.count, typeId: m.qualificationTypeId, typeName: m.qualificationType?.name ?? null })) })) })) };
+  const [qualifications, roles] = await Promise.all([
+    prisma.qualificationType.findMany({ where: { orgId, archivedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    orgId ? rolesNeeding(orgId) : [],
+  ]);
+  return { canKeep: keeps("setup.areas"), qualifications, roles, sites: sites.map((site) => ({ ...site, areas: site.areas.map(({ staffing, weekHours, together, ...area }) => ({ ...area, weekHours: weekHoursOf(weekHours), together: togetherOf(together),
+    minimums: staffing.map((m) => staffLine(m, roles)) })) })) };
 }
 
 /** A site's open areas, in order: what a module's place field offers. */

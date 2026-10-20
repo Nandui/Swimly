@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react";
 import { ArchiveRestore, ArrowDown, ArrowUp, CirclePause, Pencil, Plus, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
@@ -61,31 +61,44 @@ export function MoveArea({ id, name, first, last }: { id: string; name: string; 
   );
 }
 
-type Minimum = { count: number; typeId: string | null; typeName: string | null };
+type Minimum = { count: number; typeId: string | null; typeName: string | null; roleId?: string | null; roleName?: string | null };
+/** A role (Admin, Positions) and the qualifications it needs. */
+type Role = { id: string; name: string; typeIds: readonly string[]; archived?: boolean };
+type Line = { key: string; count: number; roleId: string; typeId: string };
 
 /** The staff an area needs while it is open (owner requests, 16 October 2026: "the 25 meter pool
  *  has a time to be open, and during that time it will need a specific amount of staff with
- *  specific qualifications"): one line per type of staff, a qualification they hold or anyone,
- *  every day's hours and any weekday's own. Each line is a need on the rota Plan to put staff on. */
-export function AreaStaffing({ area, qualifications, others }: {
+ *  specific qualifications"): one line per role it asks for (owner request, 20 October 2026: a pool
+ *  needs cover from lifeguards), the qualification that says who can fill it, every day's hours
+ *  and any weekday's own. Each line is a need on the rota Plan to put staff on. */
+export function AreaStaffing({ area, qualifications, roles, others }: {
   area: { id: string; name: string; minimums: Minimum[]; openFrom: number | null; openUntil: number | null; weekHours: WeekHour[]; together: AreaTogether[] };
   qualifications: { id: string; name: string }[];
+  roles: Role[];
   /** The site's other open areas, to be covered from. */
   others: { id: string; name: string }[];
 }) {
-  const start = area.minimums.length ? area.minimums : [{ count: 1, typeId: null, typeName: null }];
+  const start = area.minimums.length ? area.minimums : [{ count: 1, typeId: null, typeName: null, roleId: null }];
+  const [lines, setLines] = useState<Line[]>(() => start.map((m, i) => ({ key: String(i), count: m.count, roleId: m.roleId ?? "", typeId: m.typeId ?? "" })));
+  const qualName = new Map(qualifications.map((q) => [q.id, q.name]));
+  const roleName = new Map(roles.map((r) => [r.id, r.name]));
+  // What the area can be covered for: the types of staff its lines ask for.
+  const kinds = [...new Set(lines.map((l) => l.typeId))].map((typeId) => {
+    const named = [...new Set(lines.filter((l) => l.typeId === typeId && l.roleId).map((l) => roleName.get(l.roleId)!))];
+    return { typeId, label: named.length ? named.join(" or ") : typeId ? `Holds ${qualName.get(typeId) ?? "a qualification"}` : "Anyone" };
+  });
   return (
     <FormDialog
       trigger={<Button variant="outline" size="icon" aria-label={`Staff needed in ${area.name}`}><Users aria-hidden="true" /></Button>}
       title={`Staff needed in ${area.name}`}
-      description="While it is open it needs these staff, on top of its bookings and activities. Each type of staff shows on the rota Plan with places to put people on."
+      description="While it is open it needs these staff, on top of its bookings and activities. Each role shows on the rota Plan with places to put people on."
       width="sm:max-w-xl"
       submitLabel="Save"
       successMessage="Staff needed saved"
       submit={(formData) => {
         const keys = formData.getAll("line").map(String);
         return saveAreaStaffing(area.id, {
-          lines: keys.map((k) => ({ count: Number(formData.get(`count-${k}`) ?? 0), typeId: String(formData.get(`type-${k}`) ?? "") })),
+          lines: keys.map((k) => ({ count: Number(formData.get(`count-${k}`) ?? 0), roleId: String(formData.get(`role-${k}`) ?? ""), typeId: String(formData.get(`type-${k}`) ?? "") })),
           together: formData.getAll("with").map(String).map((k) => ({ withAreaId: String(formData.get(`with-area-${k}`) ?? ""), count: Number(formData.get(`with-count-${k}`) ?? 0),
             typeId: String(formData.get(`with-type-${k}`) ?? "") })),
           openFrom: String(formData.get("openFrom") ?? ""), openUntil: String(formData.get("openUntil") ?? ""),
@@ -97,7 +110,7 @@ export function AreaStaffing({ area, qualifications, others }: {
         });
       }}
     >
-      <StaffingLines id={`staffing-${area.id}`} start={start} qualifications={qualifications} />
+      <StaffingLines id={`staffing-${area.id}`} lines={lines} setLines={setLines} qualifications={qualifications} roles={roles} />
       <fieldset className="flex flex-col gap-2">
         <legend className="text-sm font-medium">Open every day</legend>
         <div className="grid grid-cols-2 gap-4">
@@ -106,7 +119,7 @@ export function AreaStaffing({ area, qualifications, others }: {
         </div>
       </fieldset>
       <WeekHours id={`staffing-${area.id}`} start={area.weekHours} />
-      {others.length ? <CoveredFrom id={`staffing-${area.id}`} name={area.name} start={area.together} others={others} qualifications={qualifications} /> : null}
+      {others.length ? <CoveredFrom id={`staffing-${area.id}`} name={area.name} start={area.together} others={others} kinds={kinds} /> : null}
     </FormDialog>
   );
 }
@@ -143,10 +156,18 @@ function WeekHours({ id, start }: { id: string; start: WeekHour[] }) {
   );
 }
 
-/** The lines of what an area needs: how many, and which type of staff. Remove every line for none. */
-function StaffingLines({ id, start, qualifications }: { id: string; start: Minimum[]; qualifications: { id: string; name: string }[] }) {
-  const [lines, setLines] = useState(() => start.map((m, i) => ({ key: String(i), ...m })));
-  const [next, setNext] = useState(start.length);
+/** The lines of what an area needs: how many, the role and who can fill it. Remove every line for
+ *  none. Choosing a role fills in the qualification it needs. */
+function StaffingLines({ id, lines, setLines, qualifications, roles }: {
+  id: string; lines: Line[]; setLines: Dispatch<SetStateAction<Line[]>>; qualifications: { id: string; name: string }[]; roles: Role[];
+}) {
+  const [next, setNext] = useState(lines.length);
+  const change = (key: string, patch: Partial<Line>) => setLines((all) => all.map((x) => (x.key === key ? { ...x, ...patch } : x)));
+  // The role's qualification, in the order Admin lists them; none for a role that needs none.
+  const typeOf = (roleId: string) => {
+    const role = roles.find((r) => r.id === roleId);
+    return role ? qualifications.find((q) => role.typeIds.includes(q.id))?.id ?? "" : "";
+  };
   return (
     <fieldset className="flex flex-col gap-3">
       <legend className="text-sm font-medium">Staff it needs</legend>
@@ -155,22 +176,30 @@ function StaffingLines({ id, start, qualifications }: { id: string; start: Minim
         <div key={l.key} className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto] items-end gap-3">
           <input type="hidden" name="line" value={l.key} />
           <Field label="How many" htmlFor={`${id}-count-${l.key}`}>
-            <Input id={`${id}-count-${l.key}`} name={`count-${l.key}`} type="number" inputMode="numeric" min={1} max={30} required defaultValue={l.count} className="min-h-11" />
+            <Input id={`${id}-count-${l.key}`} name={`count-${l.key}`} type="number" inputMode="numeric" min={1} max={30} required value={l.count}
+              onChange={(e) => change(l.key, { count: Number(e.target.value) })} className="min-h-11" />
           </Field>
-          <Field label="Type of staff" htmlFor={`${id}-type-${l.key}`}>
-            <NativeSelect id={`${id}-type-${l.key}`} name={`type-${l.key}`} defaultValue={l.typeId ?? ""} className="min-h-11 w-full">
-              <NativeSelectOption value="">Anyone</NativeSelectOption>
-              {qualifications.map((q) => <NativeSelectOption key={q.id} value={q.id}>Holds {q.name}</NativeSelectOption>)}
+          <Field label="Role" htmlFor={`${id}-role-${l.key}`}>
+            <NativeSelect id={`${id}-role-${l.key}`} name={`role-${l.key}`} value={l.roleId} onChange={(e) => change(l.key, { roleId: e.target.value, typeId: e.target.value ? typeOf(e.target.value) : l.typeId })} className="min-h-11 w-full">
+              <NativeSelectOption value="">Any role</NativeSelectOption>
+              {roles.filter((r) => !r.archived || r.id === l.roleId).map((r) => <NativeSelectOption key={r.id} value={r.id}>{r.name}</NativeSelectOption>)}
             </NativeSelect>
           </Field>
           <Button type="button" variant="ghost" size="icon" className="size-11" aria-label={`Remove line ${i + 1}`} onClick={() => setLines((all) => all.filter((x) => x.key !== l.key))}>
             <Trash2 aria-hidden="true" />
           </Button>
+          <div className="col-span-2"><Field label="Who can fill it" htmlFor={`${id}-type-${l.key}`} hint={l.roleId ? "Set from what the role needs in Admin > Positions. Change it only if this area needs something else." : undefined}>
+            <NativeSelect id={`${id}-type-${l.key}`} name={`type-${l.key}`} value={l.typeId} onChange={(e) => change(l.key, { typeId: e.target.value })} className="min-h-11 w-full">
+              <NativeSelectOption value="">Anyone</NativeSelectOption>
+              {qualifications.map((q) => <NativeSelectOption key={q.id} value={q.id}>Holds {q.name}</NativeSelectOption>)}
+            </NativeSelect>
+          </Field></div>
         </div>
       ))}
+      {roles.length === 0 ? <p className="text-sm text-ui-muted-foreground">Add roles such as Lifeguard under Admin &gt; Positions to ask for them here.</p> : null}
       {lines.length < 8 ? (
-        <Button type="button" variant="outline" className="self-start" onClick={() => { setLines((all) => [...all, { key: String(next), count: 1, typeId: null, typeName: null }]); setNext((n) => n + 1); }}>
-          <Plus aria-hidden="true" />Add a type of staff
+        <Button type="button" variant="outline" className="self-start" onClick={() => { setLines((all) => [...all, { key: String(next), count: 1, roleId: "", typeId: "" }]); setNext((n) => n + 1); }}>
+          <Plus aria-hidden="true" />Add a role
         </Button>
       ) : null}
     </fieldset>
@@ -179,14 +208,14 @@ function StaffingLines({ id, start, qualifications }: { id: string; start: Minim
 
 /** Staff in another area covering this one while both are open (owner request, 16 October 2026:
  *  one lifeguard by the door between the main hall and the 18 m pool). */
-function CoveredFrom({ id, name, start, others, qualifications }: { id: string; name: string; start: AreaTogether[]; others: { id: string; name: string }[]; qualifications: { id: string; name: string }[] }) {
+function CoveredFrom({ id, name, start, others, kinds }: { id: string; name: string; start: AreaTogether[]; others: { id: string; name: string }[]; kinds: { typeId: string; label: string }[] }) {
   const [rows, setRows] = useState(() => start.map((t, i) => ({ key: String(i), ...t })));
   const [next, setNext] = useState(start.length);
   return (
     <fieldset className="flex flex-col gap-3">
       <legend className="text-sm font-medium">Covered from another area</legend>
       <p className="text-sm text-ui-muted-foreground">
-        When staff in another area can watch {name} too, such as a lifeguard by the door between two pools. While both are open, {name} needs none of that type of staff and the other area needs this many in all.
+        When staff in another area can watch {name} too, such as a lifeguard by the door between two pools. While both are open, {name} needs none of that role and the other area needs this many in all.
       </p>
       {rows.map((r, i) => (
         <div key={r.key} className="grid grid-cols-1 items-end gap-3 sm:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.5fr)_auto]">
@@ -199,10 +228,9 @@ function CoveredFrom({ id, name, start, others, qualifications }: { id: string; 
           <Field label="Staff in all" htmlFor={`${id}-with-count-${r.key}`}>
             <Input id={`${id}-with-count-${r.key}`} name={`with-count-${r.key}`} type="number" inputMode="numeric" min={1} max={30} required defaultValue={r.count} className="min-h-11" />
           </Field>
-          <Field label="Type of staff" htmlFor={`${id}-with-type-${r.key}`}>
-            <NativeSelect id={`${id}-with-type-${r.key}`} name={`with-type-${r.key}`} defaultValue={r.typeId ?? ""} className="min-h-11 w-full">
-              <NativeSelectOption value="">Anyone</NativeSelectOption>
-              {qualifications.map((q) => <NativeSelectOption key={q.id} value={q.id}>Holds {q.name}</NativeSelectOption>)}
+          <Field label="Role" htmlFor={`${id}-with-type-${r.key}`}>
+            <NativeSelect id={`${id}-with-type-${r.key}`} name={`with-type-${r.key}`} defaultValue={r.typeId ?? kinds[0]?.typeId ?? ""} className="min-h-11 w-full">
+              {kinds.map((k) => <NativeSelectOption key={k.typeId} value={k.typeId}>{k.label}</NativeSelectOption>)}
             </NativeSelect>
           </Field>
           <Button type="button" variant="ghost" size="icon" className="size-11" aria-label={`Remove covered from ${i + 1}`} onClick={() => setRows((all) => all.filter((x) => x.key !== r.key))}>
@@ -210,7 +238,7 @@ function CoveredFrom({ id, name, start, others, qualifications }: { id: string; 
           </Button>
         </div>
       ))}
-      {rows.length < 4 ? (
+      {rows.length < 4 && kinds.length ? (
         <Button type="button" variant="outline" className="self-start" onClick={() => { setRows((all) => [...all, { key: String(next), withAreaId: others[0].id, count: 1, typeId: null }]); setNext((n) => n + 1); }}>
           <Plus aria-hidden="true" />Add an area that covers it
         </Button>

@@ -628,11 +628,16 @@ model SiteAreaStaffing {
   id                  String  @id @default(cuid())
   areaId              String
   count               Int
-  /// The qualification they need to hold; empty for anyone.
+  /// The role it asks for (owner request, 20 October 2026: a pool needs cover from lifeguards, not
+  /// from a certificate): its name on the rota. Empty on lines from before, which take the role
+  /// that needs their qualification.
+  positionId          String?
+  /// The qualification they need to hold, so who can fill it; empty for anyone.
   qualificationTypeId String?
   sortOrder           Int     @default(0)
 
   area              SiteArea           @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  position          Position?          @relation(fields: [positionId], references: [id], onDelete: SetNull)
   qualificationType QualificationType? @relation(fields: [qualificationTypeId], references: [id], onDelete: Restrict)
 
   @@index([areaId])
@@ -651,8 +656,9 @@ model Position {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
-  holders  User[]
-  requires PositionQualification[]
+  holders      User[]
+  requires     PositionQualification[]
+  areaStaffing SiteAreaStaffing[]
 
   @@unique([orgId, name])
 }

@@ -7,6 +7,7 @@ import { activityTypesByIds } from "@/lib/setup/activity-types";
 import { addDaysIso, mondayOf, youngBand } from "@/modules/rota/shared/constants";
 import { qualification } from "@/modules/rota/shared/fit";
 import { areaNeedName } from "@/modules/rota/shared/day";
+import { lineLabel } from "@/modules/rota/shared/area-needs";
 import { dayShift, type WorkItem } from "@/modules/rota/shared/shifts";
 import { commitmentsFor } from "@/modules/contributions";
 
@@ -91,7 +92,7 @@ export async function myDays(userId: string, days = 28) {
     const typeName = area?.minimums.find((m) => m.typeId === a.qualificationTypeId)?.typeName ?? null;
     const d = dayOf(date, a.siteId, sites.find((s) => s.id === a.siteId)?.name ?? "");
     const q = qualification(heldList, userId, a.qualificationTypeId, date);
-    d.items.push({ start: a.startMinutes, end: a.endMinutes, label: areaNeedName(a.qualificationTypeId ? typeName ?? "Qualified" : null), icon: "activity", place: area?.name ?? "",
+    d.items.push({ start: a.startMinutes, end: a.endMinutes, label: areaNeedName(lineLabel(area?.minimums, a.qualificationTypeId)), icon: "activity", place: area?.name ?? "",
       needs: a.qualificationTypeId ? typeName : null, problem: q === "ok" ? null : q });
     if (a.updatedAt > shared || a.createdAt > shared) d.changed = true;
   }

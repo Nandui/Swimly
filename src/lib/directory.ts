@@ -1,5 +1,5 @@
 import type { Prisma } from "@/generated/prisma/client";
-import { togetherOf, weekHoursOf, type AreaTogether, type WeekHour } from "@/lib/setup/area-staffing";
+import { roleFor, togetherOf, weekHoursOf, type AreaTogether, type RoleNeeds, type WeekHour } from "@/lib/setup/area-staffing";
 import type { SiteFilter, SubjectFilter } from "@/lib/policy/types";
 import { ADMINISTRATOR_PERMISSIONS } from "@/lib/staff/permissions";
 
@@ -87,23 +87,38 @@ export async function areaLanesAt(siteId: string, db?: Pick<Prisma.TransactionCl
 /** A site's areas (Admin, Areas), in order, with how many lanes each has (0 for none), the daily
  *  hours it is open and its minimum staff: what the rota's activities and bookings pick from and
  *  book lanes in, and what it checks staffing against. */
-export async function areasAt(siteId: string, db?: Pick<Prisma.TransactionClient, "siteArea">): Promise<AreaAt[]> {
-  const rows = await (db ?? (await import("@/lib/prisma")).prisma).siteArea.findMany({ where: { siteId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    select: { id: true, name: true, lanes: true, openFrom: true, openUntil: true, weekHours: true, together: true,
-      staffing: { orderBy: { sortOrder: "asc" }, select: { count: true, qualificationTypeId: true, qualificationType: { select: { name: true } } } } } });
-  return rows.map(({ staffing, weekHours, together, ...area }) => ({ ...area, weekHours: weekHoursOf(weekHours), together: togetherOf(together),
-    minimums: staffing.map((m) => ({ count: m.count, typeId: m.qualificationTypeId, typeName: m.qualificationType?.name ?? null })) }));
+export async function areasAt(siteId: string, db?: Pick<Prisma.TransactionClient, "siteArea" | "position">): Promise<AreaAt[]> {
+  const client = db ?? (await import("@/lib/prisma")).prisma;
+  const rows = await client.siteArea.findMany({ where: { siteId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    select: { id: true, name: true, lanes: true, openFrom: true, openUntil: true, weekHours: true, together: true, orgId: true,
+      staffing: { orderBy: { sortOrder: "asc" }, select: { count: true, positionId: true, qualificationTypeId: true, qualificationType: { select: { name: true } } } } } });
+  const roles = rows.length ? await rolesNeeding(rows[0].orgId, client) : [];
+  return rows.map(({ staffing, weekHours, together, orgId: _org, ...area }) => { void _org; return { ...area, weekHours: weekHoursOf(weekHours), together: togetherOf(together),
+    minimums: staffing.map((m) => staffLine(m, roles)) }; });
+}
+/** Every role (Admin, Positions) with the qualifications it needs, in Admin's order: what names
+ *  an area's staff lines. */
+export async function rolesNeeding(orgId: string, db?: Pick<Prisma.TransactionClient, "position">): Promise<RoleNeeds[]> {
+  const rows = await (db ?? (await import("@/lib/prisma")).prisma).position.findMany({ where: { orgId }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    select: { id: true, name: true, archivedAt: true, requires: { select: { typeId: true } }, _count: { select: { holders: true } } } });
+  return rows.map((r) => ({ id: r.id, name: r.name, archived: !!r.archivedAt, holders: r._count.holders, typeIds: r.requires.map((q) => q.typeId) }));
+}
+/** A stored staff line as an area's minimum, named by its role. */
+export function staffLine(m: { count: number; positionId: string | null; qualificationTypeId: string | null; qualificationType: { name: string } | null }, roles: readonly RoleNeeds[]): AreaMinimumAt {
+  const role = roleFor({ roleId: m.positionId, typeId: m.qualificationTypeId }, roles);
+  return { count: m.count, typeId: m.qualificationTypeId, typeName: m.qualificationType?.name ?? null, roleId: role?.id ?? null, roleName: role?.name ?? null };
 }
 /** One open area with its site, as `areasAt` gives it; null once archived or gone. */
-export async function areaById(id: string, db?: Pick<Prisma.TransactionClient, "siteArea">): Promise<(AreaAt & { siteId: string }) | null> {
+export async function areaById(id: string, db?: Pick<Prisma.TransactionClient, "siteArea" | "position">): Promise<(AreaAt & { siteId: string }) | null> {
   const row = await (db ?? (await import("@/lib/prisma")).prisma).siteArea.findFirst({ where: { id, archivedAt: null }, select: { siteId: true } });
   if (!row) return null;
   const area = (await areasAt(row.siteId, db)).find((a) => a.id === id);
   return area ? { ...area, siteId: row.siteId } : null;
 }
-/** An area as `areasAt` gives it: its hours (`hoursOn`) and the staff it needs then, "2 holding
- *  Pool Lifeguard", `typeId` null for anyone. */
-export type AreaAt = { id: string; name: string; lanes: number; openFrom: number | null; openUntil: number | null; weekHours: WeekHour[]; minimums: { count: number; typeId: string | null; typeName: string | null }[];
+/** An area as `areasAt` gives it: its hours (`hoursOn`) and the staff it needs then, "2 Lifeguard
+ *  holding Pool Lifeguard", `typeId` null for anyone and `roleName` null when no role is named. */
+export type AreaMinimumAt = { count: number; typeId: string | null; typeName: string | null; roleId: string | null; roleName: string | null };
+export type AreaAt = { id: string; name: string; lanes: number; openFrom: number | null; openUntil: number | null; weekHours: WeekHour[]; minimums: AreaMinimumAt[];
   /** Staff in another area covering this one while both are open. */
   together: AreaTogether[] };
 

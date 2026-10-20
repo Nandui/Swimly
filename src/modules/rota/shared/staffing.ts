@@ -7,7 +7,7 @@ import { subtract, type Span } from "@/modules/rota/shared/cover";
  *  date. Pure (staffing.test.ts). */
 
 /** "2 holding Pool Lifeguard", or `typeId` null for anyone. */
-export type AreaMinimum = { count: number; typeId: string | null; typeName: string | null };
+export type AreaMinimum = { count: number; typeId: string | null; typeName: string | null; roleName?: string | null };
 /** Someone in an area for a stretch. */
 export type Presence = Span & { userId: string };
 /** One stretch of an area's day in use: `have` of the `want` places filled, and the lines still

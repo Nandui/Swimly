@@ -16,7 +16,7 @@ import { fitsFor } from "@/modules/rota/shared/data";
 import { notifyShiftChange } from "@/lib/staff-api/notify";
 import { commitmentsFor, planCommitment } from "@/modules/contributions";
 import { ANY_DEPARTMENT, areaAssignmentRow, areaNeedName, areaNeedOf, isAreaNeed } from "@/modules/rota/shared/day";
-import { areaNeedsOn } from "@/modules/rota/shared/area-needs";
+import { areaNeedsOn, lineLabel } from "@/modules/rota/shared/area-needs";
 import type { Prisma } from "@/generated/prisma/client";
 import { type Allowed, CLASSES, NEEDS_REASON, allowedFor, allowedForPerson, changeSchema, iso, logLive, refresh, shared } from "@/modules/rota/shared/writes";
 
@@ -432,15 +432,14 @@ async function areaNeedFor(needId: string) {
   if (!need) return null;
   const rows = await prisma.rotaAreaAssignment.findMany({ where: { areaId: area.id, date: parseDateOnly(ref.date), qualificationTypeId: ref.typeId },
     select: { id: true, place: true, userId: true, startMinutes: true, endMinutes: true } });
-  return { id: needId, area, date: ref.date, typeId: ref.typeId, what: `${areaNeedName(ref.typeId ? need.typeName ?? "Qualified" : null)}, ${area.name}`,
+  return { id: needId, area, date: ref.date, typeId: ref.typeId, what: `${areaNeedName(need.label)}, ${area.name}`,
     startMinutes: need.startMinutes, endMinutes: need.endMinutes, places: need.places, rows: rows.map((r) => ({ ...r, needId })) };
 }
 
 /** "Pool Lifeguard on duty, Main pool" for a stored row, even once the area has changed. */
 async function areaWhat(row: { areaId: string; qualificationTypeId: string | null }) {
   const area = await areaById(row.areaId);
-  const typeName = area?.minimums.find((m) => m.typeId === row.qualificationTypeId)?.typeName ?? null;
-  return `${areaNeedName(row.qualificationTypeId ? typeName ?? "Qualified" : null)}${area ? `, ${area.name}` : ""}`;
+  return `${areaNeedName(lineLabel(area?.minimums, row.qualificationTypeId))}${area ? `, ${area.name}` : ""}`;
 }
 
 /** An area's need sits on every department's plan, so a person on it hears of a change once a
