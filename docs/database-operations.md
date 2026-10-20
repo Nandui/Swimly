@@ -125,6 +125,13 @@ production instead:
   that database, and every preview, as holding real personal data while it
   does.
 
+On 20 October 2026 the owner instead made a Neon branch of swimly-db called
+`preview` (an instant copy of production, real contact details included) and
+pointed the Preview and Development `DATABASE_URL` / `DATABASE_URL_UNPOOLED` at
+it. Previews now migrate that branch, never swimly-db's main. Branches expire
+unless the expiry is removed in Neon. Treat previews as holding real personal
+data, and remember they can email real people.
+
 Both read production in a read-only transaction, write only to a database that
 already has every migration production has, and dry-run unless given `--confirm`.
 
