@@ -58,7 +58,7 @@ export async function diaryWeek(input: { site?: string; dept?: string; day?: str
     canShare: !!department && (site.run || (site.plan && mine.has(department.id))),
     /** What can be added to the day: the department's activities (not swim classes, which come from the timetable). */
     types: types.filter((t) => !t.fromClasses && (!changeFor || t.departmentId === changeFor.id)).map((t) => ({ id: t.id, name: t.name })),
-    areas: (await areasAt(site.id)).map((a) => ({ name: a.name, lanes: a.lanes })),
+    areas: (await areasAt(site.id)).map((a) => ({ name: a.name, lanes: a.lanes, parentName: a.parentName })),
   } as const;
 }
 export type DiaryWeek = Extract<Awaited<ReturnType<typeof diaryWeek>>, { diary: unknown }>;

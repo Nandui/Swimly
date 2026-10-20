@@ -24,7 +24,7 @@ export type DiaryData = {
   pool: { staff: DiaryInput["staff"]; held: readonly Held[]; off: readonly string[]; elsewhere: Record<string, readonly (Span & { label: string })[]> };
   departmentNames: Record<string, string>;
   types: readonly { id: string; name: string }[];
-  areas: readonly { name: string }[];
+  areas: readonly { name: string; parentName: string | null }[];
 };
 
 export type DiaryState = DiaryData & {

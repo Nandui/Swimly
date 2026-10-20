@@ -30,6 +30,8 @@ export type Need = {
   detail: string | null;
   /** The area it is in, "" for none. */
   area: string;
+  /** The area that one is part of (Pool for the 25 m; owner, 20 October 2026), "" for none. */
+  group: string;
   /** The department whose work it is; null for an area's own need and swim classes. */
   departmentId: string | null;
   start: number;
@@ -53,6 +55,8 @@ export type Line = Span & {
   kind: NeedKind;
   title: string;
   area: string;
+  /** The area that one is part of, "" for none. */
+  group: string;
   /** The saved record: an activity or booking place, an area place, or the class taught. */
   assignmentId: string | null;
   place: number | null;
@@ -98,7 +102,8 @@ export type DiaryInput = {
   date: string;
   /** The department whose plan it is; null for every department together. */
   departmentId: string | null;
-  areas: readonly NeedArea[];
+  /** The site's areas, each with its department and the area it is part of (Admin, Areas). */
+  areas: readonly (NeedArea & { departmentId?: string | null; parentName?: string | null })[];
   /** The organisation's activity list. */
   types: readonly { id: string; name: string; departmentId: string; requiredTypeId: string | null; requiredName: string | null; fromClasses: boolean }[];
   /** Activities and bookings on the day (`bookingTitle` set for a booking). */
@@ -148,6 +153,8 @@ export function joined(spans: readonly Span[], gap = 0): Span[] {
 /** What the day needs, which department plans see it, and who is on what. */
 function needsOf(input: DiaryInput): Need[] {
   const types = new Map(input.types.map((t) => [t.id, t]));
+  const areaById = new Map(input.areas.map((a) => [a.id, a]));
+  const groupOf = (name: string) => input.areas.find((a) => a.name.toLowerCase() === name.toLowerCase())?.parentName ?? "";
   const out: Need[] = [];
   for (const a of areaNeedsOn(input.areas, input.date)) {
     const cuts = [...new Set([a.startMinutes, a.endMinutes, ...a.off.flatMap((o) => [o.start, o.end])])].filter((t) => t >= a.startMinutes && t <= a.endMinutes).sort((x, y) => x - y);
@@ -159,18 +166,19 @@ function needsOf(input: DiaryInput): Need[] {
       if (last && last.end === s.start && last.count === count) last.end = s.end;
       else wants.push({ ...s, count });
     }
-    out.push({ key: a.id, kind: "area", title: `${a.typeName ?? "Staff"} on duty`, detail: null, area: a.areaName, departmentId: null, start: a.startMinutes, end: a.endMinutes,
+    const home = areaById.get(a.areaId);
+    out.push({ key: a.id, kind: "area", title: `${a.typeName ?? "Staff"} on duty`, detail: null, area: a.areaName, group: home?.parentName ?? "", departmentId: home?.departmentId ?? null, start: a.startMinutes, end: a.endMinutes,
       wants: wants.filter((w) => w.count > 0), requiredTypeId: a.qualificationTypeId, requiredName: a.typeName, note: a.together, needId: a.id, classRef: null });
   }
   for (const n of input.needs) {
     const type = types.get(n.typeId);
     out.push({ key: n.id, kind: n.bookingTitle ? "booking" : "activity", title: n.bookingTitle ?? type?.name ?? "Activity", detail: n.bookingTitle ? type?.name ?? null : null,
-      area: areaOf(n.place), departmentId: type?.departmentId ?? null, start: n.start, end: n.end, wants: n.places > 0 ? [{ start: n.start, end: n.end, count: n.places }] : [],
+      area: areaOf(n.place), group: groupOf(areaOf(n.place)), departmentId: type?.departmentId ?? null, start: n.start, end: n.end, wants: n.places > 0 ? [{ start: n.start, end: n.end, count: n.places }] : [],
       requiredTypeId: type?.requiredTypeId ?? null, requiredName: type?.requiredName ?? null, note: n.note || null, needId: n.id, classRef: null });
   }
   const teaching = input.types.find((t) => t.fromClasses);
   for (const c of input.classes) {
-    out.push({ key: `class:${c.ref}`, kind: "class", title: c.title, detail: "Swim class", area: areaOf(c.place), departmentId: teaching?.departmentId ?? null, start: c.start, end: c.end,
+    out.push({ key: `class:${c.ref}`, kind: "class", title: c.title, detail: "Swim class", area: areaOf(c.place), group: groupOf(areaOf(c.place)), departmentId: teaching?.departmentId ?? null, start: c.start, end: c.end,
       wants: [{ start: c.start, end: c.end, count: 1 }], requiredTypeId: teaching?.requiredTypeId ?? null, requiredName: teaching?.requiredName ?? null, note: null, needId: null, classRef: c.ref });
   }
   return out.sort((a, b) => a.start - b.start || a.title.localeCompare(b.title));
@@ -179,7 +187,7 @@ function needsOf(input: DiaryInput): Need[] {
 function linesOf(input: DiaryInput, needs: readonly Need[]): Line[] {
   const byKey = new Map(needs.map((n) => [n.key, n]));
   const line = (n: Need | undefined, a: { id: string; userId: string; start: number; end: number; place: number | null }, assignmentId: string | null): Line[] =>
-    n ? [{ key: `${n.key}|${a.id}`, userId: a.userId, needKey: n.key, kind: n.kind, title: n.title, area: n.area, start: a.start, end: a.end, assignmentId, place: a.place }] : [];
+    n ? [{ key: `${n.key}|${a.id}`, userId: a.userId, needKey: n.key, kind: n.kind, title: n.title, area: n.area, group: n.group, start: a.start, end: a.end, assignmentId, place: a.place }] : [];
   return [
     ...input.areaAssignments.flatMap((a) => line(byKey.get(a.needId), a, a.id)),
     ...input.assignments.flatMap((a) => line(byKey.get(a.needId), a, a.id)),
@@ -256,9 +264,9 @@ function holesOf(need: Need, lines: readonly Line[], people: ReadonlyMap<string,
   return out;
 }
 
-/** Does this department's plan show this need? Its own work always; an area's own need when the
- *  department's people can do it (someone in it holds the qualification, or none is needed);
- *  every department's when the plan shows them all. */
+/** Does this department's plan show this need? Its own work always, and its own areas' needs
+ *  (Admin, Areas); a shared area's need when the department's people can do it (someone in it
+ *  holds the qualification, or none is needed); every department's when the plan shows them all. */
 function shownOn(need: Need, input: DiaryInput, members: readonly DiaryInput["staff"][number][]) {
   if (!input.departmentId) return true;
   if (need.departmentId) return need.departmentId === input.departmentId;

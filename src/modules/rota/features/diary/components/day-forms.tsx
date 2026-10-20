@@ -49,7 +49,7 @@ export function AddToDay() {
       submit={(f) => saveNeed(null, { siteId: ctx.siteId, date: ctx.date, typeId: s(f, "typeId"), place: s(f, "place"), start: s(f, "start"), end: s(f, "end"),
         places: Number(s(f, "places")), note: s(f, "note"), lanes: [] }, ctx.live ? changeOf(f) : {})}>
       <Select name="typeId" label="What" required placeholder="Choose the activity" options={ctx.types.map((t) => ({ value: t.id, label: t.name }))} />
-      <Select name="place" label="Where" optional placeholder="Choose an area" options={[{ value: "", label: "No area" }, ...ctx.areas.map((a) => ({ value: a.name, label: a.name }))]} />
+      <Select name="place" label="Where" optional placeholder="Choose an area" options={[{ value: "", label: "No area" }, ...ctx.areas.map((a) => ({ value: a.name, label: a.parentName ? `${a.parentName} › ${a.name}` : a.name }))]} />
       <div className="diary-times">
         <Input type="time" name="start" label="From" step={300} defaultValue="10:00" required />
         <Input type="time" name="end" label="To" step={300} defaultValue="11:00" required />

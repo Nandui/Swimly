@@ -308,6 +308,8 @@
 
 /* Who's where */
 .turnfin-module .diary-at { min-width: 160px; }
+.turnfin-module .diary-where-groups { display: flex; flex-direction: column; gap: 12px; }
+.turnfin-module .diary-where-head { margin: 0 0 2px; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
 .turnfin-module .diary-where { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
 .turnfin-module .diary-where-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); align-items: baseline; gap: 2px 12px; padding: 8px 0 8px 12px; border-bottom: 1px solid var(--pc-line); border-inline-start: 4px solid var(--pc-line); }
 .turnfin-module .diary-where-row:last-child { border-bottom: 0; }

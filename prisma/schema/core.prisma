@@ -241,6 +241,7 @@ model Department {
   activityTypes  ActivityType[]
   rotaWeekShares RotaWeekShare[]
   rotaPlanShifts RotaPlanShift[]
+  areas          SiteArea[]
 
   @@unique([orgId, name])
   @@index([orgId, sortOrder])
@@ -589,32 +590,40 @@ model ActivityType {
 /// from it. Modules store the area's name, and a rename reaches them through
 /// the area-rename contribution, so their records keep reading the same way.
 model SiteArea {
-  id         String    @id @default(cuid())
-  orgId      String
-  siteId     String
-  name       String
+  id           String    @id @default(cuid())
+  orgId        String
+  siteId       String
+  name         String
   /// How many lanes it has (owner request, 13 October 2026): a pool with lanes is booked whole
   /// or by lane on the rota. 0 for an area without lanes (a gym, reception).
-  lanes      Int       @default(0)
+  lanes        Int       @default(0)
   /// When the area is open, in minutes from midnight (owner requests, 16 October 2026): its staff
   /// needs apply then. These are every day's hours; `weekHours` changes them for a weekday.
-  openFrom   Int?
-  openUntil  Int?
+  openFrom     Int?
+  openUntil    Int?
   /// A weekday's own hours, Monday first: `[{ "day": 6, "from": 540, "until": 1080 }]`, or no
   /// times for closed that day. A weekday not listed keeps every day's hours.
-  weekHours  Json?
+  weekHours    Json?
   /// Staff in another area covering this one while both are open (owner request, 16 October
   /// 2026: one lifeguard by the door between the main hall and the 18 m pool):
   /// `[{ "withAreaId": "...", "count": 2, "typeId": "..." }]`. While both are open this area's
   /// staff of that type are left off and the other area needs `count` of them in all.
-  together   Json?
-  sortOrder  Int       @default(0)
-  archivedAt DateTime?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  together     Json?
+  /// The department whose area it is (owner, 20 October 2026: "a department can have sub
+  /// areas"); none for an area every department shares. A sub-area takes its parent's.
+  departmentId String?
+  /// The area it is part of, one level only: the 25 m and the 18 m are part of Pool.
+  parentId     String?
+  sortOrder    Int       @default(0)
+  archivedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  site     Club               @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  staffing SiteAreaStaffing[]
+  site       Club               @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  staffing   SiteAreaStaffing[]
+  department Department?        @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  parent     SiteArea?          @relation("SubAreas", fields: [parentId], references: [id], onDelete: SetNull)
+  subAreas   SiteArea[]         @relation("SubAreas")
 
   @@unique([siteId, name])
   @@index([orgId])

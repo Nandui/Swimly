@@ -39,12 +39,20 @@ export async function areasPage() {
   const sites = await prisma.club.findMany({
     where: { orgId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     select: { id: true, name: true, code: true, areas: { orderBy: [{ archivedAt: { sort: "asc", nulls: "first" } }, { sortOrder: "asc" }, { name: "asc" }],
-      select: { id: true, name: true, lanes: true, archivedAt: true, openFrom: true, openUntil: true, weekHours: true, together: true,
+      select: { id: true, name: true, lanes: true, archivedAt: true, openFrom: true, openUntil: true, weekHours: true, together: true, departmentId: true, parentId: true,
         staffing: { orderBy: { sortOrder: "asc" }, select: { count: true, qualificationTypeId: true, qualificationType: { select: { name: true } } } } } } },
   });
+  // Departments for every site (none tied to a site) as well as each site's own.
+  const departments = await prisma.department.findMany({ where: { orgId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true, clubId: true } });
   const qualifications = await prisma.qualificationType.findMany({ where: { orgId, archivedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } });
-  return { canKeep: keeps("setup.areas"), qualifications, sites: sites.map((site) => ({ ...site, areas: site.areas.map(({ staffing, weekHours, together, ...area }) => ({ ...area, weekHours: weekHoursOf(weekHours), together: togetherOf(together),
-    minimums: staffing.map((m) => ({ count: m.count, typeId: m.qualificationTypeId, typeName: m.qualificationType?.name ?? null })) })) })) };
+  return { canKeep: keeps("setup.areas"), qualifications, sites: sites.map((site) => {
+    const areas = site.areas.map(({ staffing, weekHours, together, ...area }) => ({ ...area, weekHours: weekHoursOf(weekHours), together: togetherOf(together),
+      minimums: staffing.map((m) => ({ count: m.count, typeId: m.qualificationTypeId, typeName: m.qualificationType?.name ?? null })) }));
+    // Each top-level area followed by its sub-areas (owner, 20 October 2026).
+    const top = areas.filter((a) => !a.parentId || !areas.some((p) => p.id === a.parentId));
+    return { ...site, departments: departments.filter((d) => !d.clubId || d.clubId === site.id).map(({ id, name }) => ({ id, name })),
+      areas: top.flatMap((a) => [a, ...areas.filter((c) => c.parentId === a.id)]) };
+  }) };
 }
 
 /** A site's open areas, in order: what a module's place field offers. */

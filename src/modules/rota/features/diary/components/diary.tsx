@@ -8,7 +8,7 @@ import { Notice } from "@/components/ui-kit/notice";
 import { leftOf, stretchOf } from "@/components/ui-kit/scale";
 import { Select } from "@/components/ui/select";
 import { clock } from "@/modules/rota/shared/constants";
-import { nextChange, stepsOf, whoIsWhere, type Hole, type PersonDay, type Span } from "@/modules/rota/features/diary/model";
+import { nextChange, stepsOf, whoIsWhere, type Hole, type PersonDay, type Span, type WhereAt } from "@/modules/rota/features/diary/model";
 import { DiaryContext, useDiary, type DiaryData, type DiaryState } from "@/modules/rota/features/diary/components/context";
 import { AddSomeone, AddToDay } from "@/modules/rota/features/diary/components/day-forms";
 import { FillSheet, type FillTarget } from "@/modules/rota/features/diary/components/fill-sheet";
@@ -88,8 +88,21 @@ function dayRange(people: readonly PersonDay[], needs: readonly Span[]) {
   return { from, to: Math.max(to, from + 60) };
 }
 
+/** Who's where, under the area each is in (or the area that is part of: Pool for the 25 m), and
+ *  with every department, under its department too. */
+function groupWhere(where: readonly WhereAt[], departments: Record<string, string> | null) {
+  const out = new Map<string, WhereAt[]>();
+  for (const w of where) {
+    const top = w.need.group || w.need.area || "Elsewhere";
+    const dept = departments && w.need.departmentId ? departments[w.need.departmentId] : null;
+    const heading = dept ? `${dept} › ${top}` : top;
+    out.set(heading, [...(out.get(heading) ?? []), w]);
+  }
+  return [...out];
+}
+
 function WhosWhere() {
-  const { diary, today } = useDiary();
+  const { diary, today, departmentId, departmentNames } = useDiary();
   const now = useNowMinute(today);
   const { from, to } = dayRange(diary.people, diary.needs);
   const [picked, setPicked] = useState<string | null>(null);
@@ -112,15 +125,22 @@ function WhosWhere() {
           options={[...(now !== null ? [{ value: String(now), label: `Now, ${clock(now)}` }] : []), ...times.filter((t) => t !== now).map((t) => ({ value: String(t), label: clock(t) }))]} />
       </div>
       {where.length ? (
-        <ul className="diary-where">
-          {where.map((w) => (
-            <li key={w.need.key} className="diary-where-row" data-tone={toneOf(w.need.kind)}>
-              <span className="diary-where-need">{w.need.kind === "area" ? w.need.area : w.need.title}<span className="diary-muted">{w.need.kind === "area" ? w.need.title : w.need.area}</span></span>
-              <span className="diary-where-names">{w.names.length ? listWords(w.names) : w.need.wants.length ? "Nobody" : "No staff needed"}</span>
-              {w.short ? <span className="diary-short"><TriangleAlert aria-hidden="true" />{w.short} more needed</span> : null}
-            </li>
+        <div className="diary-where-groups">
+          {groupWhere(where, departmentId ? null : departmentNames).map(([heading, list]) => (
+            <section key={heading} aria-label={heading}>
+              <h4 className="diary-where-head">{heading}</h4>
+              <ul className="diary-where">
+                {list.map((w) => (
+                  <li key={w.need.key} className="diary-where-row" data-tone={toneOf(w.need.kind)}>
+                    <span className="diary-where-need">{w.need.kind === "area" ? w.need.area : w.need.title}<span className="diary-muted">{w.need.kind === "area" ? w.need.title : w.need.group ? w.need.area : ""}</span></span>
+                    <span className="diary-where-names">{w.names.length ? listWords(w.names) : w.need.wants.length ? "Nobody" : "No staff needed"}</span>
+                    {w.short ? <span className="diary-short"><TriangleAlert aria-hidden="true" />{w.short} more needed</span> : null}
+                  </li>
+                ))}
+              </ul>
+            </section>
           ))}
-        </ul>
+        </div>
       ) : <p className="diary-muted">Nothing is on at {clock(at)}.</p>}
       {resting.length ? <p className="diary-muted"><Coffee aria-hidden="true" className="diary-inline-icon" />On a break: {listWords(resting)}</p> : null}
       {next && nextWords ? <p className="diary-next">Next, at <span className="tabular-nums">{clock(next.at)}</span>: {nextWords}.</p> : null}

@@ -5,6 +5,7 @@ import { z } from "zod";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { requirePermission } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
+import { departmentById } from "@/lib/directory";
 import { prisma } from "@/lib/prisma";
 import { ACTIVITY_ICON_KEYS } from "@/lib/setup/meta";
 import { WEEKDAYS, hoursWords, type WeekHour } from "@/lib/setup/area-staffing";
@@ -72,9 +73,11 @@ const areaName = z.string().trim().min(1, "Name the area, for example 25m pool."
 
 const areaLanes = z.coerce.number().int("Give a whole number of lanes.").min(0, "Give 0 lanes for an area without lanes.").max(20, "Up to 20 lanes.");
 
-/** Add an area to a site, or rename one, and say how many lanes it has (0 for none). A rename
- *  reaches every module's records that use it. */
-export async function saveArea(siteId: string, id: string | null, input: { name: string; lanes?: number | string }): Promise<ActionResult> {
+/** Add an area to a site, or rename one, and say how many lanes it has (0 for none), whose
+ *  department it is and what area it is part of (owner, 20 October 2026: Pool has the 25 m and
+ *  the 18 m; one level). A sub-area takes its parent's department. A rename reaches every module's
+ *  records that use it. */
+export async function saveArea(siteId: string, id: string | null, input: { name: string; lanes?: number | string; departmentId?: string | null; parentId?: string | null }): Promise<ActionResult> {
   const session = await requirePermission("setup.areas");
   const parsed = areaName.safeParse(input.name);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
@@ -87,24 +90,35 @@ export async function saveArea(siteId: string, id: string | null, input: { name:
   if (!site?.orgId) return fail("That site is not open.");
   const clash = await prisma.siteArea.findFirst({ where: { siteId, name: { equals: name, mode: "insensitive" }, ...(id ? { id: { not: id } } : {}) }, select: { id: true } });
   if (clash) return fail(`${site.name} already has an area called ${name}.`);
-  const existing = id ? await prisma.siteArea.findFirst({ where: { id, siteId }, select: { name: true, lanes: true } }) : null;
+  const existing = id ? await prisma.siteArea.findFirst({ where: { id, siteId }, select: { name: true, lanes: true, departmentId: true, parentId: true, _count: { select: { subAreas: { where: { archivedAt: null } } } } } }) : null;
   if (id && !existing) return fail("That area no longer exists.");
-  if (existing?.name === name && existing.lanes === lanes) return ok();
+  const parentId = input.parentId === undefined ? existing?.parentId ?? null : input.parentId || null;
+  const parent = parentId ? await prisma.siteArea.findFirst({ where: { id: parentId, siteId, archivedAt: null }, select: { id: true, name: true, parentId: true } }) : null;
+  if (parentId && (!parent || parent.id === id)) return fail("Choose another open area at this site for it to be part of.");
+  if (parent?.parentId) return fail(`${parent.name} is itself part of another area. An area can be part of one that is not.`);
+  if (parent && existing?._count.subAreas) return fail(`${existing.name} has areas of its own, so it can't be part of another.`);
+  const wanted = input.departmentId === undefined ? existing?.departmentId ?? null : input.departmentId || null;
+  const department = !parent && wanted ? await departmentById(wanted, site.orgId) : null;
+  if (!parent && wanted && !department) return fail("That department no longer exists.");
+  const departmentId = department?.id ?? null;
+  const sameHome = existing?.parentId === (parent?.id ?? null) && existing?.departmentId === departmentId;
+  if (existing?.name === name && existing.lanes === lanes && sameHome) return ok();
   const renamed = !!existing && existing.name !== name;
   const last = id ? null : await prisma.siteArea.findFirst({ where: { siteId }, orderBy: { sortOrder: "desc" }, select: { sortOrder: true } });
   let moved = 0;
   await prisma.$transaction(async (tx) => {
     if (id) {
-      await tx.siteArea.update({ where: { id }, data: { name, lanes } });
+      await tx.siteArea.update({ where: { id }, data: { name, lanes, departmentId, parentId: parent?.id ?? null } });
       if (renamed) moved = await renameAreaEverywhere({ siteId, from: existing!.name, to: name }, tx);
     } else {
-      await tx.siteArea.create({ data: { orgId: site.orgId!, siteId, name, lanes, sortOrder: (last?.sortOrder ?? -1) + 1 } });
+      await tx.siteArea.create({ data: { orgId: site.orgId!, siteId, name, lanes, departmentId, parentId: parent?.id ?? null, sortOrder: (last?.sortOrder ?? -1) + 1 } });
     }
     const laneWords = lanes ? `${lanes} ${lanes === 1 ? "lane" : "lanes"}` : "no lanes";
     await logAudit({ actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: id ? "update" : "create", entity: "SiteArea", entityId: id, clubId: siteId,
-      summary: !id ? `Added the area ${name} at ${site.name}, ${laneWords}`
+      summary: !id ? `Added the area ${name} at ${site.name}, ${laneWords}${parent ? `, part of ${parent.name}` : department ? `, ${department.name}'s` : ""}`
         : [renamed ? `Renamed ${site.name}'s area ${existing!.name} to ${name}${moved ? `, and ${moved} ${moved === 1 ? "record" : "records"} that use it` : ""}` : null,
-          existing!.lanes !== lanes ? `${renamed ? "gave it" : `Gave ${site.name}'s area ${name}`} ${laneWords}` : null].filter(Boolean).join("; ") }, tx);
+          existing!.lanes !== lanes ? `${renamed ? "gave it" : `Gave ${site.name}'s area ${name}`} ${laneWords}` : null,
+          !sameHome ? `${site.name}'s area ${name} is now ${parent ? `part of ${parent.name}` : department ? `${department.name}'s` : "shared by every department"}` : null].filter(Boolean).join("; ") }, tx);
   });
   refresh("/areas");
   return ok();

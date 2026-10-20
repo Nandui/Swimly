@@ -9,14 +9,17 @@ import type { Line, Need, NeedKind, PersonDay, Warning } from "@/modules/rota/fe
 export type Tone = "area" | "activity" | "booking" | "break" | "free" | "hole" | "off";
 export const toneOf = (kind: NeedKind): Tone => (kind === "area" ? "area" : kind === "booking" ? "booking" : "activity");
 
+/** Where something is: a sub-area with the area it is part of, "Pool › 25 m"; else the area. */
+export const placeWords = (p: { area: string; group: string }) => (p.group && p.area ? `${p.group} › ${p.area}` : p.area);
+
 /** What a line is called on someone's day: an area by the area ("Main pool"), anything else by
  *  what it is ("Aqua-fit", "Sharks 2"). */
 export const lineTitle = (l: Pick<Line, "kind" | "area" | "title">) => (l.kind === "area" ? l.area || l.title : l.title);
-/** Under it: the role for an area ("Lifeguard on duty"), else where. */
-export const lineWhere = (l: Pick<Line, "kind" | "area" | "title">) => (l.kind === "area" ? l.title : l.area);
+/** Under it: the role for an area ("Lifeguard on duty", with the area it is part of), else where. */
+export const lineWhere = (l: Pick<Line, "kind" | "area" | "title" | "group">) => (l.kind === "area" ? `${l.title}${l.group ? `, ${l.group}` : ""}` : placeWords(l));
 
-/** A need in a few words: "Lifeguard on duty, Main pool", "Party: Murphy (Party host), Main pool". */
-export const needWords = (n: Need) => `${n.title}${n.detail && n.kind === "booking" ? ` (${n.detail})` : ""}${n.area ? `, ${n.area}` : ""}`;
+/** A need in a few words: "Lifeguard on duty, Pool › 25 m", "Party: Murphy (Party host), Main pool". */
+export const needWords = (n: Need) => `${n.title}${n.detail && n.kind === "booking" ? ` (${n.detail})` : ""}${n.area ? `, ${placeWords(n)}` : ""}`;
 
 export const span = (s: { start: number; end: number }) => `${clock(s.start)}–${clock(s.end)}`;
 export const firstName = (name: string) => name.split(" ")[0];

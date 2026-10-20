@@ -124,3 +124,18 @@ test("a day is done when every need is filled", () => {
   assert.deepEqual(filled.holes, []);
   assert.equal(filled.done, true);
 });
+
+test("an area belongs to a department, and a sub-area reads with the area it is part of", () => {
+  const areas = [
+    { id: "pool", name: "Pool", departmentId: "aquatics", parentName: null },
+    { id: "main", name: "Main pool", openFrom: h("07:00"), openUntil: h("15:00"), minimums: [{ count: 2, typeId: NPLQ, typeName: "Lifeguard" }], departmentId: "aquatics", parentName: "Pool" },
+    { id: "desk", name: "Front desk", openFrom: h("07:00"), openUntil: h("15:00"), minimums: [{ count: 1, typeId: null, typeName: null }], departmentId: "front", parentName: null },
+  ];
+  const d = buildDiary({ ...base, areas });
+  const guard = d.needs.find((n) => n.kind === "area")!;
+  assert.deepEqual([guard.area, guard.group, guard.departmentId], ["Main pool", "Pool", "aquatics"]);
+  assert.equal(d.needs.find((n) => n.title === "Aqua-fit")!.group, "Pool", "an activity in a sub-area reads with its parent");
+  assert.equal(d.needs.some((n) => n.area === "Front desk" && n.kind === "area"), false, "another department's area stays on its plan, though anyone could do it");
+  const front = buildDiary({ ...base, areas, departmentId: "front" });
+  assert.ok(front.needs.some((n) => n.area === "Front desk" && n.kind === "area"));
+});
