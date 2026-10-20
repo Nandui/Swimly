@@ -305,6 +305,18 @@ export const PERMISSIONS = [
     description: "Read every CCTV viewing recorded at the sites this role covers and add notes to them. Includes recording.",
   },
   {
+    key: "site-monitoring.read",
+    group: "Site Monitoring",
+    label: "See Site Monitoring",
+    description: "See the actions raised for managers at the sites this role covers, such as a task completed with a reading out of range.",
+  },
+  {
+    key: "site-monitoring.act",
+    group: "Site Monitoring",
+    label: "Close Site Monitoring actions",
+    description: "Close an action by saying what was done, or open it again, at the sites this role covers. Includes seeing them.",
+  },
+  {
     key: "hr.records.read",
     group: "HR",
     label: "Read HR records",
@@ -440,6 +452,7 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "stock.count": ["stock.read"],
   "stock.manage": ["stock.count", "stock.read"],
   "cctv.review": ["cctv.record"],
+  "site-monitoring.act": ["site-monitoring.read"],
   "hr.notes.write": ["hr.records.read"],
   "hr.reviews.write": ["hr.records.read"],
   "hr.details.write": ["hr.records.read"],

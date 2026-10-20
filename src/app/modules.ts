@@ -6,6 +6,7 @@ import { incidentsModule } from "@/modules/incidents/manifest";
 import { purchasingModule } from "@/modules/purchasing/manifest";
 import { refundsModule } from "@/modules/refunds/manifest";
 import { rotaModule } from "@/modules/rota/manifest";
+import { siteMonitoringModule } from "@/modules/site-monitoring/manifest";
 import { shortCoursesModule } from "@/modules/short-courses/manifest";
 import { stockModule } from "@/modules/stock/manifest";
 import { tasksModule } from "@/modules/tasks/manifest";
@@ -28,6 +29,7 @@ export const modules = [
   docsModule,
   hrModule,
   cctvModule,
+  siteMonitoringModule,
   purchasingModule,
   stockModule,
 ];

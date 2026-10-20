@@ -1,0 +1,45 @@
+// Site Monitoring (owner request, 20 October 2026; docs/site-monitoring.md): what managers must
+// act on at their sites, raised automatically. Today one thing raises an action: a task completed
+// with a reading outside its range (Tasks announces it with `tasks.reading.out_of_range`). Sites
+// and staff are Core's and read only through its functions, so the table keeps plain ids and
+// carries the module prefix (CLAUDE.md section 4). Actions are closed, never deleted.
+
+/// One reading a manager must act on: what was recorded, against what range, by whom and when,
+/// and, once closed, what was done.
+model MonitoringAction {
+  id             String    @id @default(cuid())
+  orgId          String
+  siteId         String
+  /// Where it came from: "tasks".
+  source         String
+  /// The same reading announced twice raises one action: "tasks:<task>:<record>:<field>:<value>".
+  sourceKey      String    @unique
+  /// Where to see what was recorded, e.g. "/tasks/<id>".
+  sourceHref     String
+  /// The task's title: "Pool water test".
+  title          String
+  /// What was read: "Free chlorine", or "Record 2 · Free chlorine".
+  reading        String
+  value          String
+  unit           String    @default("")
+  /// The allowed range, in words: "1 to 3", "at least 1", "at most 3".
+  allowed        String
+  /// What the task says to do when it is out of range.
+  guidance       String    @default("")
+  recordedById   String?
+  recordedByName String
+  recordedAt     DateTime
+  /// open | closed (`MONITORING_STATUS_META`)
+  status         String    @default("open")
+  closedAt       DateTime?
+  closedById     String?
+  closedByName   String?
+  /// What was done, in the manager's words.
+  resolution     String    @default("")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([siteId, status])
+  @@index([orgId, status])
+  @@map("monitoring_actions")
+}
