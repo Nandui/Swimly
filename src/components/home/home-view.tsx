@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronRight, Smartphone } from "lucide-react";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { FiguresFailed } from "@/components/home/figures-failed";
 import { NeedsSummary } from "@/components/home/home-parts";
@@ -60,8 +61,7 @@ export function HomeView({ homeName, roleName, siteName, today, modules, items, 
   );
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <PageHeader title={homeName} description={`${today} · ${where}`} actions={modules.length ? <NeedsSummary count={needing} /> : undefined} />
+    <PageShell header={<PageHeader title={homeName} description={`${today} · ${where}`} actions={modules.length ? <NeedsSummary count={needing} /> : undefined} />}>
 
       {modules.length === 0 ? (
         <EmptyState icon="keyRound" title="Nothing here yet" hint="Your role has no modules yet. Ask an admin to give it a level in the modules you need." />
@@ -78,7 +78,7 @@ export function HomeView({ homeName, roleName, siteName, today, modules, items, 
           {meNote}
         </>
       )}
-    </div>
+    </PageShell>
   );
 }
 

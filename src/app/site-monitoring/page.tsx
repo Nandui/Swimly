@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { CloseAction, MONITORING_STATUS_META, monitoringActions, readingLine, ReopenAction } from "@/modules/site-monitoring/features/actions";
 import { formatDateTime } from "@/lib/format";
@@ -13,11 +14,10 @@ export const metadata: Metadata = { title: "Actions" };
 export default async function SiteMonitoringPage() {
   const { open, closed } = await monitoringActions();
   return (
-    <>
-      <PageHeader
-        title="Site Monitoring"
-        description="When a task is completed with a reading out of range, it lands here for the site's managers. Check it was put right, then close it by saying what was done."
-      />
+    <PageShell header={<PageHeader
+      title="Site Monitoring"
+      description="When a task is completed with a reading out of range, it lands here for the site's managers. Check it was put right, then close it by saying what was done."
+    />}>
       <section className="pc-panel" aria-labelledby="monitoring-open">
         <div className="pc-panel-head"><h2 id="monitoring-open">Needs action <span className="text-ui-muted-foreground tabular-nums">· {open.length}</span></h2></div>
         {open.length === 0 ? <EmptyState compact icon="clipboardCheck" title="Nothing to act on" hint="Readings out of range show here as soon as a task is completed." /> : (
@@ -58,6 +58,6 @@ export default async function SiteMonitoringPage() {
           </ul>
         )}
       </section>
-    </>
+    </PageShell>
   );
 }

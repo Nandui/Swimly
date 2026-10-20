@@ -6,6 +6,7 @@ import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDate, parseDateOnly } from "@/lib/format";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
@@ -33,9 +34,8 @@ export default async function TrainingMatrixPage({ searchParams }: { searchParam
   const filtered = !!(filters.site || filters.department || filters.course);
   const query = new URLSearchParams(Object.entries(filters).filter((e): e is [string, string] => !!e[1])).toString();
   return (
-    <>
-      <PageHeader title="Training matrix" description="Everyone you cover against the courses training rules say they need."
-        actions={rows.length ? <Button asChild variant="outline" className="min-h-11"><a href={`/training/matrix/export${query ? `?${query}` : ""}`} download><Download aria-hidden="true" />Download for Excel</a></Button> : null} />
+    <PageShell header={<PageHeader title="Training matrix" description="Everyone you cover against the courses training rules say they need."
+        actions={rows.length ? <Button asChild variant="outline" className="min-h-11"><a href={`/training/matrix/export${query ? `?${query}` : ""}`} download><Download aria-hidden="true" />Download for Excel</a></Button> : null} />}>
       <form method="get" className="pc-panel" role="search" aria-label="Filter the training matrix">
         <div className="flex flex-wrap items-end gap-4">
         <div className="min-w-0 grow basis-40 space-y-2 sm:grow-0 sm:basis-auto sm:min-w-52"><Label htmlFor="matrix-site" className="block">Site</Label>
@@ -107,6 +107,6 @@ export default async function TrainingMatrixPage({ searchParams }: { searchParam
           </section>
         </>
       )}
-    </>
+    </PageShell>
   );
 }

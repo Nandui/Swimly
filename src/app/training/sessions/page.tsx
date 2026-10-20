@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { listSessions, SESSION_STATUS_META, SessionDialog, type SessionRow } from "@/modules/training/features/sessions";
 
@@ -35,9 +36,8 @@ export default async function SessionsPage() {
   const { who, upcoming, register, past, courses, sites, types } = await listSessions();
   const none = !upcoming.length && !register.length && !past.length;
   return (
-    <>
-      <PageHeader title="Sessions" description="Classroom and poolside training with places and a register. Closing the register counts everyone's hours and completes the course it teaches."
-        actions={who.assign ? <SessionDialog courses={courses} sites={sites} types={types} /> : null} />
+    <PageShell header={<PageHeader title="Sessions" description="Classroom and poolside training with places and a register. Closing the register counts everyone's hours and completes the course it teaches."
+        actions={who.assign ? <SessionDialog courses={courses} sites={sites} types={types} /> : null} />}>
       {none ? (
         <EmptyState as="h2" icon="calendarDays" title="No sessions yet" hint={who.assign ? "Plan your next in-service, for example a monthly lifeguard training hour." : "Someone who assigns training can plan them."} />
       ) : null}
@@ -59,6 +59,6 @@ export default async function SessionsPage() {
           <Rows rows={past} label="Past sessions" />
         </section>
       ) : null}
-    </>
+    </PageShell>
   );
 }

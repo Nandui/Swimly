@@ -5,6 +5,7 @@ import { CalendarClock, Check, Mail, MapPin, Pencil, TriangleAlert, Truck, UserR
 import { Button } from "@/components/shadcn/button";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { ApproveOrder, CancelOrder, EmailHistory, euro, lastSentToSupplier, PoStatusTag, PrintOrder, purchaseOrder, RejectOrder } from "@/modules/purchasing/features/orders";
 import { formatDate, formatDateTime, plural } from "@/lib/format";
 
@@ -24,11 +25,10 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   const sent = lastSentToSupplier(o.emails);
   const units = o.lines.reduce((t, l) => t + l.quantity, 0);
   return (
-    <div className="po-desk">
-      <PageHeader title={<span className="po-num">{o.number ?? "Purchase order"}</span>} back={{ href: "/purchasing", label: "Orders" }}
+    <PageShell className="po-desk" header={<PageHeader title={<span className="po-num">{o.number ?? "Purchase order"}</span>} back={{ href: "/purchasing", label: "Orders" }}
         status={<PoStatusTag status={o.status} />}
         description={`${o.supplier.name} · ${o.site.name} · ${total} before VAT`}
-        actions={o.status === "approved" ? <span data-print="hide" className="flex flex-wrap gap-2"><PrintOrder /></span> : null} />
+        actions={o.status === "approved" ? <span data-print="hide" className="flex flex-wrap gap-2"><PrintOrder /></span> : null} />}>
 
       <div className="po-bento">
         <section aria-labelledby="po-what-h" className="po-card po-hero" data-print="hide">
@@ -125,7 +125,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           <EmailHistory emails={o.emails} />
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }
 

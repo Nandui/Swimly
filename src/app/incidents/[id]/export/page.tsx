@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { ExportView, incidentExport, PrintButton } from "@/modules/incidents/features/export";
 import { incidentNumber } from "@/modules/incidents/features/reports";
 
@@ -10,9 +11,8 @@ export default async function IncidentExportPage({ params }: { params: Promise<{
   const { id } = await params;
   const data = await incidentExport(id);
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title={<span className="tabular-nums">{`${incidentNumber(data.report.number)} full record`}</span>} back={{ href: `/incidents/${id}`, label: "The report" }} actions={<PrintButton />} />
+    <PageShell spacing="roomy" header={<PageHeader title={<span className="tabular-nums">{`${incidentNumber(data.report.number)} full record`}</span>} back={{ href: `/incidents/${id}`, label: "The report" }} actions={<PrintButton />} />}>
       <ExportView data={data} />
-    </div>
+    </PageShell>
   );
 }

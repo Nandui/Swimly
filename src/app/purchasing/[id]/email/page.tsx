@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Button } from "@/components/shadcn/button";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { EmailHistory, EmailPreview, lastSentToSupplier, orderEmailPage, SendTest, SendToSupplier } from "@/modules/purchasing/features/orders";
 
 export const metadata: Metadata = { title: "Email purchase order" };
@@ -17,13 +18,12 @@ export default async function EmailOrderPage({ params }: { params: Promise<{ id:
   const supplierEmail = o.supplier.email.trim();
   const sentBefore = lastSentToSupplier(o.emails);
   return (
-    <div className="po-desk">
-      <PageHeader title={<span className="po-num">Email {input.number}</span>} back={{ href: `/purchasing/${o.id}`, label: "The order" }}
+    <PageShell className="po-desk" header={<PageHeader title={<span className="po-num">Email {input.number}</span>} back={{ href: `/purchasing/${o.id}`, label: "The order" }}
         description={`To ${o.supplier.name}. Check the email, send yourself a test, then send it.`}
         actions={mayEmail ? <span className="flex flex-wrap gap-2">
           {sender.email ? <SendTest id={o.id} to={sender.email} /> : null}
           {emailsOn && supplierEmail ? <SendToSupplier id={o.id} number={input.number} supplier={o.supplier.name} to={supplierEmail} copyTo={supplierCopies.filter((a) => a.toLowerCase() !== supplierEmail.toLowerCase()).join(", ")} replyTo={replyTo.email} sentBefore={sentBefore} /> : null}
-        </span> : null} />
+        </span> : null} />}>
 
       <div className="space-y-3 empty:hidden">
         {!mayEmail ? <Notice title="You can't email this order" description="Whoever raised it, anyone who raises orders at its site, or whoever manages Purchasing can." /> : null}
@@ -55,6 +55,6 @@ export default async function EmailOrderPage({ params }: { params: Promise<{ id:
       </section>
 
       <EmailHistory emails={o.emails} />
-    </div>
+    </PageShell>
   );
 }

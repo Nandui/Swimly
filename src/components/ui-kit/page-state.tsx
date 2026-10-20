@@ -5,6 +5,7 @@ import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 
 /** The page states every module shares (DESIGN.md, "States"). A module's
  *  `not-found.tsx` and `error.tsx` render these inside its frame; the root
@@ -28,8 +29,7 @@ export function PageNotFound({
   actionLabel?: string;
 }) {
   return (
-    <div className="min-w-0 flex flex-col gap-6">
-      <PageHeader title="Page not found" />
+    <PageShell spacing="roomy" header={<PageHeader title="Page not found" />}>
       <div className="pc-panel">
         <EmptyState
           as="h2"
@@ -39,7 +39,7 @@ export function PageNotFound({
           action={<Button asChild><Link href={href}>{actionLabel}</Link></Button>}
         />
       </div>
-    </div>
+    </PageShell>
   );
 }
 
@@ -69,14 +69,13 @@ export function PageError({
   hint?: string;
 }) {
   return (
-    <div className="min-w-0 flex flex-col gap-6">
-      <PageHeader title={title} />
+    <PageShell spacing="roomy" header={<PageHeader title={title} />}>
       <Notice
         tone="error"
         title="Could not load this page."
         description={hint}
         actions={<Button onClick={() => retry()}>Try again</Button>}
       />
-    </div>
+    </PageShell>
   );
 }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Progress } from "@/components/shadcn/progress";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { formatDate } from "@/lib/format";
 import { HourTargetDialog, hoursInWords, hoursOverview, LogHours, RemoveHours, RemoveHourTarget } from "@/modules/training/features/hours";
 
@@ -13,14 +14,13 @@ export const metadata: Metadata = { title: "In-service hours" };
 export default async function HoursPage() {
   const { who, summaries, types, log, loggable } = await hoursOverview();
   return (
-    <>
-      <PageHeader title="In-service hours" description="Training hours against what each qualification needs, such as the 20 hours a year a pool lifeguard needs to stay qualified. Sessions add hours when their register is closed."
+    <PageShell header={<PageHeader title="In-service hours" description="Training hours against what each qualification needs, such as the 20 hours a year a pool lifeguard needs to stay qualified. Sessions add hours when their register is closed."
         actions={
           <>
             {who.manage ? <HourTargetDialog types={types} /> : null}
             {who.signoff && loggable.length ? <LogHours people={loggable} types={types} /> : null}
           </>
-        } />
+        } />}>
       {summaries.length === 0 ? (
         <EmptyState as="h2" icon="hourglass" title="No qualification needs hours yet" hint={who.manage ? "Set how many in-service hours a qualification needs, for example 20 hours in 12 months." : "Someone with the Author level in Training sets them."} />
       ) : summaries.map((t) => (
@@ -70,6 +70,6 @@ export default async function HoursPage() {
           </ul>
         )}
       </section>
-    </>
+    </PageShell>
   );
 }

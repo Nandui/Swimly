@@ -56,11 +56,12 @@ no em-dashes in UI copy) apply to any screen. The others:
 - `full-output-enforcement`: complete, untruncated code output.
 - `design-taste-frontend-v1`: the old version, for reference only.
 
-**They may overrule** the house style in [DESIGN.md](DESIGN.md) and the UI rule in
-[CLAUDE.md](CLAUDE.md) section 14 where they are the better call for the screen
-(Fernando, 11 October 2026). When one does, say which rule it overrode and why in
-the change summary. Where they agree, or a skill's advice is only a generic
-default, keep the house style:
+**They never overrule** the UI rules in [CLAUDE.md](CLAUDE.md) section 14 (Fernando's
+hard rules, 20 October 2026: shadcn components only, no arbitrary Tailwind values, no
+inline styles or new colours, every page in `PageShell` and `PageHeader`). They may
+still shape the house style in [DESIGN.md](DESIGN.md) within those rules; say which
+DESIGN.md rule one changed and why in the change summary. Where they agree, or a
+skill's advice is only a generic default, keep the house style:
 
 - shadcn/ui from `src/components/shadcn` with Poolside Clear tokens, Plus Jakarta
   Sans, the fin's blue accent and the existing radii. Their font picks (Geist,

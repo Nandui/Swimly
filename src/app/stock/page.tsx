@@ -4,6 +4,7 @@ import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDateTime, formatShortDay, plural } from "@/lib/format";
 import { StartCountDialog, STOCK_TAKE_META, stockCounts, type StockCountRow } from "@/modules/stock/features/counts";
@@ -17,13 +18,12 @@ export default async function StockCountsPage() {
   const done = takes.filter((t) => t.state === "submitted");
   const canStart = startSites.some((s) => !s.open) && live > 0;
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title="Stock counts" description="Walk the stockroom with a phone or tablet and count what is on the shelf. Submitted counts can be compared."
-        actions={canStart ? <StartCountDialog sites={startSites} today={today} /> : who.manage && live === 0 ? <Button asChild><Link href="/stock/products">Add products to count</Link></Button> : undefined} />
+    <PageShell spacing="roomy" header={<PageHeader title="Stock counts" description="Walk the stockroom with a phone or tablet and count what is on the shelf. Submitted counts can be compared."
+        actions={canStart ? <StartCountDialog sites={startSites} today={today} /> : who.manage && live === 0 ? <Button asChild><Link href="/stock/products">Add products to count</Link></Button> : undefined} />}>
       <Panel id="stk-open" title="Open" takes={open} live={live}
         empty={{ title: "No count open", hint: who.count ? (live ? "Start a count at the site you are in." : "Products are added first, then they can be counted.") : "Whoever counts stock starts a count here." }} />
       {done.length ? <Panel id="stk-done" title="Submitted" takes={done} live={live} /> : null}
-    </div>
+    </PageShell>
   );
 }
 

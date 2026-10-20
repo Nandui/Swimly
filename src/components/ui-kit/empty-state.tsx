@@ -37,7 +37,7 @@ export function EmptyState({
             <AppIcon name={icon} />
           </EmptyMedia>
         ) : null}
-        <EmptyTitle className={compact ? "text-sm" : undefined}>{Heading ? <Heading className="text-[length:inherit] leading-[inherit]">{title}</Heading> : title}</EmptyTitle>
+        <EmptyTitle className={compact ? "text-sm" : undefined}>{Heading ? <Heading className="text-inherit">{title}</Heading> : title}</EmptyTitle>
         {hint ? <EmptyDescription>{hint}</EmptyDescription> : null}
       </EmptyHeader>
       {action ? <EmptyContent>{action}</EmptyContent> : null}

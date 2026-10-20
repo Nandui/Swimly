@@ -82,7 +82,7 @@ export function ObservePractical({ id, name, title, steps, evidence: savedEviden
           {steps.map((step, i) => {
             const current = marks[step.id];
             return (
-              <li key={step.id} className={cn("flex flex-col gap-3 rounded-[var(--pc-radius-card)] border border-ui-border p-4", current?.result === "not-yet" && "border-ui-destructive")}>
+              <li key={step.id} className={cn("flex flex-col gap-3 rounded-card border border-ui-border p-4", current?.result === "not-yet" && "border-ui-destructive")}>
                 <div className="flex flex-wrap items-start gap-x-3 gap-y-1">
                   <span className="text-sm font-semibold tabular-nums text-ui-muted-foreground">{i + 1}</span>
                   <p className="min-w-0 flex-1 text-base font-medium" id={`step-${step.id}`}>{step.text}</p>
@@ -122,7 +122,7 @@ export function ObservePractical({ id, name, title, steps, evidence: savedEviden
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {evidence.map((e) => (
               <li key={e.id}>
-                <a href={`/training/evidence/${e.id}`} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-[var(--pc-radius-card)] border border-ui-border">
+                <a href={`/training/evidence/${e.id}`} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-card border border-ui-border">
                   {/* eslint-disable-next-line @next/next/no-img-element -- a private file served by this app */}
                   <img src={`/training/evidence/${e.id}`} alt={`Evidence photo ${e.name}`} loading="lazy" className="aspect-video w-full object-cover" />
                 </a>

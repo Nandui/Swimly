@@ -11,9 +11,9 @@
   --po-spring: cubic-bezier(0.32, 0.72, 0, 1);
   --po-shell: 6px;
   --po-radius: 26px;
-  --po-hair: color-mix(in srgb, var(--pc-ink) 8%, transparent);
-  --po-tint: color-mix(in srgb, var(--pc-ink) 3.5%, var(--pc-canvas, transparent));
-  --po-ring: 0 0 0 var(--po-shell) var(--po-tint), 0 0 0 calc(var(--po-shell) + 1px) var(--po-hair), 0 30px 60px -36px color-mix(in srgb, var(--pc-ink) 22%, transparent);
+  --po-hair: var(--pc-line);
+  --po-tint: var(--pc-surface-sunken);
+  --po-ring: 0 0 0 var(--po-shell) var(--po-tint), 0 0 0 calc(var(--po-shell) + 1px) var(--po-hair);
   display: flex; flex-direction: column; gap: 28px; min-width: 0;
 }
 .turnfin-app .po-desk svg { stroke-width: 1.6; }
@@ -36,7 +36,7 @@
 .turnfin-app .po-desk > :nth-child(n+6) { animation-delay: 240ms; }
 
 /* Small type: eyebrows, labels, muted lines. */
-.turnfin-app .po-desk .po-eyebrow { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 24px; padding: 0 12px; border-radius: 999px; background: color-mix(in srgb, var(--pc-primary) 10%, transparent); color: var(--pc-primary-ink, var(--pc-primary)); font-size: 10px; line-height: 1; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
+.turnfin-app .po-desk .po-eyebrow { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 24px; padding: 0 12px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary-ink, var(--pc-primary)); font-size: 10px; line-height: 1; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
 .turnfin-app .po-desk .po-label { margin: 0; color: var(--pc-ink-muted); font-size: 11px; line-height: 16px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
 .turnfin-app .po-desk .po-fine { margin: 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
 .turnfin-app .po-desk .po-muted { margin: 0; color: var(--pc-ink-muted); font-size: var(--pc-text-body); line-height: var(--pc-leading-body); }
@@ -55,10 +55,10 @@
 .turnfin-app .po-desk .po-islands { display: flex; flex-direction: column; gap: 8px; }
 .turnfin-app .po-desk .po-islands [data-slot='button'] { justify-content: flex-start; width: 100%; min-height: 48px; padding-inline: 6px 20px; border-radius: 999px; transition: transform 400ms var(--po-spring), background-color 300ms var(--po-spring); }
 .turnfin-app .po-desk .po-islands [data-slot='button']:active { transform: scale(0.98); }
-.turnfin-app .po-desk .po-islands [data-slot='button'] > svg { box-sizing: content-box; width: 16px; height: 16px; padding: 10px; border-radius: 999px; background: color-mix(in srgb, var(--pc-primary) 10%, transparent); color: var(--pc-primary); transition: transform 500ms var(--po-spring); }
+.turnfin-app .po-desk .po-islands [data-slot='button'] > svg { box-sizing: content-box; width: 16px; height: 16px; padding: 10px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); transition: transform 500ms var(--po-spring); }
 .turnfin-app .po-desk .po-islands [data-slot='button']:hover > svg { transform: translateX(2px) scale(1.05); }
-.turnfin-app .po-desk .po-islands [data-variant='default'] { box-shadow: inset 0 1px 0 color-mix(in srgb, white 25%, transparent), 0 14px 28px -16px color-mix(in srgb, var(--pc-primary) 80%, transparent); }
-.turnfin-app .po-desk .po-islands [data-variant='default'] > svg { background: color-mix(in srgb, currentColor 18%, transparent); color: inherit; }
+.turnfin-app .po-desk .po-islands [data-variant='default'] { box-shadow: none; }
+.turnfin-app .po-desk .po-islands [data-variant='default'] > svg { background: transparent; color: inherit; }
 .turnfin-app .po-desk .po-islands [data-variant='ghost'] { color: var(--pc-danger); }
 .turnfin-app .po-desk .po-islands [data-variant='ghost'] > svg { background: var(--pc-danger-soft); color: var(--pc-danger); }
 .turnfin-app .po-desk .po-islands[data-row] { flex-direction: row; flex-wrap: wrap; }
@@ -67,7 +67,7 @@
 /* Rows: borderless wells that lift on hover, with a status mark and a trailing amount. */
 .turnfin-app .po-desk .pc-rows { gap: 6px; }
 .turnfin-app .po-desk .pc-row { gap: 14px; min-height: 68px; padding: 12px 16px; border: 0; border-radius: 18px; background: var(--pc-surface-sunken); box-shadow: inset 0 0 0 1px var(--po-hair); transition: transform 500ms var(--po-spring), background-color 300ms var(--po-spring), box-shadow 300ms var(--po-spring); }
-.turnfin-app .po-desk a.pc-row:hover { background: var(--pc-surface); transform: translateY(-1px); box-shadow: inset 0 0 0 1px var(--po-hair), 0 18px 32px -24px color-mix(in srgb, var(--pc-ink) 40%, transparent); }
+.turnfin-app .po-desk a.pc-row:hover { background: var(--pc-surface); transform: translateY(-1px); box-shadow: inset 0 0 0 1px var(--po-hair); }
 .turnfin-app .po-desk a.pc-row:active { transform: scale(0.995); }
 .turnfin-app .po-desk .pc-row-title { font-weight: 650; letter-spacing: -0.005em; }
 .turnfin-app .po-desk .pc-row-chevron { box-sizing: content-box; width: 14px; height: 14px; padding: 8px; border-radius: 999px; background: var(--pc-surface); box-shadow: inset 0 0 0 1px var(--po-hair); transition: transform 500ms var(--po-spring); }
@@ -82,9 +82,9 @@
 .turnfin-app .po-desk .po-stat { position: relative; justify-content: space-between; gap: 18px; min-height: 168px; color: var(--pc-ink); text-decoration: none; transition: transform 600ms var(--po-spring); }
 .turnfin-app .po-desk a.po-stat:hover { transform: translateY(-2px); }
 .turnfin-app .po-desk a.po-stat:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 10px; }
-.turnfin-app .po-desk .po-stat[data-tone='act'] { --po-tint: color-mix(in srgb, var(--pc-warning) 18%, var(--pc-canvas, transparent)); --po-hair: color-mix(in srgb, var(--pc-warning) 28%, transparent); }
+.turnfin-app .po-desk .po-stat[data-tone='act'] { --po-tint: var(--pc-warning-soft); --po-hair: var(--pc-warning-soft); }
 .turnfin-app .po-desk .po-stat-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.turnfin-app .po-desk .po-stat-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 999px; background: color-mix(in srgb, var(--pc-primary) 10%, transparent); color: var(--pc-primary); transition: transform 500ms var(--po-spring); }
+.turnfin-app .po-desk .po-stat-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); transition: transform 500ms var(--po-spring); }
 .turnfin-app .po-desk .po-stat[data-tone='act'] .po-stat-icon { background: var(--pc-warning-soft); color: var(--pc-warning); }
 .turnfin-app .po-desk a.po-stat:hover .po-stat-icon { transform: translate(2px, -2px) scale(1.05); }
 .turnfin-app .po-desk .po-stat-icon > svg { width: 18px; height: 18px; }
@@ -128,7 +128,7 @@
 .turnfin-app .po-desk .po-step-dot { display: grid; place-items: center; width: 28px; height: 28px; margin-bottom: 8px; border-radius: 999px; background: var(--pc-surface-sunken); color: var(--pc-ink-muted); box-shadow: inset 0 0 0 1px var(--po-hair); }
 .turnfin-app .po-desk .po-step-dot > svg { width: 14px; height: 14px; stroke-width: 2.6; }
 .turnfin-app .po-desk [data-state='done'] > .po-step-dot { background: var(--pc-primary); color: var(--pc-on-primary); box-shadow: none; }
-.turnfin-app .po-desk [data-state='current'] > .po-step-dot { background: var(--pc-surface); box-shadow: inset 0 0 0 2px var(--pc-primary), 0 0 0 5px color-mix(in srgb, var(--pc-primary) 14%, transparent); }
+.turnfin-app .po-desk [data-state='current'] > .po-step-dot { background: var(--pc-surface); box-shadow: inset 0 0 0 2px var(--pc-primary), 0 0 0 5px var(--pc-primary-soft); }
 .turnfin-app .po-desk [data-state='current'] > .po-step-dot::after { content: ""; width: 8px; height: 8px; border-radius: 999px; background: var(--pc-primary); animation: po-pulse 2.4s var(--po-spring) infinite; }
 .turnfin-app .po-desk [data-state='stopped'] > .po-step-dot { background: var(--pc-danger); color: var(--pc-on-danger, var(--pc-surface)); box-shadow: 0 0 0 5px var(--pc-danger-soft); }
 @keyframes po-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.6); opacity: 0.6; } }
@@ -139,9 +139,9 @@
 
 /* What happens next: the edged card while it is this person's move. */
 .turnfin-app .po-desk .po-next { gap: 12px; }
-.turnfin-app .po-desk .po-next[data-tone='act'] { --po-tint: color-mix(in srgb, var(--pc-primary) 22%, var(--pc-canvas, transparent)); --po-hair: color-mix(in srgb, var(--pc-primary) 26%, transparent); }
-.turnfin-app .po-desk .po-next[data-tone='done'] { --po-tint: color-mix(in srgb, var(--pc-success) 12%, var(--pc-canvas, transparent)); }
-.turnfin-app .po-desk .po-next[data-tone='stopped'] { --po-tint: color-mix(in srgb, var(--pc-danger) 12%, var(--pc-canvas, transparent)); }
+.turnfin-app .po-desk .po-next[data-tone='act'] { --po-tint: var(--pc-primary-soft-hover); --po-hair: var(--pc-primary-soft-hover); }
+.turnfin-app .po-desk .po-next[data-tone='done'] { --po-tint: var(--pc-success-soft); }
+.turnfin-app .po-desk .po-next[data-tone='stopped'] { --po-tint: var(--pc-danger-soft); }
 .turnfin-app .po-desk .po-next-title { margin: 4px 0 0; font-size: 26px; line-height: 1.15; font-weight: 750; letter-spacing: -0.025em; }
 .turnfin-app .po-desk .po-next .po-islands { margin-top: 8px; }
 .turnfin-app .po-desk .po-quote { margin: 4px 0 0; padding: 14px 18px; border-radius: 4px 18px 18px 18px; background: var(--pc-surface-sunken); white-space: pre-wrap; overflow-wrap: anywhere; line-height: var(--pc-leading-body); }
@@ -159,11 +159,11 @@
 .turnfin-app .po-desk .po-lines [data-slot='table'] { border-spacing: 0 6px; }
 .turnfin-app .po-desk .po-lines [data-slot='table-head'] { padding: 0 16px; font-size: 11px !important; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700 !important; }
 .turnfin-app .po-desk .po-lines [data-slot='table-body'] [data-slot='table-cell'] { border-color: transparent !important; background: var(--pc-surface-sunken) !important; padding-block: 14px !important; }
-.turnfin-app .po-desk .po-lines [data-slot='table-body'] [data-slot='table-row']:hover [data-slot='table-cell'] { background: color-mix(in srgb, var(--pc-primary) 6%, var(--pc-surface-sunken)) !important; }
-.turnfin-app .po-desk .po-lines [data-slot='table-body'] [data-slot='table-row'][data-picked] [data-slot='table-cell'] { background: color-mix(in srgb, var(--pc-primary) 9%, var(--pc-surface)) !important; }
-.turnfin-app .po-desk .po-lines [data-slot='table-body'] [data-slot='table-row'][data-sub] [data-slot='table-cell'] { background: color-mix(in srgb, var(--pc-ink) 2%, var(--pc-surface-sunken)) !important; }
+.turnfin-app .po-desk .po-lines [data-slot='table-body'] [data-slot='table-row']:hover [data-slot='table-cell'] { background: var(--pc-primary-soft) !important; }
+.turnfin-app .po-desk .po-lines [data-slot='table-body'] [data-slot='table-row'][data-picked] [data-slot='table-cell'] { background: var(--pc-primary-soft) !important; }
+.turnfin-app .po-desk .po-lines [data-slot='table-body'] [data-slot='table-row'][data-sub] [data-slot='table-cell'] { background: var(--pc-surface-sunken) !important; }
 .turnfin-app .po-desk .po-lines [data-slot='table-footer'] { border: 0; }
-.turnfin-app .po-desk .po-lines [data-slot='table-footer'] [data-slot='table-cell'] { padding: 18px 16px; border: 0; background: color-mix(in srgb, var(--pc-primary) 8%, transparent); }
+.turnfin-app .po-desk .po-lines [data-slot='table-footer'] [data-slot='table-cell'] { padding: 18px 16px; border: 0; background: var(--pc-primary-soft); }
 .turnfin-app .po-desk .po-lines [data-slot='table-footer'] [data-slot='table-cell']:first-child { border-radius: 16px 0 0 16px; color: var(--pc-primary-ink, var(--pc-primary)); }
 .turnfin-app .po-desk .po-lines [data-slot='table-footer'] [data-slot='table-cell']:last-child { border-radius: 0 16px 16px 0; font-size: 22px !important; letter-spacing: -0.02em; }
 .turnfin-app .po-desk .po-lines .po-chip { display: inline-flex; align-items: center; min-height: 22px; margin: 4px 6px 0 0; padding: 0 9px; border-radius: 999px; background: var(--pc-surface); box-shadow: inset 0 0 0 1px var(--po-hair); color: var(--pc-ink-muted); font-size: var(--pc-text-caption); font-weight: 600; }
@@ -171,7 +171,7 @@
 .turnfin-app .po-desk .po-doc-foot { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
 .turnfin-app .po-desk .po-doc-foot > svg { flex: none; width: 14px; height: 14px; }
 .turnfin-app .po-desk .po-note { display: flex; flex-direction: column; gap: 8px; }
-.turnfin-app .po-desk .po-note > p { margin: 0; padding-left: 18px; border-left: 3px solid color-mix(in srgb, var(--pc-primary) 40%, transparent); font-size: 17px; line-height: 1.6; white-space: pre-line; overflow-wrap: anywhere; }
+.turnfin-app .po-desk .po-note > p { margin: 0; padding-left: 18px; border-left: 3px solid var(--pc-primary); font-size: 17px; line-height: 1.6; white-space: pre-line; overflow-wrap: anywhere; }
 
 /* Emails: a quiet vertical timeline. */
 .turnfin-app .po-desk .po-history { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
@@ -193,7 +193,7 @@
 .turnfin-app .po-desk .po-form-main > .po-card:nth-child(2) { animation-delay: 80ms; }
 .turnfin-app .po-desk .po-form-main > .po-card:nth-child(3) { animation-delay: 160ms; }
 .turnfin-app .po-desk .po-step-head { display: flex; align-items: center; gap: 14px; }
-.turnfin-app .po-desk .po-step-n { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 999px; background: var(--pc-primary); color: var(--pc-on-primary); font-weight: 800; font-variant-numeric: tabular-nums; box-shadow: 0 0 0 5px color-mix(in srgb, var(--pc-primary) 12%, transparent); }
+.turnfin-app .po-desk .po-step-n { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 999px; background: var(--pc-primary); color: var(--pc-on-primary); font-weight: 800; font-variant-numeric: tabular-nums; box-shadow: 0 0 0 5px var(--pc-primary-soft); }
 .turnfin-app .po-desk .po-step-head h2 { font-size: 20px; }
 .turnfin-app .po-desk .po-find { position: relative; width: 100%; }
 @media (min-width: 640px) { .turnfin-app .po-desk .po-find { width: 280px; } }
@@ -227,14 +227,14 @@
 /* Suppliers: a tile each, with a monogram, and the two settings cards side by side. */
 .turnfin-app .po-desk .po-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
 .turnfin-app .po-desk .po-tile { display: flex; flex-direction: column; gap: 14px; height: 100%; min-width: 0; padding: 18px; border-radius: 20px; background: var(--pc-surface-sunken); box-shadow: inset 0 0 0 1px var(--po-hair); color: var(--pc-ink); text-decoration: none; transition: transform 500ms var(--po-spring), background-color 300ms var(--po-spring), box-shadow 300ms var(--po-spring); }
-.turnfin-app .po-desk a.po-tile:hover { background: var(--pc-surface); transform: translateY(-2px); box-shadow: inset 0 0 0 1px var(--po-hair), 0 22px 40px -26px color-mix(in srgb, var(--pc-ink) 45%, transparent); }
+.turnfin-app .po-desk a.po-tile:hover { background: var(--pc-surface); transform: translateY(-2px); box-shadow: inset 0 0 0 1px var(--po-hair); }
 .turnfin-app .po-desk a.po-tile:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
 .turnfin-app .po-desk .po-tile[data-muted] { opacity: 0.72; }
 .turnfin-app .po-desk .po-tile-head { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .turnfin-app .po-desk .po-tile-head > div { display: flex; flex-direction: column; min-width: 0; flex: 1; }
 .turnfin-app .po-desk .po-tile-name { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -0.01em; overflow-wrap: anywhere; }
 .turnfin-app .po-desk .po-tile-sub { margin: 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); overflow-wrap: anywhere; }
-.turnfin-app .po-desk .po-monogram { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 14px; background: color-mix(in srgb, var(--pc-primary) 12%, var(--pc-surface)); color: var(--pc-primary-ink, var(--pc-primary)); font-weight: 800; font-size: 17px; letter-spacing: -0.02em; }
+.turnfin-app .po-desk .po-monogram { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 14px; background: var(--pc-primary-soft); color: var(--pc-primary-ink, var(--pc-primary)); font-weight: 800; font-size: 17px; letter-spacing: -0.02em; }
 .turnfin-app .po-desk .po-monogram[data-size='lg'] { width: 72px; height: 72px; border-radius: 22px; font-size: 28px; }
 .turnfin-app .po-desk .po-tile-facts { display: flex; flex-wrap: wrap; gap: 6px; margin: auto 0 0; padding: 0; list-style: none; }
 .turnfin-app .po-desk .po-tile-facts > li, .turnfin-app .po-desk .po-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 10px; border-radius: 999px; background: var(--pc-surface); box-shadow: inset 0 0 0 1px var(--po-hair); color: var(--pc-ink-muted); font-size: var(--pc-text-caption); font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -267,7 +267,7 @@
 .turnfin-app .po-desk a.pc-row[data-first]:hover { background: var(--pc-yellow); }
 
 /* Dialogs from these pages (portalled with .turnfin-purchasing): a softer, larger shell. */
-.turnfin-purchasing [data-slot='dialog-content'] { border-radius: 28px; box-shadow: 0 0 0 6px color-mix(in srgb, var(--pc-surface) 30%, transparent), 0 40px 80px -30px color-mix(in srgb, var(--pc-ink) 45%, transparent); }
+.turnfin-purchasing [data-slot='dialog-content'] { border-radius: 28px; box-shadow: 0 0 0 6px transparent; }
 .turnfin-purchasing [data-slot='dialog-content'] fieldset:has(> legend) { padding: 18px; border-radius: 18px; background: var(--pc-surface-sunken); }
 
 @media (max-width: 767px) {

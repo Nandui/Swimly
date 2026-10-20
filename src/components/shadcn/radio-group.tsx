@@ -30,7 +30,7 @@ function RadioGroupItem({
     <RadioGroupPrimitive.Item
       data-slot="radio-group-item"
       className={cn(
-        "shrink-0 transition-[color,background-color,border-color,box-shadow] ui-motion-feedback outline-none disabled:cursor-not-allowed disabled:opacity-50",
+        "shrink-0 transition ui-motion-feedback outline-none disabled:cursor-not-allowed disabled:opacity-50",
         dot && "aspect-square size-5 rounded-full border border-ui-input text-ui-primary focus-visible:border-ui-ring focus-visible:ring-3 focus-visible:ring-ui-ring/50 aria-invalid:border-ui-destructive aria-invalid:ring-ui-destructive/20 dark:bg-ui-input/30 dark:aria-invalid:ring-ui-destructive/40",
         className
       )}

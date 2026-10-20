@@ -66,23 +66,23 @@ html:has(.refund-submit-bar) { scroll-padding-bottom: 120px; }
   --refund-shell-pad: 6px;
   --refund-shell-radius: 32px;
   --refund-core-radius: calc(var(--refund-shell-radius) - var(--refund-shell-pad));
-  --refund-hair: color-mix(in srgb, var(--pc-ink) 7%, transparent);
-  --refund-soft-shadow: 0 1px 1px color-mix(in srgb, var(--pc-ink) 3%, transparent), 0 24px 48px -28px color-mix(in srgb, var(--pc-ink) 18%, transparent);
+  --refund-hair: var(--pc-line);
+  --refund-soft-shadow: none;
   display: contents;
 }
 .turnfin-refunds .refund-inspect svg { stroke-width: 1.6; }
 
 /* The double bezel. A shell holds either a .refund-core or an existing panel as its core. */
-.turnfin-refunds .refund-inspect .refund-shell { min-width: 0; padding: var(--refund-shell-pad); border-radius: var(--refund-shell-radius); background: color-mix(in srgb, var(--pc-ink) 3%, var(--pc-canvas, transparent)); box-shadow: inset 0 0 0 1px var(--refund-hair), var(--refund-soft-shadow);
+.turnfin-refunds .refund-inspect .refund-shell { min-width: 0; padding: var(--refund-shell-pad); border-radius: var(--refund-shell-radius); background: var(--pc-surface-sunken); box-shadow: inset 0 0 0 1px var(--refund-hair), var(--refund-soft-shadow);
   animation: refund-rise 900ms var(--refund-spring) both; }
-.turnfin-refunds .refund-inspect .refund-shell > :is(.refund-core, .pc-panel) { display: flex; flex-direction: column; gap: 20px; min-width: 0; height: 100%; padding: 28px; border-radius: var(--refund-core-radius); background: var(--pc-surface); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--pc-surface) 88%, white), 0 0 0 1px var(--refund-hair); }
+.turnfin-refunds .refund-inspect .refund-shell > :is(.refund-core, .pc-panel) { display: flex; flex-direction: column; gap: 20px; min-width: 0; height: 100%; padding: 28px; border-radius: var(--refund-core-radius); background: var(--pc-surface); box-shadow: 0 0 0 1px var(--refund-hair); }
 @keyframes refund-rise { from { opacity: 0; transform: translateY(24px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
 .turnfin-refunds .refund-inspect .refund-decide { animation-delay: 90ms; }
 .turnfin-refunds .refund-inspect .refund-main > .refund-shell:nth-child(1) { animation-delay: 160ms; }
 .turnfin-refunds .refund-inspect .refund-main > .refund-shell:nth-child(n + 2) { animation-delay: 220ms; }
 
 /* Eyebrows. */
-.turnfin-refunds .refund-inspect .refund-eyebrow { align-self: flex-start; display: inline-flex; align-items: center; min-height: 22px; padding: 0 10px; border-radius: 999px; background: color-mix(in srgb, var(--pc-primary) 9%, transparent); color: var(--pc-primary-ink, var(--pc-primary)); font-size: 10px; line-height: 1; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
+.turnfin-refunds .refund-inspect .refund-eyebrow { align-self: flex-start; display: inline-flex; align-items: center; min-height: 22px; padding: 0 10px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary-ink, var(--pc-primary)); font-size: 10px; line-height: 1; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
 
 /* The bento: claim wide, decision narrow and sticky beside it and the evidence; one column, in
    reading order (claim, decision, evidence), below 1024px. */
@@ -109,7 +109,7 @@ html:has(.refund-submit-bar) { scroll-padding-bottom: 120px; }
 .turnfin-refunds .refund-inspect .refund-stage-dot { display: grid; place-items: center; width: 28px; height: 28px; margin-bottom: 8px; border-radius: 999px; background: var(--pc-surface-sunken); color: var(--pc-ink-muted); box-shadow: inset 0 0 0 1px var(--refund-hair); }
 .turnfin-refunds .refund-inspect .refund-stage-dot > svg { width: 14px; height: 14px; stroke-width: 2.4; }
 .turnfin-refunds .refund-inspect [data-state='done'] > .refund-stage-dot { background: var(--pc-primary); color: var(--pc-on-primary); box-shadow: none; }
-.turnfin-refunds .refund-inspect [data-state='current'] > .refund-stage-dot { background: var(--pc-surface); box-shadow: inset 0 0 0 2px var(--pc-primary), 0 0 0 5px color-mix(in srgb, var(--pc-primary) 14%, transparent); }
+.turnfin-refunds .refund-inspect [data-state='current'] > .refund-stage-dot { background: var(--pc-surface); box-shadow: inset 0 0 0 2px var(--pc-primary), 0 0 0 5px var(--pc-primary-soft); }
 .turnfin-refunds .refund-inspect [data-state='current'] > .refund-stage-dot::after { content: ""; width: 8px; height: 8px; border-radius: 999px; background: var(--pc-primary); animation: refund-pulse 2.4s var(--refund-spring) infinite; }
 @keyframes refund-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.6); opacity: 0.6; } }
 .turnfin-refunds .refund-inspect [data-state='waiting'] > .refund-stage-dot { background: var(--pc-warning-soft); color: var(--pc-warning); box-shadow: inset 0 0 0 2px var(--pc-warning); }
@@ -129,15 +129,15 @@ html:has(.refund-submit-bar) { scroll-padding-bottom: 120px; }
 
 /* The decision: the one card with the fin's blue edge while this person can act. Its buttons
    are island pills with the icon in its own circle, the primary in solid ink-blue on top. */
-.turnfin-refunds .refund-inspect .refund-decide-open { background: color-mix(in srgb, var(--pc-primary) 12%, var(--pc-canvas, transparent)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pc-primary) 30%, transparent), 0 28px 56px -32px color-mix(in srgb, var(--pc-primary) 55%, transparent); }
+.turnfin-refunds .refund-inspect .refund-decide-open { background: var(--pc-primary-soft); box-shadow: inset 0 0 0 1px var(--pc-primary-soft-hover); }
 .turnfin-refunds .refund-inspect .refund-decide > .refund-core { gap: 12px; }
 .turnfin-refunds .refund-inspect .refund-decide .refund-action-buttons { gap: 8px; margin-top: 8px; }
 .turnfin-refunds .refund-inspect .refund-decide .refund-action-buttons [data-slot='button'] { justify-content: flex-start; min-height: 48px; padding-inline: 6px 20px; border-radius: 999px; border-color: var(--refund-hair); box-shadow: none; transition: transform 400ms var(--refund-spring), background-color 300ms var(--refund-spring); }
 .turnfin-refunds .refund-inspect .refund-decide .refund-action-buttons [data-slot='button']:active { transform: scale(0.98); }
-.turnfin-refunds .refund-inspect .refund-decide .refund-action-buttons [data-slot='button'] > svg { box-sizing: content-box; width: 16px; height: 16px; padding: 10px; border-radius: 999px; background: color-mix(in srgb, var(--pc-primary) 10%, transparent); color: var(--pc-primary); transition: transform 500ms var(--refund-spring); }
+.turnfin-refunds .refund-inspect .refund-decide .refund-action-buttons [data-slot='button'] > svg { box-sizing: content-box; width: 16px; height: 16px; padding: 10px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); transition: transform 500ms var(--refund-spring); }
 .turnfin-refunds .refund-inspect .refund-decide .refund-action-buttons [data-slot='button']:hover > svg { transform: translate(2px, -1px) scale(1.05); }
-.turnfin-refunds .refund-inspect .refund-decide .refund-action-buttons [data-variant='default'] { border-color: transparent; box-shadow: inset 0 1px 0 color-mix(in srgb, white 25%, transparent), 0 14px 28px -16px color-mix(in srgb, var(--pc-primary) 80%, transparent); }
-.turnfin-refunds .refund-inspect .refund-decide .refund-action-buttons [data-variant='default'] > svg { background: color-mix(in srgb, currentColor 18%, transparent); color: inherit; }
+.turnfin-refunds .refund-inspect .refund-decide .refund-action-buttons [data-variant='default'] { border-color: transparent; box-shadow: none; }
+.turnfin-refunds .refund-inspect .refund-decide .refund-action-buttons [data-variant='default'] > svg { background: transparent; color: inherit; }
 .turnfin-refunds .refund-inspect .refund-decide .refund-action-buttons [data-variant='ghost'] { justify-content: center; padding-inline: 16px; }
 .turnfin-refunds .refund-inspect .refund-decide .refund-action-buttons [data-variant='ghost'] > svg { padding: 0; background: none; }
 
@@ -148,7 +148,7 @@ html:has(.refund-submit-bar) { scroll-padding-bottom: 120px; }
 .turnfin-refunds .refund-inspect .refund-well-title { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: 11px; line-height: 16px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--pc-ink-muted); }
 .turnfin-refunds .refund-inspect .refund-well-title > svg { width: 16px; height: 16px; color: var(--pc-primary); }
 .turnfin-refunds .refund-inspect .refund-story { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 20px 24px; }
-.turnfin-refunds .refund-inspect .refund-quote { margin: 10px 0 0; padding-left: 16px; border-left: 2px solid color-mix(in srgb, var(--pc-primary) 35%, transparent); font-size: 17px; line-height: 1.55; letter-spacing: -0.005em; white-space: pre-wrap; overflow-wrap: anywhere; }
+.turnfin-refunds .refund-inspect .refund-quote { margin: 10px 0 0; padding-left: 16px; border-left: 2px solid var(--pc-primary); font-size: 17px; line-height: 1.55; letter-spacing: -0.005em; white-space: pre-wrap; overflow-wrap: anywhere; }
 
 /* The history: a quiet vertical timeline, each step's notes in a soft bubble. */
 .turnfin-refunds .refund-inspect .refund-history { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }

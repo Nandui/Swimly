@@ -8,6 +8,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-sel
 import { Progress } from "@/components/shadcn/progress";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { Tag } from "@/components/ui-kit/tag";
 import { SiteSettings } from "@/modules/tasks/features/sites";
@@ -31,10 +32,9 @@ export default async function TasksTodayPage({ searchParams }: { searchParams: P
   const data = await taskDay(await searchParams);
   if (!data.site) {
     return (
-      <>
-        <PageHeader title="Today" />
+      <PageShell header={<PageHeader title="Today" />}>
         <EmptyState as="h2" icon="building" title="No sites to show" hint="Your role does not do tasks at a site yet." />
-      </>
+      </PageShell>
     );
   }
   const { site, settings, date, day, tasks, total, figures, planned, addable, openActions, filters, tags, closed } = data;
@@ -43,13 +43,12 @@ export default async function TasksTodayPage({ searchParams }: { searchParams: P
   const isToday = date === day;
   const filtered = !!(filters.q || filters.tag || filters.status !== "all");
   return (
-    <>
-      <PageHeader
+    <PageShell header={<PageHeader
         title={isToday ? `Today: ${site.name}` : `${site.name}: ${formatWeekday(date)} ${formatDayMonth(date)}`}
         description={isToday ? `${formatWeekday(date)} ${formatDayMonth(date)} · a clear view of the day` : date > day ? "Planned from the published schedules" : "An earlier day"}
         status={settings.status !== "live" ? <Tag meta={SITE_STATUS_META[settings.status]} /> : undefined}
         actions={date <= day && addable.length && !closed ? <AddTask siteId={site.id} date={date} templates={addable} /> : undefined}
-      />
+      />}>
 
       {date <= day ? (
         <ul className="pc-stats" aria-label="The day at a glance">
@@ -118,7 +117,7 @@ export default async function TasksTodayPage({ searchParams }: { searchParams: P
         {filtered ? <p className="text-xs text-ui-muted-foreground">{tasks.length} of {total} tasks match.</p> : null}
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_var(--pc-rail-width)] lg:items-start">
+      <div className="grid gap-4 lg:grid-cols-main-rail lg:items-start">
         <div className="flex min-w-0 flex-col gap-4">
           {date > day ? (
             <section className="pc-panel" aria-labelledby="tasks-planned">
@@ -157,7 +156,7 @@ export default async function TasksTodayPage({ searchParams }: { searchParams: P
           </div>
           <dl className="flex flex-col">
             {[["Opening", settings.opening], ["Closing", settings.closing], ["High-priority tasks left", String(figures.priorityLeft)], ["Closed dates ahead", String(settings.closedDates.filter((d) => d >= day).length)]].map(([k, v]) => (
-              <div key={k} className="flex min-h-11 items-center justify-between gap-2 border-b border-[var(--pc-line)] last:border-b-0">
+              <div key={k} className="flex min-h-11 items-center justify-between gap-2 border-b border-ui-border last:border-b-0">
                 <dt className="text-sm text-ui-muted-foreground">{k}</dt><dd className="font-semibold tabular-nums">{v}</dd>
               </div>
             ))}
@@ -165,7 +164,7 @@ export default async function TasksTodayPage({ searchParams }: { searchParams: P
           {data.who.manage ? <SiteSettings site={{ ...settings, name: site.name }} /> : null}
         </aside>
       </div>
-    </>
+    </PageShell>
   );
 }
 

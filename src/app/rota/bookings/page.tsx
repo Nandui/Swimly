@@ -5,6 +5,7 @@ import { CalendarDays } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { BOOKING_KIND_META, BookingDialog, type BookingKind, CancelBooking, clock, lanesLabel, rotaRepeats, WEEKDAY_LABELS } from "@/modules/rota/features/bookings";
 import { formatDate, formatTimeRange, plural, toDateOnlyString, today } from "@/lib/format";
@@ -30,10 +31,9 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
   const areas = site ? await areasAt(site.id) : [];
   const laneCount = (place: string) => areas.find((a) => a.name.toLowerCase() === place.toLowerCase())?.lanes ?? 0;
   return (
-    <>
-      <PageHeader title={site ? `Bookings: ${site.name}` : "Bookings"}
+    <PageShell header={<PageHeader title={site ? `Bookings: ${site.name}` : "Bookings"}
         description="Schools, parties and lane hire that repeat over weeks. Each adds its activity on its days, ready to plan who."
-        actions={site?.plan && data.types.length ? <BookingDialog siteId={site.id} today={now} types={data.types} areas={areas} /> : undefined} />
+        actions={site?.plan && data.types.length ? <BookingDialog siteId={site.id} today={now} types={data.types} areas={areas} /> : undefined} />}>
       {data.repeats.length === 0 ? (
         <EmptyState icon="calendarRange" title="No bookings yet" hint="When a school, a party or a club books time that needs staff, add it here." />
       ) : (
@@ -64,6 +64,6 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
           </ul>
         </section>
       )}
-    </>
+    </PageShell>
   );
 }

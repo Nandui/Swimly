@@ -124,7 +124,7 @@ function WeekHours({ id, start }: { id: string; start: WeekHour[] }) {
         const own = start.find((w) => w.day === day);
         const mode = modes[day];
         return (
-          <div key={name} className="grid grid-cols-1 items-end gap-3 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)]">
+          <div key={name} className="grid grid-cols-1 items-end gap-3 sm:grid-cols-3">
             <Field label={name} htmlFor={`${id}-mode-${day}`}>
               <NativeSelect id={`${id}-mode-${day}`} name={`mode-${day}`} value={mode} onChange={(e) => setModes((all) => all.map((m, i) => (i === day ? e.target.value : m)))} className="min-h-11 w-full">
                 <NativeSelectOption value="same">Every day&apos;s hours</NativeSelectOption>
@@ -152,7 +152,7 @@ function StaffingLines({ id, start, qualifications }: { id: string; start: Minim
       <legend className="text-sm font-medium">Staff it needs</legend>
       {lines.length === 0 ? <p className="text-sm text-ui-muted-foreground">No staff needed. Save to take it off the rota, or add a line.</p> : null}
       {lines.map((l, i) => (
-        <div key={l.key} className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto] items-end gap-3">
+        <div key={l.key} className="grid grid-cols-two-fields-action items-end gap-3">
           <input type="hidden" name="line" value={l.key} />
           <Field label="How many" htmlFor={`${id}-count-${l.key}`}>
             <Input id={`${id}-count-${l.key}`} name={`count-${l.key}`} type="number" inputMode="numeric" min={1} max={30} required defaultValue={l.count} className="min-h-11" />
@@ -189,7 +189,7 @@ function CoveredFrom({ id, name, start, others, qualifications }: { id: string; 
         When staff in another area can watch {name} too, such as a lifeguard by the door between two pools. While both are open, {name} needs none of that type of staff and the other area needs this many in all.
       </p>
       {rows.map((r, i) => (
-        <div key={r.key} className="grid grid-cols-1 items-end gap-3 sm:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.5fr)_auto]">
+        <div key={r.key} className="grid grid-cols-1 items-end gap-3 sm:grid-cols-three-fields-action">
           <input type="hidden" name="with" value={r.key} />
           <Field label="While open with" htmlFor={`${id}-with-area-${r.key}`}>
             <NativeSelect id={`${id}-with-area-${r.key}`} name={`with-area-${r.key}`} defaultValue={r.withAreaId} required className="min-h-11 w-full">

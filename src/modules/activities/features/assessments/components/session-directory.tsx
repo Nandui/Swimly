@@ -4,6 +4,7 @@ import { Button } from "@/components/shadcn/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import { plural } from "@/lib/format";
 import { SESSION_STATUS_META, isPast, sessionDay, sessionSpan } from "@/modules/activities/shared/assessments/constants";
@@ -25,11 +26,10 @@ export function SessionDirectory({ sessions, today, setup = false, manage, view,
   const booked = matches.reduce((sum, s) => sum + s._count.bookings, 0);
   // One bar only: the date lenses inside the list panel. Setup is a header action for managers,
   // and the setup page returns through its back link (V2Assessments).
-  return <div className="min-w-0 flex flex-col gap-6">
-    <PageHeader back={setup ? { href: "/assessments", label: "Assessments" } : undefined}
+  return <PageShell spacing="roomy" header={<PageHeader back={setup ? { href: "/assessments", label: "Assessments" } : undefined}
       title={setup ? "Assessment setup" : view === "past" ? "Past assessments" : "Upcoming assessments"}
       description={setup ? "Create sessions and manage their dates, places, assessors and parent booking settings" : view === "past" ? "Look back at earlier sessions, their swimmers and outcomes" : "See what is running at this site, open the swimmer list and record assessment outcomes"}
-      actions={setup ? createAction : manage ? <Button asChild variant="outline"><Link href="/assessments/setup"><Settings2 aria-hidden="true" />Assessment setup</Link></Button> : undefined} />
+      actions={setup ? createAction : manage ? <Button asChild variant="outline"><Link href="/assessments/setup"><Settings2 aria-hidden="true" />Assessment setup</Link></Button> : undefined} />}>
     <section className="pc-panel" aria-label="Assessment sessions">
       <div className="min-w-0 flex flex-wrap items-center justify-between gap-3">
         <SegmentedLinks label="Session dates" items={(["upcoming", "past", ...(setup ? ["cancelled"] : [])] as SessionView[]).map(item => ({
@@ -74,5 +74,5 @@ export function SessionDirectory({ sessions, today, setup = false, manage, view,
         title={view === "upcoming" ? "No upcoming assessments" : view === "past" ? "No past assessments" : "No cancelled assessments"}
         hint={view === "upcoming" ? setup ? "Choose Add a session to set its date, programme and places." : manage ? "Create a session in Assessment setup. It will appear here with its booked swimmers." : "Sessions scheduled for today and later will appear here." : "Sessions will appear here when they move into this list."} />}
     </section>
-  </div>;
+  </PageShell>;
 }

@@ -1,5 +1,6 @@
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { formatTime } from "@/lib/format";
+import { Progress } from "@/components/shadcn/progress";
 import { HeatLegend } from "@/modules/activities/features/analytics/components/insights/kit";
 import { CONTACT_CHANNELS, CONTACT_OUTCOMES } from "@/modules/activities/shared/enrolment/follow-up";
 
@@ -53,8 +54,8 @@ export function Versus({ label, mine, team, format, lowerBetter, who = "This per
   const worse = gap !== null && team !== null && gap > Math.max(10, Math.abs(team) * 0.25);
   return <li>
     <span className="ins-kpi-label">{label}</span>
-    <span className="ins-compare-line"><span>{who}</span><span className="ins-bar-track" aria-hidden="true"><span className="ins-bar-fill" style={{ width: `${(mine ?? 0) / max * 100}%` }} /></span><strong className="ins-num">{format(mine)}</strong></span>
-    <span className="ins-compare-line" data-who="school"><span>Team</span><span className="ins-bar-track" aria-hidden="true"><span className="ins-bar-fill" style={{ width: `${(team ?? 0) / max * 100}%` }} /></span><span className="ins-num">{format(team)}</span></span>
+    <span className="ins-compare-line"><span>{who}</span><Progress value={Math.min(100, (mine ?? 0) / max * 100)} aria-hidden="true" className="ins-bar-track" /><strong className="ins-num">{format(mine)}</strong></span>
+    <span className="ins-compare-line" data-who="school"><span>Team</span><Progress value={Math.min(100, (team ?? 0) / max * 100)} aria-hidden="true" className="ins-bar-track" /><span className="ins-num">{format(team)}</span></span>
     {worse ? <span className="ins-flag" data-tone="warn">Worse than the team</span> : null}
   </li>;
 }

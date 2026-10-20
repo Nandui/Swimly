@@ -44,7 +44,7 @@ export function CourseFilters({ dimensions, q, active, state, todayDay, views, s
   };
   return <div className="min-w-0 flex flex-col gap-4" aria-busy={pending}>
     <div className="min-w-0 flex flex-wrap items-end gap-3">
-      <Form action="/courses" role="search" aria-label="Search weekly classes" className="min-w-0 flex-[1_1_var(--pc-field-min)] md:max-w-md">
+      <Form action="/courses" role="search" aria-label="Search weekly classes" className="min-w-0 grow basis-field md:max-w-md">
         {dimensions.map(d => d.selected ? <input key={d.key} type="hidden" name={d.key} value={d.selected} /> : null)}
         {state === "archived" ? <input type="hidden" name="state" value="archived" /> : null}
         <SearchField id="class-query" label="Find a class" defaultValue={q} placeholder="Class, level, site or pool area" clearHref={href({ q: null })} />

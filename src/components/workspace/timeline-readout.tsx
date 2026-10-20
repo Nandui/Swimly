@@ -2,6 +2,7 @@
 
 import { useRef, useState, type ReactNode } from "react";
 import { formatTime } from "@/lib/format";
+import { leftOf } from "@/components/ui-kit/scale";
 
 /** The box around a timeline grid. With `range`, it reads out the exact time under the pointer
  *  (to the quarter hour) as a pill on the time bar, so the bar can show hours alone and still
@@ -17,12 +18,14 @@ export function TimelineReadout({ className, range, children }: { className: str
     const t = track.getBoundingClientRect();
     if (event.clientX < t.left || event.clientX > t.right) { setAt(null); return; }
     const minutes = range.from + Math.round((((event.clientX - t.left) / t.width) * range.span) / 15) * 15;
-    setAt({ x: t.left - box.getBoundingClientRect().left + ((minutes - range.from) / range.span) * t.width, minutes });
+    const b = box.getBoundingClientRect();
+    // Where the pill sits, as a share of the box (a position class, never an inline style).
+    setAt({ x: (t.left - b.left + ((minutes - range.from) / range.span) * t.width) / b.width, minutes });
   };
   return (
     <div ref={ref} className={className} onPointerMove={range ? move : undefined} onPointerLeave={range ? () => setAt(null) : undefined}>
       {children}
-      {at ? <span aria-hidden="true" className="pc-timeline-readout" style={{ left: at.x }}>{formatTime(at.minutes)}</span> : null}
+      {at ? <span aria-hidden="true" className={`pc-timeline-readout ${leftOf(at.x)}`}>{formatTime(at.minutes)}</span> : null}
     </div>
   );
 }
