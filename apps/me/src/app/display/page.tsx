@@ -3,8 +3,12 @@
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { Frame } from "@/components/frame";
-import { ReadAloud, SPEECH_RATES, TEXT_SIZES, useSpeechRate, useTextSize } from "@/components/learner";
+import { ReadAloud, SPEECH_RATES, TEXT_SIZES, useSpeechRate, useTextSize, type SpeechRate, type TextSize } from "@/components/learner";
 import { session } from "@/lib/api";
+import { RadioGroup } from "@/components/shadcn/radio-group";
+import { ChoiceRow } from "@/components/ui/choice-row";
+import { PageShell } from "@/components/ui-kit/page-shell";
+import { PageHeader } from "@/components/ui-kit/page-header";
 
 const noSubscription = () => () => {};
 
@@ -20,28 +24,23 @@ export default function DisplayPage() {
   if (!token) return null;
   return (
     <Frame title="Text size and reading aloud">
-      <div className="stack">
-        <div className="stack-sm"><h1>Text size and reading aloud</h1><p className="muted">Saved on this phone. Every screen follows it straight away.</p></div>
+      <PageShell header={<PageHeader title="Text size and reading aloud" description="Saved on this phone. Every screen follows it straight away." />}>
         <fieldset className="pc-panel stack-sm">
           <legend className="panel-legend">Text size</legend>
-          <div className="pc-rows">
-            {TEXT_SIZES.map((s) => (
-              <label key={s.id} className="pc-row"><input type="radio" name="size" checked={size === s.id} onChange={() => setSize(s.id)} />{s.label}</label>
-            ))}
-          </div>
+          <RadioGroup className="pc-rows" name="size" value={size} onValueChange={(value) => setSize(value as TextSize)} aria-label="Text size">
+            {TEXT_SIZES.map((s) => <ChoiceRow key={s.id} type="radio" value={s.id} title={s.label} />)}
+          </RadioGroup>
           <p ref={sample} className="doc">Before you lift, check the scene is safe and tell your team what you are about to do.</p>
         </fieldset>
         <fieldset className="pc-panel stack-sm">
           <legend className="panel-legend">Reading aloud</legend>
-          <p className="muted">Lessons have a Read aloud button. Your phone reads the lesson in its own voice; nothing is sent anywhere.</p>
-          <div className="pc-rows">
-            {SPEECH_RATES.map((r) => (
-              <label key={r.id} className="pc-row"><input type="radio" name="rate" checked={rate === r.id} onChange={() => setRate(r.id)} />{r.label}</label>
-            ))}
-          </div>
+          <p className="text-ui-muted-foreground">Lessons have a Read aloud button. Your phone reads the lesson in its own voice; nothing is sent anywhere.</p>
+          <RadioGroup className="pc-rows" name="rate" value={rate} onValueChange={(value) => setRate(value as SpeechRate)} aria-label="Reading speed">
+            {SPEECH_RATES.map((r) => <ChoiceRow key={r.id} type="radio" value={r.id} title={r.label} />)}
+          </RadioGroup>
           <div><ReadAloud target={sample} label="Try it" /></div>
         </fieldset>
-      </div>
+      </PageShell>
     </Frame>
   );
 }

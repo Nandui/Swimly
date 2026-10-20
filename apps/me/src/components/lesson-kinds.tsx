@@ -3,7 +3,10 @@
 import { useEffect, useState } from "react";
 import { Check, ChevronRight, RotateCcw, RotateCw, ThumbsUp, Undo2 } from "lucide-react";
 import { CourseImage } from "@/components/question";
-import { Notice } from "@/components/ui";
+import { Button } from "@/components/shadcn/button";
+import { Checkbox } from "@/components/shadcn/checkbox";
+import { Label } from "@/components/shadcn/label";
+import { Bar, Notice } from "@/components/ui";
 import { apiFile } from "@/lib/api";
 
 /** Lessons that aren't text (Training e-learning phase 3): a branching
@@ -42,20 +45,20 @@ export function ScenarioPlayer({ assignmentId, steps, onFinished }: { assignment
       {!picked ? (
         <ul className="choices" aria-label="What do you do?">
           {scene.choices.map((c) => (
-            <li key={c.id}><button type="button" className="choice selectable scene-choice" onClick={() => choose(c)}><span className="choice-text">{c.text}</span><ChevronRight aria-hidden="true" /></button></li>
+            <li key={c.id}><Button type="button" variant="outline" className="choice selectable scene-choice" onClick={() => choose(c)}><span className="choice-text">{c.text}</span><ChevronRight aria-hidden="true" /></Button></li>
           ))}
         </ul>
       ) : (
         <>
-          <p className="caption muted">You chose: <strong>{picked.text}</strong></p>
+          <p className="caption">You chose: <strong>{picked.text}</strong></p>
           {ended
             ? picked.best
               ? <Notice title="The best outcome" live>{picked.feedback || "Well done. That's how it should go."}</Notice>
               : <Notice title="Not the best outcome" tone="warning" live>{picked.feedback || "Have another go and try something different."}</Notice>
             : picked.feedback ? <Notice title="What happens" live>{picked.feedback}</Notice> : null}
           <div className="lesson-nav">
-            {ended ? <button type="button" className={picked.best ? "button outline" : "button"} onClick={restart}><RotateCcw aria-hidden="true" />{picked.best ? "Play it again" : "Try again"}</button> : <span />}
-            {!ended ? <button type="button" className="button" onClick={carryOn}>Carry on<ChevronRight aria-hidden="true" /></button> : null}
+            {ended ? <Button type="button" variant={picked.best ? "outline" : "default"} onClick={restart}><RotateCcw aria-hidden="true" />{picked.best ? "Play it again" : "Try again"}</Button> : <span />}
+            {!ended ? <Button type="button" onClick={carryOn}>Carry on<ChevronRight aria-hidden="true" /></Button> : null}
           </div>
         </>
       )}
@@ -83,7 +86,7 @@ export function CardDeck({ assignmentId, cards, onFinished }: { assignmentId: st
       <section className="pc-panel stack" aria-labelledby="deck-done">
         <h2 id="deck-done" role="status">You know all {cards.length} cards</h2>
         <p className="muted">{rounds === 1 ? "First time through. Nicely done." : `It took ${rounds} rounds. Come back to them any time.`}</p>
-        <button type="button" className="button outline block" onClick={() => { setQueue(cards.map((c) => c.id)); setKnown(0); setRounds(1); setRoundLeft(cards.length); setFlipped(false); }}><RotateCcw aria-hidden="true" />Go through them again</button>
+        <Button type="button" variant="outline" className="self-start max-md:self-stretch" onClick={() => { setQueue(cards.map((c) => c.id)); setKnown(0); setRounds(1); setRoundLeft(cards.length); setFlipped(false); }}><RotateCcw aria-hidden="true" />Go through them again</Button>
       </section>
     );
   }
@@ -100,19 +103,19 @@ export function CardDeck({ assignmentId, cards, onFinished }: { assignmentId: st
   return (
     <section className="stack" aria-label="Flashcards">
       <p className="caption tabular" aria-live="polite">{known} of {cards.length} known · {queue.length} to go</p>
-      <progress className="course-progress" max={cards.length} value={known} aria-hidden="true" />
-      <button type="button" className="flashcard" aria-pressed={flipped} onClick={() => setFlipped(!flipped)}>
-        <span className="caption muted">{flipped ? "Back" : "Front"} · tap to turn over</span>
+      <div aria-hidden="true"><Bar max={cards.length} value={known} label="Cards known" /></div>
+      <Button type="button" variant="outline" className="flashcard" aria-pressed={flipped} onClick={() => setFlipped(!flipped)}>
+        <span className="caption">{flipped ? "Back" : "Front"} · tap to turn over</span>
         {!flipped && card.imageId ? <CourseImage assignmentId={assignmentId} fileId={card.imageId} alt="" className="choice-image" /> : null}
         <span className="flashcard-text" aria-live="polite">{flipped ? card.back : card.front}</span>
         <RotateCw aria-hidden="true" className="flip-icon" />
-      </button>
+      </Button>
       {flipped ? (
         <div className="lesson-nav">
-          <button type="button" className="button outline" onClick={() => answer(false)}><Undo2 aria-hidden="true" />Not yet</button>
-          <button type="button" className="button" onClick={() => answer(true)}><ThumbsUp aria-hidden="true" />I knew it</button>
+          <Button type="button" variant="outline" onClick={() => answer(false)}><Undo2 aria-hidden="true" />Not yet</Button>
+          <Button type="button" onClick={() => answer(true)}><ThumbsUp aria-hidden="true" />I knew it</Button>
         </div>
-      ) : <p className="caption muted">Think of the answer, then turn the card over.</p>}
+      ) : <p className="caption">Think of the answer, then turn the card over.</p>}
     </section>
   );
 }
@@ -136,15 +139,15 @@ export function Checklist({ storageKey, items, onFinished }: { storageKey: strin
       <div className="stack-sm">
         <h2 id="checklist-title">Checklist</h2>
         <p className="caption tabular" aria-live="polite">{done} of {items.length} ticked</p>
-        <progress className="course-progress" max={items.length} value={done} aria-hidden="true" />
+        <div aria-hidden="true"><Bar max={items.length} value={done} label="Ticked" /></div>
       </div>
       <ul className="choices">
         {items.map((item) => (
           <li key={item.id}>
-            <label className="choice selectable">
-              <input type="checkbox" checked={ticked.has(item.id)} onChange={(e) => setTicked((now) => { const next = new Set(now); if (e.target.checked) next.add(item.id); else next.delete(item.id); return next; })} />
+            <Label className="choice selectable">
+              <Checkbox checked={ticked.has(item.id)} onCheckedChange={(checked) => setTicked((now) => { const next = new Set(now); if (checked === true) next.add(item.id); else next.delete(item.id); return next; })} />
               <span className="choice-text">{item.text}</span>
-            </label>
+            </Label>
           </li>
         ))}
       </ul>
@@ -171,8 +174,8 @@ export function AudioPlayer({ assignmentId, fileId, title }: { assignmentId: str
   if (failed) return <Notice title="The recording didn’t load" tone="warning">Check your connection and open the lesson again. The transcript is below.</Notice>;
   return (
     <section className="pc-panel stack-sm" aria-label={`Recording: ${title}`}>
-      {url ? <audio controls preload="metadata" src={url} className="audio-player"><track kind="captions" /></audio> : <p className="caption muted" role="status">Getting the recording…</p>}
-      <p className="caption muted">The transcript is below if you can’t listen right now.</p>
+      {url ? <audio controls preload="metadata" src={url} className="audio-player"><track kind="captions" /></audio> : <p className="caption" role="status">Getting the recording…</p>}
+      <p className="caption">The transcript is below if you can’t listen right now.</p>
     </section>
   );
 }

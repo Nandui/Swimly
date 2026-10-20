@@ -23,7 +23,8 @@ theme describe the retired look. Components live in `src/components/shadcn`.
   no inline styles or new colours; every page uses `PageShell` and `PageHeader`. Charts
   use the shadcn Chart and bars `Progress`; sizes from data use the classes from
   `src/components/ui-kit/scale.ts`. Ask the owner before adding a token or component.
-  `npm run lint` enforces them; see CLAUDE.md, section 14.
+  `npm run lint` enforces them, in Work, Turnfin Me (`apps/me`) and the Academy site
+  (`apps/academy`); see CLAUDE.md, section 14.
 - Compose actual shadcn controls; inspect their installed source before use.
   Buttons, dialogs, alerts, tables, items, inputs, selects, checkboxes, switches,
   radio groups, popovers and command lists already have accessible primitives.

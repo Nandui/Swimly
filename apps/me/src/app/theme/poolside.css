@@ -1,0 +1,866 @@
+/* Poolside Clear v2, the Turnfin design for the whole staff app (owner decisions, September and
+   October 2026): Plus Jakarta Sans, one calm blue for action and selection, navy-tinted
+   neutrals, five status colours of matched strength, soft single-hue gradients only on time
+   blocks, white 24px panels on a cool canvas inside a rounded frame, and a deep navy dark mode.
+   Tokens and the system rules (type, controls, fields, badges, alerts, dialogs, focus) are
+   scoped to .turnfin-app, which the root layout puts on <body>, so every page and every
+   portalled dialog gets them. Rules for the Docs/Refunds shell and their pages stay scoped to
+   .turnfin-docs. It re-points the shared --ui-* tokens, so shadcn primitives follow without
+   per-page work. The approved mockups and component sheet: DESIGN.md, "Poolside Clear v2". */
+/* Printed pages use the light values of every token. */
+@media print { :root { color-scheme: light !important; } }
+
+.turnfin-app {
+  /* The ground pair. The viewport themeColor in src/app/layout.tsx repeats these values. */
+  --pc-outer: light-dark(#f7f9fb, #070c14);
+  --pc-canvas: light-dark(#eef2f6, #0c1320);
+  --pc-frame-line: light-dark(#e1e6ee, #1c2739);
+  --pc-surface: light-dark(#ffffff, #131c2b);
+  --pc-surface-sunken: light-dark(#f4f6f9, #182334);
+  --pc-surface-raised: light-dark(#ffffff, #182334);
+  --pc-ink: light-dark(#0f1b2d, #e8eef7);
+  --pc-ink-muted: light-dark(#56627a, #9babc2);
+  --pc-line: light-dark(#e2e7ef, #24324a);
+  /* Edges of things you type into or choose from: 3:1 against every surface. */
+  --pc-line-strong: light-dark(#77849a, #6b7d99);
+  --pc-primary: light-dark(#1d5fd1, #78a6ff);
+  --pc-primary-hover: light-dark(#174ea8, #9dbfff);
+  --pc-on-primary: light-dark(#ffffff, #081733);
+  --pc-primary-soft: light-dark(#e9f0fd, #17284a);
+  /* A chart's single series: the fin's blue, a step darker in dark mode so it sits in the
+     chart lightness band (dataviz validator: band, chroma and 3:1 against the surface pass). */
+  --pc-chart-1: light-dark(#1d5fd1, #5a8eee);
+  --pc-primary-soft-hover: light-dark(#dde8fc, #1d3360);
+  --pc-primary-ink: light-dark(#174ea8, #a8c5ff);
+  --pc-hover: light-dark(#f4f6f9, #1b2636);
+  --pc-focus: light-dark(#1d5fd1, #78a6ff);
+  --pc-focus-halo: 0 0 0 4px light-dark(rgb(29 95 209 / 0.2), rgb(120 166 255 / 0.28));
+  --pc-success: light-dark(#157046, #7fe0a8);
+  --pc-success-soft: light-dark(#e3f5ec, #10301f);
+  --pc-warning: light-dark(#8a5a00, #f7cf6e);
+  --pc-warning-soft: light-dark(#fdf2dc, #35270b);
+  --pc-danger: light-dark(#b4321f, #ffa395);
+  --pc-danger-soft: light-dark(#fde8e6, #3a1815);
+  --pc-on-danger: light-dark(#ffffff, #2a0906);
+  --pc-danger-hover: light-dark(#962817, #ffc2b8);
+  --pc-cover: light-dark(#5b3fc4, #c3b5ff);
+  --pc-cover-soft: light-dark(#efeafd, #231c47);
+  --pc-neutral-soft: light-dark(#f4f6f9, #182334);
+  /* The single do-first item on a page. */
+  --pc-yellow: light-dark(#fde9a8, #4a3b10);
+  --pc-on-yellow: light-dark(#3a2a00, #fbe7a8);
+  /* Ink on a light pastel a writer chose (Docs highlights): dark in both themes. */
+  --pc-on-pastel: #172033;
+  /* The Docs content palette: text colours a writer picks (lighter in dark mode) and highlights. */
+  --pc-docs-blue: light-dark(#2563eb, #93c5fd);
+  --pc-docs-teal: light-dark(#0f766e, #5eead4);
+  --pc-docs-green: light-dark(#15803d, #86efac);
+  --pc-docs-purple: light-dark(#9333ea, #d8b4fe);
+  --pc-docs-red: light-dark(#dc2626, #fca5a5);
+  --pc-docs-orange: light-dark(#c2410c, #fdba74);
+  --pc-docs-mark-yellow: #fef08a;
+  --pc-docs-mark-green: #bbf7d0;
+  --pc-docs-mark-blue: #bfdbfe;
+  --pc-docs-mark-pink: #fbcfe8;
+  --pc-docs-mark-purple: #e9d5ff;
+  --pc-docs-mark-orange: #fed7aa;
+  --pc-hatch: light-dark(#e3e8ef, #1f2b3f);
+  /* Time blocks (timelines, schedule cells, shifts): soft single-hue gradients, text 4.5:1 on both ends. */
+  --pc-block-now: linear-gradient(135deg, light-dark(#c8f2da, #1f6040), light-dark(#9fe3bd, #184d33));
+  --pc-on-block-now: light-dark(#0b3d24, #dff7e9);
+  --pc-block-next: linear-gradient(135deg, light-dark(#dce8ff, #27467f), light-dark(#bcd3fb, #1d3866));
+  --pc-on-block-next: light-dark(#0f2f6e, #dde8ff);
+  --pc-block-cover: linear-gradient(135deg, light-dark(#fff0c8, #6e5014), light-dark(#fbdc93, #5b420e));
+  --pc-on-block-cover: light-dark(#4a2f00, #fff1cf);
+  --pc-block-assess: linear-gradient(135deg, light-dark(#e8e1ff, #40307e), light-dark(#d0c3fb, #322567));
+  --pc-on-block-assess: light-dark(#2f1b78, #ece6ff);
+  --pc-shadow-card: none;
+  --pc-shadow-overlay: 0 16px 40px -12px light-dark(rgb(15 27 45 / 0.35), rgb(0 0 0 / 0.6)), 0 0 0 1px var(--pc-line);
+  /* The veil behind dialogs and sheets: a navy tint in light, black in dark. */
+  --pc-scrim: light-dark(rgb(15 27 45 / 0.28), rgb(0 0 0 / 0.5));
+  --pc-ease: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Type scale: five sizes only. Captions and metadata; body, controls and labels; section
+     titles; page titles; large figures (page and figure drop to 24px on phones). Reading text
+     in documents is 16px. docs.css and module CSS reference these tokens. */
+  --pc-text-caption: 12px;
+  --pc-leading-caption: 16px;
+  --pc-text-body: 14px;
+  --pc-leading-body: 20px;
+  --pc-text-title: 18px;
+  --pc-leading-title: 24px;
+  --pc-text-page: 28px;
+  --pc-leading-page: 36px;
+  --pc-text-figure: 28px;
+  --pc-leading-figure: 34px;
+
+  /* Control geometry: every button, field, tab and menu item is 44px on every device. Bars
+     (page links, tabs, the module bar) inset their items 4px and draw them 36px, keeping a
+     44px hit area. Corners: round controls, 16px inside a panel, 24px panels. */
+  --pc-control-height: 44px;
+  --pc-control-pad: 16px;
+  --pc-radius-control: 999px;
+  --pc-radius-card: 16px;
+  --pc-radius-panel: 24px;
+  /* The rounded frame around every module (ModuleShell), square on phones. */
+  --pc-radius-frame: 36px;
+  /* Layout sizes (owner decision, 10 October 2026). Overlays, tile grids, side columns and
+     search fields take their size from these, never a one-off length. */
+  --pc-overlay-max-width: calc(100vw - 2rem); /* menus, pickers and dialogs keep a 16px gutter */
+  --pc-overlay-max-height: calc(100dvh - 2rem);
+  --pc-tile-min: 10rem; /* narrowest column of a stats or details grid */
+  --pc-card-min: 14rem; /* narrowest column of a card grid */
+  --pc-column-min: 22rem; /* narrowest wide column: account panels, the page title */
+  --pc-rail-width: 20rem; /* a side column beside the main content */
+  --pc-field-min: 18rem; /* a search or filter field before it wraps */
+  --pc-deck-width: 1180px; /* the pool deck frame */
+
+  /* Tailwind's text utilities (shadcn internals and module markup) follow the same scale. */
+  --text-xs: var(--pc-text-caption);
+  --text-xs--line-height: var(--pc-leading-caption);
+  --text-sm: var(--pc-text-body);
+  --text-sm--line-height: var(--pc-leading-body);
+  --text-base: var(--pc-text-body);
+  --text-base--line-height: var(--pc-leading-body);
+  --text-lg: var(--pc-text-title);
+  --text-lg--line-height: var(--pc-leading-title);
+  --text-xl: var(--pc-text-title);
+  --text-xl--line-height: var(--pc-leading-title);
+  --text-2xl: var(--pc-text-page);
+  --text-2xl--line-height: var(--pc-leading-page);
+  --text-3xl: var(--pc-text-figure);
+  --text-3xl--line-height: var(--pc-leading-figure);
+
+  /* Shared shadcn tokens. */
+  --ui-background: var(--pc-surface);
+  --ui-workspace: var(--pc-canvas);
+  --ui-foreground: var(--pc-ink);
+  --ui-card: var(--pc-surface);
+  --ui-popover: var(--pc-surface-raised);
+  --ui-primary: var(--pc-primary);
+  --ui-primary-hover: var(--pc-primary-hover);
+  --ui-primary-foreground: var(--pc-on-primary);
+  --ui-brand-soft: var(--pc-primary-soft);
+  --ui-brand-soft-hover: var(--pc-primary-soft-hover);
+  --ui-brand-ink: var(--pc-primary-ink);
+  --ui-brand-border: var(--pc-primary);
+  --ui-muted: var(--pc-surface-sunken);
+  --ui-muted-foreground: var(--pc-ink-muted);
+  --ui-border: var(--pc-line);
+  --ui-input: var(--pc-line-strong);
+  --ui-ring: var(--pc-focus);
+  --ui-destructive: var(--pc-danger);
+  --ui-sidebar: var(--pc-canvas);
+  --ui-sidebar-hover: var(--pc-hover);
+  --ui-accent: var(--pc-primary-soft);
+  --ui-accent-foreground: var(--pc-primary-ink);
+  --ui-secondary: var(--pc-surface-sunken);
+  --ui-secondary-foreground: var(--pc-ink);
+  --ui-card-foreground: var(--pc-ink);
+  --ui-popover-foreground: var(--pc-ink);
+  --ui-status-green: var(--pc-success);
+  --ui-status-green-bg: var(--pc-success-soft);
+  --ui-status-blue: var(--pc-primary-ink);
+  --ui-status-blue-bg: var(--pc-primary-soft);
+  --ui-status-red: var(--pc-danger);
+  --ui-status-red-bg: var(--pc-danger-soft);
+  --ui-status-orange: var(--pc-warning);
+  --ui-status-orange-bg: var(--pc-warning-soft);
+  --ui-status-yellow: var(--pc-warning);
+  --ui-status-yellow-bg: var(--pc-warning-soft);
+  --ui-status-purple: var(--pc-cover);
+  --ui-status-purple-bg: var(--pc-cover-soft);
+  --ui-radius: var(--pc-radius-card);
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-sans);
+
+  /* Docs layout adapter and brand names, recomputed from Poolside Clear. */
+  --brand-ocean: var(--pc-primary);
+  --brand-slate: var(--pc-ink-muted);
+  --bg: var(--pc-canvas);
+  --paper: var(--pc-surface);
+  --ink: var(--pc-ink);
+  --text: var(--pc-ink);
+  --muted: var(--pc-ink-muted);
+  --line: var(--pc-line);
+  --primary: var(--pc-primary);
+  --primary-dark: var(--pc-primary-hover);
+  --accent-soft: var(--pc-primary-soft);
+  --surface-subtle: var(--pc-surface-sunken);
+  --surface-tint: var(--pc-surface-sunken);
+  --focus: var(--pc-focus);
+  --ocean-blue: var(--pc-primary);
+  --slate: var(--pc-ink-muted);
+  --radius: 16px;
+}
+/* Phones: the page title and figures step down to 24px, and PageHeader's actions take their
+   own full-width row where the buttons share the width. Icon buttons, status tags and other
+   children (the home "things need you" tag) keep their natural width. */
+@media (max-width: 767px) {
+  .turnfin-app { --pc-text-page: 24px; --pc-leading-page: 30px; --pc-text-figure: 24px; --pc-leading-figure: 30px; }
+  .turnfin-app .pc-phead-actions { width: 100%; }
+  .turnfin-app .pc-phead-actions > .ui-motion-press:not([data-size^='icon']) { flex: 1 1 auto; }
+}
+/* Corner utilities follow the three radii: 16px for anything inside a panel, 24px for panels and
+   dialogs (shadcn's rounded-ui-* scale is otherwise derived from one base radius). */
+.turnfin-app :is(.rounded-ui-md, .rounded-ui-lg) { border-radius: var(--pc-radius-card); }
+.turnfin-app :is(.rounded-ui-xl, .rounded-ui-2xl) { border-radius: var(--pc-radius-panel); }
+.turnfin-app {
+  font-family: var(--font-sans);
+  font-size: var(--pc-text-body);
+  line-height: var(--pc-leading-body);
+  color: var(--pc-ink);
+}
+/* The ground: the outer colour around the frame, and the canvas on phones where the frame is
+   the page, so overscroll matches. The viewport theme-color in src/app/layout.tsx follows the
+   same pair (--pc-outer from 768px, --pc-canvas below); keep them in sync. */
+body.turnfin-app { background: var(--pc-outer); }
+@media (max-width: 767px) { body.turnfin-app { background: var(--pc-canvas); } }
+
+/* Type: one bold page title, 600-weight section titles, sentence-case labels (never capitals). */
+.turnfin-app :is(h1, h2, h3, h4) { font-family: var(--font-sans); color: var(--pc-ink); }
+.turnfin-app h1 { font-size: var(--pc-text-page); font-weight: 600; line-height: var(--pc-leading-page); letter-spacing: -0.01em; }
+/* No letter-spacing anywhere else: unlayered, so it beats Docs' legacy heading rules. */
+.turnfin-app :is(h2, h3, h4) { letter-spacing: 0; }
+/* Heading defaults sit in the base layer so module rules (e.g. a card title at body size) and
+   Tailwind utilities in the markup can still refine them. */
+@layer base {
+  .turnfin-app h2 { font-size: var(--pc-text-title); font-weight: 600; line-height: var(--pc-leading-title); }
+  .turnfin-app svg { flex-shrink: 0; }
+  .turnfin-app :is(h3, h4) { font-size: var(--pc-text-body); font-weight: 600; line-height: var(--pc-leading-body); }
+}
+.turnfin-docs .workspace-page-content { padding: 32px clamp(16px, 3vw, 48px); }
+/* "Skip to content", the one skip link: off-screen until it has keyboard focus, then a 44px
+   pill above the frame and the bottom bar (z-index 40). */
+.turnfin-app .skip-link { position: fixed; top: 16px; left: 16px; z-index: 60; transform: translateY(calc(-100% - 32px)); display: inline-flex; align-items: center; justify-content: center; min-height: var(--pc-control-height); padding: 0 var(--pc-control-pad); border-radius: var(--pc-radius-control); background: var(--pc-primary); color: var(--pc-on-primary); font-weight: 600; text-decoration: none; }
+.turnfin-app .skip-link:focus-visible { transform: none; }
+@media print { .turnfin-app .skip-link { display: none; } }
+
+/* Controls. Every shared Button has one height, radius, type size, weight and inset. Menu and
+   popover triggers (Radix swaps their data-slot) are caught through .ui-motion-press, a class
+   only the shared Button sets. Icon buttons are square; editor toolbar buttons keep their own
+   compact inset. */
+.turnfin-app :is([data-slot='button'], .ui-motion-press) { min-height: var(--pc-control-height); border-radius: var(--pc-radius-control); font-size: var(--pc-text-body); line-height: var(--pc-leading-body); font-weight: 600; transition: background-color 120ms var(--pc-ease), color 120ms var(--pc-ease), border-color 120ms var(--pc-ease), translate 120ms var(--pc-ease); }
+.turnfin-app .ui-motion-press:not([data-size^='icon'], .toolbar-button) { padding-inline: var(--pc-control-pad); }
+/* The quick-switch PIN pad (AUSwitch): 56px keys with title-size digits for touch. */
+.turnfin-app .pc-keypad > [data-slot='button'] { min-height: 56px; font-size: var(--pc-text-title); }
+.turnfin-app .ui-motion-press[data-size^='icon'] { width: var(--pc-control-height); min-width: var(--pc-control-height); padding: 0; }
+/* A day tile in a week strip (Schedule): the weekday over the date caption, a 56px card-radius
+   tile; the chosen day is the default (blue) button, the rest outline. */
+.turnfin-app .ui-motion-press.pc-day { flex-direction: column; gap: 0; height: auto; min-width: 0; min-height: 56px; padding: 4px 0; border-radius: var(--pc-radius-card); }
+.turnfin-app .pc-day > small { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 400; color: var(--pc-ink-muted); }
+.turnfin-app .pc-day[aria-pressed='true'] > small { color: inherit; }
+@media (min-width: 1024px) { .turnfin-app .ui-motion-press.pc-day { min-width: 56px; } }
+/* Phones: the seven days touch (no gap), so each stays 44px wide inside a panel at 375; the
+   unchosen days drop their edge so the strip reads as one row, not seven boxes. */
+@media (max-width: 767px) { .turnfin-app .ui-motion-press.pc-day[data-variant='outline'] { border-color: transparent; } }
+.turnfin-app .ui-motion-press > svg { width: 18px; height: 18px; }
+/* Variants: default (blue fill), outline (white with the soft --pc-line edge, V2System .btn),
+   ghost (blue text), destructive and link (no inset, so it lines up with the text around it).
+   A combobox is an outline Button that behaves as a field, so it keeps the field edge. */
+.turnfin-app .ui-motion-press[data-variant='link'] { padding-inline: 0; }
+.turnfin-app .ui-motion-press[data-variant='outline'] { background: var(--pc-surface); border: 1px solid var(--pc-line); box-shadow: none; color: var(--pc-ink); }
+.turnfin-app .ui-motion-press[role='combobox'] { border-color: var(--pc-line-strong); }
+.turnfin-app .ui-motion-press[data-variant='outline']:hover { background: var(--pc-surface-sunken); }
+.turnfin-app .ui-motion-press[data-variant='ghost'] { color: var(--pc-primary); }
+.turnfin-app .ui-motion-press[data-variant='ghost']:hover { background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.turnfin-app .ui-motion-press[data-variant='destructive'] { background: var(--pc-danger); color: var(--pc-on-danger); }
+.turnfin-app .ui-motion-press[data-variant='destructive']:hover:not(:disabled, [aria-disabled='true']) { background: var(--pc-danger-hover); }
+/* Disabled (native, or aria-disabled while a LoadingButton or ActionButton is pending, so focus
+   stays): readable muted ink, never half opacity. Filled and outline buttons sit on the sunken
+   fill with a 1px edge (an inset shadow on filled ones, so the width never shifts); ghost and
+   link buttons, such as the Docs editor tools, only mute. Variant-qualified, so these beat the
+   bar and tools item rules further down. */
+.turnfin-app .ui-motion-press:is([data-variant='default'], [data-variant='destructive'], [data-variant='outline']):is(:disabled, [aria-disabled='true']) { background: var(--pc-surface-sunken); color: var(--pc-ink-muted); opacity: 1; }
+.turnfin-app .ui-motion-press:is([data-variant='default'], [data-variant='destructive']):is(:disabled, [aria-disabled='true']) { box-shadow: inset 0 0 0 1px var(--pc-line); }
+.turnfin-app .ui-motion-press:is([data-variant='ghost'], [data-variant='link']):is(:disabled, [aria-disabled='true']) { background: transparent; color: var(--pc-ink-muted); opacity: 1; }
+.turnfin-app .ui-motion-press[aria-disabled='true'] { cursor: not-allowed; }
+/* Focus: one 2px ring with a 2px gap on everything focusable. :where() keeps the specificity at
+   (0,3,0), so the inset rings on rail, segmented, module and refund rows still win. Fields draw
+   their own edge, ring and halo instead (below). */
+.turnfin-app :is(a, button, summary, [role='tab'], :where([tabindex]:not([tabindex='-1']))):focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+/* Headings and regions given tabindex=-1 are script focus targets (a step or result heading),
+   never reached with Tab, so they draw no ring; Chrome would otherwise paint its black default
+   after a script focus. Controls with tabindex=-1 (menu items, roving radios) keep the ring. */
+.turnfin-app :is(h1, h2, h3, h4, h5, h6, main, section, [role='region'], [role='status'])[tabindex='-1']:focus { outline: none; }
+/* Editor toolbar controls and tabs are round, like every control. */
+.turnfin-docs :is(.editor-toolbar .ui-motion-press, .editor-toolbar [data-slot='select-trigger'], .editor-toolbar select) { border-radius: var(--pc-radius-control); }
+.turnfin-app [data-slot='tabs-trigger'] { border-radius: var(--pc-radius-control); }
+.turnfin-app [data-slot='badge'] { gap: 4px; min-height: 24px; padding: 0 10px; border-radius: 999px; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
+.turnfin-app [data-slot='badge']:has(> svg) { padding-left: 8px; }
+.turnfin-app [data-slot='badge'] > svg { width: 14px; height: 14px; stroke-width: 2.5; }
+.turnfin-app [data-slot='badge']:is(:not([data-tone]), [data-tone='gray'])[data-variant='secondary'] { background: var(--pc-neutral-soft); color: var(--pc-ink-muted); }
+/* The neutral fill is barely darker than a white panel, so the gray tag draws a hairline. */
+.turnfin-app [data-slot='badge'][data-tone='gray'] { box-shadow: inset 0 0 0 1px var(--pc-line); }
+/* Notices (V2System callouts): info sits on the sunken fill with a blue icon; error, warning and
+   success use their soft fill and tone ink for icon, title and text alike (5.2:1 or better). */
+.turnfin-app [data-slot='alert'] { border: 0; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); color: var(--pc-ink); padding: 12px 16px; }
+.turnfin-app [data-slot='alert'] > svg { color: var(--pc-primary); }
+.turnfin-app [data-slot='alert'] [data-slot='alert-title'] { font-weight: 600; }
+.turnfin-app [data-slot='alert'] [data-slot='alert-description'] { color: var(--pc-ink); }
+.turnfin-app [data-slot='alert'][data-tone='error'] { background: var(--pc-danger-soft); color: var(--pc-danger); }
+.turnfin-app [data-slot='alert'][data-tone='warning'] { background: var(--pc-warning-soft); color: var(--pc-warning); }
+.turnfin-app [data-slot='alert'][data-tone='success'] { background: var(--pc-success-soft); color: var(--pc-success); }
+.turnfin-app [data-slot='alert']:is([data-tone='error'], [data-tone='warning'], [data-tone='success']) > svg,
+.turnfin-app [data-slot='alert']:is([data-tone='error'], [data-tone='warning'], [data-tone='success']) [data-slot='alert-description'] { color: inherit; }
+.turnfin-app :is([data-slot='dialog-content'], [data-slot='alert-dialog-content'], [data-slot='sheet-content']) { border-color: var(--pc-line); background: var(--pc-surface-raised); font-family: var(--font-sans); }
+.turnfin-app :is([data-slot='dialog-content'], [data-slot='alert-dialog-content']) { border: 0; border-radius: var(--pc-radius-panel); box-shadow: var(--pc-shadow-overlay); }
+.turnfin-app [data-slot='sheet-content'] { box-shadow: var(--pc-shadow-overlay); }
+/* The 44px X in a dialog or sheet is a quiet control: muted ink, the sunken fill on hover. */
+.turnfin-app .ui-motion-press:is([data-slot='dialog-close'], [data-slot='sheet-close']) { color: var(--pc-ink-muted); }
+.turnfin-app .ui-motion-press:is([data-slot='dialog-close'], [data-slot='sheet-close']):hover { background: var(--pc-surface-sunken); color: var(--pc-ink); }
+.turnfin-app :is([data-slot='dialog-title'], [data-slot='alert-dialog-title'], [data-slot='sheet-title']) { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 600; letter-spacing: 0; }
+/* Menus, selects and popovers (V2System .menu): 24px panels with no edge but the overlay
+   shadow; their padding comes from the component defaults so call-site p-0 still wins. Items
+   are 44px pills at 600 (select, command and dropdown items, radio and checkbox items, sub
+   triggers), keeping a 36px gutter for their check or dot; caption-sized lines inside an item
+   stay at 400. Labels and group headings are muted 600 captions, set in the components so a
+   call site can still restyle them. */
+.turnfin-app :is([data-slot='select-content'], [data-slot='popover-content'], [data-slot='dropdown-menu-content'], [data-slot='dropdown-menu-sub-content']) { border: 0; border-radius: var(--pc-radius-panel); box-shadow: var(--pc-shadow-overlay); font-family: var(--font-sans); }
+.turnfin-app :is([data-slot='select-item'], [data-slot='command-item'], [data-slot='dropdown-menu-item'], [data-slot='dropdown-menu-checkbox-item'], [data-slot='dropdown-menu-radio-item'], [data-slot='dropdown-menu-sub-trigger']) { min-height: var(--pc-control-height); padding: 6px 12px; border-radius: var(--pc-radius-control); font-family: var(--font-sans); font-size: var(--pc-text-body); line-height: var(--pc-leading-body); font-weight: 600; }
+.turnfin-app [data-slot='select-item'] { padding-right: 36px; }
+.turnfin-app :is([data-slot='dropdown-menu-checkbox-item'], [data-slot='dropdown-menu-radio-item'], [data-slot='dropdown-menu-item'][data-inset], [data-slot='dropdown-menu-sub-trigger'][data-inset]) { padding-left: 36px; }
+.turnfin-app [data-slot='select-item-indicator'] { right: 12px; }
+.turnfin-app :is([data-slot='dropdown-menu-checkbox-item'], [data-slot='dropdown-menu-radio-item']) > span:first-child { left: 12px; }
+.turnfin-app :is([data-slot='select-item'], [data-slot='command-item'], [data-slot='dropdown-menu-item'], [data-slot='dropdown-menu-checkbox-item'], [data-slot='dropdown-menu-radio-item']) .text-xs { font-weight: 400; }
+/* The account menu (AccountMenu, V2Home-menu): a 320px panel, 16px inside and between its
+   parts, no separators. Scoped so the shared 12px-padded menus above (site picker, More) stay as
+   they are; unlayered, so it beats the Tailwind utilities on the shadcn content. */
+.turnfin-app .tf-account-menu[data-slot='dropdown-menu-content'] { display: flex; flex-direction: column; gap: 16px; padding: 16px; border: 0; border-radius: var(--pc-radius-panel); background: var(--pc-surface); }
+/* Its two actions: 44px pills at 600 with a sunken fill when highlighted (hover or arrows). */
+.turnfin-app .tf-account-menu .tf-menu-item { gap: 12px; min-height: var(--pc-control-height); margin: 0 -4px; padding: 0 12px; border-radius: var(--pc-radius-control); color: var(--pc-ink); font-weight: 600; }
+.turnfin-app .tf-account-menu .tf-menu-item svg { color: currentColor; }
+.turnfin-app .tf-account-menu .tf-menu-item:is(:focus, [data-highlighted]) { background: var(--pc-surface-sunken); color: var(--pc-ink); }
+.turnfin-app .tf-account-menu .tf-menu-item:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: -2px; }
+
+/* Fields */
+.turnfin-app :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input) { min-height: var(--pc-control-height); border-radius: var(--pc-radius-control); border-color: var(--pc-line-strong); background: var(--pc-surface); box-shadow: none; font-size: 16px; font-weight: 400; color: var(--pc-ink); transition: border-color 120ms var(--pc-ease), box-shadow 120ms var(--pc-ease); }
+.turnfin-app [data-slot='textarea']:not(.title-input) { border-radius: var(--pc-radius-card); min-height: 96px; padding-top: 10px; padding-bottom: 10px; line-height: var(--pc-leading-title); }
+/* Field focus: the edge, a 1px ring and the halo, no outline (transparent, so forced-colors
+   mode still draws one). Select triggers and comboboxes match inputs. */
+.turnfin-app :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select'], .ui-motion-press[role='combobox']):not(.title-input):focus-visible { outline: 2px solid transparent; border-color: var(--pc-focus); box-shadow: 0 0 0 1px var(--pc-focus), var(--pc-focus-halo); }
+.turnfin-app :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input):disabled { background: var(--pc-surface-sunken); color: var(--pc-ink-muted); border-color: var(--pc-line); opacity: 1; }
+.turnfin-app [data-slot='native-select-wrapper'] { opacity: 1; }
+.turnfin-app :is([data-slot='input'], [data-slot='textarea'])[aria-invalid='true'] { border-color: var(--pc-danger); background: var(--pc-danger-soft); }
+.turnfin-app :is([data-slot='input'], [data-slot='textarea'])::placeholder { color: var(--pc-ink-muted); }
+/* Field labels: one size and weight in every module, whether the control sits inside the label
+   (Docs filters) or after it (Refunds forms). Choice labels (checkbox, radio, template cards)
+   keep body weight. Field text is 16px on phones so iOS does not zoom, body size from 768px. */
+.turnfin-app :is(label, legend:not(.sr-only), [data-slot='label']):not(:has([type='checkbox'], [type='radio'], [data-slot='checkbox'], [data-slot='radio-group-item'])) { font-size: var(--pc-text-body); line-height: var(--pc-leading-body); font-weight: 600; color: var(--pc-ink); letter-spacing: 0; text-transform: none; }
+.turnfin-app label:has(> :is(input:not([type='checkbox'], [type='radio'], [type='file']), textarea, select, [data-slot='native-select-wrapper'], [data-slot='select-trigger'])) { align-items: stretch; gap: 8px; }
+/* Module and Refunds forms: a field label is a block, so its text sits left above the control
+   (docs.css makes every label a centred flex column). Choice labels keep their row. */
+.turnfin-app :is(.turnfin-module, .turnfin-refunds) :is(.module-content, .refund-content, [data-slot='dialog-content']) label:not(:has([type='checkbox'], [type='radio'], [data-slot='checkbox'], [data-slot='radio-group-item'])) { display: block; }
+.turnfin-app label:has([type='checkbox'], [type='radio'], [data-slot='checkbox'], [data-slot='radio-group-item']) { font-size: var(--pc-text-body); line-height: var(--pc-leading-body); }
+/* A visible box or dot lines up with the first line of a wrapping label; labelled chips whose
+   radio is hidden (the /roles level picker) keep their text centred. */
+.turnfin-app label:has(:is([data-slot='checkbox'], [data-slot='radio-group-item'], input:is([type='checkbox'], [type='radio']):not([aria-hidden='true'])):not(.sr-only)) { align-items: flex-start; }
+.turnfin-app label:has([type='checkbox'], [data-slot='checkbox']) > :is([type='checkbox'], [data-slot='checkbox']) { margin-top: 0; flex-shrink: 0; }
+.turnfin-app :is([data-slot='field-description'], .hint) { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 400; color: var(--pc-ink-muted); }
+@media (min-width: 768px) {
+  .turnfin-app :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input) { font-size: var(--pc-text-body); }
+  .turnfin-app [data-slot='textarea']:not(.title-input) { line-height: var(--pc-leading-body); }
+}
+
+@media (max-width: 767px) {
+  .turnfin-docs .workspace-page-content { padding: 20px 16px; }
+}
+
+/* A desktop with a mouse, continued (after the field rules it adjusts): fields read at body
+   size (16px elsewhere stops phones zooming on focus), and controls given a fixed h-11 take
+   the control height like everything else. */
+@media (hover: hover) and (pointer: fine) and (min-width: 48.0625rem) {
+  .turnfin-app :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input) { font-size: var(--pc-text-body); }
+  .turnfin-app :is([data-slot='button'], [data-slot='input'], [data-slot='select-trigger'], [data-slot='native-select'], .ui-motion-press).h-11 { height: var(--pc-control-height); }
+}
+
+/* ---------------------------------------------------------------------------------------------
+   The frame (Poolside Clear v2, ModuleShell): a rounded canvas on the outer ground; the fin, the
+   module's page links and the tools along the top; the module bar down the left; a labelled
+   bottom bar on phones and touch screens. Every menu is one "bar": a 4px inset on all sides, its
+   items drawn 36px with a 44px hit area, so a bar is 44px tall like every control. On the canvas
+   a bar is white; inside a panel it is the sunken grey. */
+.turnfin-app .tf-shell { min-height: 100dvh; padding: 24px; background: var(--pc-outer); }
+.turnfin-app .tf-frame { display: flex; flex-direction: column; gap: 24px; min-height: calc(100dvh - 48px); margin: 0 auto; padding: 24px; border-radius: var(--pc-radius-frame); border: 1px solid var(--pc-frame-line); background: var(--pc-canvas); }
+.turnfin-app .tf-top { display: flex; align-items: center; gap: 24px; min-width: 0; }
+.turnfin-app .tf-brand { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: var(--pc-radius-card); }
+.turnfin-app .tf-brand img { display: block; width: 72px; height: 72px; max-width: none; margin: -4px; transform: translateX(3px); }
+.turnfin-app .tf-brand:hover { background: var(--pc-surface); }
+.turnfin-app .tf-body { display: flex; flex: 1; gap: 24px; align-items: flex-start; min-width: 0; }
+.turnfin-app .tf-main { flex: 1 1 auto; min-width: 0; outline: none; }
+
+.turnfin-app .tf-bar { position: relative; display: inline-flex; flex: none; align-items: center; width: max-content; max-width: 100%; padding: 4px; border-radius: 999px; background: var(--pc-surface); overflow-x: auto; scrollbar-width: none; }
+.turnfin-app .tf-pages { position: relative; display: flex; flex: 1 1 0; min-width: 0; }
+/* The frame's page bar never scrolls: links that do not fit wrap out of sight until useBarFit
+   moves them under "More" (the deck's own bar has no More, so this stays in the frame). */
+.turnfin-app .tf-shell .tf-pages > .tf-bar { flex-wrap: wrap; height: 44px; overflow: hidden; }
+/* Until measured (the server render, before "More" exists) the open page's link goes first, so
+   a page that will live under "More" is never the one wrapped out of sight. */
+.turnfin-app .tf-shell .tf-pages > .tf-bar:not([data-measured]) > [aria-current] { order: -1; }
+/* ModuleShell measures every page label here to decide how many fit before "More". */
+.turnfin-app .tf-bar-measure { position: absolute; top: 0; left: 0; display: flex; height: 0; overflow: hidden; visibility: hidden; pointer-events: none; }
+.turnfin-app .tf-tools { margin-left: auto; overflow: visible; }
+.turnfin-app :is(.tf-bar-item, .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger']), .tf-tools > .ui-motion-press) { position: relative; isolation: isolate; display: inline-flex; flex: none; align-items: center; justify-content: center; gap: 6px; width: auto; min-width: 44px; min-height: 44px; height: 44px; margin: -4px 0; padding: 0 16px; border: 0; border-radius: 999px; background: none; box-shadow: none; color: var(--pc-ink); font-size: var(--pc-text-body); font-weight: 600; white-space: nowrap; text-decoration: none; cursor: pointer; }
+.turnfin-app :is(.tf-bar-item, .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger']), .tf-tools > .ui-motion-press)::before { content: ''; position: absolute; inset: 4px 0; z-index: -1; border-radius: 999px; transition: background-color 120ms var(--pc-ease); }
+.turnfin-app :is(.tf-bar-item, .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger']), .tf-tools > .ui-motion-press):hover { background: none; }
+.turnfin-app :is(.tf-bar-item, .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger']), .tf-tools > .ui-motion-press):hover::before { background: var(--pc-surface-sunken); }
+.turnfin-app .tf-bar-item[aria-current] { color: var(--pc-on-primary); }
+/* !important: the generic :hover::before above (0,4,1) would turn the current pill grey. */
+.turnfin-app .tf-bar-item[aria-current]::before { background: var(--pc-primary) !important; }
+/* Dev build "View as": a soft blue pill while another role is being worn. */
+.turnfin-app .tf-tools > .workspace-preview-toggle[data-active='true'] { color: var(--pc-primary-ink); }
+.turnfin-app .tf-tools > .workspace-preview-toggle[data-active='true']::before { background: var(--pc-primary-soft); }
+.turnfin-app .tf-tools > .workspace-preview-toggle[data-active='true']:hover::before { background: var(--pc-primary-soft-hover); }
+.turnfin-app :is(.tf-bar-item, .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger'])):focus-visible { outline-offset: -2px; }
+/* Focus on a filled (current) item: an inset outline would vanish into the blue, so the pill
+   takes a ring with a surface gap. The transparent outline still shows in forced colours. */
+.turnfin-app :is(.tf-bar-item, .tf-rail-item, .tf-bottom-item)[aria-current]:focus-visible { outline: 2px solid transparent; }
+.turnfin-app :is(.tf-bar-item, .tf-rail-item)[aria-current]:focus-visible::before,
+.turnfin-app .tf-bottom-item[aria-current]:focus-visible .tf-bottom-icon { box-shadow: 0 0 0 2px var(--pc-surface), 0 0 0 4px var(--pc-focus); }
+.turnfin-app :is(.tf-bar-item, .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger'])) > svg { width: 16px; height: 16px; }
+.turnfin-app :is(.tf-icon, .tf-tools > [data-size^='icon']) { width: 44px; padding: 0; }
+.turnfin-app .tf-who { padding: 0 10px 0 4px; gap: 4px; }
+.turnfin-app .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger']):not(.tf-who) > span:not([data-slot='avatar']) { max-width: 28ch; overflow: hidden; text-overflow: ellipsis; }
+
+.turnfin-app .tf-rail { position: sticky; top: 24px; display: flex; flex: none; flex-direction: column; align-items: center; gap: 12px; width: 64px; }
+.turnfin-app .tf-rail-group { display: flex; flex-direction: column; align-items: center; padding: 4px; border-radius: 999px; background: var(--pc-surface); }
+.turnfin-app .tf-rail-item { position: relative; isolation: isolate; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin: 0 -4px; border-radius: 999px; color: var(--pc-ink-muted); }
+.turnfin-app .tf-rail-item > svg { width: 20px; height: 20px; }
+.turnfin-app .tf-rail-item::before { content: ''; position: absolute; inset: 4px; z-index: -1; border-radius: 999px; }
+.turnfin-app .tf-rail-item:hover { color: var(--pc-ink); }
+.turnfin-app .tf-rail-item:hover::before { background: var(--pc-surface-sunken); }
+.turnfin-app .tf-rail-item[aria-current] { color: var(--pc-on-primary); }
+.turnfin-app .tf-rail-item[aria-current]::before { background: var(--pc-primary); }
+.turnfin-app .tf-rail-item:focus-visible { outline-offset: -2px; }
+.turnfin-app .tf-rail-label { position: absolute; top: 50%; left: calc(100% + 12px); z-index: 30; padding: 4px 10px; border-radius: 999px; background: var(--pc-ink); color: var(--pc-surface); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; white-space: nowrap; pointer-events: none; opacity: 0; transform: translateY(-50%); transition: opacity 120ms var(--pc-ease); }
+.turnfin-app .tf-rail-item:is(:hover, :focus-visible) .tf-rail-label { opacity: 1; }
+
+.turnfin-app .tf-bottom { position: fixed; right: 8px; bottom: 8px; left: 8px; z-index: 40; display: none; max-width: 480px; margin-inline: auto; padding: 4px; border-radius: 999px; background: var(--pc-surface); box-shadow: var(--pc-shadow-overlay); }
+/* Equal shares, so a long module name ("Swim school") wraps to two centred lines rather than
+   overlapping its neighbours; the items stretch, so they all keep one height. */
+.turnfin-app .tf-bottom-item { display: flex; flex: 1 1 0; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 0; min-height: 56px; padding: 4px 2px; border: 0; border-radius: 999px; background: none; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; text-decoration: none; cursor: pointer; }
+.turnfin-app .tf-bottom-item > span:last-child { max-width: 100%; white-space: normal; text-align: center; text-wrap: balance; overflow-wrap: anywhere; }
+.turnfin-app .tf-bottom-icon { display: flex; align-items: center; justify-content: center; width: 56px; height: 32px; border-radius: 999px; }
+.turnfin-app .tf-bottom-icon > svg { width: 20px; height: 20px; }
+.turnfin-app .tf-bottom-item[aria-current] { color: var(--pc-primary); }
+.turnfin-app .tf-bottom-item[aria-current] .tf-bottom-icon { background: var(--pc-primary); color: var(--pc-on-primary); }
+.turnfin-app .tf-bottom-item:hover .tf-bottom-icon { background: var(--pc-surface-sunken); }
+.turnfin-app .tf-bottom-item[aria-current]:hover .tf-bottom-icon { background: var(--pc-primary); }
+html:has(.tf-shell) { scroll-padding-bottom: 112px; }
+/* What the bottom bar takes from the foot of the viewport, and the one offset for everything that
+   clears it (the frame's padding, the save bar, desk toasts): its 8px edge, its 82px height when
+   a label wraps, and a 16px gap. */
+.turnfin-app { --tf-bottom-space: 106px; }
+
+/* Tablet: page links take their own row, lined up with the page. */
+@media (min-width: 768px) and (max-width: 1099px) {
+  .turnfin-app .tf-shell .tf-top { flex-wrap: wrap; row-gap: 16px; }
+  .turnfin-app .tf-shell .tf-pages { order: 3; flex: 1 1 100%; width: auto; margin-left: 88px; }
+}
+/* Phones, and any touch screen: the labelled bottom bar replaces the module bar, so the page
+   bar lines up with the page instead of past the rail. */
+@media (max-width: 767px), (hover: none) and (pointer: coarse) {
+  .turnfin-app .tf-rail { display: none; }
+  .turnfin-app .tf-bottom { display: flex; }
+  /* Room for the bottom bar, only where there is one (the pool deck has none). */
+  .turnfin-app .tf-shell:has(> .tf-bottom) > .tf-frame { padding-bottom: var(--tf-bottom-space); }
+  .turnfin-app .tf-shell:has(> .tf-bottom) .pc-save-bar { bottom: calc(var(--tf-bottom-space) + env(safe-area-inset-bottom)); }
+  .turnfin-app .tf-pages, .turnfin-app .tf-shell .tf-pages { margin-left: 0; }
+}
+@media (max-width: 767px) {
+  .turnfin-app .tf-shell { padding: 0; }
+  .turnfin-app .tf-frame { min-height: 100dvh; gap: 16px; padding: 16px; border: 0; border-radius: 0; }
+  .turnfin-app .tf-shell:has(> .tf-bottom) > .tf-frame { padding-bottom: var(--tf-bottom-space); }
+  .turnfin-app .tf-top { flex-wrap: wrap; gap: 12px; }
+  .turnfin-app .tf-pages { order: 3; flex: 1 1 100%; width: auto; }
+  .turnfin-app .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger']):not(.tf-who) > span:not([data-slot='avatar']) { display: none; }
+  /* A labelled menu (the working site) becomes a 44px icon button: its name and chevron go. */
+  .turnfin-app .tf-tools > [data-slot='dropdown-menu-trigger']:not(.tf-who):has(> span + svg) { width: 44px; padding: 0; }
+  .turnfin-app .tf-tools > [data-slot='dropdown-menu-trigger']:not(.tf-who) > span + svg { display: none; }
+}
+/* Help's frame has no bottom bar, so it needs no room for one on phones and touch screens. */
+@media (hover: none) and (pointer: coarse) {
+  .turnfin-app .tf-help > .tf-frame { padding-bottom: 24px; }
+}
+@media (max-width: 767px) {
+  .turnfin-app .tf-help > .tf-frame { padding-bottom: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .turnfin-app .tf-rail-label, .turnfin-app :is(.tf-bar-item, .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger']))::before { transition: none; }
+}
+/* Print: only the page itself; the frame's bars, edge and padding go. */
+@media print {
+  .turnfin-app :is(.tf-top, .tf-rail, .tf-bottom) { display: none; }
+  .turnfin-app .tf-shell { padding: 0; background: none; }
+  .turnfin-app .tf-frame { min-height: 0; padding: 0; border: 0; border-radius: 0; background: none; }
+  /* A printed guide keeps its words, not its links back or its tools. */
+  .turnfin-app .tf-help .tf-main a[data-slot='button'] { display: none; }
+}
+
+/* Toasts (sonner, via src/components/ui/toast.tsx): the app's type, a 16px card with the overlay shadow,
+   the icon in its status colour and a 44px round close inside on the right. Sonner injects its
+   own styles, so these selectors carry one more attribute than its own. */
+.turnfin-app [data-sonner-toaster] { font-family: var(--font-sans); }
+.turnfin-app [data-sonner-toaster] [data-sonner-toast][data-styled='true'] { gap: 12px; padding-right: 52px; font-size: var(--pc-text-body); line-height: var(--pc-leading-body); box-shadow: var(--pc-shadow-overlay); }
+.turnfin-app [data-sonner-toaster] [data-sonner-toast][data-styled='true'] [data-title] { font-weight: 600; line-height: var(--pc-leading-body); }
+.turnfin-app [data-sonner-toaster] [data-sonner-toast][data-styled='true'] [data-description] { color: var(--pc-ink-muted); line-height: var(--pc-leading-body); }
+.turnfin-app [data-sonner-toaster] [data-sonner-toast][data-type='error'] [data-icon] { color: var(--pc-danger); }
+.turnfin-app [data-sonner-toaster] [data-sonner-toast][data-type='success'] [data-icon] { color: var(--pc-success); }
+.turnfin-app [data-sonner-toaster] [data-sonner-toast][data-type='warning'] [data-icon] { color: var(--pc-warning); }
+.turnfin-app [data-sonner-toaster] [data-sonner-toast][data-styled='true'] [data-close-button] { top: 50%; right: 4px; left: auto; width: var(--pc-control-height); height: var(--pc-control-height); border: 0; border-radius: var(--pc-radius-control); background: transparent; color: var(--pc-ink-muted); transform: translateY(-50%); }
+.turnfin-app [data-sonner-toaster] [data-sonner-toast][data-styled='true'] [data-close-button]:hover { border: 0; background: var(--pc-surface-sunken); color: var(--pc-ink); }
+.turnfin-app [data-sonner-toaster] [data-sonner-toast][data-styled='true'] [data-close-button]:focus-visible { box-shadow: none; outline: 2px solid var(--pc-focus); outline-offset: -2px; }
+.turnfin-app [data-sonner-toaster] [data-sonner-toast][data-styled='true'] [data-close-button] > svg { width: 16px; height: 16px; }
+/* Wherever the bottom bar shows (phones and touch screens), desk toasts sit above it, in the
+   --tf-bottom-space the frame keeps free for it. Sonner's own
+   mobile offset only applies at 600px and below. The deck's toasts are at the top. */
+@media (max-width: 767px), (hover: none) and (pointer: coarse) {
+  .turnfin-app [data-sonner-toaster][data-y-position='bottom'] { bottom: var(--tf-bottom-space); }
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Shared v2 parts (the component sheet): panels, rows, figure tiles, time blocks. Pages compose
+   these; they never restyle them. */
+.turnfin-app .pc-panel { display: flex; flex-direction: column; gap: 16px; min-width: 0; padding: 24px; border-radius: var(--pc-radius-panel); background: var(--pc-surface); }
+.turnfin-app .pc-panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; min-height: 44px; }
+.turnfin-app .pc-panel-head > h2 { margin: 0; }
+.turnfin-app .pc-rows { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.turnfin-app .pc-rows-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+.turnfin-app .pc-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; min-width: 0; min-height: 64px; padding: 12px 16px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); background: var(--pc-surface); color: var(--pc-ink); text-decoration: none; }
+.turnfin-app :is(a, button).pc-row:hover { background: var(--pc-surface-sunken); }
+.turnfin-app :is(a, button).pc-row:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+/* A row that is a shared Button (the quick-switch people) keeps the row's inset, not the control's. */
+.turnfin-app button.pc-row.ui-motion-press { padding: 12px 16px; }
+.turnfin-app .pc-row-body { display: flex; flex: 1 1 140px; flex-direction: column; min-width: 0; }
+.turnfin-app .pc-row-title { font-weight: 600; }
+.turnfin-app .pc-row-hint { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 400; color: var(--pc-ink-muted); }
+.turnfin-app .pc-row-trail { display: flex; flex: 0 1 auto; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px 12px; max-width: 100%; margin-left: auto; }
+.turnfin-app .pc-row-count { min-width: 24px; font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+.turnfin-app .pc-row-chevron { width: 16px; height: 16px; color: var(--pc-ink-muted); }
+.turnfin-app .pc-row[data-first] { border-color: transparent; background: var(--pc-yellow); color: var(--pc-on-yellow); }
+.turnfin-app .pc-row[data-first] :is(.pc-row-hint, .pc-row-chevron) { color: inherit; }
+.turnfin-app :is(a, button).pc-row[data-first]:hover { background: var(--pc-yellow); }
+.turnfin-app .pc-row[data-muted] { color: var(--pc-ink-muted); }
+/* A row that opens in place (the deck's swimmers): its head is one plain trigger, the chevron
+   drawn as the outline icon button; the open row takes the primary edge, with no fill. */
+.turnfin-app .pc-row[data-state='open'] { border-color: var(--pc-primary); }
+.turnfin-app .pc-row-toggle { display: flex; flex: 1 1 auto; align-items: center; gap: 12px; min-width: 0; min-height: 44px; padding: 0; border: 0; border-radius: var(--pc-radius-card); background: none; color: inherit; font: inherit; text-align: start; cursor: pointer; }
+.turnfin-app .pc-row-toggle:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 4px; }
+.turnfin-app .pc-row-toggle-icon { display: inline-flex; flex: none; align-items: center; justify-content: center; width: var(--pc-control-height); height: var(--pc-control-height); border: 1px solid var(--pc-line-strong); border-radius: 999px; background: var(--pc-surface); color: var(--pc-ink); }
+.turnfin-app .pc-row-toggle-icon > svg { width: 16px; height: 16px; transition: transform 120ms var(--pc-ease); }
+.turnfin-app .pc-row-toggle:hover .pc-row-toggle-icon { background: var(--pc-surface-sunken); }
+.turnfin-app .pc-row-toggle[data-state='open'] .pc-row-toggle-icon > svg { transform: rotate(180deg); }
+/* The current row of a list that filters or navigates (Help's topics, Docs' work queues): a soft
+   blue fill, no edge. */
+.turnfin-app a.pc-row[aria-current] { border-color: transparent; background: var(--pc-primary-soft); }
+.turnfin-app a.pc-row[aria-current]:hover { background: var(--pc-primary-soft-hover); }
+/* Compact rows: a 44px list of single labels (Help's topics and "On this page"). */
+.turnfin-app .pc-rows[data-size='compact'] .pc-row { flex-wrap: nowrap; min-height: 44px; padding: 8px 16px; }
+.turnfin-app .pc-rows[data-size='compact'] .pc-row-trail { flex: none; flex-wrap: nowrap; }
+/* A choice row (ui/ChoiceRow, HRPerson): a radio or checkbox inside its label, the whole 56px
+   row the target. Beats docs.css's column label and its weight 500. */
+.turnfin-app label.pc-row { flex-direction: row; flex-wrap: nowrap; align-items: flex-start; min-height: 56px; font-weight: 400; cursor: pointer; }
+.turnfin-app label.pc-row > :is([data-slot='checkbox'], [data-slot='radio-group-item']) { margin-top: 2px; }
+.turnfin-app label.pc-row:hover { background: var(--pc-surface-sunken); }
+.turnfin-app label.pc-row:has(:focus-visible) { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.turnfin-app label.pc-row:has([data-state='checked']) { border-color: var(--pc-primary); }
+.turnfin-app label.pc-row:has(:disabled) { cursor: not-allowed; color: var(--pc-ink-muted); }
+/* Rows inside an overlay take its raised surface, so they never show as darker boxes in dark mode. */
+.turnfin-app :is([data-slot='dialog-content'], [data-slot='alert-dialog-content'], [data-slot='sheet-content']) .pc-row { background: transparent; }
+.turnfin-app .pc-tile-icon { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); }
+.turnfin-app .pc-tile-icon > svg { width: 20px; height: 20px; }
+/* Figure tiles. Inside a panel: two per row, 16px tiles with a 1px line (V2System .stats). On the
+   canvas: borderless white 24px tiles that fill the row (V2Refunds, TROverview, SSAnalytics).
+   A tile that filters shows a soft fill on hover and a 2px blue edge when open (aria-current). */
+.turnfin-app .pc-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+/* Figure tiles that fit as many to a row as the tile size allows (`grid-cols-tiles`). */
+.turnfin-app .pc-stats.grid-cols-tiles { grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--pc-tile-min)), 1fr)); }
+.turnfin-app .pc-stat { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; padding: 16px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); color: var(--pc-ink); text-decoration: none; }
+.turnfin-app .pc-stats:not(:is([data-slot='card'], [role='dialog'], .pc-panel) .pc-stats) { grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); gap: 16px; }
+.turnfin-app .pc-stats:not(:is([data-slot='card'], [role='dialog'], .pc-panel) .pc-stats) > .pc-stat, .turnfin-app .pc-stats:not(:is([data-slot='card'], [role='dialog'], .pc-panel) .pc-stats) > * > .pc-stat { padding: 24px; border-color: transparent; border-radius: var(--pc-radius-panel); background: var(--pc-surface); }
+/* Many small tiles in a panel (the deck's Class overview): up to four a row, at least 140px each,
+   so a phone still shows two. */
+.turnfin-app .pc-stats.pc-stats-fill { grid-template-columns: repeat(auto-fill, minmax(max(min(100%, 140px), calc((100% - 36px) / 4)), 1fr)); }
+.turnfin-app a.pc-stat:hover { background: var(--pc-surface-sunken); }
+.turnfin-app a.pc-stat[aria-current] { border-color: var(--pc-primary); box-shadow: inset 0 0 0 1px var(--pc-primary); }
+/* On the canvas the tile has no edge of its own, so the open one draws the whole 2px inside. */
+.turnfin-app .pc-stats:not(:is([data-slot='card'], [role='dialog'], .pc-panel) .pc-stats) > a.pc-stat[aria-current],
+.turnfin-app .pc-stats:not(:is([data-slot='card'], [role='dialog'], .pc-panel) .pc-stats) > * > a.pc-stat[aria-current] { box-shadow: inset 0 0 0 2px var(--pc-primary); }
+/* A lone tile never stretches into a banner: at most 320px, in a panel or on the canvas. */
+.turnfin-app .pc-stats > :only-child { max-width: 320px; }
+/* Panels side by side: one column on phones, two from 768px, and every panel in one row from
+   1280px. A .pc-grid-stack keeps its panels in one column below 1280px (the home page's Today
+   over Quick actions, beside Waiting) and hands them to the row at 1280px; a lone child spans
+   the row, so a missing panel never leaves a void. */
+.turnfin-app .pc-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
+.turnfin-app .pc-grid-stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+@media (min-width: 768px) {
+  .turnfin-app .pc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .turnfin-app .pc-grid > :only-child { grid-column: 1 / -1; }
+  .turnfin-app .pc-grid > .pc-grid-stack:only-child { display: contents; }
+}
+@media (min-width: 1280px) {
+  .turnfin-app .pc-grid { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+  .turnfin-app .pc-grid > .pc-grid-stack { display: contents; }
+}
+.turnfin-app .pc-stat-figure { font-size: var(--pc-text-figure); line-height: var(--pc-leading-figure); font-weight: 700; font-variant-numeric: tabular-nums; }
+.turnfin-app .pc-stat [data-slot='badge'] { max-width: 100%; white-space: normal; }
+.turnfin-app .pc-note { display: flex; align-items: flex-start; gap: 12px; padding: 16px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); }
+/* The save bar (SaveBar: the register and the competency checklist, desk and deck): a panel of
+   its own below the main one, the status on the left and the primary on the right, held 16px
+   above the viewport's edge while the page scrolls. Where the bottom bar shows (desk phones and
+   touch screens) it sits 16px above that bar instead (--tf-bottom-space). */
+.turnfin-app .pc-save-bar { position: sticky; z-index: 10; bottom: calc(16px + env(safe-area-inset-bottom)); flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px 12px 24px; box-shadow: var(--pc-shadow-overlay); }
+/* A status tag that opens more (the register's Medical tag): the tag's own height in the row,
+   a 44px hit area around it. */
+.turnfin-app .pc-tag-trigger { position: relative; display: inline-flex; align-items: center; min-height: 24px; min-width: 0; padding: 0; border: 0; background: none; cursor: pointer; }
+.turnfin-app .pc-tag-trigger::before { content: ''; position: absolute; inset: -10px -4px; }
+.turnfin-app .pc-tag-trigger:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; border-radius: 999px; }
+.turnfin-app .pc-tag-trigger > [data-slot='badge'] > svg:last-child { transition: transform 120ms var(--pc-ease); }
+.turnfin-app .pc-tag-trigger[data-state='open'] > [data-slot='badge'] > svg:last-child { transform: rotate(180deg); }
+/* A feed (V2System .feed, HRActivity): a dot, a 600 line and a caption, with no row edges. */
+.turnfin-app .pc-feed { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.turnfin-app .pc-feed > li { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
+.turnfin-app .pc-feed-dot { flex: none; width: 8px; height: 8px; margin-top: 6px; border-radius: 999px; background: var(--pc-primary); }
+.turnfin-app a.pc-note { color: inherit; text-decoration: none; }
+.turnfin-app a.pc-note:hover { box-shadow: inset 0 0 0 1px var(--pc-line); }
+
+/* Time blocks: one pattern for the home timeline, schedule cells, the duty list and shifts. */
+.turnfin-app .pc-block { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 56px; padding: 8px 10px 8px 12px; border-radius: var(--pc-radius-card); color: var(--pc-ink); text-decoration: none; overflow: hidden; }
+.turnfin-app .pc-block-body { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.turnfin-app .pc-block-body > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.turnfin-app .pc-block-title { font-weight: 600; }
+.turnfin-app .pc-block-hint { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
+.turnfin-app .pc-block-time { flex: none; font-weight: 600; font-variant-numeric: tabular-nums; line-height: var(--pc-leading-body); }
+.turnfin-app .pc-block-time small { display: block; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 400; }
+.turnfin-app .pc-block-tag { display: inline-flex; flex: none; align-items: center; gap: 4px; min-height: 24px; padding: 0 8px; border-radius: 999px; background: var(--pc-surface); color: var(--pc-ink); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
+.turnfin-app .pc-block-tag > svg { width: 14px; height: 14px; }
+/* A block's state: `data-block` on the shared TimelineGrid (a dialog trigger's own `data-state`
+   belongs to Radix), `data-state` on older callers. */
+.turnfin-app .pc-block:is([data-block='now'], [data-state='now']) { background: var(--pc-block-now); color: var(--pc-on-block-now); }
+.turnfin-app .pc-block:is([data-block='next'], [data-state='next']) { background: var(--pc-block-next); color: var(--pc-on-block-next); }
+.turnfin-app .pc-block:is([data-block='cover'], [data-state='cover']) { background: var(--pc-block-cover); color: var(--pc-on-block-cover); }
+.turnfin-app .pc-block:is([data-block='assessment'], [data-state='assessment']) { background: var(--pc-block-assess); color: var(--pc-on-block-assess); }
+.turnfin-app .pc-block:is([data-block='done'], [data-state='done']) { background: var(--pc-surface-sunken); color: var(--pc-ink-muted); }
+.turnfin-app .pc-block:is([data-block='off'], [data-state='off'], [data-block='open'], [data-state='open']) { background: repeating-linear-gradient(135deg, var(--pc-hatch) 0 6px, transparent 6px 12px); box-shadow: inset 0 0 0 1px var(--pc-line); color: var(--pc-ink-muted); }
+.turnfin-app .pc-block:is([data-block='off'], [data-state='off']) .pc-block-title { text-decoration: line-through; }
+/* Week plan (V2Rota): a planned shift whose person is absent keeps its time, in danger ink on
+   the danger wash; a stacked block puts the time over words that wrap (a narrow day column). */
+.turnfin-app .pc-block:is([data-block='absent'], [data-state='absent']), .turnfin-app .pc-block.ui-motion-press[data-block='absent']:hover { background: var(--pc-danger-soft); color: var(--pc-danger); }
+.turnfin-app .pc-block[data-layout='stack'] { flex-direction: column; align-items: stretch; gap: 0; }
+.turnfin-app .pc-block[data-layout='stack'] .pc-block-body > * { white-space: normal; }
+.turnfin-app .pc-block:is(a, button):focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+/* A block that is a dialog trigger (a shadcn Button): the block's shape and colours, not the
+   control's. */
+.turnfin-app .pc-block.ui-motion-press { justify-content: flex-start; height: auto; padding: 8px 10px 8px 12px; text-align: start; white-space: normal; font-weight: 400; text-decoration: none; }
+.turnfin-app .pc-block.ui-motion-press:hover { filter: brightness(0.97); }
+.turnfin-app .pc-block.ui-motion-press:is([data-block='now']):hover { background: var(--pc-block-now); color: var(--pc-on-block-now); }
+.turnfin-app .pc-block.ui-motion-press:is([data-block='next']):hover { background: var(--pc-block-next); color: var(--pc-on-block-next); }
+.turnfin-app .pc-block.ui-motion-press:is([data-block='cover']):hover { background: var(--pc-block-cover); color: var(--pc-on-block-cover); }
+.turnfin-app .pc-block.ui-motion-press:is([data-block='assessment']):hover { background: var(--pc-block-assess); color: var(--pc-on-block-assess); }
+.turnfin-app .pc-block.ui-motion-press:is([data-block='done']):hover { background: var(--pc-surface-sunken); color: var(--pc-ink-muted); }
+.turnfin-app .pc-block.ui-motion-press:is([data-block='off'], [data-block='open']):hover { background: repeating-linear-gradient(135deg, var(--pc-hatch) 0 6px, transparent 6px 12px); color: var(--pc-ink-muted); }
+.turnfin-app a.pc-block:hover { filter: brightness(0.97); }
+.turnfin-app .pc-block > svg { flex: none; width: 18px; height: 18px; }
+.turnfin-app .pc-block[data-density='icon'] { justify-content: center; padding: 0; }
+.turnfin-app .pc-block[data-density='compact'] { gap: 6px; padding-inline: 8px 4px; }
+.turnfin-app .pc-block[data-density='mark'] { padding: 0; }
+.turnfin-app .pc-block:has(> .pc-block-strip) { position: relative; padding-bottom: 14px; }
+.turnfin-app .pc-block-strip { position: absolute; inset-inline: 12px; bottom: 6px; height: 6px; border-radius: 999px; overflow: hidden; }
+.turnfin-app .pc-block-strip > span { position: absolute; inset-block: 0; box-shadow: inset 0 0 0 1px var(--pc-line); }
+.turnfin-app .pc-block-strip > [data-kind='activity'] { background: var(--pc-surface); }
+/* The day as a grid from 1280px (--tl-cols is set by TimelineGrid): each lane is one rounded
+   row (its name, then its track with faint hour lines and the past shaded), hours read along
+   the top, blocks sit to the minute on 5-minute columns, and a "now" pill heads the dashed
+   line at the time now. */
+.turnfin-app .pc-timeline { --tl-lane: 240px; --tl-head: 32px; --tl-row: minmax(60px, auto); display: grid; grid-template-columns: var(--tl-lane) repeat(var(--tl-cols), minmax(0, 1fr)); grid-template-rows: var(--tl-head); grid-auto-rows: var(--tl-row); column-gap: 0; row-gap: 8px; min-width: 0; }
+.turnfin-app .pc-timeline > .pc-block { min-height: 0; margin: 6px 4px; }
+.turnfin-app .pc-timeline-row { border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); background: var(--pc-surface); }
+/* Hour lines (`.pc-timeline-line`) and the past (`.pc-timeline-past`) are placed by TimelineGrid. */
+.turnfin-app .pc-timeline-track { position: relative; overflow: hidden; margin: 1px 1px 1px 0; border-radius: 0 15px 15px 0; }
+.turnfin-app .pc-timeline-past { position: absolute; inset-block: 0; background: var(--pc-surface-sunken); }
+.turnfin-app .pc-timeline-line { position: absolute; inset-block: 0; width: 1px; background: var(--pc-line); }
+/* Where now sits inside its 5-minute column, in fifths. */
+.turnfin-app :is(.pc-timeline-now-label, .pc-timeline-now) { --at: 0%; }
+.turnfin-app :is(.pc-timeline-now-label, .pc-timeline-now)[data-at='1'] { --at: 20%; }
+.turnfin-app :is(.pc-timeline-now-label, .pc-timeline-now)[data-at='2'] { --at: 40%; }
+.turnfin-app :is(.pc-timeline-now-label, .pc-timeline-now)[data-at='3'] { --at: 60%; }
+.turnfin-app :is(.pc-timeline-now-label, .pc-timeline-now)[data-at='4'] { --at: 80%; }
+.turnfin-app .pc-timeline > .pc-timeline-lane { position: relative; z-index: 1; border-color: transparent; }
+/* A person's shift on the planner: the frame their duties sit in. Its free time is a soft blue
+   with a dashed edge, to drag across and plan; what they do sits inside it as blocks. */
+.turnfin-app .rota-free, .turnfin-app .pc-timeline > .pc-block[data-block='shift'] { position: relative; z-index: 2; min-width: 0; height: auto; margin: 2px 1px; padding: 0; border: 1px dashed color-mix(in srgb, var(--pc-primary) 45%, transparent); border-radius: 18px; background: color-mix(in srgb, var(--pc-primary-soft) 70%, var(--pc-surface)); color: var(--pc-ink-muted); cursor: crosshair; touch-action: none; user-select: none; }
+.turnfin-app .rota-free:hover { background: var(--pc-primary-soft); border-color: var(--pc-primary); }
+.turnfin-app .rota-free:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.turnfin-app .pc-timeline > .pc-block[data-block='shift'] { cursor: default; }
+.turnfin-app .pc-timeline > .pc-block[data-block='shift'] > * { visibility: hidden; }
+.turnfin-app .rota-drag-range { position: absolute; inset-block: 4px; display: flex; align-items: center; justify-content: center; min-width: 0; overflow: hidden; border-radius: 12px; background: var(--pc-primary); color: var(--pc-on-primary); white-space: nowrap; }
+/* A lane's name that opens its editor: it reads as the name, and the whole name tile is the
+   target (a stretched button), so a lane needs no separate edit icon. */
+.turnfin-app .pc-timeline-lane-label > .pc-timeline-lane-link[data-slot='button'] { position: static; display: inline; width: auto; height: auto; min-height: 0; padding: 0; border: 0; background: none; box-shadow: none; color: var(--pc-ink); font: inherit; font-weight: 600; text-align: start; white-space: inherit; text-decoration: none; }
+.turnfin-app .pc-timeline-lane-label > .pc-timeline-lane-link[data-slot='button']::after { content: ''; position: absolute; inset: 0; border-radius: var(--pc-radius-card); }
+.turnfin-app .pc-timeline-lane-label > .pc-timeline-lane-link[data-slot='button']:hover { text-decoration: underline; text-underline-offset: 3px; background: none; }
+.turnfin-app .pc-timeline-lane-label > .pc-timeline-lane-link[data-slot='button']:focus-visible { outline: none; }
+.turnfin-app .pc-timeline-lane-label > .pc-timeline-lane-link[data-slot='button']:focus-visible::after { outline: 2px solid var(--pc-focus); outline-offset: -2px; }
+/* A planning timeline reads out the exact quarter hour under the pointer, on the time bar. */
+.turnfin-app .pc-timeline-wide { position: relative; }
+.turnfin-app .pc-timeline-readout { position: absolute; top: 6px; z-index: 5; padding: 1px 8px; transform: translateX(-50%); border-radius: var(--pc-radius-control); background: var(--pc-primary); color: var(--pc-on-primary); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; font-variant-numeric: tabular-nums; pointer-events: none; }
+/* The day's summary in the planner's head: gaps to fill (amber) or all covered (quiet). */
+.turnfin-app .rota-summary { display: inline-flex; align-items: center; min-height: 28px; padding-inline: 12px; border-radius: var(--pc-radius-control); background: var(--pc-surface-sunken); color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
+.turnfin-app .rota-summary[data-tone='gap'] { background: var(--pc-warning-soft); color: var(--pc-warning); }
+/* The key's last item: a shift is the dashed box around what a person does. */
+.turnfin-app .rota-key-shift { display: inline-flex; align-items: center; min-height: 24px; padding-inline: 8px; border: 1px dashed color-mix(in srgb, var(--pc-primary) 45%, transparent); border-radius: var(--pc-radius-control); color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
+.turnfin-app .pc-timeline > .pc-timeline-hour:is(*, [data-past]) { justify-content: flex-start; min-height: 0; padding-inline: 4px; border: 0; border-radius: 0; background: none; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
+.turnfin-app .pc-timeline > .pc-timeline-hour:not([data-past]) { color: var(--pc-ink); }
+/* The Week plan's day tabs: what still needs sorting out, as a small amber count. */
+.turnfin-app .rota-tab-count { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding-inline: 6px; border-radius: var(--pc-radius-control); background: var(--pc-warning-soft); color: var(--pc-warning); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 700; }
+/* A free day on the week sheet: an empty, quiet cell; for managers a + appears on hover or focus. */
+.turnfin-app .rota-empty-day { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 56px; border-radius: var(--pc-radius-card); color: var(--pc-ink-muted); }
+.turnfin-app .rota-empty-day.ui-motion-press:hover { background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.turnfin-app .pc-timeline-now-label { position: relative; z-index: 3; align-self: center; justify-self: start; width: max-content; margin-left: var(--at); padding: 2px 8px; transform: translateX(-50%); border-radius: var(--pc-radius-control); background: var(--pc-primary); color: var(--pc-on-primary); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.turnfin-app .pc-timeline-heading { align-self: center; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
+.turnfin-app .pc-timeline-hour { display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 44px; overflow: hidden; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.turnfin-app .pc-timeline-hour[data-past] { border-color: transparent; background: var(--pc-hatch); color: var(--pc-ink-muted); }
+.turnfin-app .pc-timeline-hour[data-now] { border-color: var(--pc-primary); background: var(--pc-primary); color: var(--pc-on-primary); }
+.turnfin-app .pc-timeline-lane { display: flex; align-items: center; gap: 12px; min-width: 0; min-height: 56px; margin-inline-end: 4px; padding: 8px 8px 8px 12px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); }
+.turnfin-app .pc-timeline-lane:has(> .pc-tile-icon) { padding-inline-start: 8px; }
+.turnfin-app .pc-timeline-lane[data-header] { border-color: transparent; padding-inline-start: 0; }
+.turnfin-app .pc-timeline-lane-body { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.turnfin-app .pc-timeline-lane-body > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.turnfin-app .pc-timeline-lane-label { color: var(--pc-ink); font-size: var(--pc-text-body); line-height: var(--pc-leading-body); font-weight: 600; }
+.turnfin-app .pc-timeline-lane-caption { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
+.turnfin-app .pc-timeline-lane-action { display: flex; flex: none; align-items: center; gap: 4px; }
+.turnfin-app .pc-timeline-now { position: relative; z-index: 1; pointer-events: none; }
+/* Blocks sit above the now line, so it never crosses their words; hatched blocks get an opaque ground. */
+.turnfin-app .pc-timeline > .pc-block { position: relative; z-index: 2; }
+.turnfin-app .pc-timeline > .pc-block:is([data-block='off'], [data-block='open']) { background-color: var(--pc-surface); }
+/* A finished block is a white card with a line, so it still reads on the shaded past. */
+.turnfin-app .pc-timeline > .pc-block[data-block='done'] { background: var(--pc-surface); box-shadow: inset 0 0 0 1px var(--pc-line); }
+/* Lane names (the timeline and the week plan) wrap to two lines rather than cutting a name short. */
+.turnfin-app :is(.rota-roster, .pc-timeline) .pc-timeline-lane-label { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; }
+.turnfin-app .pc-timeline-now::after { content: ''; position: absolute; top: -8px; bottom: 0; left: var(--at); border-left: 2px dashed var(--pc-primary); }
+.turnfin-app .pc-timeline-narrow { display: none; flex-direction: column; gap: 16px; }
+.turnfin-app .pc-agenda-item { display: flex; align-items: stretch; gap: 8px; }
+.turnfin-app .pc-agenda-item > .pc-block { flex: 1; }
+/* On phones every tag in the agenda shows as its icon, so the title keeps its room;
+   the words stay for screen readers. */
+@media (max-width: 767px) {
+  .turnfin-app .pc-timeline-narrow .pc-block .pc-block-tag-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
+@media (max-width: 1279px) {
+  .turnfin-app .pc-timeline-wide { display: none; }
+  .turnfin-app .pc-timeline-narrow { display: flex; }
+}
+.turnfin-app .pc-timeline-narrow-only { display: none; }
+@media (max-width: 1279px) {
+  .turnfin-app .pc-timeline-narrow-only { display: inline; }
+  .turnfin-app .pc-timeline-wide-only { display: none; }
+}
+.turnfin-app .pc-only-narrow { display: none; }
+@media (max-width: 767px) {
+  .turnfin-app .pc-only-wide { display: none; }
+  .turnfin-app .pc-only-narrow { display: flex; }
+  .turnfin-app .pc-panel { padding: 16px; gap: 12px; }
+  /* A row action whose words sit in .pc-only-wide becomes a 44px icon button on phones; its
+     aria-label still names it. */
+  .turnfin-app .ui-motion-press:has(> .pc-only-wide) { width: var(--pc-control-height); min-width: var(--pc-control-height); padding: 0; }
+  /* Seven day tiles share a phone's width, so the weekday ("Today" included) steps down to caption size. */
+  .turnfin-app .ui-motion-press.pc-day { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
+}
+
+/* v2 primitives */
+/* shadcn's card, table, tabs and outline items take the component sheet's shapes,
+   so every page built from them follows without per-page work. */
+.turnfin-app [data-slot='card'] { border-color: transparent; border-radius: var(--pc-radius-panel); background: var(--pc-surface); box-shadow: none; }
+.turnfin-app :is([data-slot='card'], [data-slot='dialog-content'], [data-slot='sheet-content'], .pc-panel, [data-slot='table-container']) [data-slot='card'] { border-color: var(--pc-line); border-radius: var(--pc-radius-card); }
+
+.turnfin-app [data-slot='table-container'] { padding: 8px 16px; border: 0; border-radius: var(--pc-radius-panel); background: var(--pc-surface); box-shadow: none; }
+.turnfin-app [data-slot='table-container']:has(> [data-layout='grid']) { padding: 0; border-radius: 0; background: transparent; }
+.turnfin-app :is([data-slot='card'], [data-slot='dialog-content'], .pc-panel) [data-slot='table-container'] { padding: 0; background: transparent; }
+.turnfin-app [data-slot='table']:not([data-layout='grid']) { border-collapse: separate; border-spacing: 0 8px; }
+.turnfin-app [data-slot='table-header'] [data-slot='table-row'] { border: 0; background: none; }
+.turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-head'] { height: auto; padding: 4px 16px 0; border: 0; background: none; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
+.turnfin-app [data-slot='table-body'] [data-slot='table-row'] { border: 0; background: none; }
+.turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-header'] { background: none; }
+/* Body cells, row headers (th scope=row) included, make up the row card. Size, colour and weight
+   stay off td: poolside is unlayered and would beat a cell's own utilities. */
+.turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] :is([data-slot='table-cell'], [data-slot='table-head']) { padding: 12px 16px; border-top: 1px solid var(--pc-line); border-bottom: 1px solid var(--pc-line); background: var(--pc-surface); vertical-align: middle; }
+.turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] :is([data-slot='table-cell'], [data-slot='table-head']):first-child { border-left: 1px solid var(--pc-line); border-radius: var(--pc-radius-card) 0 0 var(--pc-radius-card); }
+.turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] :is([data-slot='table-cell'], [data-slot='table-head']):last-child { border-right: 1px solid var(--pc-line); border-radius: 0 var(--pc-radius-card) var(--pc-radius-card) 0; }
+/* A table that re-homes its trailing columns below lg (max-lg:hidden) still closes its row card:
+   the last visible cell takes the right edge. */
+@media (max-width: 1023.98px) {
+  .turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-cell']:not(.max-lg\:hidden):not(:has(~ [data-slot='table-cell']:not(.max-lg\:hidden))) { border-right: 1px solid var(--pc-line); border-radius: 0 var(--pc-radius-card) var(--pc-radius-card) 0; }
+  .turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-cell']:first-child:not(.max-lg\:hidden):not(:has(~ [data-slot='table-cell']:not(.max-lg\:hidden))) { border-radius: var(--pc-radius-card); }
+}
+/* The same for columns re-homed below md (max-md:hidden), e.g. row actions moved under the name. */
+@media (max-width: 767.98px) {
+  .turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-cell']:not(.max-md\:hidden):not(:has(~ [data-slot='table-cell']:not(.max-md\:hidden))) { border-right: 1px solid var(--pc-line); border-radius: 0 var(--pc-radius-card) var(--pc-radius-card) 0; }
+  .turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-cell']:first-child:not(.max-md\:hidden):not(:has(~ [data-slot='table-cell']:not(.max-md\:hidden))) { border-radius: var(--pc-radius-card); }
+}
+.turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-row']:hover :is([data-slot='table-cell'], [data-slot='table-head']) { background: var(--pc-surface-sunken); }
+.turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-head'] { height: auto; text-align: left; color: var(--pc-ink); font-size: var(--pc-text-body); line-height: var(--pc-leading-body); font-weight: 400; }
+
+.turnfin-app [data-slot='tabs-list'][data-variant='default'] { flex-wrap: wrap; justify-content: flex-start; row-gap: 8px; height: auto; min-height: 44px; padding: 4px; border-radius: var(--pc-radius-panel); background: var(--pc-surface-sunken); }
+.turnfin-app [data-slot='tabs-list'][data-variant='default'] [data-slot='tabs-trigger'] { position: relative; isolation: isolate; flex: none; min-height: 44px; margin: -4px 0; padding: 0 16px; border: 0; border-radius: 999px; background: none; box-shadow: none; color: var(--pc-ink-muted); font-size: var(--pc-text-body); font-weight: 600; }
+.turnfin-app [data-slot='tabs-list'][data-variant='default'] [data-slot='tabs-trigger']::before { content: ''; position: absolute; inset: 4px 0; z-index: -1; border-radius: 999px; }
+.turnfin-app [data-slot='tabs-list'][data-variant='default'] [data-slot='tabs-trigger']:hover::before { background: var(--pc-surface); }
+.turnfin-app [data-slot='tabs-list'][data-variant='default'] [data-slot='tabs-trigger'][data-state='active'] { background: none; color: var(--pc-ink); }
+.turnfin-app [data-slot='tabs-list'][data-variant='default'] [data-slot='tabs-trigger'][data-state='active']::before { background: var(--pc-surface); box-shadow: inset 0 0 0 1px var(--pc-line-strong); }
+
+/* One segmented control: SegmentedLinks (links, aria-current), SegmentedChoice (radios,
+   data-state) and the account menu's Appearance (menu radio items). It wraps onto more rows,
+   never scrolls; 8px between rows keeps each item's 44px hit area (margin -4px 0) whole. The
+   panel radius clamps to a pill on one row and stays concentric with the items when wrapped. */
+.turnfin-app .pc-seg { display: inline-flex; flex: none; flex-wrap: wrap; align-items: center; gap: 8px 0; width: max-content; max-width: 100%; padding: 4px; border-radius: var(--pc-radius-panel); background: var(--pc-seg-track, var(--pc-surface-sunken)); overflow: visible; }
+/* In dark mode a raised overlay is the sunken colour, so there the track drops to the page
+   surface and the chosen pill takes the raised one (light mode is unchanged). */
+.turnfin-app :is([data-slot='dialog-content'], [data-slot='alert-dialog-content'], [data-slot='sheet-content'], [data-slot='popover-content']) { --pc-seg-track: light-dark(var(--pc-surface-sunken), var(--pc-surface)); --pc-seg-thumb: var(--pc-surface-raised); }
+.turnfin-app .pc-seg-item { position: relative; isolation: isolate; display: inline-flex; flex: none; align-items: center; gap: 6px; min-width: 44px; min-height: 44px; margin: -4px 0; padding: 0 16px; border: 0; border-radius: 999px; background: none; box-shadow: none; color: var(--pc-ink-muted); font-weight: 600; white-space: nowrap; text-decoration: none; cursor: pointer; }
+.turnfin-app .pc-seg-item::before { content: ''; position: absolute; inset: 4px 0; z-index: -1; border-radius: 999px; }
+.turnfin-app .pc-seg-item:is(:hover, [data-highlighted])::before { background: var(--pc-seg-thumb, var(--pc-surface)); }
+.turnfin-app .pc-seg-item:is(:focus, [data-highlighted]) { background: none; }
+.turnfin-app .pc-seg-item:is([aria-current], [data-state='checked'], [aria-pressed='true']) { color: var(--pc-ink); }
+.turnfin-app .pc-seg-item:is([aria-current], [data-state='checked'], [aria-pressed='true'])::before { background: var(--pc-seg-thumb, var(--pc-surface)); box-shadow: inset 0 0 0 1px var(--pc-line-strong); }
+.turnfin-app .pc-seg-item:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: -2px; }
+/* A toggle button as a segment (aria-pressed: the deck's Competency view) wears the segment's
+   colours, not the ghost button's blue. */
+.turnfin-app .pc-seg > .pc-seg-item.ui-motion-press:is(*, :hover) { background: none; color: var(--pc-ink-muted); }
+.turnfin-app .pc-seg > .pc-seg-item.ui-motion-press[aria-pressed='true']:is(*, :hover) { color: var(--pc-ink); }
+.turnfin-app .pc-seg-item:is(:disabled, [data-disabled]) { cursor: not-allowed; }
+.turnfin-app .pc-seg-item > [data-slot='dropdown-menu-radio-item-indicator'] { display: none; }
+.turnfin-app .pc-seg-fill { display: flex; width: 100%; }
+.turnfin-app .pc-seg-fill > .pc-seg-item { flex: 1 1 0; min-width: max-content; justify-content: center; padding-inline: 12px; }
+@media (max-width: 639px) {
+  .turnfin-app .pc-seg-fill-phone { display: flex; width: 100%; }
+  .turnfin-app .pc-seg-fill-phone > .pc-seg-item { flex: 1 1 0; min-width: max-content; justify-content: center; padding-inline: 12px; }
+}
+.turnfin-app .pc-seg-count { font-weight: 400; }
+.turnfin-app [data-slot='item'][data-variant='outline'] { min-height: 64px; padding: 12px 16px; border-color: var(--pc-line); border-radius: var(--pc-radius-card); background: var(--pc-surface); }
+.turnfin-app a[data-slot='item'][data-variant='outline']:hover { background: var(--pc-surface-sunken); }
+
+/* A list of shadcn items on the page (not already inside a panel, card or dialog) is a white panel
+   of separate rows, like every v2 list. */
+.turnfin-app .tf-main [data-slot='item-group']:not(:is([data-slot='card'], [role='dialog'], .pc-panel, [data-slot='popover-content']) [data-slot='item-group']) { gap: 8px; padding: 8px 16px 16px; border: 0; border-radius: var(--pc-radius-panel); background: var(--pc-surface); }
+.turnfin-app .tf-main [data-slot='item-group'] { display: flex; flex-direction: column; gap: 8px; }
+.turnfin-app .tf-main [data-slot='item-group'] > [data-slot='item'], .turnfin-app .tf-main [data-slot='item-group'] > [role='listitem'] > [data-slot='item'] { min-height: 64px; padding: 12px 16px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); background: var(--pc-surface); }
+.turnfin-app .tf-main [data-slot='item-group'] > a[data-slot='item']:hover, .turnfin-app .tf-main [data-slot='item-group'] > [role='listitem'] > a[data-slot='item']:hover { background: var(--pc-surface-sunken); }
+/* A row that opens in place (Awaiting enrolment) takes the primary edge while open. */
+.turnfin-app .tf-main [data-slot='item']:has(> [data-slot='collapsible'][data-state='open']) { border-color: var(--pc-primary); }
+.turnfin-app .tf-main [data-slot='item-group'] > [data-slot='item-separator'] { display: none; }
+
+/* An empty state on the page itself sits on a white panel. */
+.turnfin-app .tf-main [data-slot='empty']:not(:is([data-slot='card'], [data-slot='table-container'], [data-slot='item-group'], [role='dialog'], .pc-panel) [data-slot='empty']) { border: 0; border-radius: var(--pc-radius-panel); background: var(--pc-surface); }
+
+/* Docs pages inside the v2 frame: the frame owns the inset, so the old page padding goes. */
+.turnfin-app .tf-main .workspace-page-content { padding: 0; }
+.turnfin-app .tf-main .workspace-page-content > * { max-width: none; margin-inline: 0; }
+
+/* Page blocks sit 16px apart in every frame (ModuleShell, Instructor, Help). The gap reaches
+   blocks a page returns as direct children (a fragment), not ones inside its own wrapper. */
+.turnfin-app .tf-content { display: flex; flex-direction: column; gap: 16px; }
+
+/* A note in the danger tone (Docs' emergency plans): the danger wash and ink, as emergencies
+   are everywhere; its heading, caption and icon follow the ink. */
+.turnfin-app .pc-note[data-tone='danger'] { background: var(--pc-danger-soft); color: var(--pc-danger); }
+.turnfin-app .pc-note[data-tone='danger'] :is(h2, h3, svg, .pc-row-hint) { color: inherit; }

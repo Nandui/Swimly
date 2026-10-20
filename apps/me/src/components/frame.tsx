@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { BookOpen, CalendarDays, GraduationCap, House, LayoutGrid, LogOut } from "lucide-react";
+import { Button } from "@/components/shadcn/button";
 import { TextSizeEffect } from "@/components/learner";
 import { OfflineBar, useOffline } from "@/components/offline";
 import { api, session } from "@/lib/api";
@@ -56,16 +57,16 @@ export function Frame({ title, children }: { title: string; children: ReactNode 
       <header className="topbar">
         <Brand href="/" />
         <div className="tf-bar">
-          <button type="button" className="tf-bar-item" onClick={() => void signOut()} disabled={leaving}><LogOut aria-hidden="true" />{leaving ? "Signing out…" : "Sign out"}</button>
+          <Button type="button" variant="ghost" className="tf-bar-item" onClick={() => void signOut()} disabled={leaving}><LogOut aria-hidden="true" />{leaving ? "Signing out…" : "Sign out"}</Button>
         </div>
       </header>
       <OfflineBar />
       {confirming ? (
         <div className="offline-failed" role="alert">
           <p><strong>{waiting === 1 ? "1 change hasn’t" : `${waiting} changes haven’t`} reached Turnfin yet.</strong> Signing out now deletes {waiting === 1 ? "it" : "them"} from this phone.</p>
-          <div className="row">
-            <button type="button" className="button outline" onClick={() => void signOut(true)}>Sign out anyway</button>
-            <button type="button" className="button ghost" onClick={() => setConfirming(false)}>Stay signed in</button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="button" variant="outline" onClick={() => void signOut(true)}>Sign out anyway</Button>
+            <Button type="button" variant="ghost" onClick={() => setConfirming(false)}>Stay signed in</Button>
           </div>
         </div>
       ) : null}

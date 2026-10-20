@@ -1,4 +1,5 @@
-import { CalendarCheck, Check, CircleCheck, Clock, Hourglass, Wallet, X, type LucideIcon } from "lucide-react";
+import { CalendarCheck, Check, CircleCheck, Clock, Hourglass, Wallet, X } from "lucide-react";
+import type { TagMeta } from "@/components/ui-kit/tag";
 import type { BookingState, Course } from "@/lib/api";
 
 /** Dates come as "2026-11-07" (a day, not an instant), so they are read in UTC. */
@@ -38,23 +39,23 @@ export function rhythm(c: Pick<Course, "sessions" | "group">) {
   return `${n} ${n === 1 ? "day" : c.group === "course" ? "sessions" : "days"}`;
 }
 
-export type Meta = { label: string; tone: "green" | "orange" | "red" | "blue" | "gray"; icon: LucideIcon };
+export type Meta = TagMeta;
 
 /** How many places are left, always with an icon so colour is never the only signal. */
 export function placesMeta(c: Pick<Course, "placesLeft" | "waitingList">): Meta {
-  if (c.placesLeft <= 0) return c.waitingList ? { label: "Full, waiting list open", tone: "orange", icon: Hourglass } : { label: "Full", tone: "red", icon: X };
-  if (c.placesLeft <= 2) return { label: `${c.placesLeft} ${c.placesLeft === 1 ? "place" : "places"} left`, tone: "orange", icon: Clock };
-  return { label: `${c.placesLeft} places left`, tone: "green", icon: Check };
+  if (c.placesLeft <= 0) return c.waitingList ? { label: "Full, waiting list open", color: "orange", icon: Hourglass } : { label: "Full", color: "red", icon: X };
+  if (c.placesLeft <= 2) return { label: `${c.placesLeft} ${c.placesLeft === 1 ? "place" : "places"} left`, color: "orange", icon: Clock };
+  return { label: `${c.placesLeft} places left`, color: "green", icon: Check };
 }
 
 /** Where a booking stands, for "My bookings". */
 export const BOOKING_META: Record<BookingState, Meta> = {
-  "to-pay": { label: "Waiting for payment", tone: "orange", icon: Wallet },
-  booked: { label: "Booked", tone: "green", icon: CalendarCheck },
-  waiting: { label: "Waiting list", tone: "blue", icon: Hourglass },
-  done: { label: "Finished", tone: "gray", icon: CircleCheck },
-  withdrawn: { label: "Withdrawn", tone: "gray", icon: X },
-  cancelled: { label: "Cancelled", tone: "red", icon: X },
+  "to-pay": { label: "Waiting for payment", color: "orange", icon: Wallet },
+  booked: { label: "Booked", color: "green", icon: CalendarCheck },
+  waiting: { label: "Waiting list", color: "blue", icon: Hourglass },
+  done: { label: "Finished", color: "gray", icon: CircleCheck },
+  withdrawn: { label: "Withdrawn", color: "gray", icon: X },
+  cancelled: { label: "Cancelled", color: "red", icon: X },
 };
 
 const EURO = new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" });
