@@ -1,0 +1,299 @@
+/* Turnfin Me's own layout, on Work's Poolside Clear v2 theme (owner rules, 20 October 2026: shadcn
+   components only, no arbitrary values, no inline styles or new colours, every page in PageShell and
+   PageHeader). The tokens, the shadcn controls, the fin, the bar, the bottom bar, panels, rows and
+   tile icons come from theme/poolside.css and shadcn.css, exact copies of Work's
+   (scripts/lint/ui-rules.mjs checks they match). Colours here are only those tokens; status colour
+   comes from the metadata maps in src/lib/meta.ts, always with an icon. */
+.turnfin-app {
+  /* Me only: a 16px reading size for documents and lessons (.doc). */
+  --pc-text-reading: 16px;
+  --pc-leading-reading: 26px;
+}
+body.turnfin-app { min-height: 100dvh; background: var(--pc-canvas); }
+
+.muted { color: var(--pc-ink-muted); }
+.caption { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); color: var(--pc-ink-muted); }
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.stack-sm { display: flex; flex-direction: column; gap: 8px; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* Frame: the top row on the canvas (the fin, the name, Sign out), the page, and the floating
+   bottom bar, all in one 720px column. */
+.frame { min-height: 100dvh; display: flex; flex-direction: column; }
+.topbar { display: flex; align-items: center; gap: 12px; width: 100%; max-width: 720px; margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) 16px 0; }
+.topbar > .tf-bar { margin-left: auto; }
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.brand-name { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 600; color: var(--pc-ink); }
+.page { flex: 1; width: 100%; max-width: 720px; margin: 0 auto; padding: 16px 16px calc(104px + env(safe-area-inset-bottom)); }
+/* Sign-in: one narrow column with no bottom bar. */
+.page.narrow { max-width: 440px; padding-top: max(48px, env(safe-area-inset-top)); padding-bottom: calc(48px + env(safe-area-inset-bottom)); }
+
+/* ---------------------------------------------------------------------------------------------
+   Me only: the single place Me differs from Work. Me has no module rail, so the bottom bar shows
+   at every width, capped to the page's 720px column, and clears the home indicator; the page
+   scrolls focus targets clear of it. */
+.turnfin-app .tf-bottom { display: flex; left: max(8px, calc(50% - 352px)); right: max(8px, calc(50% - 352px)); bottom: calc(8px + env(safe-area-inset-bottom)); }
+html:has(.tf-bottom) { scroll-padding-bottom: calc(112px + env(safe-area-inset-bottom)); }
+
+
+/* Home's do-first links in the callout shape: the yellow one first, then the blue. */
+.notice { display: flex; align-items: flex-start; gap: 12px; padding: 16px; border-radius: var(--pc-radius-card); background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.notice > svg { width: 20px; height: 20px; }
+.notice-body { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.notice strong { font-weight: 600; }
+/* The one do-first item on Home (MeHome's yellow callout), a link. */
+.notice.first { background: var(--pc-yellow); color: var(--pc-on-yellow); text-decoration: none; }
+.notice.first > .pc-row-chevron { margin-top: 2px; color: inherit; }
+
+/* Documents: 16px reading text. */
+.doc { font-size: var(--pc-text-reading); line-height: var(--pc-leading-reading); overflow-wrap: anywhere; }
+.doc > * + * { margin-top: 12px; }
+.doc > :is(h2, h3, h4):not(:first-child) { margin-top: 24px; }
+.doc ul, .doc ol { padding-left: 22px; margin: 0; }
+.doc :is(code, pre) { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.doc pre { margin-inline: 0; margin-bottom: 0; padding: 12px 16px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); font-size: var(--pc-text-body); line-height: var(--pc-leading-body); white-space: pre-wrap; overflow-wrap: anywhere; }
+.doc hr { border: 0; border-top: 1px solid var(--pc-line); margin-inline: 0; margin-bottom: 0; }
+.doc table { border-collapse: collapse; width: 100%; display: block; overflow-x: auto; }
+.doc :is(th, td) { border: 1px solid var(--pc-line); padding: 8px; text-align: left; vertical-align: top; }
+.doc blockquote { margin: 0; padding-left: 12px; border-left: 3px solid var(--pc-line-strong); }
+.doc .callout { padding: 12px 16px; border-radius: var(--pc-radius-card); background: var(--pc-primary-soft); }
+/* Top-level numbered lists are the mockup's steps: sunken rows with a blue counter. A paragraph
+   and a nested list inside one step stack in its second column; nested lists keep plain markers. */
+.doc > ol { list-style: none; padding: 0; counter-reset: s; display: flex; flex-direction: column; gap: 8px; }
+.doc > ol > li { display: grid; grid-template-columns: 24px 1fr; column-gap: 12px; padding: 12px 16px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); counter-increment: s; }
+.doc > ol > li::before { content: counter(s); grid-row: 1 / span 99; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; margin-top: 1px; border-radius: 999px; background: var(--pc-primary); color: var(--pc-on-primary); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
+.doc > ol > li > * { grid-column: 2; }
+.doc > ol > li > * + * { margin-top: 8px; }
+
+/* Courses built from lessons (Training e-learning). One lesson per screen, the course's
+   progress as a bar, Back and Next at the end within thumb reach. */
+.course-hero { gap: 20px; }
+.lesson-row[data-done] .pc-tile-icon { background: var(--pc-success-soft); color: var(--pc-success); }
+.lesson-video { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: var(--pc-radius-card); overflow: hidden; background: var(--pc-surface-sunken); }
+.lesson-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.lesson-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.lesson-nav > [data-slot="button"]:last-child { flex: 1 1 auto; max-width: 320px; margin-left: auto; }
+.lesson-file-image, .doc.lesson img { display: block; max-width: 100%; height: auto; border-radius: var(--pc-radius-card); }
+.lesson-image-placeholder { display: block; width: 100%; aspect-ratio: 4 / 3; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); }
+.doc.lesson h2 { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); }
+.doc.lesson blockquote { padding: 12px 16px; border: 0; border-radius: var(--pc-radius-card); background: var(--pc-primary-soft); color: var(--pc-primary-ink); font-weight: 500; }
+.doc.lesson a { color: var(--pc-primary); text-underline-offset: 3px; }
+
+/* Questions (quizzes and the final exam): big tappable answer rows, one question per screen. */
+.question { display: flex; flex-direction: column; gap: 16px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.question-prompt { display: flex; flex-direction: column; gap: 4px; padding: 0; font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 600; }
+.question-image { display: block; max-width: 100%; max-height: 320px; width: auto; height: auto; border-radius: var(--pc-radius-card); }
+.choices { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.choice { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 16px; border: 1px solid var(--pc-line-strong); border-radius: var(--pc-radius-card); background: var(--pc-surface); }
+.choice.selectable { cursor: pointer; }
+.choice.selectable:hover { background: var(--pc-hover); }
+.choice.selectable:has([data-state="checked"]), .turnfin-app .ui-motion-press.choice[aria-pressed="true"] { border-color: var(--pc-primary); background: var(--pc-primary-soft); color: var(--pc-primary-ink); box-shadow: inset 0 0 0 1px var(--pc-primary); }
+.choice.selectable:has(:focus-visible) { box-shadow: 0 0 0 1px var(--pc-focus), var(--pc-focus-halo); }
+.choice.selectable:has(:disabled) { cursor: default; }
+.choice-text { display: flex; flex: 1; flex-direction: column; gap: 8px; min-width: 0; overflow-wrap: anywhere; }
+.choice-image { display: block; max-width: 100%; max-height: 160px; width: auto; border-radius: var(--pc-radius-card); }
+.order-number { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 999px; background: var(--pc-primary); color: var(--pc-on-primary); font-size: var(--pc-text-caption); font-weight: 600; }
+.order-moves { display: flex; flex: none; gap: 4px; }
+.match-pair { flex-wrap: wrap; }
+.match-pair .choice-text { flex: 1 1 140px; font-weight: 600; }
+.match-pair [data-slot="native-select"], .match-pair [data-slot="input"] { flex: 1 1 180px; width: auto; }
+.quiz-done { gap: 12px; }
+
+/* The final exam. */
+.exam-rules { display: flex; flex-direction: column; gap: 8px; margin: 0; padding-left: 20px; }
+.exam-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.exam-count { flex: 1 1 auto; font-weight: 600; }
+.exam-timer { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border-radius: 999px; background: var(--pc-surface); font-weight: 600; }
+.exam-timer svg { width: 16px; height: 16px; }
+.exam-timer.is-low { background: var(--pc-danger-soft); color: var(--pc-danger); }
+.exam-dots { display: flex; flex-wrap: wrap; gap: 6px; }
+.exam-dot { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--pc-line-strong); border-radius: 999px; background: var(--pc-surface); color: var(--pc-ink); font: inherit; font-weight: 600; cursor: pointer; }
+.exam-dot[data-answered] { border-color: var(--pc-primary-soft); background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.exam-dot[aria-current] { border-color: var(--pc-primary); background: var(--pc-primary); color: var(--pc-on-primary); }
+.exam-dot:focus-visible, .exam-jump:focus-visible { outline: none; box-shadow: 0 0 0 1px var(--pc-focus), var(--pc-focus-halo); }
+.turnfin-app .exam-jump { width: 100%; font: inherit; text-align: left; cursor: pointer; }
+.exam-figure { margin: 0; font-size: 56px; line-height: 1; font-weight: 700; letter-spacing: -0.02em; }
+
+/* Richer lessons (Training e-learning phase 3): callouts, tap to reveal, flip cards, step by
+   step, knowledge checks, branching scenarios, flashcards, checklists and recordings. */
+.eyebrow { color: var(--pc-primary-ink); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.inline-icon { display: inline-block; width: 16px; height: 16px; margin-right: 6px; vertical-align: -3px; }
+.course-cover { display: block; width: 100%; aspect-ratio: 16 / 7; object-fit: cover; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); }
+.course-thumb { flex: none; width: 56px; height: 40px; object-fit: cover; border-radius: 10px; background: var(--pc-surface-sunken); }
+.callout-box { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; border-left: 4px solid var(--pc-primary); border-radius: var(--pc-radius-card); background: var(--pc-primary-soft); color: var(--pc-ink); }
+.callout-box > * + * { margin-top: 0; }
+.doc .choices { padding-left: 0; }
+.callout-box[data-tone="tip"] { border-left-color: var(--pc-success); background: var(--pc-success-soft); }
+.callout-box[data-tone="warning"] { border-left-color: var(--pc-warning); background: var(--pc-warning-soft); }
+.callout-box[data-tone="danger"] { border-left-color: var(--pc-danger); background: var(--pc-danger-soft); }
+.callout-label { margin: 0; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.reveal { border: 1px solid var(--pc-line-strong); border-radius: var(--pc-radius-card); background: var(--pc-surface); overflow: hidden; }
+.reveal-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 56px; padding: 8px 16px; border: 0; background: none; color: var(--pc-ink); font: inherit; font-weight: 600; text-align: left; cursor: pointer; }
+.reveal-toggle:hover { background: var(--pc-hover); }
+.reveal-toggle:focus-visible, .flip-card:focus-visible, .flashcard:focus-visible, .spot-frame:focus-visible { outline: none; box-shadow: 0 0 0 1px var(--pc-focus), var(--pc-focus-halo); }
+.reveal-toggle > svg { flex: none; width: 20px; height: 20px; transition: transform 200ms var(--pc-ease); }
+.reveal[data-open] .reveal-toggle > svg { transform: rotate(180deg); }
+.reveal-body { padding: 0 16px 16px; }
+.reveal-body > * + * { margin-top: 12px; }
+.flip-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.flip-card, .flashcard { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; min-height: 140px; padding: 20px 16px; border: 1px solid var(--pc-line-strong); border-radius: var(--pc-radius-card); background: var(--pc-surface); color: var(--pc-ink); font: inherit; text-align: center; cursor: pointer; transition: background-color 160ms var(--pc-ease), border-color 160ms var(--pc-ease); }
+.flip-card[aria-pressed="true"], .flashcard[aria-pressed="true"] { border-color: var(--pc-primary); background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.flip-face, .flip-text { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.flip-icon { position: absolute; right: 12px; bottom: 12px; width: 16px; height: 16px; opacity: 0.6; }
+.flashcard { min-height: 240px; }
+.flashcard-text { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 600; overflow-wrap: anywhere; }
+.stepper { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); }
+.stepper-body { min-height: 72px; }
+.stepper-body .step-item > * + * { margin-top: 12px; }
+.knowledge-check { display: flex; flex-direction: column; gap: 16px; padding: 16px; border: 1px solid var(--pc-primary-soft); border-radius: var(--pc-radius-card); background: var(--pc-surface); }
+.knowledge-check-label { display: inline-flex; align-items: center; gap: 6px; margin: 0; color: var(--pc-primary-ink); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.knowledge-check-label > svg { width: 16px; height: 16px; }
+.scene-text { font-size: var(--pc-text-reading); line-height: var(--pc-leading-reading); white-space: pre-line; }
+.scene-choice { width: 100%; color: var(--pc-ink); font: inherit; text-align: left; }
+.scene-choice > svg { flex: none; width: 20px; height: 20px; color: var(--pc-primary); }
+.audio-player { display: block; width: 100%; }
+.spot-frame { position: relative; display: inline-block; max-width: 100%; border-radius: var(--pc-radius-card); cursor: crosshair; touch-action: manipulation; }
+.spot-frame[data-locked] { cursor: default; }
+.spot-image { display: block; max-width: 100%; height: auto; border-radius: var(--pc-radius-card); user-select: none; -webkit-user-drag: none; }
+.spot-marker { position: absolute; width: 28px; height: 28px; margin: -14px 0 0 -14px; border: 3px solid var(--pc-surface); border-radius: 999px; background: var(--pc-primary); box-shadow: none; pointer-events: none; }
+.spot-marker.is-right { background: var(--pc-success); }
+.blank-sentence { font-size: var(--pc-text-reading); line-height: 2.4; }
+.turnfin-app .blank-input[data-slot="input"] { display: inline-block; width: 9em; min-height: 40px; margin: 0 4px; padding: 4px 10px; vertical-align: baseline; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-toggle > svg, .flip-card, .flashcard { transition: none; } }
+
+/* A certificate for finished training (e-learning phase 4): on screen as a card, on paper alone. */
+.certificate { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px 24px 28px; border: 1px solid var(--pc-line-strong); border-radius: var(--pc-radius-card); background: var(--pc-surface); text-align: center; overflow: hidden; }
+.certificate::before { content: ''; position: absolute; inset: 0 0 auto; height: 8px; background: var(--pc-primary); }
+.certificate-seal { display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; margin-bottom: 8px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); }
+.certificate-seal svg { width: 32px; height: 32px; }
+.certificate-name { font-size: var(--pc-text-display, 32px); line-height: 1.15; letter-spacing: -0.01em; text-wrap: balance; }
+.certificate-course { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 700; text-wrap: balance; }
+.certificate-code { margin-top: 16px; padding: 8px 16px; border-radius: 999px; background: var(--pc-surface-sunken); letter-spacing: 0.04em; }
+@media print {
+  .no-print, .topbar, .tf-bottom { display: none !important; }
+  body.turnfin-app { background: var(--pc-surface); }
+  .page { padding: 0; }
+  .certificate { border: 2px solid var(--pc-ink); min-height: 90vh; justify-content: center; }
+}
+
+/* The learner's own space (Training e-learning phase 6). */
+/* Larger text, chosen under More › Text size: every size token steps up together. */
+html[data-text="large"] body.turnfin-app {
+  --pc-text-caption: 14px; --pc-leading-caption: 20px; --pc-text-body: 17px; --pc-leading-body: 26px;
+  --pc-text-title: 21px; --pc-leading-title: 28px; --pc-text-reading: 19px; --pc-leading-reading: 30px;
+}
+html[data-text="largest"] body.turnfin-app {
+  --pc-text-caption: 16px; --pc-leading-caption: 22px; --pc-text-body: 20px; --pc-leading-body: 30px;
+  --pc-text-title: 24px; --pc-leading-title: 32px; --pc-text-reading: 22px; --pc-leading-reading: 34px;
+}
+html[data-text] .turnfin-app [data-slot="input"] { font-size: max(16px, var(--pc-text-body)); }
+.turnfin-app .ui-motion-press[aria-pressed="true"] { border-color: var(--pc-primary); background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.lesson-tools { display: flex; flex-wrap: wrap; gap: 8px; }
+/* Training's own shortcuts: search, today's refresher, saved, the catalogue and my record. */
+.search-row { display: flex; gap: 8px; }
+.search-row [data-slot="input"] { flex: 1 1 auto; min-width: 0; }
+.learn-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.learn-tile { display: flex; flex-direction: column; gap: 8px; height: 100%; min-height: 96px; padding: 16px; border-radius: var(--pc-radius-card); background: var(--pc-surface); color: var(--pc-ink); text-decoration: none; }
+.learn-tile:hover { background: var(--pc-surface-sunken); }
+.learn-tile:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.learn-tile strong { font-weight: 600; }
+/* The daily refresher: the streak as a figure, the day's five as dots. */
+.refresher-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; }
+.streak { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+.streak-figure { font-size: var(--pc-text-figure); line-height: var(--pc-leading-figure); font-weight: 700; font-variant-numeric: tabular-nums; }
+.streak svg { width: 24px; height: 24px; color: var(--pc-warning); }
+.streak[data-cold] svg { color: var(--pc-ink-muted); }
+.day-dots { display: flex; gap: 6px; }
+.day-dot { width: 12px; height: 12px; border-radius: 999px; background: var(--pc-surface-sunken); box-shadow: inset 0 0 0 1px var(--pc-line-strong); }
+.day-dot[data-done] { background: var(--pc-primary); box-shadow: none; }
+/* Badges: earned ones in colour, the rest as what to aim for. */
+.badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.badge { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; height: 100%; padding: 16px; border: 1px dashed var(--pc-line-strong); border-radius: var(--pc-radius-card); color: var(--pc-ink-muted); }
+.badge[data-earned] { border: 1px solid transparent; background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.badge-icon { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 999px; background: var(--pc-surface-sunken); }
+.badge[data-earned] .badge-icon { background: var(--pc-primary); color: var(--pc-on-primary); }
+.badge-icon svg { width: 20px; height: 20px; }
+.badge strong { color: var(--pc-ink); font-weight: 600; }
+/* Star rating: big tappable stars, filled up to the one chosen. */
+.stars { display: flex; gap: 4px; }
+.star { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 999px; color: var(--pc-line-strong); cursor: pointer; }
+.star:hover { background: var(--pc-hover); }
+.star:has(:focus-visible) { box-shadow: 0 0 0 1px var(--pc-focus), var(--pc-focus-halo); }
+.star svg { width: 32px; height: 32px; }
+.star[data-on] { color: var(--pc-warning); }
+.star[data-on] svg, .stars-read svg[data-on] { fill: currentColor; }
+.stars-read { display: inline-flex; gap: 2px; margin-right: 6px; vertical-align: -3px; color: var(--pc-warning); }
+.stars-read svg { width: 16px; height: 16px; }
+.stars-read svg:not([data-on]) { color: var(--pc-line-strong); }
+/* A saved note under its lesson. */
+.note-text { padding: 12px 16px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); white-space: pre-wrap; overflow-wrap: anywhere; }
+/* My record on paper: the frame and buttons drop away. */
+.record-table { width: 100%; border-collapse: collapse; font-size: var(--pc-text-caption); }
+.record-table :is(th, td) { padding: 8px; border-bottom: 1px solid var(--pc-line); text-align: left; vertical-align: top; }
+.record-wrap { overflow-x: auto; }
+/* A fieldset's legend set as the panel's heading. */
+.panel-legend { float: left; width: 100%; padding: 0; margin-bottom: 4px; font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 600; }
+.panel-legend + * { clear: both; }
+
+/* Training e-learning phase 8: typed answers, tabs, sort into groups, explore a picture, slides and hand in work. */
+.typed-answer { display: flex; align-items: center; gap: 8px; }
+.typed-answer [data-slot="input"] { flex: 1; }
+.typed-unit { font-weight: 600; color: var(--pc-ink-muted); }
+.tabs { display: flex; flex-direction: column; gap: 12px; margin-block: 16px; }
+.tab-list { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); }
+.tab-panel > :first-child { margin-top: 0; }
+.sort-list { list-style: none; padding: 0; margin: 0; }
+.sort-item { padding: 12px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); }
+.sort-item fieldset { border: 0; padding: 0; margin: 0; }
+.sort-item[data-state="right"] { border-color: var(--pc-success); background: var(--pc-success-soft); }
+.sort-item[data-state="wrong"] { border-color: var(--pc-danger); border-width: 2px; }
+.sort-text { font-weight: 600; padding: 0; }
+.sort-groups { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.sort-group { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--pc-line-strong); border-radius: 999px; cursor: pointer; }
+.sort-group[data-chosen] { border-color: var(--pc-primary); background: var(--pc-primary-soft); font-weight: 600; }
+.sort-group:has(:focus-visible) { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.explore-frame { position: relative; border-radius: var(--pc-radius-card); overflow: hidden; }
+.explore-frame img { display: block; width: 100%; height: auto; }
+.turnfin-app .explore-marker { position: absolute; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; transform: translate(-50%, -50%); border-radius: 999px; border: 3px solid var(--pc-surface); background: var(--pc-primary); color: var(--pc-on-primary); font: inherit; font-weight: 700; cursor: pointer; }
+.explore-marker[data-seen] { background: var(--pc-surface); color: var(--pc-primary); border-color: var(--pc-primary); }
+.explore-marker[data-open] { outline: 3px solid var(--pc-focus); outline-offset: 2px; }
+.explore-marker:focus-visible { outline: 3px solid var(--pc-focus); outline-offset: 2px; }
+.explore-detail { padding: 16px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); }
+.explore-detail h3 { margin: 0 0 8px; }
+.explore-row { width: 100%; text-align: left; font: inherit; }
+.pre-line { white-space: pre-line; }
+.lesson-embed { position: relative; width: 100%; aspect-ratio: 16 / 10; border-radius: var(--pc-radius-card); overflow: hidden; background: var(--pc-surface-sunken); }
+.lesson-embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.lesson-locked { display: flex; flex-direction: column; gap: 12px; }
+.lesson-row-locked { opacity: 0.6; }
+
+/* Offline (e-learning phase 9): the line under the top row, and what Turnfin turned down. */
+.offline-bar, .offline-failed { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; width: calc(100% - 32px); max-width: 688px; margin: 12px auto 0; padding: 8px 8px 8px 16px; border-radius: var(--pc-radius-card); background: var(--pc-surface); color: var(--pc-ink); }
+.offline-bar > svg { width: 20px; height: 20px; flex: none; color: var(--pc-primary); }
+.offline-bar > p { flex: 1; min-width: 0; margin: 0; }
+.offline-failed { flex-direction: column; align-items: stretch; padding: 16px; }
+.offline-failed > p { margin: 0; }
+.offline-failed > [data-slot="button"] { align-self: flex-start; }
+.spin { animation: offline-spin 1s linear infinite; }
+@keyframes offline-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+/* Card-like shadcn Buttons (flip cards, flashcards, scenario and explore rows, the exam's
+   question dots and jump rows, tap to reveal, picture spots): they keep the Button's focus, hover
+   and press, but take the card's shape, wrap their text and grow with it. */
+.turnfin-app .ui-motion-press:is(.flip-card, .flashcard, .choice, .reveal-toggle, .exam-jump) { height: auto; white-space: normal; text-align: left; justify-content: flex-start; font-weight: 400; }
+.turnfin-app .ui-motion-press:is(.flip-card, .flashcard) { min-height: 140px; justify-content: center; text-align: center; border-radius: var(--pc-radius-card); border: 1px solid var(--pc-line-strong); }
+.turnfin-app .ui-motion-press.flashcard { min-height: 240px; }
+.turnfin-app .ui-motion-press.choice { min-height: 56px; border-radius: var(--pc-radius-card); border-color: var(--pc-line-strong); }
+.turnfin-app .ui-motion-press.reveal-toggle { width: 100%; min-height: 56px; justify-content: space-between; border-radius: 0; color: var(--pc-ink); font-weight: 600; }
+.turnfin-app .ui-motion-press.exam-jump { width: 100%; min-height: 64px; border-radius: var(--pc-radius-card); color: var(--pc-ink); }
+.turnfin-app .ui-motion-press.exam-dot { border-radius: var(--pc-radius-card); border-color: var(--pc-line-strong); }
+.turnfin-app .ui-motion-press.exam-dot[data-answered] { border-color: var(--pc-primary-soft); background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.turnfin-app .ui-motion-press.exam-dot[aria-current] { border-color: var(--pc-primary); background: var(--pc-primary); color: var(--pc-on-primary); }
+.turnfin-app .ui-motion-press:is(.flip-card, .flashcard)[aria-pressed="true"] { border-color: var(--pc-primary); background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
+.turnfin-app .explore-marker.ui-motion-press[data-seen] { background: var(--pc-surface); color: var(--pc-primary); border-color: var(--pc-primary); }
+/* On paper the certificate and the record stand alone: their page headers drop away. */
+@media print { .certificate-page > [data-page-header], .no-print-back [data-page-header] [data-slot="button"] { display: none !important; } }

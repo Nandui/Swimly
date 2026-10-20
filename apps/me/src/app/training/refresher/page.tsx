@@ -1,12 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
-import { Award, BookCheck, ChevronLeft, ChevronRight, Clock, Flame, GraduationCap, Medal, Route, Sparkles, Star, Target, Trophy } from "lucide-react";
+import { Award, BookCheck, ChevronRight, Clock, Flame, GraduationCap, Medal, Route, Sparkles, Star, Target, Trophy } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { answered, QuestionField, type Answer, type LearnerQuestion } from "@/components/question";
 import { LoadError, Loading, Notice, useLoad } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
+import { Button } from "@/components/shadcn/button";
+import { PageShell } from "@/components/ui-kit/page-shell";
+import { PageHeader } from "@/components/ui-kit/page-header";
 
 type Item = { cardId: string | null; assignmentId: string; course: string; question: LearnerQuestion & { id: string } };
 type Badge = { id: string; title: string; hint: string; earned: boolean };
@@ -25,7 +27,7 @@ function Badges({ badges }: { badges: Badge[] }) {
   const earned = badges.filter((b) => b.earned).length;
   return (
     <section className="pc-panel" aria-labelledby="badges-title">
-      <div className="pc-panel-head"><h2 id="badges-title">Badges</h2><span className="muted tabular">{earned} of {badges.length}</span></div>
+      <div className="pc-panel-head"><h2 id="badges-title">Badges</h2><span className="text-ui-muted-foreground tabular-nums">{earned} of {badges.length}</span></div>
       <ul className="badges">
         {badges.map((b) => {
           const Icon = BADGE_ICON[b.id] ?? Medal;
@@ -70,9 +72,7 @@ export default function RefresherPage() {
   const streak = data ? (data.streak.today || tally.answered === 0 ? data.streak.current : data.streak.current + 1) : 0;
   return (
     <Frame title="Today’s refresher">
-      <div className="stack">
-        <Link href="/training" className="button ghost back-link"><ChevronLeft aria-hidden="true" />My training</Link>
-        <div className="stack-sm"><h1>Today’s refresher</h1><p className="muted">A few questions from your courses, about two minutes. The ones you miss come back until they stick.</p></div>
+      <PageShell header={<PageHeader back={{ href: "/training", label: "My training" }} title="Today’s refresher" description="A few questions from your courses, about two minutes. The ones you miss come back until they stick." />}>
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : (
           <>
             <section className="pc-panel refresher-head" aria-label="Your streak">
@@ -81,7 +81,7 @@ export default function RefresherPage() {
                 <span className="day-dots" aria-label={`${Math.min(answeredToday, data.goal)} of ${data.goal} answered today`}>
                   {Array.from({ length: data.goal }, (_, i) => <span key={i} className="day-dot" data-done={i < answeredToday || undefined} />)}
                 </span>
-                <span className="caption tabular">Best {Math.max(data.streak.best, streak)} {Math.max(data.streak.best, streak) === 1 ? "day" : "days"}</span>
+                <span className="caption tabular-nums">Best {Math.max(data.streak.best, streak)} {Math.max(data.streak.best, streak) === 1 ? "day" : "days"}</span>
               </span>
             </section>
             {finished ? (
@@ -89,7 +89,7 @@ export default function RefresherPage() {
                 <h2 id="refresher-done" role={tally.answered ? "status" : undefined}>
                   {tally.answered ? `You got ${tally.correct} of ${tally.answered} right` : data.answered ? "Done for today" : "Nothing to refresh yet"}
                 </h2>
-                <p className="muted">
+                <p className="text-ui-muted-foreground">
                   {tally.answered || data.answered ? "Come back tomorrow to keep your streak going. Anything you missed comes back then."
                     : "Questions you miss in a course’s practice come back here, along with questions from courses you have finished."}
                 </p>
@@ -108,15 +108,15 @@ export default function RefresherPage() {
                 <div className="lesson-nav">
                   <span />
                   {checked
-                    ? <button type="button" className="button" onClick={next}>{index + 1 < data.questions.length ? "Next question" : "Finish"}<ChevronRight aria-hidden="true" /></button>
-                    : <button type="button" className="button" onClick={check} disabled={busy || !answered(item.question, answer)}>{busy ? "Checking…" : "Check"}</button>}
+                    ? <Button type="button" onClick={next}>{index + 1 < data.questions.length ? "Next question" : "Finish"}<ChevronRight aria-hidden="true" /></Button>
+                    : <Button type="button" onClick={check} disabled={busy || !answered(item.question, answer)}>{busy ? "Checking…" : "Check"}</Button>}
                 </div>
               </section>
             ) : null}
             <Badges badges={data.badges} />
           </>
         )}
-      </div>
+      </PageShell>
     </Frame>
   );
 }

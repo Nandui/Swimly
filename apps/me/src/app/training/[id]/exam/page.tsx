@@ -1,12 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, CircleCheck, Clock3, Send } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { answered, QuestionField, type Answer, type ExamInfo, type LearnerQuestion } from "@/components/question";
-import { LoadError, Loading, Notice, useLoad } from "@/components/ui";
+import { Bar, LoadError, Loading, Notice, useLoad } from "@/components/ui";
+import { Button } from "@/components/shadcn/button";
+import { PageShell } from "@/components/ui-kit/page-shell";
+import { PageHeader } from "@/components/ui-kit/page-header";
 import { ApiError, api } from "@/lib/api";
 
 type Paper = { id: string; number: number; deadlineAt: string | null; questions: (LearnerQuestion & { answer: Answer | null })[] };
@@ -91,16 +93,14 @@ export default function ExamPage() {
   const done = paper ? paper.questions.filter((q) => answered(q, answers[q.id])).length : 0;
   const unanswered = paper ? paper.questions.map((q, i) => ({ q, i })).filter(({ q }) => !answered(q, answers[q.id])) : [];
 
+  const title = paper && reviewing ? "Ready to hand in?" : "Final exam";
+  const description = !data || paper ? undefined
+    : data.passed ? "You have passed this exam." : data.attempts.used ? `Attempt ${data.attempts.used + 1} of ${data.attempts.allowed}.` : "Take your time and read each question carefully.";
   return (
     <Frame title="My training">
-      <div className="stack">
-        <Link href={`/training/${id}`} className="button ghost back-link"><ChevronLeft aria-hidden="true" />Course</Link>
+      <PageShell header={<PageHeader back={{ href: `/training/${id}`, label: "Course" }} title={title} description={description} />}>
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : !paper ? (
-          <section className="pc-panel stack" aria-labelledby="exam-title">
-            <div className="stack-sm">
-              <h1 id="exam-title">Final exam</h1>
-              <p className="muted">{data.passed ? "You have passed this exam." : data.attempts.used ? `Attempt ${data.attempts.used + 1} of ${data.attempts.allowed}.` : "Take your time and read each question carefully."}</p>
-            </div>
+          <section className="pc-panel stack" aria-label="About the exam">
             <ul className="exam-rules">
               <li><strong className="tabular">{data.questions}</strong> questions{data.questions > 1 ? ", one per screen" : ""}</li>
               <li>Pass mark <strong className="tabular">{data.passMark}%</strong></li>
@@ -110,15 +110,14 @@ export default function ExamPage() {
             </ul>
             {failure ? <Notice title={failure} tone="error" live /> : null}
             {data.canStart
-              ? <button type="button" className="button block" onClick={start} disabled={busy}>{busy ? "Starting…" : "Start the exam"}<ChevronRight aria-hidden="true" /></button>
+              ? <Button type="button" className="w-full" onClick={start} disabled={busy}>{busy ? "Starting…" : "Start the exam"}<ChevronRight aria-hidden="true" /></Button>
               : <Notice title={data.reason ?? "The exam isn't open."} />}
           </section>
         ) : reviewing ? (
-          <section className="pc-panel stack" aria-labelledby="review-title">
+          <section className="pc-panel stack" aria-label="Your answers">
             <div className="stack-sm">
-              <h1 id="review-title">Ready to hand in?</h1>
               <p className="muted tabular">{done} of {paper.questions.length} answered</p>
-              <progress className="course-progress" max={paper.questions.length} value={done} aria-label="Questions answered" />
+              <Bar value={done} max={paper.questions.length} label="Questions answered" />
             </div>
             {unanswered.length ? (
               <Notice title={unanswered.length === 1 ? "One question has no answer" : `${unanswered.length} questions have no answer`} tone="warning">
@@ -128,26 +127,25 @@ export default function ExamPage() {
             {unanswered.length ? (
               <ul className="pc-rows">
                 {unanswered.map(({ q, i }) => (
-                  <li key={q.id}><button type="button" className="pc-row exam-jump" onClick={() => { setIndex(i); setReviewing(false); setConfirming(false); }}>
+                  <li key={q.id}><Button type="button" variant="ghost" className="pc-row exam-jump" onClick={() => { setIndex(i); setReviewing(false); setConfirming(false); }}>
                     <span className="pc-row-body"><span className="pc-row-title">Question {i + 1}</span><span className="pc-row-hint">{q.prompt}</span></span>
                     <ChevronRight className="pc-row-chevron" aria-hidden="true" />
-                  </button></li>
+                  </Button></li>
                 ))}
               </ul>
             ) : null}
             {paper.deadlineAt ? <Timer deadline={paper.deadlineAt} onOut={handIn} /> : null}
             {failure ? <Notice title={failure} tone="error" live /> : null}
             <div className="lesson-nav">
-              <button type="button" className="button outline" onClick={() => { setReviewing(false); setConfirming(false); }}><ChevronLeft aria-hidden="true" />Back to the questions</button>
+              <Button type="button" variant="outline" onClick={() => { setReviewing(false); setConfirming(false); }}><ChevronLeft aria-hidden="true" />Back to the questions</Button>
               {confirming
-                ? <button type="button" className="button" onClick={handIn} disabled={busy}><Send aria-hidden="true" />{busy ? "Handing in…" : "Yes, hand it in"}</button>
-                : <button type="button" className="button" onClick={() => setConfirming(true)}><CircleCheck aria-hidden="true" />Hand in</button>}
+                ? <Button type="button" onClick={handIn} disabled={busy}><Send aria-hidden="true" />{busy ? "Handing in…" : "Yes, hand it in"}</Button>
+                : <Button type="button" onClick={() => setConfirming(true)}><CircleCheck aria-hidden="true" />Hand in</Button>}
             </div>
             {confirming ? <p className="caption" role="status">You can&apos;t change your answers after this.</p> : null}
           </section>
         ) : question ? (
-          <section className="stack" aria-labelledby="exam-question-title">
-            <h1 id="exam-question-title">Final exam</h1>
+          <section className="stack" aria-label={`Question ${index + 1}`}>
             <div className="exam-bar">
               <span className="caption tabular exam-count">Question {index + 1} of {paper.questions.length}</span>
               <span className="caption muted exam-saved">{saving === "saving" ? "Saving…" : saving === "saved" ? "Saved" : ""}</span>
@@ -155,8 +153,8 @@ export default function ExamPage() {
             </div>
             <nav aria-label="Questions" className="exam-dots">
               {paper.questions.map((q, i) => (
-                <button key={q.id} type="button" className="exam-dot tabular" data-answered={answered(q, answers[q.id]) || undefined} aria-current={i === index ? "step" : undefined}
-                  aria-label={`Question ${i + 1}${answered(q, answers[q.id]) ? ", answered" : ""}`} onClick={() => setIndex(i)}>{i + 1}</button>
+                <Button key={q.id} type="button" variant="outline" size="icon" className="exam-dot tabular" data-answered={answered(q, answers[q.id]) || undefined} aria-current={i === index ? "step" : undefined}
+                  aria-label={`Question ${i + 1}${answered(q, answers[q.id]) ? ", answered" : ""}`} onClick={() => setIndex(i)}>{i + 1}</Button>
               ))}
             </nav>
             <div className="pc-panel">
@@ -165,14 +163,14 @@ export default function ExamPage() {
             {saving === "failed" && !failure ? <Notice title="Your last answer didn't save" tone="error" live>Check your connection, then choose it again.</Notice> : null}
             {failure ? <Notice title={failure} tone="error" live /> : null}
             <div className="lesson-nav">
-              {index > 0 ? <button type="button" className="button outline" onClick={() => setIndex(index - 1)}><ChevronLeft aria-hidden="true" />Back</button> : <span />}
+              {index > 0 ? <Button type="button" variant="outline" onClick={() => setIndex(index - 1)}><ChevronLeft aria-hidden="true" />Back</Button> : <span />}
               {index + 1 < paper.questions.length
-                ? <button type="button" className="button" onClick={() => setIndex(index + 1)}>Next question<ChevronRight aria-hidden="true" /></button>
-                : <button type="button" className="button" onClick={() => setReviewing(true)}>Review and hand in<ChevronRight aria-hidden="true" /></button>}
+                ? <Button type="button" onClick={() => setIndex(index + 1)}>Next question<ChevronRight aria-hidden="true" /></Button>
+                : <Button type="button" onClick={() => setReviewing(true)}>Review and hand in<ChevronRight aria-hidden="true" /></Button>}
             </div>
           </section>
         ) : null}
-      </div>
+      </PageShell>
     </Frame>
   );
 }

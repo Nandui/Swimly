@@ -9,6 +9,8 @@ import { useOffline } from "@/components/offline";
 import { EmptyRows } from "@/components/ui";
 import { session } from "@/lib/api";
 import { date } from "@/lib/format";
+import { PageShell } from "@/components/ui-kit/page-shell";
+import { PageHeader } from "@/components/ui-kit/page-header";
 
 const noSubscription = () => () => {};
 
@@ -22,11 +24,8 @@ export default function OfflinePage() {
   if (!token) return null;
   return (
     <Frame title="Saved for offline">
-      <div className="stack">
-        <div className="stack-sm">
-          <h1>Saved for offline</h1>
-          <p className="muted">{offline ? "With no signal, these courses still open. Anything else waits until you’re back online." : "These courses open even with no signal. Save one from its course page."}</p>
-        </div>
+      <PageShell header={<PageHeader title="Saved for offline"
+        description={offline ? "With no signal, these courses still open. Anything else waits until you’re back online." : "These courses open even with no signal. Save one from its course page."} />}>
         <section className="pc-panel" aria-label="Saved courses">
           {saved.length ? (
             <ul className="pc-rows">{saved.map((course) => (
@@ -40,7 +39,7 @@ export default function OfflinePage() {
           ) : <EmptyRows>Nothing saved on this phone yet.</EmptyRows>}
         </section>
         <p className="caption">Saved courses are removed after 30 days without being brought up to date, and when you sign out.</p>
-      </div>
+      </PageShell>
     </Frame>
   );
 }

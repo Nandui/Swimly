@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { QuestionField, type Answer, type LearnerQuestion } from "@/components/question";
 import { LoadError, Loading, Notice, Tag, useLoad } from "@/components/ui";
+import { Button } from "@/components/shadcn/button";
+import { PageShell } from "@/components/ui-kit/page-shell";
+import { PageHeader } from "@/components/ui-kit/page-header";
 import { date } from "@/lib/format";
 import { EXAM_RESULT_META } from "@/lib/meta";
 
@@ -36,16 +39,15 @@ export default function ExamResultPage() {
   const { data, error, reload } = useLoad<Result>(`training/${id}/exam/attempts/${attempt}`);
   return (
     <Frame title="My training">
-      <div className="stack">
-        <Link href={`/training/${id}`} className="button ghost back-link"><ChevronLeft aria-hidden="true" />Course</Link>
+      <PageShell header={<PageHeader back={{ href: `/training/${id}`, label: "Course" }} title={!data ? "Exam result" : data.passed ? "You passed" : "Not this time"}
+        status={data ? <Tag meta={EXAM_RESULT_META[data.passed ? "passed" : "failed"]} /> : undefined} />}>
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : (
           <>
-            <section className="pc-panel stack exam-score" aria-labelledby="result-title">
-              <div className="row"><h1 id="result-title">{data.passed ? "You passed" : "Not this time"}</h1><Tag meta={EXAM_RESULT_META[data.passed ? "passed" : "failed"]} /></div>
+            <section className="pc-panel stack exam-score" aria-label="Your score">
               <p className="exam-figure tabular">{data.percent}%</p>
               <p className="muted tabular">{data.correct} of {data.total} right{data.passMark ? ` · pass mark ${data.passMark}%` : ""} · attempt {data.number}, {date(data.submittedAt)}</p>
               {data.passed
-                ? <Link href={`/training/${id}`} className="button block">Back to the course<ChevronRight aria-hidden="true" /></Link>
+                ? <Button asChild className="w-full"><Link href={`/training/${id}`}>Back to the course<ChevronRight aria-hidden="true" /></Link></Button>
                 : null}
             </section>
             {!data.passed ? (
@@ -59,7 +61,7 @@ export default function ExamResultPage() {
                     </Link></li>
                   ))}
                 </ul>
-                <Link href={`/training/${id}`} className="button outline block">Back to the course</Link>
+                <Button asChild variant="outline" className="w-full"><Link href={`/training/${id}`}>Back to the course</Link></Button>
               </section>
             ) : null}
             {data.review ? (
@@ -77,7 +79,7 @@ export default function ExamResultPage() {
             ) : null}
           </>
         )}
-      </div>
+      </PageShell>
     </Frame>
   );
 }

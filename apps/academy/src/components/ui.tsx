@@ -1,11 +1,15 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { CircleAlert, Info, TriangleAlert } from "lucide-react";
-import { SITE_NAME, type Meta } from "@/lib/format";
+import { Skeleton } from "@/components/shadcn/skeleton";
+import { SITE_NAME } from "@/lib/format";
 import { AccountLink } from "@/components/account-link";
 
-/** The page frame: the site's name and the account link, then the page. `wide` pages (the course
- *  list, a course) use the full 1120px column; forms and bookings keep a 720px one. */
+export { Notice } from "@/components/ui-kit/notice";
+export { Tag } from "@/components/ui-kit/tag";
+
+/** The site frame: the site's name and the account link, then the page (its PageShell). `wide`
+ *  pages (the course list, a course) use the full 1120px column; forms and bookings keep a 720px
+ *  one. `title` names the browser tab. */
 export function Frame({ title, children, wide }: { title: string; children: ReactNode; wide?: boolean }) {
   return (
     <div className="frame">
@@ -20,7 +24,7 @@ export function Frame({ title, children, wide }: { title: string; children: Reac
           </nav>
         </div>
       </header>
-      <main id="main" className={`page${wide ? " wide" : ""}`}><div className="stack">{children}</div></main>
+      <main id="main" className={`page${wide ? " wide" : ""}`}>{children}</main>
       <footer className="footer">
         <p className="caption">We use your details only to arrange your course and to phone you about payment. Questions about a booking? Reply to any email we sent you.</p>
       </footer>
@@ -28,31 +32,12 @@ export function Frame({ title, children, wide }: { title: string; children: Reac
   );
 }
 
-export function Tag({ meta }: { meta: Meta }) {
-  const Icon = meta.icon;
-  return <span className={`tag tone-${meta.tone}`}><Icon aria-hidden="true" />{meta.label}</span>;
-}
-
-const NOTICE_ICON = { info: Info, warning: TriangleAlert, error: CircleAlert };
-
-/** A callout with an icon per tone. `live` announces it: only for the result of something the
- *  person just did, never for what a page says on load. */
-export function Notice({ title, children, tone, live }: { title: string; children?: ReactNode; tone?: "error" | "warning"; live?: boolean }) {
-  const Icon = NOTICE_ICON[tone ?? "info"];
-  return (
-    <div className={`notice${tone ? ` ${tone}` : ""}`} role={live ? (tone === "error" ? "alert" : "status") : undefined}>
-      <Icon aria-hidden="true" />
-      <div className="notice-body"><strong>{title}</strong>{children ? <p>{children}</p> : null}</div>
-    </div>
-  );
-}
-
 /** Placeholder cards the shape of what is coming. */
 export function Loading({ rows = 3, grid }: { rows?: number; grid?: boolean }) {
   return (
-    <div className={grid ? "course-grid" : "stack-sm"} role="status">
+    <div className={grid ? "course-grid" : "flex flex-col gap-2"} role="status">
       <span className="sr-only">Loading…</span>
-      {Array.from({ length: rows }, (_, i) => <div key={i} className={grid ? "placeholder-card" : "placeholder-row"} />)}
+      {Array.from({ length: rows }, (_, i) => <Skeleton key={i} className={grid ? "h-60 rounded-panel" : "h-24 rounded-card"} />)}
     </div>
   );
 }

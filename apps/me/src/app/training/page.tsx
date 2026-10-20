@@ -6,9 +6,13 @@ import { useState, type FormEvent } from "react";
 import { Bookmark, CalendarDays, ChevronRight, FileText, Flame, GraduationCap, LibraryBig, Route, Search, Timer } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { CourseImage } from "@/components/question";
-import { EmptyRows, LoadError, Loading, Tag, useLoad } from "@/components/ui";
+import { Bar, EmptyRows, LoadError, Loading, Tag, useLoad } from "@/components/ui";
 import { date, day } from "@/lib/format";
 import { TRAINING_META, type Meta } from "@/lib/meta";
+import { Input } from "@/components/shadcn/input";
+import { Button } from "@/components/shadcn/button";
+import { PageShell } from "@/components/ui-kit/page-shell";
+import { PageHeader } from "@/components/ui-kit/page-header";
 
 type Item = { id: string; title: string; state: string; dueOn: string | null; completedAt: string | null; progress: { done: number; total: number } | null; coverId: string | null; category: string };
 
@@ -34,15 +38,15 @@ function OnTheJob({ plan }: { plan: Plan }) {
     <>
       {plan.paths.map((p) => (
         <section key={p.id} className="pc-panel stack-sm" aria-labelledby={`path-${p.id}`}>
-          <div className="row"><span className="pc-tile-icon"><Route aria-hidden="true" /></span><h2 id={`path-${p.id}`}>{p.title}</h2></div>
-          {p.summary ? <p className="muted">{p.summary}</p> : null}
-          <p className="muted tabular">{p.finishedOn ? `Finished ${date(p.finishedOn)}` : `${p.done} of ${p.total} courses done${p.overdue ? " · something is overdue" : ""}`}</p>
-          <progress className="course-progress" max={p.total} value={p.done} aria-label="Courses done on this path" />
+          <div className="flex flex-wrap items-center gap-2"><span className="pc-tile-icon"><Route aria-hidden="true" /></span><h2 id={`path-${p.id}`}>{p.title}</h2></div>
+          {p.summary ? <p className="text-ui-muted-foreground">{p.summary}</p> : null}
+          <p className="text-ui-muted-foreground tabular-nums">{p.finishedOn ? `Finished ${date(p.finishedOn)}` : `${p.done} of ${p.total} courses done${p.overdue ? " · something is overdue" : ""}`}</p>
+          <Bar max={p.total} value={p.done} label="Courses done on this path" />
           <ol className="pc-rows">
             {p.steps.map((step, i) => {
               const body = (
                 <>
-                  <span className="pc-tile-icon tabular" aria-hidden="true">{i + 1}</span>
+                  <span className="pc-tile-icon tabular-nums" aria-hidden="true">{i + 1}</span>
                   <span className="pc-row-body"><span className="pc-row-title">{step.title}</span>
                     <span className="pc-row-hint">{step.completedOn ? `Completed ${date(step.completedOn)}` : step.dueOn ? `Due ${day(step.dueOn)}` : step.state === "cancelled" ? "Not assigned" : "No deadline"}</span></span>
                   <span className="pc-row-trail"><Tag meta={TRAINING_META[step.state] ?? TRAINING_META.assigned} />{step.assignmentId ? <ChevronRight className="pc-row-chevron" aria-hidden="true" /> : null}</span>
@@ -71,11 +75,11 @@ function OnTheJob({ plan }: { plan: Plan }) {
       ) : null}
       {plan.hours.progress.length || plan.hours.log.length ? (
         <section className="pc-panel stack-sm" aria-labelledby="t-hours">
-          <div className="row"><span className="pc-tile-icon"><Timer aria-hidden="true" /></span><h2 id="t-hours">In-service hours</h2></div>
+          <div className="flex flex-wrap items-center gap-2"><span className="pc-tile-icon"><Timer aria-hidden="true" /></span><h2 id="t-hours">In-service hours</h2></div>
           {plan.hours.progress.map((h) => (
             <div key={h.qualification} className="stack-sm">
-              <p className="tabular"><strong>{h.qualification}</strong>: {inWords(h.minutes)} of {h.hours} h since {date(h.since)}{h.met ? ", done" : `, ${inWords(h.hours * 60 - h.minutes)} to go`}</p>
-              <progress className="course-progress" max={100} value={h.percent} aria-label={`${h.qualification} hours`} />
+              <p className="tabular-nums"><strong>{h.qualification}</strong>: {inWords(h.minutes)} of {h.hours} h since {date(h.since)}{h.met ? ", done" : `, ${inWords(h.hours * 60 - h.minutes)} to go`}</p>
+              <Bar max={100} value={h.percent} label={`${h.qualification} hours`} />
             </div>
           ))}
           {plan.hours.log.length ? (
@@ -113,9 +117,8 @@ function LearnerTools({ refresher }: { refresher: Refresher | null }) {
   return (
     <>
       <form role="search" className="search-row" onSubmit={search}>
-        <label htmlFor="training-search" className="sr-only">Search my training</label>
-        <input id="training-search" type="search" className="input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search my courses and lessons" maxLength={80} />
-        <button type="submit" className="button" disabled={q.trim().length < 2}><Search aria-hidden="true" /><span className="sr-only">Search</span></button>
+        <Input id="training-search" type="search" aria-label="Search my training" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search my courses and lessons" maxLength={80} />
+        <Button type="submit" size="icon" disabled={q.trim().length < 2}><Search aria-hidden="true" /><span className="sr-only">Search</span></Button>
       </form>
       <nav aria-label="My learning">
         <ul className="learn-tiles">
@@ -148,8 +151,7 @@ export default function TrainingPage() {
   );
   return (
     <Frame title="My training">
-      <div className="stack">
-        <div className="stack-sm"><h1>My training</h1><p className="muted">Courses assigned to you. Open one to work through its lessons; it remembers where you got to.</p></div>
+      <PageShell header={<PageHeader title="My training" description="Courses assigned to you. Open one to work through its lessons; it remembers where you got to." />}>
         <LearnerTools refresher={refresher} />
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : (
           <>
@@ -158,7 +160,7 @@ export default function TrainingPage() {
             <section className="pc-panel" aria-labelledby="t-done"><div className="pc-panel-head"><h2 id="t-done">Completed</h2></div>{list(done, "Nothing completed yet.")}</section>
           </>
         )}
-      </div>
+      </PageShell>
     </Frame>
   );
 }
