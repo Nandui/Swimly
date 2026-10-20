@@ -4,6 +4,10 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.45.1 · 20 October 2026 · Timetable rows match your class times
+
+- On **Analytics**, **When classes are full** (Business) and **Attendance by time slot** (Pool deck) now give each class start time its own row, such as 15:10, 15:45 and 16:20, instead of lumping every class that starts within the same hour together. Each figure now matches the classes that actually run at that time.
+
 ## 1.45.0 · 20 October 2026 · Open a timetable slot on the Business dashboard
 
 - On **Analytics > Business**, press any slot in **When classes are full** to see what it holds: each programme and level in that day and time, with places filled, free and waiting, and the classes behind them. Press the slot again, the cross or Escape to close it.
