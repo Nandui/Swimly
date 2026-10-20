@@ -14,7 +14,7 @@ import { ENROLMENT_STATUS_META } from "@/modules/activities/shared/enrolment/con
 import { formatCount, plural } from "@/lib/format";
 import type { MultiplePlacesAnalyticsData } from "@/modules/activities/features/analytics/server/report-data";
 import { multiplePlacesCsv } from "@/modules/activities/features/analytics/server/multiple-places";
-import { ReportPicker } from "@/modules/activities/features/analytics/components/navigation";
+import { DashboardSwitch } from "@/modules/activities/features/analytics/components/navigation";
 import { AnalyticsRefresh } from "@/modules/activities/features/analytics/components/refresh";
 import { ReportUpdated } from "@/modules/activities/features/analytics/components/period";
 import { StatTile } from "@/modules/activities/features/analytics/components/stat-tile";
@@ -36,16 +36,16 @@ export function MultiplePlacesReport({ data }: { data: MultiplePlacesAnalyticsDa
   const waitlisted = data.swimmers.filter(swimmer => swimmer.waitlisted > 0).length;
   const where = data.allSites ? "across your sites" : "at this site";
 
-  return <div className="ins">
+  return <div className="ins" data-dashboard="business">
     <div className="ins-top">
-      <PageHeader title="Multiple enrolments" description={`${data.siteName} · Swimmers enrolled more than once, waitlist places included`} actions={<AnalyticsRefresh />} />
+      <PageHeader title="Multiple enrolments" back={{ href: "/analytics", label: "Business" }} description={`${data.siteName} · Swimmers enrolled more than once, waitlist places included`} actions={<AnalyticsRefresh />} />
     </div>
     <section className="ins-filters" aria-label="Report and filters"><div className="ins-filters-row">
-      <ReportPicker active="multiple" />
-      {data.multipleSites ? <SegmentedLinks label="Sites to include" items={[
+      <DashboardSwitch page="multiple" />
+      {data.multipleSites ? <div className="ins-filters-scope"><SegmentedLinks label="Sites to include" items={[
         { href: "/analytics/multiple-places", label: "This site", current: !data.allSites },
         { href: "/analytics/multiple-places?scope=all", label: "All sites", current: data.allSites },
-      ]} /> : null}
+      ]} /></div> : null}
     </div></section>
     <ul className="ins-kpis" data-count="2" aria-label="Swimmers with more than one enrolment">
       <StatTile icon={Users} value={formatCount(data.swimmers.length)} label="More than one enrolment" caption={`Swimmers ${where}`} />

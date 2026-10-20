@@ -21,7 +21,7 @@ function Compare({ label, mine, school, format = percent, lowerBetter }: { label
 
 export function TeacherDetailReport({ data }: { data: OneTeacherInsights & { detail: Detail } }) {
   const { teacher: t, school, weeks: byWeek, classes, leavers, late, missed } = data.detail;
-  return <ReportShell ctx={data} page="teachers" path={`/analytics/teachers/${encodeURIComponent(t.key)}`} back={{ href: reportHref(data, "/analytics/teachers"), label: "Teachers" }} title={t.name} footnotes={[
+  return <ReportShell ctx={data} page="teachers" path={`/analytics/teachers/${encodeURIComponent(t.key)}`} back={{ href: `${reportHref(data, "/analytics/pool-deck")}#teachers`, label: "Pool deck" }} title={t.name} footnotes={[
     "Lessons are the ones this teacher started on the pool deck. Left after counts swimmers who left the swim school when this teacher taught the last lesson they came to.",
     "Compared with every lesson at the same sites in the same period.",
   ]}>

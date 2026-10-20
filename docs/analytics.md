@@ -12,15 +12,36 @@ Every report takes `?range=4w|13w|26w|52w` (default 13 weeks, starting on a Mond
 and `?sites=all` (every site the person works at; default the working site), and
 compares with the same length of time just before.
 
-## The suite (16 October 2026)
+## Three dashboards (19 October 2026)
 
-The pages are one suite (`components/navigation.tsx`, `ANALYTICS_GROUPS`): **The
-business** (Overview, Classes, Swimmers, Progression), **Our people** (Teachers,
-Reception) and **Checks** (Registers, Multiple enrolments). Each page opens with one
-filter tray (`components/insights/filters.tsx`) and is split into named sections
-(`Section` in `kit.tsx`) with "On this page" links. The look follows the
-high-end-visual-design skill: ringed trays around white panels, spring easing and a
-rise-in on load (switched off for reduced motion), all in `analytics.css`.
+The owner asked for analytics "for the business decisions, another for the reception so
+the supervisor can performance manage the people managing it, and another for the pool
+deck supervisor". So the suite is three dashboards (`components/navigation.tsx`,
+`DASHBOARDS`), switched by three links at the start of the one sticky bar under the
+title (`DashboardSwitch`), with the filters after them. The app's own bar and rail are
+the only menus. Every other page sits behind one dashboard (`ANALYTICS_PAGES`) and has a
+link back to it:
+
+- **Business** (`/analytics`, `getBusinessInsights`): behind it Every class
+  (`/analytics/classes`), Swimmers and leavers (`/analytics/swimmers`) and Multiple
+  enrolments.
+- **Reception** (`/analytics/reception`): behind it each person (`/analytics/reception/[key]`).
+- **Pool deck** (`/analytics/pool-deck`, `getPoolDeckInsights`): behind it each teacher
+  (`/analytics/teachers/[key]`), Level by level (`/analytics/progression`) and Registers
+  (`/analytics/instructors`). `/analytics/teachers` redirects to the pool deck's teacher
+  table, keeping its filters.
+
+All three need Swim school Manage (the `analytics` screen). They follow the mockups the
+owner approved on 20 October 2026, in Turnfin's Poolside look (`analytics.css`: white
+panels, pills, one blue for data, an orange second series validated against it). Each
+opens with Worth a look first, then headline tiles that each switch one chart
+(`components/insights/switches.tsx`, `TileSwitch`) with the same weeks of the period
+before (`overview.trend[].before`, `desk.weekly[].before`) and a plain sentence. People
+are compared one measure at a time (`PillSwitch` + `CompareList` in `blocks.tsx`): a bar
+each against the team or school average, orange with a reason when worth a word; the
+full table stays under "Show everyone as a table". Places filled week by week is
+measured against today's classes; the waiting list has no history, so its tile shows
+today's list by level.
 
 Filters, all carried from page to page by `reportQuery` (`server/period.ts`):
 
@@ -39,22 +60,37 @@ Filters, all carried from page to page by `reportQuery` (`server/period.ts`):
   to a programme, so only bookings placed elsewhere drop out. A single class's page
   and Reception ignore it.
 
-- **Overview** (`/analytics`): swimmers now, places filled, waiting list, joined,
-  left, stayed, attendance and level passes; a weekly trend with joiners and
-  leavers; Needs attention; why swimmers left; ages.
-- **Classes** (`/analytics/classes`, `/analytics/classes/[id]`): a day × start-hour
-  heat map of places filled, each level, every class; a class shows its swimmers'
-  attendance, last lessons and skills, its waiting list, leavers and every lesson
-  with who started it.
-- **Swimmers** (`/analytics/swimmers`): month-by-month joiners and leavers and
-  drop-off, reasons, tenure, level left from, ages, swimmers who may leave, leaving
-  soon and every leaver.
-- **Progression** (`/analytics/progression`): per level the swimmers, passes, the
-  median weeks to pass, skills done, the hardest skill and swimmers over 26 weeks
-  at one level; assessments and how many went on to take a place within 30 days.
-- **Teachers** (`/analytics/teachers`, `/analytics/teachers/[key]`): per teacher,
-  lessons, cover, missed starts, attendance, on-time starts (within 5 minutes),
-  registers complete, skills ticked, passes and leavers, against the school.
+- **Business** (`/analytics`): worth a look first (full classes with a waiting list,
+  classes under half full, swimmers who may leave, leaving soon); tiles for swimmers,
+  joined, left, places filled and waiting, each with its chart; a day × start-hour heat
+  map of places filled with a dot where someone waits, beside the full and nearly empty
+  classes; places at each level; who left by reason or level; assessments to places;
+  the next four weeks; ages.
+- **Reception** (`/analytics/reception`): worth a look first; tiles for jobs done, on
+  time, still waiting, new swimmers complete, unenrols with a reason and undone in a
+  day; the team one measure at a time; how fast the desk answers; still waiting; record
+  quality; work by kind against the period before; busy hours; follow-up calls;
+  assessment bookings.
+- **Every class** (`/analytics/classes`, `/analytics/classes/[id]`): fill, free places,
+  waiting list and lessons held, then every class; a class shows its swimmers'
+  attendance, last lessons and skills, its waiting list, leavers and every lesson with
+  who started it.
+- **Swimmers and leavers** (`/analytics/swimmers`): month-by-month joiners and leavers
+  and drop-off, reasons, tenure, level left from, ages, parents in the app, swimmers who
+  may leave, leaving soon and every leaver.
+- **Pool deck** (`/analytics/pool-deck`): tiles for attendance, started on time,
+  registers complete, same teacher each week, skills ticked and level passes, each with
+  its chart; worth a look first (registers not done this week, lessons with no start record,
+  teachers more than 10 points worse than the school, swimmers over 6 months at a
+  level); registers this week; attendance by time slot; same teacher each week;
+  cancelled lessons; every teacher one measure at a time against the school; weeks to pass each level; the
+  skill holding each level back.
+- **Level by level** (`/analytics/progression`): per level the swimmers, passes, the
+  median weeks to pass, skills done, the hardest skill and swimmers over 26 weeks at
+  one level; assessments and how many went on to take a place within 30 days.
+- **Teachers** (`/analytics/teachers/[key]`): per teacher, lessons, cover, missed
+  starts, attendance, on-time starts (within 5 minutes), registers complete, skills
+  ticked, passes and leavers, against the school.
 
 Rules the figures share:
 
@@ -122,14 +158,15 @@ Pure functions in `server/extras.ts`, tested in `extras.test.ts`:
   those who joined long enough ago; the top row covers the last two years.
 - **Parents in the app** (Swimmers): swimmers here today with a parent linked
   (`ParentChildAccess`, not revoked), and those first linked in the period.
-- **The next four weeks** (Classes): places booked on each coming week against
+- **The next four weeks** (Business): places booked on each coming week against
   capacity, with places starting and ending in between. New joiners are not guessed.
-- **Attendance by time slot** (Classes), **cancelled lessons** with the swimmer
+- **Attendance by time slot** (Pool deck), **cancelled lessons** with the swimmer
   places affected and reasons, and **same teacher each week**: the share of each
-  class's lessons taught by its most frequent teacher (also a Teachers figure).
-- **Assessment to first lesson** (Progression): median days for those who started
+  class's lessons taught by its most frequent teacher (Pool deck).
+- **Assessment to first lesson** (Business and Level by level): median days for those who started
   within two months.
-- **Overview** lists reception jobs past their target (`server/desk-overdue.ts`).
+- Reception jobs past their target are on Reception (Still waiting). `server/desk-overdue.ts`
+  is no longer read by any page.
 
 ## Instructor attendance
 

@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.44.0 · 20 October 2026 · Swim school analytics: three clearer dashboards
+
+- **Analytics** is now three dashboards, one for each person who reads it: **Business**, **Reception** and **Pool deck**. Switch between them with the buttons under the page title.
+- Each one opens with **Worth a look first**: the few things to decide on or follow up, each with a count and a link.
+- The headline figures are now tiles. Press one to see it week by week, with the same weeks of the period before as a dashed line or a grey bar, and one plain sentence saying what it means.
+- **The team** on Reception and **The teachers** on Pool deck show one thing at a time. Pick what to compare, such as Jobs a day or Attendance, and everyone gets one bar against the team or school average. A bar turns orange, with a short reason, when it is worth a word. Every figure is still there, and **Show everyone as a table** opens the full table.
+- Business now shows who left by reason or by level, places at each level as one bar each, and an orange dot on the timetable where someone is waiting for a class. Everything that was on these pages before is still there, in Turnfin's usual look.
+
 ## 1.43.1 · 20 October 2026 · Incidents: a copy of each footage request
 
 - When you **Ask for footage** on an incident report, or use **Send again**, you are now copied in on the email, so you can see it went and what it said.

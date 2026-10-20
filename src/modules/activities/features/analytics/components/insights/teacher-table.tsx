@@ -6,11 +6,11 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { SegmentedChoice } from "@/components/ui-kit/segmented-links";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
-import type { TeacherInsights } from "@/modules/activities/features/analytics/server/insights-data";
+import type { PoolDeckInsights } from "@/modules/activities/features/analytics/server/insights-data";
 import { Meter } from "@/modules/activities/features/analytics/components/insights/meter";
 
-type Teacher = TeacherInsights["teachers"]["teachers"][number];
-type School = TeacherInsights["teachers"]["school"];
+type Teacher = PoolDeckInsights["teachers"]["teachers"][number];
+type School = PoolDeckInsights["teachers"]["school"];
 
 const sorts = [
   { value: "lessons", label: "Lessons", by: (t: Teacher) => -t.lessons },

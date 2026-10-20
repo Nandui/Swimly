@@ -9,7 +9,7 @@ type Person = NonNullable<DeskPersonInsights["person"]>;
 export function DeskPersonReport({ data }: { data: DeskPersonInsights & { person: Person } }) {
   const { person: p, sites, weeks, heat, kinds, jobs, compare: c, followUps, corrections } = data.person;
   const hours = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 0 });
-  return <ReportShell ctx={data} page="reception" path={`/analytics/reception/${encodeURIComponent(p.key)}`} back={{ href: reportHref(data, "/analytics/reception"), label: "Reception" }} title={p.name} programme={false} footnotes={[
+  return <ReportShell ctx={data} page="reception" path={`/analytics/reception/${encodeURIComponent(p.key)}`} back={{ href: `${reportHref(data, "/analytics/reception")}#people`, label: "Reception" }} title={p.name} programme={false} footnotes={[
     "Work done counts what this person recorded in Turnfin for the swim school, short courses, the Academy and refunds. Phone calls, emails and the till are not in Turnfin.",
     "Team figures are for everyone who did desk work at the same sites in the same period. Small numbers move a lot: read a quiet week with care.",
   ]}>
