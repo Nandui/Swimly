@@ -26,6 +26,8 @@ function fixture() {
   const curriculum = curriculumProgramme("programme", ["entry", "next"]);
   const catalogue = [curriculum];
   const completions: { levelId: string; programmeId: string }[] = [];
+  /** Sites of the swimmer's attended assessments, oldest first. */
+  const assessedAt: string[] = [];
   const tx = {
     programme: { findMany: async () => catalogue },
     $queryRaw: async (parts: TemplateStringsArray, id: string) => {
@@ -69,7 +71,10 @@ function fixture() {
     },
     level: { findMany: async () => [{ id: "entry", name: "Entry", sortOrder: 0 }, { id: "next", name: "Next", sortOrder: 1 }] },
     levelCompletion: { findMany: async () => completions },
-    assessmentBooking: { findMany: async () => [] },
+    assessmentBooking: {
+      findMany: async () => [],
+      findFirst: async () => assessedAt.length ? { session: { clubId: assessedAt[assessedAt.length - 1] } } : null,
+    },
     auditLog: { create: async ({ data }: { data: object }) => { if (auditFailureAfter !== null && audits.length >= auditFailureAfter) throw new Error("Audit unavailable"); audits.push(data); } },
   };
   const prisma = {
@@ -96,7 +101,7 @@ function fixture() {
     "next/cache": { revalidatePath: () => { } },
   });
   return {
-    actions, rows, courses, student, sites, audits, locks, curriculum, catalogue, completions,
+    actions, rows, courses, student, sites, audits, locks, curriculum, catalogue, completions, assessedAt,
     failAudit: (after = 0) => { auditFailureAfter = after; },
     beforeTransaction: (run: () => void) => { beforeTransaction = run; },
   };
@@ -330,4 +335,35 @@ test("an archived destination site cannot receive an enrolment or transfer", asy
   assert.equal((await f.actions.enrolStudent(enrolInput, { choice: "keep", ids: ["source"] })).ok, false);
   assert.equal((await f.actions.transferEnrolment("source", "b", "", { choice: "move", ids: ["source", "b"] })).ok, false);
   assert.equal(f.rows.length, 1); assert.equal(f.rows[0].status, "ACTIVE");
+});
+
+test("enrolling away from the assessment's centre warns first and records the choice", async () => {
+  const f = fixture(); f.rows.splice(0); f.assessedAt.push("bishopstown");
+  f.sites.push({ id: "bishopstown", name: "Bishopstown", archivedAt: null });
+  const input = { studentId: "swimmer", courseId: "b", placementReason: "", allowWaitlist: false, legendAgreement: "PENDING" as const };
+  const warned = await f.actions.enrolStudent(input);
+  assert.equal(warned.ok, false);
+  if (warned.ok) return;
+  assert.match(warned.confirmation!.description, /assessed at Bishopstown.*This class is at Site A/);
+  assert.deepEqual(warned.confirmation!.ids, ["site:club"]);
+  assert.equal(f.rows.length, 0); assert.equal(f.audits.length, 0);
+  assert.equal((await f.actions.enrolStudent(input, { choice: "keep", ids: ["site:club"] })).ok, true);
+  assert.equal(f.rows.length, 1);
+  assert.match(JSON.stringify(f.audits), /assessed at Bishopstown, enrolled at Site A after a warning/);
+});
+
+test("the centre warning joins the existing-place question instead of adding a second one", async () => {
+  const f = fixture(); f.assessedAt.push("bishopstown");
+  const input = { studentId: "swimmer", courseId: "b", placementReason: "", allowWaitlist: false, legendAgreement: "PENDING" as const };
+  const asked = await f.actions.enrolStudent(input, { choice: "keep", ids: ["source"] });
+  assert.equal(asked.ok, false);
+  if (asked.ok) return;
+  assert.deepEqual(asked.confirmation!.ids, ["source", "site:club"]);
+  assert.equal((await f.actions.enrolStudent(input, { choice: "keep", ids: asked.confirmation!.ids })).ok, true);
+});
+
+test("no centre warning when the swimmer was assessed at the class's centre", async () => {
+  const f = fixture(); f.rows.splice(0); f.assessedAt.push("bishopstown", "club");
+  const result = await f.actions.enrolStudent({ studentId: "swimmer", courseId: "b", placementReason: "", allowWaitlist: false, legendAgreement: "PENDING" });
+  assert.equal(result.ok, true);
 });

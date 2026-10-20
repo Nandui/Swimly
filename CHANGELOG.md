@@ -4,6 +4,11 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.42.0 · 20 October 2026 · Swim school: a check when enrolling at another centre
+
+- When you enrol a swimmer in a class at a different centre from where they were assessed, Turnfin now stops and asks you to check first. Parents are told lessons are only at the centre where their child was assessed.
+- You can still go ahead. The activity log notes that they were enrolled at another centre after the check.
+
 ## 1.40.0 · 19 October 2026 · Incidents: staff conduct and welfare reports
 
 - **Staff conduct or welfare** is now its own choice when you report an incident, for things that happen on shift such as a procedure not followed, a staff member taken unwell or a dispute between staff.
