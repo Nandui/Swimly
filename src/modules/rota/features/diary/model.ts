@@ -42,6 +42,8 @@ export type Need = {
   requiredName: string | null;
   /** "Covered from Main hall 09:00–21:00". */
   note: string | null;
+  /** The activity it is, for an activity or booking (its sub-activities). */
+  typeId: string | null;
   /** What a change is saved against: the rota need (activity, booking or area need) or the class. */
   needId: string | null;
   classRef: string | null;
@@ -57,6 +59,8 @@ export type Line = Span & {
   area: string;
   /** The area that one is part of, "" for none. */
   group: string;
+  /** Sub-activities they do while on it, in order: at a time, or any time (`at` null). */
+  subs: { name: string; when: string; at: number | null }[];
   /** The saved record: an activity or booking place, an area place, or the class taught. */
   assignmentId: string | null;
   place: number | null;
@@ -108,7 +112,9 @@ export type DiaryInput = {
   types: readonly { id: string; name: string; departmentId: string; requiredTypeId: string | null; requiredName: string | null; fromClasses: boolean }[];
   /** Activities and bookings on the day (`bookingTitle` set for a booking). */
   needs: readonly { id: string; typeId: string; place: string; start: number; end: number; places: number; note: string; bookingTitle: string | null }[];
-  assignments: readonly { id: string; needId: string; place: number; userId: string; start: number; end: number }[];
+  /** People on activities and bookings, with the sub-activities they do there ("start", "end",
+   *  "at" a time, or "during"). */
+  assignments: readonly { id: string; needId: string; place: number; userId: string; start: number; end: number; subs?: readonly { name: string; when: string; at: number | null }[] }[];
   /** People on an area's own need, by the need's id (`area:<area>:<qualification>:<date>`). */
   areaAssignments: readonly { id: string; needId: string; place: number; userId: string; start: number; end: number }[];
   classes: readonly { ref: string; title: string; place: string; start: number; end: number; userId: string | null }[];
@@ -168,26 +174,32 @@ function needsOf(input: DiaryInput): Need[] {
     }
     const home = areaById.get(a.areaId);
     out.push({ key: a.id, kind: "area", title: `${a.typeName ?? "Staff"} on duty`, detail: null, area: a.areaName, group: home?.parentName ?? "", departmentId: home?.departmentId ?? null, start: a.startMinutes, end: a.endMinutes,
-      wants: wants.filter((w) => w.count > 0), requiredTypeId: a.qualificationTypeId, requiredName: a.typeName, note: a.together, needId: a.id, classRef: null });
+      wants: wants.filter((w) => w.count > 0), requiredTypeId: a.qualificationTypeId, requiredName: a.typeName, note: a.together, typeId: null, needId: a.id, classRef: null });
   }
   for (const n of input.needs) {
     const type = types.get(n.typeId);
     out.push({ key: n.id, kind: n.bookingTitle ? "booking" : "activity", title: n.bookingTitle ?? type?.name ?? "Activity", detail: n.bookingTitle ? type?.name ?? null : null,
       area: areaOf(n.place), group: groupOf(areaOf(n.place)), departmentId: type?.departmentId ?? null, start: n.start, end: n.end, wants: n.places > 0 ? [{ start: n.start, end: n.end, count: n.places }] : [],
-      requiredTypeId: type?.requiredTypeId ?? null, requiredName: type?.requiredName ?? null, note: n.note || null, needId: n.id, classRef: null });
+      requiredTypeId: type?.requiredTypeId ?? null, requiredName: type?.requiredName ?? null, note: n.note || null, typeId: n.typeId, needId: n.id, classRef: null });
   }
   const teaching = input.types.find((t) => t.fromClasses);
   for (const c of input.classes) {
     out.push({ key: `class:${c.ref}`, kind: "class", title: c.title, detail: "Swim class", area: areaOf(c.place), group: groupOf(areaOf(c.place)), departmentId: teaching?.departmentId ?? null, start: c.start, end: c.end,
-      wants: [{ start: c.start, end: c.end, count: 1 }], requiredTypeId: teaching?.requiredTypeId ?? null, requiredName: teaching?.requiredName ?? null, note: null, needId: null, classRef: c.ref });
+      wants: [{ start: c.start, end: c.end, count: 1 }], requiredTypeId: teaching?.requiredTypeId ?? null, requiredName: teaching?.requiredName ?? null, note: null, typeId: null, needId: null, classRef: c.ref });
   }
   return out.sort((a, b) => a.start - b.start || a.title.localeCompare(b.title));
 }
 
+/** Sub-activities on the clock: at the start, at the end, at their time, or any time (null). */
+export function subsAt(a: { start: number; end: number; subs?: readonly { name: string; when: string; at: number | null }[] }): Line["subs"] {
+  const at = (s: { when: string; at: number | null }) => (s.when === "start" ? a.start : s.when === "end" ? a.end : s.when === "at" ? s.at : null);
+  return (a.subs ?? []).map((s) => ({ name: s.name, when: s.when, at: at(s) })).sort((x, y) => (x.at ?? a.start + 0.5) - (y.at ?? a.start + 0.5));
+}
+
 function linesOf(input: DiaryInput, needs: readonly Need[]): Line[] {
   const byKey = new Map(needs.map((n) => [n.key, n]));
-  const line = (n: Need | undefined, a: { id: string; userId: string; start: number; end: number; place: number | null }, assignmentId: string | null): Line[] =>
-    n ? [{ key: `${n.key}|${a.id}`, userId: a.userId, needKey: n.key, kind: n.kind, title: n.title, area: n.area, group: n.group, start: a.start, end: a.end, assignmentId, place: a.place }] : [];
+  const line = (n: Need | undefined, a: { id: string; userId: string; start: number; end: number; place: number | null; subs?: DiaryInput["assignments"][number]["subs"] }, assignmentId: string | null): Line[] =>
+    n ? [{ key: `${n.key}|${a.id}`, userId: a.userId, needKey: n.key, kind: n.kind, title: n.title, area: n.area, group: n.group, subs: subsAt(a), start: a.start, end: a.end, assignmentId, place: a.place }] : [];
   return [
     ...input.areaAssignments.flatMap((a) => line(byKey.get(a.needId), a, a.id)),
     ...input.assignments.flatMap((a) => line(byKey.get(a.needId), a, a.id)),

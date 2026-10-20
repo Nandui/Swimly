@@ -139,3 +139,12 @@ test("an area belongs to a department, and a sub-area reads with the area it is 
   const front = buildDiary({ ...base, areas, departmentId: "front" });
   assert.ok(front.needs.some((n) => n.area === "Front desk" && n.kind === "area"));
 });
+
+test("sub-activities on someone's line read in order, at the start, any time, at a time and at the end", () => {
+  const d = buildDiary({ ...base, assignments: [{ ...base.assignments[0], subs: [
+    { name: "Close the cash till", when: "end", at: null }, { name: "Cash drop", when: "at", at: h("11:00") },
+    { name: "Answer the phone", when: "during", at: null }, { name: "Open the cash till", when: "start", at: null },
+  ] }] });
+  const line = d.people.find((p) => p.userId === "aoife")!.lines.find((l) => l.title === "Aqua-fit")!;
+  assert.deepEqual(line.subs.map((x) => [x.name, x.at]), [["Open the cash till", h("10:30")], ["Answer the phone", null], ["Cash drop", h("11:00")], ["Close the cash till", h("11:30")]]);
+});

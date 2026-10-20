@@ -3,7 +3,7 @@ import { activePlacedStaff, areasAt, contractMinutesByIds, departmentIdsOf, depa
 import { isDateOnly, parseDateOnly, toDateOnlyString as isoOf, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { qualificationsHeldBy } from "@/lib/qualifications";
-import { activityTypesOf } from "@/lib/setup/activity-types";
+import { activityTypesOf, subActivitiesFor } from "@/lib/setup/activity-types";
 import { commitmentsFor } from "@/modules/contributions";
 import { changeBlocked } from "@/modules/rota/shared/access";
 import { addDaysIso, mondayOf, youngBand } from "@/modules/rota/shared/constants";
@@ -59,6 +59,8 @@ export async function diaryWeek(input: { site?: string; dept?: string; day?: str
     /** What can be added to the day: the department's activities (not swim classes, which come from the timetable). */
     types: types.filter((t) => !t.fromClasses && (!changeFor || t.departmentId === changeFor.id)).map((t) => ({ id: t.id, name: t.name })),
     areas: (await areasAt(site.id)).map((a) => ({ name: a.name, lanes: a.lanes, parentName: a.parentName })),
+    /** Each activity's sub-activities, to choose from on someone's line. */
+    subActivities: await subActivitiesFor(types.map((t) => t.id)),
   } as const;
 }
 export type DiaryWeek = Extract<Awaited<ReturnType<typeof diaryWeek>>, { diary: unknown }>;
@@ -71,7 +73,8 @@ export async function diaryInputs(siteId: string, orgId: string | null, days: re
     activityTypesOf(orgId, true),
     areasAt(siteId),
     prisma.rotaNeed.findMany({ where: { siteId, date: range }, select: { id: true, date: true, typeId: true, place: true, startMinutes: true, endMinutes: true, places: true, note: true,
-      repeat: { select: { title: true } }, assignments: { select: { id: true, needId: true, place: true, userId: true, startMinutes: true, endMinutes: true } } } }),
+      repeat: { select: { title: true } }, assignments: { select: { id: true, needId: true, place: true, userId: true, startMinutes: true, endMinutes: true,
+        subs: { orderBy: { sortOrder: "asc" }, select: { name: true, when: true, atMinutes: true } } } } } }),
     prisma.rotaAreaAssignment.findMany({ where: { siteId, date: range }, select: { id: true, date: true, areaId: true, qualificationTypeId: true, place: true, userId: true, startMinutes: true, endMinutes: true } }),
     prisma.rotaPlanShift.findMany({ where: { siteId, date: range }, select: { id: true, date: true, userId: true, departmentId: true, startMinutes: true, endMinutes: true } }),
     prisma.rotaBreak.findMany({ where: { siteId, date: range }, select: { date: true, userId: true, startMinutes: true, minutes: true, paid: true } }),
@@ -109,7 +112,8 @@ export async function diaryInputs(siteId: string, orgId: string | null, days: re
       date, departmentId, areas, held: held.map((q) => ({ userId: q.userId, typeId: q.typeId, issuedOn: q.issuedOn ? isoOf(q.issuedOn) : null, expiresOn: q.expiresOn ? isoOf(q.expiresOn) : null, revoked: !!q.revokedAt })),
       types: types.map((t) => ({ id: t.id, name: t.name, departmentId: t.departmentId, requiredTypeId: t.requiredTypeId, requiredName: t.requiredType?.name ?? null, fromClasses: t.fromClasses })),
       needs: dayNeeds.map((n) => ({ id: n.id, typeId: n.typeId, place: n.place, start: n.startMinutes, end: n.endMinutes, places: n.places, note: n.note, bookingTitle: n.repeat?.title ?? null })),
-      assignments: dayNeeds.flatMap((n) => n.assignments.map((a) => ({ id: a.id, needId: a.needId, place: a.place, userId: a.userId, start: a.startMinutes, end: a.endMinutes }))),
+      assignments: dayNeeds.flatMap((n) => n.assignments.map((a) => ({ id: a.id, needId: a.needId, place: a.place, userId: a.userId, start: a.startMinutes, end: a.endMinutes,
+        subs: a.subs.map((x) => ({ name: x.name, when: x.when, at: x.atMinutes })) }))),
       // An area's need is `area:<area>:<qualification>:<date>` (areaNeedsOn); kept only while the area is.
       areaAssignments: onAreas.filter((a) => on(a.date) && areaIds.has(a.areaId)).map((a) => ({ id: a.id, needId: `area:${a.areaId}:${a.qualificationTypeId ?? "*"}:${date}`, place: a.place, userId: a.userId, start: a.startMinutes, end: a.endMinutes })),
       classes: classes.filter((c) => c.date === date).map((c) => ({ ref: c.ref!, title: c.title ?? c.label, place: c.place ?? "", start: c.startMinutes, end: c.endMinutes, userId: c.userId })),
@@ -122,3 +126,4 @@ export async function diaryInputs(siteId: string, orgId: string | null, days: re
   }
   return out;
 }
+

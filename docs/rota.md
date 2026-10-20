@@ -125,7 +125,21 @@ it.
     area place (`RotaAreaAssignment`), an activity or booking place (`RotaAssignment`, past its
     places when they are all taken, for break cover) or the class's teacher (`planTeacher`).
   - **Who's where** (`whoIsWhere`, `nextChange`) at any half hour (now on today): each need running
-    then with who is on it and how many more it needs, who is on a break, the next change.
+    then with who is on it and how many more it needs, who is on a break, the next change. Needs
+    are grouped by area as department › area › sub-area (`groupWhere`): an area belongs to a
+    department and may be part of another (`SiteArea.departmentId`, `parentId`; owner's card,
+    20 October 2026, "Department, area, sub-areas"); an area need belongs to its area's
+    department, and a sub-area takes its parent's.
+  - **Sub-activities** (owner, 20 October 2026: "when we assign that activity, we might also
+    assign other sub activities that are available during that"; card "Yes, add them"): each
+    activity has a list in Admin, Activities (`SubActivity`, Core): a name, when (at the start, at
+    the end, at a set time, any time while on it) and whether it is **usual**. Putting someone on
+    the activity (`fillNeed`) copies the usual ones onto their place (`RotaAssignmentSub`; a set
+    time only when it falls in their stretch). Their day lists them under the line with times
+    (`subsAt`: start and end follow the line's own times, so changing times needs nothing more),
+    and **Sub-activities** there ticks, unticks and retimes them for that day (`saveLineSubs`,
+    audited). They are done by the person on the activity and never add to what it needs.
+    Copy does not carry them yet.
   - **The day, person by person**: from 1024px a track per person (a red and amber Not covered
     line on top); areas blue, activities and classes green, bookings violet, breaks dashed, time
     not given yet dotted, a now line on today; below 1024px each person's day as a short list.

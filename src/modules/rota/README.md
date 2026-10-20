@@ -22,6 +22,7 @@ See [docs/rota.md](../../../docs/rota.md).
 
 ## Data owned
 - `RotaNeed`, `RotaAssignment` — activities planned and who covers them.
+- `RotaAssignmentSub` — the sub-activities given with an activity place for that day (the list itself is Core's `SubActivity`, read through `subActivitiesFor`).
 - `RotaAreaAssignment` — who is on each area's own need (its hours and staff come from Admin, Areas).
 - `RotaPlanShift`, `RotaBreak` — planned shifts and breaks.
 - `RotaBookingKind` — how many staff each kind of booking needs (0 for none).

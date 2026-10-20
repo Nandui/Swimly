@@ -44,3 +44,6 @@ export function warningWords(w: Warning, young: YoungBand | null = null) {
     case "young": return young === "under16" ? "Under 16: check their breaks and hours." : "Under 18: check their breaks and rest between days.";
   }
 }
+
+/** What someone does while on it: "10:30 Open the cash till · Answer the phone · 11:30 Close the cash till". */
+export const subsWords = (l: Pick<Line, "subs">) => l.subs.map((x) => (x.at !== null ? `${clock(x.at)} ${x.name}` : x.name)).join(" · ");

@@ -1,13 +1,16 @@
 "use client";
 
-import { Archive, ArchiveRestore, Pencil, Plus } from "lucide-react";
+import { useState } from "react";
+import { Archive, ArchiveRestore, ListChecks, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
+import { Checkbox } from "@/components/shadcn/checkbox";
+import { Label } from "@/components/shadcn/label";
 import { Input } from "@/components/shadcn/input";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { archiveActivityType, saveActivityType } from "@/lib/setup/actions";
-import { ACTIVITY_ICONS, ACTIVITY_ICON_KEYS } from "@/lib/setup/meta";
+import { archiveActivityType, saveActivityType, saveSubActivities } from "@/lib/setup/actions";
+import { ACTIVITY_ICONS, ACTIVITY_ICON_KEYS, SUB_WHEN, SUB_WHENS, type SubWhen } from "@/lib/setup/meta";
 
 const THEME = "turnfin-module";
 type Option = { id: string; name: string };
@@ -58,5 +61,66 @@ export function ArchiveActivity({ id, name, archived }: { id: string; name: stri
       description={archived ? "It can be planned again." : "It can no longer be added to a day. Days already planned with it keep it."}
       confirmLabel={archived ? "Restore" : "Archive"} successMessage={archived ? "Activity restored" : "Activity archived"}
       run={() => archiveActivityType(id, !archived)} />
+  );
+}
+
+export type SubRow = { id: string; name: string; when: string; atMinutes: number | null; usual: boolean };
+type Draft = { key: string; id: string; name: string; when: SubWhen; at: string; usual: boolean };
+const hhmm = (m: number | null) => (m === null ? "" : `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`);
+
+/** An activity's sub-activities (owner, 20 October 2026): what is done while on it, such as Till
+ *  1's "Open the cash till" at the start and "Close the cash till" at the end, and whether it is
+ *  usual (given to whoever is put on it) or only when the plan chooses it. */
+export function SubActivitiesDialog({ activity, subs }: { activity: { id: string; name: string }; subs: SubRow[] }) {
+  const start = (): Draft[] => subs.map((x) => ({ key: x.id, id: x.id, name: x.name, when: (SUB_WHENS as string[]).includes(x.when) ? x.when as SubWhen : "during", at: hhmm(x.atMinutes), usual: x.usual }));
+  const [rows, setRows] = useState<Draft[]>(start);
+  const [next, setNext] = useState(0);
+  const set = (key: string, patch: Partial<Draft>) => setRows((list) => list.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+  const fid = `subs-${activity.id}`;
+  return (
+    <FormDialog portalClassName={THEME} width="sm:max-w-2xl" onOpen={() => setRows(start())}
+      trigger={<Button variant="outline"><ListChecks aria-hidden="true" />Sub-activities{subs.length ? ` (${subs.length})` : ""}</Button>}
+      title={`${activity.name}: sub-activities`}
+      description="What is done while on it, and when. Usual ones are given to whoever is put on it; the Plan can add or take off any of them for a day."
+      submitLabel="Save sub-activities" successMessage="Sub-activities saved"
+      submit={() => saveSubActivities(activity.id, rows.map((r) => ({ id: r.id, name: r.name, when: r.when, at: r.at, usual: r.usual })))}>
+      {rows.length ? (
+        <ul className="flex flex-col gap-4">
+          {rows.map((r, i) => (
+            <li key={r.key} className="grid items-end gap-3 sm:grid-cols-12">
+              <div className="sm:col-span-5">
+                <Field label={`Sub-activity ${i + 1}`} htmlFor={`${fid}-${r.key}-name`}>
+                  <Input id={`${fid}-${r.key}-name`} value={r.name} onChange={(e) => set(r.key, { name: e.target.value })} required minLength={2} maxLength={60} className="min-h-11" />
+                </Field>
+              </div>
+              <div className="sm:col-span-4">
+                <Field label="When" htmlFor={`${fid}-${r.key}-when`}>
+                  <NativeSelect id={`${fid}-${r.key}-when`} value={r.when} onChange={(e) => set(r.key, { when: e.target.value as SubWhen })} className="min-h-11 w-full">
+                    {SUB_WHENS.map((w) => <NativeSelectOption key={w} value={w}>{SUB_WHEN[w]}</NativeSelectOption>)}
+                  </NativeSelect>
+                </Field>
+              </div>
+              <div className="sm:col-span-3">
+                {r.when === "at" ? (
+                  <Field label="Time" htmlFor={`${fid}-${r.key}-at`}>
+                    <Input id={`${fid}-${r.key}-at`} type="time" step={300} value={r.at} onChange={(e) => set(r.key, { at: e.target.value })} required className="min-h-11" />
+                  </Field>
+                ) : null}
+              </div>
+              <div className="flex min-h-11 items-center gap-2 sm:col-span-9">
+                <Checkbox id={`${fid}-${r.key}-usual`} checked={r.usual} onCheckedChange={(v) => set(r.key, { usual: v === true })} />
+                <Label htmlFor={`${fid}-${r.key}-usual`} className="font-normal">Usual: give it to whoever is put on {activity.name}</Label>
+              </div>
+              <div className="flex justify-end sm:col-span-3">
+                <Button type="button" variant="ghost" onClick={() => setRows((list) => list.filter((x) => x.key !== r.key))}><Trash2 aria-hidden="true" />Remove</Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : <p className="text-sm text-ui-muted-foreground">None yet. For example, Open the cash till at the start and Close the cash till at the end.</p>}
+      <Button type="button" variant="outline" onClick={() => { setRows((list) => [...list, { key: `new-${next}`, id: "", name: "", when: "during", at: "", usual: true }]); setNext((n) => n + 1); }}>
+        <Plus aria-hidden="true" />Add a sub-activity
+      </Button>
+    </FormDialog>
   );
 }

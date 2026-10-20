@@ -411,3 +411,10 @@
 .turnfin-module .diary-step-title { display: inline-flex; align-items: center; gap: 6px; color: var(--pc-ink); font-weight: 600; }
 .turnfin-module .diary-step-title > svg { width: 16px; height: 16px; color: var(--pc-ink-muted); }
 .turnfin-module .diary-step-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.turnfin-module .diary-subs { display: block; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
+.turnfin-module .diary-subs-list { display: flex; flex-direction: column; gap: 2px; margin: 4px 0 0; padding: 0; list-style: none; color: var(--pc-ink); font-size: var(--pc-text-body); }
+.turnfin-module .diary-subs-list > li { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 8px; }
+.turnfin-module .diary-subs-list > li > span { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
+.turnfin-module .diary-sub-choices { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.turnfin-module .diary-sub-choice { display: grid; grid-template-columns: minmax(0, 1fr) 140px; align-items: end; gap: 12px; }
+.turnfin-module .diary-sub-check { display: flex; align-items: center; gap: 8px; min-height: 44px; }

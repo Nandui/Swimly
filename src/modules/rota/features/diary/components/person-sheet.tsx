@@ -1,7 +1,10 @@
 "use client";
 
-import { Clock, Coffee, Flag, Moon, Plus } from "lucide-react";
+import { useState } from "react";
+import { Clock, Coffee, Flag, ListChecks, Moon, Plus } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
+import { Checkbox } from "@/components/shadcn/checkbox";
+import { Label } from "@/components/shadcn/label";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/shadcn/sheet";
 import { FormDialog } from "@/components/form-dialog";
 import { Notice } from "@/components/ui-kit/notice";
@@ -10,7 +13,7 @@ import { Select } from "@/components/ui/select";
 import { breakEntitlement, clock } from "@/modules/rota/shared/constants";
 import { ChangeFields, changeOf } from "@/modules/rota/shared/components/change-fields";
 import { stepsOf, type Line, type PersonDay, type Span, type Step } from "@/modules/rota/features/diary/model";
-import { changeLine, fillNeed, placeBreaks, removeLine, removeShift, saveShift } from "@/modules/rota/features/diary/server/actions";
+import { changeLine, fillNeed, placeBreaks, removeLine, removeShift, saveLineSubs, saveShift } from "@/modules/rota/features/diary/server/actions";
 import { useDiary } from "@/modules/rota/features/diary/components/context";
 import { firstName, hoursWords, lineTitle, lineWhere, needWords, partsWords, span as spanWords, toneOf, warningWords } from "@/modules/rota/features/diary/components/words";
 
@@ -73,9 +76,11 @@ function StepItem({ person, step }: { person: PersonDay; step: Step }) {
         <div className="diary-step-text">
           <span className="diary-step-title">{step.count > 1 ? `${step.count} swim classes` : lineTitle(l)}</span>
           <span className="diary-muted">{step.count > 1 ? lines.map((x) => x.title).join(", ") : lineWhere(l)}</span>
+          {l.subs.length ? <ul className="diary-subs-list" aria-label="Sub-activities">{l.subs.map((x, i) => <li key={i}><span className="tabular-nums">{x.at !== null ? clock(x.at) : "Any time"}</span>{x.name}</li>)}</ul> : null}
           {ctx.canChange && ctx.departmentFor ? (
             <div className="diary-step-actions">
               {l.kind !== "class" && l.assignmentId ? <ChangeTime person={person} line={l} /> : null}
+              {(l.kind === "activity" || l.kind === "booking") && l.assignmentId && (l.subs.length || (ctx.needs.get(l.needKey)?.typeId && ctx.subActivities[ctx.needs.get(l.needKey)!.typeId!]?.length)) ? <SubsDialog person={person} line={l} /> : null}
               <TakeOff person={person} lines={lines} />
             </div>
           ) : null}
@@ -251,6 +256,49 @@ function ShiftDialog({ person, shift }: { person: PersonDay; shift: (Span & { id
         <Input type="time" name="end" label="To" step={300} defaultValue={clock(around.end)} required />
       </div>
       {ctx.live ? <ChangeFields id={`diary-shift-${shift?.id ?? person.userId}`} /> : null}
+    </FormDialog>
+  );
+}
+
+type SubChoice = { key: string; subActivityId: string | null; name: string; when: string; at: string; on: boolean };
+const WHEN_WORDS: Record<string, string> = { start: "at the start", end: "at the end", during: "any time while on it" };
+
+/** Which sub-activities they do while on it that day (owner, 20 October 2026): the activity's
+ *  list from Admin, ticked as they are now, with a time for one at a set time. */
+function SubsDialog({ person, line }: { person: PersonDay; line: Line }) {
+  const ctx = useDiary();
+  const typeId = ctx.needs.get(line.needKey)?.typeId ?? null;
+  const list = typeId ? ctx.subActivities[typeId] ?? [] : [];
+  const start = (): SubChoice[] => {
+    const has = (name: string) => line.subs.find((x) => x.name.toLowerCase() === name.toLowerCase());
+    const fromList = list.map((x) => {
+      const now = has(x.name);
+      return { key: x.id, subActivityId: x.id, name: x.name, when: x.when, at: clock(now?.at ?? x.at ?? line.start), on: !!now };
+    });
+    const extra = line.subs.filter((x) => !list.some((y) => y.name.toLowerCase() === x.name.toLowerCase()))
+      .map((x, i) => ({ key: `kept-${i}`, subActivityId: null, name: x.name, when: x.when, at: clock(x.at ?? line.start), on: true }));
+    return [...fromList, ...extra];
+  };
+  const [rows, setRows] = useState<SubChoice[]>(start);
+  const set = (key: string, patch: Partial<SubChoice>) => setRows((all) => all.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+  return (
+    <FormDialog portalClassName={PORTAL} title={`${firstName(person.name)} on ${lineTitle(line)}: sub-activities`} description={`${spanWords(line)}. Tick what they do while on it.`}
+      submitLabel="Save" successMessage="Sub-activities saved." onOpen={() => setRows(start())}
+      trigger={<Button variant="outline"><ListChecks aria-hidden="true" />Sub-activities</Button>}
+      submit={(f) => saveLineSubs({ siteId: ctx.siteId, date: ctx.date, departmentId: ctx.departmentFor!, id: line.assignmentId!, userId: person.userId,
+        subs: rows.filter((r) => r.on).map((r) => ({ subActivityId: r.subActivityId, name: r.name, when: r.when as "start" | "end" | "at" | "during", at: r.at })) }, ctx.live ? changeOf(f) : {})}>
+      <ul className="diary-sub-choices">
+        {rows.map((r) => (
+          <li key={r.key} className="diary-sub-choice">
+            <div className="diary-sub-check">
+              <Checkbox id={`sub-${line.key}-${r.key}`} checked={r.on} onCheckedChange={(v) => set(r.key, { on: v === true })} />
+              <Label htmlFor={`sub-${line.key}-${r.key}`} className="font-normal">{r.name}<span className="diary-caption">{r.when === "at" ? "" : ` ${WHEN_WORDS[r.when] ?? ""}`}</span></Label>
+            </div>
+            {r.when === "at" && r.on ? <Input type="time" label="At" step={300} value={r.at} onChange={(v) => set(r.key, { at: v })} min={clock(line.start)} max={clock(line.end)} required /> : null}
+          </li>
+        ))}
+      </ul>
+      {ctx.live ? <ChangeFields id={`diary-subs-${line.key}`} /> : null}
     </FormDialog>
   );
 }

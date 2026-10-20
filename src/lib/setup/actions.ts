@@ -7,7 +7,7 @@ import { requirePermission } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { departmentById } from "@/lib/directory";
 import { prisma } from "@/lib/prisma";
-import { ACTIVITY_ICON_KEYS } from "@/lib/setup/meta";
+import { ACTIVITY_ICON_KEYS, SUB_WHEN, SUB_WHENS } from "@/lib/setup/meta";
 import { WEEKDAYS, hoursWords, type WeekHour } from "@/lib/setup/area-staffing";
 import { Prisma } from "@/generated/prisma/client";
 import { renameAreaEverywhere } from "@/modules/server";
@@ -53,6 +53,50 @@ export async function saveActivityType(id: string | null, input: ActivityTypeInp
   refresh("/activity-list");
   return ok();
 }
+
+const subsSchema = z.array(z.object({
+  id: z.string().trim().max(64).default(""),
+  name: z.string().trim().min(2, "Name each sub-activity, for example Open the cash till.").max(60, "Keep each name under 60 characters."),
+  when: z.enum(SUB_WHENS),
+  at: z.string().trim().default(""),
+  usual: z.boolean(),
+})).max(20, "Up to 20 sub-activities.");
+export type SubActivitiesInput = z.input<typeof subsSchema>;
+
+/** An activity's sub-activities (owner, 20 October 2026: "when we assign that activity, we might
+ *  also assign other sub activities that are available during that"): what is done while on it
+ *  and when. Usual ones are given to whoever is put on it; days already planned keep theirs.
+ *  Taking one off the list archives it. */
+export async function saveSubActivities(activityTypeId: string, input: SubActivitiesInput): Promise<ActionResult> {
+  const session = await requirePermission("setup.activities");
+  const parsed = subsSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const type = await prisma.activityType.findFirst({ where: { id: activityTypeId, orgId: session.user.orgId ?? undefined }, select: { name: true, subs: { where: { archivedAt: null }, select: { id: true } } } });
+  if (!type) return fail("That activity is no longer on the list.");
+  const rows: (z.output<typeof subsSchema>[number] & { atMinutes: number | null })[] = [];
+  for (const s of parsed.data) {
+    const at = s.when === "at" ? clockMinutes(s.at) : null;
+    if (s.when === "at" && at === null) return fail(`Give ${s.name} a time, like 11:00.`);
+    rows.push({ ...s, atMinutes: at });
+  }
+  if (new Set(rows.map((r) => r.name.toLowerCase())).size !== rows.length) return fail("Each sub-activity once.");
+  const kept = new Set(rows.map((r) => r.id).filter(Boolean));
+  await prisma.$transaction(async (tx) => {
+    for (const [i, r] of rows.entries()) {
+      const data = { name: r.name, when: r.when, atMinutes: r.atMinutes, usual: r.usual, sortOrder: i };
+      if (r.id && type.subs.some((x) => x.id === r.id)) await tx.subActivity.update({ where: { id: r.id }, data });
+      else await tx.subActivity.create({ data: { ...data, activityTypeId } });
+    }
+    const gone = type.subs.filter((x) => !kept.has(x.id)).map((x) => x.id);
+    if (gone.length) await tx.subActivity.updateMany({ where: { id: { in: gone } }, data: { archivedAt: new Date() } });
+    await logAudit({ actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: "update", entity: "ActivityType", entityId: activityTypeId, clubId: null,
+      summary: `Set ${type.name}'s sub-activities: ${rows.map((r) => `${r.name} (${r.when === "at" ? `at ${s2(r.atMinutes!)}` : SUB_WHEN[r.when].toLowerCase()}${r.usual ? "" : ", when chosen"})`).join(", ") || "none"}` }, tx);
+  });
+  refresh("/activity-list");
+  return ok();
+}
+const clockMinutes = (v: string) => (/^\d{2}:\d{2}$/.test(v) && Number(v.slice(0, 2)) < 24 && Number(v.slice(3)) < 60 ? Number(v.slice(0, 2)) * 60 + Number(v.slice(3)) : null);
+const s2 = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 
 /** Archive or restore an activity. Days already planned with it keep it. */
 export async function archiveActivityType(id: string, archived: boolean): Promise<ActionResult> {

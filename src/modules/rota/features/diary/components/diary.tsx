@@ -14,7 +14,7 @@ import { AddSomeone, AddToDay } from "@/modules/rota/features/diary/components/d
 import { FillSheet, type FillTarget } from "@/modules/rota/features/diary/components/fill-sheet";
 import { useNowMinute } from "@/modules/rota/features/diary/components/now";
 import { PersonSheet } from "@/modules/rota/features/diary/components/person-sheet";
-import { firstName, hoursWords, lineTitle, listWords, needWords, partsWords, span as spanWords, toneOf } from "@/modules/rota/features/diary/components/words";
+import { firstName, hoursWords, lineTitle, subsWords, listWords, needWords, partsWords, span as spanWords, toneOf } from "@/modules/rota/features/diary/components/words";
 
 /** The day's diary (owner, 20 October 2026: "the plan, the diary, the actual guide for the day
  *  ... readable and understood by anyone"): what is not covered yet, who's where at a moment,
@@ -245,7 +245,7 @@ function PersonRow({ person, f, hours, now }: { person: PersonDay; f: (t: number
       <Track f={f} hours={hours} now={now}>
         {person.lines.map((l) => (
           <Button variant="ghost" key={l.key} className={`diary-block absolute inset-y-1 ${stretchOf(f(l.start), f(l.end))}`} data-tone={toneOf(l.kind)}
-            title={`${lineTitle(l)}, ${spanWords(l)}`} aria-label={`${person.name} on ${lineTitle(l)}, ${spanWords(l)}`} onClick={() => open(person.userId)}>
+            title={`${lineTitle(l)}, ${spanWords(l)}${l.subs.length ? `: ${subsWords(l)}` : ""}`} aria-label={`${person.name} on ${lineTitle(l)}, ${spanWords(l)}${l.subs.length ? `: ${subsWords(l)}` : ""}`} onClick={() => open(person.userId)}>
             <span className="diary-block-title">{lineTitle(l)}</span><span className="diary-block-time tabular-nums">{spanWords(l)}</span>
           </Button>
         ))}
@@ -280,7 +280,8 @@ function PersonCard({ person }: { person: PersonDay }) {
         {steps.map((s, i) => (
           <li key={i} data-tone={s.kind === "work" ? toneOf(s.line.kind) : s.kind}>
             <span className="tabular-nums">{clock(s.start)}</span>
-            <span>{s.kind === "work" ? (s.count > 1 ? `${s.count} swim classes` : lineTitle(s.line)) : s.kind === "break" ? `Break, ${s.end - s.start} min` : s.kind === "free" ? "Nothing given yet" : "Off"}</span>
+            <span>{s.kind === "work" ? (s.count > 1 ? `${s.count} swim classes` : lineTitle(s.line)) : s.kind === "break" ? `Break, ${s.end - s.start} min` : s.kind === "free" ? "Nothing given yet" : "Off"}
+              {s.kind === "work" && s.line.subs.length ? <span className="diary-subs">{subsWords(s.line)}</span> : null}</span>
           </li>
         ))}
         {person.parts.length ? <li data-tone="finish"><span className="tabular-nums">{clock(person.parts[person.parts.length - 1].end)}</span><span>Finishes</span></li> : null}

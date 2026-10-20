@@ -431,11 +431,32 @@ model RotaAssignment {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  need RotaNeed @relation(fields: [needId], references: [id], onDelete: Cascade)
-  user User     @relation("RotaAssignee", fields: [userId], references: [id], onDelete: Restrict)
+  need RotaNeed            @relation(fields: [needId], references: [id], onDelete: Cascade)
+  user User                @relation("RotaAssignee", fields: [userId], references: [id], onDelete: Restrict)
+  subs RotaAssignmentSub[]
 
   @@index([needId])
   @@index([userId])
+}
+
+/// A sub-activity someone does while on an activity that day (owner, 20 October 2026: "when we
+/// assign that activity, we might also assign other sub activities that are available during
+/// that"): Till 1's "Open the cash till" at the start. Its name is kept, so the day still reads
+/// the same if the activity's list changes.
+model RotaAssignmentSub {
+  id            String  @id @default(cuid())
+  assignmentId  String
+  subActivityId String?
+  name          String
+  /// "start", "end", "at" (at `atMinutes`) or "during" (any time while they are on it).
+  when          String
+  atMinutes     Int?
+  sortOrder     Int     @default(0)
+
+  assignment  RotaAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  subActivity SubActivity?   @relation(fields: [subActivityId], references: [id], onDelete: SetNull)
+
+  @@index([assignmentId])
 }
 
 /// Someone on one place of an area's own need on a day (owner request, 16 October 2026: "in

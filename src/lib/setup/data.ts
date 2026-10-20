@@ -21,7 +21,8 @@ export async function activityListPage() {
   const [types, departments, qualifications] = await Promise.all([
     prisma.activityType.findMany({
       where: { orgId }, orderBy: [{ archivedAt: { sort: "asc", nulls: "first" } }, { sortOrder: "asc" }, { name: "asc" }],
-      select: { id: true, name: true, icon: true, departmentId: true, requiredTypeId: true, fromClasses: true, archivedAt: true, department: { select: { name: true } }, requiredType: { select: { name: true } } },
+      select: { id: true, name: true, icon: true, departmentId: true, requiredTypeId: true, fromClasses: true, archivedAt: true, department: { select: { name: true } }, requiredType: { select: { name: true } },
+        subs: { where: { archivedAt: null }, orderBy: { sortOrder: "asc" }, select: { id: true, name: true, when: true, atMinutes: true, usual: true } } },
     }),
     prisma.department.findMany({ where: { orgId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
     prisma.qualificationType.findMany({ where: { orgId, archivedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
@@ -29,7 +30,7 @@ export async function activityListPage() {
   return {
     canKeep: keeps("setup.activities"), departments, qualifications,
     types: types.map((t) => ({ id: t.id, name: t.name, icon: t.icon, departmentId: t.departmentId, departmentName: t.department.name, requiredTypeId: t.requiredTypeId,
-      requiredName: t.requiredType?.name ?? null, fromClasses: t.fromClasses, archived: !!t.archivedAt })),
+      requiredName: t.requiredType?.name ?? null, fromClasses: t.fromClasses, archived: !!t.archivedAt, subs: t.subs })),
   };
 }
 

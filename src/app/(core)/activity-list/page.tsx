@@ -3,7 +3,7 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
-import { ActivityDialog, ArchiveActivity } from "@/components/setup/activity-list";
+import { ActivityDialog, ArchiveActivity, SubActivitiesDialog } from "@/components/setup/activity-list";
 import { screenPage } from "@/lib/page-guards";
 import { activityListPage } from "@/lib/setup/data";
 import { ACTIVITY_TAG_META, activityIcon } from "@/lib/setup/meta";
@@ -33,11 +33,13 @@ export default async function ActivityListPage() {
                   <span className="pc-row-body">
                     <span className="pc-row-title">{t.name}</span>
                     <span className="pc-row-hint">{t.departmentName}{t.requiredName ? ` · needs ${t.requiredName}` : ""}</span>
+                    {t.subs.length ? <span className="pc-row-hint">Sub-activities: {t.subs.map((x) => x.name).join(", ")}</span> : null}
                   </span>
                   <span className="pc-row-trail">
                     {t.fromClasses ? <Tag meta={ACTIVITY_TAG_META.classes} /> : null}
                     {t.archived ? <Tag meta={ARCHIVAL_STATUS_META.archived} /> : null}
                     {canKeep ? <>
+                      {!t.fromClasses && !t.archived ? <SubActivitiesDialog activity={t} subs={t.subs} /> : null}
                       <ActivityDialog activity={t} departments={departments} qualifications={qualifications} />
                       <ArchiveActivity id={t.id} name={t.name} archived={t.archived} />
                     </> : null}

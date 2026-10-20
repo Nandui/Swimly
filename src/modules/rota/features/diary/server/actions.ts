@@ -6,7 +6,7 @@ import { logAudit } from "@/lib/audit";
 import { areasAt, departmentById, staffContact } from "@/lib/directory";
 import { isDateOnly, parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { activityTypeById } from "@/lib/setup/activity-types";
+import { activityTypeById, subActivitiesFor } from "@/lib/setup/activity-types";
 import { notifyShiftChange } from "@/lib/staff-api/notify";
 import { planTeacher } from "@/modules/rota/shared/actions";
 import { areaNeedsOn } from "@/modules/rota/shared/area-needs";
@@ -93,9 +93,13 @@ export async function fillNeed(input: FillInput, changeInput: Change = {}): Prom
   const person = await staffContact(d.userId, at.site.orgId, { activeOnly: true });
   if (!person) return fail("That person is no longer active.");
   const what = `${need.repeat?.title ?? type?.name ?? "an activity"}${need.place ? `, ${need.place}` : ""}`;
+  // The activity's usual sub-activities come with it (owner, 20 October 2026); one at a set time
+  // only when it falls in their stretch.
+  const usual = ((await subActivitiesFor([need.typeId], { usualOnly: true }))[need.typeId ?? ""] ?? []).filter((x) => x.when !== "at" || (x.at !== null && x.at >= t.start && x.at <= t.end));
   await prisma.$transaction(async (tx) => {
     const row = await tx.rotaAssignment.create({ data: { needId: need.id, place: freePlace(need.assignments, need.places, t.start, t.end), userId: person.id, startMinutes: t.start, endMinutes: t.end,
-      createdById: at.actor.id, createdByName: at.actor.name } });
+      createdById: at.actor.id, createdByName: at.actor.name,
+      subs: { create: usual.map((x, i) => ({ subActivityId: x.id, name: x.name, when: x.when, atMinutes: x.at, sortOrder: i })) } } });
     await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "create", entity: "RotaAssignment", entityId: row.id, clubId: d.siteId, summary: `Put ${person.name} on ${what}, ${d.date} ${clock(t.start)}–${clock(t.end)}` }, tx);
     if (at.live) await logLive(tx, at, d.date, "added", `${person.name} put on ${what}, ${clock(t.start)} to ${clock(t.end)}`, person.id, change);
   });
@@ -288,6 +292,49 @@ export async function placeBreaks(input: BreaksInput, changeInput: Change = {}):
     if (breaks.length) await tx.rotaBreak.createMany({ data: breaks.map((b) => ({ orgId: at.site.orgId, siteId, date: on, userId, startMinutes: b.start, minutes: b.minutes, paid: b.paid, byId: at.actor.id, byName: at.actor.name })) });
     await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "update", entity: "RotaBreak", entityId: null, clubId: siteId, summary: `Placed ${person.name}'s breaks on ${date}: ${words}` }, tx);
     if (at.live) await logLive(tx, at, date, "changed", `${person.name}'s breaks: ${words}`, person.id, change);
+  });
+  refresh();
+  return ok();
+}
+
+const subsSchema = z.object({
+  siteId: z.string().min(1),
+  date: z.string().refine(isDateOnly, "Choose a day."),
+  departmentId: z.string().min(1),
+  /** The activity or booking place they are on. */
+  id: z.string().min(1),
+  userId: z.string().min(1),
+  subs: z.array(z.object({ subActivityId: z.string().nullable(), name: z.string().trim().min(1).max(60), when: z.enum(["start", "end", "at", "during"]), at: z.string().default("") })).max(20),
+});
+export type LineSubsInput = z.input<typeof subsSchema>;
+
+/** Which sub-activities someone does while on an activity that day, and when (owner, 20 October
+ *  2026: Till 1's "open the cash till" at the start, "close" at the end), replacing the ones
+ *  before. One at a set time keeps inside their stretch. */
+export async function saveLineSubs(input: LineSubsInput, changeInput: Change = {}): Promise<ActionResult> {
+  const parsed = subsSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const change = changeSchema.parse(changeInput);
+  const d = parsed.data;
+  const at = await allowedForPerson(d.siteId, d.date, d.departmentId, d.userId);
+  if (!at.ok) return fail(at.error);
+  if (at.live && !change.reason) return fail(NEEDS_REASON);
+  const row = await prisma.rotaAssignment.findFirst({ where: { id: d.id, userId: d.userId, need: { siteId: d.siteId } }, select: { id: true, startMinutes: true, endMinutes: true, need: { select: { date: true, typeId: true } } } });
+  if (!row || iso(row.need.date) !== d.date) return fail("That is no longer on the day.");
+  const subs: { subActivityId: string | null; name: string; when: string; atMinutes: number | null }[] = [];
+  for (const x of d.subs) {
+    const minutes = x.when === "at" ? parseClock(x.at) : null;
+    if (x.when === "at" && (minutes === null || minutes < row.startMinutes || minutes > row.endMinutes)) return fail(`Give ${x.name} a time while they are on it, ${clock(row.startMinutes)} to ${clock(row.endMinutes)}.`);
+    subs.push({ subActivityId: x.subActivityId, name: x.name, when: x.when, atMinutes: minutes });
+  }
+  const person = await staffContact(d.userId, at.site.orgId);
+  const words = subs.map((x) => (x.atMinutes !== null ? `${x.name} at ${clock(x.atMinutes)}` : x.when === "during" ? x.name : `${x.name} at the ${x.when}`)).join(", ") || "none";
+  await prisma.$transaction(async (tx) => {
+    await tx.rotaAssignmentSub.deleteMany({ where: { assignmentId: row.id } });
+    if (subs.length) await tx.rotaAssignmentSub.createMany({ data: subs.map((x, i) => ({ ...x, assignmentId: row.id, sortOrder: i })) });
+    await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "update", entity: "RotaAssignment", entityId: row.id, clubId: d.siteId,
+      summary: `Set ${person?.name ?? "someone"}'s sub-activities on ${d.date}, ${clock(row.startMinutes)}–${clock(row.endMinutes)}: ${words}` }, tx);
+    if (at.live) await logLive(tx, at, d.date, "changed", `${person?.name ?? "Someone"}'s sub-activities: ${words}`, d.userId, change);
   });
   refresh();
   return ok();

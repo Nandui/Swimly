@@ -578,10 +578,34 @@ model ActivityType {
   requiredType QualificationType? @relation(fields: [requiredTypeId], references: [id], onDelete: SetNull)
   needs        RotaNeed[]
   repeats      RotaRepeat[]
+  subs         SubActivity[]
 
   @@unique([orgId, name])
   @@index([departmentId])
   @@map("RotaActivityType")
+}
+
+/// Something done while on an activity (owner, 20 October 2026): Till 1 has "Open the cash
+/// till" at the start, "Cash drop" at 11:00, "Answer the phone" any time, "Close the cash till"
+/// at the end. Usual ones are given to whoever is put on the activity; the plan can change them.
+model SubActivity {
+  id             String    @id @default(cuid())
+  activityTypeId String
+  name           String
+  /// "start", "end", "at" (at `atMinutes`) or "during" (any time while on the activity).
+  when           String    @default("during")
+  atMinutes      Int?
+  /// Given to whoever is put on the activity, unless the plan takes it off.
+  usual          Boolean   @default(true)
+  sortOrder      Int       @default(0)
+  archivedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  activityType ActivityType        @relation(fields: [activityTypeId], references: [id], onDelete: Cascade)
+  done         RotaAssignmentSub[]
+
+  @@index([activityTypeId])
 }
 
 /// A place at a site where work happens (owner decision, 7 October 2026): the
