@@ -4,6 +4,11 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.42.0 · 20 October 2026 · Swim school: a check when enrolling at another centre
+
+- When you enrol a swimmer in a class at a different centre from where they were assessed, Turnfin now stops and asks you to check first. Parents are told lessons are only at the centre where their child was assessed.
+- You can still go ahead. The activity log notes that they were enrolled at another centre after the check.
+
 ## 1.41.0 · 20 October 2026 · Add a swimmer to Awaiting enrolment yourself
 
 - Reception can now put a swimmer on **Awaiting enrolment** by hand, for when they need a class but have not been placed by an assessment (for example, they moved from another swim school). Press **Add a swimmer** at the top of the page, pick the swimmer, the level they should start at, and say why.

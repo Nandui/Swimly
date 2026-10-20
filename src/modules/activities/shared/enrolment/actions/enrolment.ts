@@ -1,6 +1,6 @@
 "use server";
 
-import { isArchivedSite } from "@/lib/directory";
+import { isArchivedSite, sitesByIds } from "@/lib/directory";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
@@ -73,6 +73,29 @@ async function placementFor(
   };
 }
 
+/** Parents are told lessons follow the centre where the child was assessed
+ *  (owner rule, 20 October 2026). Staff may still enrol elsewhere, but are
+ *  warned first. Uses the latest attended assessment in this programme. */
+const OTHER_SITE = "site:";
+async function assessedElsewhere(
+  tx: Prisma.TransactionClient,
+  studentId: string,
+  course: { clubId: string; level: { programmeId: string } },
+) {
+  const curriculum = await readSharedCurriculum(tx);
+  const latest = await tx.assessmentBooking.findFirst({
+    where: { studentId, status: "ATTENDED", session: { programmeId: { in: curriculum.programmeIds.variants(course.level.programmeId) } } },
+    orderBy: [{ session: { date: "desc" } }, { session: { startMinutes: "desc" } }],
+    select: { session: { select: { clubId: true } } },
+  });
+  if (!latest || latest.session.clubId === course.clubId) return null;
+  const sites = await sitesByIds([latest.session.clubId, course.clubId], tx);
+  return {
+    assessedAt: sites.get(latest.session.clubId)?.name ?? "another centre",
+    classAt: sites.get(course.clubId)?.name ?? "this centre",
+  };
+}
+
 function revalidate() {
   revalidatePath("/legend-agreements");
   revalidatePath("/awaiting-enrolment");
@@ -133,19 +156,32 @@ export async function enrolStudent(input: EnrolInput, confirmation?: Confirmatio
       orderBy: { id: "asc" },
     });
     const decision = reply.data;
-    const matches = decision && decision.ids.length === existing.length && existing.every((row) => decision.ids.includes(row.id));
-    if (existing.length && (!matches || (full && decision?.choice === "withdraw") || existing.some((row) => !sources.some((source) => source.courseId === row.courseId)))) {
+    const elsewhere = await assessedElsewhere(tx, studentId, course);
+    const siteKey = `${OTHER_SITE}${course.clubId}`;
+    const placeIds = decision?.ids.filter((id) => !id.startsWith(OTHER_SITE)) ?? [];
+    const matches = decision && placeIds.length === existing.length && existing.every((row) => placeIds.includes(row.id));
+    const placesUnanswered = existing.length > 0 && (!matches || (full && decision?.choice === "withdraw") || existing.some((row) => !sources.some((source) => source.courseId === row.courseId)));
+    const siteUnanswered = elsewhere !== null && !decision?.ids.includes(siteKey);
+    if (placesUnanswered || siteUnanswered) {
+      const siteWarning = elsewhere
+        ? `${fullName(student)} was assessed at ${elsewhere.assessedAt}, and parents are told lessons are only at the centre where their child was assessed. This class is at ${elsewhere.classAt}. `
+        : "";
       return {
-        ok: false, error: "Choose what to do with the existing places.",
-        confirmation: {
+        ok: false, error: existing.length ? "Choose what to do with the existing places." : `Check the centre: ${fullName(student)} was assessed at ${elsewhere?.assessedAt}.`,
+        confirmation: existing.length ? {
           title: "Unenrol from the previous class?",
-          description: `${fullName(student)} is already enrolled in: ${existing.map((row) => `${courseLabel(row.course)} (${row.course.level.name})`).join("; ")}. ` +
+          description: siteWarning + `${fullName(student)} is already enrolled in: ${existing.map((row) => `${courseLabel(row.course)} (${row.course.level.name})`).join("; ")}. ` +
             (full ? "The new class is full. Joining its waitlist keeps these places." : "Keep these places, or end them when enrolling in the new class. Attendance and marks stay on record."),
-          ids: existing.map((row) => row.id),
+          ids: [...existing.map((row) => row.id), ...(elsewhere ? [siteKey] : [])],
           choices: full ? [{ label: "Keep places and join waitlist", value: "keep" }] : [
             { label: "Keep existing places", value: "keep" },
             { label: "Unenrol and enrol", value: "withdraw" },
           ],
+        } : {
+          title: `Enrol at ${elsewhere?.classAt} instead of ${elsewhere?.assessedAt}?`,
+          description: siteWarning + "Check with the family that they want lessons at this centre before you go ahead.",
+          ids: [siteKey],
+          choices: [{ label: full ? `Join the waitlist at ${elsewhere?.classAt}` : `Enrol at ${elsewhere?.classAt}`, value: "keep" }],
         },
       };
     }
@@ -172,6 +208,7 @@ export async function enrolStudent(input: EnrolInput, confirmation?: Confirmatio
       action: full ? "waitlist" : "enrol", entity: "Enrolment", entityId: enrolment.id,
       programmeId: course.level.programmeId, clubId: course.clubId,
       summary: `${full ? "Waitlisted" : "Enrolled"} ${fullName(student)} in ${courseLabel(course)} at ${course.level.name}` +
+        (elsewhere ? ` — assessed at ${elsewhere.assessedAt}, enrolled at ${elsewhere.classAt} after a warning` : "") +
         (!full && legendAgreement ? ` — Legend agreement: ${LEGEND_AGREEMENT_META[legendAgreement].label}` : "") +
         (earned ? "" : ` — placed out of sequence: ${placementReason}`),
     }, tx);
