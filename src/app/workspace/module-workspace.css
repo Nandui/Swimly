@@ -8,12 +8,6 @@
 /* Rota (owner decisions, 6 October 2026; DESIGN.md "Rota's day timeline"). Only layout lives here:
    the blocks are the shared `.pc-block` fills (`data-block="next"` someone on it, `"cover"` a gap).
    The week strip: one tile per day with its gap count, the open day outlined in blue. */
-.turnfin-module .rota-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
-.turnfin-module .rota-week-day { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-height: 72px; padding: 10px 12px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); background: var(--pc-surface); color: var(--pc-ink); font-weight: 600; font-variant-numeric: tabular-nums; text-decoration: none; }
-.turnfin-module .rota-week-day:hover { background: var(--pc-surface-sunken); }
-.turnfin-module .rota-week-day[aria-current] { border-color: var(--pc-primary); box-shadow: inset 0 0 0 1px var(--pc-primary); }
-.turnfin-module .rota-week-day:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
-.turnfin-module .rota-week-day [data-slot='badge'] { max-width: 100%; }
 /* The day: a zoom bar, the hours, then one group per activity and place, its label beside its
    stacked lanes (one per place). Nothing scrolls sideways: the day fits the width. */
 .turnfin-module .rota-tl { display: flex; flex-direction: column; gap: 8px; }
@@ -91,19 +85,15 @@
 @media (max-width: 1023px) {
   .turnfin-module .rota-tl { display: none; }
   .turnfin-module .rota-agenda { display: flex; }
-  .turnfin-module .rota-week { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
 }
 /* Who can fill it: candidates in the sheet. */
 .turnfin-module .rota-gap-card { display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; border-radius: var(--pc-radius-card); background: var(--pc-block-cover); color: var(--pc-on-block-cover); }
 .turnfin-module .rota-gap-card small { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-variant-numeric: tabular-nums; }
 .turnfin-module .rota-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 /* Today: each gap with its best fits beside it. */
-.turnfin-module .rota-fits { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; }
+.turnfin-module .rota-fits { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; width: 100%; }
 .turnfin-module .rota-fits > .pc-row { flex-wrap: nowrap; min-height: 0; padding: 10px 12px; color: var(--pc-ink); background: var(--pc-surface); }
 @media (max-width: 1023px) { .turnfin-module .rota-fits { grid-template-columns: minmax(0, 1fr); } }
-/* Turnfin-wide two-up panels for Today. */
-.turnfin-module .rota-two { display: grid; gap: 16px; align-items: start; }
-@media (min-width: 1100px) { .turnfin-module .rota-two { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 /* Purchasing: a purchase order prints as the document the supplier gets, without the workspace around it. */
 @media print {
@@ -118,7 +108,6 @@
 }
 
 /* Shift-first Plan (owner, 13 October 2026): what needs people, then each person's shift. */
-.turnfin-module .rota-week-sum { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 400; }
 .turnfin-module .rota-tl-label > .rota-tl-kind { color: var(--pc-ink-muted); }
 .turnfin-module .rota-tl-label > .rota-tl-together { color: var(--pc-primary-ink); font-weight: 600; white-space: normal; }
 .turnfin-module .rota-tl-track[data-row='need'] { min-height: 48px; }
@@ -132,127 +121,126 @@
 .turnfin-module .rota-tl-totals > span { padding: 6px 12px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); }
 .turnfin-module .rota-tl-totals > span[data-gaps] { background: var(--pc-block-cover); color: var(--pc-on-block-cover); font-weight: 600; }
 
-/* ── Plan, redesigned (high-end-visual-design skill, 13 October 2026) ───────────────────────────
-   Soft structuralism with an asymmetric bento: the week rail (wide) beside the open day (narrow),
-   then the day's timeline in one tray. Each card is a double bezel: a quiet tinted shell with a
-   hairline, holding a white core with its own concentric radius and an inner highlight. Motion is
-   a spring curve on transform and opacity only, and stops for reduced motion. */
-.turnfin-module .rota-plan {
-  --rota-spring: cubic-bezier(0.32, 0.72, 0, 1);
-  --rota-shell-pad: 6px;
-  --rota-shell-radius: 32px;
-  --rota-core-radius: calc(var(--rota-shell-radius) - var(--rota-shell-pad));
-  --rota-hair: var(--pc-line);
-  --rota-soft-shadow: none;
-  display: contents;
-}
-.turnfin-module .rota-plan svg { stroke-width: 1.6; }
+/* ── Plan, rebuilt (20 October 2026; references: 7shifts' day view, Deputy's open shifts row,
+   Square's workday, Remote's phone day) ──────────────────────────────────────────────────────────
+   One white surface: a slim week bar, the open day's figures and its two to-do lists, one toolbar,
+   then the board. Rows sit on hairlines, not in boxes, so the eye follows time across. */
+.turnfin-module .rota-plan { --rota-label: 216px; }
+.turnfin-module .rota-plan .rota-departments { margin-bottom: 4px; }
+.turnfin-module .rota-surface { display: flex; flex-direction: column; gap: 20px; min-width: 0; padding: 24px; border-radius: var(--pc-radius-panel); background: var(--pc-surface); box-shadow: 0 0 0 1px var(--pc-line); }
+.turnfin-module .rota-board { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 
-/* The double bezel. */
-.turnfin-module .rota-plan .rota-shell { min-width: 0; padding: var(--rota-shell-pad); border-radius: var(--rota-shell-radius); background: var(--pc-surface-sunken); box-shadow: inset 0 0 0 1px var(--rota-hair), var(--rota-soft-shadow);
-  animation: rota-rise 900ms var(--rota-spring) both; }
-.turnfin-module .rota-plan .rota-core { display: flex; flex-direction: column; gap: 20px; min-width: 0; height: 100%; padding: 28px; border-radius: var(--rota-core-radius); background: var(--pc-surface); box-shadow: 0 0 0 1px var(--rota-hair); }
-.turnfin-module .rota-plan .rota-core-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 16px; }
-@keyframes rota-rise { from { opacity: 0; transform: translateY(24px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
-.turnfin-module .rota-plan .rota-bento > :nth-child(2) { animation-delay: 90ms; }
-.turnfin-module .rota-plan > .rota-shell:nth-of-type(1) { animation-delay: 180ms; }
-@media (prefers-reduced-motion: reduce) { .turnfin-module .rota-plan :is(.rota-shell, .rota-week-day, .pc-block, [data-slot='button'], [data-slot='button'] > svg) { animation: none !important; transition: none !important; } }
+/* The week bar: arrows and the range, then seven day tabs, each with what is still to fill. */
+.turnfin-module .rota-weekbar { display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px; border-bottom: 1px solid var(--pc-line); }
+.turnfin-module .rota-weekbar-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.turnfin-module .rota-weekbar-range { padding-inline: 4px; font-size: var(--pc-text-title, 1.125rem); font-weight: 700; letter-spacing: -0.01em; }
+.turnfin-module .rota-weekbar-total { margin-inline-start: auto; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
+.turnfin-module .rota-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; margin: 0; padding: 0; list-style: none; }
+.turnfin-module .rota-day-tab { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; align-items: baseline; column-gap: 8px; width: 100%; height: auto; min-height: 64px; padding: 10px 12px; border-radius: var(--pc-radius-card); box-shadow: inset 0 0 0 1px var(--pc-line); text-align: start; white-space: nowrap; }
+.turnfin-module .rota-day-dow { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.turnfin-module .rota-day-num { font-size: 1.375rem; line-height: 1.1; font-weight: 750; letter-spacing: -0.02em; }
+.turnfin-module .rota-day-state { grid-column: 1 / -1; display: inline-flex; align-items: center; gap: 6px; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+.turnfin-module .rota-day-state::before { content: ""; flex: none; width: 6px; height: 6px; border-radius: 999px; background: var(--pc-line); }
+.turnfin-module .rota-day-tab[data-state='gaps'] .rota-day-state { color: var(--pc-warning); }
+.turnfin-module .rota-day-tab[data-state='gaps'] .rota-day-state::before { background: var(--pc-warning); }
+.turnfin-module .rota-day-tab[data-state='covered'] .rota-day-state { color: var(--pc-success); }
+.turnfin-module .rota-day-tab[data-state='covered'] .rota-day-state::before { background: var(--pc-success); }
+.turnfin-module .rota-day-tab[data-today] .rota-day-dow { color: var(--pc-primary); }
+.turnfin-module .rota-day-tab[aria-current] { background: var(--pc-primary); box-shadow: none; color: var(--pc-on-primary); }
+.turnfin-module .rota-day-tab[aria-current]:hover { background: var(--pc-primary-hover); color: var(--pc-on-primary); }
+.turnfin-module .rota-day-tab[aria-current] :is(.rota-day-dow, .rota-day-state) { color: var(--pc-on-primary); }
+.turnfin-module .rota-day-tab[aria-current] .rota-day-state::before { background: var(--pc-on-primary); }
 
-/* Eyebrows and quiet text. */
-.turnfin-module .rota-plan .rota-eyebrow { align-self: flex-start; display: inline-flex; align-items: center; min-height: 22px; padding: 0 10px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary-ink, var(--pc-primary)); font-size: 10px; line-height: 1; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
-.turnfin-module .rota-plan .rota-quiet { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
-.turnfin-module .rota-plan .rota-round { border-radius: 999px; border-color: var(--rota-hair); box-shadow: none; }
-.turnfin-module .rota-plan .rota-round:active { transform: scale(0.96); }
+/* The open day: its name and figures, then the places to fill, the people to check and adding. */
+.turnfin-module .rota-day-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+.turnfin-module .rota-day-title { margin: 0; font-size: var(--pc-text-title, 1.25rem); font-weight: 750; letter-spacing: -0.015em; }
+.turnfin-module .rota-day-stats { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
+.turnfin-module .rota-day-stats > div { display: flex; gap: 6px; }
+.turnfin-module .rota-day-stats dt::after { content: ":"; }
+.turnfin-module .rota-day-stats dd { margin: 0; color: var(--pc-ink); font-weight: 650; }
+.turnfin-module .rota-day-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.turnfin-module .rota-day-actions [data-tone='warning'] { border-color: var(--pc-warning-soft); background: var(--pc-warning-soft); color: var(--pc-warning); font-weight: 650; }
+.turnfin-module .rota-day-actions [data-tone='success'] { border-color: var(--pc-success-soft); background: var(--pc-success-soft); color: var(--pc-success); font-weight: 650; }
+.turnfin-module .rota-day-note { flex-basis: 100%; margin: 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
 
-/* The bento: week wide, day narrow; one column below 1024px. */
-.turnfin-module .rota-plan .rota-bento { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); gap: 16px; align-items: stretch; }
-@media (max-width: 1023px) { .turnfin-module .rota-plan .rota-bento { grid-template-columns: minmax(0, 1fr); } }
-.turnfin-module .rota-plan .rota-week-title { margin: 0; font-size: 26px; line-height: 1.1; font-weight: 700; letter-spacing: -0.02em; }
-.turnfin-module .rota-plan .rota-day-title { margin: 0; font-size: 56px; line-height: 0.95; font-weight: 800; letter-spacing: -0.045em; }
+/* One toolbar: the board, the area, the time of day and zoom, other departments and the key. */
+.turnfin-module .rota-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.turnfin-module .rota-toolbar-time { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.turnfin-module .rota-select[data-slot='select-trigger'] { min-height: 44px; border-radius: 999px; padding-inline: 14px; }
+.turnfin-module .rota-tl-hint { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
 
-/* The week rail: seven machined tiles, the open day filled with the fin's blue. */
-.turnfin-module .rota-plan .rota-week { flex: 1; gap: 8px; }
-.turnfin-module .rota-plan .rota-week > li { display: flex; }
-.turnfin-module .rota-plan .rota-week > li > .rota-week-day { flex: 1; }
-.turnfin-module .rota-plan .rota-week-day { position: relative; gap: 2px; min-height: 132px; padding: 14px 14px 12px; border: 0; border-radius: 20px; background: var(--pc-surface-sunken); box-shadow: inset 0 0 0 1px var(--rota-hair);
-  transition: transform 500ms var(--rota-spring), background-color 300ms var(--rota-spring), box-shadow 300ms var(--rota-spring); }
-.turnfin-module .rota-plan .rota-week-day:hover { background: var(--pc-surface-sunken); transform: translateY(-3px); box-shadow: inset 0 0 0 1px var(--rota-hair); }
-.turnfin-module .rota-plan .rota-week-day:active { transform: scale(0.98); }
-.turnfin-module .rota-plan .rota-week-dow { display: flex; align-items: center; justify-content: space-between; width: 100%; color: var(--pc-ink-muted); font-size: 11px; line-height: 16px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
-.turnfin-module .rota-plan .rota-week-dow > i { padding: 1px 6px; border-radius: 999px; background: var(--pc-surface); color: var(--pc-primary); font-style: normal; font-size: 9px; letter-spacing: 0.1em; }
-.turnfin-module .rota-plan .rota-week-num { font-size: 32px; line-height: 1.1; font-weight: 800; letter-spacing: -0.04em; }
-.turnfin-module .rota-plan .rota-week-sum { margin-top: auto; }
-.turnfin-module .rota-plan .rota-week-state { display: inline-flex; align-items: center; gap: 6px; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; color: var(--pc-ink-muted); align-items: baseline; }
-.turnfin-module .rota-plan .rota-week-state::before { content: ""; flex: none; width: 6px; height: 6px; translate: 0 -1px; border-radius: 999px; background: currentColor; }
-.turnfin-module .rota-plan .rota-week-day[data-state='gaps'] .rota-week-state { color: var(--pc-warning); }
-.turnfin-module .rota-plan .rota-week-day[data-state='covered'] .rota-week-state { color: var(--pc-success); }
-.turnfin-module .rota-plan .rota-week-day[aria-current] { background: var(--pc-primary); color: var(--pc-on-primary); box-shadow: none; transform: translateY(-3px); }
-.turnfin-module .rota-plan .rota-week-day[aria-current] :is(.rota-week-dow, .rota-week-sum, .rota-week-state) { color: var(--pc-on-primary); }
-.turnfin-module .rota-plan .rota-week-day[aria-current] .rota-week-dow > i { background: var(--pc-primary-hover); color: var(--pc-on-primary); }
-@media (max-width: 767px) {
-  .turnfin-module .rota-plan .rota-week { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: -4px; padding: 4px 4px 8px; }
-  .turnfin-module .rota-plan .rota-week > li { flex: 0 0 104px; scroll-snap-align: start; }
-  .turnfin-module .rota-plan .rota-week-day { min-height: 116px; }
-  .turnfin-module .rota-plan .rota-core { padding: 18px; gap: 16px; }
-  .turnfin-module .rota-plan .rota-day-title { font-size: 44px; }
-  .turnfin-module .rota-plan .rota-week-title { font-size: 22px; }
-}
-
-/* The open day: big date, four figures, the two actions as island pills. */
-.turnfin-module .rota-plan .rota-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; margin: 0; overflow: hidden; border-radius: 20px; background: var(--rota-hair); box-shadow: inset 0 0 0 1px var(--rota-hair); }
-.turnfin-module .rota-plan .rota-stats > div { display: flex; flex-direction: column-reverse; gap: 2px; padding: 12px 14px; background: var(--pc-surface); }
-.turnfin-module .rota-plan .rota-stats dt { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
-.turnfin-module .rota-plan .rota-stats dd { margin: 0; font-size: 22px; line-height: 1.2; font-weight: 700; letter-spacing: -0.02em; }
-.turnfin-module .rota-plan .rota-stats > [data-gaps] { background: var(--pc-warning-soft); }
-.turnfin-module .rota-plan .rota-stats > [data-gaps] dd { color: var(--pc-warning); }
-.turnfin-module .rota-plan .rota-day-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
-.turnfin-module .rota-plan .rota-day-actions [data-slot='button'] { min-height: 44px; padding-inline: 6px 18px; border-radius: 999px; border-color: var(--rota-hair); box-shadow: none; transition: transform 400ms var(--rota-spring), background-color 300ms var(--rota-spring); }
-.turnfin-module .rota-plan .rota-day-actions [data-slot='button']:active { transform: scale(0.98); }
-.turnfin-module .rota-plan .rota-day-actions [data-slot='button'] > svg { box-sizing: content-box; width: 16px; height: 16px; padding: 8px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); transition: transform 500ms var(--rota-spring); }
-.turnfin-module .rota-plan .rota-day-actions [data-slot='button']:hover > svg { transform: translate(2px, -1px) scale(1.05); }
-.turnfin-module .rota-plan .rota-day-actions > :first-child [data-slot='button'] { background: var(--pc-ink); color: var(--pc-surface); border-color: transparent; }
-.turnfin-module .rota-plan .rota-day-actions > :first-child [data-slot='button'] > svg { background: transparent; color: var(--pc-surface); }
-
-/* The timeline tray: no boxed labels, lanes as soft wells, a frosted sticky ruler. */
-.turnfin-module .rota-plan .rota-tl { gap: 6px; }
-.turnfin-module .rota-plan .rota-tl-zoom { padding-bottom: 8px; }
-.turnfin-module .rota-plan .rota-tl-hint { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
-.turnfin-module .rota-plan .rota-tl-row { grid-template-columns: 208px minmax(0, 1fr); gap: 16px; }
-.turnfin-module .rota-plan .rota-tl-sticky { top: 0; margin-inline: -12px; padding: 8px 12px; border-radius: 999px; background: var(--pc-surface); backdrop-filter: blur(16px); box-shadow: 0 0 0 1px var(--rota-hair); }
-.turnfin-module .rota-plan .rota-tl-hours > span { font-size: 11px; font-weight: 600; letter-spacing: 0.02em; }
-.turnfin-module .rota-plan .rota-tl-sec { gap: 10px; margin: 20px 0 6px; color: var(--pc-ink); font-size: 11px; letter-spacing: 0.16em; }
-.turnfin-module .rota-plan .rota-tl-sec::after { background: var(--rota-hair); }
-.turnfin-module .rota-plan .rota-count { display: inline-flex; align-items: center; min-height: 20px; padding: 0 8px; border-radius: 999px; background: var(--pc-surface-sunken); color: var(--pc-ink-muted); letter-spacing: 0.04em; text-transform: none; font-variant-numeric: tabular-nums; }
-.turnfin-module .rota-plan .rota-count[data-gaps] { background: var(--pc-warning-soft); color: var(--pc-warning); }
-/* What needs people, area by area (owner, 16 October 2026): a soft heading per area, its rows under it. */
-.turnfin-module .rota-plan .rota-tl-area-band { display: flex; flex-direction: column; gap: 6px; }
-.turnfin-module .rota-plan .rota-tl-area-band + .rota-tl-area-band { margin-top: 10px; }
-.turnfin-module .rota-plan .rota-tl-area { display: flex; align-items: center; gap: 10px; margin: 0; padding: 8px 14px; border-radius: 16px; background: var(--pc-surface-sunken); color: var(--pc-ink); font-size: var(--pc-text-body); font-weight: 750; letter-spacing: -0.01em; }
-.turnfin-module .rota-plan .rota-tl-area .rota-count { font-size: var(--pc-text-caption); font-weight: 650; }
-.turnfin-module .rota-plan .rota-departments { margin-bottom: 16px; }
-.turnfin-module .rota-plan .rota-tl-label { gap: 1px; padding: 8px 12px; border: 0; border-radius: 18px; background: transparent; }
-.turnfin-module .rota-plan .rota-tl-label.ui-motion-press { padding: 8px 12px; border-radius: 18px; }
+/* The board: rows on hairlines under a sticky clock. */
+.turnfin-module .rota-plan .rota-tl { gap: 0; }
+.turnfin-module .rota-plan .rota-tl-row { grid-template-columns: var(--rota-label) minmax(0, 1fr); gap: 12px; }
+.turnfin-module .rota-plan .rota-tl-head { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 8px 0 6px; border-bottom: 1px solid var(--pc-line); background: var(--pc-surface); }
+.turnfin-module .rota-tl-corner { align-self: center; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); font-weight: 650; }
+.turnfin-module .rota-plan .rota-tl-hours > span { font-size: var(--pc-text-caption); font-weight: 600; }
+.turnfin-module .rota-tl-pulse { position: relative; height: 22px; touch-action: pan-y; }
+.turnfin-module .rota-tl-pulse > span { position: absolute; top: 0; bottom: 0; display: grid; place-items: center; margin-inline: 1px; border-radius: 6px; background: var(--pc-primary-soft); color: var(--pc-primary-ink, var(--pc-primary)); font-size: var(--pc-text-caption); font-weight: 650; }
+.turnfin-module .rota-tl-pulse > span[data-empty] { background: var(--pc-surface-sunken); }
+.turnfin-module .rota-tl-pulse > span[data-short] { background: var(--pc-warning-soft); color: var(--pc-warning); }
+.turnfin-module .rota-plan .rota-tl-band { gap: 0; }
+.turnfin-module .rota-plan .rota-tl-band > .rota-tl-row, .turnfin-module .rota-plan .rota-tl-area-band > .rota-tl-row { padding-block: 4px; border-bottom: 1px solid var(--pc-line); }
+.turnfin-module .rota-plan .rota-tl-band > .rota-tl-row:not(:last-child) { border-bottom-style: dashed; }
+.turnfin-module .rota-plan .rota-tl-track { min-height: 52px; border: 0; border-radius: 0; background: none; }
+.turnfin-module .rota-plan .rota-tl-track[data-row='need'] { min-height: 48px; }
+.turnfin-module .rota-plan .rota-tl-track > .pc-block { border-radius: 12px; }
+.turnfin-module .rota-plan .rota-tl-label { gap: 2px; padding: 6px 10px; border: 0; border-radius: var(--pc-radius-card); background: transparent; }
 .turnfin-module .rota-plan .rota-tl-label.ui-motion-press:hover { background: var(--pc-surface-sunken); }
-.turnfin-module .rota-plan .rota-tl-label > .rota-tl-name { color: var(--pc-ink); font-weight: 650; letter-spacing: -0.005em; }
+.turnfin-module .rota-plan .rota-tl-label { color: var(--pc-ink); }
 .turnfin-module .rota-plan .rota-tl-label > .rota-tl-name > svg { color: var(--pc-primary); }
-.turnfin-module .rota-plan .rota-tl-person { display: grid; grid-template-columns: 36px minmax(0, 1fr); column-gap: 10px; align-content: center; }
-.turnfin-module .rota-plan .rota-tl-person > :not(.rota-avatar) { grid-column: 2; }
-.turnfin-module .rota-plan .rota-avatar { grid-row: 1 / span 2; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); box-shadow: inset 0 0 0 1px var(--pc-primary-soft-hover); font-size: 12px; font-weight: 700; letter-spacing: 0.02em; }
-.turnfin-module .rota-plan .rota-meter { display: block; height: 4px; margin-top: 4px; overflow: hidden; border-radius: 999px; background: var(--pc-surface-sunken); }
-.turnfin-module .rota-plan .rota-meter > span { display: block; height: 100%; border-radius: inherit; background: var(--pc-primary); }
-.turnfin-module .rota-plan .rota-meter[data-over] > span { background: var(--pc-warning); }
-.turnfin-module .rota-plan .rota-tl-track { border: 0; border-radius: 18px; background-color: var(--pc-surface-sunken); box-shadow: inset 0 0 0 1px var(--rota-hair);
-}
-.turnfin-module .rota-plan .rota-tl-track > .pc-block { border-radius: 14px; box-shadow: none;
-  transition: transform 400ms var(--rota-spring), box-shadow 300ms var(--rota-spring); }
-.turnfin-module .rota-plan .rota-tl-track > .pc-block:is(a, button):hover { transform: translateY(-1px); }
-.turnfin-module .rota-plan .rota-tl-track > .pc-block:is(a, button):active { transform: scale(0.98); }
-.turnfin-module .rota-plan .rota-tl-track > .pc-block.rota-free-time { box-shadow: inset 0 0 0 1px var(--rota-hair); background: repeating-linear-gradient(135deg, var(--pc-hatch) 0 5px, transparent 5px 10px), var(--pc-surface); }
+.turnfin-module .rota-plan .rota-tl-person { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; align-content: center; }
+.turnfin-module .rota-plan .rota-tl-person > [data-slot='avatar'] { grid-row: 1 / span 3; align-self: center; }
+.turnfin-module .rota-plan .rota-tl-person > :not([data-slot='avatar']) { grid-column: 2; }
+.turnfin-module .rota-plan .rota-tl-person .rota-warn-icon { color: var(--pc-warning); }
+.turnfin-module .rota-week-bar[data-slot='progress'] { height: 4px; margin-top: 4px; }
+.turnfin-module .rota-week-bar[data-over] [data-slot='progress-indicator'] { background: var(--pc-warning); }
+.turnfin-module .rota-plan .rota-tl-area-band { display: flex; flex-direction: column; }
+.turnfin-module .rota-plan .rota-tl-area { display: flex; align-items: center; gap: 10px; min-height: 44px; margin: 12px 0 0; padding: 0 4px 0 12px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); font-size: var(--pc-text-body); font-weight: 750; }
+.turnfin-module .rota-plan .rota-count { display: inline-flex; align-items: center; min-height: 20px; padding: 0 8px; border-radius: 999px; background: var(--pc-surface-sunken); color: var(--pc-ink-muted); font-size: var(--pc-text-caption); font-weight: 650; font-variant-numeric: tabular-nums; }
+.turnfin-module .rota-plan .rota-tl-area .rota-count { background: var(--pc-surface); }
+.turnfin-module .rota-plan .rota-count[data-gaps] { background: var(--pc-warning-soft); color: var(--pc-warning); }
+/* Open needs: the first row of the People board, tinted so gaps read before people. */
+.turnfin-module .rota-open > .rota-tl-row { background: var(--pc-warning-soft); border-radius: var(--pc-radius-card); border-bottom: 0 !important; margin-block: 8px 4px; padding: 4px; }
+.turnfin-module .rota-open-label > .rota-tl-name > svg { color: var(--pc-warning) !important; }
+.turnfin-module .rota-open .rota-tl-track { min-height: 44px; }
+.turnfin-module .rota-plan .rota-tl-track > .pc-block.rota-free-time { box-shadow: inset 0 0 0 1px var(--pc-line); background: var(--pc-surface); color: var(--pc-ink-muted); }
+.turnfin-module .rota-plan .rota-tl-track > .pc-block.rota-free-time > svg { color: var(--pc-primary); }
+.turnfin-module .rota-plan .rota-tl-track > .pc-block.rota-free-time:hover { box-shadow: inset 0 0 0 1px var(--pc-primary); color: var(--pc-primary); }
 .turnfin-module .rota-plan .rota-tl-track > .pc-block[data-lent] { box-shadow: inset 0 0 0 1.5px var(--pc-ink-muted); }
-.turnfin-module .rota-plan .rota-people-shift { border-radius: 16px; }
-.turnfin-module .rota-plan .rota-tl-key { gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--rota-hair); }
-.turnfin-module .rota-plan .rota-tl-key > span { padding: 4px 10px 4px 6px; border-radius: 999px; background: var(--pc-surface-sunken); }
-.turnfin-module .rota-plan .rota-tl-key i { width: 16px; height: 10px; border-radius: 999px; }
+.turnfin-module .rota-plan .rota-people-shift { border-radius: 14px; }
+.turnfin-module .rota-tl-empty { margin: 12px 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
+/* The key, in its popover. */
+.turnfin-module .rota-tl-key { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; font-size: var(--pc-text-caption); }
+.turnfin-module .rota-tl-key > li { display: flex; align-items: center; gap: 10px; }
+.turnfin-module .rota-tl-key i { position: relative !important; flex: none; display: inline-block; width: 24px; height: 14px; min-height: 0 !important; padding: 0 !important; margin: 0 !important; border-radius: 6px; inset: auto !important; }
+.turnfin-module .rota-tl-key i.rota-split-gap { height: 0; border-radius: 0; background: none; }
+.turnfin-module .rota-fill-cta { display: inline-flex; align-items: center; gap: 2px; color: var(--pc-primary); font-weight: 650; }
+.turnfin-module .rota-fill-cta > svg { width: 16px; height: 16px; }
+/* Phones and tablets: the board is a list per view. */
+.turnfin-module .rota-agenda-title { display: flex; align-items: center; gap: 8px; margin: 0; font-size: var(--pc-text-body); font-weight: 750; }
+@media (max-width: 1023px) {
+  .turnfin-module .rota-surface { padding: 16px; }
+  .turnfin-module .rota-days { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: -4px; padding: 2px 4px 6px; }
+  .turnfin-module .rota-days > li { flex: 0 0 96px; scroll-snap-align: start; }
+  .turnfin-module .rota-weekbar-total { flex-basis: 100%; margin-inline-start: 0; }
+}
+@media (max-width: 639px) {
+  .turnfin-module .rota-surface { margin-inline: -8px; padding: 12px; }
+  .turnfin-module .rota-day-head { align-items: flex-start; }
+}
 
-/* Split shifts (owner request, 16 October 2026): the key shows the dotted "off" line. */
-.turnfin-module .rota-plan .rota-tl-key i.rota-split-gap { height: 0; border-radius: 0; background: none; }
+/* Today (laid out again 20 October 2026): five figures, then what to do beside what to know. */
+.turnfin-module .rota-kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 0; }
+.turnfin-module .rota-kpis > div { display: flex; flex-direction: column-reverse; gap: 2px; padding: 16px 18px; border-radius: var(--pc-radius-panel); background: var(--pc-surface); box-shadow: 0 0 0 1px var(--pc-line); }
+.turnfin-module .rota-kpis dt { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
+.turnfin-module .rota-kpis dd { margin: 0; font-size: 1.75rem; line-height: 1.15; font-weight: 750; letter-spacing: -0.02em; }
+.turnfin-module .rota-kpis > [data-tone='warning'] { background: var(--pc-warning-soft); box-shadow: none; }
+.turnfin-module .rota-kpis > [data-tone='warning'] dd { color: var(--pc-warning); }
+.turnfin-module .rota-kpis > [data-tone='success'] dd { color: var(--pc-success); }
+.turnfin-module .rota-today { display: grid; gap: 16px; align-items: start; }
+.turnfin-module :is(.rota-today-main, .rota-today-side) { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+@media (min-width: 1100px) { .turnfin-module .rota-today { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); } }
+@media (max-width: 1023px) { .turnfin-module .rota-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.turnfin-module .rota-kpis-three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 639px) { .turnfin-module .rota-kpis-three { grid-template-columns: minmax(0, 1fr); } }
