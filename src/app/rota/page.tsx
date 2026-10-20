@@ -3,103 +3,86 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
+import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { Tag } from "@/components/ui-kit/tag";
-import {
-  addDaysIso, AddShiftSheet, ALL_DEPARTMENTS, CopyDialog, DayPlan, duration, mondayOf, NeedDialog, planWeek, ROTA_WEEK_META, ShareWeek,
-} from "@/modules/rota/features/plan";
 import { formatDateRange, formatDayMonth, formatWeekday } from "@/lib/format";
+import { addDaysIso, CopyWeek, Diary, diaryWeek, EVERY_DEPARTMENT, mondayOf, ROTA_DAY_META, ROTA_WEEK_META, ShareWeekDialog } from "@/modules/rota/features/diary";
 
 export const metadata: Metadata = { title: "Plan" };
 
-/** The department supervisor's Plan (owner decisions, 6 October 2026; shift first, owner, 13 October
- *  2026; every department together with a filter, owner, 16 October 2026; redesigned 20 October
- *  2026): a site's week for one department or all of them, as one surface: a slim week bar (each
- *  day with how much is still to fill), then the open day's board (DayPlan: People or Needs, the
- *  places to fill and the people to check). The week exports to Excel for Timepoint. A draft
- *  until the week is shared with its staff. */
-export default async function PlanPage({ searchParams }: { searchParams: Promise<{ site?: string; week?: string; dept?: string; day?: string }> }) {
-  const input = await searchParams;
-  const data = await planWeek(input);
-  if (!data.site) {
+/** The department supervisor's Plan, as the day's diary (owner, 20 October 2026): it opens on
+ *  their own department's day, shows what is not covered yet first, who's where at a moment, then
+ *  the day person by person. A week's days sit in one bar under the title; the week exports to
+ *  Excel for Timepoint and is a draft until shared with its staff. */
+export default async function PlanPage({ searchParams }: { searchParams: Promise<{ site?: string; dept?: string; day?: string }> }) {
+  const data = await diaryWeek(await searchParams);
+  if (!data.site || !("diary" in data)) {
     return (
       <PageShell header={<PageHeader title="Plan" />}>
         <EmptyState as="h2" icon="calendarDays" title="No sites to show" hint="Your rota role does not cover a site yet." />
       </PageShell>
     );
   }
-  const { site, monday, now, date, department, departments, everyDepartment, week, share, day } = data;
-  const link = (q: { week?: string; day?: string; dept?: string }) =>
-    `/rota?${new URLSearchParams({ site: site.id, ...(department ? { dept: everyDepartment ? ALL_DEPARTMENTS : department.id } : {}), ...q })}`;
-  const sunday = addDaysIso(monday, 6);
-  const live = date <= now;
-  const thisMonday = mondayOf(now);
-  const weeksBack = Array.from({ length: 6 }, (_, i) => addDaysIso(monday, -7 * (i + 1)));
-  const daysBack = Array.from({ length: 14 }, (_, i) => addDaysIso(date, -(i + 1)));
+  const { site, date, now, monday, department, departments, every, share, week, diary } = data;
+  const deptParam = every ? EVERY_DEPARTMENT : department?.id;
+  const link = (day: string, dept = deptParam) => `/rota?${new URLSearchParams({ site: site.id, ...(dept ? { dept } : {}), day })}`;
+  const today = date === now;
   const dateLabel = `${formatWeekday(date)} ${formatDayMonth(date)}`;
-  const weekGaps = week.reduce((n, d) => n + d.gapCount, 0);
+  const weekHoles = week.reduce((n, d) => n + d.holes, 0);
   const departmentNames = Object.fromEntries(departments.map((d) => [d.id, d.name]));
+  const thisMonday = mondayOf(now);
   return (
-    <PageShell className="rota-plan" header={<PageHeader
-        title={everyDepartment ? `Plan: ${site.name}` : department ? `Plan: ${department.name}` : "Plan"}
-        description={`${site.name} · ${everyDepartment ? "every department. Choose one to copy, export or share its week." : share ? `shared with staff by ${share.sharedByName}.` : "a draft until you share the week with staff."}`}
-        status={department && !everyDepartment ? <Tag meta={ROTA_WEEK_META[share ? "shared" : "draft"]} /> : undefined}
-        actions={department ? <>
-          {data.canShare ? <CopyDialog siteId={site.id} departmentId={department.id} date={date} monday={monday}
-            options={{ days: daysBack.map((d) => ({ iso: d, label: `${formatWeekday(d)} ${formatDayMonth(d)}` })), weeks: weeksBack.map((m) => ({ iso: m, label: m === addDaysIso(thisMonday, -7) ? "Last week" : `Week of ${formatDayMonth(m)}` })) }} /> : null}
-          {data.canShare ? <Button asChild variant="outline"><a href={`/rota/export?${new URLSearchParams({ site: site.id, dept: department.id, week: monday })}`} download><Download aria-hidden="true" />Export week</a></Button> : null}
-          {data.canShare && !share ? <ShareWeek siteId={site.id} departmentId={department.id} monday={monday} department={department.name} gaps={weekGaps} /> : null}
+    <PageShell className="diary-page" spacing="roomy" header={<PageHeader
+        title={every ? "Plan: every department" : department ? `Plan: ${department.name}` : "Plan"}
+        description={`${site.name} · ${every ? "every department together. Choose one to copy, export or share its week." : share ? `shared with staff by ${share.sharedByName}.` : "a draft until you share the week with staff."}`}
+        status={department ? <Tag meta={ROTA_WEEK_META[share ? "shared" : "draft"]} /> : undefined}
+        actions={department && data.canShare ? <>
+          <CopyWeek siteId={site.id} departmentId={department.id} date={date} monday={monday}
+            days={Array.from({ length: 14 }, (_, i) => addDaysIso(date, -(i + 1))).map((d) => ({ iso: d, label: `${formatWeekday(d)} ${formatDayMonth(d)}` }))}
+            weeks={Array.from({ length: 6 }, (_, i) => addDaysIso(monday, -7 * (i + 1))).map((m) => ({ iso: m, label: m === addDaysIso(thisMonday, -7) ? "Last week" : `Week of ${formatDayMonth(m)}` }))} />
+          <Button asChild variant="outline"><a href={`/rota/export?${new URLSearchParams({ site: site.id, dept: department.id, week: monday })}`} download><Download aria-hidden="true" />Export week</a></Button>
+          {!share ? <ShareWeekDialog siteId={site.id} departmentId={department.id} monday={monday} department={department.name} holes={weekHoles} /> : null}
         </> : undefined}
       />}>
-      {department && departments.length > 1 ? (
-        <SegmentedLinks label="Department" className="rota-departments" items={[
-          { href: `/rota?${new URLSearchParams({ site: site.id, dept: ALL_DEPARTMENTS, week: monday, day: date })}`, label: "All departments", current: everyDepartment },
-          ...departments.map((d) => ({ href: `/rota?${new URLSearchParams({ site: site.id, dept: d.id, week: monday, day: date })}`, label: d.name, current: !everyDepartment && d.id === department.id })),
+      {departments.length > 1 ? (
+        <SegmentedLinks label="Department" items={[
+          ...departments.map((d) => ({ href: link(date, d.id), label: d.name, current: !every && d.id === department?.id })),
+          { href: link(date, EVERY_DEPARTMENT), label: "Every department", current: every },
         ]} />
       ) : null}
-      {!department ? (
+      {!departments.length ? (
         <EmptyState as="h2" icon="calendarDays" title="No departments at this site" hint="An administrator adds them in Admin, Departments. Each activity on the rota belongs to one." />
       ) : (
-        <section className="rota-surface" aria-labelledby={`rota-day-${date}`}>
-          <nav className="rota-weekbar" aria-label="Week">
-            <div className="rota-weekbar-nav">
-              <Button asChild variant="outline" size="icon" className="size-11" aria-label="Previous week"><Link href={link({ week: addDaysIso(monday, -7) })}><ChevronLeft aria-hidden="true" /></Link></Button>
-              <span className="rota-weekbar-range tabular-nums">{formatDateRange(monday, sunday)}</span>
-              <Button asChild variant="outline" size="icon" className="size-11" aria-label="Next week"><Link href={link({ week: addDaysIso(monday, 7) })}><ChevronRight aria-hidden="true" /></Link></Button>
-              {date !== now ? <Button asChild variant="ghost"><Link href={link({ week: thisMonday, day: now })}>Today</Link></Button> : null}
-              <span className="rota-weekbar-total tabular-nums">{weekGaps ? `${weekGaps} to fill this week` : "Nothing to fill this week"}</span>
-            </div>
-            <ul className="rota-days">
-              {week.map((d) => {
-                const state = !d.planned ? "empty" : d.gapCount ? "gaps" : "covered";
-                return (
-                  <li key={d.iso}>
-                    <Button asChild variant="ghost" className="rota-day-tab" data-state={state} data-today={d.iso === now ? "" : undefined}>
-                      <Link href={link({ day: d.iso })} aria-current={d.iso === date ? "date" : undefined}
-                        aria-label={`${formatWeekday(d.iso)} ${formatDayMonth(d.iso)}${d.iso === now ? ", today" : ""}: ${d.staff ? `${d.staff} staff, ${duration(d.paidMinutes)}` : "nobody added yet"}, ${!d.planned ? "nothing planned" : d.gapCount ? `${d.gapCount} to fill` : "covered"}`}>
-                        <span className="rota-day-dow">{formatWeekday(d.iso, "short")}</span>
-                        <span className="rota-day-num tabular-nums">{formatDayMonth(d.iso).split(" ")[0]}</span>
-                        <span className="rota-day-state tabular-nums">{!d.planned ? "—" : d.gapCount ? `${d.gapCount} to fill` : "Covered"}</span>
-                      </Link>
-                    </Button>
-                  </li>
-                );
-              })}
-            </ul>
+        <>
+          <nav className="diary-week" aria-label="Days of the week">
+            <Button asChild variant="outline" size="icon" className="size-11" aria-label="Previous week"><Link href={link(addDaysIso(date, -7))}><ChevronLeft aria-hidden="true" /></Link></Button>
+            <span className="diary-week-range tabular-nums">{formatDateRange(monday, addDaysIso(monday, 6))}</span>
+            <Button asChild variant="outline" size="icon" className="size-11" aria-label="Next week"><Link href={link(addDaysIso(date, 7))}><ChevronRight aria-hidden="true" /></Link></Button>
+            {!today ? <Button asChild variant="ghost"><Link href={link(now)}>Today</Link></Button> : null}
+            <SegmentedLinks label="Day" className="diary-days" items={week.map((d) => ({
+              href: link(d.date),
+              label: `${formatWeekday(d.date, "short")} ${formatDayMonth(d.date).split(" ")[0]}${d.date === now ? " (today)" : ""}`,
+              count: d.holes ? `${d.holes} to fill` : d.people ? "Done" : "—",
+              current: d.date === date,
+            }))} />
           </nav>
-          <DayPlan siteId={site.id} departmentId={department.id} everyDepartment={everyDepartment} departmentNames={departmentNames} date={date} dateLabel={dateLabel} live={live}
-            heading={`${formatWeekday(date)} ${formatDayMonth(date)}${date === now ? ", today" : ""}`} today={date === now}
-            actions={data.canChange ? <>
-              <AddShiftSheet siteId={site.id} departmentId={department.id} departments={everyDepartment ? data.changeable : undefined} date={date} dateLabel={dateLabel} live={live} />
-              {data.types.length ? <NeedDialog siteId={site.id} date={date} live={live} types={data.types} areas={data.areas} /> : null}
-            </> : undefined}
-            note={data.canChange ? undefined : data.blocked === "come" ? "This day has come: the duty manager changes it from Today."
-              : data.blocked === "member" ? `You plan only the departments you belong to, and ${everyDepartment ? "none of them are" : `${department.name} is not one of yours`}. An administrator ticks it under Departments on your profile in HR, People.`
-              : "You can see this plan. Planning it needs the Plan level for Rota in your role."}
-            canChange={data.canChange} zones={day.zones} groups={day.groups} allGroups={data.allGroups} people={day.people} hours={data.hours} types={data.types} anyTypes={data.anyTypes} areaList={data.areas} />
-        </section>
+          <section className="diary-dayhead" aria-labelledby="diary-date">
+            <h2 id="diary-date" className="diary-date">{dateLabel}{today ? ", today" : ""}</h2>
+            <Tag meta={ROTA_DAY_META[!diary.needs.length && !diary.people.length ? "empty" : diary.done ? "covered" : "gaps"]}
+              label={!diary.needs.length && !diary.people.length ? undefined : diary.done ? "Every need filled" : `${diary.holes.length} not covered`} />
+          </section>
+          {!data.canChange ? (
+            <Notice title={data.blocked === "come" ? "This day has come: the duty manager changes it from Today."
+              : data.blocked === "member" ? `You plan only the departments you belong to${department ? `, and ${department.name} is not one of yours` : ""}. An administrator ticks yours under Departments on your profile in HR, People.`
+              : "You can see this plan. Planning it needs the Plan level for Rota in your role."} />
+          ) : null}
+          <Diary siteId={site.id} date={date} dateLabel={dateLabel} today={today} live={date <= now} canChange={data.canChange}
+            departmentId={department?.id ?? null} departmentFor={data.departmentFor} diary={diary} hours={data.hours} pool={data.pool}
+            departmentNames={departmentNames} types={data.types} areas={data.areas} />
+        </>
       )}
     </PageShell>
   );
