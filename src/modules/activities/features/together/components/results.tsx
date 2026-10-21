@@ -4,6 +4,7 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Lead } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
 import { CombinationList } from "@/modules/activities/features/together/components/combination-list";
+import type { GroupMember } from "@/modules/activities/features/together/components/move-dialog";
 import { WHAT_IF_META } from "@/modules/activities/features/together/constants";
 import { formatTime, DAY_META } from "@/modules/activities/shared/courses/constants";
 import type { TogetherResult, FamilyMember } from "@/modules/activities/features/together/server/match";
@@ -15,10 +16,13 @@ export function TogetherResults({
   result,
   count,
   members,
+  group,
 }: {
   result: TogetherResult | null;
   count: number;
   members: FamilyMember[];
+  /** The group with their places, when the viewer may move them. */
+  group?: GroupMember[];
 }) {
   if (!result || result.unplaced.length) return null;
 
@@ -64,6 +68,7 @@ export function TogetherResults({
                 heading={`${DAY_META[day].label} ${formatTime(slot.startMinutes)}`}
                 members={members}
                 courses={slot.courses}
+                group={group}
               />
             </Fragment>
           ))}
@@ -90,6 +95,7 @@ export function TogetherResults({
                 members={members}
                 courses={day.spread!}
                 differentTimes
+                group={group}
               />
             </Fragment>
           ))}

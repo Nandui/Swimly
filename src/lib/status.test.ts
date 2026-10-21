@@ -9,6 +9,7 @@ import { NOTE_VISIBILITY_META, REVIEW_STATUS_META } from "@/modules/hr/shared/co
 import { PERSON_STATUS_META, QUALIFICATION_STATE_META } from "@/lib/people/constants";
 import { incidentStatuses, seriousMeta, SEVERITY_META } from "@/modules/incidents";
 import { refundStatuses } from "@/modules/refunds";
+import { coinageStatuses } from "@/modules/coinage";
 import { MONITORING_STATUS_META } from "@/modules/site-monitoring";
 import * as shortCourses from "@/modules/short-courses";
 import { STOCK_CATEGORY_TONE_META, STOCK_CHANGE_META, STOCK_TAKE_META } from "@/modules/stock";
@@ -23,7 +24,7 @@ const TONES = new Set(["green", "blue", "orange", "red", "purple", "gray"]);
 
 const MAPS: Record<string, Record<string, StatusMeta>> = {
   ACTIONS, CLUB_STATUS_META, DEVICE_STATUS_META, DOC_STATUS_META, RISK_BAND_TONE_META, HOME_ITEM_META, HOME_SESSION_META,
-  NOTE_VISIBILITY_META, REVIEW_STATUS_META, PERSON_STATUS_META, QUALIFICATION_STATE_META, refundStatuses, incidentStatuses, SEVERITY_META, INCIDENT_SERIOUS: { serious: seriousMeta },
+  NOTE_VISIBILITY_META, REVIEW_STATUS_META, PERSON_STATUS_META, QUALIFICATION_STATE_META, refundStatuses, coinageStatuses, incidentStatuses, SEVERITY_META, INCIDENT_SERIOUS: { serious: seriousMeta },
   HEALTH_FORM_META: shortCourses.HEALTH_FORM_META, SHORT_COURSE_AREA_META: shortCourses.SHORT_COURSE_AREA_META, SHORT_COURSE_META: shortCourses.SHORT_COURSE_META,
   SHORT_COURSE_PAYMENT_META: shortCourses.SHORT_COURSE_PAYMENT_META, SHORT_COURSE_PLACE_META: shortCourses.SHORT_COURSE_PLACE_META,
   SHORT_COURSE_ONLINE_META: shortCourses.SHORT_COURSE_ONLINE_META, SHORT_COURSE_CALL_DUE_META: shortCourses.SHORT_COURSE_CALL_DUE_META,
