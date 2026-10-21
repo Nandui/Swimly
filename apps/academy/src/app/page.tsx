@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, CalendarDays, Dumbbell, LifeBuoy, MapPin, PhoneCall, Shapes, Ticket, Users, Waves, type LucideIcon } from "lucide-react";
+import { ArrowRight, BadgeCheck, CalendarDays, LifeBuoy, MapPin, PhoneCall, Ticket, Users, type LucideIcon } from "lucide-react";
 import { api, message, type Course } from "@/lib/api";
 import { placesMeta, rhythm, span } from "@/lib/format";
 import { Button } from "@/components/shadcn/button";
@@ -11,13 +11,13 @@ import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
 import { SegmentedChoice } from "@/components/ui-kit/segmented-links";
 
-/** What a course is about, as an icon: qualifications by kind, short courses by where they run. */
-const ICONS: Record<string, LucideIcon> = { lifeguard: LifeBuoy, "swim-teacher": Users, pool: Waves, gym: Dumbbell, studio: Users };
-const iconOf = (c: Course) => ICONS[c.category] ?? (c.group === "qualification" ? BadgeCheck : Shapes);
+/** What a course is about, as an icon, by kind of qualification. */
+const ICONS: Record<string, LucideIcon> = { lifeguard: LifeBuoy, "swim-teacher": Users };
+const iconOf = (c: Course) => ICONS[c.category] ?? BadgeCheck;
 
-/** The filter a course falls under: every qualification together, short courses by where. */
-const filterOf = (c: Course) => (c.group === "qualification" ? "qualification" : c.category);
-const filterLabel = (c: Course) => (c.group === "qualification" ? "Qualifications" : c.categoryLabel);
+/** The filter a course falls under: its kind (lifeguard, swim teacher, other). */
+const filterOf = (c: Course) => c.category;
+const filterLabel = (c: Course) => c.categoryLabel;
 
 /** The home page: what we offer, how booking works, and every course open for booking, soonest
  *  first. Full ones stay listed. */
@@ -41,7 +41,7 @@ export default function CoursesPage() {
   return (
     <Frame title="Courses" wide>
       <PageShell spacing="roomy" className="academy-home" header={<PageHeader title="Book a course at LeisureWorld"
-        description="Lifeguard and swim teacher qualifications, and six to eight week courses in the pool, the gym and the studio."
+        description="Lifeguard and swim teacher qualifications at our centres."
         actions={<Button asChild variant="outline"><a href="#courses">See the courses<ArrowRight aria-hidden="true" /></a></Button>} />}>
       <ol className="how" aria-label="How booking works">
         <li><span className="how-icon" aria-hidden="true"><Ticket /></span><span><strong>Hold your place online</strong><span className="text-ui-muted-foreground">Pick a course and check your email with a code. No account to set up.</span></span></li>

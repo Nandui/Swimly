@@ -579,6 +579,7 @@ model ActivityType {
   needs        RotaNeed[]
   repeats      RotaRepeat[]
   subs         SubActivity[]
+  areaNeeds    SiteAreaStaffing[]
 
   @@unique([orgId, name])
   @@index([departmentId])
@@ -595,6 +596,9 @@ model SubActivity {
   /// "start", "end", "at" (at `atMinutes`) or "during" (any time while on the activity).
   when           String    @default("during")
   atMinutes      Int?
+  /// Its set times when it has more than one (owner, 21 October 2026: cash drops at 12:00 and
+  /// 16:00), in minutes from midnight; `atMinutes` keeps the first.
+  times          Int[]     @default([])
   /// Given to whoever is put on the activity, unless the plan takes it off.
   usual          Boolean   @default(true)
   sortOrder      Int       @default(0)
@@ -667,11 +671,19 @@ model SiteAreaStaffing {
   positionId          String?
   /// The qualification they need to hold, so who can fill it; empty for anyone.
   qualificationTypeId String?
+  /// The activity they need to be on (owner, 21 October 2026: Reception needs at least one person
+  /// on Serving customers): only people on it in the area or its parts count. Empty for a line
+  /// that asks for staff on duty in the area.
+  activityTypeId      String?
+  /// When an activity line applies, in minutes from midnight; empty for whenever it is open.
+  fromMinutes         Int?
+  untilMinutes        Int?
   sortOrder           Int     @default(0)
 
   area              SiteArea           @relation(fields: [areaId], references: [id], onDelete: Cascade)
   position          Position?          @relation(fields: [positionId], references: [id], onDelete: SetNull)
   qualificationType QualificationType? @relation(fields: [qualificationTypeId], references: [id], onDelete: Restrict)
+  activityType      ActivityType?      @relation(fields: [activityTypeId], references: [id], onDelete: Restrict)
 
   @@index([areaId])
 }

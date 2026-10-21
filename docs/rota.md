@@ -117,6 +117,22 @@ it.
     day is **done when every need is filled**; warnings never block.
   - **Not covered yet** first: every hole, soonest first, with why ("Nobody yet", "1 more
     needed", "Riley is off", "Liam is on a break") and **Choose someone**.
+  - **Area needs on an activity** (owner, 21 October 2026: "areas should require the presence of
+    a certain number of staff on activities related to that area ... if no one is, that's a
+    gap"; card "Yes, build it like that"): a line in an area's Staff needed can be "at least N on
+    an activity", whenever the area is open or between its own times inside them
+    (`SiteAreaStaffing.activityTypeId`, `fromMinutes`, `untilMinutes`). `areaNeedsOn` makes one
+    area need per activity (`area:<area>:act-<activity>:<date>`), its places the most any line
+    asks for at once (lines are each "at least", so overlapping ones take the larger number). Who
+    counts is anyone on that activity in the area or its sub-areas (`countsFor`), however they
+    were put on it; nobody on other activities there. Holes say "Nobody on it yet", "1 more
+    needed on it". **Choose someone** on such a hole puts the person on the activity itself
+    (`fillAreaActivity`): the day keeps one activity record in the area asking for nobody
+    (`places` 0, stretched to the line's hours and with the people's times), so their day reads
+    "Serving customers, Reception", its usual sub-activities come with it, and Who's where lists
+    them under the area's line (`heldByAreaLine` hides the record itself). Today and the old
+    timeline (`buildDay`) take people on the activity off the line's places. Lines without an
+    activity ("2 holding NPLQ while open") work as before. Different activities still add up.
   - **Choose someone** (`candidates`): best fits first (free then, able, own department), then
     other departments' people, borrowed straight away (`allowedForPerson`), then who can't and why
     ("Busy: Main pool 11:30–15:00", "Needs NPLQ", "Off today"); each with what it does to their day
@@ -133,12 +149,14 @@ it.
   - **Sub-activities** (owner, 20 October 2026: "when we assign that activity, we might also
     assign other sub activities that are available during that"; card "Yes, add them"): each
     activity has a list in Admin, Activities (`SubActivity`, Core): a name, when (at the start, at
-    the end, at a set time, any time while on it) and whether it is **usual**. Putting someone on
-    the activity (`fillNeed`) copies the usual ones onto their place (`RotaAssignmentSub`; a set
-    time only when it falls in their stretch). Their day lists them under the line with times
+    the end, at set times, any time while on it) and whether it is **usual**. At set times takes
+    as many times as it needs (owner, 21 October 2026: cash drops at 12:00 and 16:00; `times`,
+    with `atMinutes` keeping the first for older readers; `subTimes` in `lib/setup/meta.ts`).
+    Putting someone on the activity (`fillNeed`) copies the usual ones onto their place
+    (`RotaAssignmentSub`, with the set times that fall in their stretch, and only when one does). Their day lists them under the line with times
     (`subsAt`: start and end follow the line's own times, so changing times needs nothing more),
-    and **Sub-activities** there ticks, unticks and retimes them for that day (`saveLineSubs`,
-    audited). They are done by the person on the activity and never add to what it needs.
+    and **Sub-activities** there ticks, unticks and retimes them for that day, adding or removing
+    times (`saveLineSubs`, audited). They are done by the person on the activity and never add to what it needs.
     Copy does not carry them yet.
   - **The day, person by person**: from 1024px a track per person (a red and amber Not covered
     line on top); areas blue, activities and classes green, bookings violet, breaks dashed, time

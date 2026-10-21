@@ -6,8 +6,11 @@ import { subtract, type Span } from "@/modules/rota/shared/cover";
  *  Only the people on the area's own need count, a qualified place only someone holding it in
  *  date. Pure (staffing.test.ts). */
 
-/** "2 holding Pool Lifeguard", or `typeId` null for anyone. */
-export type AreaMinimum = { count: number; typeId: string | null; typeName: string | null; roleName?: string | null };
+/** "2 holding Pool Lifeguard", or `typeId` null for anyone. A line tied to an activity (owner,
+ *  21 October 2026: "at least 1 on Serving customers") names it, and the times it applies when
+ *  not whenever the area is open. */
+export type AreaMinimum = { count: number; typeId: string | null; typeName: string | null; roleName?: string | null;
+  activityTypeId?: string | null; activityName?: string | null; from?: number | null; until?: number | null };
 /** Someone in an area for a stretch. */
 export type Presence = Span & { userId: string };
 /** One stretch of an area's day in use: `have` of the `want` places filled, and the lines still

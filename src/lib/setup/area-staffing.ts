@@ -3,7 +3,8 @@
 
 /** One line of what an area needs: how many, the role it asks for and the qualification that
  *  says who can fill it (`typeId`, null for anyone). */
-type Minimum = { count: number; typeId: string | null; typeName: string | null; roleId?: string | null; roleName?: string | null };
+type Minimum = { count: number; typeId: string | null; typeName: string | null; roleId?: string | null; roleName?: string | null;
+  activityTypeId?: string | null; activityName?: string | null; from?: number | null; until?: number | null };
 /** A role (Admin, Positions) and the qualifications it needs, in Admin's order. */
 export type RoleNeeds = { id: string; name: string; typeIds: readonly string[]; archived?: boolean; holders?: number };
 
@@ -27,7 +28,7 @@ export const staffLabel = (m: Minimum) => m.roleName ?? (m.typeId ? m.typeName ?
 /** What an area's need for a type of staff is called, from its lines: their roles ("Lifeguard",
  *  "Receptionist or Duty manager"), else the qualification, else null for anyone. */
 export function lineLabel(minimums: readonly Minimum[] | undefined, typeId: string | null): string | null {
-  const labels = [...new Set((minimums ?? []).filter((m) => m.typeId === typeId).map(staffLabel).filter((l): l is string => !!l))];
+  const labels = [...new Set((minimums ?? []).filter((m) => !m.activityTypeId && m.typeId === typeId).map(staffLabel).filter((l): l is string => !!l))];
   return labels.length ? labels.join(" or ") : typeId ? "Qualified" : null;
 }
 
@@ -83,11 +84,26 @@ export function hoursOn(area: AreaHours, date: string): { start: number; end: nu
   return from !== null && until !== null && until > from ? { start: from, end: until } : null;
 }
 
+/** A stored line of what an area needs (`SiteAreaStaffing`) as the pages and the rota read it. */
+export function minimumOf(m: { count: number; qualificationTypeId: string | null; qualificationType: { name: string } | null; activityTypeId: string | null; fromMinutes: number | null;
+  untilMinutes: number | null; activityType: { name: string } | null }) {
+  return { count: m.count, typeId: m.qualificationTypeId, typeName: m.qualificationType?.name ?? null, activityTypeId: m.activityTypeId, activityName: m.activityType?.name ?? null,
+    from: m.fromMinutes, until: m.untilMinutes };
+}
+
+/** One line of what an area needs in a few words: "2 × Lifeguard", "1 × anyone", "1 on Serving
+ *  customers 12:00 to 14:00". */
+export function minimumWords(m: Minimum) {
+  if (!m.activityTypeId) return `${m.count} × ${staffLabel(m) ?? "anyone"}`;
+  const when = m.from != null && m.until != null ? ` ${hhmm(m.from)} to ${hhmm(m.until)}` : "";
+  return `${m.count} on ${m.activityName ?? "an activity"}${when}`;
+}
+
 /** "2 × Lifeguard and 1 × anyone · open 07:00 to 22:00, Saturday 09:00 to 18:00, Sunday closed", or null
  *  with no staff set. */
 export function staffingWords(area: { minimums: Minimum[] } & AreaHours) {
   if (!area.minimums.length) return null;
-  const lines = area.minimums.map((m) => `${m.count} × ${staffLabel(m) ?? "anyone"}`);
+  const lines = area.minimums.map(minimumWords);
   const list = lines.length > 1 ? `${lines.slice(0, -1).join(", ")} and ${lines[lines.length - 1]}` : lines[0];
   return `Needs ${list} · ${hoursWords(area)}`;
 }

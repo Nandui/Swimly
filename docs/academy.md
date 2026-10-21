@@ -66,9 +66,11 @@ Owner decision, 8 October 2026. The public book on a separate site,
 cannot take payment online, so a booking **holds a place** and reception **phones within 72
 hours** to take payment.
 
-Since 15 October 2026 (ADR 0011) the site is the customer portal for **every course we sell to
-the public**: the Academy's qualifications and Short courses (docs/short-courses.md), on one list
-with filters by kind and centre. Customers sign in with an email code and see **My bookings**.
+Since 15 October 2026 (ADR 0011) the site was the customer portal for the Academy's
+qualifications and Short courses together. Since 21 October 2026 (owner choice) it **sells only
+the Academy's courses**, with filters by kind and centre; short courses are booked at the desk.
+Customers sign in with an email code and see **My bookings**, which still shows any short course
+booked at the desk under their email.
 
 - **Which courses.** A course shows online when Manage ticks **Open for online booking**
   (`AcademyCourse.bookOnline`), until its first session (`bookableOnline`). Full courses stay
@@ -96,13 +98,15 @@ with filters by kind and centre. Customers sign in with an email code and see **
 - **Overdue** places stay held until someone records a call. Nothing is cancelled automatically.
 - The home card shows how many are waiting to be phoned, flagged when any are past 72 hours.
 
-### How the site gets both kinds of course
+### How the site gets its courses
 
 The API is Short courses' `booking` feature: email codes, tokens, rate limits, emails and the
 routes. Courses come from two **sources** shaped by `shared/public-booking.ts`: Academy courses
 (`features/booking/server/academy.ts`) and short courses (`courses.ts`). Each lists its courses
-open online, finds one, holds a place in its own tables and reports a customer's bookings. Course
-ids are unique across tables, so `courses/{id}` asks each source.
+open online, finds one, holds a place in its own tables and reports a customer's bookings. Only
+the Academy source is on sale (`ON_SALE` in `api.ts`); both report a customer's bookings
+(`BOOKED`). Putting short courses back on sale is adding the source to `ON_SALE` and the
+**Open for online booking** tick back to the short course dialog.
 
 ### The booking API (`/api/academy/v1`)
 

@@ -4,7 +4,7 @@ import { useState, type Dispatch, type SetStateAction } from "react";
 import { ArchiveRestore, ArrowDown, ArrowUp, CirclePause, Pencil, Plus, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
-import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
+import { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from "@/components/shadcn/native-select";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { moveArea, saveArea, saveAreaStaffing, setAreaArchived } from "@/lib/setup/actions";
@@ -88,44 +88,60 @@ export function MoveArea({ id, name, first, last }: { id: string; name: string; 
   );
 }
 
-type Minimum = { count: number; typeId: string | null; typeName: string | null; roleId?: string | null; roleName?: string | null };
+type Minimum = { count: number; typeId: string | null; typeName: string | null; roleId?: string | null; roleName?: string | null;
+  activityTypeId?: string | null; from?: number | null; until?: number | null };
 /** A role (Admin, Positions) and the qualifications it needs. */
 type Role = { id: string; name: string; typeIds: readonly string[]; archived?: boolean };
-type Line = { key: string; count: number; roleId: string; typeId: string };
+/** An activity an area's line can ask people to be on, with its department for grouping. */
+type ActivityChoice = { id: string; name: string; departmentName: string };
+/** A line: a role on duty (roleId, typeId), or people on an activity (activityTypeId and its times). */
+type Line = { key: string; count: number; roleId: string; typeId: string; activityTypeId: string; from: number | null; until: number | null };
 
 /** The staff an area needs while it is open (owner requests, 16 October 2026: "the 25 meter pool
  *  has a time to be open, and during that time it will need a specific amount of staff with
  *  specific qualifications"): one line per role it asks for (owner request, 20 October 2026: a pool
  *  needs cover from lifeguards), the qualification that says who can fill it, every day's hours
- *  and any weekday's own. Each line is a need on the rota Plan to put staff on. */
-export function AreaStaffing({ area, qualifications, roles, others }: {
+ *  and any weekday's own. Each line is a need on the rota Plan to put staff on. A line can instead
+ *  ask for people on an activity there (owner, 21 October 2026: Reception needs at least one person
+ *  on Serving customers), whenever it is open or between its own times. */
+export function AreaStaffing({ area, qualifications, activities, roles, others }: {
   area: { id: string; name: string; minimums: Minimum[]; openFrom: number | null; openUntil: number | null; weekHours: WeekHour[]; together: AreaTogether[] };
   qualifications: { id: string; name: string }[];
+  /** The organisation's open activities, for lines that ask for people on one. */
+  activities: ActivityChoice[];
   roles: Role[];
   /** The site's other open areas, to be covered from. */
   others: { id: string; name: string }[];
 }) {
   const start = area.minimums.length ? area.minimums : [{ count: 1, typeId: null, typeName: null, roleId: null }];
-  const [lines, setLines] = useState<Line[]>(() => start.map((m, i) => ({ key: String(i), count: m.count, roleId: m.roleId ?? "", typeId: m.typeId ?? "" })));
+  const [lines, setLines] = useState<Line[]>(() => start.map((m, i) => ({ key: String(i), count: m.count, roleId: m.roleId ?? "", typeId: m.typeId ?? "",
+    activityTypeId: m.activityTypeId ?? "", from: m.from ?? null, until: m.until ?? null })));
   const qualName = new Map(qualifications.map((q) => [q.id, q.name]));
   const roleName = new Map(roles.map((r) => [r.id, r.name]));
   // What the area can be covered for: the types of staff its lines ask for.
-  const kinds = [...new Set(lines.map((l) => l.typeId))].map((typeId) => {
-    const named = [...new Set(lines.filter((l) => l.typeId === typeId && l.roleId).map((l) => roleName.get(l.roleId)!))];
+  const duty = lines.filter((l) => !l.activityTypeId);
+  const kinds = [...new Set(duty.map((l) => l.typeId))].map((typeId) => {
+    const named = [...new Set(duty.filter((l) => l.typeId === typeId && l.roleId).map((l) => roleName.get(l.roleId)!))];
     return { typeId, label: named.length ? named.join(" or ") : typeId ? `Holds ${qualName.get(typeId) ?? "a qualification"}` : "Anyone" };
   });
   return (
     <FormDialog
       trigger={<Button variant="outline" size="icon" aria-label={`Staff needed in ${area.name}`}><Users aria-hidden="true" /></Button>}
       title={`Staff needed in ${area.name}`}
-      description="While it is open it needs these staff, on top of its bookings and activities. Each role shows on the rota Plan with places to put people on."
+      description="While it is open it needs these staff, on top of its bookings. Each role shows on the rota Plan with places to put people on; a line on an activity counts only the people on that activity here or in its parts. Anything short shows under Not covered yet."
       width="sm:max-w-xl"
       submitLabel="Save"
       successMessage="Staff needed saved"
       submit={(formData) => {
         const keys = formData.getAll("line").map(String);
         return saveAreaStaffing(area.id, {
-          lines: keys.map((k) => ({ count: Number(formData.get(`count-${k}`) ?? 0), roleId: String(formData.get(`role-${k}`) ?? ""), typeId: String(formData.get(`type-${k}`) ?? "") })),
+          lines: keys.map((k) => {
+            const count = Number(formData.get(`count-${k}`) ?? 0);
+            const activityTypeId = String(formData.get(`activity-${k}`) ?? "");
+            return activityTypeId
+              ? { count, typeId: "", activityTypeId, from: String(formData.get(`from-${k}`) ?? ""), until: String(formData.get(`until-${k}`) ?? "") }
+              : { count, roleId: String(formData.get(`role-${k}`) ?? ""), typeId: String(formData.get(`type-${k}`) ?? "") };
+          }),
           together: formData.getAll("with").map(String).map((k) => ({ withAreaId: String(formData.get(`with-area-${k}`) ?? ""), count: Number(formData.get(`with-count-${k}`) ?? 0),
             typeId: String(formData.get(`with-type-${k}`) ?? "") })),
           openFrom: String(formData.get("openFrom") ?? ""), openUntil: String(formData.get("openUntil") ?? ""),
@@ -137,7 +153,7 @@ export function AreaStaffing({ area, qualifications, roles, others }: {
         });
       }}
     >
-      <StaffingLines id={`staffing-${area.id}`} lines={lines} setLines={setLines} qualifications={qualifications} roles={roles} />
+      <StaffingLines id={`staffing-${area.id}`} lines={lines} setLines={setLines} qualifications={qualifications} roles={roles} activities={activities} />
       <fieldset className="flex flex-col gap-2">
         <legend className="text-sm font-medium">Open every day</legend>
         <div className="grid grid-cols-2 gap-4">
@@ -183,10 +199,11 @@ function WeekHours({ id, start }: { id: string; start: WeekHour[] }) {
   );
 }
 
-/** The lines of what an area needs: how many, the role and who can fill it. Remove every line for
- *  none. Choosing a role fills in the qualification it needs. */
-function StaffingLines({ id, lines, setLines, qualifications, roles }: {
-  id: string; lines: Line[]; setLines: Dispatch<SetStateAction<Line[]>>; qualifications: { id: string; name: string }[]; roles: Role[];
+/** The lines of what an area needs: how many, and either the role and who can fill it, or the
+ *  activity they are on (with its own times, or whenever it is open). Remove every line for none.
+ *  Choosing a role fills in the qualification it needs. */
+function StaffingLines({ id, lines, setLines, qualifications, roles, activities }: {
+  id: string; lines: Line[]; setLines: Dispatch<SetStateAction<Line[]>>; qualifications: { id: string; name: string }[]; roles: Role[]; activities: ActivityChoice[];
 }) {
   const [next, setNext] = useState(lines.length);
   const change = (key: string, patch: Partial<Line>) => setLines((all) => all.map((x) => (x.key === key ? { ...x, ...patch } : x)));
@@ -195,11 +212,46 @@ function StaffingLines({ id, lines, setLines, qualifications, roles }: {
     const role = roles.find((r) => r.id === roleId);
     return role ? qualifications.find((q) => role.typeIds.includes(q.id))?.id ?? "" : "";
   };
+  const departments = [...new Set(activities.map((a) => a.departmentName))];
+  const add = (line: Omit<Line, "key">) => { setLines((all) => [...all, { key: String(next), ...line }]); setNext((n) => n + 1); };
+  const remove = (l: Line, i: number) => (
+    <Button type="button" variant="ghost" size="icon" className="mt-6 size-11" aria-label={`Remove line ${i + 1}`} onClick={() => setLines((all) => all.filter((x) => x.key !== l.key))}>
+      <Trash2 aria-hidden="true" />
+    </Button>
+  );
   return (
     <fieldset className="flex flex-col gap-3">
       <legend className="text-sm font-medium">Staff it needs</legend>
       {lines.length === 0 ? <p className="text-sm text-ui-muted-foreground">No staff needed. Save to take it off the rota, or add a line.</p> : null}
       {lines.map((l, i) => (
+        l.activityTypeId ? (
+          <div key={l.key} className="grid grid-cols-fill-auto items-start gap-3">
+            <input type="hidden" name="line" value={l.key} />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <Field label="At least" htmlFor={`${id}-count-${l.key}`}>
+                <Input id={`${id}-count-${l.key}`} name={`count-${l.key}`} type="number" inputMode="numeric" min={1} max={30} required value={l.count}
+                  onChange={(e) => change(l.key, { count: Number(e.target.value) })} className="min-h-11" />
+              </Field>
+              <div className="sm:col-span-2"><Field label="On the activity" htmlFor={`${id}-activity-${l.key}`}>
+                <NativeSelect id={`${id}-activity-${l.key}`} name={`activity-${l.key}`} value={l.activityTypeId} onChange={(e) => change(l.key, { activityTypeId: e.target.value })} className="min-h-11 w-full">
+                  {departments.map((d) => (
+                    <NativeSelectOptGroup key={d} label={d}>
+                      {activities.filter((a) => a.departmentName === d).map((a) => <NativeSelectOption key={a.id} value={a.id}>{a.name}</NativeSelectOption>)}
+                    </NativeSelectOptGroup>
+                  ))}
+                </NativeSelect>
+              </Field></div>
+              <p className="text-sm text-ui-muted-foreground sm:col-span-3">Between these times, or leave both empty for whenever it is open.</p>
+              <Field label="From" htmlFor={`${id}-from-${l.key}`} optional>
+                <Input id={`${id}-from-${l.key}`} name={`from-${l.key}`} type="time" step={300} defaultValue={hhmm(l.from)} className="min-h-11" />
+              </Field>
+              <Field label="Until" htmlFor={`${id}-until-${l.key}`} optional>
+                <Input id={`${id}-until-${l.key}`} name={`until-${l.key}`} type="time" step={300} defaultValue={hhmm(l.until)} className="min-h-11" />
+              </Field>
+            </div>
+            {remove(l, i)}
+          </div>
+        ) : (
         <div key={l.key} className="grid grid-cols-fill-auto items-start gap-3">
           <input type="hidden" name="line" value={l.key} />
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -220,16 +272,22 @@ function StaffingLines({ id, lines, setLines, qualifications, roles }: {
               </NativeSelect>
             </Field></div>
           </div>
-          <Button type="button" variant="ghost" size="icon" className="mt-6 size-11" aria-label={`Remove line ${i + 1}`} onClick={() => setLines((all) => all.filter((x) => x.key !== l.key))}>
-            <Trash2 aria-hidden="true" />
-          </Button>
+          {remove(l, i)}
         </div>
+        )
       ))}
       {roles.length === 0 ? <p className="text-sm text-ui-muted-foreground">Add roles such as Lifeguard under Admin &gt; Positions to ask for them here.</p> : null}
-      {lines.length < 8 ? (
-        <Button type="button" variant="outline" className="self-start" onClick={() => { setLines((all) => [...all, { key: String(next), count: 1, roleId: "", typeId: "" }]); setNext((n) => n + 1); }}>
-          <Plus aria-hidden="true" />Add a role
-        </Button>
+      {lines.length < 12 ? (
+        <div className="flex flex-wrap gap-3">
+          <Button type="button" variant="outline" onClick={() => add({ count: 1, roleId: "", typeId: "", activityTypeId: "", from: null, until: null })}>
+            <Plus aria-hidden="true" />Add a role
+          </Button>
+          {activities.length ? (
+            <Button type="button" variant="outline" onClick={() => add({ count: 1, roleId: "", typeId: "", activityTypeId: activities[0].id, from: null, until: null })}>
+              <Plus aria-hidden="true" />Add people on an activity
+            </Button>
+          ) : null}
+        </div>
       ) : null}
     </fieldset>
   );

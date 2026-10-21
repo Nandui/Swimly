@@ -4,11 +4,58 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.49.0 · 20 October 2026 · Rota: areas ask for a role, not a certificate
+## 1.54.0 · 21 October 2026 · Rota: areas ask for a role, not a certificate
 
 - On the rota **Plan**, an area's own staff now show by the role it needs, such as **Lifeguard on duty** in the main pool, instead of the name of the certificate.
 - The certificate still decides who can fill the place, and still shows in small print, so anyone without it gets the same warning as before.
 - In **Admin, Areas**, each line in **Staff needed** now has a **Role** (from Admin, Positions) and **Who can fill it**. Choosing a role fills in the qualification it needs; change it only if that area needs something else. Areas you set up before already show the role that needs their certificate, so nothing needs entering again. Open them once to check the role is right.
+- Lines that ask for people on an activity, such as **at least 1 on Serving customers**, stay as they are and show next to the roles.
+
+## 1.53.0 · 21 October 2026 · Areas need people on an activity, and sub-activities at several times
+
+- In **Admin > Areas**, an area's **Staff needed** can now ask for people on an activity: for example, Reception needs **at least 1 on Serving customers**, from 09:00 to 21:00. Leave the times empty for whenever the area is open. Add as many lines as you need, such as a second one for 2 people at the busy time.
+- On the rota **Plan**, only people actually on that activity in the area (or in one of its parts, such as Till 1) count. If nobody is on it for a stretch, it shows under **Not covered yet** with the time and the reason, such as "Nobody on it yet".
+- **Choose someone** for one of these puts the person on that activity in the area, so their day says what they are doing there and the activity's usual sub-activities come with it.
+- Your existing lines, such as "2 lifeguards while open", work as before.
+- **Sub-activities** can now happen at several set times: for example, a cash drop at 12:00 and 16:00. Set the times in **Admin > Activities > Sub-activities**, and add or remove times for one person's day from their day on the Plan.
+## 1.52.0 · 21 October 2026 · Coinage: ask accounts for change for the tills
+
+- **Coinage** is new, beside Refunds under Front of house. The desk asks accounts for coins for a till, and accounts decides and records the order, the same way refund requests go to finance.
+- **Request coinage** asks for the site, the till or area it is for, the day it is needed by, and how much of each coin in euro, from €2 down to 1c (for example €50 of €2 coins). Turnfin shows how many coins that is and adds up the total. Save a draft or send it to accounts.
+- Accounts gets an email when a request arrives, and can take it on, approve it, decline it or ask the desk for more information. Nobody decides their own request.
+- Once ordered, accounts records the day it was ordered, the delivery day and the order reference. The desk gets an email at each step and can follow every request, with its full history, under **Coinage requests**.
+- Home shows accounts how many requests wait to be decided and ordered, and the desk a **Request coinage** button.
+- Coinage stays hidden until an administrator gives roles a level in **Admin > Roles**: **Use** for the desks, **Manage** for accounts.
+## 1.51.0 · 21 October 2026 · Together: move them from there
+
+- Each option on **Together** now has a **Move them here** button (or **Move Robin here** when only one child needs to change), for anyone who can enrol swimmers.
+- Before anything changes, you see every child on one card: the class they leave (it ends today), the class they join (it starts today), and whether they change class, change level or get a new place. A child already in that class is marked "Stays as they are".
+- If a child has more than one place, choose which one to move from, or keep it and add the new class too.
+- The usual checks still apply. A level they haven't finished needs a reason, which goes on their record. A new place asks about the Legend agreement. You get a warning when the child was assessed at another centre. A class that has filled up stops the move.
+- Everyone moves at once or nobody does, and each change goes into the activity log with your name. Attendance and marks from the old class stay in their history.
+
+## 1.50.0 · 21 October 2026 · Analytics is for managers only
+
+- **Analytics** now has its own place under **Managers** on the home page and in Admin > Roles, next to the CCTV log and Site Monitoring. Only roles given Analytics **View** can open it, at the sites they work at. Administrators still see it.
+- Swim school **Manage** no longer opens Analytics. If a manager's role used to reach it that way, give that role Analytics View in Admin > Roles.
+
+## 1.49.0 · 21 October 2026 · Together: try other levels
+
+- **Together** can now answer "what if": beside each child you have picked, choose **Their level now** or another level, such as "what if Robin moved up to Seals and Poppy stayed in Seals". The times update straight away.
+- When you are trying another level, the page says so in a blue **What if** box, and each heading and each child it applies to carries a **What if** tag. Nothing changes on the child's record or class; **Back to their levels now** takes you back.
+- A child with no class level yet can be given a level to try, so you can still see what would suit the family.
+- The page has a calmer look: one row per child, **Start again** at the top, and each option shows the class time first, the class, and how many places are taken. On a phone the rows stack neatly.
+
+## 1.48.2 · 21 October 2026 · Competencies start as Not achieved
+
+- Every competency now starts as **Not achieved** until an instructor marks it. A swimmer's profile shows **Not achieved** where it used to say **Not marked**, and the choice of mark is now just **Not achieved** or **Achieved**, the same as on the pool deck.
+- Nothing already marked has changed: every **Achieved** and **Not achieved** stays exactly as it was, with who marked it and when.
+- In the parents app, a skill nobody has marked yet in the child's current level now shows as **Practising** instead of **Not assessed yet**. The "skills achieved" count is the same as before.
+
+## 1.48.1 · 21 October 2026 · The booking site sells Academy courses only
+
+- The booking site (academy.leisureworldcork.com) now shows only Academy courses, such as lifeguard and swim teacher qualifications. Customers still hold a place there without paying, and reception phones them within 72 hours to take payment.
+- Short courses are booked at the desk only. The **Open for online booking** tick is gone from short courses.
 
 ## 1.48.0 · 20 October 2026 · Rota: a new Plan, the day's diary
 

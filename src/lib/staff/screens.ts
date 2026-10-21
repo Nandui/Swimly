@@ -12,12 +12,13 @@ import { isRestrictedPermission, type PermissionKey } from "@/lib/staff/permissi
 
 export const SCREENS = [
   { key: "refunds", label: "Refunds", path: "/refunds", description: "A separate workspace for customer refund requests, finance decisions and external payment records.", requires: "refunds.read" },
+  { key: "coinage", label: "Coinage", path: "/coinage", description: "Coins and notes for the tills: requests from the desk, accounts decisions and order records.", requires: "coinage.read" },
   {
     key: "analytics",
     label: "Analytics",
     path: "/analytics",
-    description: "Enrolled swimmers by level, recent enrolment activity and monthly class cancellations for the selected site.",
-    requires: "courses.manage",
+    description: "For managers: the swim school's Business, Reception and Pool deck dashboards for their sites.",
+    requires: "analytics.view",
   },
   {
     key: "duty",
@@ -173,7 +174,7 @@ export function visibleScreens(permissions: ReadonlySet<PermissionKey>): Set<Scr
  *  - Core: the organisation itself (people, roles, sites, the activity log),
  *    shared by every module and opened in the Core workspace.
  *  - Activities: the swim school (desk and office) and the pool deck.
- *  - Work modules: Docs, Refunds, Training, HR, Rota, Purchasing, Stock, Academy, Short courses, Tasks, Incidents, the CCTV log and Site Monitoring, each its own workspace.
+ *  - Work modules: Docs, Refunds, Coinage, Training, HR, Rota, Purchasing, Stock, Academy, Short courses, Tasks, Incidents, the CCTV log and Site Monitoring, each its own workspace.
  *
  *  A new screen must be added to exactly one of these; a test checks it.
  *  Separate modules never imply access to the swim-school workspace. */
@@ -182,7 +183,7 @@ export const ACTIVITIES_SCREENS = [
   "analytics", "duty", "cancellations", "calendar", "instructor", "students", "courses",
   "together", "assessments", "awaiting-enrolment", "legend-agreements", "programmes",
 ] as const satisfies readonly ScreenKey[];
-export const WORK_MODULE_SCREENS = ["docs", "refunds", "training", "hr", "rota", "purchasing", "stock", "short-courses", "tasks", "incidents", "cctv", "site-monitoring"] as const satisfies readonly ScreenKey[];
+export const WORK_MODULE_SCREENS = ["docs", "refunds", "coinage", "training", "hr", "rota", "purchasing", "stock", "short-courses", "tasks", "incidents", "cctv", "site-monitoring"] as const satisfies readonly ScreenKey[];
 
 const CORE = new Set<string>(CORE_SCREENS);
 const AQUATICS = new Set<string>(ACTIVITIES_SCREENS);

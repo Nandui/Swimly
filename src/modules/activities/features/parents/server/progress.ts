@@ -37,10 +37,14 @@ function progressDto(events: ReleasedEvent[], curriculum: SharedCurriculum, curr
   const programmes = curriculum.programmes.filter(p => p.levels.some(l => relevant.has(l.id))).map(programme => ({
     id: programme.id, name: programme.name,
     levels: programme.levels.filter(l => !l.archivedAt || relevant.has(l.id)).map(level => {
+      // A skill in the child's current level starts as Not achieved, which
+      // parents read as "Practising" (owner decision, 21 October 2026). Other
+      // levels keep NOT_ASSESSED, so an assessment-only child stays one.
+      const unmarked = current.has(level.id) ? "WORKING_ON" : "NOT_ASSESSED";
       const competencies = level.competencies.filter(c => !c.archivedAt || marks.has(c.id)).map(competency => {
         const value = object(marks.get(competency.id)?.value ?? null);
         return { id: competency.id, name: competency.name, description: competency.description,
-          status: value.status === "ACHIEVED" || value.status === "WORKING_ON" ? value.status : "NOT_ASSESSED", assessedOn: value.assessedOn ?? null };
+          status: value.status === "ACHIEVED" || value.status === "WORKING_ON" ? value.status : unmarked, assessedOn: value.assessedOn ?? null };
       });
       const completion = completions.get(level.id);
       const value = object(completion?.value ?? null);

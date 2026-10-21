@@ -27,6 +27,15 @@ function times(start: string, end: string): { ok: true; start: number; end: numb
   const slot = slotProblem(s, e);
   return slot ? { ok: false, error: slot } : { ok: true, start: s, end: e };
 }
+/** An activity's usual sub-activities for someone on it for a stretch, ready to save: one at set
+ *  times keeps the times inside the stretch, and is left off when none are. */
+function usualSubs(all: Awaited<ReturnType<typeof subActivitiesFor>>, typeId: string, t: { start: number; end: number }) {
+  return (all[typeId] ?? []).flatMap((x) => {
+    const times = x.when === "at" ? x.times.filter((m) => m >= t.start && m <= t.end) : [];
+    return x.when === "at" && !times.length ? [] : [{ subActivityId: x.id, name: x.name, when: x.when, atMinutes: times[0] ?? null, times }];
+  }).map((x, i) => ({ ...x, sortOrder: i }));
+}
+
 /** The first place on a need nobody is on during the stretch; past its own places when they are
  *  all taken then (cover for someone's break). */
 const freePlace = (rows: readonly { place: number; startMinutes: number; endMinutes: number }[], places: number, start: number, end: number) => {
@@ -65,6 +74,7 @@ export async function fillNeed(input: FillInput, changeInput: Change = {}): Prom
     const need = areaNeedsOn(areas, d.date).find((n) => n.id === d.needId);
     if (!need) return fail("That area no longer needs these staff that day. Check its hours and staff under Admin, Areas.");
     if (t.start < need.startMinutes || t.end > need.endMinutes) return fail(`Keep the time inside the hours it is open, ${clock(need.startMinutes)} to ${clock(need.endMinutes)}.`);
+    if (need.activityTypeId) return fillAreaActivity({ ...d, need: { ...need, activityTypeId: need.activityTypeId }, t }, change);
     const at = await allowedForPerson(d.siteId, d.date, d.departmentId, d.userId);
     if (!at.ok) return fail(at.error);
     if (at.live && !change.reason) return fail(NEEDS_REASON);
@@ -93,18 +103,52 @@ export async function fillNeed(input: FillInput, changeInput: Change = {}): Prom
   const person = await staffContact(d.userId, at.site.orgId, { activeOnly: true });
   if (!person) return fail("That person is no longer active.");
   const what = `${need.repeat?.title ?? type?.name ?? "an activity"}${need.place ? `, ${need.place}` : ""}`;
-  // The activity's usual sub-activities come with it (owner, 20 October 2026); one at a set time
-  // only when it falls in their stretch.
-  const usual = ((await subActivitiesFor([need.typeId], { usualOnly: true }))[need.typeId ?? ""] ?? []).filter((x) => x.when !== "at" || (x.at !== null && x.at >= t.start && x.at <= t.end));
+  // The activity's usual sub-activities come with it (owner, 20 October 2026); one at set times
+  // with the times that fall in their stretch, and only when one does.
+  const usual = usualSubs(await subActivitiesFor([need.typeId], { usualOnly: true }), need.typeId, t);
   await prisma.$transaction(async (tx) => {
     const row = await tx.rotaAssignment.create({ data: { needId: need.id, place: freePlace(need.assignments, need.places, t.start, t.end), userId: person.id, startMinutes: t.start, endMinutes: t.end,
       createdById: at.actor.id, createdByName: at.actor.name,
-      subs: { create: usual.map((x, i) => ({ subActivityId: x.id, name: x.name, when: x.when, atMinutes: x.at, sortOrder: i })) } } });
+      subs: { create: usual } } });
     await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "create", entity: "RotaAssignment", entityId: row.id, clubId: d.siteId, summary: `Put ${person.name} on ${what}, ${d.date} ${clock(t.start)}–${clock(t.end)}` }, tx);
     if (at.live) await logLive(tx, at, d.date, "added", `${person.name} put on ${what}, ${clock(t.start)} to ${clock(t.end)}`, person.id, change);
   });
   refresh();
   if (type && (await shared(prisma, d.siteId, type.departmentId, d.date))) await notifyShiftChange(person.id, `You are on ${what} at ${at.site.name} on ${d.date}, ${clock(t.start)}–${clock(t.end)}.`);
+  return ok();
+}
+
+/** Fill an area's activity line (owner, 21 October 2026: Reception needs at least one person on
+ *  Serving customers): the person is put on that activity in the area, so their day says what
+ *  they do there and the activity's usual sub-activities come with it. The day keeps one record of
+ *  the activity in the area for this, asking for nobody itself, stretched to the line's hours. */
+async function fillAreaActivity(d: z.output<typeof fillSchema> & { need: ReturnType<typeof areaNeedsOn>[number] & { activityTypeId: string }; t: { start: number; end: number } }, change: z.output<typeof changeSchema>): Promise<ActionResult> {
+  const { need, t } = d;
+  const type = await activityTypeById(need.activityTypeId);
+  if (!type) return fail("That activity is no longer on the list. Check the area's staff under Admin, Areas.");
+  const at = await allowedForPerson(d.siteId, d.date, d.departmentId, d.userId);
+  if (!at.ok) return fail(at.error);
+  if (at.live && !change.reason) return fail(NEEDS_REASON);
+  const person = await staffContact(d.userId, at.site.orgId, { activeOnly: true });
+  if (!person) return fail("That person is no longer active.");
+  const what = `${type.name}, ${need.areaName}`;
+  const usual = usualSubs(await subActivitiesFor([type.id], { usualOnly: true }), type.id, t);
+  const on = parseDateOnly(d.date);
+  await prisma.$transaction(async (tx) => {
+    const held = await tx.rotaNeed.findFirst({ where: { siteId: d.siteId, date: on, typeId: type.id, place: need.areaName, places: 0, repeatId: null }, select: { id: true, startMinutes: true, endMinutes: true } });
+    const start = Math.min(need.startMinutes, held?.startMinutes ?? need.startMinutes), end = Math.max(need.endMinutes, held?.endMinutes ?? need.endMinutes);
+    const carrier = held
+      ? (held.startMinutes !== start || held.endMinutes !== end ? await tx.rotaNeed.update({ where: { id: held.id }, data: { startMinutes: start, endMinutes: end } }) : held)
+      : await tx.rotaNeed.create({ data: { orgId: at.site.orgId, siteId: d.siteId, date: on, typeId: type.id, place: need.areaName, startMinutes: start, endMinutes: end, places: 0,
+        note: `For ${need.areaName}'s need`, createdById: at.actor.id, createdByName: at.actor.name } });
+    const row = await tx.rotaAssignment.create({ data: { needId: carrier.id, place: 1, userId: person.id, startMinutes: t.start, endMinutes: t.end, createdById: at.actor.id, createdByName: at.actor.name,
+      subs: { create: usual } } });
+    await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "create", entity: "RotaAssignment", entityId: row.id, clubId: d.siteId,
+      summary: `Put ${person.name} on ${what} for the area's need, ${d.date} ${clock(t.start)}–${clock(t.end)}` }, tx);
+    if (at.live) await logLive(tx, at, d.date, "added", `${person.name} put on ${what}, ${clock(t.start)} to ${clock(t.end)}`, person.id, change);
+  });
+  refresh();
+  if (await shared(prisma, d.siteId, type.departmentId, d.date)) await notifyShiftChange(person.id, `You are on ${what} at ${at.site.name} on ${d.date}, ${clock(t.start)}–${clock(t.end)}.`);
   return ok();
 }
 
@@ -143,10 +187,16 @@ export async function changeLine(input: LineInput & { start: string; end: string
       if (at.live) await logLive(tx, at, d.date, "changed", `Time changed to ${clock(t.start)} to ${clock(t.end)}`, d.userId, change);
     });
   } else {
-    const row = await prisma.rotaAssignment.findFirst({ where: { id: d.id, userId: d.userId, need: { siteId: d.siteId } }, select: { id: true, startMinutes: true, endMinutes: true, need: { select: { date: true, startMinutes: true, endMinutes: true } } } });
+    const row = await prisma.rotaAssignment.findFirst({ where: { id: d.id, userId: d.userId, need: { siteId: d.siteId } },
+      select: { id: true, startMinutes: true, endMinutes: true, need: { select: { id: true, date: true, startMinutes: true, endMinutes: true, places: true, repeatId: true } } } });
     if (!row || iso(row.need.date) !== d.date) return fail("That is no longer on the day.");
-    if (t.start < row.need.startMinutes || t.end > row.need.endMinutes) return fail(`Keep the time inside its own time, ${clock(row.need.startMinutes)} to ${clock(row.need.endMinutes)}.`);
+    // A record kept only for an area's activity line asks for nobody: it stretches with the people on it.
+    const holder = row.need.places === 0 && !row.need.repeatId;
+    if (!holder && (t.start < row.need.startMinutes || t.end > row.need.endMinutes)) return fail(`Keep the time inside its own time, ${clock(row.need.startMinutes)} to ${clock(row.need.endMinutes)}.`);
     await prisma.$transaction(async (tx) => {
+      if (holder && (t.start < row.need.startMinutes || t.end > row.need.endMinutes)) {
+        await tx.rotaNeed.update({ where: { id: row.need.id }, data: { startMinutes: Math.min(t.start, row.need.startMinutes), endMinutes: Math.max(t.end, row.need.endMinutes) } });
+      }
       await tx.rotaAssignment.update({ where: { id: row.id }, data: { startMinutes: t.start, endMinutes: t.end } });
       await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "update", entity: "RotaAssignment", entityId: row.id, clubId: d.siteId,
         summary: `Changed a time on ${d.date} to ${clock(t.start)}–${clock(t.end)} (was ${clock(row.startMinutes)}–${clock(row.endMinutes)})` }, tx);
@@ -304,7 +354,9 @@ const subsSchema = z.object({
   /** The activity or booking place they are on. */
   id: z.string().min(1),
   userId: z.string().min(1),
-  subs: z.array(z.object({ subActivityId: z.string().nullable(), name: z.string().trim().min(1).max(60), when: z.enum(["start", "end", "at", "during"]), at: z.string().default("") })).max(20),
+  subs: z.array(z.object({ subActivityId: z.string().nullable(), name: z.string().trim().min(1).max(60), when: z.enum(["start", "end", "at", "during"]),
+    /** Its times that day, like 12:00 and 16:00, when `when` is "at". */
+    times: z.array(z.string()).max(12).default([]) })).max(20),
 });
 export type LineSubsInput = z.input<typeof subsSchema>;
 
@@ -321,14 +373,17 @@ export async function saveLineSubs(input: LineSubsInput, changeInput: Change = {
   if (at.live && !change.reason) return fail(NEEDS_REASON);
   const row = await prisma.rotaAssignment.findFirst({ where: { id: d.id, userId: d.userId, need: { siteId: d.siteId } }, select: { id: true, startMinutes: true, endMinutes: true, need: { select: { date: true, typeId: true } } } });
   if (!row || iso(row.need.date) !== d.date) return fail("That is no longer on the day.");
-  const subs: { subActivityId: string | null; name: string; when: string; atMinutes: number | null }[] = [];
+  const subs: { subActivityId: string | null; name: string; when: string; atMinutes: number | null; times: number[] }[] = [];
   for (const x of d.subs) {
-    const minutes = x.when === "at" ? parseClock(x.at) : null;
-    if (x.when === "at" && (minutes === null || minutes < row.startMinutes || minutes > row.endMinutes)) return fail(`Give ${x.name} a time while they are on it, ${clock(row.startMinutes)} to ${clock(row.endMinutes)}.`);
-    subs.push({ subActivityId: x.subActivityId, name: x.name, when: x.when, atMinutes: minutes });
+    const times = x.when === "at" ? x.times.map(parseClock) : [];
+    if (x.when === "at" && (!times.length || times.some((m) => m === null || m < row.startMinutes || m > row.endMinutes))) {
+      return fail(`Give ${x.name} its times while they are on it, ${clock(row.startMinutes)} to ${clock(row.endMinutes)}.`);
+    }
+    const sorted = [...new Set(times as number[])].sort((a, b) => a - b);
+    subs.push({ subActivityId: x.subActivityId, name: x.name, when: x.when, atMinutes: sorted[0] ?? null, times: sorted });
   }
   const person = await staffContact(d.userId, at.site.orgId);
-  const words = subs.map((x) => (x.atMinutes !== null ? `${x.name} at ${clock(x.atMinutes)}` : x.when === "during" ? x.name : `${x.name} at the ${x.when}`)).join(", ") || "none";
+  const words = subs.map((x) => (x.times.length ? `${x.name} at ${x.times.map(clock).join(" and ")}` : x.when === "during" ? x.name : `${x.name} at the ${x.when}`)).join(", ") || "none";
   await prisma.$transaction(async (tx) => {
     await tx.rotaAssignmentSub.deleteMany({ where: { assignmentId: row.id } });
     if (subs.length) await tx.rotaAssignmentSub.createMany({ data: subs.map((x, i) => ({ ...x, assignmentId: row.id, sortOrder: i })) });

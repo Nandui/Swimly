@@ -114,15 +114,16 @@ export const SWIMMER_GUIDES: HelpArticle[] = [
   },
   {
     slug: "sibling-times", title: "Find class times for siblings or a group", category: "enrolment", scopes: ["desk"],
-    summary: "Use Together to compare options that have room for each swimmer at their current level.", keywords: ["sibling", "siblings", "sibbling", "family", "brother", "sister", "together", "same time", "friends"],
+    summary: "Use Together to compare options that have room for each swimmer at their current level, or at a level you want to try.", keywords: ["sibling", "siblings", "sibbling", "family", "brother", "sister", "together", "same time", "friends"],
     before: ["You need the Together screen. It compares current enrolment levels, so each selected swimmer needs a current class level."],
     steps: [
       { title: "Open Together and build the group", text: "Choose Add a swimmer, find the first swimmer, then use Add another swimmer. The app may suggest other swimmers who share their contact details." },
-      { title: "Check who is included", text: "Review each selected swimmer and their level. Remove anyone who is not part of this search, or use Start again." },
-      { title: "Compare the options", text: "Review All starting at the same time and Same day, different times. Check each class’s site, schedule and available places; use Next combinations when more options are available." },
-      { title: "Make the bookings separately", text: "Once you have agreed an option, open each swimmer’s enrolment controls to enrol or move them. Searching Together does not reserve spaces or make a group booking." },
-    ], result: "You have a set of class options to discuss, with each swimmer’s level taken into account.",
-    troubleshooting: [{ question: "No day suits everyone, or someone has no current level.", answer: "Read the explanation, check the selected group and current enrolments, then remove someone to compare the remaining swimmers if useful. You may need separate days or a different class arrangement." }],
+      { title: "Check who is included", text: "Review each selected swimmer and the level they are in now. Remove anyone who is not part of this search, or use Start again." },
+      { title: "Try another level if you want", text: "Beside a swimmer, change Their level now to another level to see what would work if they moved. The page marks it What if; nothing changes on the swimmer. Use Back to their levels now to undo it." },
+      { title: "Compare the options", text: "Review All starting at the same time and Same day, different times. Check each class’s site, schedule and available places; use More options when there are more." },
+      { title: "Move them into the option", text: "Once the family agrees an option, choose Move them here under it. Check each child’s card: the class that ends today, the class that starts today, and whether their level changes. Add a reason or the Legend agreement where asked, then press Move. Everyone moves together, or nobody does. Searching alone does not reserve places." },
+    ], result: "You have class options to discuss with the family, and can move the children into the one they choose.",
+    troubleshooting: [{ question: "No day suits everyone, or someone has no current level.", answer: "Read the explanation, check the selected group and current enrolments, try another level beside a swimmer, or remove someone to compare the remaining swimmers if useful. You may need separate days or a different class arrangement." }],
     related: ["enrol-swimmer", "move-swimmer", "find-class"], action: "together",
   },
 ];

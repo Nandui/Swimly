@@ -1,5 +1,5 @@
 import type { Prisma } from "@/generated/prisma/client";
-import { roleFor, togetherOf, weekHoursOf, type AreaTogether, type RoleNeeds, type WeekHour } from "@/lib/setup/area-staffing";
+import { minimumOf, roleFor, togetherOf, weekHoursOf, type AreaTogether, type RoleNeeds, type WeekHour } from "@/lib/setup/area-staffing";
 import type { SiteFilter, SubjectFilter } from "@/lib/policy/types";
 import { ADMINISTRATOR_PERMISSIONS } from "@/lib/staff/permissions";
 
@@ -91,7 +91,7 @@ export async function areasAt(siteId: string, db?: Pick<Prisma.TransactionClient
   const client = db ?? (await import("@/lib/prisma")).prisma;
   const rows = await client.siteArea.findMany({ where: { siteId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     select: { id: true, name: true, lanes: true, openFrom: true, openUntil: true, weekHours: true, together: true, departmentId: true, parentId: true, orgId: true,
-      staffing: { orderBy: { sortOrder: "asc" }, select: { count: true, positionId: true, qualificationTypeId: true, qualificationType: { select: { name: true } } } } } });
+      staffing: { orderBy: { sortOrder: "asc" }, select: { count: true, positionId: true, qualificationTypeId: true, qualificationType: { select: { name: true } }, activityTypeId: true, fromMinutes: true, untilMinutes: true, activityType: { select: { name: true } } } } } });
   const byId = new Map(rows.map((r) => [r.id, r]));
   const roles = rows.length ? await rolesNeeding(rows[0].orgId, client) : [];
   return rows.map(({ staffing, weekHours, together, departmentId, parentId, orgId: _org, ...area }) => {
@@ -109,10 +109,11 @@ export async function rolesNeeding(orgId: string, db?: Pick<Prisma.TransactionCl
     select: { id: true, name: true, archivedAt: true, requires: { select: { typeId: true } }, _count: { select: { holders: true } } } });
   return rows.map((r) => ({ id: r.id, name: r.name, archived: !!r.archivedAt, holders: r._count.holders, typeIds: r.requires.map((q) => q.typeId) }));
 }
-/** A stored staff line as an area's minimum, named by its role. */
-export function staffLine(m: { count: number; positionId: string | null; qualificationTypeId: string | null; qualificationType: { name: string } | null }, roles: readonly RoleNeeds[]): AreaMinimumAt {
-  const role = roleFor({ roleId: m.positionId, typeId: m.qualificationTypeId }, roles);
-  return { count: m.count, typeId: m.qualificationTypeId, typeName: m.qualificationType?.name ?? null, roleId: role?.id ?? null, roleName: role?.name ?? null };
+/** A stored staff line as an area's minimum, a line of staff on duty named by its role; a line
+ *  on an activity has none. */
+export function staffLine(m: Parameters<typeof minimumOf>[0] & { positionId: string | null }, roles: readonly RoleNeeds[]): AreaMinimumAt {
+  const role = m.activityTypeId ? null : roleFor({ roleId: m.positionId, typeId: m.qualificationTypeId }, roles);
+  return { ...minimumOf(m), roleId: role?.id ?? null, roleName: role?.name ?? null };
 }
 /** One open area with its site, as `areasAt` gives it; null once archived or gone. */
 export async function areaById(id: string, db?: Pick<Prisma.TransactionClient, "siteArea" | "position">): Promise<(AreaAt & { siteId: string }) | null> {
@@ -123,7 +124,8 @@ export async function areaById(id: string, db?: Pick<Prisma.TransactionClient, "
 }
 /** An area as `areasAt` gives it: its hours (`hoursOn`) and the staff it needs then, "2 Lifeguard
  *  holding Pool Lifeguard", `typeId` null for anyone and `roleName` null when no role is named. */
-export type AreaMinimumAt = { count: number; typeId: string | null; typeName: string | null; roleId: string | null; roleName: string | null };
+export type AreaMinimumAt = { count: number; typeId: string | null; typeName: string | null; roleId: string | null; roleName: string | null;
+  activityTypeId: string | null; activityName: string | null; from: number | null; until: number | null };
 export type AreaAt = { id: string; name: string; lanes: number; openFrom: number | null; openUntil: number | null; weekHours: WeekHour[]; minimums: AreaMinimumAt[];
   /** Staff in another area covering this one while both are open. */
   together: AreaTogether[];

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 
+import { togetherHref, type WhatIf } from "@/modules/activities/features/together/href";
 import { StudentSearch } from "@/modules/activities/shared/students/components/student-search";
 
 /** Adds one more swimmer to the group.
@@ -12,12 +13,12 @@ import { StudentSearch } from "@/modules/activities/shared/students/components/s
  *  Searches the server rather than a list it was handed — over a thousand
  *  swimmers, and this page used to carry all of them so that one could be
  *  picked. Anyone already in the group is left out of the answers, so the only
- *  thing it offers is a thing that would change something. */
-export function AddToGroup({ chosen }: { chosen: string[] }) {
+ *  thing it offers is a thing that would change something. Any what-if levels stay. */
+export function AddToGroup({ chosen, whatIf = {} }: { chosen: string[]; whatIf?: WhatIf }) {
   const router = useRouter();
 
   return (
-    <div className="min-w-0 flex flex-col gap-4 max-w-sm">
+    <div className="min-w-0 flex w-full flex-col gap-4 sm:max-w-sm">
       <StudentSearch
         exclude={chosen}
         label={chosen.length === 0 ? "Add a swimmer" : "Add another swimmer"}
@@ -25,7 +26,7 @@ export function AddToGroup({ chosen }: { chosen: string[] }) {
         emptyText="Nobody matches."
         onSelect={(hit) => {
           if (hit)
-            router.push(`/together?students=${[...chosen, hit.id].join(",")}`);
+            router.push(togetherHref([...chosen, hit.id], whatIf), { scroll: false });
         }}
       />
     </div>

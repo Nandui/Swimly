@@ -105,12 +105,12 @@ export const CLASS_GUIDES: HelpArticle[] = [
   },
   {
     slug: "profile-competencies", title: "Review or edit competencies on a swimmer profile", category: "teaching", scopes: ["desk"],
-    summary: "Inspect marks across programmes, make permitted corrections and view a competency’s history.", keywords: ["profile", "competency", "competencies", "progress", "correct mark", "not marked"],
+    summary: "Inspect marks across programmes, make permitted corrections and view a competency’s history.", keywords: ["profile", "competency", "competencies", "progress", "correct mark", "not marked", "not achieved"],
     before: ["Open the swimmer’s profile. Editing requires permission to mark competencies. Archived and completed levels can be read-only."],
     steps: [
       { title: "Open Competencies", text: "Expand the relevant programme and level. The profile shows achieved counts and confirmed completions." },
       { title: "Inspect the current evidence", text: "Read each competency’s mark, assessor and date when available. Use History to inspect its recorded changes when your access allows it." },
-      { title: "Make the intended changes", text: "Choose Not marked, Not achieved or Achieved as appropriate. Review all unsaved edits before leaving the level." },
+      { title: "Make the intended changes", text: "Choose Not achieved or Achieved. A competency nobody has marked yet starts as Not achieved. Review all unsaved edits before leaving the level." },
       { title: "Save the marks", text: "Use the marks save action and wait for confirmation. Changing profile tabs preserves the editing state, but unsaved work still needs a successful save." },
     ], result: "The saved marks update the swimmer’s shared progress, with the changes recorded in their history.",
     troubleshooting: [{ question: "How do I correct a completed level?", answer: "Use the separate completion-correction action if you have permission. Read its consequences before changing a confirmed milestone." }],

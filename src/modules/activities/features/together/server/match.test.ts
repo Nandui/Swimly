@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { CourseRow } from "@/modules/activities/shared/courses/data/courses";
-import { findCombinations, findTimesTogether, type FamilyMember, type Placement } from "@/modules/activities/features/together/server/match";
+import { findCombinations, findTimesTogether, levelOptions, withLevels, type FamilyMember, type Placement } from "@/modules/activities/features/together/server/match";
 
 function course(id: string, levelId = "one", startMinutes = 960, free = 1): CourseRow {
   return { id, clubId: "club", club: { id: "club", name: "Club" }, name: id,
@@ -104,3 +104,33 @@ test("large families can start and continue a large result set without enumerati
   assert.deepEqual(findCombinations(members, courses, { differentTimes: true }).combinations, []);
 });
 
+
+test("a what-if level searches that level only, and a current class elsewhere needs a free place", () => {
+  const now = { ...course("now", "one", 960, 1), _count: { enrolments: 1 } };
+  const up = course("up", "two", 960, 1);
+  const members = withLevels([member("A", ["one"], ["now"]), member("B")], { A: "two" }, [now, up]);
+  assert.deepEqual(members[0], { studentId: "A", name: "A", levelIds: ["two"], currentCourseIds: [], whatIf: true });
+  assert.deepEqual(members[1], member("B"));
+  const rows = everyPage(members, [now, up, course("b")]);
+  assert.deepEqual(keys(rows), ["up,b"]);
+  assert.equal(rows[0][0].whatIf, true);
+  assert.equal(rows[0][1].whatIf, undefined);
+});
+
+test("no what-if leaves the group exactly as it is", () => {
+  const members = [member("A", ["one"], ["now"]), member("B")];
+  assert.deepEqual(withLevels(members, {}, [course("now")]), members);
+});
+
+test("a what-if level gives a swimmer with no class level something to search", () => {
+  const members = withLevels([member("A", [])], { A: "one" }, [course("a")]);
+  const result = findTimesTogether(members, [course("a")]);
+  assert.equal(result.unplaced.length, 0);
+  assert.equal(result.days.length, 1);
+});
+
+test("levels to choose from follow the curriculum, one per level with a class", () => {
+  const other = { ...course("c", "z"), level: { id: "z", name: "Adults", sortOrder: 0, programme: { id: "p2", name: "Adults", sortOrder: 1 } } };
+  const high = { ...course("b", "two"), level: { id: "two", name: "two", sortOrder: 2, programme: { id: "programme", name: "Swimming", sortOrder: 0 } } };
+  assert.deepEqual(levelOptions([other, high, course("a"), course("a2")]).map((l) => l.id), ["one", "two", "z"]);
+});

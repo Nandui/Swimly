@@ -1,0 +1,73 @@
+// Coinage (main database): change orders for the tills, from the desk to accounts.
+// Identity/site IDs and names are snapshots, as in Refunds, so history survives leavers.
+
+model CoinageRequest {
+  id             String                @id
+  number         Int                   @unique @default(autoincrement())
+  status         String                @default("DRAFT")
+  version        Int                   @default(1)
+  creatorId      String
+  creatorName    String
+  clubId         String
+  clubName       String
+  forWhom        String                @default("")
+  neededBy       String                @default("")
+  /// Euro cents per denomination, keyed by the denomination in cents ({"200": 5000}).
+  lines          Json                  @default("{}")
+  totalCents     Int?
+  notes          String                @default("")
+  handlerId      String?
+  handlerName    String?
+  approvedById   String?
+  approvedByName String?
+  orderedOn      String?
+  deliveryOn     String?
+  orderReference String?
+  orderedById    String?
+  orderedByName  String?
+  submittedAt    DateTime?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  events         CoinageEvent[]
+  notifications  CoinageNotification[]
+
+  @@index([status, submittedAt])
+  @@index([clubId, status])
+  @@index([creatorId])
+  @@index([handlerId])
+}
+
+model CoinageEvent {
+  id            String                @id @default(cuid())
+  requestId     String
+  operationId   String
+  actorId       String
+  actorName     String
+  action        String
+  note          String                @default("")
+  snapshot      Json
+  createdAt     DateTime              @default(now())
+  request       CoinageRequest        @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  notifications CoinageNotification[]
+
+  @@unique([requestId, operationId])
+  @@index([requestId, createdAt])
+}
+
+model CoinageNotification {
+  id          String         @id @default(cuid())
+  requestId   String
+  eventId     String
+  recipientId String
+  status      String         @default("PENDING")
+  attempts    Int            @default(0)
+  attemptedAt DateTime?
+  error       String?
+  sentAt      DateTime?
+  createdAt   DateTime       @default(now())
+  request     CoinageRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  event       CoinageEvent   @relation(fields: [eventId], references: [id], onDelete: Restrict)
+
+  @@unique([eventId, recipientId])
+  @@index([requestId, status])
+}

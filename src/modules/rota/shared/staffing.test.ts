@@ -51,7 +51,8 @@ test("an area's need is on the Plan in its own right, with a place for each staf
   assert.equal(g.departmentId, ANY_DEPARTMENT, "on every department's plan");
   assert.equal(g.requiredTypeId, "nplq");
   assert.deepEqual(g.needs.map((n) => [n.startMinutes, n.endMinutes, n.places]), [[h("07:00"), h("14:00"), 2]]);
-  assert.deepEqual(areaNeedOf(g.needs[0].id), { areaId: "pool25", typeId: "nplq", date: "2026-10-23" });
+  assert.deepEqual(areaNeedOf(g.needs[0].id), { areaId: "pool25", typeId: "nplq", activityTypeId: null, date: "2026-10-23" });
+  assert.deepEqual(areaNeedOf("area:rec:act-serve:2026-10-23"), { areaId: "rec", typeId: null, activityTypeId: "serve", date: "2026-10-23" }, "an activity line names its activity");
   assert.equal(g.gapCount, 2, "both places to fill");
   assert.equal(needRows(d.groups)[0].kind, "area");
   assert.equal(day("2026-10-25", []).groups.length, 0, "nothing while it is closed");

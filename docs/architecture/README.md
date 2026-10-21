@@ -25,6 +25,7 @@ Each module is a self-contained package under `src/modules/<id>`: its `manifest.
 | --- | --- | --- | --- |
 | activities | Runs the swim school: classes, swimmers, attendance, assessments, the parent app and the pool deck. | `activities.prisma` | reports class commitments; site summaries; home cards |
 | refunds | Moves a refund request from reception to finance. Features: `queue`, `request`, `workspace` ([README](../../src/modules/refunds/README.md)). | `refunds.prisma` | home cards |
+| coinage | Moves a till's request for coins from the desk to accounts. Features: `queue`, `request`, `workspace` ([README](../../src/modules/coinage/README.md), [ADR 0014](decisions/0014-add-coinage-module.md)). | `coinage.prisma` | home cards |
 | purchasing | Raises and approves purchase orders. Features: `orders`, `suppliers`, `workspace` ([README](../../src/modules/purchasing/README.md)). | `purchasing.prisma` | home cards |
 | short-courses | Runs the courses the public book a place on: six and eight week courses and the Academy's lifeguard and swim teacher courses. Features: `courses`, `course-types`, `academy-courses`, `academy-types`, `academy-calls`, `booking`, `workspace` ([README](../../src/modules/short-courses/README.md), [ADR 0009](decisions/0009-add-short-courses-module.md), [ADR 0011](decisions/0011-merge-academy-into-short-courses.md)). | `short-courses.prisma`, `short-courses.academy.prisma` | home cards; Rota commitments; the public booking site's API |
 | stock | Counts the stock on the shelf at each site and compares counts. Features: `counts`, `products`, `compare`, `workspace` ([README](../../src/modules/stock/README.md), [ADR 0010](decisions/0010-add-stock-module.md)). | `stock.prisma` | home cards |
@@ -51,7 +52,7 @@ Modules read those tables only through Core's functions, never with their own qu
 flowchart TB
   list["src/app/modules.ts<br/>(every module's manifest.ts)"] --> registry["Core registry<br/>Home, menus, role editor"]
   subgraph Modules
-    activities[Swim school and Pool deck]; refunds[Refunds]; tasks[Tasks]
+    activities[Swim school and Pool deck]; refunds[Refunds]; coinage[Coinage]; tasks[Tasks]
     rota[Rota]; training[Training]; docs[Docs]; hr[HR]; purchasing[Purchasing]; incidents[Incidents]; shortcourses[Short courses and the Academy]; stock[Stock]; cctv[CCTV log]; monitoring[Site Monitoring]
   end
   Modules --> core["Core: people, roles, sites, audit, policy<br/>(src/lib, src/modules/contributions.ts)"]
