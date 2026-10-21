@@ -55,6 +55,9 @@ const fillSchema = z.object({
   userId: z.string().min(1, "Choose who."),
   start: z.string(),
   end: z.string(),
+  /** For an area's staff needed: the activity there to put them on (owner, 21 October 2026),
+   *  which covers the area for its time. Left out, they cover the area itself. */
+  activityTypeId: z.string().nullish(),
 });
 export type FillInput = z.input<typeof fillSchema>;
 
@@ -77,6 +80,15 @@ export async function fillNeed(input: FillInput, changeInput: Change = {}): Prom
     if (!need) return fail("That area no longer needs these staff that day. Check its hours and staff under Admin, Areas.");
     if (t.start < need.startMinutes || t.end > need.endMinutes) return fail(`Keep the time inside the hours it is open, ${clock(need.startMinutes)} to ${clock(need.endMinutes)}.`);
     if (need.activityTypeId) return fillAreaActivity({ ...d, need: { ...need, activityTypeId: need.activityTypeId }, t }, change);
+    if (d.activityTypeId) {
+      // That activity already on in the area with a place free then: they take it, filling both.
+      const parts = new Set([need.areaName, ...areas.filter((a) => a.parentName === need.areaName).map((a) => a.name)].map((n) => n.toLowerCase()));
+      const onDay = await prisma.rotaNeed.findMany({ where: { siteId: d.siteId, date: parseDateOnly(d.date), typeId: d.activityTypeId, repeatId: null, places: { gt: 0 },
+        startMinutes: { lte: t.start }, endMinutes: { gte: t.end } }, select: { id: true, place: true, places: true, assignments: { select: { startMinutes: true, endMinutes: true } } } });
+      const free = onDay.find((n) => parts.has(n.place.split(",")[0].trim().toLowerCase()) && n.assignments.filter((a) => a.startMinutes < t.end && t.start < a.endMinutes).length < n.places);
+      if (free) return fillNeed({ ...input, kind: "activity", needId: free.id, activityTypeId: null }, changeInput);
+      return fillAreaActivity({ ...d, need: { ...need, activityTypeId: d.activityTypeId }, t }, change);
+    }
     const at = await allowedForPerson(d.siteId, d.date, d.departmentId, d.userId);
     if (!at.ok) return fail(at.error);
     if (at.live && !change.reason) return fail(NEEDS_REASON);
@@ -121,15 +133,17 @@ export async function fillNeed(input: FillInput, changeInput: Change = {}): Prom
 }
 
 /** Fill an area's activity line (owner, 21 October 2026: Reception needs at least one person on
- *  Serving customers): the person is put on that activity in the area, so their day says what
+ *  Serving customers), or its staff needed with an activity there (owner, the same evening: "if
+ *  that activity is for reception ... its covered"): the person is put on that activity in the area, so their day says what
  *  they do there and the activity's usual sub-activities come with it. The day keeps one record of
  *  the activity in the area for this, asking for nobody itself, stretched to the line's hours. */
 async function fillAreaActivity(d: z.output<typeof fillSchema> & { need: ReturnType<typeof areaNeedsOn>[number] & { activityTypeId: string }; t: { start: number; end: number } }, change: z.output<typeof changeSchema>): Promise<ActionResult> {
   const { need, t } = d;
   const type = await activityTypeById(need.activityTypeId);
-  if (!type) return fail("That activity is no longer on the list. Check the area's staff under Admin, Areas.");
+  if (!type || type.archivedAt || type.fromClasses) return fail("That activity is no longer on the list. Check the area's staff under Admin, Areas.");
   const at = await allowedForPerson(d.siteId, d.date, d.departmentId, d.userId);
   if (!at.ok) return fail(at.error);
+  if (type.orgId !== at.site.orgId) return fail("That activity is no longer on the list. Check the area's staff under Admin, Areas.");
   if (at.live && !change.reason) return fail(NEEDS_REASON);
   const person = await staffContact(d.userId, at.site.orgId, { activeOnly: true });
   if (!person) return fail("That person is no longer active.");

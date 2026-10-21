@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { buildDiary, candidates, nextChange, stepsOf, whoIsWhere, type DiaryInput } from "@/modules/rota/features/diary/model";
+import { buildDiary, candidates, coverActivities, nextChange, stepsOf, whoIsWhere, type DiaryInput } from "@/modules/rota/features/diary/model";
 
 /** The day's diary (owner, 20 October 2026). Invented site and people. */
 const h = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3));
@@ -196,4 +196,48 @@ test("an area's activity line counts only people on that activity there, and say
   const at10 = whoIsWhere(d, h("10:00"));
   assert.deepEqual(at10.find((w) => w.need.key === LINE)!.names, ["Ciara Walsh"]);
   assert.equal(at10.some((w) => w.need.key === "n-serve"), false);
+});
+
+test("someone on an activity in an area covers its staff needed for that time (owner, 21 October 2026)", () => {
+  const RECEPTION = `area:rec:*:${DATE}`;
+  const input: DiaryInput = {
+    ...base, departmentId: "front",
+    areas: [...base.areas,
+      { id: "rec", name: "Reception", departmentId: "front", openFrom: h("07:00"), openUntil: h("21:00"), minimums: [{ count: 1, typeId: null, typeName: null }] },
+      { id: "till2", name: "Till 2", departmentId: "front", parentName: "Reception" }],
+    types: [...base.types, { id: "till", name: "Till", departmentId: "front", requiredTypeId: null, requiredName: null, fromClasses: false }],
+    needs: [...base.needs, { id: "n-till", typeId: "till", place: "Till 2", start: h("12:00"), end: h("15:15"), places: 1, note: "", bookingTitle: null }],
+    assignments: [...base.assignments, { id: "a-maeve", needId: "n-till", place: 1, userId: "ciara", start: h("12:00"), end: h("15:15") }],
+  };
+  const d = buildDiary(input);
+  assert.deepEqual(d.holes.filter((x) => x.needKey === RECEPTION).map((x) => [x.start, x.end]), [[h("07:00"), h("12:00")], [h("15:15"), h("21:00")]],
+    "Ciara on the till, in a part of Reception, covers Reception 12:00–15:15");
+  assert.deepEqual(whoIsWhere(d, h("13:00")).find((w) => w.need.key === RECEPTION)?.names, ["Ciara Walsh"]);
+  // Without her, the whole day is a gap.
+  assert.deepEqual(buildDiary({ ...input, assignments: base.assignments }).holes.filter((x) => x.needKey === RECEPTION).map((x) => [x.start, x.end]), [[h("07:00"), h("21:00")]]);
+});
+
+test("an activity with no lifeguard qualification is not one of the pool's lifeguards; one asking for it is", () => {
+  const guard = { id: "guard", name: "Pool watch", departmentId: "aquatics", requiredTypeId: NPLQ, requiredName: "Lifeguard", fromClasses: false };
+  const input: DiaryInput = { ...base, types: [...base.types, guard],
+    needs: [...base.needs, { id: "n-guard", typeId: "guard", place: "Main pool", start: h("10:30"), end: h("11:30"), places: 1, note: "", bookingTitle: null }],
+    assignments: [...base.assignments, { id: "a-niamh", needId: "n-guard", place: 1, userId: "niamh", start: h("10:30"), end: h("11:30") }] };
+  const d = buildDiary(input);
+  assert.equal(d.holes.some((x) => x.needKey === AREA_NEED && x.start < h("11:30") && h("10:30") < x.end), false, "Niamh on Pool watch fills the place Aoife left for aqua-fit");
+});
+
+test("choosing someone for an area's gap offers the area's own activities, those on there that day first", () => {
+  const input: DiaryInput = {
+    ...base, departmentId: "front",
+    areas: [{ id: "rec", name: "Reception", departmentId: "front", openFrom: h("07:00"), openUntil: h("21:00"), minimums: [{ count: 1, typeId: null, typeName: null }] }],
+    needs: [{ id: "n-serve", typeId: "serve", place: "Reception", start: h("09:00"), end: h("10:00"), places: 1, note: "", bookingTitle: null }],
+    types: [...base.types, { id: "serve", name: "Serving customers", departmentId: "front", requiredTypeId: null, requiredName: null, fromClasses: false }],
+    assignments: [{ id: "a-s", needId: "n-serve", place: 1, userId: "ciara", start: h("09:00"), end: h("10:00") }], areaAssignments: [], classes: [],
+  };
+  const d = buildDiary(input);
+  const need = d.needs.find((n) => n.key === `area:rec:*:${DATE}`)!;
+  const list = [{ id: "desk", departmentId: "front", requiredTypeId: null }, { id: "serve", departmentId: "front", requiredTypeId: null },
+    { id: "aqua", departmentId: "aquatics", requiredTypeId: null }];
+  assert.deepEqual(coverActivities(need, list, d.people.flatMap((p) => p.lines)).map((a) => a.id), ["serve", "desk"]);
+  assert.deepEqual(coverActivities(d.needs.find((n) => n.kind === "activity")!, list, []), []);
 });

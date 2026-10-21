@@ -191,8 +191,19 @@ export function buildDay(input: {
     const needIds = new Set(input.needs.filter((n) => n.typeId === activityTypeId && names.has(n.place.split(",")[0].trim().toLowerCase())).map((n) => n.id));
     return input.assignments.filter((a) => needIds.has(a.needId) && !input.off?.has(a.userId)).map((a) => ({ start: a.startMinutes, end: a.endMinutes }));
   };
+  // An area's staff needed counts the people on activities there too (not bookings), each for the
+  // line its activity's qualification is, or else a line that asks for none.
+  const onArea = (areaId: string, typeId: string | null, lines: readonly (string | null)[]) => {
+    const names = areaNames(areaId);
+    const needIds = new Set(input.needs.filter((n) => {
+      const t = types.get(n.typeId);
+      if (!t || t.fromClasses || n.repeatTitle || !names.has(n.place.split(",")[0].trim().toLowerCase())) return false;
+      return t.requiredTypeId && lines.includes(t.requiredTypeId) ? typeId === t.requiredTypeId : typeId === null;
+    }).map((n) => n.id));
+    return input.assignments.filter((a) => needIds.has(a.needId) && !input.off?.has(a.userId)).map((a) => ({ start: a.startMinutes, end: a.endMinutes }));
+  };
   const areaNeeds: DayNeed[] = [];
-  const own = areaNeedsOn(siteAreas.flatMap((a) => (a.id ? [{ ...a, id: a.id }] : [])), input.date, onActivity);
+  const own = areaNeedsOn(siteAreas.flatMap((a) => (a.id ? [{ ...a, id: a.id }] : [])), input.date, onActivity, onArea);
   for (const n of own) {
     const id = n.typeId;
     const activity = n.activityTypeId ? types.get(n.activityTypeId) : undefined;

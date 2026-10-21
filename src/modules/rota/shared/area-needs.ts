@@ -38,11 +38,15 @@ export const ACTIVITY_NEED = "act-";
 export const areaActivityTypeId = (areaId: string, activityTypeId: string) => areaTypeId(areaId, `${ACTIVITY_NEED}${activityTypeId}`);
 /** People on an activity in an area for a stretch, each span one person: what an activity line counts. */
 export type OnActivity = (areaId: string, activityTypeId: string) => readonly Span[];
+/** People on activities in an area that count for its staff needed of a type of staff (owner, 21
+ *  October 2026: "if that activity is for reception ... that time of that activity means its
+ *  covered"), each span one person; `lines` is every type the area's own lines ask for. */
+export type OnArea = (areaId: string, typeId: string | null, lines: readonly (string | null)[]) => readonly Span[];
 
 const span = (s: Span) => `${hhmm(s.start)}–${hhmm(s.end)}`;
 const join = (a: string | null, b: string) => (a ? `${a}; ${b}` : b);
 
-export function areaNeedsOn(areas: readonly NeedArea[], date: string, onActivity?: OnActivity): AreaNeed[] {
+export function areaNeedsOn(areas: readonly NeedArea[], date: string, onActivity?: OnActivity, onArea?: OnArea): AreaNeed[] {
   const byId = new Map(areas.map((a) => [a.id, a]));
   const hours = new Map(areas.map((a) => [a.id, hoursOn({ openFrom: a.openFrom ?? null, openUntil: a.openUntil ?? null, weekHours: a.weekHours ?? [] }, date)]));
   const needs = new Map<string, AreaNeed & { own: number }>();
@@ -96,6 +100,10 @@ export function areaNeedsOn(areas: readonly NeedArea[], date: string, onActivity
     }
   }
   const own = [...needs.values()].filter((n) => n.places > 0).map(({ own: _own, ...n }) => { void _own; return n; });
+  if (onArea) for (const n of own) {
+    const lines = own.filter((m) => m.areaId === n.areaId).map((m) => m.qualificationTypeId);
+    n.off.push(...presentOff(n, onArea(n.areaId, n.qualificationTypeId, lines)));
+  }
   return [...own, ...areas.flatMap((a) => activityNeedsOf(a, hours.get(a.id) ?? null, date, onActivity))];
 }
 
@@ -137,6 +145,26 @@ function activityNeedsOf(a: NeedArea, open: Span | null, date: string, onActivit
     return { id: `${key}:${date}`, typeId: key, areaId: a.id, areaName: a.name, qualificationTypeId: null, typeName: null, label: name, startMinutes: start, endMinutes: end, places, off,
       together: null, activityTypeId, activityName: name };
   });
+}
+
+/** Places of a need taken by people on activities in the area: stretch by stretch, the places
+ *  still needed after what is off, from the last, one for each person there. */
+function presentOff(n: AreaNeed, present: readonly Span[]): OffSpan[] {
+  const out: OffSpan[] = [];
+  const cuts = [...new Set([n.startMinutes, n.endMinutes, ...n.off.flatMap((o) => [o.start, o.end]), ...present.flatMap((p) => [p.start, p.end])])]
+    .filter((t) => t >= n.startMinutes && t <= n.endMinutes).sort((x, y) => x - y);
+  for (let i = 0; i < cuts.length - 1; i++) {
+    const s = { start: cuts[i], end: cuts[i + 1] };
+    let here = present.filter((p) => p.start <= s.start && p.end >= s.end).length;
+    const offNow = new Set(n.off.filter((o) => o.start <= s.start && o.end >= s.end).map((o) => o.place));
+    for (let place = n.places; place >= 1 && here > 0; place--) {
+      if (offNow.has(place)) continue;
+      here--;
+      const last = out.findLast((o) => o.place === place);
+      if (last && last.end === s.start) last.end = s.end; else out.push({ place, ...s });
+    }
+  }
+  return out;
 }
 
 /** How many of each type an area needs, stretch by stretch, from its needs and what is off: what

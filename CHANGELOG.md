@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.60.0 · 21 October 2026 · Rota: people on an area's activities cover the area
+
+- On the rota **Plan**, someone on an activity in an area now counts towards the staff that area needs, for the time of that activity. If Reception needs at least one person and Maeve is on Till 2 at Reception from 12:00 to 15:15, Reception is covered then and the gap shrinks to the times nobody is there.
+- This works for an area's parts too: someone on an activity at Till 2, which is part of Reception, covers Reception.
+- When an area asks for a qualification, such as lifeguards on the pool, only an activity that needs that same qualification counts. An aqua-fit instructor is still not one of the pool's lifeguards.
+- Tap an area's gap, on the **Not covered** row or under **Not covered yet**, to choose someone for that exact time. A new **Put them on** choice picks which of the area's activities they do, or the area itself. If that activity is already on there with a free place, they take it, which fills both.
+- **Today** counts people the same way.
+
 ## 1.59.1 · 21 October 2026 · Rota: take someone off from their block on the Plan
 
 - On the rota **Plan**, tap a block on someone's row in **The day, person by person** (an area, an activity, a class or a booking). It now opens just that block, with **Take them off** and **Change time** right there, and their whole day one tap away. Before, the block opened their whole day and taking them off was a small link inside it.

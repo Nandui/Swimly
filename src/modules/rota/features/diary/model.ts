@@ -54,6 +54,12 @@ export type Need = {
   /** An area's activity line: who counts is anyone on this activity in these areas (the area and
    *  its parts, lower case), not people put on the need itself. */
   onActivity: { typeId: string; areas: string[] } | null;
+  /** An area's staff needed (owner, 21 October 2026: "if that activity is for reception ... that
+   *  time of that activity means its covered"): anyone on an activity in the area or its parts
+   *  counts too (`coveredBy`). When the activity asks for a qualification one of the area's lines
+   *  asks for, it counts only for that line; otherwise only for a line that asks for none, so an
+   *  aqua-fit instructor is not one of the pool's lifeguards. `lines`: every line's qualification. */
+  coveredBy?: { areas: string[]; lines: (string | null)[] } | null;
 };
 
 /** Something one person is on. */
@@ -75,6 +81,8 @@ export type Line = Span & {
   /** The saved record: an activity or booking place, an area place, or the class taught. */
   assignmentId: string | null;
   place: number | null;
+  /** The qualification its activity asks for, for an activity. */
+  requiredTypeId?: string | null;
 };
 
 /** A stretch of a need with fewer people than it needs. */
@@ -174,7 +182,9 @@ function needsOf(input: DiaryInput): Need[] {
   const groupOf = (name: string) => input.areas.find((a) => a.name.toLowerCase() === name.toLowerCase())?.parentName ?? "";
   const out: Need[] = [];
   const partsOf = (name: string) => [name, ...input.areas.filter((x) => x.parentName?.toLowerCase() === name.toLowerCase()).map((x) => x.name)].map((n) => n.toLowerCase());
-  for (const a of areaNeedsOn(input.areas, input.date)) {
+  const own = areaNeedsOn(input.areas, input.date);
+  const lineTypes = (areaId: string) => [...new Set(own.filter((n) => n.areaId === areaId && !n.activityTypeId).map((n) => n.qualificationTypeId))];
+  for (const a of own) {
     const cuts = [...new Set([a.startMinutes, a.endMinutes, ...a.off.flatMap((o) => [o.start, o.end])])].filter((t) => t >= a.startMinutes && t <= a.endMinutes).sort((x, y) => x - y);
     const wants: Need["wants"] = [];
     for (let i = 0; i < cuts.length - 1; i++) {
@@ -193,7 +203,8 @@ function needsOf(input: DiaryInput): Need[] {
       continue;
     }
     out.push({ key: a.id, kind: "area", title: `${a.label ?? "Staff"} on duty`, detail: null, area: a.areaName, group: home?.parentName ?? "", departmentId: home?.departmentId ?? null, start: a.startMinutes, end: a.endMinutes,
-      wants: wants.filter((w) => w.count > 0), requiredTypeId: a.qualificationTypeId, requiredName: a.typeName, note: a.together, typeId: null, needId: a.id, classRef: null, onActivity: null });
+      wants: wants.filter((w) => w.count > 0), requiredTypeId: a.qualificationTypeId, requiredName: a.typeName, note: a.together, typeId: null, needId: a.id, classRef: null, onActivity: null,
+      coveredBy: { areas: partsOf(a.areaName), lines: lineTypes(a.areaId) } });
   }
   for (const n of input.needs) {
     const type = types.get(n.typeId);
@@ -228,7 +239,7 @@ function linesOf(input: DiaryInput, needs: readonly Need[]): Line[] {
   const byKey = new Map(needs.map((n) => [n.key, n]));
   const line = (n: Need | undefined, a: { id: string; userId: string; start: number; end: number; place: number | null; subs?: DiaryInput["assignments"][number]["subs"] }, assignmentId: string | null): Line[] =>
     n ? [{ key: `${n.key}|${a.id}`, userId: a.userId, needKey: n.key, kind: n.kind, title: n.title, typeId: n.kind === "activity" || n.kind === "booking" ? n.typeId : null, area: n.area, group: n.group,
-      subs: subsAt(a), start: a.start, end: a.end, assignmentId, place: a.place }] : [];
+      subs: subsAt(a), start: a.start, end: a.end, assignmentId, place: a.place, ...(n.kind === "activity" ? { requiredTypeId: n.requiredTypeId } : {}) }] : [];
   return [
     ...input.areaAssignments.flatMap((a) => line(byKey.get(a.needId), a, a.id)),
     ...input.assignments.flatMap((a) => line(byKey.get(a.needId), a, a.id)),
@@ -280,12 +291,35 @@ function personDay(input: DiaryInput, person: DiaryInput["staff"][number], lines
 /** Does someone's line count for a need: theirs on it, or for an area's activity line, on that
  *  activity in the area or its parts. */
 export const countsFor = (need: Need) => (l: Line) => l.needKey === need.key
-  || (!!need.onActivity && !!l.typeId && l.typeId === need.onActivity.typeId && need.onActivity.areas.includes(l.area.toLowerCase()));
+  || (!!need.onActivity && !!l.typeId && l.typeId === need.onActivity.typeId && need.onActivity.areas.includes(l.area.toLowerCase()))
+  || coversArea(need, l);
 
-/** Is a need only a place to hold people for an area's activity line (it asks for nobody itself)?
- *  It is then read under the area's line, not on its own. */
+/** Does someone on an activity count for an area's staff needed: the activity is in the area or
+ *  one of its parts, and its qualification is the line's (or, when no line asks for it, the line
+ *  asks for none). */
+function coversArea(need: Need, l: Pick<Line, "kind" | "area" | "requiredTypeId">) {
+  if (!need.coveredBy || l.kind !== "activity" || !need.coveredBy.areas.includes(l.area.toLowerCase())) return false;
+  const asks = l.requiredTypeId ?? null;
+  return asks && need.coveredBy.lines.includes(asks) ? need.requiredTypeId === asks : need.requiredTypeId === null;
+}
+
+/** The activities that cover an area's staff needed when someone is put on one there (owner, 21
+ *  October 2026: choosing someone for Reception's gap puts them on a Reception activity): the area's
+ *  department's activities whose qualification fits the line, those already on in the area that
+ *  day first. None for any other need. */
+export function coverActivities<T extends { id: string; departmentId: string; requiredTypeId: string | null }>(need: Need, activities: readonly T[], lines: readonly Line[]): T[] {
+  if (!need.coveredBy || need.kind !== "area") return [];
+  const fits = activities.filter((a) => (!need.departmentId || a.departmentId === need.departmentId)
+    && coversArea(need, { kind: "activity", area: need.area, requiredTypeId: a.requiredTypeId }));
+  const used = new Set(lines.filter((l) => l.kind === "activity" && l.typeId && need.coveredBy!.areas.includes(l.area.toLowerCase())).map((l) => l.typeId));
+  return [...fits.filter((a) => used.has(a.id)), ...fits.filter((a) => !used.has(a.id))];
+}
+
+/** Is a need only a place to hold people for an area (it asks for nobody itself, and who is on it
+ *  counts for the area's activity line or staff needed)? It is then read under the area. */
 export const heldByAreaLine = (need: Need, needs: readonly Need[]) => need.kind === "activity" && !need.wants.length
-  && needs.some((n) => n.onActivity && n.onActivity.typeId === need.typeId && n.onActivity.areas.includes(need.area.toLowerCase()));
+  && needs.some((n) => (n.onActivity && n.onActivity.typeId === need.typeId && n.onActivity.areas.includes(need.area.toLowerCase()))
+    || coversArea(n, { kind: "activity", area: need.area, requiredTypeId: need.requiredTypeId }));
 
 /** Holes in one need: where fewer people are on it than it needs, counting nobody who is off or
  *  on a break. */
@@ -343,8 +377,8 @@ export function buildDiary(input: DiaryInput): Diary {
   const everyone = new Map(input.staff.map((s) => [s.userId, personDay(input, s, allLines.filter((l) => l.userId === s.userId), byKey)]));
   const people = input.staff.filter(onPlan).map((s) => everyone.get(s.userId)!)
     .sort((a, b) => (a.parts[0]?.start ?? 1440) - (b.parts[0]?.start ?? 1440) || a.name.localeCompare(b.name));
-  // An area's activity line counts everyone on that activity there, shown on this plan or not.
-  const holes = needs.flatMap((n) => holesOf(n, n.onActivity ? allLines : allLines.filter((l) => shownKeys.has(l.needKey)), everyone)).sort((a, b) => a.start - b.start || a.end - b.end);
+  // An area's activity line and staff needed count everyone on an activity there, shown on this plan or not.
+  const holes = needs.flatMap((n) => holesOf(n, n.onActivity || n.coveredBy ? allLines : allLines.filter((l) => shownKeys.has(l.needKey)), everyone)).sort((a, b) => a.start - b.start || a.end - b.end);
   return { date: input.date, needs, holes, people, done: holes.length === 0 };
 }
 

@@ -81,7 +81,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
           ) : null}
           <Diary siteId={site.id} date={date} dateLabel={dateLabel} today={today} live={date <= now} canChange={data.canChange}
             departmentId={department?.id ?? null} departmentFor={data.departmentFor} diary={diary} hours={data.hours} pool={data.pool}
-            departmentNames={departmentNames} types={data.types} areas={data.areas} subActivities={data.subActivities} />
+            departmentNames={departmentNames} types={data.types} activities={data.activities} areas={data.areas} subActivities={data.subActivities} />
         </>
       )}
     </PageShell>
