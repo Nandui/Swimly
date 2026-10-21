@@ -267,10 +267,6 @@ a.ins-kpi:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2p
 .turnfin-app .ins-kpi-meter { position: relative; display: block; height: 6px; margin: 6px 0 2px; border-radius: 999px; background: var(--ins-track); overflow: hidden; }
 .turnfin-app .ins-kpi-meter > [data-slot='progress-indicator'] { border-radius: 999px; background: var(--ins-a); }
 .turnfin-app .ins-spark { display: block; width: 100%; height: 28px; margin: 2px 0; overflow: visible; }
-.turnfin-app .ins-delta { display: inline-flex; align-items: center; gap: 1px; color: var(--pc-ink-muted); font-size: 13px; font-weight: 600; white-space: nowrap; }
-.turnfin-app .ins-delta svg { width: 14px; height: 14px; }
-.turnfin-app .ins-delta[data-tone='good'] { color: var(--pc-success); }
-.turnfin-app .ins-delta[data-tone='bad'] { color: var(--pc-danger); }
 
 /* ── Charts. */
 .turnfin-app .ins-chart { position: relative; display: flex; flex-direction: column; gap: 10px; margin: 0; min-width: 0; }

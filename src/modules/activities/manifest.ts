@@ -1,4 +1,4 @@
-import { Waves, WavesLadder } from "lucide-react";
+import { ChartNoAxesCombined, Waves, WavesLadder } from "lucide-react";
 import type { ModuleManifest } from "@/modules/registry";
 
 /** How this module describes itself to the rest of Turnfin: its name, menu entry,
@@ -21,7 +21,7 @@ export const swimSchoolModule: ModuleManifest = {
         permissions: ["swimschool.desk", "students.manage", "enrolment.manage", "parents.manage"],
       },
       {
-        key: "manage", label: "Manage", help: "Programmes, levels, classes and reports.",
+        key: "manage", label: "Manage", help: "Programmes, levels and classes.",
         permissions: ["courses.manage", "curriculum.manage", "progression.override"],
       },
     ],
@@ -56,6 +56,25 @@ export const poolDeckModule: ModuleManifest = {
         key: "lead", label: "Lead", help: "Also take attendance for any class, for example copying in a paper register.",
         permissions: ["attendance.markAny"],
       },
+    ],
+  },
+};
+
+// Analytics is for managers only (owner decision, 21 October 2026: "the whole analytics page
+// should only be accessible to managers and above"), so it is its own module in the Managers
+// group rather than part of Swim school Manage. Its pages stay in the swim school workspace.
+export const analyticsModule: ModuleManifest = {
+  id: "analytics",
+  group: "managers",
+  name: "Analytics",
+  description: "The swim school's Business, Reception and Pool deck dashboards",
+  icon: ChartNoAxesCombined,
+  href: "/analytics",
+  logName: "Analytics",
+  access: {
+    reach: "sites",
+    levels: [
+      { key: "view", label: "View", help: "See the Business, Reception and Pool deck dashboards for their sites, and every report behind them.", permissions: ["analytics.view"] },
     ],
   },
 };

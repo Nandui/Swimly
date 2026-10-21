@@ -5,17 +5,17 @@ import { Headset, TrendingUp, Waves } from "lucide-react";
  *  2026: "analytics for the business decisions, another for the reception so the supervisor can
  *  performance manage the people managing it, and another for the pool deck supervisor so they can
  *  manage their teachers, and service delivery like attendance, competencies and all that"). */
-export const DASHBOARDS = [
+const DASHBOARDS = [
   { key: "business", href: "/analytics", label: "Business", icon: TrendingUp },
   { key: "reception", href: "/analytics/reception", label: "Reception", icon: Headset },
   { key: "pool-deck", href: "/analytics/pool-deck", label: "Pool deck", icon: Waves },
 ] as const;
 
-export type Dashboard = typeof DASHBOARDS[number]["key"];
+type Dashboard = typeof DASHBOARDS[number]["key"];
 
 /** Every analytics page and the dashboard it opens from. The pages behind a dashboard are its
  *  detail: reached from its panels, with a way back to it. */
-export const ANALYTICS_PAGES = {
+const ANALYTICS_PAGES = {
   business: "business", classes: "business", swimmers: "business", multiple: "business",
   reception: "reception",
   "pool-deck": "pool-deck", teachers: "pool-deck", progression: "pool-deck", instructors: "pool-deck",

@@ -34,7 +34,7 @@ const heightClass = (height: number) => HEIGHTS[height] ?? "h-56";
 
 /** A clean axis for counts: a step of 1, 2, 2.5 or 5 times a power of ten (never a fraction of a
  *  whole), about four steps up to a top that holds the largest value. */
-export function niceScale(value: number) {
+function niceScale(value: number) {
   const rough = Math.max(value, 1) / 4;
   const exp = Math.pow(10, Math.floor(Math.log10(rough)));
   const step = Math.max(1, [1, 2, 2.5, 5, 10].map(m => m * exp).find(s => s >= rough && (s >= 10 || Number.isInteger(s))) ?? 10 * exp);

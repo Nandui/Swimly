@@ -151,11 +151,11 @@ export function jobsFromMeasures(items: DeskMeasure[]): Job[] {
 }
 
 const DUBLIN_DAY = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Dublin", year: "numeric", month: "2-digit", day: "2-digit" });
-export function dublinDay(at: Date) {
+function dublinDay(at: Date) {
   return DUBLIN_DAY.format(at);
 }
 
-export function median(values: number[]) {
+function median(values: number[]) {
   if (!values.length) return null;
   const s = [...values].sort((a, b) => a - b), mid = Math.floor(s.length / 2);
   return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;

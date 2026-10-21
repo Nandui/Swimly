@@ -305,6 +305,12 @@ export const PERMISSIONS = [
     description: "Read every CCTV viewing recorded at the sites this role covers and add notes to them. Includes recording.",
   },
   {
+    key: "analytics.view",
+    group: "Analytics",
+    label: "See swim school analytics",
+    description: "See the Business, Reception and Pool deck dashboards for the sites this role covers, and every report behind them.",
+  },
+  {
     key: "site-monitoring.read",
     group: "Site Monitoring",
     label: "See Site Monitoring",
