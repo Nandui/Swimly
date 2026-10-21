@@ -15,6 +15,7 @@ import { useMemo, useState } from "react";
 
 import { Tag } from "@/components/ui-kit/tag";
 import { PLACEMENT_META } from "@/modules/activities/shared/enrolment/constants";
+import { MoveDialog, type GroupMember } from "@/modules/activities/features/together/components/move-dialog";
 import { WHAT_IF_META } from "@/modules/activities/features/together/constants";
 import { capacityLabel, courseName, formatTime } from "@/modules/activities/shared/courses/constants";
 import type { CourseRow } from "@/modules/activities/shared/courses/data/courses";
@@ -30,6 +31,8 @@ type CombinationListProps = {
   members: FamilyMember[];
   courses: CourseRow[];
   differentTimes?: boolean;
+  /** The group with their places, when the viewer may move them ("Move them here"). */
+  group?: GroupMember[];
 };
 
 export function CombinationList(props: CombinationListProps) {
@@ -43,6 +46,7 @@ function CombinationPages({
   members,
   courses,
   differentTimes = false,
+  group,
 }: CombinationListProps) {
   const [cursors, setCursors] = useState<(string[] | null)[]>([null]);
   const page = useMemo(
@@ -72,6 +76,7 @@ function CombinationPages({
           key={placements.map((p) => p.course.id).join(",")}
           heading={many ? `Option ${offset + index + 1}` : null}
           placements={placements}
+          move={group ? { heading, group } : null}
         />
       ))}
       {paged ? (
@@ -104,9 +109,11 @@ function CombinationPages({
 function SlotList({
   heading,
   placements,
+  move,
 }: {
   heading: string | null;
   placements: Placement[];
+  move: { heading: string; group: GroupMember[] } | null;
 }) {
   const sorted = [...placements].sort(
     (a, b) => a.course.startMinutes - b.course.startMinutes,
@@ -151,6 +158,11 @@ function SlotList({
           );
         })}
       </ItemGroup>
+      {move && placements.some((p) => !p.alreadyIn) ? (
+        <div className="flex min-w-0 justify-end">
+          <MoveDialog heading={move.heading} placements={sorted} group={move.group} />
+        </div>
+      ) : null}
     </div>
   );
 }
