@@ -80,7 +80,7 @@ export async function fillNeed(input: FillInput, changeInput: Change = {}): Prom
     if (at.live && !change.reason) return fail(NEEDS_REASON);
     const person = await staffContact(d.userId, at.site.orgId, { activeOnly: true });
     if (!person) return fail("That person is no longer active.");
-    const what = `${need.typeName ?? "Staff"} on duty, ${need.areaName}`;
+    const what = `${need.label ?? "Staff"} on duty, ${need.areaName}`;
     const rows = await prisma.rotaAreaAssignment.findMany({ where: { siteId: d.siteId, areaId: need.areaId, date: parseDateOnly(d.date), qualificationTypeId: need.qualificationTypeId }, select: { place: true, startMinutes: true, endMinutes: true } });
     await prisma.$transaction(async (tx) => {
       const row = await tx.rotaAreaAssignment.create({ data: { orgId: at.site.orgId, siteId: d.siteId, areaId: need.areaId, date: parseDateOnly(d.date), qualificationTypeId: need.qualificationTypeId,

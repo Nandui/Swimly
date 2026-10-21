@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.58.0 · 21 October 2026 · Rota: areas ask for a role, not a certificate
+
+- On the rota **Plan**, an area's own staff now show by the role it needs, such as **Lifeguard on duty** in the main pool, instead of the name of the certificate.
+- The certificate still decides who can fill the place, and still shows in small print, so anyone without it gets the same warning as before.
+- In **Admin, Areas**, each line in **Staff needed** now has a **Role** (from Admin, Positions) and **Who can fill it**. Choosing a role fills in the qualification it needs; change it only if that area needs something else. Areas you set up before already show the role that needs their certificate, so nothing needs entering again. Open them once to check the role is right.
+- Lines that ask for people on an activity, such as **at least 1 on Serving customers**, stay as they are and show next to the roles.
+
 ## 1.57.0 · 21 October 2026 · Swimming courses in the parents app
 
 - Swimming courses can now be booked in the parents app. When you put on or change a **Pool** course, tick **Show in the parents app** and it shows there until its first session.

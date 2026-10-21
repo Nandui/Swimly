@@ -191,7 +191,7 @@ function needsOf(input: DiaryInput): Need[] {
         note: null, typeId: a.activityTypeId, needId: a.id, classRef: null, onActivity: { typeId: a.activityTypeId, areas: partsOf(a.areaName) } });
       continue;
     }
-    out.push({ key: a.id, kind: "area", title: `${a.typeName ?? "Staff"} on duty`, detail: null, area: a.areaName, group: home?.parentName ?? "", departmentId: home?.departmentId ?? null, start: a.startMinutes, end: a.endMinutes,
+    out.push({ key: a.id, kind: "area", title: `${a.label ?? "Staff"} on duty`, detail: null, area: a.areaName, group: home?.parentName ?? "", departmentId: home?.departmentId ?? null, start: a.startMinutes, end: a.endMinutes,
       wants: wants.filter((w) => w.count > 0), requiredTypeId: a.qualificationTypeId, requiredName: a.typeName, note: a.together, typeId: null, needId: a.id, classRef: null, onActivity: null });
   }
   for (const n of input.needs) {

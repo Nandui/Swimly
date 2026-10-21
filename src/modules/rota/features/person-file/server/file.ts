@@ -5,6 +5,7 @@ import { ABSENCE_REASON_META, RETURN_FIT_META, ROTA_CHANGE_REASON_META, addDaysI
 import type { PersonFileEntry } from "@/modules/contributions";
 import { withNeedNames } from "@/modules/rota/shared/data";
 import { areaNeedName } from "@/modules/rota/shared/day";
+import { lineLabel } from "@/modules/rota/shared/area-needs";
 import { areaById, sitesByIds } from "@/lib/directory";
 
 /** Rota's part of a person's file: what they are planned on in the next two
@@ -39,9 +40,8 @@ export async function plannedFile(userId: string): Promise<{ summary: string; en
     ...rows.map((r) => ({ id: r.id, on: iso(r.need.date), start: r.startMinutes, end: r.endMinutes, detail: [r.need.type.name, r.need.place || null, r.need.site.name] })),
     ...onAreas.map((a) => {
       const area = areas.get(a.areaId);
-      const typeName = area?.minimums.find((m) => !m.activityTypeId && m.typeId === a.qualificationTypeId)?.typeName ?? null;
       return { id: a.id, on: iso(a.date), start: a.startMinutes, end: a.endMinutes,
-        detail: [areaNeedName(a.qualificationTypeId ? typeName ?? "Qualified" : null), area?.name ?? null, sites.get(a.siteId)?.name ?? null] };
+        detail: [areaNeedName(lineLabel(area?.minimums, a.qualificationTypeId)), area?.name ?? null, sites.get(a.siteId)?.name ?? null] };
     }),
   ].sort((x, y) => x.on.localeCompare(y.on) || x.start - y.start);
   const days = new Set(items.map((r) => r.on)).size;

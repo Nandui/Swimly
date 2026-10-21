@@ -174,6 +174,8 @@ const clockTime = z.string().trim().max(5).refine((v) => !v || /^([01]\d|2[0-3])
 const staffingSchema = z.object({
   lines: z.array(z.object({
     count: z.coerce.number().int("Give a whole number of staff.").min(1, "Give at least 1 staff, or remove the line.").max(30, "Up to 30 staff."),
+    /** The role it asks for (Admin, Positions); empty for none. */
+    roleId: z.string().trim().max(64).default("").transform((v) => v || null),
     typeId: z.string().trim().max(64).default("").transform((v) => v || null),
     /** People on this activity there (owner, 21 October 2026), between `from` and `until` or whenever it is open. */
     activityTypeId: z.string().trim().max(64).default("").transform((v) => v || null),
@@ -203,7 +205,7 @@ export async function saveAreaStaffing(id: string, input: AreaStaffingInput): Pr
   const orgId = session.user.orgId;
   const parsed = staffingSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
-  const lines = parsed.data.lines.map((l) => ({ ...l, typeId: l.activityTypeId ? null : l.typeId, from: l.activityTypeId ? minutesOf(l.from) : null, until: l.activityTypeId ? minutesOf(l.until) : null }));
+  const lines = parsed.data.lines.map((l) => ({ ...l, typeId: l.activityTypeId ? null : l.typeId, roleId: l.activityTypeId ? null : l.roleId, from: l.activityTypeId ? minutesOf(l.from) : null, until: l.activityTypeId ? minutesOf(l.until) : null }));
   const duty = lines.filter((l) => !l.activityTypeId);
   const onActivities = lines.filter((l) => l.activityTypeId);
   if (onActivities.some((l) => (l.from === null) !== (l.until === null))) return fail("Give an activity line both times, or leave both empty for whenever it is open.");
@@ -231,19 +233,23 @@ export async function saveAreaStaffing(id: string, input: AreaStaffingInput): Pr
   const typeIds = [...new Set(lines.flatMap((l) => (l.typeId ? [l.typeId] : [])))];
   const types = typeIds.length ? await prisma.qualificationType.findMany({ where: { id: { in: typeIds }, orgId: orgId ?? undefined }, select: { id: true, name: true } }) : [];
   if (types.length !== typeIds.length) return fail("That qualification is no longer offered.");
-  if (new Set(duty.map((l) => l.typeId ?? "")).size !== duty.length) return fail("Each type of staff once: add to its number instead.");
+  const roleIds = [...new Set(duty.flatMap((l) => (l.roleId ? [l.roleId] : [])))];
+  const roles = roleIds.length ? await prisma.position.findMany({ where: { id: { in: roleIds }, orgId: orgId ?? undefined }, select: { id: true, name: true } }) : [];
+  if (roles.length !== roleIds.length) return fail("That role is no longer offered.");
+  if (new Set(duty.map((l) => `${l.roleId ?? ""}|${l.typeId ?? ""}`)).size !== duty.length) return fail("Each role once: add to its number instead.");
   const activityIds = [...new Set(onActivities.map((l) => l.activityTypeId!))];
   const activities = activityIds.length ? await prisma.activityType.findMany({ where: { id: { in: activityIds }, orgId: orgId ?? undefined, archivedAt: null, fromClasses: false }, select: { id: true, name: true } }) : [];
   if (activities.length !== activityIds.length) return fail("That activity is no longer on the list.");
   const name = new Map(types.map((t) => [t.id, t.name]));
+  const role = new Map(roles.map((r) => [r.id, r.name]));
   const activityName = new Map(activities.map((a) => [a.id, a.name]));
-  const words = lines.length ? lines.map((l) => minimumWords({ count: l.count, typeId: l.typeId, typeName: l.typeId ? name.get(l.typeId) ?? null : null, activityTypeId: l.activityTypeId,
-    activityName: l.activityTypeId ? activityName.get(l.activityTypeId) ?? null : null, from: l.from, until: l.until })).join(", ") : "no minimum";
+  const words = lines.length ? lines.map((l) => minimumWords({ count: l.count, typeId: l.typeId, typeName: l.typeId ? `holding ${name.get(l.typeId)}` : null, roleName: l.roleId ? role.get(l.roleId) ?? null : null,
+    activityTypeId: l.activityTypeId, activityName: l.activityTypeId ? activityName.get(l.activityTypeId) ?? null : null, from: l.from, until: l.until })).join(", ") : "no minimum";
   const hours = lines.length ? `, ${hoursWords({ openFrom, openUntil, weekHours: days })}` : "";
-  const covered = together.map((t) => `, covered from ${others.find((o) => o.id === t.withAreaId)!.name} while both are open (${t.count} ${t.typeId ? name.get(t.typeId) : "anyone"} in all)`).join("");
+  const covered = together.map((t) => `, covered from ${others.find((o) => o.id === t.withAreaId)!.name} while both are open (${t.count} ${t.typeId ? `holding ${name.get(t.typeId)}` : "anyone"} in all)`).join("");
   await prisma.$transaction(async (tx) => {
     await tx.siteAreaStaffing.deleteMany({ where: { areaId: id } });
-    if (lines.length) await tx.siteAreaStaffing.createMany({ data: lines.map((l, i) => ({ areaId: id, count: l.count, qualificationTypeId: l.typeId, activityTypeId: l.activityTypeId,
+    if (lines.length) await tx.siteAreaStaffing.createMany({ data: lines.map((l, i) => ({ areaId: id, count: l.count, positionId: l.roleId, qualificationTypeId: l.typeId, activityTypeId: l.activityTypeId,
       fromMinutes: l.from, untilMinutes: l.until, sortOrder: i })) });
     await tx.siteArea.update({ where: { id }, data: { openFrom, openUntil, weekHours: days.length ? days : Prisma.DbNull, together: together.length ? together : Prisma.DbNull } });
     await logAudit({ actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: "update", entity: "SiteArea", entityId: id, clubId: area.siteId,

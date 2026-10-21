@@ -1,7 +1,8 @@
 import "server-only";
 import { can, requireSession } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
-import { minimumOf, togetherOf, weekHoursOf } from "@/lib/setup/area-staffing";
+import { togetherOf, weekHoursOf } from "@/lib/setup/area-staffing";
+import { rolesNeeding, staffLine } from "@/lib/directory";
 import { lanesInPlace } from "@/lib/setup/lanes";
 import type { PermissionKey } from "@/lib/staff/permissions";
 
@@ -41,17 +42,20 @@ export async function areasPage() {
     where: { orgId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     select: { id: true, name: true, code: true, areas: { orderBy: [{ archivedAt: { sort: "asc", nulls: "first" } }, { sortOrder: "asc" }, { name: "asc" }],
       select: { id: true, name: true, lanes: true, archivedAt: true, openFrom: true, openUntil: true, weekHours: true, together: true, departmentId: true, parentId: true,
-        staffing: { orderBy: { sortOrder: "asc" }, select: { count: true, qualificationTypeId: true, qualificationType: { select: { name: true } }, activityTypeId: true, fromMinutes: true, untilMinutes: true, activityType: { select: { name: true } } } } } } },
+        staffing: { orderBy: { sortOrder: "asc" }, select: { count: true, positionId: true, qualificationTypeId: true, qualificationType: { select: { name: true } }, activityTypeId: true, fromMinutes: true, untilMinutes: true, activityType: { select: { name: true } } } } } } },
   });
   // Departments for every site (none tied to a site) as well as each site's own.
   const departments = await prisma.department.findMany({ where: { orgId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true, clubId: true } });
-  const qualifications = await prisma.qualificationType.findMany({ where: { orgId, archivedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } });
+  const [qualifications, roles] = await Promise.all([
+    prisma.qualificationType.findMany({ where: { orgId, archivedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    orgId ? rolesNeeding(orgId) : [],
+  ]);
   // What an area's line can ask people to be on (owner, 21 October 2026); swim classes come from the timetable.
   const activities = await prisma.activityType.findMany({ where: { orgId, archivedAt: null, fromClasses: false }, orderBy: [{ department: { sortOrder: "asc" } }, { sortOrder: "asc" }, { name: "asc" }],
     select: { id: true, name: true, department: { select: { name: true } } } });
-  return { canKeep: keeps("setup.areas"), qualifications, activities: activities.map((a) => ({ id: a.id, name: a.name, departmentName: a.department.name })), sites: sites.map((site) => {
+  return { canKeep: keeps("setup.areas"), qualifications, roles, activities: activities.map((a) => ({ id: a.id, name: a.name, departmentName: a.department.name })), sites: sites.map((site) => {
     const areas = site.areas.map(({ staffing, weekHours, together, ...area }) => ({ ...area, weekHours: weekHoursOf(weekHours), together: togetherOf(together),
-      minimums: staffing.map(minimumOf) }));
+      minimums: staffing.map((m) => staffLine(m, roles)) }));
     // Each top-level area followed by its sub-areas (owner, 20 October 2026).
     const top = areas.filter((a) => !a.parentId || !areas.some((p) => p.id === a.parentId));
     return { ...site, departments: departments.filter((d) => !d.clubId || d.clubId === site.id).map(({ id, name }) => ({ id, name })),

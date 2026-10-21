@@ -1,5 +1,5 @@
 import type { Prisma } from "@/generated/prisma/client";
-import { minimumOf, togetherOf, weekHoursOf, type AreaTogether, type WeekHour } from "@/lib/setup/area-staffing";
+import { minimumOf, roleFor, togetherOf, weekHoursOf, type AreaTogether, type RoleNeeds, type WeekHour } from "@/lib/setup/area-staffing";
 import type { SiteFilter, SubjectFilter } from "@/lib/policy/types";
 import { ADMINISTRATOR_PERMISSIONS } from "@/lib/staff/permissions";
 
@@ -87,29 +87,46 @@ export async function areaLanesAt(siteId: string, db?: Pick<Prisma.TransactionCl
 /** A site's areas (Admin, Areas), in order, with how many lanes each has (0 for none), the daily
  *  hours it is open and its minimum staff: what the rota's activities and bookings pick from and
  *  book lanes in, and what it checks staffing against. */
-export async function areasAt(siteId: string, db?: Pick<Prisma.TransactionClient, "siteArea">): Promise<AreaAt[]> {
-  const rows = await (db ?? (await import("@/lib/prisma")).prisma).siteArea.findMany({ where: { siteId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    select: { id: true, name: true, lanes: true, openFrom: true, openUntil: true, weekHours: true, together: true, departmentId: true, parentId: true,
-      staffing: { orderBy: { sortOrder: "asc" }, select: { count: true, qualificationTypeId: true, qualificationType: { select: { name: true } }, activityTypeId: true, fromMinutes: true, untilMinutes: true, activityType: { select: { name: true } } } } } });
+export async function areasAt(siteId: string, db?: Pick<Prisma.TransactionClient, "siteArea" | "position">): Promise<AreaAt[]> {
+  const client = db ?? (await import("@/lib/prisma")).prisma;
+  const rows = await client.siteArea.findMany({ where: { siteId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    select: { id: true, name: true, lanes: true, openFrom: true, openUntil: true, weekHours: true, together: true, departmentId: true, parentId: true, orgId: true,
+      staffing: { orderBy: { sortOrder: "asc" }, select: { count: true, positionId: true, qualificationTypeId: true, qualificationType: { select: { name: true } }, activityTypeId: true, fromMinutes: true, untilMinutes: true, activityType: { select: { name: true } } } } } });
   const byId = new Map(rows.map((r) => [r.id, r]));
-  return rows.map(({ staffing, weekHours, together, departmentId, parentId, ...area }) => {
+  const roles = rows.length ? await rolesNeeding(rows[0].orgId, client) : [];
+  return rows.map(({ staffing, weekHours, together, departmentId, parentId, orgId: _org, ...area }) => {
+    void _org;
     const parent = parentId ? byId.get(parentId) ?? null : null;
     return { ...area, weekHours: weekHoursOf(weekHours), together: togetherOf(together),
-      minimums: staffing.map(minimumOf),
+      minimums: staffing.map((m) => staffLine(m, roles)),
       parentId: parent?.id ?? null, parentName: parent?.name ?? null, departmentId: parent ? parent.departmentId : departmentId };
   });
 }
+/** Every role (Admin, Positions) with the qualifications it needs, in Admin's order: what names
+ *  an area's staff lines. */
+export async function rolesNeeding(orgId: string, db?: Pick<Prisma.TransactionClient, "position">): Promise<RoleNeeds[]> {
+  const rows = await (db ?? (await import("@/lib/prisma")).prisma).position.findMany({ where: { orgId }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    select: { id: true, name: true, archivedAt: true, requires: { select: { typeId: true } }, _count: { select: { holders: true } } } });
+  return rows.map((r) => ({ id: r.id, name: r.name, archived: !!r.archivedAt, holders: r._count.holders, typeIds: r.requires.map((q) => q.typeId) }));
+}
+/** A stored staff line as an area's minimum, a line of staff on duty named by its role; a line
+ *  on an activity has none. */
+export function staffLine(m: Parameters<typeof minimumOf>[0] & { positionId: string | null }, roles: readonly RoleNeeds[]): AreaMinimumAt {
+  const role = m.activityTypeId ? null : roleFor({ roleId: m.positionId, typeId: m.qualificationTypeId }, roles);
+  return { ...minimumOf(m), roleId: role?.id ?? null, roleName: role?.name ?? null };
+}
 /** One open area with its site, as `areasAt` gives it; null once archived or gone. */
-export async function areaById(id: string, db?: Pick<Prisma.TransactionClient, "siteArea">): Promise<(AreaAt & { siteId: string }) | null> {
+export async function areaById(id: string, db?: Pick<Prisma.TransactionClient, "siteArea" | "position">): Promise<(AreaAt & { siteId: string }) | null> {
   const row = await (db ?? (await import("@/lib/prisma")).prisma).siteArea.findFirst({ where: { id, archivedAt: null }, select: { siteId: true } });
   if (!row) return null;
   const area = (await areasAt(row.siteId, db)).find((a) => a.id === id);
   return area ? { ...area, siteId: row.siteId } : null;
 }
-/** An area as `areasAt` gives it: its hours (`hoursOn`) and the staff it needs then, "2 holding
- *  Pool Lifeguard", `typeId` null for anyone. */
-export type AreaAt = { id: string; name: string; lanes: number; openFrom: number | null; openUntil: number | null; weekHours: WeekHour[];
-  minimums: { count: number; typeId: string | null; typeName: string | null; activityTypeId: string | null; activityName: string | null; from: number | null; until: number | null }[];
+/** An area as `areasAt` gives it: its hours (`hoursOn`) and the staff it needs then, "2 Lifeguard
+ *  holding Pool Lifeguard", `typeId` null for anyone and `roleName` null when no role is named. */
+export type AreaMinimumAt = { count: number; typeId: string | null; typeName: string | null; roleId: string | null; roleName: string | null;
+  activityTypeId: string | null; activityName: string | null; from: number | null; until: number | null };
+export type AreaAt = { id: string; name: string; lanes: number; openFrom: number | null; openUntil: number | null; weekHours: WeekHour[]; minimums: AreaMinimumAt[];
   /** Staff in another area covering this one while both are open. */
   together: AreaTogether[];
   /** The area it is part of (Pool for the 25 m), and the department whose area it is (a

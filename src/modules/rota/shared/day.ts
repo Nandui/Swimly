@@ -51,8 +51,9 @@ export function areaNeedOf(needId: string): { areaId: string; typeId: string | n
 }
 /** The stored row behind a person on an area need (`area:<row>`), or null. */
 export const areaAssignmentRow = (id: string) => (id.startsWith("area:") ? id.slice(5) : null);
-/** "Pool Lifeguard on duty", "Staff on duty". */
-export const areaNeedName = (typeName: string | null) => (typeName ? `${typeName} on duty` : "Staff on duty");
+/** "Lifeguard on duty", "Staff on duty": an area need by the role it asks for (owner request, 20
+ *  October 2026), the qualification only saying who can fill it. */
+export const areaNeedName = (label: string | null) => (label ? `${label} on duty` : "Staff on duty");
 
 /** A swim class that day, from the swim school's commitments. */
 export type DayClass = { ref: string; userId: string | null; startMinutes: number; endMinutes: number; title: string; place: string; planned: boolean };
@@ -197,7 +198,7 @@ export function buildDay(input: {
     const activity = n.activityTypeId ? types.get(n.activityTypeId) : undefined;
     if (n.activityTypeId) types.set(id, { id, name: activity?.name ?? n.activityName ?? "Activity", icon: activity?.icon ?? "activity", departmentId: ANY_DEPARTMENT,
       requiredTypeId: activity?.requiredTypeId ?? null, requiredName: activity?.requiredName ?? null, fromClasses: false });
-    else types.set(id, { id, name: areaNeedName(n.qualificationTypeId ? n.typeName ?? "Qualified" : null), icon: "activity", departmentId: ANY_DEPARTMENT, requiredTypeId: n.qualificationTypeId,
+    else types.set(id, { id, name: areaNeedName(n.label), icon: "activity", departmentId: ANY_DEPARTMENT, requiredTypeId: n.qualificationTypeId,
       requiredName: n.qualificationTypeId ? n.typeName : null, fromClasses: false });
     areaNeeds.push({ id: n.id, typeId: id, place: n.areaName, startMinutes: n.startMinutes, endMinutes: n.endMinutes, places: n.places, note: "", repeatTitle: null, off: n.off, together: n.together });
   }
