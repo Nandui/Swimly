@@ -35,11 +35,29 @@
  *  that never happened. */
 
 export type ConfirmationReply = { choice: string; ids: string[] };
+
+/** A class or place as the confirmation shows it: what it is, when, at which level and centre. */
+export type ChangePlace = { title: string; when: string; level: string; centre: string };
+
+/** A move or enrolment about to happen, for the confirmation to draw at a glance
+ *  (ChangeReview in the UI kit, which declares the same shape). `from` is the place that ends
+ *  for a move, or the places they hold now for an enrolment (the choice decides whether those end). */
+export type PlannedChange = {
+  subject: string;
+  kind: "move" | "enrol" | "waitlist";
+  from: ChangePlace[];
+  to: ChangePlace;
+  /** Short plain sentences: a level change, a centre warning. */
+  notes: string[];
+};
+
 export type ActionConfirmation = {
   title: string;
   description: string;
   ids: string[];
   choices: { label: string; value: string }[];
+  /** A move or enrolment: shown as a picture of the change, its buttons held for a few seconds. */
+  change?: PlannedChange;
 };
 export type ActionResult = { ok: true } | { ok: false; error: string; fieldErrors?: Record<string, string>; confirmation?: ActionConfirmation };
 

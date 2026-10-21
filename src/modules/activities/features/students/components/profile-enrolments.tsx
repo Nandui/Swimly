@@ -49,7 +49,7 @@ export function ManageProfileEnrolments({ studentId, active, enrolments, targets
         <div className="flex basis-full flex-wrap gap-2">
           <ClassEnrolmentDialog trigger={<Button variant="outline">Move class</Button>} courses={targets.filter(c => c.id !== e.course.id)} currentEnrolment={e}
             submit={(data, confirmation) => transferEnrolment(e.id, String(data.get("toCourseId") ?? ""), String(data.get("placementReason") ?? ""), confirmation)} />
-          {e.status === "WAITLISTED" ? <ProfileActionDialog trigger={<Button variant="outline">Enrol from waitlist</Button>} title="Enrol from the waitlist" description={`Activate the place in ${courseLabelWithSite(e.course)} if a space is available.`} submitLabel="Enrol" submit={data => promoteFromWaitlist(e.id, readLegendAgreement(data))}><LegendAgreementField /></ProfileActionDialog> : null}
+          {e.status === "WAITLISTED" ? <ProfileActionDialog trigger={<Button variant="outline">Enrol from waitlist</Button>} title="Enrol from the waitlist" description={`Activate the place in ${courseLabelWithSite(e.course)} if a space is available.`} submitLabel="Review enrolment" submit={(data, confirmation) => promoteFromWaitlist(e.id, readLegendAgreement(data), confirmation)}><LegendAgreementField /></ProfileActionDialog> : null}
           <LeavePlace enrolment={e} />
         </div></li>)}</ul> : <EmptyState compact title="No current enrolments or waitlist places" />}
       {active ? <ClassEnrolmentDialog trigger={<Button className="justify-self-start">Enrol in a class</Button>} courses={targets}

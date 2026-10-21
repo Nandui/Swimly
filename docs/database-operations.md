@@ -16,8 +16,10 @@ Available operations: `check`, `levels.list`, `courses.list`, `students.list`,
 `students.update`, `enrolments.create`. Lists return up to 50 rows; pass the
 last returned `id` as `cursor` to continue. Get/update also need `id`.
 Writes take `input` in the existing server action's format. Updates require
-complete input: read existing values first. Enrolment confirmations are
-returned unchanged; send `confirmation` only after user authorization.
+complete input: read existing values first. Every `enrolments.create` first
+returns a confirmation describing the change (with `confirmation.change`, the
+same picture staff see before the five-second confirm); it is returned
+unchanged; send `confirmation` only after user authorization.
 
 For an active `enrolments.create`, include `input.legendAgreement`: `DONE` only
 when staff confirm the billing agreement was updated in Legend, or `PENDING`

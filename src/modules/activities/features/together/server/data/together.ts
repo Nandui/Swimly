@@ -2,7 +2,10 @@ import type { Prisma } from "@/generated/prisma/client";
 import { requireSession } from "@/lib/authz";
 import { getSharedCurriculum, type SharedCurriculum } from "@/modules/activities/shared/curriculum/data/shared";
 import { prisma } from "@/lib/prisma";
+import { sitesByIds } from "@/lib/directory";
 import { DAY_META, formatTime } from "@/modules/activities/shared/courses/constants";
+import { changePlace } from "@/modules/activities/shared/enrolment/change";
+import type { ChangePlace } from "@/lib/action-result";
 import type { FamilyMember } from "@/modules/activities/features/together/server/match";
 
 /** The children somebody is trying to get into the pool on one trip.
@@ -38,7 +41,7 @@ const STUDENT_SELECT = {
       levelId: true,
       programmeId: true,
       level: { select: { id: true, name: true, sortOrder: true } },
-      course: { select: { name: true, dayOfWeek: true, startMinutes: true } },
+      course: { select: { name: true, dayOfWeek: true, startMinutes: true, durationMinutes: true, clubId: true } },
     },
   },
 } as const satisfies Prisma.StudentSelect;
@@ -58,7 +61,7 @@ export type TogetherStudent = {
 };
 
 /** A place someone holds: the class, its level and programme (shared ids), and how it reads. */
-export type Place = { enrolmentId: string; courseId: string; programmeId: string; levelName: string; label: string };
+export type Place = { enrolmentId: string; courseId: string; programmeId: string; levelName: string; label: string; place: ChangePlace };
 
 export type Suggestion = TogetherStudent & {
   /** Whose details they share, and which — so the offer explains itself. */
@@ -70,7 +73,7 @@ export type Suggestion = TogetherStudent & {
  *  handful is an address rather than a household — a school, a childminder. */
 const SUGGESTION_CAP = 10;
 
-function shape(row: Row, curriculum: SharedCurriculum): TogetherStudent {
+function shape(row: Row, curriculum: SharedCurriculum, centre: (id: string) => string): TogetherStudent {
   const levels = [...new Map(row.enrolments.map((e) => [curriculum.levelIds.resolve(e.levelId), curriculum.level(e.levelId) ?? e.level])).values()]
     .sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id));
   return {
@@ -88,6 +91,7 @@ function shape(row: Row, curriculum: SharedCurriculum): TogetherStudent {
         programmeId: curriculum.programmeIds.resolve(e.programmeId),
         levelName,
         label: `${e.course.name ?? levelName} · ${DAY_META[e.course.dayOfWeek].label} ${formatTime(e.course.startMinutes)}`,
+        place: changePlace({ ...e.course, level: { name: levelName } }, centre(e.course.clubId)),
       };
     }),
   };
@@ -130,6 +134,10 @@ export async function getGroup(ids: string[]): Promise<{
         })
       : [];
 
+  // Centre names for the places they hold, so "Move them here" can show a move between centres.
+  const sites = await sitesByIds([...ordered, ...nearby].flatMap((row) => row.enrolments.map((e) => e.course.clubId)));
+  const centre = (id: string) => sites.get(id)?.name ?? "Removed site";
+
   const suggestions: Suggestion[] = nearby.map((row) => {
     const by: ("email" | "phone")[] = [];
     const match = ordered.find(
@@ -144,13 +152,13 @@ export async function getGroup(ids: string[]): Promise<{
       by.push("phone");
     }
     return {
-      ...shape(row, curriculum),
+      ...shape(row, curriculum, centre),
       sharesWith: match ? `${match.firstName} ${match.lastName}` : "",
       by,
     };
   });
 
-  return { chosen: ordered.map(row => shape(row, curriculum)), suggestions };
+  return { chosen: ordered.map(row => shape(row, curriculum, centre)), suggestions };
 }
 
 export function toMembers(students: TogetherStudent[]): FamilyMember[] {
