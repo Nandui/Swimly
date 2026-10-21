@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, Table
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
 import { ApproveOrder, CancelOrder, EmailHistory, euro, lastSentToSupplier, PoStatusTag, PrintOrder, purchaseOrder, RejectOrder } from "@/modules/purchasing/features/orders";
+import { SupplierPicture } from "@/modules/purchasing/features/suppliers";
 import { formatDate, formatDateTime, plural } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Purchase order" };
@@ -34,7 +35,10 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
         <section aria-labelledby="po-what-h" className="po-card po-hero" data-print="hide">
           <div className="po-hero-main">
             <span className="po-eyebrow">{o.number ? "Purchase order" : o.status === "draft" ? "Draft order" : "Order request"}</span>
-            <h2 id="po-what-h" className="po-headline">{o.supplier.name}</h2>
+            <div className="flex min-w-0 items-center gap-4">
+              <SupplierPicture id={o.supplier.id} name={o.supplier.name} version={o.supplier.pictureVersion} size="lg" />
+              <h2 id="po-what-h" className="po-headline min-w-0">{o.supplier.name}</h2>
+            </div>
             <ul className="po-where">
               <li><MapPin aria-hidden="true" />{o.site.name}</li>
               <li><UserRound aria-hidden="true" />Raised by {o.requestedByName}</li>

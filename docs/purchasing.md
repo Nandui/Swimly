@@ -27,6 +27,15 @@ running number (owner request, 15 October 2026; orders approved before then keep
   every supplier**. A supplier's page has its details, its **approved products** (name,
   supplier's code, unit, agreed price and, for retail products, the brand and the sizes and
   colours it comes in) and **its own approvers**.
+- **Supplier pictures** (owner request, 21 October 2026): each supplier may have one
+  picture, its logo or a photo, added, changed or removed on its page by Purchasing: Manage
+  (audited). It is shrunk to a 512px WebP square on white (so dark logos read in dark mode)
+  and kept on the `Supplier` row (`pictureData`, `pictureVersion`), like the swim school's
+  programme artwork (`src/lib/images/square-picture.ts`); JPG, PNG or WebP up to 2 MB. It is
+  served at `/purchasing/suppliers/[id]/picture?v=<version>` to anyone with
+  `purchasing.read` in the same organisation, and shows on the supplier tiles, the supplier
+  page, beside the supplier on a new order and at the top of an order. Without one, the
+  supplier's initials show.
 
 ### How the screens look (16 October 2026)
 

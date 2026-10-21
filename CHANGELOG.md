@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.60.0 · 21 October 2026 · Pictures for suppliers in Purchasing
+
+- Each supplier in **Purchasing** can now have a picture, such as its logo or a photo. Open the supplier from **Suppliers** and choose **Add a picture**. On a phone you can take a photo or pick one you already have.
+- The picture shows on the supplier's tile in **Suppliers**, at the top of its page, next to the supplier you pick on a **New order**, and at the top of each order.
+- Choose **Change picture** to replace it, or **Remove picture** to take it off. A supplier without a picture shows its initials, as before.
+- Only people who manage Purchasing can add, change or remove a picture. Everyone who uses Purchasing sees it.
+
 ## 1.59.0 · 21 October 2026 · Rota: place "any time" sub-activities on the Plan
 
 - A sub-activity done **any time** while someone is on an activity, such as **Answer the phone** on Reception, is now placed straight on the rota **Plan**, at the moment you choose.

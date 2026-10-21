@@ -56,7 +56,7 @@ export async function purchaseOrder(id: string) {
     where: { id, orgId: who.orgId ?? undefined },
     select: {
       ...ORDER_ROW, note: true, decisionNote: true, cancelledAt: true, updatedAt: true,
-      supplier: { select: { name: true, accountNumber: true, contactName: true, email: true, phone: true } },
+      supplier: { select: { id: true, name: true, pictureVersion: true, accountNumber: true, contactName: true, email: true, phone: true } },
       lines: { orderBy: [{ name: "asc" }, { id: "asc" }], select: { id: true, productId: true, name: true, code: true, unit: true, brand: true, size: true, colour: true, unitPriceCents: true, quantity: true } },
       emails: { orderBy: { createdAt: "desc" }, select: { id: true, kind: true, toAddress: true, ccAddress: true, sentByName: true, status: true, error: true, createdAt: true } },
     },
@@ -103,7 +103,7 @@ export async function orderForm(orderId?: string) {
   const suppliers = await prisma.supplier.findMany({
     where: { orgId: who.orgId ?? undefined, archivedAt: null, products: { some: { archivedAt: null } } },
     orderBy: { name: "asc" },
-    select: { id: true, name: true, products: { where: { archivedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true, code: true, unit: true, brand: true, sizes: true, colours: true, priceCents: true } } },
+    select: { id: true, name: true, pictureVersion: true, products: { where: { archivedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true, code: true, unit: true, brand: true, sizes: true, colours: true, priceCents: true } } },
   });
   const { rules } = await approvalContext(who);
   const roles = [...(await rolesByIds(rules.map((r) => r.roleId))).values()];
