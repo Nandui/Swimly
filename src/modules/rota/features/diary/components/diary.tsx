@@ -14,7 +14,7 @@ import { AddSomeone, AddToDay } from "@/modules/rota/features/diary/components/d
 import { FillSheet, type FillTarget } from "@/modules/rota/features/diary/components/fill-sheet";
 import { useNowMinute } from "@/modules/rota/features/diary/components/now";
 import { PersonSheet } from "@/modules/rota/features/diary/components/person-sheet";
-import { firstName, hoursWords, lineTitle, subsWords, listWords, needWords, partsWords, span as spanWords, toneOf } from "@/modules/rota/features/diary/components/words";
+import { firstName, hoursWords, lineTitle, subsWords, listWords, needName, needWords, partsWords, span as spanWords, toneOf } from "@/modules/rota/features/diary/components/words";
 
 /** The day's diary (owner, 20 October 2026: "the plan, the diary, the actual guide for the day
  *  ... readable and understood by anyone"): what is not covered yet, who's where at a moment,
@@ -222,7 +222,7 @@ function HoleRows({ rows, f, hours, now }: { rows: Hole[][]; f: (t: number) => n
         {row.map((h) => {
           const need = needs.get(h.needKey);
           const words = `${need ? needWords(need) : "Not covered"}, ${spanWords(h)}: ${h.why}`;
-          const body = <><span className="diary-block-title">{need?.kind === "area" ? need.area : need?.title}</span><span className="diary-block-time tabular-nums">{spanWords(h)}</span></>;
+          const body = <><span className="diary-block-title">{need ? needName(need) : null}</span><span className="diary-block-time tabular-nums">{spanWords(h)}</span></>;
           const cls = `diary-block absolute inset-y-1 ${stretchOf(f(h.start), f(h.end))}`;
           return canChange && departmentFor
             ? <Button variant="ghost" key={h.key} className={cls} data-tone={h.empty ? "hole" : "short"} aria-label={`Choose someone: ${words}`} title={words} onClick={() => fill(h.needKey, h, h.why)}>{body}</Button>

@@ -221,7 +221,8 @@ function StaffingLines({ id, start, qualifications, activities }: { id: string; 
           </div>
           {l.what.startsWith("act:") ? (
             <div className="grid grid-cols-2 gap-3">
-              <Field label="From" htmlFor={`${id}-from-${l.key}`} optional hint="Leave both empty for whenever it is open.">
+              <p className="col-span-2 text-sm text-ui-muted-foreground">Between these times, or leave both empty for whenever it is open.</p>
+              <Field label="From" htmlFor={`${id}-from-${l.key}`} optional>
                 <Input id={`${id}-from-${l.key}`} name={`from-${l.key}`} type="time" step={300} defaultValue={hhmm(l.from ?? null)} className="min-h-11" />
               </Field>
               <Field label="Until" htmlFor={`${id}-until-${l.key}`} optional>

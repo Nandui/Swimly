@@ -15,7 +15,7 @@ import { ChangeFields, changeOf } from "@/modules/rota/shared/components/change-
 import { stepsOf, type Line, type PersonDay, type Span, type Step } from "@/modules/rota/features/diary/model";
 import { changeLine, fillNeed, placeBreaks, removeLine, removeShift, saveLineSubs, saveShift } from "@/modules/rota/features/diary/server/actions";
 import { useDiary } from "@/modules/rota/features/diary/components/context";
-import { firstName, hoursWords, lineTitle, lineWhere, needWords, partsWords, span as spanWords, toneOf, warningWords } from "@/modules/rota/features/diary/components/words";
+import { firstName, hoursWords, needName, lineTitle, lineWhere, needWords, partsWords, span as spanWords, toneOf, warningWords } from "@/modules/rota/features/diary/components/words";
 
 const PORTAL = "turnfin-module";
 const s = (f: FormData, k: string) => String(f.get(k) ?? "");
@@ -117,7 +117,7 @@ function FreeStep({ person, free }: { person: PersonDay; free: Span }) {
               return (
                 <FormDialog key={h.key} portalClassName={PORTAL} title={`Put ${firstName(person.name)} on ${need.title}`} description={`${needWords(need)}, ${spanWords(part)}.`}
                   submitLabel="Put on" successMessage={`${person.name} is on ${need.title}.`}
-                  trigger={<Button variant="outline"><Plus aria-hidden="true" />{need.kind === "area" ? need.area || need.title : need.title} {spanWords(part)}</Button>}
+                  trigger={<Button variant="outline"><Plus aria-hidden="true" />{needName(need)} {spanWords(part)}</Button>}
                   submit={(f) => fillNeed({ siteId: ctx.siteId, date: ctx.date, departmentId: ctx.departmentFor!, kind: need.kind, needId: need.needId, classRef: need.classRef,
                     userId: person.userId, start: clock(part.start), end: clock(part.end) }, ctx.live ? changeOf(f) : {})}>
                   {ctx.live ? <ChangeFields id={`diary-free-${h.key}`} /> : <p className="diary-muted">It is not covered then: {h.why.toLowerCase()}.</p>}
