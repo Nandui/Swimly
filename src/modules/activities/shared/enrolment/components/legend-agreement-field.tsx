@@ -6,13 +6,14 @@ import { Label } from "@/components/shadcn/label";
 import { useFieldFeedback } from "@/components/ui/form-feedback";
 
 /** No default answer: recording a completed agreement is a staff assertion. */
-export function LegendAgreementField({ required = true }: { required?: boolean }) {
+/** `name` lets one form ask for several children's agreements (Together's "Move them here"). */
+export function LegendAgreementField({ required = true, name = "legendAgreement", label = "Legend billing agreement" }: { required?: boolean; name?: string; label?: string }) {
   const id = useId();
-  const feedback = useFieldFeedback("legendAgreement");
+  const feedback = useFieldFeedback(name);
   return <fieldset className="min-w-0 space-y-2 border-t border-ui-border pt-4">
-    <legend className="text-sm font-semibold">Legend billing agreement</legend>
+    <legend className="text-sm font-semibold">{label}</legend>
     <p id={`${id}-hint`} className="text-sm text-ui-muted-foreground">Has the agreement for this class been updated in Legend?</p>
-    <RadioGroup name="legendAgreement" required={required} onValueChange={feedback.clear} aria-label="Legend billing agreement" aria-describedby={`${id}-hint${feedback.error ? ` ${id}-error` : ""}`} className="gap-2">
+    <RadioGroup name={name} required={required} onValueChange={feedback.clear} aria-label={label} aria-describedby={`${id}-hint${feedback.error ? ` ${id}-error` : ""}`} className="gap-2">
       <Label htmlFor={`${id}-done`} className="min-h-11 cursor-pointer rounded-ui-md border border-ui-border px-3 py-3 has-[[data-state=checked]]:border-ui-brand-border has-[[data-state=checked]]:bg-ui-brand-soft">
         <RadioGroupItem id={`${id}-done`} value="DONE" aria-invalid={!!feedback.error} />Updated in Legend
       </Label>

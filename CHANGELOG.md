@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.51.0 · 21 October 2026 · Together: move them from there
+
+- Each option on **Together** now has a **Move them here** button (or **Move Robin here** when only one child needs to change), for anyone who can enrol swimmers.
+- Before anything changes, you see every child on one card: the class they leave (it ends today), the class they join (it starts today), and whether they change class, change level or get a new place. A child already in that class is marked "Stays as they are".
+- If a child has more than one place, choose which one to move from, or keep it and add the new class too.
+- The usual checks still apply. A level they haven't finished needs a reason, which goes on their record. A new place asks about the Legend agreement. You get a warning when the child was assessed at another centre. A class that has filled up stops the move.
+- Everyone moves at once or nobody does, and each change goes into the activity log with your name. Attendance and marks from the old class stay in their history.
+
 ## 1.50.0 · 21 October 2026 · Analytics is for managers only
 
 - **Analytics** now has its own place under **Managers** on the home page and in Admin > Roles, next to the CCTV log and Site Monitoring. Only roles given Analytics **View** can open it, at the sites they work at. Administrators still see it.
