@@ -156,7 +156,15 @@ it.
     (`RotaAssignmentSub`, with the set times that fall in their stretch, and only when one does). Their day lists them under the line with times
     (`subsAt`: start and end follow the line's own times, so changing times needs nothing more),
     and **Sub-activities** there ticks, unticks and retimes them for that day, adding or removing
-    times (`saveLineSubs`, audited). They are done by the person on the activity and never add to what it needs.
+    times (`saveLineSubs`, audited). One done **any time** is not given by Admin at all (owner,
+    21 October 2026: "the sub activities can be assigned at any time, during that activity,
+    directly on the plan"): it never comes along with `fillNeed`, and their day shows **Place on
+    their time** under the line, one button for each. Tapping one asks when (quick hour picks or a
+    typed time inside the stretch) and saves its own `RotaAssignmentSub` (`when` "during",
+    `atMinutes`/`times` the moment; `placeSub`, audited), so the phone can be placed twice. A placed
+    one opens again to move it or take it off; `saveLineSubs` leaves these alone. Older ones with
+    no time wait on the same button. Who's where lists the sub-activities in the half hour shown.
+    They are done by the person on the activity and never add to what it needs.
     Copy does not carry them yet.
   - **The day, person by person**: from 1024px a track per person (a red and amber Not covered
     line on top); areas blue, activities and classes green, bookings violet, breaks dashed, time

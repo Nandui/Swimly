@@ -413,8 +413,16 @@
 .turnfin-module .diary-step-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 .turnfin-module .diary-subs { display: block; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
 .turnfin-module .diary-subs-list { display: flex; flex-direction: column; gap: 2px; margin: 4px 0 0; padding: 0; list-style: none; color: var(--pc-ink); font-size: var(--pc-text-body); }
-.turnfin-module .diary-subs-list > li { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 8px; }
-.turnfin-module .diary-subs-list > li > span { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
+.turnfin-module .diary-subs-list > li { display: grid; grid-template-columns: 72px minmax(0, 1fr); align-items: center; gap: 8px; }
+.turnfin-module .diary-subs-list > li > span:first-child { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
+/* One placed on the Plan (done any time): its name opens moving it. */
+.turnfin-module .diary-subs-list .diary-sub-placed { justify-content: flex-start; gap: 8px; min-height: 44px; height: auto; padding: 0 8px; margin-inline-start: -8px; color: var(--pc-ink); font-size: var(--pc-text-body); font-weight: 400; flex-wrap: wrap; justify-self: start; max-width: 100%; white-space: normal; text-align: start; column-gap: 8px; row-gap: 0; }
+.turnfin-module .diary-subs-list .diary-sub-placed > .diary-caption { color: var(--pc-primary); font-weight: 600; }
+.turnfin-module .diary-to-place { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; }
+.turnfin-module .diary-quick-times { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; border: 0; }
+.turnfin-module .diary-around { margin: 0; color: var(--pc-ink); }
+.turnfin-module .diary-around > ul { margin: 4px 0 0; padding: 0; list-style: none; }
+.turnfin-module .diary-around li { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 8px; }
 .turnfin-module .diary-sub-choices { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
 .turnfin-module .diary-sub-choice { display: grid; grid-template-columns: minmax(0, 1fr); align-items: end; gap: 8px; }
 .turnfin-module .diary-sub-check { display: flex; align-items: center; gap: 8px; min-height: 44px; }

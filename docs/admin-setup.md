@@ -41,7 +41,7 @@ The lists are organisation-wide, so their actions use the flat permission check.
   smaller jobs done by whoever is on it, such as open the cash till at the start or a cash drop
   at 12:00, each with when and whether it is usual. Modules read them through
   `subActivitiesFor` (`src/lib/setup/activity-types.ts`); the rota Plan gives the usual ones to
-  whoever is put on the activity (docs/rota.md). Removing one archives it.
+  whoever is put on the activity, and one done any time is placed on someone's time there instead (docs/rota.md). Removing one archives it.
 - **Areas** (`SiteArea`): each site's pools, gym and reception, in order, and how many **lanes**
   each has (0 for none; owner request, 13 October 2026), numbered from 1, so the rota, swim classes, assessments and short courses take a pool whole or by lane (19 October 2026). A pool without lanes says so on the list. Each area may also have a
   **staff needed** while it is open (`SiteAreaStaffing`, `saveAreaStaffing`; owner requests, 16 October 2026): lines of how many and
