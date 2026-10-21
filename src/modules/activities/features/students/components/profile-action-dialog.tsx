@@ -11,6 +11,8 @@ import type { ActionConfirmation, ActionResult, ConfirmationReply } from "@/lib/
 import { toast } from "@/components/ui/toast";
 import { withTimeout } from "@/lib/save-feedback";
 import { cn } from "@/lib/utils";
+import { ChangeReview } from "@/components/ui-kit/change-review";
+import { CountdownButton, useCountdown } from "@/components/ui/countdown-button";
 
 /** Keeps a reviewable server confirmation and the original form together. */
 export function ProfileActionDialog({ trigger, title, description, submitLabel = "Save", success = "Saved", submit, children, wide = false, footer, submitDisabled = false, onOpenChange }: {
@@ -25,9 +27,17 @@ export function ProfileActionDialog({ trigger, title, description, submitLabel =
   const [confirmation, setConfirmation] = useState<ActionConfirmation | null>(null);
   const [pending, startTransition] = useTransition();
   const [pendingChoice, setPendingChoice] = useState<string | null>(null);
-  useEffect(() => { if (confirmation) confirmationHeading.current?.focus({ preventScroll: true }); }, [confirmation]);
+  useEffect(() => {
+    if (!confirmation) return;
+    confirmationHeading.current?.focus({ preventScroll: true });
+    // The class list above may have been scrolled; the change is read from its top.
+    confirmationHeading.current?.scrollIntoView({ block: "start" });
+  }, [confirmation]);
   const data = useRef<FormData | null>(null), busy = useRef(false);
   const router = useRouter();
+  // A move or enrolment is drawn as a picture of the change and its buttons wait a few seconds.
+  const change = confirmation?.change;
+  const left = useCountdown(open && change ? JSON.stringify([confirmation.title, confirmation.ids]) : null);
   function run(values: FormData, reply?: ConfirmationReply) {
     if (busy.current) return;
     busy.current = true; setPendingChoice(reply?.choice ?? null); data.current = values; feedback.reset();
@@ -48,13 +58,14 @@ export function ProfileActionDialog({ trigger, title, description, submitLabel =
       <FormFeedbackProvider feedback={feedback}><form ref={formRef} method="post" aria-busy={pending} onSubmit={event => { event.preventDefault(); if (!confirmation && !submitDisabled) run(new FormData(event.currentTarget)); }} className={cn(wide ? "flex min-h-0 flex-1 flex-col" : "space-y-5")}>
         <div className={cn(wide ? "min-h-0 space-y-4 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6" : "space-y-4")}>
         <fieldset disabled={pending || !!confirmation} hidden={!!confirmation} className="min-w-0 space-y-4">{children}</fieldset>
-        {confirmation ? <section ref={confirmationHeading} tabIndex={-1} className="space-y-3" aria-label="Confirm this change"><h3 className="font-semibold">{confirmation.title}</h3><p className="whitespace-pre-line text-sm">{confirmation.description}</p></section> : null}
+        {confirmation ? <section ref={confirmationHeading} tabIndex={-1} className="space-y-3" aria-label="Confirm this change"><h3 className="font-semibold">{confirmation.title}</h3><p className="whitespace-pre-line text-sm">{confirmation.description}</p>{change ? <ChangeReview change={change} /> : null}</section> : null}
         {error ? <div ref={summaryRef} tabIndex={-1}><Notice tone="error" live="alert" title={error} /></div> : null}
         </div>
         <div className={cn(wide && "flex shrink-0 flex-col gap-3 border-t border-ui-border p-4 sm:flex-row sm:items-center sm:justify-between sm:px-6")}>
         {wide && !confirmation ? <div className="min-w-0 text-sm">{footer}</div> : null}
-        <DialogFooter className={cn(wide && "shrink-0 flex-row flex-wrap justify-end sm:ml-auto [&_button]:min-h-11")}><Button type="button" variant="outline" disabled={pending} onClick={() => confirmation ? setConfirmation(null) : changeOpen(false)}>{confirmation ? "Back" : "Cancel"}</Button>
-          {confirmation ? confirmation.choices.map(choice => <LoadingButton type="button" key={choice.value} disabled={pending} pending={pending && pendingChoice === choice.value} pendingLabel="Working…" onClick={() => data.current && run(data.current, { choice: choice.value, ids: confirmation.ids })}>{choice.label}</LoadingButton>)
+        <DialogFooter className={cn(wide && "shrink-0 flex-row flex-wrap justify-end sm:ml-auto [&_button]:min-h-11")}>{confirmation ? <Button type="button" variant="outline" disabled={pending} onClick={() => changeOpen(false)}>Cancel</Button> : null}<Button type="button" variant="outline" disabled={pending} onClick={() => confirmation ? setConfirmation(null) : changeOpen(false)}>{confirmation ? "Back" : "Cancel"}</Button>
+          {confirmation && change ? confirmation.choices.map((choice, index, all) => <CountdownButton type="button" key={choice.value} variant={index === all.length - 1 ? "default" : "outline"} left={left} pending={pending && pendingChoice === choice.value} disabled={pending && pendingChoice !== choice.value} pendingLabel="Working…" announce={index === all.length - 1} onClick={() => data.current && run(data.current, { choice: choice.value, ids: confirmation.ids })}>{choice.label}</CountdownButton>)
+            : confirmation ? confirmation.choices.map(choice => <LoadingButton type="button" key={choice.value} disabled={pending} pending={pending && pendingChoice === choice.value} pendingLabel="Working…" onClick={() => data.current && run(data.current, { choice: choice.value, ids: confirmation.ids })}>{choice.label}</LoadingButton>)
             : <LoadingButton type="submit" disabled={submitDisabled} pending={pending} pendingLabel="Working…">{submitLabel}</LoadingButton>}
         </DialogFooter>
         </div>

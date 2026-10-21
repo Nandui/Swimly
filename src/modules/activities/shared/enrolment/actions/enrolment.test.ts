@@ -5,12 +5,12 @@ import { curriculumProgramme, sharedCurriculumRows } from "@/test/curriculum";
 import { serverModule } from "@/test/server-module";
 
 type Actions = typeof import("@/modules/activities/shared/enrolment/actions/enrolment");
-type Course = { club: { id: string; name: string; archivedAt: Date | null }; id: string; clubId: string; levelId: string; capacity: number; archivedAt: Date | null; name: string; dayOfWeek: "MONDAY"; startMinutes: number; level: { id: string; name: string; programmeId: string; archivedAt: Date | null; programme: { archivedAt: Date | null } } };
+type Course = { club: { id: string; name: string; archivedAt: Date | null }; id: string; clubId: string; levelId: string; capacity: number; archivedAt: Date | null; name: string; dayOfWeek: "MONDAY"; startMinutes: number; durationMinutes: number; level: { id: string; name: string; programmeId: string; archivedAt: Date | null; programme: { archivedAt: Date | null } } };
 
 function fixture() {
   const courses: Course[] = ["a", "b", "c"].map((id) => ({
     id, club: { id: "club", name: "Site A", archivedAt: null }, clubId: "club", levelId: "entry", capacity: 2, archivedAt: null,
-    name: `Class ${id}`, dayOfWeek: "MONDAY", startMinutes: 900,
+    name: `Class ${id}`, dayOfWeek: "MONDAY", startMinutes: 900, durationMinutes: 30,
     level: { id: "entry", name: "Entry", programmeId: "programme", archivedAt: null, programme: { archivedAt: null } },
   }));
   const student = { id: "swimmer", clubId: "club", firstName: "Test", lastName: "Swimmer", status: "ACTIVE" };
@@ -142,7 +142,13 @@ test("waitlist promotion requires a fresh Legend answer and records it when acti
   const f = fixture(); f.rows[0].status = "WAITLISTED";
   assert.equal((await f.actions.promoteFromWaitlist("source")).ok, false);
   assert.equal(f.rows[0].status, "WAITLISTED");
-  assert.equal((await f.actions.promoteFromWaitlist("source", "PENDING")).ok, true);
+  const review = await f.actions.promoteFromWaitlist("source", "PENDING");
+  assert.equal(review.ok, false);
+  if (review.ok) return;
+  assert.equal(review.confirmation?.change?.kind, "enrol");
+  assert.equal(review.confirmation?.change?.to.centre, "Site A");
+  assert.equal(f.rows[0].status, "WAITLISTED");
+  assert.equal((await f.actions.promoteFromWaitlist("source", "PENDING", { choice: "enrol", ids: ["source"] })).ok, true);
   assert.equal(f.rows[0].status, "ACTIVE");
   assert.equal(f.rows[0].legendAgreementStatus, "PENDING");
   assert.equal(f.rows[0].legendAgreementUpdatedById, "staff");
@@ -172,7 +178,8 @@ test("moving requires confirmation naming both classes before any writes", async
   const result = await f.actions.transferEnrolment("source", "b");
   assert.equal(result.ok, false);
   if (result.ok) return;
-  assert.match(result.confirmation!.description, /Class a.*Class b/);
+  assert.equal(result.confirmation!.change!.from[0].title, "Class a");
+  assert.equal(result.confirmation!.change!.to.title, "Class b");
   assert.deepEqual(result.confirmation!.choices, [{ label: "Confirm move", value: "move" }]);
   assert.equal(f.rows.length, 1);
   assert.equal(f.rows[0].status, "ACTIVE");
@@ -302,7 +309,13 @@ test("audit failure rolls back unenrol and enrol", async () => {
 test("past enrolments and waitlists do not trigger the existing-class prompt", async () => {
   for (const status of ["WITHDRAWN", "COMPLETED", "TRANSFERRED", "WAITLISTED"]) {
     const f = fixture(); f.rows[0].status = status;
-    assert.equal((await f.actions.enrolStudent(enrolInput)).ok, true);
+    const review = await f.actions.enrolStudent(enrolInput);
+    assert.equal(review.ok, false);
+    if (review.ok) return;
+    assert.deepEqual(review.confirmation?.ids, []);
+    assert.deepEqual(review.confirmation?.change?.from, []);
+    assert.equal(f.rows.length, 1);
+    assert.equal((await f.actions.enrolStudent(enrolInput, { choice: "keep", ids: [] })).ok, true);
     assert.equal(f.rows[0].status, status);
   }
 });
@@ -313,10 +326,13 @@ test("cross-site transfers use earned progress from the old site and audit both 
   f.courses[1].clubId = "other"; f.courses[1].club = { id: "other", name: "Site B", archivedAt: null };
   f.courses[1].levelId = "next-b"; f.courses[1].level = { ...f.courses[1].level, id: "next-b", programmeId: "programme-b" };
   f.completions.push({ levelId: "entry-b", programmeId: "programme-b" });
+  f.sites.push({ id: "other", name: "Site B", archivedAt: null });
   const review = await f.actions.transferEnrolment("source", "b");
   assert.equal(review.ok, false);
   if (review.ok) return;
-  assert.match(review.confirmation!.description, /Site A.*Site B/);
+  assert.equal(review.confirmation!.change!.kind, "move");
+  assert.equal(review.confirmation!.change!.from[0].centre, "Site A");
+  assert.equal(review.confirmation!.change!.to.centre, "Site B");
   assert.equal((await f.actions.transferEnrolment("source", "b", "", { choice: "move", ids: review.confirmation!.ids })).ok, true);
   assert.equal(f.rows[1].levelId, "next"); assert.equal(f.rows[1].programmeId, "programme");
   assert.equal(f.rows[1].placementReason, null);
@@ -364,6 +380,23 @@ test("the centre warning joins the existing-place question instead of adding a s
 
 test("no centre warning when the swimmer was assessed at the class's centre", async () => {
   const f = fixture(); f.rows.splice(0); f.assessedAt.push("bishopstown", "club");
-  const result = await f.actions.enrolStudent({ studentId: "swimmer", courseId: "b", placementReason: "", allowWaitlist: false, legendAgreement: "PENDING" });
-  assert.equal(result.ok, true);
+  const input = { studentId: "swimmer", courseId: "b", placementReason: "", allowWaitlist: false, legendAgreement: "PENDING" as const };
+  const review = await f.actions.enrolStudent(input);
+  assert.equal(review.ok, false);
+  if (review.ok) return;
+  assert.doesNotMatch(review.confirmation!.change!.notes.join(" "), /Assessed at/);
+  assert.equal((await f.actions.enrolStudent(input, { choice: "keep", ids: [] })).ok, true);
+});
+
+test("every enrolment is shown as a picture of the change before it is saved", async () => {
+  const f = fixture(); f.rows.splice(0);
+  const review = await f.actions.enrolStudent(enrolInput);
+  assert.equal(review.ok, false);
+  if (review.ok) return;
+  assert.deepEqual(review.confirmation?.change, {
+    subject: "Test Swimmer", kind: "enrol", from: [],
+    to: { title: "Class b", when: "Monday 15:00 to 15:30", level: "Entry", centre: "Site A" },
+    notes: ["Legend billing agreement: Still to do."],
+  });
+  assert.equal(f.rows.length, 0); assert.equal(f.audits.length, 0);
 });

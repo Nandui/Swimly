@@ -1,13 +1,13 @@
 "use server";
 
-import { isArchivedSite } from "@/lib/directory";
+import { isArchivedSite, sitesByIds } from "@/lib/directory";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
-import { fail, ok, type ActionResult, type ConfirmationReply } from "@/lib/action-result";
+import { fail, ok, type ActionResult, type ConfirmationReply, type PlannedChange } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
-import { capacityLabel, courseLabelWithSite as courseLabel } from "@/modules/activities/shared/courses/constants";
+import { capacityLabel, courseLabelWithSite as courseLabel, courseName } from "@/modules/activities/shared/courses/constants";
 import { withCourseSeat } from "@/modules/activities/shared/enrolment/seat";
 import { parseDateOnly, today } from "@/lib/format";
 import { fullName } from "@/modules/activities/shared/students/constants";
@@ -16,6 +16,13 @@ import { prisma } from "@/lib/prisma";
 import { assessedElsewhere, COURSE_SELECT, OTHER_SITE, placementFor } from "@/modules/activities/shared/enrolment/rules";
 import { agreementRecord, LEGEND_AGREEMENT_META, type LegendAgreementChoice } from "@/modules/activities/shared/enrolment/legend-agreement";
 import { isLeaveReason, LEAVE_REASONS } from "@/modules/activities/shared/enrolment/leave-reasons";
+import { changePlace, levelNote } from "@/modules/activities/shared/enrolment/change";
+
+/** Centre names for the confirmation's picture of the change. */
+async function centreNamer(ids: string[], tx: Prisma.TransactionClient) {
+  const sites = await sitesByIds(ids, tx);
+  return (id: string) => sites.get(id)?.name ?? "Removed site";
+}
 
 const placementReasonSchema = z.string().trim().max(300, "Keep the reason under 300 characters.");
 const enrolSchema = z.object({
@@ -102,6 +109,22 @@ export async function enrolStudent(input: EnrolInput, confirmation?: Confirmatio
     const matches = decision && placeIds.length === existing.length && existing.every((row) => placeIds.includes(row.id));
     const placesUnanswered = existing.length > 0 && (!matches || (full && decision?.choice === "withdraw") || existing.some((row) => !sources.some((source) => source.courseId === row.courseId)));
     const siteUnanswered = elsewhere !== null && !decision?.ids.includes(siteKey);
+    // Every enrolment is confirmed first, on a picture of the change (owner request, 21 October 2026).
+    let change: PlannedChange | undefined;
+    if (placesUnanswered || siteUnanswered || !decision) {
+      const centre = await centreNamer([course.clubId, ...existing.map((row) => row.course.clubId)], tx);
+      change = {
+        subject: fullName(student), kind: full ? "waitlist" : "enrol",
+        from: existing.map((row) => changePlace(row.course, centre(row.course.clubId))),
+        to: changePlace(course, centre(course.clubId)),
+        notes: [
+          ...(elsewhere ? [`Assessed at ${elsewhere.assessedAt}. Parents are told lessons are at the centre where their child was assessed, so check with the family.`] : []),
+          ...(full ? ["The class is full, so they join its waitlist and do not hold a place yet."] : []),
+          ...(earned ? [] : [`Placed above the level they have earned: ${placementReason}`]),
+          ...(!full && legendAgreement ? [`Legend billing agreement: ${LEGEND_AGREEMENT_META[legendAgreement].label}.`] : []),
+        ],
+      };
+    }
     if (placesUnanswered || siteUnanswered) {
       const siteWarning = elsewhere
         ? `${fullName(student)} was assessed at ${elsewhere.assessedAt}, and parents are told lessons are only at the centre where their child was assessed. This class is at ${elsewhere.classAt}. `
@@ -117,14 +140,28 @@ export async function enrolStudent(input: EnrolInput, confirmation?: Confirmatio
             { label: "Keep existing places", value: "keep" },
             { label: "Unenrol and enrol", value: "withdraw" },
           ],
+          change,
         } : {
           title: `Enrol at ${elsewhere?.classAt} instead of ${elsewhere?.assessedAt}?`,
           description: siteWarning + "Check with the family that they want lessons at this centre before you go ahead.",
           ids: [siteKey],
           choices: [{ label: full ? `Join the waitlist at ${elsewhere?.classAt}` : `Enrol at ${elsewhere?.classAt}`, value: "keep" }],
+          change,
         },
       };
     }
+    if (!decision) return {
+      ok: false, error: "Check the enrolment before it is saved.",
+      confirmation: {
+        title: full ? `Put ${fullName(student)} on the waitlist?` : `Enrol ${fullName(student)}?`,
+        description: full
+          ? `${courseLabel(course)} is full (${capacityLabel(taken, course.capacity)}). They join its waitlist.`
+          : "Their place starts today. Nothing changes until you confirm.",
+        ids: [],
+        choices: [{ label: full ? "Join the waitlist" : "Confirm enrolment", value: "keep" }],
+        change,
+      },
+    };
     if (!full && decision?.choice === "withdraw") {
       for (const previous of existing) {
         await tx.enrolment.update({ where: { id: previous.id }, data: { status: "WITHDRAWN", endedOn: parseDateOnly(today()), scheduledEndOn: null } });
@@ -195,14 +232,14 @@ export async function endEnrolment(id: string, input: z.infer<typeof endSchema>)
   return result;
 }
 
-export async function promoteFromWaitlist(id: string, legendAgreement?: LegendAgreementChoice): Promise<ActionResult> {
+export async function promoteFromWaitlist(id: string, legendAgreement?: LegendAgreementChoice, confirmation?: ConfirmationReply): Promise<ActionResult> {
   const session = await requirePermission("enrolment.manage");
   if (legendAgreement !== "PENDING" && legendAgreement !== "DONE") return fail("Confirm whether the billing agreement has been updated in Legend.", { legendAgreement: "Choose Updated in Legend or Still to do." });
   const source = await prisma.enrolment.findUnique({
     where: { id }, select: { courseId: true, studentId: true },
   });
   if (!source) return fail("That enrolment no longer exists.");
-  const result = await withCourseSeat(source.courseId, async (tx) => {
+  const result = await withCourseSeat(source.courseId, async (tx): Promise<ActionResult> => {
     await tx.$queryRaw`SELECT id FROM "Student" WHERE id = ${source.studentId} FOR UPDATE`;
     const enrolment = await tx.enrolment.findUnique({ where: { id }, select: ENROLMENT_SELECT });
     if (!enrolment) return fail("That enrolment no longer exists.");
@@ -215,6 +252,23 @@ export async function promoteFromWaitlist(id: string, legendAgreement?: LegendAg
     if (enrolment.course.capacity !== null && taken >= enrolment.course.capacity) return fail(
       `${courseLabel(enrolment.course)} is still full (${capacityLabel(taken, enrolment.course.capacity)}).`
     );
+    if (confirmation?.choice !== "enrol" || confirmation.ids[0] !== id) {
+      const centre = await centreNamer([shared.clubId], tx);
+      return {
+        ok: false, error: "Check the enrolment before it is saved.",
+        confirmation: {
+          title: `Enrol ${fullName(enrolment.student)} from the waitlist?`,
+          description: "Their place starts today. Nothing changes until you confirm.",
+          ids: [id],
+          choices: [{ label: "Confirm enrolment", value: "enrol" }],
+          change: {
+            subject: fullName(enrolment.student), kind: "enrol", from: [],
+            to: changePlace(shared, centre(shared.clubId)),
+            notes: ["They leave the waitlist and take a place in the class.", `Legend billing agreement: ${LEGEND_AGREEMENT_META[legendAgreement].label}.`],
+          },
+        },
+      };
+    }
     await tx.enrolment.update({ where: { id }, data: { status: "ACTIVE", startedOn: parseDateOnly(today()), ...agreementRecord(legendAgreement, session.user) } });
     await logAudit({
       actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: "enrol",
@@ -266,14 +320,29 @@ export async function transferEnrolment(id: string, toCourseId: string, placemen
     const taken = await tx.enrolment.count({ where: { courseId: toCourseId, status: "ACTIVE" } });
     if (to.capacity !== null && taken >= to.capacity) return fail(`${courseLabel(to)} is full (${capacityLabel(taken, to.capacity)}).`);
     if (reply.data?.ids[0] !== id || reply.data.ids[1] !== toCourseId) {
+      const left = sharedCourse(from.course, curriculum);
+      const centre = await centreNamer([left.clubId, to.clubId], tx);
+      const elsewhere = await assessedElsewhere(tx, from.studentId, to);
+      const waiting = from.status === "WAITLISTED";
       return {
         ok: false,
         error: "Confirm the move before continuing.",
         confirmation: {
           title: `Continue with moving ${fullName(from.student)}?`,
-          description: `From ${from.status === "WAITLISTED" ? "the waitlist for " : ""}${courseLabel(from.course)} to ${courseLabel(to)}. Their current place will end and the new place will open. Attendance and marks stay on record.`,
+          description: "Check the change below. Their current place ends today and the new place starts today.",
           ids: [id, toCourseId],
           choices: [{ label: "Confirm move", value: "move" }],
+          change: {
+            subject: fullName(from.student), kind: "move",
+            from: [{ ...changePlace(left, centre(left.clubId)), ...(waiting ? { title: `Waitlist for ${courseName(left)}` } : {}) }],
+            to: changePlace(to, centre(to.clubId)),
+            notes: [
+              ...levelNote(left.level.name, to.level.name),
+              ...(elsewhere ? [`Assessed at ${elsewhere.assessedAt}. Parents are told lessons are at the centre where their child was assessed, so check with the family.`] : []),
+              ...(earned ? [] : [`Placed above the level they have earned: ${reason}`]),
+              "Their attendance and marks so far stay on their record.",
+            ],
+          },
         },
       };
     }

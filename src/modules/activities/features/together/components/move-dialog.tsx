@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowDown, ArrowRightLeft } from "lucide-react";
+import { ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/shadcn/item";
+import { ChangeReview } from "@/components/ui-kit/change-review";
 import { Skeleton } from "@/components/shadcn/skeleton";
 import { FormDialog } from "@/components/form-dialog";
 import { Notice } from "@/components/ui-kit/notice";
@@ -12,6 +13,7 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { LegendAgreementField } from "@/modules/activities/shared/enrolment/components/legend-agreement-field";
 import { DAY_META, formatTime } from "@/modules/activities/shared/courses/constants";
+import { changePlace, levelNote } from "@/modules/activities/shared/enrolment/change";
 import { MOVE_META } from "@/modules/activities/features/together/constants";
 import { checkMove, makeMove } from "@/modules/activities/features/together/server/actions";
 import type { Place } from "@/modules/activities/features/together/server/data/together";
@@ -27,7 +29,8 @@ const KEEP = "keep";
  *  child, the class they leave and the class they join (day, time, level), whether their level
  *  changes, and anything the usual rules need: a reason for a level they have not earned, the
  *  Legend agreement for a new place, a warning when they were assessed at another centre. One
- *  button then makes every move together, or none. */
+ *  button then makes every move together, or none; like every move and enrolment it waits five
+ *  seconds, starting again when a choice here changes, and stays off while a child cannot move. */
 export function MoveDialog({ heading, placements, group }: {
   heading: string;
   placements: Placement[];
@@ -79,8 +82,12 @@ export function MoveDialog({ heading, placements, group }: {
       submitLabel={moving.length === 1 ? `Move ${names[0]}` : `Move ${moving.length} children`}
       pendingLabel="Moving…"
       successMessage={`Done. ${who} ${moving.length === 1 ? "is" : "are"} now in the new ${moving.length === 1 ? "class" : "classes"}, starting today.`}
-      width="sm:max-w-xl"
+      width="sm:max-w-2xl"
       onOpen={check}
+      countdown={{
+        key: JSON.stringify([from, checks?.length ?? null]),
+        blocked: !checks || !!checkError || checks.some((c) => c.problem),
+      }}
       submit={(data) => makeMove(steps(data))}
     >
       <div className="flex min-w-0 flex-col gap-4">
@@ -95,20 +102,17 @@ export function MoveDialog({ heading, placements, group }: {
             return (
               <Item key={p.studentId} variant="outline" role="listitem" className="items-start">
                 <ItemContent className="min-w-0 gap-3">
-                  <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-                    <ItemTitle>{p.name}</ItemTitle>
-                    <Tag meta={kind} />
-                  </div>
-                  <div className="flex min-w-0 flex-col gap-1 text-sm">
-                    <p className="text-ui-muted-foreground">
-                      {chosen ? <>Now: {chosen.label} <span className="whitespace-nowrap">(ends today)</span></> : candidates.length ? `Keeps ${candidates.map((c) => c.label).join(" and ")}` : "No place in this programme yet"}
-                    </p>
-                    <ArrowDown aria-hidden="true" className="size-4 text-ui-muted-foreground" />
-                    <p className="font-semibold">New: {slot(p)} <span className="whitespace-nowrap font-normal text-ui-muted-foreground">(starts today)</span></p>
-                    {chosen && kind === MOVE_META.level ? (
-                      <ItemDescription>Their level changes from {chosen.levelName} to {p.course.level.name}.</ItemDescription>
-                    ) : null}
-                  </div>
+                  <ChangeReview
+                    badge={<Tag meta={kind} />}
+                    change={{
+                      subject: p.name,
+                      kind: chosen ? "move" : "enrol",
+                      from: chosen ? [chosen.place] : [],
+                      to: changePlace(p.course, p.course.club.name),
+                      notes: chosen ? levelNote(chosen.levelName, p.course.level.name)
+                        : [candidates.length ? `Keeps ${candidates.map((c) => c.label).join(" and ")}.` : "No place in this programme yet."],
+                    }}
+                  />
                   {candidates.length > 0 ? (
                     <Select
                       label="Move from"
