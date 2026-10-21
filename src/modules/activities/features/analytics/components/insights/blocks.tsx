@@ -4,6 +4,7 @@ import { Progress } from "@/components/shadcn/progress";
 import { leftOf, widthOf } from "@/components/ui-kit/scale";
 import { ChevronRight } from "lucide-react";
 import { formatCount, nameInitials } from "@/lib/format";
+import { percent } from "@/modules/activities/features/analytics/components/insights/kit";
 
 /** The plain-language pieces the three dashboards share (owner, 20 October 2026: "the overall user is not a
  *  SaaS engineer or expected to be hyper tech savvy"). Each figure comes with a sentence saying what it
@@ -76,22 +77,36 @@ export function SplitBar({ label, parts }: { label: string; parts: { key: string
   </div>;
 }
 
-/** Places at each level as one bar: filled, free and, beyond it, those waiting. */
-export function LevelPlaces({ rows }: { rows: { key: string; name: string; group?: string; filled: number; free: number; waiting: number; classes: number }[] }) {
+/** One level's places as a bar the same length on every row (owner, 21 October 2026: "these bars need
+ *  to be standardized, also I need a percentage of full for each as this is a KPI"): the filled share
+ *  in blue, the rest free, how full it is as a figure at the end, and anyone waiting said in amber. */
+export function PlacesRow({ name, detail, full, waiting, facts }: {
+  name: React.ReactNode; detail?: React.ReactNode;
+  /** Percent of the places filled, null when its classes have no limit. */
+  full: number | null; waiting: number; facts: React.ReactNode;
+}) {
+  const share = full === null ? null : full / 100;
+  return <li>
+    <span className="ins-levels-name"><strong>{name}</strong>{detail}</span>
+    <span className="ins-levels-bar" aria-hidden="true">
+      {share === null ? <span data-part="free" className="w-full" /> : <>
+        {share > 0 ? <span data-part="filled" className={widthOf(Math.min(1, share))} /> : null}
+        {share < 1 ? <span data-part="free" className="flex-1" /> : null}
+      </>}
+    </span>
+    <span className="ins-levels-full">{share === null ? <span>No limit</span> : <><strong>{percent(full)}</strong><span>full</span></>}</span>
+    <span className="ins-levels-text"><span>{facts}</span>{waiting ? <span className="ins-levels-waiting"><span className="ins-swatch" data-series="b" aria-hidden="true" />{formatCount(waiting)} waiting</span> : null}</span>
+  </li>;
+}
+
+/** Places at each level, one row each, every bar the same length so the levels compare at a glance. */
+export function LevelPlaces({ rows }: { rows: { key: string; name: string; group?: string; filled: number; free: number; full: number | null; waiting: number; classes: number }[] }) {
   if (!rows.length) return <p className="ins-sub">No classes with a limit in this view.</p>;
-  const max = Math.max(1, ...rows.map(r => r.filled + r.free + r.waiting));
   return <>
     <ul className="ins-legend" aria-hidden="true"><li><span className="ins-swatch" />Filled</li><li><span className="ins-swatch" data-series="free" />Free</li><li><span className="ins-swatch" data-series="b" />Waiting</li></ul>
     <ul className="ins-levels">
-      {rows.map(r => <li key={r.key}>
-        <span className="ins-levels-name"><strong>{r.name}</strong>{r.group ? <span>{r.group}</span> : null}</span>
-        <span className="ins-levels-bar" aria-hidden="true">
-          {r.filled ? <span data-part="filled" className={widthOf(r.filled / max)} /> : null}
-          {r.free ? <span data-part="free" className={widthOf(r.free / max)} /> : null}
-          {r.waiting ? <span data-part="waiting" className={widthOf(r.waiting / max)} /> : null}
-        </span>
-        <span className="ins-levels-text">{formatCount(r.filled)} filled, {formatCount(r.free)} free{r.waiting ? <>, <strong>{formatCount(r.waiting)} waiting</strong></> : null}<span className="ins-muted"> · {r.classes} {r.classes === 1 ? "class" : "classes"}</span></span>
-      </li>)}
+      {rows.map(r => <PlacesRow key={r.key} name={r.name} detail={r.group ? <span>{r.group}</span> : null} full={r.full} waiting={r.waiting}
+        facts={<>{formatCount(r.filled)} filled, {formatCount(r.free)} free<span className="ins-muted"> · {r.classes} {r.classes === 1 ? "class" : "classes"}</span></>} />)}
     </ul>
   </>;
 }
