@@ -12,10 +12,11 @@ import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, Table
 import { Notice } from "@/components/ui-kit/notice";
 import { saveOrder } from "@/modules/purchasing/features/orders/server/actions";
 import { approverRoles, euro, lineDetails, rulesFor, type ApprovalRule } from "@/modules/purchasing/shared/rules";
+import { SupplierPicture } from "@/modules/purchasing/shared/supplier-picture";
 import { toast } from "@/components/ui/toast";
 
 type Product = { id: string; name: string; code: string; unit: string; brand: string; sizes: string[]; colours: string[]; priceCents: number };
-type Supplier = { id: string; name: string; products: Product[] };
+type Supplier = { id: string; name: string; pictureVersion: string | null; products: Product[] };
 type Existing = { id: string; siteId: string; supplierId: string; neededBy: Date | null; note: string; status: string; decisionNote: string; lines: { productId: string | null; size: string; colour: string; quantity: number }[] };
 
 /** One line of the order: a product, and the size and colour picked when it comes in them. */
@@ -99,10 +100,13 @@ export function OrderForm({ sites, suppliers, rules, roleNames, existing, initia
           </div>
           <div className="space-y-2">
             <Label htmlFor="po-supplier">Supplier</Label>
-            <NativeSelect id="po-supplier" value={supplierId} onChange={(e) => { setSupplierId(e.target.value); setQty({}); setPick({}); }} required>
-              <NativeSelectOption value="" disabled>Choose an approved supplier</NativeSelectOption>
-              {suppliers.map((s) => <NativeSelectOption key={s.id} value={s.id}>{s.name}</NativeSelectOption>)}
-            </NativeSelect>
+            <div className="flex items-center gap-3">
+              {supplier ? <SupplierPicture id={supplier.id} name={supplier.name} version={supplier.pictureVersion} /> : null}
+              <NativeSelect id="po-supplier" value={supplierId} onChange={(e) => { setSupplierId(e.target.value); setQty({}); setPick({}); }} required>
+                <NativeSelectOption value="" disabled>Choose an approved supplier</NativeSelectOption>
+                {suppliers.map((s) => <NativeSelectOption key={s.id} value={s.id}>{s.name}</NativeSelectOption>)}
+              </NativeSelect>
+            </div>
           </div>
         </div>
         </section>
