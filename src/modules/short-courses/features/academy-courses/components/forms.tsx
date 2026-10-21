@@ -12,11 +12,13 @@ import { Textarea } from "@/components/shadcn/textarea";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { PlaceLanesField, type AreaWithLanes } from "@/components/ui/lane-picker";
 import {
-  recordChecks, recordResult, removeSession, saveCandidate, saveCourse, saveSession, setCourseStatus, setWithdrawn, takeRegister,
+  linkCandidate, recordChecks, recordResult, removeSession, saveCandidate, saveCourse, saveSession, setCourseStatus, setWithdrawn, takeRegister,
 } from "@/modules/short-courses/features/academy-courses/server/actions";
 import { ACADEMY_OUTCOMES, ACADEMY_PAYMENT_META, ACADEMY_PAYMENTS, ACADEMY_RESULT_META } from "@/modules/short-courses/shared/academy-rules";
 
 import { PersonSelect, amount, text, THEME, useRefresh, type Option, type Person } from "@/modules/short-courses/shared/components/form-kit";
+import { SwimmerCard, SwimmerLinkDialog, type SwimmerCardData } from "@/modules/short-courses/shared/components/swimmer-card";
+import { readSwimmerChoice, SwimmerPicker } from "@/modules/short-courses/shared/components/swimmer-picker";
 
 /** The Academy's course dialogs (docs/academy.md): putting a course on, its sessions,
  *  candidates, pre-course checks, registers and results. */
@@ -123,7 +125,7 @@ export function SessionDialog({ courseId, session, areas, suggestDate, trigger }
 /** A session's register: the minutes each candidate was there, all of it by default. */
 export function RegisterDialog({ session, candidates, trigger }: {
   session: { id: string; label: string; length: number; marks: Record<string, number>; taken: boolean };
-  candidates: { id: string; name: string }[]; trigger?: ReactNode;
+  candidates: { id: string; name: string; memberNumber?: string | null; medical?: boolean }[]; trigger?: ReactNode;
 }) {
   const refresh = useRefresh();
   return (
@@ -139,7 +141,10 @@ export function RegisterDialog({ session, candidates, trigger }: {
             return (
               <li key={c.id} className="pc-row">
                 <Checkbox id={`reg-${session.id}-${c.id}`} name={`there-${c.id}`} defaultChecked={session.taken ? (was ?? 0) > 0 : true} />
-                <Label htmlFor={`reg-${session.id}-${c.id}`} className="pc-row-body font-normal">{c.name}</Label>
+                <Label htmlFor={`reg-${session.id}-${c.id}`} className="pc-row-body font-normal">
+                  <span className="pc-row-title">{c.name}</span>
+                  {c.memberNumber || c.medical ? <span className="pc-row-hint">{[c.memberNumber ? `Member ${c.memberNumber}` : null, c.medical ? "Medical notes on file" : null].filter(Boolean).join(" · ")}</span> : null}
+                </Label>
                 <span className="pc-row-trail">
                   <Input aria-label={`Minutes ${c.name} was there`} name={`min-${c.id}`} type="number" min={0} max={session.length} defaultValue={was && was > 0 ? was : session.length} className="min-h-11 w-24" />
                 </span>
@@ -154,22 +159,30 @@ export function RegisterDialog({ session, candidates, trigger }: {
 
 /* ---------- Candidates ---------- */
 
-export type CandidateEdit = { id: string; userId: string | null; name: string; email: string; phone: string; dateOfBirth: string | null; payment: string; paidCents: number; note: string };
+export type CandidateEdit = { id: string; userId: string | null; name: string; email: string; phone: string; dateOfBirth: string | null; payment: string; paidCents: number; note: string;
+  swimmerId?: string | null; swimmer?: SwimmerCardData | null };
 
-/** Put someone on the course: one of our staff, or a member of the public. Payment is taken
- *  elsewhere and recorded here. */
-export function CandidateDialog({ courseId, candidate, staff, priceCents, trigger }: { courseId: string; candidate?: CandidateEdit; staff: Person[]; priceCents: number; trigger?: ReactNode }) {
+/** Put someone on the course: one of our staff, or a member of the public, found on the swimmer
+ *  records or added there (owner request, 21 October 2026). Payment is taken elsewhere and
+ *  recorded here. With the swim school switched off, and for candidates added before the records,
+ *  a member of the public's name and contacts are typed. */
+export function CandidateDialog({ courseId, candidate, staff, priceCents, swimmerRecords = false, canOpenSwimmers = false, trigger }: {
+  courseId: string; candidate?: CandidateEdit; staff: Person[]; priceCents: number; swimmerRecords?: boolean; canOpenSwimmers?: boolean; trigger?: ReactNode;
+}) {
   const refresh = useRefresh();
   const [who, setWho] = useState<"staff" | "public">(candidate ? (candidate.userId ? "staff" : "public") : "public");
   const fid = candidate ? `cand-${candidate.id}` : "cand-new";
+  const picking = who === "public" && swimmerRecords && !candidate;
+  const linked = who === "public" && Boolean(candidate?.swimmerId);
+  const typed = who === "public" && !picking && !linked;
   return (
     <FormDialog portalClassName={THEME} width="sm:max-w-lg"
       trigger={trigger ?? <Button><UserPlus aria-hidden="true" />Add a candidate</Button>}
-      title={candidate ? `Change ${candidate.name}` : "Add a candidate"} description="Their details are kept with the course, for the tutor and the awarding body."
+      title={candidate ? `Change ${candidate.name}` : "Add a candidate"} description={picking ? "Find them on the swimmer records, or add them there. Their details are kept with the course, for the tutor and the awarding body." : "Their details are kept with the course, for the tutor and the awarding body."}
       submitLabel={candidate ? "Save" : "Add to course"} successMessage={candidate ? "Candidate saved" : "Candidate added"} onSuccess={refresh}
       submit={(fd) => saveCandidate(courseId, candidate?.id ?? null, {
         userId: who === "staff" ? text(fd, "userId") : "", name: text(fd, "name"), email: text(fd, "email"), phone: text(fd, "phone"), dateOfBirth: text(fd, "dateOfBirth"),
-        payment: text(fd, "payment"), paid: text(fd, "paid"), note: text(fd, "note"),
+        payment: text(fd, "payment"), paid: text(fd, "paid"), note: text(fd, "note"), swimmer: picking ? readSwimmerChoice(fd) : undefined,
       })}>
       {!candidate ? (
         <Field label="Who" htmlFor={`${fid}-who`}>
@@ -179,17 +192,22 @@ export function CandidateDialog({ courseId, candidate, staff, priceCents, trigge
           </NativeSelect>
         </Field>
       ) : null}
+      {picking ? <SwimmerPicker fid={fid} /> : null}
+      {linked && candidate?.swimmer ? <SwimmerCard swimmer={candidate.swimmer} canOpen={canOpenSwimmers} /> : null}
+      {candidate && typed && swimmerRecords ? <p className="pc-row-hint">Added before the swimmer records. Use Link to swimmer on their row to match them.</p> : null}
       <div className="grid gap-4 sm:grid-cols-2">
         {who === "staff" ? (
           <Field label="Staff member" htmlFor={`${fid}-user`}><PersonSelect id={`${fid}-user`} name="userId" people={staff} defaultValue={candidate?.userId} /></Field>
-        ) : (
+        ) : typed ? (
           <Field label="Name" htmlFor={`${fid}-name`}><Input id={`${fid}-name`} name="name" required minLength={2} maxLength={120} defaultValue={candidate?.name} className="min-h-11" /></Field>
-        )}
-        <Field label="Date of birth" htmlFor={`${fid}-dob`} optional={who === "staff"} hint={who === "staff" ? "From their record when left empty." : "For the minimum age."}>
-          <Input id={`${fid}-dob`} name="dateOfBirth" type="date" defaultValue={candidate?.dateOfBirth ?? ""} className="min-h-11" />
-        </Field>
-        <Field label="Email" htmlFor={`${fid}-email`} optional><Input id={`${fid}-email`} name="email" type="email" maxLength={200} defaultValue={candidate?.email} className="min-h-11" /></Field>
-        <Field label="Phone" htmlFor={`${fid}-phone`} optional><Input id={`${fid}-phone`} name="phone" type="tel" maxLength={40} defaultValue={candidate?.phone} className="min-h-11" /></Field>
+        ) : null}
+        {who === "staff" || typed ? <>
+          <Field label="Date of birth" htmlFor={`${fid}-dob`} optional={who === "staff"} hint={who === "staff" ? "From their record when left empty." : "For the minimum age."}>
+            <Input id={`${fid}-dob`} name="dateOfBirth" type="date" defaultValue={candidate?.dateOfBirth ?? ""} className="min-h-11" />
+          </Field>
+          <Field label="Email" htmlFor={`${fid}-email`} optional><Input id={`${fid}-email`} name="email" type="email" maxLength={200} defaultValue={candidate?.email} className="min-h-11" /></Field>
+          <Field label="Phone" htmlFor={`${fid}-phone`} optional><Input id={`${fid}-phone`} name="phone" type="tel" maxLength={40} defaultValue={candidate?.phone} className="min-h-11" /></Field>
+        </> : null}
         <Field label="Payment" htmlFor={`${fid}-pay`}>
           <NativeSelect id={`${fid}-pay`} name="payment" defaultValue={candidate?.payment ?? (who === "staff" ? "waived" : "owed")} key={who} className="min-h-11 w-full">
             {ACADEMY_PAYMENTS.map((p) => <NativeSelectOption key={p} value={p}>{ACADEMY_PAYMENT_META[p].label}</NativeSelectOption>)}
@@ -202,6 +220,11 @@ export function CandidateDialog({ courseId, candidate, staff, priceCents, trigge
       <Field label="Note" htmlFor={`${fid}-note`} optional><Textarea id={`${fid}-note`} name="note" maxLength={500} defaultValue={candidate?.note} /></Field>
     </FormDialog>
   );
+}
+
+/** Link a member of the public added before the swimmer records, or held online, to their record. */
+export function LinkCandidateButton({ id, name, email, phone, dateOfBirth }: { id: string; name: string; email: string; phone: string; dateOfBirth: string | null }) {
+  return <SwimmerLinkDialog name={name} prefill={{ contactEmail: email, contactPhone: phone, dateOfBirth: dateOfBirth ?? undefined }} submit={(choice) => linkCandidate(id, choice)} />;
 }
 
 export function WithdrawButton({ id, name, withdrawn }: { id: string; name: string; withdrawn: boolean }) {

@@ -1,9 +1,11 @@
 import "server-only";
-import { parseDateOnly, today } from "@/lib/format";
+import { formatDate, parseDateOnly, toDateOnlyString, today } from "@/lib/format";
+import { sitesByIds } from "@/lib/directory";
 import { sitesFor } from "@/lib/policy/session";
 import { prisma } from "@/lib/prisma";
 import { expandPermissions } from "@/lib/staff/permissions";
-import type { Commitment, CommitmentQuery, HomeItem, HomeViewer } from "@/modules/contributions";
+import type { Commitment, CommitmentQuery, HomeItem, HomeViewer, MemberHistoryEntry } from "@/modules/contributions";
+import { ACADEMY_RESULT_META } from "@/modules/short-courses/shared/academy-rules";
 
 /** What the Academy tells other modules (docs/academy.md).
  *
@@ -59,4 +61,21 @@ export async function academyHomeItems(viewer: HomeViewer): Promise<HomeItem[]> 
   if (registers) items.push({ label: "Academy registers to take today", href: "/short-courses/academy", count: registers, attention: true });
   if (starting) items.push({ label: "Academy courses starting in the next two weeks", href: "/short-courses/academy", count: starting });
   return items;
+}
+
+/** Member history (owner request, 21 October 2026): the Academy courses a member of the public has
+ *  been on, for their swimmer profile. Course, site, dates and the result only. */
+export async function academyMemberHistory(swimmerId: string): Promise<MemberHistoryEntry[]> {
+  const rows = await prisma.academyCandidate.findMany({
+    where: { swimmerId }, orderBy: { createdAt: "desc" }, take: 50,
+    select: { id: true, status: true, course: { select: { siteId: true, cancelledAt: true, type: { select: { name: true } },
+      sessions: { orderBy: { date: "asc" }, select: { date: true } } } } },
+  });
+  const sites = await sitesByIds(rows.map((r) => r.course.siteId));
+  return rows.map((r) => {
+    const first = r.course.sessions[0]?.date, last = r.course.sessions[r.course.sessions.length - 1]?.date;
+    const span = first ? (last && last.getTime() !== first.getTime() ? `${formatDate(first)} to ${formatDate(last)}` : formatDate(first)) : "No sessions";
+    const result = r.course.cancelledAt ? "course cancelled" : (ACADEMY_RESULT_META[r.status as keyof typeof ACADEMY_RESULT_META]?.label ?? r.status).toLowerCase();
+    return { id: `ac-${r.id}`, title: `${r.course.type.name} at ${sites.get(r.course.siteId)?.name ?? "a closed site"}`, detail: `${span} · ${result}`, on: first ? toDateOnlyString(first) : "", module: "Academy" };
+  });
 }

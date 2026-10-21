@@ -9,6 +9,8 @@ import { prisma } from "@/lib/prisma";
 import { placeProblem } from "@/lib/setup/data";
 import { ageOn, centsOf, clockOf, MAX_WEEKS, SHORT_COURSE_PAYMENTS, takesPlace, weeklyDates } from "@/modules/short-courses/shared/rules";
 import { atSite, courseFor, iso, optionalDate, refresh } from "@/modules/short-courses/shared/server";
+import { chose, copiedFrom, keepBooked, resolveSwimmer, swimmerChoiceSchema, type SwimmerChoiceInput } from "@/modules/short-courses/shared/swimmers";
+import { members } from "@/modules/contributions";
 
 /** Short course writes (docs/short-courses.md). A course and everything on it is checked
  *  against its site: Manage puts courses and sessions on, Instructor (Run) takes registers, View
@@ -146,9 +148,11 @@ export async function removeSession(id: string): Promise<ActionResult> {
 /* ---------- People ---------- */
 
 const personSchema = z.object({
-  name: z.string().trim().min(2, "Give their name.").max(120),
+  /** Typed only when the swimmer records are switched off, or on a booking made before them. */
+  name: z.string().trim().max(120).default(""),
   email: z.string().trim().max(200).refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), "Check the email address.").default(""),
   phone: z.string().trim().max(40).default(""),
+  /** Asked for when the course has a minimum age and their swimmer record has none. */
   dateOfBirth: optionalDate,
   payment: z.enum(SHORT_COURSE_PAYMENTS as [string, ...string[]]).default("owed"),
   paid: z.string().trim().default(""),
@@ -156,11 +160,16 @@ const personSchema = z.object({
   note: z.string().trim().max(500).default(""),
   /** A new person only: put them on the waiting list rather than in a place. */
   waiting: z.boolean().default(false),
+  /** Who it is on the swimmer records (owner request, 21 October 2026). */
+  swimmer: swimmerChoiceSchema.default({ swimmerId: "", newSwimmer: null }),
 });
 export type PersonInput = z.input<typeof personSchema>;
 
 /** Book someone on a course, or put them on its waiting list when it is full; or change their
- *  details and payment. Payment is taken at the till and recorded here. */
+ *  payment and health form. Since 21 October 2026 a new booking is someone on the swimmer records,
+ *  picked or added there first (with the swim school switched off, a typed name as before); their
+ *  name, phone, email and date of birth come from that record. Payment is taken at the till and
+ *  recorded here. */
 export async function saveParticipant(courseId: string, id: string | null, input: PersonInput): Promise<ActionResult> {
   const at = await courseFor(courseId, "short-courses.read");
   if (!at.ok) return fail(at.error);
@@ -171,18 +180,48 @@ export async function saveParticipant(courseId: string, id: string | null, input
   const d = parsed.data;
   const cents = centsOf(d.paid || "0");
   if (cents === null) return fail("Give the amount paid like 45 or 45.00.");
-  const [course, before] = await Promise.all([
+  const [course, before, directory] = await Promise.all([
     prisma.shortCourse.findUniqueOrThrow({ where: { id: courseId }, select: { priceCents: true, type: { select: { minAge: true } }, sessions: { orderBy: { date: "asc" }, take: 1, select: { date: true } } } }),
-    id ? prisma.shortCourseParticipant.findFirst({ where: { id, courseId }, select: { status: true } }) : null,
+    id ? prisma.shortCourseParticipant.findFirst({ where: { id, courseId }, select: { status: true, swimmerId: true, name: true, email: true, phone: true, dateOfBirth: true, source: true } }) : null,
+    members(),
   ]);
   if (id && !before) return fail("They are no longer on this course.");
+  // Who it is: their swimmer record when they have one or the desk picks one, else what was typed.
+  const swimmerId = before?.swimmerId || d.swimmer.swimmerId;
+  const linking = Boolean(directory) && (!id || Boolean(swimmerId) || chose(d.swimmer));
+  if (!linking && !before?.swimmerId && d.name.length < 2) return fail("Give their name.");
+  if (linking && !id && !chose(d.swimmer)) return fail("Find the person on the swimmer records, or add them as a new swimmer.");
+  if (linking && !before?.swimmerId && d.swimmer.swimmerId) {
+    const twice = await prisma.shortCourseParticipant.findFirst({ where: { courseId, swimmerId: d.swimmer.swimmerId, status: { not: "withdrawn" }, ...(id ? { id: { not: id } } : {}) }, select: { name: true } });
+    if (twice) return fail(`${twice.name} is already on this course.`);
+  }
+  if (!id && d.swimmer.newSwimmer && !d.waiting) {
+    // Checked before a new swimmer is added, so a full course does not leave a record behind.
+    if ((await prisma.shortCourseParticipant.count({ where: { courseId, status: "booked" } })) >= at.course.capacity) return fail("The course is full. Put them on the waiting list instead.");
+  }
+  let who: { swimmerId: string | null; name: string; email: string; phone: string; dateOfBirth: Date | null };
+  let added = false;
+  const kept = before && { swimmerId: before.swimmerId, name: before.name, email: before.email, phone: before.phone, dateOfBirth: before.dateOfBirth };
+  if (linking) {
+    const found = await resolveSwimmer(swimmerId ? { swimmerId, newSwimmer: null } : d.swimmer, { siteId: at.site.id, by: at.actor, via: "Short courses" });
+    // A record that has gone keeps the details copied when it was linked, so payment can still be recorded.
+    if (!found.ok && !(kept?.swimmerId && swimmerId === kept.swimmerId)) return fail(found.error);
+    added = found.ok && found.added;
+    const copy = found.ok ? keepBooked(copiedFrom(found.swimmer), before) : kept!;
+    who = { ...copy, dateOfBirth: copy.dateOfBirth ?? (d.dateOfBirth ? parseDateOnly(d.dateOfBirth) : before?.dateOfBirth ?? null) };
+  } else if (kept?.swimmerId) {
+    who = kept;
+  } else {
+    who = { swimmerId: null, name: d.name, email: d.email, phone: d.phone, dateOfBirth: d.dateOfBirth ? parseDateOnly(d.dateOfBirth) : null };
+  }
   const firstDay = course.sessions[0] ? iso(course.sessions[0].date) : null;
-  if (course.type.minAge && d.dateOfBirth && ageOn(d.dateOfBirth, firstDay ?? today()) < course.type.minAge) {
-    return fail(`They are ${ageOn(d.dateOfBirth, firstDay ?? today())} on the first day; the course is for ${course.type.minAge} and over.`);
+  const birth = who.dateOfBirth ? iso(who.dateOfBirth) : null;
+  if (course.type.minAge && birth && ageOn(birth, firstDay ?? today()) < course.type.minAge) {
+    return fail(`${who.name} is ${ageOn(birth, firstDay ?? today())} on the first day; the course is for ${course.type.minAge} and over.`);
   }
   const paidCents = d.payment === "paid" && !d.paid ? course.priceCents : cents;
-  const data = { name: d.name, email: d.email, phone: d.phone, dateOfBirth: d.dateOfBirth ? parseDateOnly(d.dateOfBirth) : null,
-    payment: d.payment, paidCents, healthFormOn: d.healthFormOn ? parseDateOnly(d.healthFormOn) : null, note: d.note };
+  const data = { ...who, payment: d.payment, paidCents, healthFormOn: d.healthFormOn ? parseDateOnly(d.healthFormOn) : null, note: d.note };
+  const name = who.name;
   const outcome = await prisma.$transaction(async (tx) => {
     let status = before?.status ?? "booked";
     if (!id) {
@@ -195,13 +234,39 @@ export async function saveParticipant(courseId: string, id: string | null, input
     }
     const row = id ? await tx.shortCourseParticipant.update({ where: { id }, data })
       : await tx.shortCourseParticipant.create({ data: { ...data, status, courseId, createdById: at.actor.id, createdByName: at.actor.name } });
+    const linked = who.swimmerId && !before?.swimmerId ? (added ? ", added to the swimmer records" : ", from the swimmer records") : "";
     await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: id ? "update" : "create", entity: "ShortCourseParticipant", entityId: row.id, clubId: at.site.id,
-      summary: id ? `Changed ${d.name} on the ${at.course.type.name} course: payment ${d.payment}`
-        : status === "waiting" ? `Put ${d.name} on the waiting list for the ${at.course.type.name} course` : `Booked ${d.name} on the ${at.course.type.name} course: payment ${d.payment}` }, tx);
+      summary: id ? `Changed ${name} on the ${at.course.type.name} course: payment ${d.payment}${linked ? `; linked to their swimmer record${added ? " (added)" : ""}` : ""}`
+        : status === "waiting" ? `Put ${name} on the waiting list for the ${at.course.type.name} course${linked}` : `Booked ${name} on the ${at.course.type.name} course${linked}: payment ${d.payment}` }, tx);
     return { error: null };
   });
   if (outcome.error) return fail(outcome.error);
   refresh(courseId);
+  return ok();
+}
+
+/** Link a booking made before the swimmer records (or held online) to the person's swimmer record,
+ *  picked or added there. Their name, phone, email and date of birth then come from the record. */
+export async function linkParticipant(id: string, input: SwimmerChoiceInput): Promise<ActionResult> {
+  const p = await prisma.shortCourseParticipant.findFirst({ where: { id }, select: { courseId: true, name: true, swimmerId: true, dateOfBirth: true, source: true, email: true, phone: true } });
+  if (!p) return fail("They are no longer on this course.");
+  const at = await courseFor(p.courseId, "short-courses.read");
+  if (!at.ok) return fail(at.error);
+  const parsed = swimmerChoiceSchema.safeParse(input);
+  if (!parsed.success || !chose(parsed.data)) return fail("Find the person on the swimmer records, or add them as a new swimmer.");
+  if (parsed.data.swimmerId) {
+    const twice = await prisma.shortCourseParticipant.findFirst({ where: { courseId: p.courseId, swimmerId: parsed.data.swimmerId, status: { not: "withdrawn" }, id: { not: id } }, select: { name: true } });
+    if (twice) return fail(`${twice.name} is already on this course.`);
+  }
+  const found = await resolveSwimmer(parsed.data, { siteId: at.site.id, by: at.actor, via: "Short courses" });
+  if (!found.ok) return fail(found.error);
+  const copy = keepBooked(copiedFrom(found.swimmer), p);
+  await prisma.$transaction(async (tx) => {
+    await tx.shortCourseParticipant.update({ where: { id }, data: { ...copy, dateOfBirth: copy.dateOfBirth ?? p.dateOfBirth } });
+    await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "update", entity: "ShortCourseParticipant", entityId: id, clubId: at.site.id,
+      summary: `Linked ${p.name} on the ${at.course.type.name} course to the swimmer record of ${copy.name}${found.added ? " (added)" : ""}${p.swimmerId ? ", in place of another" : ""}` }, tx);
+  });
+  refresh(p.courseId);
   return ok();
 }
 

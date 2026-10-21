@@ -35,19 +35,20 @@ import { ManageProfileEnrolments } from "@/modules/activities/features/students/
 import { ProfileCompetencies } from "@/modules/activities/features/students/components/profile-competencies";
 import { HistoryFeed } from "@/modules/activities/features/students/components/profile-history";
 import { GuardianAccessPanel } from "@/modules/activities/shared/parents/components/guardian-access";
+import type { MemberHistoryEntry } from "@/modules/contributions";
 import styles from "@/modules/activities/features/students/components/swimmer-profile.module.css";
 
 type Tab = "journey" | "competencies" | "attendance" | "assessments" | "details" | "parents";
 const JOURNEY_MODES = [{ value: "milestones", label: "Milestones" }, { value: "activity", label: "All activity" }];
 type ProfileAccess = { edit: boolean; enrol: boolean; assess: boolean; complete: boolean; override: boolean; courses: boolean; assessments: boolean; audit: boolean; parents?: boolean };
-export type SwimmerProfileProps = { student: StudentDetail; enrolments: StudentEnrolment[]; programmes: ProgrammeProgress[]; assessments: StudentAssessment[]; targets: TransferTarget[]; history: HistoryPage; access: ProfileAccess; initialTab?: string; returnTo: string; instant: string };
+export type SwimmerProfileProps = { student: StudentDetail; enrolments: StudentEnrolment[]; programmes: ProgrammeProgress[]; assessments: StudentAssessment[]; targets: TransferTarget[]; history: HistoryPage; otherCourses?: MemberHistoryEntry[]; access: ProfileAccess; initialTab?: string; returnTo: string; instant: string };
 function profileTab(value?: string, parents = false): Tab {
   if (value === "progress") return "competencies";
   if (value === "parents" && parents) return "parents";
   return ["competencies", "attendance", "assessments", "details"].includes(value ?? "") ? value as Tab : "journey";
 }
 
-export function SwimmerProfile({ student, enrolments, programmes, assessments, targets, history, access, initialTab, returnTo, instant }: SwimmerProfileProps) {
+export function SwimmerProfile({ student, enrolments, programmes, assessments, targets, history, otherCourses = [], access, initialTab, returnTo, instant }: SwimmerProfileProps) {
   const [tab, setTab] = useState<Tab>(profileTab(initialTab, access.parents)), [mode, setMode] = useState("milestones");
   const [programme, setProgramme] = useState("all"), [kind, setKind] = useState<HistoryKind>("all");
   const [search, setSearch] = useState(""), [level, setLevel] = useState<string | null>(null);
@@ -132,12 +133,19 @@ export function SwimmerProfile({ student, enrolments, programmes, assessments, t
               <HistoryFeed studentId={student.id} query={{ kind: "assessment" }} emptyTitle="No other assessment activity" />
             </> : <HistoryFeed studentId={student.id} query={{ kind: "assessment" }} emptyTitle="No assessments yet" />}
           </section></TabsContent>
-          <TabsContent value="details" className="m-0"><ProfileDetails student={student} /></TabsContent>
+          <TabsContent value="details" className="m-0"><div className="flex flex-col gap-6"><ProfileDetails student={student} /><OtherCourses entries={otherCourses} /></div></TabsContent>
           {access.parents ? <TabsContent value="parents" className="m-0"><div className="pc-panel"><GuardianAccessPanel studentId={student.id} swimmerName={name} /></div></TabsContent> : null}
         </div>
       </div>
     </Tabs>
   </PageShell>;
+}
+
+/** Short courses and Academy courses they have been booked on, from those modules. */
+function OtherCourses({ entries }: { entries: MemberHistoryEntry[] }) {
+  return <section className="pc-panel" aria-labelledby="other-courses-heading"><div><h2 id="other-courses-heading">Other courses</h2><p className="pc-row-hint">Short courses and Academy courses they have been booked on.</p></div>
+    {entries.length ? <ul className="pc-rows">{entries.map(e => <li key={e.id} className="pc-row"><div className="pc-row-body"><h3 className="pc-row-title">{e.title}</h3><p className="pc-row-hint">{e.detail}</p></div><div className="pc-row-trail"><span className="pc-row-hint">{e.module}</span></div></li>)}</ul>
+      : <EmptyState compact icon="calendarDays" title="No other courses" />}</section>;
 }
 
 function ProfileDetails({ student }: { student: StudentDetail }) {
