@@ -4,7 +4,7 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.53.0 · 21 October 2026 · Short courses book people from the swimmer records
+## 1.54.0 · 21 October 2026 · Short courses book people from the swimmer records
 
 - **Book someone on** (short courses) and **Add a candidate** (Academy courses) now start with **Find the swimmer**. Search by name, member number, date of birth or a parent's name, and pick the right person. Their member number, contacts, emergency contact and medical notes come with them.
 - If they are not on the swimmer records yet, choose **Add them as a new swimmer**, fill in their details, and they are added and booked on in one go. Turnfin tells you if someone with the same name and date of birth is already there, so nobody is added twice. Adults on gym and lifeguard courses get a swimmer record too; staff on Academy courses stay as staff.
@@ -13,6 +13,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - People booked before today show **No swimmer record** and a **Link to swimmer** button, so you can match them up when you have a moment. Nothing else about them changes.
 - When you log a call as **Paid** for an Academy place held online, Turnfin asks you to find them on the swimmer records or add them first. Their details from the booking are filled in for you.
 - A swimmer's profile now lists the short courses and Academy courses they have been on, under **Details**, in **Other courses**.
+## 1.53.0 · 21 October 2026 · Areas need people on an activity, and sub-activities at several times
+
+- In **Admin > Areas**, an area's **Staff needed** can now ask for people on an activity: for example, Reception needs **at least 1 on Serving customers**, from 09:00 to 21:00. Leave the times empty for whenever the area is open. Add as many lines as you need, such as a second one for 2 people at the busy time.
+- On the rota **Plan**, only people actually on that activity in the area (or in one of its parts, such as Till 1) count. If nobody is on it for a stretch, it shows under **Not covered yet** with the time and the reason, such as "Nobody on it yet".
+- **Choose someone** for one of these puts the person on that activity in the area, so their day says what they are doing there and the activity's usual sub-activities come with it.
+- Your existing lines, such as "2 lifeguards while open", work as before.
+- **Sub-activities** can now happen at several set times: for example, a cash drop at 12:00 and 16:00. Set the times in **Admin > Activities > Sub-activities**, and add or remove times for one person's day from their day on the Plan.
 ## 1.52.0 · 21 October 2026 · Coinage: ask accounts for change for the tills
 
 - **Coinage** is new, beside Refunds under Front of house. The desk asks accounts for coins for a till, and accounts decides and records the order, the same way refund requests go to finance.

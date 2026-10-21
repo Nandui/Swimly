@@ -32,11 +32,15 @@ export const ACTIVITY_TAG_META = {
 export const SUB_WHEN = {
   start: "At the start",
   end: "At the end",
-  at: "At a set time",
+  at: "At set times",
   during: "Any time while on it",
 } as const;
 export type SubWhen = keyof typeof SUB_WHEN;
 export const SUB_WHENS = Object.keys(SUB_WHEN) as SubWhen[];
+/** A sub-activity's set times (owner, 21 October 2026: cash drops at 12:00 and 16:00), in order:
+ *  its list, or the one time saved before there could be more. */
+export const subTimes = (x: { atMinutes: number | null; times?: readonly number[] | null }) =>
+  [...new Set(x.times?.length ? x.times : x.atMinutes !== null ? [x.atMinutes] : [])].sort((a, b) => a - b);
 
 /** A location as an area and the detail after it ("Learner pool, lane 3"), kept with the lanes. */
 export { joinLocation, splitLocation } from "@/lib/setup/lanes";

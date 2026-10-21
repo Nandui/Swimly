@@ -59,3 +59,17 @@ test("the stored setting keeps only what makes sense", () => {
     [{ withAreaId: "hall", count: 2, typeId: "nplq" }, { withAreaId: "y", count: 1, typeId: null }]);
   assert.deepEqual(togetherOf(null), []);
 });
+
+test("an area's activity lines: the larger number where two meet, its own times inside the hours, people on it taking places off", () => {
+  const serve = { typeId: null, typeName: null, activityTypeId: "serve", activityName: "Serving customers" };
+  const rec = { id: "rec", name: "Reception", lanes: 0, openFrom: h("08:00"), openUntil: h("20:00"), weekHours: [],
+    minimums: [{ count: 1, ...serve, from: null, until: null }, { count: 2, ...serve, from: h("12:00"), until: h("14:00") }, { count: 1, ...nplq }] };
+  const [duty, line] = areaNeedsOn([rec], date);
+  assert.equal(duty.activityTypeId, null, "the staff-on-duty line stays as it was");
+  assert.deepEqual([line.id, line.startMinutes, line.endMinutes, line.places, line.activityName], [`area:rec:act-serve:${date}`, h("08:00"), h("20:00"), 2, "Serving customers"]);
+  assert.deepEqual(line.off, [{ place: 2, start: h("08:00"), end: h("12:00") }, { place: 2, start: h("14:00"), end: h("20:00") }]);
+  const covered = areaNeedsOn([rec], date, () => [{ start: h("08:00"), end: h("13:00") }])[1];
+  assert.deepEqual(covered.off, [{ place: 1, start: h("08:00"), end: h("12:00") }, { place: 2, start: h("08:00"), end: h("13:00") }, { place: 2, start: h("14:00"), end: h("20:00") }]);
+  const closed = areaNeedsOn([{ ...rec, weekHours: [{ day: 4, from: null, until: null }] }], date);
+  assert.equal(closed.length, 0, "closed that day: no line applies");
+});

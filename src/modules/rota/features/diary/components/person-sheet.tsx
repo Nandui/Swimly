@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Clock, Coffee, Flag, ListChecks, Moon, Plus } from "lucide-react";
+import { Clock, Coffee, Flag, ListChecks, Moon, Plus, X } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Checkbox } from "@/components/shadcn/checkbox";
 import { Label } from "@/components/shadcn/label";
@@ -15,7 +15,7 @@ import { ChangeFields, changeOf } from "@/modules/rota/shared/components/change-
 import { stepsOf, type Line, type PersonDay, type Span, type Step } from "@/modules/rota/features/diary/model";
 import { changeLine, fillNeed, placeBreaks, removeLine, removeShift, saveLineSubs, saveShift } from "@/modules/rota/features/diary/server/actions";
 import { useDiary } from "@/modules/rota/features/diary/components/context";
-import { firstName, hoursWords, lineTitle, lineWhere, needWords, partsWords, span as spanWords, toneOf, warningWords } from "@/modules/rota/features/diary/components/words";
+import { firstName, hoursWords, needName, lineTitle, lineWhere, needWords, partsWords, span as spanWords, toneOf, warningWords } from "@/modules/rota/features/diary/components/words";
 
 const PORTAL = "turnfin-module";
 const s = (f: FormData, k: string) => String(f.get(k) ?? "");
@@ -117,7 +117,7 @@ function FreeStep({ person, free }: { person: PersonDay; free: Span }) {
               return (
                 <FormDialog key={h.key} portalClassName={PORTAL} title={`Put ${firstName(person.name)} on ${need.title}`} description={`${needWords(need)}, ${spanWords(part)}.`}
                   submitLabel="Put on" successMessage={`${person.name} is on ${need.title}.`}
-                  trigger={<Button variant="outline"><Plus aria-hidden="true" />{need.kind === "area" ? need.area || need.title : need.title} {spanWords(part)}</Button>}
+                  trigger={<Button variant="outline"><Plus aria-hidden="true" />{needName(need)} {spanWords(part)}</Button>}
                   submit={(f) => fillNeed({ siteId: ctx.siteId, date: ctx.date, departmentId: ctx.departmentFor!, kind: need.kind, needId: need.needId, classRef: need.classRef,
                     userId: person.userId, start: clock(part.start), end: clock(part.end) }, ctx.live ? changeOf(f) : {})}>
                   {ctx.live ? <ChangeFields id={`diary-free-${h.key}`} /> : <p className="diary-muted">It is not covered then: {h.why.toLowerCase()}.</p>}
@@ -260,23 +260,27 @@ function ShiftDialog({ person, shift }: { person: PersonDay; shift: (Span & { id
   );
 }
 
-type SubChoice = { key: string; subActivityId: string | null; name: string; when: string; at: string; on: boolean };
+type SubChoice = { key: string; subActivityId: string | null; name: string; when: string; times: string[]; on: boolean };
 const WHEN_WORDS: Record<string, string> = { start: "at the start", end: "at the end", during: "any time while on it" };
 
 /** Which sub-activities they do while on it that day (owner, 20 October 2026): the activity's
- *  list from Admin, ticked as they are now, with a time for one at a set time. */
+ *  list from Admin, ticked as they are now, with the times for one at set times (owner, 21
+ *  October 2026: as many as needed, such as cash drops at 12:00 and 16:00). */
 function SubsDialog({ person, line }: { person: PersonDay; line: Line }) {
   const ctx = useDiary();
   const typeId = ctx.needs.get(line.needKey)?.typeId ?? null;
   const list = typeId ? ctx.subActivities[typeId] ?? [] : [];
   const start = (): SubChoice[] => {
-    const has = (name: string) => line.subs.find((x) => x.name.toLowerCase() === name.toLowerCase());
+    const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+    const timesNow = (name: string) => line.subs.filter((x) => same(x.name, name) && x.at !== null).map((x) => clock(x.at!));
+    const inStretch = (times: readonly number[]) => times.filter((m) => m >= line.start && m <= line.end);
     const fromList = list.map((x) => {
-      const now = has(x.name);
-      return { key: x.id, subActivityId: x.id, name: x.name, when: x.when, at: clock(now?.at ?? x.at ?? line.start), on: !!now };
+      const on = line.subs.some((y) => same(y.name, x.name));
+      const usual = inStretch(x.times);
+      return { key: x.id, subActivityId: x.id, name: x.name, when: x.when, times: on && timesNow(x.name).length ? timesNow(x.name) : (usual.length ? usual : [line.start]).map(clock), on };
     });
-    const extra = line.subs.filter((x) => !list.some((y) => y.name.toLowerCase() === x.name.toLowerCase()))
-      .map((x, i) => ({ key: `kept-${i}`, subActivityId: null, name: x.name, when: x.when, at: clock(x.at ?? line.start), on: true }));
+    const extra = [...new Map(line.subs.filter((x) => !list.some((y) => same(y.name, x.name))).map((x) => [x.name.toLowerCase(), x])).values()]
+      .map((x, i) => ({ key: `kept-${i}`, subActivityId: null, name: x.name, when: x.when, times: x.when === "at" ? timesNow(x.name) : [], on: true }));
     return [...fromList, ...extra];
   };
   const [rows, setRows] = useState<SubChoice[]>(start);
@@ -286,7 +290,7 @@ function SubsDialog({ person, line }: { person: PersonDay; line: Line }) {
       submitLabel="Save" successMessage="Sub-activities saved." onOpen={() => setRows(start())}
       trigger={<Button variant="outline"><ListChecks aria-hidden="true" />Sub-activities</Button>}
       submit={(f) => saveLineSubs({ siteId: ctx.siteId, date: ctx.date, departmentId: ctx.departmentFor!, id: line.assignmentId!, userId: person.userId,
-        subs: rows.filter((r) => r.on).map((r) => ({ subActivityId: r.subActivityId, name: r.name, when: r.when as "start" | "end" | "at" | "during", at: r.at })) }, ctx.live ? changeOf(f) : {})}>
+        subs: rows.filter((r) => r.on).map((r) => ({ subActivityId: r.subActivityId, name: r.name, when: r.when as "start" | "end" | "at" | "during", times: r.when === "at" ? r.times : [] })) }, ctx.live ? changeOf(f) : {})}>
       <ul className="diary-sub-choices">
         {rows.map((r) => (
           <li key={r.key} className="diary-sub-choice">
@@ -294,7 +298,26 @@ function SubsDialog({ person, line }: { person: PersonDay; line: Line }) {
               <Checkbox id={`sub-${line.key}-${r.key}`} checked={r.on} onCheckedChange={(v) => set(r.key, { on: v === true })} />
               <Label htmlFor={`sub-${line.key}-${r.key}`} className="font-normal">{r.name}<span className="diary-caption">{r.when === "at" ? "" : ` ${WHEN_WORDS[r.when] ?? ""}`}</span></Label>
             </div>
-            {r.when === "at" && r.on ? <Input type="time" label="At" step={300} value={r.at} onChange={(v) => set(r.key, { at: v })} min={clock(line.start)} max={clock(line.end)} required /> : null}
+            {r.when === "at" && r.on ? (
+              <div className="diary-sub-times">
+                {(r.times.length ? r.times : [clock(line.start)]).map((t, i, all) => (
+                  <div key={i} className="diary-sub-time">
+                    <Input type="time" label={all.length > 1 ? `Time ${i + 1}` : "At"} step={300} value={t} min={clock(line.start)} max={clock(line.end)} required
+                      onChange={(v) => set(r.key, { times: all.map((x, j) => (j === i ? v : x)) })} />
+                    {all.length > 1 ? (
+                      <Button type="button" variant="ghost" size="icon" className="size-11" aria-label={`Remove ${r.name} time ${i + 1}`} onClick={() => set(r.key, { times: all.filter((_, j) => j !== i) })}>
+                        <X aria-hidden="true" />
+                      </Button>
+                    ) : null}
+                  </div>
+                ))}
+                {r.times.length < 12 ? (
+                  <Button type="button" variant="outline" onClick={() => set(r.key, { times: [...(r.times.length ? r.times : [clock(line.start)]), clock(line.start)] })}>
+                    <Plus aria-hidden="true" />Add a time
+                  </Button>
+                ) : null}
+              </div>
+            ) : null}
           </li>
         ))}
       </ul>

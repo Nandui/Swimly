@@ -39,7 +39,7 @@ export async function plannedFile(userId: string): Promise<{ summary: string; en
     ...rows.map((r) => ({ id: r.id, on: iso(r.need.date), start: r.startMinutes, end: r.endMinutes, detail: [r.need.type.name, r.need.place || null, r.need.site.name] })),
     ...onAreas.map((a) => {
       const area = areas.get(a.areaId);
-      const typeName = area?.minimums.find((m) => m.typeId === a.qualificationTypeId)?.typeName ?? null;
+      const typeName = area?.minimums.find((m) => !m.activityTypeId && m.typeId === a.qualificationTypeId)?.typeName ?? null;
       return { id: a.id, on: iso(a.date), start: a.startMinutes, end: a.endMinutes,
         detail: [areaNeedName(a.qualificationTypeId ? typeName ?? "Qualified" : null), area?.name ?? null, sites.get(a.siteId)?.name ?? null] };
     }),

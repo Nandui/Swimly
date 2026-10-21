@@ -1,7 +1,7 @@
 /** An area's staff needs and the hours it is open (Admin, Areas; owner requests, 16 October
  *  2026), shared by the page, its dialog and the rota. Pure. */
 
-type Minimum = { count: number; typeId: string | null; typeName: string | null };
+type Minimum = { count: number; typeId: string | null; typeName: string | null; activityTypeId?: string | null; activityName?: string | null; from?: number | null; until?: number | null };
 /** A weekday's own hours, Monday 0: no times is closed that day. */
 export type WeekHour = { day: number; from: number | null; until: number | null };
 export type AreaHours = { openFrom: number | null; openUntil: number | null; weekHours: readonly WeekHour[] };
@@ -54,11 +54,26 @@ export function hoursOn(area: AreaHours, date: string): { start: number; end: nu
   return from !== null && until !== null && until > from ? { start: from, end: until } : null;
 }
 
+/** A stored line of what an area needs (`SiteAreaStaffing`) as the pages and the rota read it. */
+export function minimumOf(m: { count: number; qualificationTypeId: string | null; qualificationType: { name: string } | null; activityTypeId: string | null; fromMinutes: number | null;
+  untilMinutes: number | null; activityType: { name: string } | null }) {
+  return { count: m.count, typeId: m.qualificationTypeId, typeName: m.qualificationType?.name ?? null, activityTypeId: m.activityTypeId, activityName: m.activityType?.name ?? null,
+    from: m.fromMinutes, until: m.untilMinutes };
+}
+
+/** One line of what an area needs in a few words: "2 NPLQ", "1 anyone", "1 on Serving customers
+ *  12:00 to 14:00". */
+export function minimumWords(m: Minimum) {
+  if (!m.activityTypeId) return `${m.count} ${m.typeId ? m.typeName ?? "qualified" : "anyone"}`;
+  const when = m.from != null && m.until != null ? ` ${hhmm(m.from)} to ${hhmm(m.until)}` : "";
+  return `${m.count} on ${m.activityName ?? "an activity"}${when}`;
+}
+
 /** "2 NPLQ and 1 anyone · open 07:00 to 22:00, Saturday 09:00 to 18:00, Sunday closed", or null
  *  with no staff set. */
 export function staffingWords(area: { minimums: Minimum[] } & AreaHours) {
   if (!area.minimums.length) return null;
-  const lines = area.minimums.map((m) => `${m.count} ${m.typeId ? m.typeName ?? "qualified" : "anyone"}`);
+  const lines = area.minimums.map(minimumWords);
   const list = lines.length > 1 ? `${lines.slice(0, -1).join(", ")} and ${lines[lines.length - 1]}` : lines[0];
   return `Needs ${list} · ${hoursWords(area)}`;
 }
