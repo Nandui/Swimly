@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.60.0 · 21 October 2026 · Pictures for suppliers in Purchasing
+
+- Each supplier in **Purchasing** can now have a picture, such as its logo or a photo. Open the supplier from **Suppliers** and choose **Add a picture**. On a phone you can take a photo or pick one you already have.
+- The picture shows on the supplier's tile in **Suppliers**, at the top of its page, next to the supplier you pick on a **New order**, and at the top of each order.
+- Choose **Change picture** to replace it, or **Remove picture** to take it off. A supplier without a picture shows its initials, as before.
+- Only people who manage Purchasing can add, change or remove a picture. Everyone who uses Purchasing sees it.
+
 ## 1.59.1 · 21 October 2026 · Rota: take someone off from their block on the Plan
 
 - On the rota **Plan**, tap a block on someone's row in **The day, person by person** (an area, an activity, a class or a booking). It now opens just that block, with **Take them off** and **Change time** right there, and their whole day one tap away. Before, the block opened their whole day and taking them off was a small link inside it.

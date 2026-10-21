@@ -5,7 +5,7 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
-import { AddRule, APPROVAL_LIST_META, euro, RemoveRule, SupplierDialog, SupplierEmailCopy, SupplierEmailsSwitch, SUPPLIER_EMAILS_META, SupplierMonogram, suppliersPage } from "@/modules/purchasing/features/suppliers";
+import { AddRule, APPROVAL_LIST_META, euro, RemoveRule, SupplierDialog, SupplierEmailCopy, SupplierEmailsSwitch, SUPPLIER_EMAILS_META, SupplierPicture, suppliersPage } from "@/modules/purchasing/features/suppliers";
 import { formatDateTime, plural } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Suppliers" };
@@ -29,7 +29,7 @@ export default async function SuppliersPage() {
               <li key={s.id}>
                 <Link href={`/purchasing/suppliers/${s.id}`} className="po-tile" data-muted={s.archivedAt ? "" : undefined}>
                   <span className="po-tile-head">
-                    <SupplierMonogram name={s.name} />
+                    <SupplierPicture id={s.id} name={s.name} version={s.pictureVersion} />
                     <span className="flex min-w-0 flex-1 flex-col">
                       <span className="po-tile-name">{s.name}</span>
                       <span className="po-tile-sub">{s.accountNumber ? `Account ${s.accountNumber}` : s.contactName || s.email || "No account number"}</span>
