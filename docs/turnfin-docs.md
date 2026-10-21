@@ -174,19 +174,14 @@ can run again; a dry run prints counts first.
 
 ## HR procedures (21 October 2026)
 
-`docs-content/hr-procedures/` holds LeisureWorld's everyday HR procedures (HR-SOP-00 to HR-SOP-09:
-absence, sickness, return to work, repeated and long-term absence, lateness, annual leave,
-statutory leave, records and medical privacy) as Markdown in the same shape the import reads.
-Every page is tagged Draft, because the handbook details marked "Set by LeisureWorld" must be
-filled in before an independent approver publishes them. They come in with the same import,
-which accepts `--site all` (filed under every open site) and needs no approver when every page
-is a draft:
-
-```powershell
-npm run prod -- scripts/docs-import-notion.ts docs-content/hr-procedures --site all
-npm run prod -- scripts/docs-import-notion.ts docs-content/hr-procedures --site all --author <email> --confirm
-```
-
-The drafts then wait in the author's **My work › Drafts in progress**. A reference already in Docs
-is skipped, so editing these files later does not change Docs; change the document in Docs.
-`hr-procedures.test.ts` checks every file reads as a valid draft SOP.
+Docs ships LeisureWorld's everyday HR procedures, HR-SOP-00 to HR-SOP-09 (absence, sickness on
+the day, keeping in touch and return to work, repeated and long-term absence, lateness, annual
+leave, force majeure and other leave, records and medical privacy), as Markdown in
+`src/modules/docs/features/import/content/hr-procedures.ts`. A Docs administrator adds them in
+**Administration › HR procedures** with **Add the HR procedures**: each becomes a draft owned by
+them and filed under every site (`DocumentService.addReadyMade`, one transaction, a `created`
+audit row per document and one `ready_made_added` row). A reference already in Docs is skipped,
+so a second click adds only what is missing, and the panel shows which are in Docs. They stay
+drafts because the handbook details marked "Set by LeisureWorld" must be filled in before an
+independent approver publishes them. Changing the Markdown later does not change documents
+already in Docs. `hr-procedures.test.ts` checks the pages and the add.

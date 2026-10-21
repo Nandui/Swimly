@@ -6,9 +6,10 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 ## 1.60.0 · 21 October 2026 · HR procedures in Docs
 
-- Ten HR procedures are on their way into **Docs**, each short and step by step: reporting an absence, sickness on the day, keeping in touch and the return-to-work talk, repeated absence, long-term sickness, lateness and not turning up, annual leave, force majeure and other leave, and keeping absence records private. A starting page lists them all.
+- Ten HR procedures are ready to add to **Docs**, each short and step by step: reporting an absence, sickness on the day, keeping in touch and the return-to-work talk, repeated absence, long-term sickness, lateness and not turning up, annual leave, force majeure and other leave, and keeping absence records private. A starting page lists them all.
 - Each one says who does what, by when, and where it goes in Turnfin, such as **Report an absence** and **Return to work** in Rota.
-- They arrive as drafts. Where one says **Set by LeisureWorld** (a phone number, a time, a number of days), fill it in from the staff handbook, then send it for approval as usual. Once approved, everyone with Docs can read it.
+- To add them, open **Docs**, **Administration**, **HR procedures** and choose **Add the HR procedures**. They arrive as your drafts, for every site. Clicking again never adds a second copy.
+- Where one says **Set by LeisureWorld** (a phone number, a time, a number of days), fill it in from the staff handbook, then send it for approval as usual. Once approved, everyone with Docs can read it.
 
 ## 1.59.1 · 21 October 2026 · Rota: take someone off from their block on the Plan
 

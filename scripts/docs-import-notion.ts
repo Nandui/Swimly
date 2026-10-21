@@ -9,7 +9,8 @@ import { validateBody } from "@/modules/docs/shared/content";
 import { findMember, type Database, type Sql } from "@/modules/docs/shared/database";
 import { canApprove, canWrite } from "@/modules/docs/shared/types";
 import { DocumentService } from "@/modules/docs/shared/domain";
-import { parseNotionPage, type NotionPage } from "@/modules/docs/features/import";
+// The server part only: the feature entry also carries the Administration panel.
+import { parseNotionPage, type NotionPage } from "@/modules/docs/features/import/server/notion-import";
 import { staffDirectory } from "@/modules/docs/shared/staff-directory-data";
 import { docsStorageConfig } from "@/modules/docs/shared/storage-config";
 
@@ -24,14 +25,7 @@ import { docsStorageConfig } from "@/modules/docs/shared/storage-config";
  *  import can run again. Dry run by default; prints counts and titles only.
  *
  *    npm run prod -- scripts/docs-import-notion.ts "C:\path\Export" --site Bishopstown
- *    npm run prod -- scripts/docs-import-notion.ts "C:\path\Export" --site Bishopstown --author a@x --approver b@x --confirm
- *
- *  Also reads Markdown kept in this repository in the same shape, such as the
- *  HR procedures (docs-content/hr-procedures). `--site all` files them under
- *  every open site. When every page is a draft no approver is needed: the
- *  drafts wait for --author to finish them and submit them in the app.
- *
- *    npm run prod -- scripts/docs-import-notion.ts docs-content/hr-procedures --site all --author a@x --confirm */
+ *    npm run prod -- scripts/docs-import-notion.ts "C:\path\Export" --site Bishopstown --author a@x --approver b@x --confirm */
 
 function args() {
   const out = { folder: "", site: "Bishopstown", author: "", approver: "", confirm: false };
@@ -93,11 +87,8 @@ async function main() {
       problems.push(`${file.split(/[\\/]/).pop()}: ${(error as Error).message}`);
     }
   }
-  const sites = opts.site.toLowerCase() === "all"
-    ? await prisma.club.findMany({ where: { archivedAt: null }, select: { id: true, name: true }, orderBy: { name: "asc" } })
-    : await prisma.club.findMany({ where: { name: { contains: opts.site, mode: "insensitive" }, archivedAt: null }, select: { id: true, name: true }, take: 1 });
-  if (!sites.length) throw new Error(`No open site matches "${opts.site}".`);
-  const site = { ids: sites.map((s) => s.id), name: sites.map((s) => s.name).join(" and ") };
+  const site = await prisma.club.findFirst({ where: { name: { contains: opts.site, mode: "insensitive" }, archivedAt: null }, select: { id: true, name: true } });
+  if (!site) throw new Error(`No open site matches "${opts.site}".`);
 
   const docs = openDocs();
   try {
@@ -109,17 +100,15 @@ async function main() {
     console.log(`${pages.length} Notion pages read for ${site.name}; ${pages.length - fresh.length} already in Docs.`);
     console.log(`To import: ${fresh.length} (${count((p) => !p.draft)} to publish, ${count((p) => p.draft)} as drafts). Types: NOP ${count((p) => p.type === "NOP")}, SOP ${count((p) => p.type === "SOP")}, EAP ${count((p) => p.type === "EAP")}, other ${count((p) => p.type === "Custom")}.`);
     for (const p of problems) console.log(`  Could not read: ${p}`);
-    if (!opts.confirm) return console.log(`Dry run. Pass --author <email>${pages.some((p) => !p.page.draft) ? " --approver <email>" : ""} --confirm to import.`);
+    if (!opts.confirm) return console.log("Dry run. Pass --author <email> --approver <email> --confirm to import.");
 
     const [author, approver] = await Promise.all([opts.author, opts.approver].map((email) => prisma.user.findFirst({ where: { email, isActive: true }, select: { id: true, name: true } })));
     if (!author) throw new Error("Pass --author <email> of an active account that can write documents.");
-    // Drafts only need an author; anything to publish also needs an independent approver.
-    const needsApprover = pages.some((p) => !p.page.draft);
-    if (needsApprover && (!approver || approver.id === author.id)) throw new Error("Pass --approver <email> of a different active account that can approve documents.");
+    if (!approver || approver.id === author.id) throw new Error("Pass --approver <email> of a different active account that can approve documents.");
     // Check both before touching anything, so a refusal never leaves half an import.
-    const [asAuthor, asApprover] = await Promise.all([findMember(docs, author.id), approver ? findMember(docs, approver.id) : null]);
+    const [asAuthor, asApprover] = await Promise.all([findMember(docs, author.id), findMember(docs, approver.id)]);
     if (!asAuthor || !canWrite(asAuthor)) throw new Error(`${author.name} cannot write documents in Docs.`);
-    if (needsApprover && (!asApprover || !canApprove(asApprover))) throw new Error(`${approver!.name} cannot approve documents in Docs.`);
+    if (!asApprover || !canApprove(asApprover)) throw new Error(`${approver.name} cannot approve documents in Docs.`);
     const service = new DocumentService(docs);
     let published = 0, drafted = 0;
     // A page not tagged Draft that an earlier run created but did not publish is finished now.
@@ -132,8 +121,8 @@ async function main() {
       await docs.query("UPDATE drafts SET lease_owner=null, lease_session=null, lease_until=null WHERE document_id=$1 AND lease_owner=$2 AND status='draft'", [id, author.id]);
       const session = randomUUID();
       const draft = await service.lock(author.id, id, session);
-      const submission = await service.submit(author.id, id, session, draft!.revision, approver!.id, `Imported from the Notion ${site.name} NOP & SOP register.`);
-      await service.review(approver!.id, id, submission, "approved", "");
+      const submission = await service.submit(author.id, id, session, draft!.revision, approver.id, `Imported from the Notion ${site.name} NOP & SOP register.`);
+      await service.review(approver.id, id, submission, "approved", "");
     };
     let finished = 0;
     for (const { page } of pages) {
@@ -143,7 +132,7 @@ async function main() {
     for (const { page } of fresh) {
       const content = {
         schemaVersion: 1 as const, title: page.title, reference: page.reference, type: page.type, summary: page.summary,
-        ownerId: author.id, facilityIds: site.ids, teamIds: [], reviewDate: page.reviewDate, body: page.body,
+        ownerId: author.id, facilityIds: [site.id], teamIds: [], reviewDate: page.reviewDate, body: page.body,
         riskRows: [], riskMatrix: null, relatedIds: [], attachments: [],
       };
       const id = await service.create(author.id, content);
@@ -151,7 +140,7 @@ async function main() {
       await publish(id);
       published++;
     }
-    console.log(`Imported ${published + drafted}: ${published} published${published ? ` (approved by ${approver!.name})` : ""}, ${drafted} left as drafts.${finished ? ` Finished publishing ${finished} from an earlier run.` : ""}`);
+    console.log(`Imported ${published + drafted}: ${published} published (approved by ${approver.name}), ${drafted} left as drafts.${finished ? ` Finished publishing ${finished} from an earlier run.` : ""}`);
   } finally {
     await docs.end();
   }

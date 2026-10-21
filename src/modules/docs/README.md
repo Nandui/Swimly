@@ -14,7 +14,7 @@ Docs keeps its content in its own database (`DOCS_DATABASE_URL`, migrations in `
 - `reports` — reading and review reports, on screen and as a download (`/docs/reports`, `/api/docs/reports`).
 - `admin` — categories, groups, templates and settings (`/docs/admin`).
 - `files` — attachments: upload and download (`/api/docs/files`).
-- `import` — importing pages from Notion, or Markdown kept in the repo such as the HR procedures in `docs-content/hr-procedures` (`scripts/docs-import-notion.ts`).
+- `import` — importing pages from Notion (`scripts/docs-import-notion.ts`), and the ready-made HR procedures a Docs administrator adds in one click (Administration › HR procedures, `/docs/admin?section=hr`).
 - `me` — a person's required reading for Turnfin Me, and the overdue-reading digest. Reached through `index.ts`.
 - `workspace` — the Docs frame, its menu and the access check (`src/app/docs/layout.tsx`).
 

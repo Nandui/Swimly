@@ -165,22 +165,58 @@ export async function reconcile(tx: Sql, documentId?: string) {
       );
   }
 }
+/** One page of a ready-made set: what the document says; Docs fills in the rest. */
+export type ReadyMadePage = Pick<DocumentContent, 'title' | 'reference' | 'type' | 'summary' | 'reviewDate' | 'body'>;
+async function insertDraft(tx: Sql, who: string, input: unknown) {
+  const id = randomUUID();
+  const c = await checkContent(tx, id, input);
+  await tx.query('INSERT INTO documents(id,created_by) VALUES($1,$2)', [id, who]);
+  await tx.query('INSERT INTO drafts(document_id,content,contributors) VALUES($1,$2,$3)', [
+    id,
+    JSON.stringify(c),
+    [who],
+  ]);
+  await tx.query('INSERT INTO assignment_rules(document_id) VALUES($1)', [id]);
+  await audit(tx, who, id, 'created', c.title);
+  return id;
+}
 export class DocumentService {
   constructor(public db: Database) {}
   async create(who: string, input: unknown) {
     return this.db.transaction(async (tx) => {
       author(await actor(tx, who));
-      const id = randomUUID();
-      const c = await checkContent(tx, id, input);
-      await tx.query('INSERT INTO documents(id,created_by) VALUES($1,$2)', [id, who]);
-      await tx.query('INSERT INTO drafts(document_id,content,contributors) VALUES($1,$2,$3)', [
-        id,
-        JSON.stringify(c),
-        [who],
-      ]);
-      await tx.query('INSERT INTO assignment_rules(document_id) VALUES($1)', [id]);
-      await audit(tx, who, id, 'created', c.title);
-      return id;
+      return insertDraft(tx, who, input);
+    });
+  }
+  /** Adds a ready-made set of documents (such as the HR procedures) as drafts owned by the
+   *  Docs administrator who adds them, filed under every site. A reference already in Docs is
+   *  skipped, so adding the set again only fills in what is missing. One transaction. */
+  async addReadyMade(who: string, setName: string, pages: ReadyMadePage[]) {
+    return this.db.transaction(async (tx) => {
+      admin(await actor(tx, who));
+      await syncPlatformGroups(tx);
+      const facilityIds = (
+        await rows<{ id: string }>(tx, "SELECT id FROM groups WHERE kind='facility' AND source='platform' ORDER BY name")
+      ).map((g) => g.id);
+      const present = new Set(
+        (
+          await rows<{ reference: string }>(
+            tx,
+            "SELECT lower(content->>'reference') AS reference FROM drafts UNION SELECT lower(content->>'reference') FROM snapshots",
+          )
+        ).map((r) => r.reference),
+      );
+      let added = 0;
+      for (const page of pages) {
+        if (present.has(page.reference.toLowerCase())) continue;
+        await insertDraft(tx, who, {
+          schemaVersion: 1, ...page, ownerId: who, facilityIds, teamIds: [],
+          riskRows: [], riskMatrix: null, relatedIds: [], attachments: [],
+        });
+        added++;
+      }
+      if (added) await audit(tx, who, null, 'ready_made_added', `${setName}: ${added} added as drafts`);
+      return { added, alreadyThere: pages.length - added };
     });
   }
   async startDraft(who: string, id: string, versionId?: string) {

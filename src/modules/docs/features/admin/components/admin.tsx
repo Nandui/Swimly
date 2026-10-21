@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/shadcn/checkbox';
 import { Button } from '@/components/shadcn/button';
 import { Input } from '@/components/shadcn/input';
 import { Textarea } from '@/components/shadcn/textarea';
-import { useState, useTransition } from 'react';
+import { useState, useTransition, type ReactNode } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Plus, Pencil, Save, Mail, ChevronRight, CheckCircle2, Trash2 } from 'lucide-react';
 import {
@@ -58,10 +58,13 @@ export function AdminView({
   workspace: w,
   mail,
   events,
+  hrProcedures,
 }: {
   workspace: Workspace;
   mail: MailItem[];
   events: AuditEvent[];
+  /** The HR procedures panel, from the import feature (rendered by the route). */
+  hrProcedures?: ReactNode;
 }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -72,6 +75,7 @@ export function AdminView({
     'templates',
     'matrix',
     'activity',
+    ...(hrProcedures ? ['hr'] : []),
     ...(w.localMode ? ['mail'] : []),
   ];
   const tab = sections.includes(params.get('section') || '') ? params.get('section')! : 'people';
@@ -148,6 +152,7 @@ export function AdminView({
             ['templates', 'Templates'],
             ['matrix', 'Risk matrix'],
             ['activity', 'Activity'],
+            ...(hrProcedures ? [['hr', 'HR procedures']] : []),
             ...(w.localMode ? [['mail', 'Local mailbox']] : []),
           ].map(([key, label]) => ({ href: `/docs/admin?section=${key}`, label, current: tab === key }))}
         />
@@ -571,6 +576,7 @@ export function AdminView({
               )}
             </section>
           )}
+          {tab === 'hr' && hrProcedures}
           {tab === 'mail' && (
             <section className="pc-panel" aria-labelledby="mail-heading">
               <div>
