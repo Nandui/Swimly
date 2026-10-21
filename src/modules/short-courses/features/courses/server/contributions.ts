@@ -1,10 +1,12 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
-import { parseDateOnly, today } from "@/lib/format";
+import { formatDate, parseDateOnly, toDateOnlyString, today } from "@/lib/format";
+import { sitesByIds } from "@/lib/directory";
 import { sitesFor } from "@/lib/policy/session";
 import { prisma } from "@/lib/prisma";
 import { expandPermissions } from "@/lib/staff/permissions";
-import type { AreaRename, Commitment, CommitmentQuery, HomeItem, HomeViewer } from "@/modules/contributions";
+import type { AreaRename, Commitment, CommitmentQuery, HomeItem, HomeViewer, MemberHistoryEntry } from "@/modules/contributions";
+import { SHORT_COURSE_PLACE_META } from "@/modules/short-courses/shared/rules";
 
 /** What Short courses tells other modules (docs/short-courses.md), registered in module.ts.
  *
@@ -67,4 +69,21 @@ export async function shortCourseHomeItems(viewer: HomeViewer): Promise<HomeItem
   if (freeForWaiting) items.push({ label: "Short courses with a place for the waiting list", hint: "Offer it to the first person waiting", href: "/short-courses", count: freeForWaiting, attention: true });
   if (starting) items.push({ label: "Short courses starting in the next two weeks", href: "/short-courses", count: starting });
   return items;
+}
+
+/** Member history (owner request, 21 October 2026): the short courses a swimmer has been booked
+ *  on or waited for, for their swimmer profile. Course, site, dates and where they stand only. */
+export async function shortCourseMemberHistory(swimmerId: string): Promise<MemberHistoryEntry[]> {
+  const rows = await prisma.shortCourseParticipant.findMany({
+    where: { swimmerId }, orderBy: { createdAt: "desc" }, take: 50,
+    select: { id: true, status: true, course: { select: { siteId: true, cancelledAt: true, type: { select: { name: true } },
+      sessions: { orderBy: { date: "asc" }, select: { date: true } } } } },
+  });
+  const sites = await sitesByIds(rows.map((r) => r.course.siteId));
+  return rows.map((r) => {
+    const dates = r.course.sessions.map((s) => toDateOnlyString(s.date));
+    const span = dates.length ? (dates.length > 1 ? `${formatDate(r.course.sessions[0].date)} to ${formatDate(r.course.sessions[dates.length - 1].date)}` : formatDate(r.course.sessions[0].date)) : "No sessions";
+    const place = r.course.cancelledAt ? "course cancelled" : (SHORT_COURSE_PLACE_META[r.status as keyof typeof SHORT_COURSE_PLACE_META]?.label ?? r.status).toLowerCase();
+    return { id: `sc-${r.id}`, title: `${r.course.type.name} at ${sites.get(r.course.siteId)?.name ?? "a closed site"}`, detail: `${span} · ${place}`, on: dates[0] ?? "", module: "Short courses" };
+  });
 }

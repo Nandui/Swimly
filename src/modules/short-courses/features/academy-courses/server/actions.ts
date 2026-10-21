@@ -11,6 +11,8 @@ import { qualificationTypeById, recordQualification, revokeQualification, update
 import { placeProblem } from "@/lib/setup/data";
 import { ACADEMY_OUTCOMES, ACADEMY_PAYMENTS, centsOf, expiryFrom, takesPlace } from "@/modules/short-courses/shared/academy-rules";
 import { atSite, clockOf, courseFor, iso, optionalDate, refresh } from "@/modules/short-courses/shared/academy-server";
+import { chose, copiedFrom, keepBooked, resolveSwimmer, swimmerChoiceSchema, type SwimmerChoiceInput } from "@/modules/short-courses/shared/swimmers";
+import { members } from "@/modules/contributions";
 
 /** Academy writes (docs/academy.md). The course list is the organisation's (Manage); a course
  *  and everything on it is checked against its site: Manage puts courses and sessions on,
@@ -133,6 +135,7 @@ export async function removeSession(id: string): Promise<ActionResult> {
 
 const candidateSchema = z.object({
   userId: z.string().default(""),
+  /** Typed only when the swimmer records are switched off, or for a candidate added before them. */
   name: z.string().trim().max(120).default(""),
   email: z.string().trim().max(200).refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), "Check the email address.").default(""),
   phone: z.string().trim().max(40).default(""),
@@ -140,11 +143,15 @@ const candidateSchema = z.object({
   payment: z.enum(ACADEMY_PAYMENTS as [string, ...string[]]).default("owed"),
   paid: z.string().trim().default(""),
   note: z.string().trim().max(500).default(""),
+  /** A member of the public on the swimmer records (owner request, 21 October 2026). */
+  swimmer: swimmerChoiceSchema.default({ swimmerId: "", newSwimmer: null }),
 });
 export type CandidateInput = z.input<typeof candidateSchema>;
 
 /** Put someone on a course, one of our staff or a member of the public, with the payment taken
- *  elsewhere; or change their details. Places are the course's capacity. */
+ *  elsewhere; or change their details. Since 21 October 2026 a member of the public is someone on
+ *  the swimmer records, picked or added there first, and their name and contacts come from it
+ *  (with the swim school switched off, typed as before). Places are the course's capacity. */
 export async function saveCandidate(courseId: string, id: string | null, input: CandidateInput): Promise<ActionResult> {
   const at = await courseFor(courseId, "academy.run");
   if (!at.ok) return fail(at.error);
@@ -152,30 +159,78 @@ export async function saveCandidate(courseId: string, id: string | null, input: 
   const parsed = candidateSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const d = parsed.data;
-  const person = d.userId ? await staffContact(d.userId, at.site.orgId) : null;
-  if (d.userId && !person) return fail("That staff member is no longer here.");
-  const name = person?.name ?? d.name;
-  if (name.length < 2) return fail("Give the candidate's name.");
+  const before = id ? await prisma.academyCandidate.findFirst({ where: { id, courseId }, select: { id: true, userId: true, swimmerId: true, name: true, email: true, phone: true, dateOfBirth: true, source: true } }) : null;
+  if (id && !before) return fail("That candidate is no longer on the course.");
+  const userId = d.userId;
+  const person = userId ? await staffContact(userId, at.site.orgId) : null;
+  if (userId && !person) return fail("That staff member is no longer here.");
   const paidCents = centsOf(d.paid || "0");
   if (paidCents === null) return fail("Give the amount paid like 150 or 150.00.");
-  const before = id ? await prisma.academyCandidate.findFirst({ where: { id, courseId }, select: { id: true } }) : null;
-  if (id && !before) return fail("That candidate is no longer on the course.");
+  const directory = person ? null : await members();
+  const swimmerId = before?.swimmerId || d.swimmer.swimmerId;
+  const linking = Boolean(directory) && (!id || Boolean(swimmerId) || chose(d.swimmer));
+  if (linking && !id && !chose(d.swimmer)) return fail("Find the candidate on the swimmer records, or add them as a new swimmer.");
   if (!id) {
-    const taken = (await prisma.academyCandidate.findMany({ where: { courseId }, select: { status: true, userId: true } }));
+    const taken = (await prisma.academyCandidate.findMany({ where: { courseId }, select: { status: true, userId: true, swimmerId: true } }));
     if (taken.filter((c) => takesPlace(c.status)).length >= at.course.capacity) return fail("The course is full. Add a place on the course first.");
     if (person && taken.some((c) => c.userId === person.id && takesPlace(c.status))) return fail(`${person.name} is already on this course.`);
   }
-  const data = {
-    userId: person?.id ?? null, name, email: d.email || person?.email || "", phone: d.phone,
-    dateOfBirth: d.dateOfBirth ? parseDateOnly(d.dateOfBirth) : person?.dateOfBirth ?? null,
-    payment: d.payment, paidCents, note: d.note,
-  };
+  if (linking && !before?.swimmerId && d.swimmer.swimmerId
+    && await prisma.academyCandidate.findFirst({ where: { courseId, swimmerId: d.swimmer.swimmerId, status: { not: "withdrawn" }, ...(id ? { id: { not: id } } : {}) }, select: { id: true } })) {
+    return fail("They are already on this course.");
+  }
+  let who: { swimmerId: string | null; name: string; email: string; phone: string; dateOfBirth: Date | null };
+  let added = false;
+  const kept = before && { swimmerId: before.swimmerId, name: before.name, email: before.email, phone: before.phone, dateOfBirth: before.dateOfBirth };
+  if (person) {
+    who = { swimmerId: null, name: person.name, email: d.email || person.email || "", phone: d.phone, dateOfBirth: d.dateOfBirth ? parseDateOnly(d.dateOfBirth) : person.dateOfBirth ?? null };
+  } else if (linking) {
+    const found = await resolveSwimmer(swimmerId ? { swimmerId, newSwimmer: null } : d.swimmer, { siteId: at.site.id, by: at.actor, via: "the Academy" });
+    // A record that has gone keeps the details copied when it was linked.
+    if (!found.ok && !(kept?.swimmerId && swimmerId === kept.swimmerId)) return fail(found.error);
+    added = found.ok && found.added;
+    const copy = found.ok ? keepBooked(copiedFrom(found.swimmer), before) : kept!;
+    who = { ...copy, dateOfBirth: copy.dateOfBirth ?? (d.dateOfBirth ? parseDateOnly(d.dateOfBirth) : before?.dateOfBirth ?? null) };
+  } else if (kept?.swimmerId) {
+    who = kept;
+  } else {
+    who = { swimmerId: null, name: d.name, email: d.email, phone: d.phone, dateOfBirth: d.dateOfBirth ? parseDateOnly(d.dateOfBirth) : null };
+  }
+  if (who.name.length < 2) return fail("Give the candidate's name.");
+  const data = { userId: person?.id ?? null, ...who, payment: d.payment, paidCents, note: d.note };
+  const linked = who.swimmerId && !before?.swimmerId ? (added ? ", added to the swimmer records" : ", from the swimmer records") : "";
   await prisma.$transaction(async (tx) => {
     const row = id ? await tx.academyCandidate.update({ where: { id }, data }) : await tx.academyCandidate.create({ data: { ...data, courseId, createdById: at.actor.id, createdByName: at.actor.name } });
     await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: id ? "update" : "create", entity: "AcademyCandidate", entityId: row.id, clubId: at.site.id,
-      summary: `${id ? "Changed" : "Put"} ${name}${person ? " (staff)" : ""} ${id ? "on" : "on"} the ${at.course.type.name} course: payment ${d.payment}` }, tx);
+      summary: `${id ? "Changed" : "Put"} ${who.name}${person ? " (staff)" : ""} on the ${at.course.type.name} course${linked}: payment ${d.payment}` }, tx);
   });
   refresh(courseId);
+  return ok();
+}
+
+/** Link a member of the public added before the swimmer records, or who held a place online, to
+ *  their swimmer record, picked or added there. Anyone with Academy access at the course's site,
+ *  as for logging the call that confirms a place held online. */
+export async function linkCandidate(id: string, input: SwimmerChoiceInput): Promise<ActionResult> {
+  const c = await prisma.academyCandidate.findFirst({ where: { id }, select: { courseId: true, name: true, userId: true, swimmerId: true, dateOfBirth: true, source: true, email: true, phone: true } });
+  if (!c) return fail("That candidate is no longer on the course.");
+  const at = await courseFor(c.courseId, "academy.read");
+  if (!at.ok) return fail(at.error);
+  if (c.userId) return fail(`${c.name} is one of our staff; their record is their staff record.`);
+  const parsed = swimmerChoiceSchema.safeParse(input);
+  if (!parsed.success || !chose(parsed.data)) return fail("Find the candidate on the swimmer records, or add them as a new swimmer.");
+  if (parsed.data.swimmerId && await prisma.academyCandidate.findFirst({ where: { courseId: c.courseId, swimmerId: parsed.data.swimmerId, status: { not: "withdrawn" }, id: { not: id } }, select: { id: true } })) {
+    return fail("That swimmer is already on this course.");
+  }
+  const found = await resolveSwimmer(parsed.data, { siteId: at.site.id, by: at.actor, via: "the Academy" });
+  if (!found.ok) return fail(found.error);
+  const copy = keepBooked(copiedFrom(found.swimmer), c);
+  await prisma.$transaction(async (tx) => {
+    await tx.academyCandidate.update({ where: { id }, data: { ...copy, dateOfBirth: copy.dateOfBirth ?? c.dateOfBirth } });
+    await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "update", entity: "AcademyCandidate", entityId: id, clubId: at.site.id,
+      summary: `Linked ${c.name} on the ${at.course.type.name} course to the swimmer record of ${copy.name}${found.added ? " (added)" : ""}${c.swimmerId ? ", in place of another" : ""}` }, tx);
+  });
+  refresh(c.courseId);
   return ok();
 }
 

@@ -309,12 +309,21 @@ async function seedShortCourses(db: PrismaClient) {
   const running = await db.shortCourse.create({ data: { orgId: ORG, siteId: "club_churchfield", typeId: c25k.id, capacity: 6, priceCents: 9000, instructorId: "sbx_liam", ...by } });
   const sessions = [];
   for (let week = 0; week < 8; week++) sessions.push(await db.shortCourseSession.create({ data: { courseId: running.id, date: day(-14 + week * 7), startMinutes: 1110, endMinutes: 1170, place: "Gym" } }));
+  // Booked from the swimmer records (owner request, 21 October 2026): invented adults with member
+  // numbers, one with medical notes; Eli was booked before the records and is not linked yet.
+  const adult = async (name: string, n: number, medicalNotes: string | null = null) => {
+    const [firstName, lastName] = name.split(" ");
+    const s = await db.student.create({ data: { clubId: "club_churchfield", memberNumber: `SBX-90${String(n).padStart(2, "0")}`, firstName, lastName, dateOfBirth: new Date(`19${80 + n}-0${(n % 9) + 1}-1${n % 9}T00:00:00Z`),
+      contactName: name, contactPhone: "000 000 0000", contactEmail: `${firstName.toLowerCase()}@example.invalid`, emergencyName: "Pat Sample", emergencyPhone: "000 111 1111", emergencyRelationship: "Partner", medicalNotes } });
+    return { swimmerId: s.id, email: s.contactEmail ?? "", dateOfBirth: s.dateOfBirth };
+  };
   const people = [];
-  for (const [name, payment, paidCents, form] of [["Alex Sample", "paid", 9000, true], ["Bea Sample", "paid", 9000, true], ["Cal Sample", "deposit", 3000, true], ["Dee Sample", "paid", 9000, false], ["Eli Sample", "waived", 0, true]] as const) {
-    people.push(await db.shortCourseParticipant.create({ data: { courseId: running.id, name, phone: "000 000 0000", payment, paidCents, healthFormOn: form ? day(-15) : null, ...by } }));
+  for (const [i, [name, payment, paidCents, form]] of ([["Alex Sample", "paid", 9000, true], ["Bea Sample", "paid", 9000, true], ["Cal Sample", "deposit", 3000, true], ["Dee Sample", "paid", 9000, false], ["Eli Sample", "waived", 0, true]] as const).entries()) {
+    const record = name === "Eli Sample" ? {} : await adult(name, i + 1, name === "Bea Sample" ? "Invented: mild asthma, inhaler in her bag." : null);
+    people.push(await db.shortCourseParticipant.create({ data: { courseId: running.id, name, phone: "000 000 0000", payment, paidCents, healthFormOn: form ? day(-15) : null, ...record, ...by } }));
   }
   for (const [i, name] of ["Fin Sample", "Gus Sample"].entries()) {
-    await db.shortCourseParticipant.create({ data: { courseId: running.id, name, phone: "000 000 0000", status: "waiting", createdAt: new Date(Date.now() - (3 - i) * 86_400_000), ...by } });
+    await db.shortCourseParticipant.create({ data: { courseId: running.id, name, phone: "000 000 0000", status: "waiting", createdAt: new Date(Date.now() - (3 - i) * 86_400_000), ...await adult(name, i + 6), ...by } });
   }
   for (const session of sessions.slice(0, 2)) {
     await db.shortCourseAttendance.createMany({ data: people.map((p, i) => ({ sessionId: session.id, participantId: p.id, present: i !== 3 })) });

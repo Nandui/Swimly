@@ -17,7 +17,7 @@ permissions and rules are unchanged; old `/academy` links redirect.
 | Course on the list | `AcademyCourseType` | A course we deliver: "National Pool Lifeguard Qualification". Kind (lifeguard, swim teacher, other), awarding body, minimum age, hours to attend, the pre-course checks it asks for (`ACADEMY_CHECKS`: age, swim test, medical form, photo ID), and the qualification a staff member gets when they pass. Archived, never deleted. |
 | Course | `AcademyCourse` | One run of it at a site: places, price, tutor, assessor (or the tutor). Planned, then **running** once its first session comes (worked out), then completed or cancelled. |
 | Session | `AcademySession` | A dated session in one of the site's areas (Admin, Areas). Keeps who took its register. |
-| Candidate | `AcademyCandidate` | One of our staff (`userId`) or a member of the public by name, with email, phone and date of birth; payment (paid, deposit, owed, no charge) and the amount paid; the day each check was done; the result (passed, referred, not yet competent, or withdrawn) with the certificate number and expiry. |
+| Candidate | `AcademyCandidate` | One of our staff (`userId`) or a member of the public on the swimmer records (`swimmerId`, since 21 October 2026; older candidates by name until linked), with email, phone and date of birth; payment (paid, deposit, owed, no charge) and the amount paid; the day each check was done; the result (passed, referred, not yet competent, or withdrawn) with the certificate number and expiry. |
 | Attendance | `AcademyAttendance` | The minutes a candidate was at a session (0 when absent). |
 | Call | `AcademyCall` | A phone call to someone who held a place online: paid (amount and till receipt), no answer, asked us to call back, or not going ahead; who called and when. |
 | Email check | `AcademyEmailCheck` | The booking site's email code, then a one-hour token. Only hashes are kept. |
@@ -39,6 +39,20 @@ A role's old Academy level still counts as a Short courses level, and the higher
 (`formerly` in the manifest, owner choice "Higher of the two"), until the role is next saved.
 
 Every write checks the course's site (`mayFor`) and is audited under "Short courses" (older rows say "Academy").
+
+## Candidates from the swimmer records
+
+Owner request, 21 October 2026, the same as short courses (docs/short-courses.md, "Booking people
+on"): a member of the public is found on the swimmer records or added there with **Add them as a
+new swimmer**, and their name, contacts and date of birth come from the record. Staff stay staff.
+The candidate's row shows the member number and **Medical notes** when any are on file, the
+register shows the member number, and the candidate's dialog shows the record. Older candidates
+are tagged **No swimmer record** with **Link to swimmer**.
+
+A place held online is matched when it is confirmed: logging a call as **Paid** asks the desk to
+find the person on the swimmer records or add them (prefilled from the booking), unless they are
+linked already. The place keeps the email and phone it was booked with. With the swim school
+switched off, candidates are typed by name as before.
 
 ## A pass puts the qualification on the staff record
 
@@ -157,7 +171,11 @@ next two weeks at their sites.
 - Online booking: `src/modules/short-courses/features/booking/server/` (`http.ts`, `api.ts`, `email.ts`, `router.ts`, `academy.ts`, `courses.ts`), the shape in `shared/public-booking.ts`,
   `src/app/api/academy/v1/[[...path]]/route.ts`, and the site in `apps/academy`. The site follows
   Work's UI rules (CLAUDE.md, section 14) with its own shadcn components and exact copies of Work's
-  theme files; `npm run lint` in `apps/academy` checks them
+  theme files; `npm run lint` in `apps/academy` checks them. It looks like the parents app
+  (LeisureWorld Aquatics; owner request, 21 October 2026): `theme/leisureworld.css` holds the
+  parents app's LeisureWorld colours, copied from it, and re-points Poolside's tokens; Manrope, the
+  navy header, ticket-style course and booking cards and the light and dark switch match it. When
+  the parents app's palette changes, copy it into that file
 - Tests: `rules.test.ts`, `academy.test.ts`, `booking.test.ts` (the booking API and the call
   list end to end), and the booked-session case in `src/modules/rota/shared/day.test.ts`
 - Sandbox: an NPLQ course at Hillview started yesterday. Sam tutors and Liam assesses.

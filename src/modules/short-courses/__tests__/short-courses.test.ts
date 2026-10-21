@@ -12,6 +12,7 @@ let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let actions: typeof import("../features/courses/server/actions") & typeof import("../features/course-types/server/actions");
 let data: typeof import("../features/courses/server/data");
 let contributions: typeof import("@/modules/contributions");
+let directory: import("@/modules/contributions").MemberDirectory;
 const ORG = "org_leisureworld";
 type GrantRow = { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string };
 const state = { id: "nora", permissions: [] as string[], grants: [] as GrantRow[] };
@@ -52,8 +53,10 @@ before(async () => {
   };
   contributions = serverModule<typeof import("@/modules/contributions")>("src/modules/contributions.ts", { ...d, "@/modules/server": {} });
   serverModule("src/modules/short-courses/module.ts", { ...d, "@/modules/contributions": contributions });
-  actions = { ...serverModule<object>("src/modules/short-courses/features/course-types/server/actions.ts", d), ...serverModule<object>("src/modules/short-courses/features/courses/server/actions.ts", d) } as typeof actions;
-  data = serverModule("src/modules/short-courses/features/courses/server/data.ts", d);
+  const withSeam = { ...d, "@/modules/contributions": contributions };
+  actions = { ...serverModule<object>("src/modules/short-courses/features/course-types/server/actions.ts", d), ...serverModule<object>("src/modules/short-courses/features/courses/server/actions.ts", withSeam) } as typeof actions;
+  data = serverModule("src/modules/short-courses/features/courses/server/data.ts", withSeam);
+  directory = serverModule<typeof import("@/modules/activities/features/students/server/members")>("src/modules/activities/features/students/server/members.ts", d).memberDirectory;
 });
 after(async () => { await fixture?.close(); });
 
@@ -124,6 +127,44 @@ test("Instructor takes the register on the day; View cannot", async () => {
   assert.equal(view.booked.find((p) => p.name === "Sam Example")!.attended, 1);
   assert.equal(view.booked.find((p) => p.name === "Lee Example")!.attended, 0, "marked absent, not missing");
   assert.equal(await fixture.prisma.shortCourseAttendance.count({ where: { sessionId: session.id } }), 2);
+});
+
+test("with the swim school on, a booking is someone on the swimmer records, picked or added there", async () => {
+  contributions.registerMemberDirectory(directory);
+  as("nora", ["short-courses.manage"]);
+  assert.equal((await actions.saveCourseType(null, { name: "Synthetic Adult swim", area: "pool", weeks: 6, sessionMinutes: 45 })).ok, true);
+  const type = await fixture.prisma.shortCourseType.findFirstOrThrow({ where: { name: "Synthetic Adult swim" } });
+  const made = await actions.saveCourse(null, { siteId: bishopstown, typeId: type.id, capacity: 3, price: "60", instructorId: "ray", firstDay: first, weeks: 6, start: "19:00", end: "19:45", place: "Gym floor" });
+  const id = made.id!;
+  const known = await fixture.prisma.student.create({ data: { clubId: bishopstown, memberNumber: "SYN-1001", firstName: "Robin", lastName: "Example", contactPhone: "000 1111", contactEmail: "robin@example.invalid", medicalNotes: "Synthetic: carries an inhaler" } });
+  const ada = { firstName: "Ada", lastName: "Example", dateOfBirth: "1990-05-01", memberNumber: "", contactName: "", contactEmail: "", contactPhone: "000 2222", emergencyName: "", emergencyPhone: "", emergencyRelationship: "", medicalNotes: "" };
+  as("desk", [], [at(bishopstown, ["short-courses.read"])]);
+  assert.equal((await actions.saveParticipant(id, null, { name: "Typed Example" })).ok, false, "a typed name is not enough any more");
+  assert.equal((await actions.saveParticipant(id, null, { swimmer: { swimmerId: known.id }, payment: "paid" })).ok, true);
+  assert.equal((await actions.saveParticipant(id, null, { swimmer: { swimmerId: known.id } })).ok, false, "not twice on one course");
+  assert.equal((await actions.saveParticipant(id, null, { swimmer: { newSwimmer: ada } })).ok, true);
+  assert.equal((await actions.saveParticipant(id, null, { swimmer: { newSwimmer: ada } })).ok, false, "the same person is not added to the records twice");
+  const added = await fixture.prisma.student.findFirstOrThrow({ where: { firstName: "Ada", lastName: "Example" } });
+  assert.equal(added.clubId, bishopstown, "added at the course's site");
+  assert.match((await fixture.prisma.auditLog.findFirstOrThrow({ where: { entity: "Student", entityId: added.id } })).summary, /from Short courses/);
+  const robin = await fixture.prisma.shortCourseParticipant.findFirstOrThrow({ where: { courseId: id, swimmerId: known.id } });
+  assert.deepEqual([robin.name, robin.phone, robin.email, robin.paidCents], ["Robin Example", "000 1111", "robin@example.invalid", 6000], "details come from the record");
+  // A booking made before the records is linked afterwards.
+  const old = await fixture.prisma.shortCourseParticipant.create({ data: { courseId: id, name: "Old Example", createdByName: "desk" } });
+  const oldStudent = await fixture.prisma.student.create({ data: { clubId: churchfield, firstName: "Olive", lastName: "Example", memberNumber: "SYN-1002" } });
+  assert.deepEqual((await directory.search("SYN-1002")).map((h) => h.id), [oldStudent.id], "found by member number");
+  assert.deepEqual((await directory.search("olive")).map((h) => h.id), [oldStudent.id], "and by name");
+  assert.equal((await actions.linkParticipant(old.id, { swimmerId: oldStudent.id })).ok, true);
+  assert.equal((await fixture.prisma.shortCourseParticipant.findUniqueOrThrow({ where: { id: old.id } })).name, "Olive Example");
+  const view = await data.shortCourse(id);
+  const shown = view.booked.find((p) => p.swimmerId === known.id)!;
+  assert.equal(view.swimmerRecords, true);
+  assert.equal(shown.swimmer?.memberNumber, "SYN-1001");
+  assert.equal(shown.swimmer?.medicalNotes, "Synthetic: carries an inhaler", "the desk working the course reads the medical notes");
+  const history = await contributions.memberHistoryFor(known.id);
+  assert.deepEqual(history.map((h) => [h.module, h.title]), [["Short courses", "Synthetic Adult swim at " + view.course.site.name]], "the swimmer profile lists the course");
+  as("nora", [], [at(bishopstown, ["short-courses.manage"])]);
+  assert.equal((await actions.setCourseStatus(id, "cancelled")).ok, true);
 });
 
 test("a cancelled course leaves the Rota and takes no bookings", async () => {

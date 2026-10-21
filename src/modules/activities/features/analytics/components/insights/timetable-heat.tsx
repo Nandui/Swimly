@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { widthOf } from "@/components/ui-kit/scale";
 import * as React from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { formatTime, plural } from "@/lib/format";
 import { DAY_META } from "@/modules/activities/shared/courses/constants";
+import { PlacesRow } from "@/modules/activities/features/analytics/components/insights/blocks";
 import type { BusinessInsights } from "@/modules/activities/features/analytics/server/insights-data";
 
 type Day = keyof typeof DAY_META;
@@ -81,7 +81,6 @@ export function TimetableHeat({ capacity, classHrefs, legend }: { capacity: Capa
 
 /** One slot opened: each level in it with places filled, free and waiting, and the classes behind it. */
 function SlotDetail({ id, title, cell, classHrefs, onClose }: { id: string; title: string; cell: Cell; classHrefs: Record<string, string>; onClose: () => void }) {
-  const max = Math.max(1, ...cell.levels.map(l => Math.max(l.capacity, l.enrolled) + l.waiting));
   const programmes = [...new Set(cell.levels.map(l => l.programmeName))];
   return <section id={id} className="ins-slot" aria-label={`${title}: programmes and levels`}>
     <div className="ins-slot-head">
@@ -96,23 +95,13 @@ function SlotDetail({ id, title, cell, classHrefs, onClose }: { id: string; titl
       <ul className="ins-levels">
         {cell.levels.filter(l => l.programmeName === programme).map(l => {
           const free = Math.max(0, l.capacity - l.enrolled);
-          const filled = l.capacity ? Math.min(l.enrolled, l.capacity) : l.enrolled;
-          return <li key={l.levelId}>
-            <span className="ins-levels-name">
-              <strong>{l.name}</strong>
-              <span className="ins-slot-classes">{l.classes.map(c => {
-                const text = `${formatTime(c.startMinutes)} ${c.name}`;
-                const href = classHrefs[c.id];
-                return <span key={c.id}>{href ? <Link href={href}>{text}</Link> : text}</span>;
-              })}</span>
-            </span>
-            <span className="ins-levels-bar" aria-hidden="true">
-              {filled ? <span data-part="filled" className={widthOf(filled / max)} /> : null}
-              {free ? <span data-part="free" className={widthOf(free / max)} /> : null}
-              {l.waiting ? <span data-part="waiting" className={widthOf(l.waiting / max)} /> : null}
-            </span>
-            <span className="ins-levels-text">{l.enrolled}{l.capacity ? ` of ${l.capacity}` : ""} filled{l.capacity ? `, ${free} free` : ""}{l.waiting ? <>, <strong>{l.waiting} waiting</strong></> : null}<span className="ins-muted"> · {percent(l.fill)} full</span></span>
-          </li>;
+          return <PlacesRow key={l.levelId} name={l.name} full={l.fill} waiting={l.waiting}
+            detail={<span className="ins-slot-classes">{l.classes.map(c => {
+              const text = `${formatTime(c.startMinutes)} ${c.name}`;
+              const href = classHrefs[c.id];
+              return <span key={c.id}>{href ? <Link href={href}>{text}</Link> : text}</span>;
+            })}</span>}
+            facts={<>{l.enrolled}{l.capacity ? ` of ${l.capacity}` : ""} filled{l.capacity ? `, ${free} free` : ""}</>} />;
         })}
       </ul>
     </div>)}

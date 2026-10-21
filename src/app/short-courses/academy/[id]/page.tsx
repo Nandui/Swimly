@@ -9,7 +9,7 @@ import { Tag } from "@/components/ui-kit/tag";
 import { CallDialog } from "@/modules/short-courses/features/academy-calls";
 import {
   academyCourse, ACADEMY_CALL_DUE_META, ACADEMY_COURSE_META, ACADEMY_KIND_META, ACADEMY_PAYMENT_META, ACADEMY_RESULT_META, callDue, CandidateDialog, ChecksDialog,
-  CourseDialog, CourseStatusButton, euro, hoursLabel, newCourseOptions, RegisterDialog, ResultDialog, SessionDialog, WithdrawButton,
+  CourseDialog, CourseStatusButton, euro, hoursLabel, LinkCandidateButton, newCourseOptions, RegisterDialog, ResultDialog, SessionDialog, SWIMMER_RECORD_META, WithdrawButton,
   type AcademyKind, type AcademyPayment, type AcademyResult,
 } from "@/modules/short-courses/features/academy-courses";
 import { formatDate, formatDateTime, plural } from "@/lib/format";
@@ -24,7 +24,7 @@ const clock = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${S
  *  it on and changes its sessions. */
 export default async function AcademyCoursePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { course, candidates, canRun, canManage, areas, staff, today } = await academyCourse(id);
+  const { course, candidates, canRun, canManage, areas, staff, today, swimmerRecords, canOpenSwimmers } = await academyCourse(id);
   const options = canManage ? await newCourseOptions() : null;
   const kind = ACADEMY_KIND_META[course.type.kind as AcademyKind] ?? ACADEMY_KIND_META.other;
   const open = course.state !== "cancelled" && course.state !== "completed";
@@ -83,7 +83,7 @@ export default async function AcademyCoursePage({ params }: { params: Promise<{ 
                   </span>
                   <span className="pc-row-trail">
                     {canRun && open && s.date <= today ? <RegisterDialog session={{ id: s.id, label: `${day(s.date)}`, length: s.endMinutes - s.startMinutes, marks, taken: !!s.registerAt }}
-                      candidates={active.map((c) => ({ id: c.id, name: c.name }))} /> : null}
+                      candidates={active.map((c) => ({ id: c.id, name: c.name, memberNumber: c.swimmer?.memberNumber, medical: c.swimmer?.hasMedicalNotes }))} /> : null}
                     {canManage && open ? <SessionDialog courseId={course.id} areas={areas} session={{ id: s.id, date: s.date, startMinutes: s.startMinutes, endMinutes: s.endMinutes, place: s.place, note: s.note }}
                       trigger={<Button variant="outline" size="icon" aria-label={`Change the session on ${day(s.date)}`}><Pencil aria-hidden="true" /></Button>} /> : null}
                   </span>
@@ -98,7 +98,7 @@ export default async function AcademyCoursePage({ params }: { params: Promise<{ 
         <div className="pc-panel-head">
           <div className="flex flex-col gap-1"><h2 id="ac-candidates">Candidates · {course.taken} of {course.capacity}</h2>
             <p className="pc-row-hint">Staff and members of the public. Payment is taken elsewhere and recorded here.</p></div>
-          {canRun && open && course.taken < course.capacity ? <CandidateDialog courseId={course.id} staff={staff} priceCents={course.priceCents} /> : null}
+          {canRun && open && course.taken < course.capacity ? <CandidateDialog courseId={course.id} staff={staff} priceCents={course.priceCents} swimmerRecords={swimmerRecords} canOpenSwimmers={canOpenSwimmers} /> : null}
         </div>
         {candidates.length === 0 ? <EmptyState compact icon="users" title="Nobody on the course yet" hint={canRun ? "Add each candidate with their payment." : undefined} /> : (
           <ul className="pc-rows">
@@ -113,6 +113,7 @@ export default async function AcademyCoursePage({ params }: { params: Promise<{ 
                   <span className="pc-row-body">
                     <span className="pc-row-title">{c.name}{c.userId ? <span className="ml-2 text-xs font-normal text-ui-muted-foreground">Staff</span> : null}</span>
                     <span className="pc-row-hint">{[
+                      c.swimmer?.memberNumber ? `Member ${c.swimmer.memberNumber}` : null,
                       c.source === "online" ? `held online${c.reference ? ` ${c.reference}` : ""}, ${c.phone}` : null,
                       r.checks.length ? `checks ${checksDone} of ${r.checks.length}${missing.length ? ` (${missing.map((m) => m.detail === "Not done" ? m.label.toLowerCase() : m.detail.toLowerCase()).join(", ")})` : ""}` : null,
                       `${hoursLabel(c.attended)} attended${course.type.minHours ? ` of ${course.type.minHours}h` : ""}`,
@@ -123,16 +124,20 @@ export default async function AcademyCoursePage({ params }: { params: Promise<{ 
                   </span>
                   <span className="pc-row-trail flex-wrap">
                     {due ? <Tag meta={ACADEMY_CALL_DUE_META[due.due]} label={due.due === "overdue" ? due.label : `Call by ${due.label}`} /> : null}
+                    {c.swimmer?.hasMedicalNotes ? <Tag meta={SWIMMER_RECORD_META.medical} /> : null}
+                    {swimmerRecords && !c.userId && !c.swimmerId ? <Tag meta={SWIMMER_RECORD_META.unlinked} /> : null}
                     <Tag meta={ACADEMY_PAYMENT_META[c.payment as AcademyPayment] ?? ACADEMY_PAYMENT_META.owed} />
-                    {toCall ? <CallDialog primary={due?.due === "overdue"} course={`${course.type.name} at ${course.site.name}`} priceCents={course.priceCents}
+                    {toCall ? <CallDialog swimmerRecords={swimmerRecords} primary={due?.due === "overdue"} course={`${course.type.name} at ${course.site.name}`} priceCents={course.priceCents}
                       person={{ id: c.id, name: c.name, phone: c.phone, phone2: c.phone2, callTimes: c.callTimes, reference: c.reference, heldAt: formatDateTime(c.createdAt),
+                        linked: Boolean(c.swimmerId || c.userId), email: c.email, dateOfBirth: c.dateOfBirth,
                         calls: c.calls.map((x) => ({ outcome: x.outcome, byName: x.byName, at: formatDateTime(x.createdAt), note: x.note })) }} /> : null}
                     <Tag meta={ACADEMY_RESULT_META[c.status as AcademyResult] ?? ACADEMY_RESULT_META.booked} />
                     {c.status === "booked" && r.ready ? <span className="text-xs text-ui-muted-foreground">Ready for assessment</span> : null}
                     {canRun && open ? <>
                       {c.status !== "withdrawn" && r.checks.length ? <ChecksDialog candidate={c} asks={course.type.checks} /> : null}
                       {c.status !== "withdrawn" && course.first && course.first <= today ? <ResultDialog candidate={{ ...c, isStaff: !!c.userId }} today={today} grants={grants} /> : null}
-                      <CandidateDialog courseId={course.id} staff={staff} priceCents={course.priceCents} candidate={c}
+                      {swimmerRecords && !c.userId && !c.swimmerId && !toCall ? <LinkCandidateButton id={c.id} name={c.name} email={c.email} phone={c.phone} dateOfBirth={c.dateOfBirth} /> : null}
+                      <CandidateDialog courseId={course.id} staff={staff} priceCents={course.priceCents} candidate={c} swimmerRecords={swimmerRecords} canOpenSwimmers={canOpenSwimmers}
                         trigger={<Button variant="outline" size="icon" aria-label={`Change ${c.name}`}><Pencil aria-hidden="true" /></Button>} />
                       {c.status === "booked" || c.status === "withdrawn" ? <WithdrawButton id={c.id} name={c.name} withdrawn={c.status === "withdrawn"} /> : null}
                     </> : null}

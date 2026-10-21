@@ -1,15 +1,19 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, CalendarDays, LifeBuoy, MapPin, PhoneCall, Ticket, Users, type LucideIcon } from "lucide-react";
+import { ArrowRight, BadgeCheck, CalendarDays, LifeBuoy, MapPin, Users, type LucideIcon } from "lucide-react";
 import { api, message, type Course } from "@/lib/api";
 import { placesMeta, rhythm, span } from "@/lib/format";
 import { Button } from "@/components/shadcn/button";
-import { Frame, Loading, Notice, Tag } from "@/components/ui";
+import { Card } from "@/components/shadcn/card";
+import { DateBlock } from "@/components/date-block";
+import { EmptyState, Frame, Loading, Notice, Tag } from "@/components/ui";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
 import { SegmentedChoice } from "@/components/ui-kit/segmented-links";
+import pool from "../../public/images/pool-water.webp";
 
 /** What a course is about, as an icon, by kind of qualification. */
 const ICONS: Record<string, LucideIcon> = { lifeguard: LifeBuoy, "swim-teacher": Users };
@@ -40,16 +44,21 @@ export default function CoursesPage() {
 
   return (
     <Frame title="Courses" wide>
-      <PageShell spacing="roomy" className="academy-home" header={<PageHeader title="Book a course at LeisureWorld"
-        description="Lifeguard and swim teacher qualifications at our centres."
-        actions={<Button asChild variant="outline"><a href="#courses">See the courses<ArrowRight aria-hidden="true" /></a></Button>} />}>
+      <PageShell spacing="roomy" className="academy-home" header={<PageHeader title={<><span>Learn to keep swimmers safe.</span> <span>Book your course online.</span></>}
+        description="Lifeguard and swim teacher qualifications at LeisureWorld centres. Hold a place in a few minutes and we phone you to take payment."
+        actions={<Button asChild><a href="#courses">See the courses<ArrowRight aria-hidden="true" /></a></Button>} />}>
+      <figure className="hero-photo">
+        <Image src={pool} alt="" priority />
+        <figcaption><LifeBuoy aria-hidden="true" /><span>Skills for life.<br /><strong>Qualifications that count.</strong></span></figcaption>
+      </figure>
+
       <ol className="how" aria-label="How booking works">
-        <li><span className="how-icon" aria-hidden="true"><Ticket /></span><span><strong>Hold your place online</strong><span className="text-ui-muted-foreground">Pick a course and check your email with a code. No account to set up.</span></span></li>
-        <li><span className="how-icon" aria-hidden="true"><PhoneCall /></span><span><strong>We phone you within 72 hours</strong><span className="text-ui-muted-foreground">We take payment over the phone, at the time you choose.</span></span></li>
-        <li><span className="how-icon" aria-hidden="true"><BadgeCheck /></span><span><strong>You&apos;re booked</strong><span className="text-ui-muted-foreground">See your courses, dates and payments any time under My bookings.</span></span></li>
+        <li><span className="step-number" aria-hidden="true">1</span><span><strong>Hold your place online</strong><span>Pick a course and check your email with a code. No account to set up.</span></span></li>
+        <li><span className="step-number" aria-hidden="true">2</span><span><strong>We phone you within 72 hours</strong><span>We take payment over the phone, at the time you choose.</span></span></li>
+        <li><span className="step-number" aria-hidden="true">3</span><span><strong>You&apos;re booked</strong><span>See your courses, dates and payments any time under My bookings.</span></span></li>
       </ol>
 
-      <section id="courses" className="flex flex-col gap-4" aria-labelledby="courses-h">
+      <section id="courses" className="flex flex-col gap-6" aria-labelledby="courses-h">
         <div className="section-head">
           <h2 id="courses-h">Open for booking</h2>
           {courses && courses.length ? <p className="text-ui-muted-foreground">{shown.length === all.length ? `${all.length} ${all.length === 1 ? "course" : "courses"}, soonest first.` : `${shown.length} of ${all.length} courses.`}</p> : null}
@@ -67,30 +76,33 @@ export default function CoursesPage() {
           </div>
         ) : null}
         {error ? <Notice title="Couldn't load the courses" tone="error">{error}</Notice> : null}
-        {!courses && !error ? <Loading rows={3} grid /> : null}
-        {courses && all.length === 0 ? <Notice title="No courses open for booking right now">New dates are added here as soon as they are set. Check back soon.</Notice> : null}
-        {courses && all.length > 0 && shown.length === 0 ? <Notice title="Nothing matches">Try another kind of course or centre.</Notice> : null}
+        {!courses && !error ? <Loading rows={4} grid /> : null}
+        {courses && all.length === 0 ? <EmptyState title="No courses open for booking right now">New dates are added here as soon as they are set. Check back soon.</EmptyState> : null}
+        {courses && all.length > 0 && shown.length === 0 ? <EmptyState title="Nothing matches" action={<Button type="button" variant="outline" onClick={() => { setFilter(""); setSite(""); }}>Show every course</Button>}>Try another kind of course or centre.</EmptyState> : null}
         <ul className="course-grid">
           {shown.map((c) => {
             const Icon = iconOf(c);
             return (
               <li key={c.id}>
-                <Link href={`/courses/${c.id}`} className="course-card">
-                  <span className="course-top">
-                    <span className="course-icon" aria-hidden="true"><Icon /></span>
-                    <span className="caption">{c.group === "qualification" ? `${c.categoryLabel} qualification` : c.categoryLabel}</span>
-                  </span>
-                  <span className="title">{c.name}</span>
-                  {c.description ? <span className="text-ui-muted-foreground line-clamp-2">{c.description}</span> : c.awardingBody ? <span className="text-ui-muted-foreground">Awarded by {c.awardingBody}</span> : null}
-                  <span className="course-facts">
-                    <span><CalendarDays aria-hidden="true" /><span>{span(c.firstDay, c.lastDay)}<br /><span className="text-ui-muted-foreground">{rhythm(c)}</span></span></span>
-                    <span><MapPin aria-hidden="true" />{c.site}</span>
-                  </span>
-                  <span className="course-foot">
-                    <span className="price">{c.price}</span>
-                    <Tag meta={placesMeta(c)} />
-                  </span>
-                </Link>
+                <Card asChild className="course-card">
+                  <Link href={`/courses/${c.id}`}>
+                    <DateBlock date={c.firstDay} />
+                    <span className="course-body">
+                      <span className="course-kind"><Icon aria-hidden="true" />{c.group === "qualification" ? `${c.categoryLabel} qualification` : c.categoryLabel}</span>
+                      <span className="title">{c.name}</span>
+                      {c.description ? <span className="text-ui-muted-foreground line-clamp-2">{c.description}</span> : c.awardingBody ? <span className="text-ui-muted-foreground">Awarded by {c.awardingBody}</span> : null}
+                      <span className="course-facts">
+                        <span><CalendarDays aria-hidden="true" /><span>{span(c.firstDay, c.lastDay)}<br /><span className="text-ui-muted-foreground">{rhythm(c)}</span></span></span>
+                        <span><MapPin aria-hidden="true" />{c.site}</span>
+                      </span>
+                    </span>
+                    <span className="course-foot">
+                      <span className="price">{c.price}</span>
+                      <Tag meta={placesMeta(c)} />
+                      <span className="route-action">See the course<ArrowRight aria-hidden="true" /></span>
+                    </span>
+                  </Link>
+                </Card>
               </li>
             );
           })}

@@ -27,7 +27,7 @@ Each module is a self-contained package under `src/modules/<id>`: its `manifest.
 | refunds | Moves a refund request from reception to finance. Features: `queue`, `request`, `workspace` ([README](../../src/modules/refunds/README.md)). | `refunds.prisma` | home cards |
 | coinage | Moves a till's request for coins from the desk to accounts. Features: `queue`, `request`, `workspace` ([README](../../src/modules/coinage/README.md), [ADR 0014](decisions/0014-add-coinage-module.md)). | `coinage.prisma` | home cards |
 | purchasing | Raises and approves purchase orders. Features: `orders`, `suppliers`, `workspace` ([README](../../src/modules/purchasing/README.md)). | `purchasing.prisma` | home cards |
-| short-courses | Runs the courses the public book a place on: six and eight week courses and the Academy's lifeguard and swim teacher courses. Features: `courses`, `course-types`, `academy-courses`, `academy-types`, `academy-calls`, `booking`, `workspace` ([README](../../src/modules/short-courses/README.md), [ADR 0009](decisions/0009-add-short-courses-module.md), [ADR 0011](decisions/0011-merge-academy-into-short-courses.md)). | `short-courses.prisma`, `short-courses.academy.prisma` | home cards; Rota commitments; the public booking site's API |
+| short-courses | Runs the courses the public book a place on: six and eight week courses and the Academy's lifeguard and swim teacher courses. Features: `courses`, `course-types`, `academy-courses`, `academy-types`, `academy-calls`, `booking`, `workspace` ([README](../../src/modules/short-courses/README.md), [ADR 0009](decisions/0009-add-short-courses-module.md), [ADR 0011](decisions/0011-merge-academy-into-short-courses.md)). | `short-courses.prisma`, `short-courses.academy.prisma` | home cards; Rota commitments; the public booking site's API; books people from the swimmer records through the member directory and reports member history ([ADR 0014](decisions/0014-short-courses-book-from-swimmer-records.md)) |
 | stock | Counts the stock on the shelf at each site and compares counts. Features: `counts`, `products`, `compare`, `workspace` ([README](../../src/modules/stock/README.md), [ADR 0010](decisions/0010-add-stock-module.md)). | `stock.prisma` | home cards |
 | cctv | Records every time CCTV footage is checked (Managers group). Features: `viewings`, `workspace` ([README](../../src/modules/cctv/README.md), [ADR 0012](decisions/0012-add-cctv-log-module.md)). | `cctv.prisma` | home cards |
 | tasks | Runs each site's daily checks and logs. Features: `day`, `follow-ups`, `templates`, `sites`, `reports`, `schedule`, `workspace` ([README](../../src/modules/tasks/README.md)). | `tasks.prisma` | home cards; emits `tasks.reading.out_of_range` |
@@ -59,6 +59,9 @@ flowchart TB
   Modules --> ui["UI kit (src/components/shadcn, ui, ui-kit)"]
   activities -.->|class commitments| core
   shortcourses -.->|course sessions| core
+  activities -.->|member directory| core
+  core -.->|swimmer records| shortcourses
+  shortcourses -.->|member history| core
   core -.->|commitments| rota
   training -.->|person file, subject records| core
   rota -.->|person file| core
@@ -71,4 +74,4 @@ flowchart TB
   me -->|index.ts| rota
 ```
 
-No module imports another; the boundary lint makes it an error. Solid arrows are direct calls through a module's `index.ts` (or Core's notifier). Dashed arrows are registrations: a module registers a home card, commitments, a person-file section or subject records in `src/modules/contributions.ts` from its `module.ts`, and another module or Core screen reads whatever is registered. Every module also registers a home card. The one event so far, Tasks' `tasks.reading.out_of_range`, raises Site Monitoring's actions ([events.md](events.md)).
+No module imports another; the boundary lint makes it an error. Solid arrows are direct calls through a module's `index.ts` (or Core's notifier). Dashed arrows are registrations: a module registers a home card, commitments, a person-file section, subject records, the member directory or member history in `src/modules/contributions.ts` from its `module.ts`, and another module or Core screen reads whatever is registered. Every module also registers a home card. The one event so far, Tasks' `tasks.reading.out_of_range`, raises Site Monitoring's actions ([events.md](events.md)).

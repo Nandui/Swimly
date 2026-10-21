@@ -8,7 +8,7 @@ import { readSharedCurriculum, sharedCourse } from "@/modules/activities/shared/
  *  becomes a POST endpoint. Callers authenticate and lock first (withCourseSeat). */
 
 export const COURSE_SELECT = {
-  id: true, clubId: true, name: true, dayOfWeek: true, startMinutes: true,
+  id: true, clubId: true, name: true, dayOfWeek: true, startMinutes: true, durationMinutes: true,
   capacity: true, archivedAt: true, levelId: true,
   level: { select: { id: true, name: true, archivedAt: true, programmeId: true, programme: { select: { archivedAt: true } } } },
 } as const satisfies Prisma.CourseSelect;

@@ -4,12 +4,41 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.54.0 · 21 October 2026 · Rota: areas ask for a role, not a certificate
+## 1.58.0 · 21 October 2026 · Rota: areas ask for a role, not a certificate
 
 - On the rota **Plan**, an area's own staff now show by the role it needs, such as **Lifeguard on duty** in the main pool, instead of the name of the certificate.
 - The certificate still decides who can fill the place, and still shows in small print, so anyone without it gets the same warning as before.
 - In **Admin, Areas**, each line in **Staff needed** now has a **Role** (from Admin, Positions) and **Who can fill it**. Choosing a role fills in the qualification it needs; change it only if that area needs something else. Areas you set up before already show the role that needs their certificate, so nothing needs entering again. Open them once to check the role is right.
 - Lines that ask for people on an activity, such as **at least 1 on Serving customers**, stay as they are and show next to the roles.
+
+## 1.56.1 · 21 October 2026 · Places at each level show how full each level is
+
+- In **Analytics**, **Places at each level** now gives every level a bar the same length, so you can compare them at a glance. The blue part is how much of that level is filled and the grey part is what is free.
+- Each level shows how full it is as a percentage at the end of its row. Anyone waiting is shown beside the figures with an orange dot.
+- When you open a slot in **When classes are full**, its levels use the same bars and percentages.
+## 1.56.0 · 21 October 2026 · A clear check before every move and enrolment
+
+- Whenever you move or enrol a swimmer, Turnfin now shows one clear picture of what is about to happen before anything changes: the swimmer's name in large type, the class they leave (it ends today) and the class they join (it starts today), each with its day, time, level and centre.
+- When the move takes a swimmer from one centre to another, a **Transfer between centres** banner shows both centres in large type, so a change of centre cannot be missed.
+- The confirm button waits five seconds before you can press it ("Confirm move in 5", then "Confirm move"). If you go back and change something, the wait starts again. **Cancel** and **Back** always work straight away.
+- This covers enrolling from a class page, from a swimmer's profile and from **Awaiting enrolment**, enrolling from a waitlist, moving a swimmer to another class (including from **Awaiting moves**), and **Move them here** on **Together**.
+- The check also lists anything worth knowing: a level change, a level they haven't finished yet, a child assessed at another centre, and the Legend agreement.
+
+## 1.55.0 · 21 October 2026 · Short courses book people from the swimmer records
+
+- **Book someone on** (short courses) and **Add a candidate** (Academy courses) now start with **Find the swimmer**. Search by name, member number, date of birth or a parent's name, and pick the right person. Their member number, contacts, emergency contact and medical notes come with them.
+- If they are not on the swimmer records yet, choose **Add them as a new swimmer**, fill in their details, and they are added and booked on in one go. Turnfin tells you if someone with the same name and date of birth is already there, so nobody is added twice. Adults on gym and lifeguard courses get a swimmer record too; staff on Academy courses stay as staff.
+- Each person on a course shows their **member number**, and a red **Medical notes** tag when there are any. Open the pencil to read their full record, with **Open their profile** if you can see Swimmers. Change their details on the swimmer record, and every course they are on follows.
+- The register shows each person's member number too.
+- People booked before today show **No swimmer record** and a **Link to swimmer** button, so you can match them up when you have a moment. Nothing else about them changes.
+- When you log a call as **Paid** for an Academy place held online, Turnfin asks you to find them on the swimmer records or add them first. Their details from the booking are filled in for you.
+- A swimmer's profile now lists the short courses and Academy courses they have been on, under **Details**, in **Other courses**.
+## 1.54.0 · 21 October 2026 · The Academy booking site looks like the parents app
+
+- The Academy booking site, where people book lifeguard and swim teacher courses, now looks like the LeisureWorld Aquatics parents app: the same navy bar with the LeisureWorld logo, the same font, blue headings and orange dates, and the same cards.
+- Courses are shown as cards with the start date on the left, two side by side on a computer. My bookings shows each booking the same way.
+- There is a light and dark switch at the top right, as on the parents app.
+- Nothing about booking has changed: people still hold a place with a code sent to their email, and you still phone them within 72 hours to take payment.
 
 ## 1.53.0 · 21 October 2026 · Areas need people on an activity, and sub-activities at several times
 

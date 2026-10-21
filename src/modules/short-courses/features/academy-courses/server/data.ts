@@ -13,6 +13,8 @@ import { courseState, readiness, takesPlace } from "@/modules/short-courses/shar
  *  covers; a course outside them is a 404. The course list belongs to the organisation. */
 
 import { inSites, iso } from "@/modules/short-courses/shared/reads";
+import { swimmersFor, swimmerView } from "@/modules/short-courses/shared/swimmers";
+import { canSee, requireSession } from "@/lib/authz";
 
 const COURSE_ROW = {
   id: true, status: true, capacity: true, priceCents: true, cancelledAt: true, siteId: true, tutorId: true,
@@ -92,7 +94,7 @@ export async function academyCourse(id: string) {
       sessions: { orderBy: [{ date: "asc" }, { startMinutes: "asc" }], select: { id: true, date: true, startMinutes: true, endMinutes: true, place: true, note: true, registerAt: true, registerBy: true,
         attendance: { select: { candidateId: true, minutes: true } } } },
       candidates: { orderBy: [{ status: "asc" }, { name: "asc" }], select: {
-        id: true, userId: true, name: true, email: true, phone: true, dateOfBirth: true, payment: true, paidCents: true, status: true,
+        id: true, userId: true, swimmerId: true, name: true, email: true, phone: true, dateOfBirth: true, payment: true, paidCents: true, status: true,
         swimTestOn: true, medicalOn: true, idCheckedOn: true, checkedByName: true, resultOn: true, resultNote: true, certificateNumber: true, certificateExpires: true,
         qualificationId: true, note: true, source: true, reference: true, phone2: true, callTimes: true, callBy: true, createdAt: true,
         calls: { orderBy: { createdAt: "desc" }, select: { outcome: true, note: true, byName: true, createdAt: true } } } },
@@ -107,15 +109,19 @@ export async function academyCourse(id: string) {
   const on = today();
   const first = course.sessions[0] ? iso(course.sessions[0].date) : null;
   const dateOf = (d: Date | null) => (d ? iso(d) : null);
+  // Members of the public's swimmer records: member number, contacts and medical notes.
+  const [swimmers, session] = await Promise.all([swimmersFor(course.candidates.map((c) => c.swimmerId), read), requireSession()]);
   const candidates = course.candidates.map((c) => {
+    const swimmer = c.swimmerId ? swimmerView(swimmers.byId.get(c.swimmerId)) : null;
     const attended = course.sessions.reduce((n, s) => n + (s.attendance.find((a) => a.candidateId === c.id)?.minutes ?? 0), 0);
-    const cand = { ...c, dateOfBirth: dateOf(c.dateOfBirth), swimTestOn: dateOf(c.swimTestOn), medicalOn: dateOf(c.medicalOn), idCheckedOn: dateOf(c.idCheckedOn),
+    const cand = { ...c, swimmer, name: swimmer?.name ?? c.name, dateOfBirth: dateOf(c.dateOfBirth), swimTestOn: dateOf(c.swimTestOn), medicalOn: dateOf(c.medicalOn), idCheckedOn: dateOf(c.idCheckedOn),
       resultOn: dateOf(c.resultOn), certificateExpires: dateOf(c.certificateExpires) };
     return { ...cand, attended, readiness: readiness(course.type, cand, first, attended) };
   });
   const [areas, staff] = await Promise.all([areaLanesAt(course.siteId), run ? staffAt(who.orgId ?? null, course.siteId) : []]);
   return {
     who, canRun: run, canManage: manage, areas, staff, today: on,
+    swimmerRecords: swimmers.available, canOpenSwimmers: canSee(session, "students"),
     course: {
       ...course, state: courseState(course, first, on), first,
       last: course.sessions.length ? iso(course.sessions[course.sessions.length - 1].date) : null,

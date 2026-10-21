@@ -8,6 +8,8 @@ import { mayFor, sitesFor } from "@/lib/policy/session";
 import { callDue } from "@/modules/short-courses/shared/public-booking";
 import { requireShortCoursesActor } from "@/modules/short-courses/shared/access";
 import { inSites, iso } from "@/modules/short-courses/shared/reads";
+import { swimmersFor, swimmerView } from "@/modules/short-courses/shared/swimmers";
+import { canSee, requireSession } from "@/lib/authz";
 import { courseState, SHORT_COURSE_CALL_TIMES, stillOwed, takesPlace, toPhone, waitingOrder } from "@/modules/short-courses/shared/rules";
 
 /** The reads (docs/short-courses.md). Courses are limited to the sites `short-courses.read`
@@ -108,7 +110,7 @@ export async function shortCourse(id: string) {
       sessions: { orderBy: [{ date: "asc" }, { startMinutes: "asc" }], select: { id: true, date: true, startMinutes: true, endMinutes: true, place: true, note: true, registerAt: true, registerBy: true,
         attendance: { select: { participantId: true, present: true } } } },
       participants: { orderBy: [{ createdAt: "asc" }], select: {
-        id: true, name: true, email: true, phone: true, dateOfBirth: true, status: true, payment: true, paidCents: true, healthFormOn: true, note: true, createdAt: true,
+        id: true, swimmerId: true, name: true, email: true, phone: true, dateOfBirth: true, status: true, payment: true, paidCents: true, healthFormOn: true, note: true, createdAt: true,
         source: true, reference: true, phone2: true, callTimes: true, callBy: true } },
     },
   });
@@ -120,16 +122,20 @@ export async function shortCourse(id: string) {
   const on = today();
   const first = course.sessions[0] ? iso(course.sessions[0].date) : null;
   const held = course.sessions.filter((s) => iso(s.date) <= on).length;
-  const person = (p: (typeof course.participants)[number]) => ({
-    ...p, dateOfBirth: p.dateOfBirth ? iso(p.dateOfBirth) : null, healthFormOn: p.healthFormOn ? iso(p.healthFormOn) : null,
+  // Their swimmer records: member number, contacts and medical notes, for everyone working the course.
+  const [swimmers, session] = await Promise.all([swimmersFor(course.participants.map((p) => p.swimmerId), read), requireSession()]);
+  const person = (p: (typeof course.participants)[number], swimmer = p.swimmerId ? swimmerView(swimmers.byId.get(p.swimmerId)) : null) => ({
+    ...p, swimmer, name: swimmer?.name ?? p.name, dateOfBirth: p.dateOfBirth ? iso(p.dateOfBirth) : null, healthFormOn: p.healthFormOn ? iso(p.healthFormOn) : null,
     attended: course.sessions.filter((s) => s.attendance.some((a) => a.participantId === p.id && a.present)).length,
     owed: stillOwed(course.priceCents, p),
     online: onlineOf(p),
   });
   const [areas, staff] = await Promise.all([areaLanesAt(course.siteId), manage ? activeStaffAtSite(who.orgId ?? null, course.siteId) : []]);
-  const booked = course.participants.filter((p) => takesPlace(p.status)).map(person);
+  const booked = course.participants.filter((p) => takesPlace(p.status)).map((p) => person(p));
   return {
     who, canRun: run, canManage: manage, areas, staff, today: on,
+    /** The swim school is on: bookings are made from its swimmer records. */
+    swimmerRecords: swimmers.available, canOpenSwimmers: canSee(session, "students"),
     course: {
       ...course, state: courseState(course, first, on), first, held,
       last: course.sessions.length ? iso(course.sessions[course.sessions.length - 1].date) : null,
@@ -137,8 +143,8 @@ export async function shortCourse(id: string) {
       sessions: course.sessions.map((s) => ({ ...s, date: iso(s.date) })),
     },
     booked,
-    waiting: waitingOrder(course.participants).map(person),
-    withdrawn: course.participants.filter((p) => p.status === "withdrawn").map(person),
+    waiting: waitingOrder(course.participants).map((p) => person(p)),
+    withdrawn: course.participants.filter((p) => p.status === "withdrawn").map((p) => person(p)),
   };
 }
 export type ShortCourseView = Awaited<ReturnType<typeof shortCourse>>;

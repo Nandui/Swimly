@@ -119,7 +119,7 @@ export function BusinessReport({ data }: { data: BusinessInsights }) {
         <MiniList label="Classes under half full" empty="Every class is at least half full." rows={o.attention.quiet.map(c => ({ key: c.id, title: c.name, hint: formatSlotShort(c), value: `${c.enrolled} of ${c.capacity}`, href: data.canOpenClasses ? reportHref(data, `/analytics/classes/${c.id}`) : undefined }))} />
       </Panel>
       <Panel id="levels" span={7} title="Places at each level" sub="Where swimmers wait and where places sit empty.">
-        <LevelPlaces rows={data.capacity.levels.map(l => ({ key: l.levelId, name: l.name, group: l.programmeName, filled: Math.max(0, l.capacity - l.empty), free: l.empty, waiting: l.waiting, classes: l.classes }))} />
+        <LevelPlaces rows={data.capacity.levels.map(l => ({ key: l.levelId, name: l.name, group: l.programmeName, filled: Math.max(0, l.capacity - l.empty), free: l.empty, full: l.fill, waiting: l.waiting, classes: l.classes }))} />
       </Panel>
       <Panel id="reasons" span={5} title="Who left" sub={o.left.current ? `${plural(o.left.current, "swimmer")} left in this period.` : "Nobody left in this period."} action={<PanelLink href={`${swimmersHref}#leavers`}>Every leaver</PanelLink>}>
         <PillSwitch label="Show leavers by" options={[{ key: "reason", label: "Reason" }, { key: "level", label: "Level" }]} panels={leftBy} />

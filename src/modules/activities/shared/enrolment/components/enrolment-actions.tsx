@@ -189,7 +189,7 @@ export function EnrolIntoCourse({
       }
       title={`Enrol into ${courseLabel(course)}`}
       description={`${course.level.name} · ${formatSlotShort(course)} · ${capacityLabel(taken, course.capacity)}`}
-      submitLabel="Enrol"
+      submitLabel="Review enrolment"
       successMessage="Swimmer enrolled"
       submit={(formData, confirmation) =>
         enrolStudent(readEnrol(formData), confirmation)
@@ -229,7 +229,7 @@ export function EnrolInCourseForStudent({
         </Button>
       }
       title={`Enrol ${fullName(student)}`}
-      submitLabel="Enrol"
+      submitLabel="Review enrolment"
       successMessage="Enrolled"
       submit={(formData, confirmation) =>
         enrolStudent(readEnrol(formData), confirmation)
@@ -386,8 +386,8 @@ export function PromoteFromWaitlist({
     </Button>}
     title={`Enrol ${fullName(enrolment.student)} from the waitlist`}
     description={`Their place in ${classLabel ?? "this class"} becomes active if a seat is available.`}
-    submitLabel="Enrol from waitlist" successMessage={`Enrolled in ${classLabel ?? "the class"}`}
-    submit={data => promoteFromWaitlist(enrolment.id, readLegendAgreement(data))}>
+    submitLabel="Review enrolment" successMessage={`Enrolled in ${classLabel ?? "the class"}`}
+    submit={(data, confirmation) => promoteFromWaitlist(enrolment.id, readLegendAgreement(data), confirmation)}>
     <LegendAgreementField />
   </FormDialog>;
 }
@@ -413,7 +413,7 @@ export function TransferEnrolment({
       }
       title={`Move ${fullName(enrolment.student)} to another class`}
       description={`${classLabel ? `From ${classLabel}. ` : ""}The old place closes and a new one opens, so their attendance so far stays intact.`}
-      submitLabel="Move"
+      submitLabel="Review move"
       successMessage="Swimmer moved"
       submit={(formData, confirmation) =>
         transferEnrolment(
