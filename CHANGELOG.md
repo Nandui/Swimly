@@ -4,12 +4,18 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.60.0 · 21 October 2026 · HR procedures in Docs
+## 1.61.0 · 21 October 2026 · HR procedures in Docs
 
 - Ten HR procedures are ready to add to **Docs**, each short and step by step: reporting an absence, sickness on the day, keeping in touch and the return-to-work talk, repeated absence, long-term sickness, lateness and not turning up, annual leave, force majeure and other leave, and keeping absence records private. A starting page lists them all.
 - Each one says who does what, by when, and where it goes in Turnfin, such as **Report an absence** and **Return to work** in Rota.
 - To add them, open **Docs**, **Administration**, **HR procedures** and choose **Add the HR procedures**. They arrive as your drafts, for every site. Clicking again never adds a second copy.
 - Where one says **Set by LeisureWorld** (a phone number, a time, a number of days), fill it in from the staff handbook, then send it for approval as usual. Once approved, everyone with Docs can read it.
+## 1.60.0 · 21 October 2026 · Pictures for suppliers in Purchasing
+
+- Each supplier in **Purchasing** can now have a picture, such as its logo or a photo. Open the supplier from **Suppliers** and choose **Add a picture**. On a phone you can take a photo or pick one you already have.
+- The picture shows on the supplier's tile in **Suppliers**, at the top of its page, next to the supplier you pick on a **New order**, and at the top of each order.
+- Choose **Change picture** to replace it, or **Remove picture** to take it off. A supplier without a picture shows its initials, as before.
+- Only people who manage Purchasing can add, change or remove a picture. Everyone who uses Purchasing sees it.
 
 ## 1.59.1 · 21 October 2026 · Rota: take someone off from their block on the Plan
 
