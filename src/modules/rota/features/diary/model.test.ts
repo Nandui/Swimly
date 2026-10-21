@@ -148,3 +148,41 @@ test("sub-activities on someone's line read in order, at the start, any time, at
   const line = d.people.find((p) => p.userId === "aoife")!.lines.find((l) => l.title === "Aqua-fit")!;
   assert.deepEqual(line.subs.map((x) => [x.name, x.at]), [["Open the cash till", h("10:30")], ["Answer the phone", null], ["Cash drop", h("11:00")], ["Close the cash till", h("11:30")]]);
 });
+
+test("a sub-activity at several set times reads once for each", () => {
+  const d = buildDiary({ ...base, assignments: [{ ...base.assignments[0], start: h("10:00"), end: h("17:00"), subs: [{ name: "Cash drop", when: "at", at: h("12:00"), times: [h("12:00"), h("16:00")] }] }] });
+  const line = d.people.find((p) => p.userId === "aoife")!.lines.find((l) => l.title === "Aqua-fit")!;
+  assert.deepEqual(line.subs.map((x) => [x.name, x.at]), [["Cash drop", h("12:00")], ["Cash drop", h("16:00")]]);
+});
+
+test("an area's activity line counts only people on that activity there, and says when nobody is", () => {
+  // Owner, 21 October 2026: Reception needs at least one person on Serving customers 09:00–17:00,
+  // and two from 12:00 to 14:00. Ciara is on it in Till 1 (part of Reception) 09:00–12:00; Liam is
+  // in Reception on another activity, which does not count.
+  const LINE = `area:rec:act-serve:${DATE}`;
+  const d = buildDiary({ ...base, departmentId: "front",
+    areas: [
+      { id: "rec", name: "Reception", openFrom: h("08:00"), openUntil: h("20:00"), departmentId: "front",
+        minimums: [{ count: 1, typeId: null, typeName: null, activityTypeId: "serve", activityName: "Serving customers", from: h("09:00"), until: h("17:00") },
+          { count: 2, typeId: null, typeName: null, activityTypeId: "serve", activityName: "Serving customers", from: h("12:00"), until: h("14:00") }] },
+      { id: "till1", name: "Till 1", parentName: "Reception", departmentId: "front" },
+    ],
+    types: [...base.types, { id: "serve", name: "Serving customers", departmentId: "front", requiredTypeId: null, requiredName: null, fromClasses: false }],
+    needs: [
+      { id: "n-serve", typeId: "serve", place: "Till 1", start: h("09:00"), end: h("17:00"), places: 0, note: "", bookingTitle: null },
+      { id: "n-desk", typeId: "desk", place: "Reception", start: h("09:00"), end: h("17:00"), places: 0, note: "", bookingTitle: null },
+    ],
+    assignments: [
+      { id: "a-ciara", needId: "n-serve", place: 1, userId: "ciara", start: h("09:00"), end: h("12:00") },
+      { id: "a-liam", needId: "n-desk", place: 1, userId: "liam", start: h("09:00"), end: h("17:00") },
+    ],
+    areaAssignments: [], breaks: [], shifts: [], classes: [] });
+  const line = d.needs.find((n) => n.key === LINE)!;
+  assert.deepEqual([line.kind, line.title, line.area, line.typeId], ["area", "Serving customers", "Reception", "serve"]);
+  assert.deepEqual(d.holes.filter((x) => x.needKey === LINE).map((x) => [x.start, x.end, x.short, x.why]), [
+    [h("12:00"), h("14:00"), 2, "Needs 2 on it, nobody yet"], [h("14:00"), h("17:00"), 1, "Nobody on it yet"]]);
+  // Who's where at 10:00 reads Ciara under Reception's line, and not again under the record holding her.
+  const at10 = whoIsWhere(d, h("10:00"));
+  assert.deepEqual(at10.find((w) => w.need.key === LINE)!.names, ["Ciara Walsh"]);
+  assert.equal(at10.some((w) => w.need.key === "n-serve"), false);
+});

@@ -439,7 +439,7 @@ async function areaNeedFor(needId: string) {
 /** "Pool Lifeguard on duty, Main pool" for a stored row, even once the area has changed. */
 async function areaWhat(row: { areaId: string; qualificationTypeId: string | null }) {
   const area = await areaById(row.areaId);
-  const typeName = area?.minimums.find((m) => m.typeId === row.qualificationTypeId)?.typeName ?? null;
+  const typeName = area?.minimums.find((m) => !m.activityTypeId && m.typeId === row.qualificationTypeId)?.typeName ?? null;
   return `${areaNeedName(row.qualificationTypeId ? typeName ?? "Qualified" : null)}${area ? `, ${area.name}` : ""}`;
 }
 

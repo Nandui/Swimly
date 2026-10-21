@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ArchiveRestore, ArrowDown, ArrowUp, CirclePause, Pencil, Plus, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
-import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
+import { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from "@/components/shadcn/native-select";
 import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { moveArea, saveArea, saveAreaStaffing, setAreaArchived } from "@/lib/setup/actions";
@@ -88,15 +88,21 @@ export function MoveArea({ id, name, first, last }: { id: string; name: string; 
   );
 }
 
-type Minimum = { count: number; typeId: string | null; typeName: string | null };
+type Minimum = { count: number; typeId: string | null; typeName: string | null; activityTypeId?: string | null; from?: number | null; until?: number | null };
+/** An activity an area's line can ask people to be on, with its department for grouping. */
+type ActivityChoice = { id: string; name: string; departmentName: string };
 
 /** The staff an area needs while it is open (owner requests, 16 October 2026: "the 25 meter pool
  *  has a time to be open, and during that time it will need a specific amount of staff with
  *  specific qualifications"): one line per type of staff, a qualification they hold or anyone,
- *  every day's hours and any weekday's own. Each line is a need on the rota Plan to put staff on. */
-export function AreaStaffing({ area, qualifications, others }: {
+ *  every day's hours and any weekday's own. Each line is a need on the rota Plan to put staff on.
+ *  A line can instead ask for people on an activity there (owner, 21 October 2026: Reception needs
+ *  at least one person on Serving customers), whenever it is open or between its own times. */
+export function AreaStaffing({ area, qualifications, activities, others }: {
   area: { id: string; name: string; minimums: Minimum[]; openFrom: number | null; openUntil: number | null; weekHours: WeekHour[]; together: AreaTogether[] };
   qualifications: { id: string; name: string }[];
+  /** The organisation's open activities, for lines that ask for people on one. */
+  activities: ActivityChoice[];
   /** The site's other open areas, to be covered from. */
   others: { id: string; name: string }[];
 }) {
@@ -105,14 +111,19 @@ export function AreaStaffing({ area, qualifications, others }: {
     <FormDialog
       trigger={<Button variant="outline" size="icon" aria-label={`Staff needed in ${area.name}`}><Users aria-hidden="true" /></Button>}
       title={`Staff needed in ${area.name}`}
-      description="While it is open it needs these staff, on top of its bookings and activities. Each type of staff shows on the rota Plan with places to put people on."
+      description="While it is open it needs these staff. A line on an activity counts only the people on that activity here or in its parts; anything short shows under Not covered yet on the rota Plan."
       width="sm:max-w-xl"
       submitLabel="Save"
       successMessage="Staff needed saved"
       submit={(formData) => {
         const keys = formData.getAll("line").map(String);
         return saveAreaStaffing(area.id, {
-          lines: keys.map((k) => ({ count: Number(formData.get(`count-${k}`) ?? 0), typeId: String(formData.get(`type-${k}`) ?? "") })),
+          lines: keys.map((k) => {
+            const what = String(formData.get(`type-${k}`) ?? "");
+            return what.startsWith("act:")
+              ? { count: Number(formData.get(`count-${k}`) ?? 0), typeId: "", activityTypeId: what.slice(4), from: String(formData.get(`from-${k}`) ?? ""), until: String(formData.get(`until-${k}`) ?? "") }
+              : { count: Number(formData.get(`count-${k}`) ?? 0), typeId: what };
+          }),
           together: formData.getAll("with").map(String).map((k) => ({ withAreaId: String(formData.get(`with-area-${k}`) ?? ""), count: Number(formData.get(`with-count-${k}`) ?? 0),
             typeId: String(formData.get(`with-type-${k}`) ?? "") })),
           openFrom: String(formData.get("openFrom") ?? ""), openUntil: String(formData.get("openUntil") ?? ""),
@@ -124,7 +135,7 @@ export function AreaStaffing({ area, qualifications, others }: {
         });
       }}
     >
-      <StaffingLines id={`staffing-${area.id}`} start={start} qualifications={qualifications} />
+      <StaffingLines id={`staffing-${area.id}`} start={start} qualifications={qualifications} activities={activities} />
       <fieldset className="flex flex-col gap-2">
         <legend className="text-sm font-medium">Open every day</legend>
         <div className="grid grid-cols-2 gap-4">
@@ -170,35 +181,67 @@ function WeekHours({ id, start }: { id: string; start: WeekHour[] }) {
   );
 }
 
-/** The lines of what an area needs: how many, and which type of staff. Remove every line for none. */
-function StaffingLines({ id, start, qualifications }: { id: string; start: Minimum[]; qualifications: { id: string; name: string }[] }) {
-  const [lines, setLines] = useState(() => start.map((m, i) => ({ key: String(i), ...m })));
+/** A line's choice: `act:<activity>`, a qualification's id, or "" for anyone. */
+const whatOf = (m: Minimum) => (m.activityTypeId ? `act:${m.activityTypeId}` : m.typeId ?? "");
+
+/** The lines of what an area needs: how many, and which type of staff or which activity they are
+ *  on (with its own times, or whenever it is open). Remove every line for none. */
+function StaffingLines({ id, start, qualifications, activities }: { id: string; start: Minimum[]; qualifications: { id: string; name: string }[]; activities: ActivityChoice[] }) {
+  const [lines, setLines] = useState(() => start.map((m, i) => ({ key: String(i), ...m, what: whatOf(m) })));
   const [next, setNext] = useState(start.length);
+  const departments = [...new Set(activities.map((a) => a.departmentName))];
   return (
     <fieldset className="flex flex-col gap-3">
       <legend className="text-sm font-medium">Staff it needs</legend>
       {lines.length === 0 ? <p className="text-sm text-ui-muted-foreground">No staff needed. Save to take it off the rota, or add a line.</p> : null}
       {lines.map((l, i) => (
-        <div key={l.key} className="grid grid-cols-two-fields-action items-end gap-3">
-          <input type="hidden" name="line" value={l.key} />
-          <Field label="How many" htmlFor={`${id}-count-${l.key}`}>
-            <Input id={`${id}-count-${l.key}`} name={`count-${l.key}`} type="number" inputMode="numeric" min={1} max={30} required defaultValue={l.count} className="min-h-11" />
-          </Field>
-          <Field label="Type of staff" htmlFor={`${id}-type-${l.key}`}>
-            <NativeSelect id={`${id}-type-${l.key}`} name={`type-${l.key}`} defaultValue={l.typeId ?? ""} className="min-h-11 w-full">
-              <NativeSelectOption value="">Anyone</NativeSelectOption>
-              {qualifications.map((q) => <NativeSelectOption key={q.id} value={q.id}>Holds {q.name}</NativeSelectOption>)}
-            </NativeSelect>
-          </Field>
-          <Button type="button" variant="ghost" size="icon" className="size-11" aria-label={`Remove line ${i + 1}`} onClick={() => setLines((all) => all.filter((x) => x.key !== l.key))}>
-            <Trash2 aria-hidden="true" />
-          </Button>
+        <div key={l.key} className="flex flex-col gap-3">
+          <div className="grid grid-cols-two-fields-action items-end gap-3">
+            <input type="hidden" name="line" value={l.key} />
+            <Field label={l.what.startsWith("act:") ? "At least" : "How many"} htmlFor={`${id}-count-${l.key}`}>
+              <Input id={`${id}-count-${l.key}`} name={`count-${l.key}`} type="number" inputMode="numeric" min={1} max={30} required defaultValue={l.count} className="min-h-11" />
+            </Field>
+            <Field label="Who" htmlFor={`${id}-type-${l.key}`}>
+              <NativeSelect id={`${id}-type-${l.key}`} name={`type-${l.key}`} value={l.what} className="min-h-11 w-full"
+                onChange={(e) => setLines((all) => all.map((x) => (x.key === l.key ? { ...x, what: e.target.value } : x)))}>
+                <NativeSelectOptGroup label="On duty here">
+                  <NativeSelectOption value="">Anyone</NativeSelectOption>
+                  {qualifications.map((q) => <NativeSelectOption key={q.id} value={q.id}>Holds {q.name}</NativeSelectOption>)}
+                </NativeSelectOptGroup>
+                {departments.map((d) => (
+                  <NativeSelectOptGroup key={d} label={`On an activity: ${d}`}>
+                    {activities.filter((a) => a.departmentName === d).map((a) => <NativeSelectOption key={a.id} value={`act:${a.id}`}>On {a.name}</NativeSelectOption>)}
+                  </NativeSelectOptGroup>
+                ))}
+              </NativeSelect>
+            </Field>
+            <Button type="button" variant="ghost" size="icon" className="size-11" aria-label={`Remove line ${i + 1}`} onClick={() => setLines((all) => all.filter((x) => x.key !== l.key))}>
+              <Trash2 aria-hidden="true" />
+            </Button>
+          </div>
+          {l.what.startsWith("act:") ? (
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="From" htmlFor={`${id}-from-${l.key}`} optional hint="Leave both empty for whenever it is open.">
+                <Input id={`${id}-from-${l.key}`} name={`from-${l.key}`} type="time" step={300} defaultValue={hhmm(l.from ?? null)} className="min-h-11" />
+              </Field>
+              <Field label="Until" htmlFor={`${id}-until-${l.key}`} optional>
+                <Input id={`${id}-until-${l.key}`} name={`until-${l.key}`} type="time" step={300} defaultValue={hhmm(l.until ?? null)} className="min-h-11" />
+              </Field>
+            </div>
+          ) : null}
         </div>
       ))}
-      {lines.length < 8 ? (
-        <Button type="button" variant="outline" className="self-start" onClick={() => { setLines((all) => [...all, { key: String(next), count: 1, typeId: null, typeName: null }]); setNext((n) => n + 1); }}>
-          <Plus aria-hidden="true" />Add a type of staff
-        </Button>
+      {lines.length < 12 ? (
+        <div className="flex flex-wrap gap-3">
+          <Button type="button" variant="outline" onClick={() => { setLines((all) => [...all, { key: String(next), count: 1, typeId: null, typeName: null, what: "" }]); setNext((n) => n + 1); }}>
+            <Plus aria-hidden="true" />Add a type of staff
+          </Button>
+          {activities.length ? (
+            <Button type="button" variant="outline" onClick={() => { setLines((all) => [...all, { key: String(next), count: 1, typeId: null, typeName: null, activityTypeId: activities[0].id, what: `act:${activities[0].id}` }]); setNext((n) => n + 1); }}>
+              <Plus aria-hidden="true" />Add people on an activity
+            </Button>
+          ) : null}
+        </div>
       ) : null}
     </fieldset>
   );

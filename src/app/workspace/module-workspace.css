@@ -416,5 +416,7 @@
 .turnfin-module .diary-subs-list > li { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 8px; }
 .turnfin-module .diary-subs-list > li > span { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
 .turnfin-module .diary-sub-choices { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
-.turnfin-module .diary-sub-choice { display: grid; grid-template-columns: minmax(0, 1fr) 140px; align-items: end; gap: 12px; }
+.turnfin-module .diary-sub-choice { display: grid; grid-template-columns: minmax(0, 1fr); align-items: end; gap: 8px; }
 .turnfin-module .diary-sub-check { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.turnfin-module .diary-sub-times { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }
+.turnfin-module .diary-sub-time { display: flex; align-items: end; gap: 4px; width: 184px; }

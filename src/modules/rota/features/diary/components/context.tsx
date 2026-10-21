@@ -26,7 +26,7 @@ export type DiaryData = {
   types: readonly { id: string; name: string }[];
   areas: readonly { name: string; parentName: string | null }[];
   /** Each activity's sub-activities (Admin, Activities), by activity. */
-  subActivities: Record<string, readonly { id: string; name: string; when: string; at: number | null; usual: boolean }[]>;
+  subActivities: Record<string, readonly { id: string; name: string; when: string; at: number | null; times: readonly number[]; usual: boolean }[]>;
 };
 
 export type DiaryState = DiaryData & {
