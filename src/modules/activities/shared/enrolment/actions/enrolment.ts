@@ -1,6 +1,6 @@
 "use server";
 
-import { isArchivedSite, sitesByIds } from "@/lib/directory";
+import { isArchivedSite } from "@/lib/directory";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
@@ -10,10 +10,10 @@ import { requirePermission } from "@/lib/authz";
 import { capacityLabel, courseLabelWithSite as courseLabel } from "@/modules/activities/shared/courses/constants";
 import { withCourseSeat } from "@/modules/activities/shared/enrolment/seat";
 import { parseDateOnly, today } from "@/lib/format";
-import { hasEarnedPlace, previousLevel } from "@/modules/activities/shared/progression/rules";
 import { fullName } from "@/modules/activities/shared/students/constants";
 import { readSharedCurriculum, sharedCourse } from "@/modules/activities/shared/curriculum/data/shared";
 import { prisma } from "@/lib/prisma";
+import { assessedElsewhere, COURSE_SELECT, OTHER_SITE, placementFor } from "@/modules/activities/shared/enrolment/rules";
 import { agreementRecord, LEGEND_AGREEMENT_META, type LegendAgreementChoice } from "@/modules/activities/shared/enrolment/legend-agreement";
 import { isLeaveReason, LEAVE_REASONS } from "@/modules/activities/shared/enrolment/leave-reasons";
 
@@ -27,12 +27,6 @@ const enrolSchema = z.object({
 });
 export type EnrolInput = z.infer<typeof enrolSchema>;
 
-const COURSE_SELECT = {
-  id: true, clubId: true, name: true, dayOfWeek: true, startMinutes: true,
-  capacity: true, archivedAt: true, levelId: true,
-  level: { select: { id: true, name: true, archivedAt: true, programmeId: true, programme: { select: { archivedAt: true } } } },
-} as const satisfies Prisma.CourseSelect;
-
 const ENROLMENT_SELECT = {
   id: true, status: true, studentId: true, courseId: true, programmeId: true,
   placementReason: true,
@@ -41,60 +35,6 @@ const ENROLMENT_SELECT = {
   student: { select: { firstName: true, lastName: true, status: true, clubId: true } },
   course: { select: COURSE_SELECT },
 } as const satisfies Prisma.EnrolmentSelect;
-
-/** Re-read placement against the locked class; a changed timetable cannot
- *  leave a new enrolment pinned to an old level. Transfers use the same rule. */
-async function placementFor(
-  tx: Prisma.TransactionClient,
-  studentId: string,
-  course: Prisma.CourseGetPayload<{ select: typeof COURSE_SELECT }>
-) {
-  const curriculum = await readSharedCurriculum(tx);
-  const target = sharedCourse(course, curriculum);
-  const programmeId = { in: curriculum.programmeIds.variants(target.level.programmeId) };
-  const orderedLevels = curriculum.levels.filter(l => l.programmeId === target.level.programmeId && !l.archivedAt);
-  const [completions, actives, assessments] = await Promise.all([
-    tx.levelCompletion.findMany({ where: { studentId, programmeId }, select: { levelId: true } }),
-    tx.enrolment.findMany({ where: { studentId, programmeId, status: "ACTIVE" }, select: { levelId: true } }),
-    tx.assessmentBooking.findMany({
-      where: { studentId, status: "ATTENDED", outcomeLevelId: { not: null }, session: { programmeId } },
-      select: { outcomeLevelId: true },
-    }),
-  ]);
-  const resolve = curriculum.levelIds.resolve;
-  return {
-    earned: hasEarnedPlace({
-      targetLevelId: target.levelId, orderedLevels,
-      completedLevelIds: new Set(completions.map(row => resolve(row.levelId))),
-      activeLevelIds: new Set(actives.map(row => resolve(row.levelId))),
-      assessedLevelIds: new Set(assessments.flatMap(row => row.outcomeLevelId ? [resolve(row.outcomeLevelId)] : [])),
-    }),
-    below: previousLevel(target.levelId, orderedLevels),
-  };
-}
-
-/** Parents are told lessons follow the centre where the child was assessed
- *  (owner rule, 20 October 2026). Staff may still enrol elsewhere, but are
- *  warned first. Uses the latest attended assessment in this programme. */
-const OTHER_SITE = "site:";
-async function assessedElsewhere(
-  tx: Prisma.TransactionClient,
-  studentId: string,
-  course: { clubId: string; level: { programmeId: string } },
-) {
-  const curriculum = await readSharedCurriculum(tx);
-  const latest = await tx.assessmentBooking.findFirst({
-    where: { studentId, status: "ATTENDED", session: { programmeId: { in: curriculum.programmeIds.variants(course.level.programmeId) } } },
-    orderBy: [{ session: { date: "desc" } }, { session: { startMinutes: "desc" } }],
-    select: { session: { select: { clubId: true } } },
-  });
-  if (!latest || latest.session.clubId === course.clubId) return null;
-  const sites = await sitesByIds([latest.session.clubId, course.clubId], tx);
-  return {
-    assessedAt: sites.get(latest.session.clubId)?.name ?? "another centre",
-    classAt: sites.get(course.clubId)?.name ?? "this centre",
-  };
-}
 
 function revalidate() {
   revalidatePath("/legend-agreements");

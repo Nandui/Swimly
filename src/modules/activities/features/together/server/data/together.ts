@@ -2,6 +2,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { requireSession } from "@/lib/authz";
 import { getSharedCurriculum, type SharedCurriculum } from "@/modules/activities/shared/curriculum/data/shared";
 import { prisma } from "@/lib/prisma";
+import { DAY_META, formatTime } from "@/modules/activities/shared/courses/constants";
 import type { FamilyMember } from "@/modules/activities/features/together/server/match";
 
 /** The children somebody is trying to get into the pool on one trip.
@@ -32,9 +33,12 @@ const STUDENT_SELECT = {
   enrolments: {
     where: { status: "ACTIVE" } as const,
     select: {
+      id: true,
       courseId: true,
       levelId: true,
+      programmeId: true,
       level: { select: { id: true, name: true, sortOrder: true } },
+      course: { select: { name: true, dayOfWeek: true, startMinutes: true } },
     },
   },
 } as const satisfies Prisma.StudentSelect;
@@ -49,7 +53,12 @@ export type TogetherStudent = {
   levelIds: string[];
   levelName: string | null;
   currentCourseIds: string[];
+  /** The places they hold now, for "Move them here" to say what ends. */
+  places: Place[];
 };
+
+/** A place someone holds: the class, its level and programme (shared ids), and how it reads. */
+export type Place = { enrolmentId: string; courseId: string; programmeId: string; levelName: string; label: string };
 
 export type Suggestion = TogetherStudent & {
   /** Whose details they share, and which — so the offer explains itself. */
@@ -71,6 +80,16 @@ function shape(row: Row, curriculum: SharedCurriculum): TogetherStudent {
     levelIds: levels.map((level) => level.id),
     levelName: levels.map((level) => level.name).join(", ") || null,
     currentCourseIds: row.enrolments.map((e) => e.courseId),
+    places: row.enrolments.map((e) => {
+      const levelName = (curriculum.level(e.levelId) ?? e.level).name;
+      return {
+        enrolmentId: e.id,
+        courseId: e.courseId,
+        programmeId: curriculum.programmeIds.resolve(e.programmeId),
+        levelName,
+        label: `${e.course.name ?? levelName} · ${DAY_META[e.course.dayOfWeek].label} ${formatTime(e.course.startMinutes)}`,
+      };
+    }),
   };
 }
 

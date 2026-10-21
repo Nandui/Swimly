@@ -10,6 +10,7 @@ import { PageShell } from "@/components/ui-kit/page-shell";
 import { Lead } from "@/components/ui-kit/prose";
 import { AddToGroup, findTimesTogether, getCourses, getGroup, levelOptions, readWhatIf, SelectedSwimmer, TogetherResults, togetherHref, toMembers, withLevels } from "@/modules/activities/features/together";
 import { screenPage } from "@/lib/page-guards";
+import { can } from "@/lib/authz";
 import { AppIcon } from "@/components/ui-kit/app-icon";
 import { FlaskConical } from "lucide-react";
 
@@ -19,7 +20,7 @@ export const metadata: Metadata = { title: "Together" };
 const GROUP_CAP = 8;
 
 export default async function TogetherPage(props: PageProps<"/together">) {
-  await screenPage("together");
+  const session = await screenPage("together");
 
   const params = await props.searchParams;
   const raw = typeof params.students === "string" ? params.students : "";
@@ -36,6 +37,10 @@ export default async function TogetherPage(props: PageProps<"/together">) {
   const levels = levelOptions(courses);
   // What if: levels somebody wants to try for some of them (owner request, 21 October 2026).
   const whatIf = readWhatIf(typeof params.as === "string" ? params.as : "", chosenIds, new Set(levels.map((level) => level.id)));
+  // A what-if that is now their only level (after "Move them here") is no longer a what-if.
+  for (const student of chosen) {
+    if (student.levelIds.length === 1 && student.levelIds[0] === whatIf[student.id]) delete whatIf[student.id];
+  }
   const assumed = chosen.filter((student) => whatIf[student.id]);
   const members = withLevels(toMembers(chosen), whatIf, courses);
   const result = chosen.length > 0 ? findTimesTogether(members, courses) : null;
@@ -156,6 +161,7 @@ export default async function TogetherPage(props: PageProps<"/together">) {
             result={result}
             count={chosen.length}
             members={members}
+            group={can(session, "enrolment.manage") ? chosen.map(({ id, name, places }) => ({ id, name, places })) : undefined}
           />
         </>
       )}

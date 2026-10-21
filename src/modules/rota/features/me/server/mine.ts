@@ -88,7 +88,7 @@ export async function myDays(userId: string, days = 28) {
     const shared = holder ? sharedAt(a.siteId, holder, date) : null;
     if (!shared) continue;
     const area = areas.get(a.areaId);
-    const typeName = area?.minimums.find((m) => m.typeId === a.qualificationTypeId)?.typeName ?? null;
+    const typeName = area?.minimums.find((m) => !m.activityTypeId && m.typeId === a.qualificationTypeId)?.typeName ?? null;
     const d = dayOf(date, a.siteId, sites.find((s) => s.id === a.siteId)?.name ?? "");
     const q = qualification(heldList, userId, a.qualificationTypeId, date);
     d.items.push({ start: a.startMinutes, end: a.endMinutes, label: areaNeedName(a.qualificationTypeId ? typeName ?? "Qualified" : null), icon: "activity", place: area?.name ?? "",

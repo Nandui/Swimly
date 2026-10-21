@@ -4,12 +4,34 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.51.0 · 21 October 2026 · The Academy booking site looks like the parents app
+## 1.54.0 · 21 October 2026 · The Academy booking site looks like the parents app
 
 - The Academy booking site, where people book lifeguard and swim teacher courses, now looks like the LeisureWorld Aquatics parents app: the same navy bar with the LeisureWorld logo, the same font, blue headings and orange dates, and the same cards.
 - Courses are shown as cards with the start date on the left, two side by side on a computer. My bookings shows each booking the same way.
 - There is a light and dark switch at the top right, as on the parents app.
 - Nothing about booking has changed: people still hold a place with a code sent to their email, and you still phone them within 72 hours to take payment.
+## 1.53.0 · 21 October 2026 · Areas need people on an activity, and sub-activities at several times
+
+- In **Admin > Areas**, an area's **Staff needed** can now ask for people on an activity: for example, Reception needs **at least 1 on Serving customers**, from 09:00 to 21:00. Leave the times empty for whenever the area is open. Add as many lines as you need, such as a second one for 2 people at the busy time.
+- On the rota **Plan**, only people actually on that activity in the area (or in one of its parts, such as Till 1) count. If nobody is on it for a stretch, it shows under **Not covered yet** with the time and the reason, such as "Nobody on it yet".
+- **Choose someone** for one of these puts the person on that activity in the area, so their day says what they are doing there and the activity's usual sub-activities come with it.
+- Your existing lines, such as "2 lifeguards while open", work as before.
+- **Sub-activities** can now happen at several set times: for example, a cash drop at 12:00 and 16:00. Set the times in **Admin > Activities > Sub-activities**, and add or remove times for one person's day from their day on the Plan.
+## 1.52.0 · 21 October 2026 · Coinage: ask accounts for change for the tills
+
+- **Coinage** is new, beside Refunds under Front of house. The desk asks accounts for coins for a till, and accounts decides and records the order, the same way refund requests go to finance.
+- **Request coinage** asks for the site, the till or area it is for, the day it is needed by, and how much of each coin in euro, from €2 down to 1c (for example €50 of €2 coins). Turnfin shows how many coins that is and adds up the total. Save a draft or send it to accounts.
+- Accounts gets an email when a request arrives, and can take it on, approve it, decline it or ask the desk for more information. Nobody decides their own request.
+- Once ordered, accounts records the day it was ordered, the delivery day and the order reference. The desk gets an email at each step and can follow every request, with its full history, under **Coinage requests**.
+- Home shows accounts how many requests wait to be decided and ordered, and the desk a **Request coinage** button.
+- Coinage stays hidden until an administrator gives roles a level in **Admin > Roles**: **Use** for the desks, **Manage** for accounts.
+## 1.51.0 · 21 October 2026 · Together: move them from there
+
+- Each option on **Together** now has a **Move them here** button (or **Move Robin here** when only one child needs to change), for anyone who can enrol swimmers.
+- Before anything changes, you see every child on one card: the class they leave (it ends today), the class they join (it starts today), and whether they change class, change level or get a new place. A child already in that class is marked "Stays as they are".
+- If a child has more than one place, choose which one to move from, or keep it and add the new class too.
+- The usual checks still apply. A level they haven't finished needs a reason, which goes on their record. A new place asks about the Legend agreement. You get a warning when the child was assessed at another centre. A class that has filled up stops the move.
+- Everyone moves at once or nobody does, and each change goes into the activity log with your name. Attendance and marks from the old class stay in their history.
 
 ## 1.50.0 · 21 October 2026 · Analytics is for managers only
 

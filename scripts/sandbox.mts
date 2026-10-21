@@ -67,10 +67,10 @@ const roles: Record<string, string> = {};
 const levelRoles: { name: string; homeName: string; levels: Record<string, string>; extras?: string[]; system?: boolean }[] = [
   { name: "Admin", homeName: "Management", levels: { admin: "manage" }, system: true },
   { name: "Instructor", homeName: "Pool deck", levels: { "pool-deck": "teach" }, system: true },
-  { name: "Receptionist", homeName: "Front of House", levels: { "swim-school": "desk", "short-courses": "view", refunds: "use", docs: "read", rota: "view", tasks: "do", stock: "count" } },
+  { name: "Receptionist", homeName: "Front of House", levels: { "swim-school": "desk", "short-courses": "view", refunds: "use", coinage: "use", docs: "read", rota: "view", tasks: "do", stock: "count" } },
   { name: "Lifeguard", homeName: "Poolside", levels: { docs: "read", rota: "view", tasks: "do" } },
   { name: "Pool supervisor", homeName: "Pool planning", levels: { docs: "read", rota: "plan", academy: "run", "short-courses": "run", tasks: "review", incidents: "report" } },
-  { name: "Duty manager", homeName: "Duty desk", levels: { "swim-school": "desk", refunds: "manage", docs: "read", training: "trainer", rota: "manage", academy: "run", "short-courses": "run", tasks: "review", incidents: "report", cctv: "record" }, extras: ["swim-school.cancel-classes"] },
+  { name: "Duty manager", homeName: "Duty desk", levels: { "swim-school": "desk", refunds: "manage", coinage: "manage", docs: "read", training: "trainer", rota: "manage", academy: "run", "short-courses": "run", tasks: "review", incidents: "report", cctv: "record" }, extras: ["swim-school.cancel-classes"] },
   { name: "Swim school manager", homeName: "Swim school office", levels: { "swim-school": "manage", "pool-deck": "lead", docs: "manage", training: "manage", rota: "manage", hr: "team", academy: "manage", "short-courses": "manage", tasks: "manage", incidents: "report" }, extras: ["swim-school.cancel-classes", "docs.approve"] },
   { name: "Centre manager", homeName: "Centre office", levels: { docs: "read", rota: "manage", tasks: "review", incidents: "investigate", stock: "manage", cctv: "review", "site-monitoring": "act" } },
   { name: "Operations manager", homeName: "Operations", levels: { docs: "read", tasks: "review", incidents: "manage", stock: "manage", cctv: "review", "site-monitoring": "act" } },
