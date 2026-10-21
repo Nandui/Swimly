@@ -62,3 +62,9 @@ const EURO = new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR"
 export const euro = (cents: number) => EURO.format(cents / 100);
 
 export const SITE_NAME = process.env.NEXT_PUBLIC_ACADEMY_NAME?.trim() || "LeisureWorld Academy";
+
+/** A date as the parents app's ticket shows it: the month over the day ("Nov", "7"). */
+export function dateBlock(iso: string) {
+  const d = asDate(iso);
+  return { month: part(DAY, d, "month"), day: part(DAY, d, "day"), weekday: part(DAY, d, "weekday") };
+}

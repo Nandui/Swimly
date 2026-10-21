@@ -157,7 +157,11 @@ next two weeks at their sites.
 - Online booking: `src/modules/short-courses/features/booking/server/` (`http.ts`, `api.ts`, `email.ts`, `router.ts`, `academy.ts`, `courses.ts`), the shape in `shared/public-booking.ts`,
   `src/app/api/academy/v1/[[...path]]/route.ts`, and the site in `apps/academy`. The site follows
   Work's UI rules (CLAUDE.md, section 14) with its own shadcn components and exact copies of Work's
-  theme files; `npm run lint` in `apps/academy` checks them
+  theme files; `npm run lint` in `apps/academy` checks them. It looks like the parents app
+  (LeisureWorld Aquatics; owner request, 21 October 2026): `theme/leisureworld.css` holds the
+  parents app's LeisureWorld colours, copied from it, and re-points Poolside's tokens; Manrope, the
+  navy header, ticket-style course and booking cards and the light and dark switch match it. When
+  the parents app's palette changes, copy it into that file
 - Tests: `rules.test.ts`, `academy.test.ts`, `booking.test.ts` (the booking API and the call
   list end to end), and the booked-session case in `src/modules/rota/shared/day.test.ts`
 - Sandbox: an NPLQ course at Hillview started yesterday. Sam tutors and Liam assesses.

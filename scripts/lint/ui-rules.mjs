@@ -8,7 +8,9 @@
 //      other stylesheet uses their tokens.
 //   3. Turnfin Me (apps/me) and the Academy site (apps/academy) follow the same rules, with exact
 //      copies of Work's theme (poolside.css, shadcn.css, globals.css, motion.css), so the three apps
-//      share one set of colours.
+//      share one set of colours. The Academy site adds one brand file, theme/leisureworld.css: the
+//      parents app's LeisureWorld colours, copied from it, so the two public sites look alike
+//      (owner request, 21 October 2026).
 // Run by `npm run lint` in each app. Exits 1 and lists every problem when a rule is broken.
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
@@ -67,7 +69,7 @@ for (const page of walk(join(src, "app"), (path) => /[\\/]page\.tsx$/.test(path)
 }
 
 // ── 2. Colour literals only in the theme files.
-const THEME = new Set(["src/app/theme/poolside.css", "src/app/shadcn.css"].map((file) => join(app, file).split("\\").join("/")));
+const THEME = new Set(["src/app/theme/poolside.css", "src/app/shadcn.css", ...(app === "apps/academy" ? ["src/app/theme/leisureworld.css"] : [])].map((file) => join(app, file).split("\\").join("/")));
 const COLOUR = /#[\da-f]{3,8}\b|\b(?:rgba?|hsla?|oklch|oklab|lab|lch|hwb|color-mix)\(/gi;
 for (const sheet of walk(src, (path) => path.endsWith(".css"))) {
   const name = relative(root, sheet).split("\\").join("/");

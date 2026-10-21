@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.51.0 · 21 October 2026 · The Academy booking site looks like the parents app
+
+- The Academy booking site, where people book lifeguard and swim teacher courses, now looks like the LeisureWorld Aquatics parents app: the same navy bar with the LeisureWorld logo, the same font, blue headings and orange dates, and the same cards.
+- Courses are shown as cards with the start date on the left, two side by side on a computer. My bookings shows each booking the same way.
+- There is a light and dark switch at the top right, as on the parents app.
+- Nothing about booking has changed: people still hold a place with a code sent to their email, and you still phone them within 72 hours to take payment.
+
 ## 1.50.0 · 21 October 2026 · Analytics is for managers only
 
 - **Analytics** now has its own place under **Managers** on the home page and in Admin > Roles, next to the CCTV log and Site Monitoring. Only roles given Analytics **View** can open it, at the sites they work at. Administrators still see it.
