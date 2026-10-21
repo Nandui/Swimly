@@ -10,6 +10,7 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - Courses are shown as cards with the start date on the left, two side by side on a computer. My bookings shows each booking the same way.
 - There is a light and dark switch at the top right, as on the parents app.
 - Nothing about booking has changed: people still hold a place with a code sent to their email, and you still phone them within 72 hours to take payment.
+
 ## 1.53.0 · 21 October 2026 · Areas need people on an activity, and sub-activities at several times
 
 - In **Admin > Areas**, an area's **Staff needed** can now ask for people on an activity: for example, Reception needs **at least 1 on Serving customers**, from 09:00 to 21:00. Leave the times empty for whenever the area is open. Add as many lines as you need, such as a second one for 2 people at the busy time.
