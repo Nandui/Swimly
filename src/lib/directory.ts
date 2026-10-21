@@ -279,6 +279,13 @@ export async function siteAddress(id: string): Promise<string> {
   return (await (await client()).club.findUnique({ where: { id }, select: { address: true } }))?.address ?? "";
 }
 
+/** Each site's reception phone, for the public (the parents app); empty when none is set. */
+export async function sitePhones(ids: readonly string[], db?: Db): Promise<Map<string, string>> {
+  if (!ids.length) return new Map();
+  const rows = await (await client(db)).club.findMany({ where: { id: { in: [...new Set(ids)] } }, select: { id: true, phone: true } });
+  return new Map(rows.map((r) => [r.id, r.phone]));
+}
+
 export async function organisationName(id: string | null): Promise<string> {
   if (!id) return "";
   const { prisma } = await import("@/lib/prisma");

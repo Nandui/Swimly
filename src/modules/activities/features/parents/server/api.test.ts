@@ -61,7 +61,7 @@ before(async () => {
   fixture = await isolatedPrisma();
   await fixture.prisma.user.create({ data: { id: "staff", name: "Synthetic Staff", email: "staff@example.test", passwordHash: "unused" } });
   class AuthorizationError extends Error {}
-  const doubles = { "@/lib/prisma": { prisma: fixture.prisma }, "@/lib/clubs/current": { currentClubId: async () => "club_bishopstown" },
+  const doubles = { "@/lib/prisma": { prisma: fixture.prisma }, "server-only": {}, "@/lib/clubs/current": { currentClubId: async () => "club_bishopstown" },
     "next/cache": { revalidatePath() {} }, "@/lib/authz": { AuthorizationError,
       requirePermission: async () => { if (!actorPermissions) throw new AuthorizationError(); return { user: { id: "staff", name: "Synthetic Staff" } }; }, canSee: () => actorScreen } };
   router = serverModule<Router>("src/modules/activities/features/parents/server/router.ts", doubles);

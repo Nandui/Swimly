@@ -90,6 +90,7 @@ function ClubList({
           <div className="pc-row-body">
             <span className="pc-row-title">{club.name}</span>
             {club.address ? <span className="pc-row-hint">{club.address.replace(/\n/g, ", ")}</span> : null}
+            {club.phone ? <span className="pc-row-hint">Reception {club.phone}</span> : null}
             {summaries.get(club.id) ? <span className="pc-row-hint">{summaries.get(club.id)}</span> : null}
             {/* Added before 1.12.4 without an organisation: saving it once fixes it. */}
             {!club.orgId && !archived ? <span className="pc-row-hint">Not yet in Incidents, Rota and the other modules. Open it with the pencil and choose Save changes to add it.</span> : null}
