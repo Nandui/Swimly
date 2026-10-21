@@ -23,9 +23,9 @@ import { instructorAttendanceTotals, type AttendanceOccurrence } from "@/modules
 
 export type ReportParams = { range?: string | string[]; sites?: string | string[]; from?: string | string[]; to?: string | string[]; programme?: string | string[] };
 
-/** Who may read the reports and which sites they cover. Analytics needs the
- *  swim school's top level (`courses.manage`, the "analytics" screen), which
- *  also covers the teacher figures. */
+/** Who may read the reports and which sites they cover. Analytics is for
+ *  managers: the Analytics module's View level (`analytics.view`, the
+ *  "analytics" screen), which also covers the teacher and desk figures. */
 export async function context(params: ReportParams, now: Date) {
   const session = await requireSession();
   if (!canSee(session, "analytics")) throw new AuthorizationError("Analytics access is required.");

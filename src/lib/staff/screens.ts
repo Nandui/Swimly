@@ -17,8 +17,8 @@ export const SCREENS = [
     key: "analytics",
     label: "Analytics",
     path: "/analytics",
-    description: "Enrolled swimmers by level, recent enrolment activity and monthly class cancellations for the selected site.",
-    requires: "courses.manage",
+    description: "For managers: the swim school's Business, Reception and Pool deck dashboards for their sites.",
+    requires: "analytics.view",
   },
   {
     key: "duty",

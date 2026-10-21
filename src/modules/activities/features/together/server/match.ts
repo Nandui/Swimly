@@ -7,6 +7,8 @@ export type FamilyMember = {
   name: string;
   levelIds: string[];
   currentCourseIds: string[];
+  /** Searched at a level they are not at ("what if"); nothing on the swimmer changes. */
+  whatIf?: boolean;
 };
 
 export type Placement = {
@@ -14,7 +16,34 @@ export type Placement = {
   name: string;
   course: CourseRow;
   alreadyIn: boolean;
+  whatIf?: boolean;
 };
+
+/** A level someone can be checked at: one with a class at this site, in curriculum order. */
+export type LevelOption = { id: string; name: string; programme: string };
+
+export function levelOptions(courses: CourseRow[]): LevelOption[] {
+  const levels = new Map(courses.filter((course) => !course.archivedAt).map((course) => [course.level.id, course.level]));
+  return [...levels.values()]
+    .sort((a, b) => a.programme.sortOrder - b.programme.sortOrder || a.programme.name.localeCompare(b.programme.name) ||
+      a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
+    .map((level) => ({ id: level.id, name: level.name, programme: level.programme.name }));
+}
+
+/** The group as it would be at the levels somebody is asking about (owner request, 21 October
+ *  2026: "what if this one was at that level and the other at the same they are in"). A swimmer
+ *  with an assumed level is searched at that level only. Their current class still counts as
+ *  theirs only if it is at that level; otherwise they would need a free place like anyone new.
+ *  Only the search changes: no enrolment or level is touched. */
+export function withLevels(members: FamilyMember[], assumed: Record<string, string>, courses: CourseRow[]): FamilyMember[] {
+  const levelOf = new Map(courses.map((course) => [course.id, course.levelId]));
+  return members.map((member) => {
+    const levelId = assumed[member.studentId];
+    if (!levelId) return member;
+    return { ...member, whatIf: true, levelIds: [levelId],
+      currentCourseIds: member.currentCourseIds.filter((id) => levelOf.get(id) === levelId) };
+  });
+}
 
 export type CombinationPage = {
   combinations: Placement[][];
@@ -45,7 +74,7 @@ export function findCombinations(
   const choices = members.map((member) => live
     .filter((course) => member.levelIds.includes(course.levelId) || member.currentCourseIds.includes(course.id))
     .map((course): Placement => ({ studentId: member.studentId, name: member.name, course,
-      alreadyIn: member.currentCourseIds.includes(course.id) }))
+      alreadyIn: member.currentCourseIds.includes(course.id), ...(member.whatIf ? { whatIf: true } : {}) }))
     .filter((placement) => placement.alreadyIn || remaining.get(placement.course.id)! > 0)
     .sort((a, b) => Number(b.alreadyIn) - Number(a.alreadyIn) ||
       a.course.startMinutes - b.course.startMinutes || a.course.id.localeCompare(b.course.id)));

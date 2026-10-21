@@ -1,4 +1,4 @@
-import { Award, Circle, CircleCheck, CircleDashed, GraduationCap, Loader, TriangleAlert } from "lucide-react";
+import { Award, CircleCheck, CircleDashed, GraduationCap, Loader, TriangleAlert } from "lucide-react";
 import type { CompetencyStatus } from "@/generated/prisma/client";
 import type { StatusMeta } from "@/lib/status";
 
@@ -9,8 +9,12 @@ export const COMPETENCY_STATUS_META: Record<CompetencyStatus, StatusMeta> = {
   ACHIEVED: { label: "Achieved", color: "green", icon: CircleCheck },
 };
 
-/** A competency nobody has marked yet. */
-export const NOT_MARKED_META = { label: "Not marked", color: "gray", icon: Circle } as const satisfies StatusMeta;
+/** A competency starts as Not achieved: a skill nobody has marked yet reads,
+ *  counts and saves as WORKING_ON (owner decision, 21 October 2026). No row is
+ *  written until someone marks it, so who marked it and when stay true. */
+export function markOrDefault(status: CompetencyStatus | null | undefined): CompetencyStatus {
+  return status ?? "WORKING_ON";
+}
 
 export const LEVEL_PROGRESS_META = {
   graduated: { label: "Graduated", color: "blue", icon: GraduationCap },

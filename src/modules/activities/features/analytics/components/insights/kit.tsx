@@ -1,6 +1,6 @@
 import Link from "next/link";
 import * as React from "react";
-import { ArrowDownRight, ArrowRight, ArrowUpRight, type LucideIcon } from "lucide-react";
+import { ArrowRight, ArrowUpRight, type LucideIcon } from "lucide-react";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
 import { Progress } from "@/components/shadcn/progress";
@@ -10,7 +10,7 @@ import { AnalyticsRefresh } from "@/modules/activities/features/analytics/compon
 import { FilterBar, type FilterBarProps } from "@/modules/activities/features/analytics/components/insights/filters";
 import { AreaChart, FlowChart, Sparkline, type ChartKind } from "@/modules/activities/features/analytics/components/insights/charts";
 export { Meter } from "@/modules/activities/features/analytics/components/insights/meter";
-export { ColumnChart, Sparkline } from "@/modules/activities/features/analytics/components/insights/charts";
+export { ColumnChart } from "@/modules/activities/features/analytics/components/insights/charts";
 import { DEFAULT_RANGE, RANGES, reportQuery, type ReportFilters, type ReportPeriod } from "@/modules/activities/features/analytics/server/period";
 
 const one = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 1 });
@@ -172,31 +172,16 @@ export function PanelLink({ href, children }: { href: string; children: React.Re
   return <Link href={href} className="ins-panel-link">{children}<ArrowRight aria-hidden="true" /></Link>;
 }
 
-type Change = { current: number | null; previous: number | null; change: number | null };
-
-/** A change against the previous period, as words and an arrow, green when it
- *  went the good way. `unit` "pts" for percentages. */
-export function Delta({ change, better, unit = "", label }: { change: Change; better: "up" | "down" | "none"; unit?: "" | "pts"; label: string }) {
-  if (change.change === null) return <span className="ins-delta">No earlier figure</span>;
-  const value = change.change;
-  const rounded = unit === "pts" ? Math.round(value * 10) / 10 : Math.round(value);
-  const tone = rounded === 0 || better === "none" ? undefined : (rounded > 0) === (better === "up") ? "good" : "bad";
-  const Icon = rounded > 0 ? ArrowUpRight : rounded < 0 ? ArrowDownRight : ArrowRight;
-  const text = rounded === 0 ? "No change" : `${rounded > 0 ? "+" : "−"}${unit === "pts" ? one.format(Math.abs(rounded)) : formatCount(Math.abs(rounded))}${unit === "pts" ? " pts" : ""}`;
-  return <span className="ins-delta" data-tone={tone}><Icon aria-hidden="true" />{text}<span className="sr-only"> {label}</span></span>;
-}
-
-/** One headline figure: what it is, the value, how it moved, a note, and optionally its recent
+/** One headline figure: what it is, the value, a note, and optionally its recent
  *  trend or a fill meter. With `href` the whole cell opens the page behind it. */
-export function Kpi({ label, value, unit, note, delta, href, spark, meter }: {
-  label: string; value: React.ReactNode; unit?: string; note?: React.ReactNode; delta?: React.ReactNode; href?: string;
+export function Kpi({ label, value, unit, note, href, spark, meter }: {
+  label: string; value: React.ReactNode; unit?: string; note?: React.ReactNode; href?: string;
   spark?: (number | null)[]; meter?: number | null;
 }) {
   const body = <>
     <span className="ins-kpi-label">{label}{href ? <ArrowUpRight aria-hidden="true" className="ins-kpi-go" /> : null}</span>
     <span className="ins-kpi-line">
       <span className="ins-kpi-value">{value}{unit ? <small>{unit}</small> : null}</span>
-      {delta}
     </span>
     {spark ? <Sparkline values={spark} /> : null}
     {meter !== undefined && meter !== null ? <Progress value={Math.min(100, meter)} aria-hidden="true" className="ins-kpi-meter" /> : null}
