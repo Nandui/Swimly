@@ -19,6 +19,9 @@ export async function listPeople() {
       isActive: true,
       createdAt: true,
       passwordHash: true,
+      staffRoleId: true,
+      siteIds: true,
+      departments: { select: { departmentId: true } },
       staffRole: { select: { id: true, name: true, permissions: true } },
     },
   });

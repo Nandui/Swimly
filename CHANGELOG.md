@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.63.0 · 21 October 2026 · Admin: search and filters on Staff
+
+- **Admin › Staff** now has a **Find a person** box at the top. Start typing a name or email and the list narrows as you type.
+- Beside it, choose **Everyone**, **Can sign in** or **Deactivated**, each with how many people it shows.
+- Under it, pick a **Role**, where they **Work at** and a **Department**. Each choice shows how many people have it. Someone who works at every site shows under each site.
+- The search and the choices work together, the page says how many people match, and **Clear all** brings everyone back.
+- Open a person and press **Staff** to come back: the list is just as you left it.
+
 ## 1.62.0 · 21 October 2026 · Rota: people on an area's activities cover the area
 
 - On the rota **Plan**, someone on an activity in an area now counts towards the staff that area needs, for the time of that activity. If Reception needs at least one person and Maeve is on Till 2 at Reception from 12:00 to 15:15, Reception is covered then and the gap shrinks to the times nobody is there.
