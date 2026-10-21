@@ -27,6 +27,7 @@ const workArea = (id, ...extra) => [`src/modules/${id}/**`, `src/app/${id}/**`, 
 const workModules = {
   docs: workArea("docs", "src/app/api/docs/**"),
   refunds: workArea("refunds", "src/app/api/refunds/**"),
+  coinage: workArea("coinage"),
   training: workArea("training", "src/app/api/cron/training/**"),
   hr: workArea("hr"),
   rota: workArea("rota"),
@@ -103,6 +104,7 @@ const coreData = notTables(Object.keys(moduleFiles), "Core never queries a modul
 const coreThroughFunctions = {
   docs: [],
   refunds: [],
+  coinage: [],
   purchasing: ["role", "site"],
   tasks: ["site"],
   incidents: [],
