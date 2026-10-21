@@ -149,6 +149,17 @@ test("sub-activities on someone's line read in order, at the start, any time, at
   assert.deepEqual(line.subs.map((x) => [x.name, x.at]), [["Open the cash till", h("10:30")], ["Answer the phone", null], ["Cash drop", h("11:00")], ["Close the cash till", h("11:30")]]);
 });
 
+test("a sub-activity done any time reads at the time the Plan placed it, each placing on its own", () => {
+  // Owner, 21 October 2026: "the sub activities can be assigned at any time, during that activity, directly on the plan".
+  const d = buildDiary({ ...base, assignments: [{ ...base.assignments[0], start: h("10:00"), end: h("17:00"), subs: [
+    { id: "s1", name: "Answer the phone", when: "during", at: h("15:00"), times: [h("15:00")] },
+    { id: "s2", name: "Answer the phone", when: "during", at: h("12:30"), times: [h("12:30")] },
+    { id: "s3", name: "Tidy the desk", when: "during", at: null },
+  ] }] });
+  const line = d.people.find((p) => p.userId === "aoife")!.lines.find((l) => l.title === "Aqua-fit")!;
+  assert.deepEqual(line.subs.map((x) => [x.id, x.at]), [["s3", null], ["s2", h("12:30")], ["s1", h("15:00")]]);
+});
+
 test("a sub-activity at several set times reads once for each", () => {
   const d = buildDiary({ ...base, assignments: [{ ...base.assignments[0], start: h("10:00"), end: h("17:00"), subs: [{ name: "Cash drop", when: "at", at: h("12:00"), times: [h("12:00"), h("16:00")] }] }] });
   const line = d.people.find((p) => p.userId === "aoife")!.lines.find((l) => l.title === "Aqua-fit")!;

@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.59.0 · 21 October 2026 · Rota: place "any time" sub-activities on the Plan
+
+- A sub-activity done **any time** while someone is on an activity, such as **Answer the phone** on Reception, is now placed straight on the rota **Plan**, at the moment you choose.
+- Open someone's day on the Plan: under each activity, **Place on their time** lists these sub-activities. Tap one, tap a time (or type one) inside their time on the activity, and choose **Place it**. You can place the same one more than once, such as the phone at 12:30 and again at 15:00.
+- Once placed, it shows at its time on their day, on the phone view and in **Who's where**, which now lists the sub-activities in the half hour shown. Tap a placed one to move it or take it off.
+- In **Admin, Activities**, these now read **Any time: placed on the Plan**, and they no longer come along by themselves when someone is put on the activity. Sub-activities at the start, at the end or at set times work as before.
+
 ## 1.58.0 · 21 October 2026 · Rota: areas ask for a role, not a certificate
 
 - On the rota **Plan**, an area's own staff now show by the role it needs, such as **Lifeguard on duty** in the main pool, instead of the name of the certificate.

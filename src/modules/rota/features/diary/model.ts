@@ -68,9 +68,10 @@ export type Line = Span & {
   area: string;
   /** The area that one is part of, "" for none. */
   group: string;
-  /** Sub-activities they do while on it, in order: at a time, or any time (`at` null). One at
-   *  several set times is here once for each. */
-  subs: { name: string; when: string; at: number | null }[];
+  /** Sub-activities they do while on it, in order: at a time, or one done any time that the Plan
+   *  has not placed yet (`at` null). One at several times is here once for each; `id` is its saved
+   *  record, for moving one placed on the Plan. */
+  subs: { id?: string; name: string; when: string; at: number | null }[];
   /** The saved record: an activity or booking place, an area place, or the class taught. */
   assignmentId: string | null;
   place: number | null;
@@ -209,14 +210,18 @@ function needsOf(input: DiaryInput): Need[] {
 }
 
 /** A sub-activity someone does: `at` its first set time, `times` all of them (owner, 21 October
- *  2026: cash drops at 12:00 and 16:00). */
-export type SubIn = { name: string; when: string; at: number | null; times?: readonly number[] };
+ *  2026: cash drops at 12:00 and 16:00). One done any time ("during") has the time the Plan placed
+ *  it at, or none yet (owner, 21 October 2026: "assigned at any time during that activity,
+ *  directly on the plan"). */
+export type SubIn = { id?: string; name: string; when: string; at: number | null; times?: readonly number[] };
 
-/** Sub-activities on the clock: at the start, at the end, at each of their times, or any time (null). */
+/** Sub-activities on the clock: at the start, at the end, at each of their times, at the time the
+ *  Plan placed one done any time, or not placed yet (null). */
 export function subsAt(a: { start: number; end: number; subs?: readonly SubIn[] }): Line["subs"] {
   const at = (s: SubIn): (number | null)[] => (s.when === "start" ? [a.start] : s.when === "end" ? [a.end]
-    : s.when === "at" ? (s.times?.length ? [...s.times] : [s.at]) : [null]);
-  return (a.subs ?? []).flatMap((s) => at(s).map((t) => ({ name: s.name, when: s.when, at: t }))).sort((x, y) => (x.at ?? a.start + 0.5) - (y.at ?? a.start + 0.5));
+    : s.times?.length ? [...s.times] : [s.at]);
+  return (a.subs ?? []).flatMap((s) => at(s).map((t) => ({ ...(s.id ? { id: s.id } : {}), name: s.name, when: s.when, at: t })))
+    .sort((x, y) => (x.at ?? a.start + 0.5) - (y.at ?? a.start + 0.5));
 }
 
 function linesOf(input: DiaryInput, needs: readonly Need[]): Line[] {

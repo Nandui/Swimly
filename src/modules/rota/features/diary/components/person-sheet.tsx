@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Clock, Coffee, Flag, ListChecks, Moon, Plus, X } from "lucide-react";
+import { SubPlace, SubsToPlace } from "@/modules/rota/features/diary/components/sub-place";
 import { Button } from "@/components/shadcn/button";
 import { Checkbox } from "@/components/shadcn/checkbox";
 import { Label } from "@/components/shadcn/label";
@@ -76,11 +77,23 @@ function StepItem({ person, step }: { person: PersonDay; step: Step }) {
         <div className="diary-step-text">
           <span className="diary-step-title">{step.count > 1 ? `${step.count} swim classes` : lineTitle(l)}</span>
           <span className="diary-muted">{step.count > 1 ? lines.map((x) => x.title).join(", ") : lineWhere(l)}</span>
-          {l.subs.length ? <ul className="diary-subs-list" aria-label="Sub-activities">{l.subs.map((x, i) => <li key={i}><span className="tabular-nums">{x.at !== null ? clock(x.at) : "Any time"}</span>{x.name}</li>)}</ul> : null}
+          {l.subs.some((x) => x.at !== null) ? (
+            <ul className="diary-subs-list" aria-label="Sub-activities">
+              {l.subs.map((x, i) => (x.at === null ? null : (
+                <li key={x.id ? `${x.id}-${x.at}` : i}>
+                  <span className="tabular-nums">{clock(x.at)}</span>
+                  {x.when === "during" && x.id && l.assignmentId && ctx.canChange && ctx.departmentFor
+                    ? <SubPlace person={person} line={l} sub={{ id: x.id, name: x.name, at: x.at }} />
+                    : <span>{x.name}</span>}
+                </li>
+              )))}
+            </ul>
+          ) : null}
+          {(l.kind === "activity" || l.kind === "booking") && l.assignmentId && ctx.canChange && ctx.departmentFor ? <SubsToPlace person={person} line={l} /> : null}
           {ctx.canChange && ctx.departmentFor ? (
             <div className="diary-step-actions">
               {l.kind !== "class" && l.assignmentId ? <ChangeTime person={person} line={l} /> : null}
-              {(l.kind === "activity" || l.kind === "booking") && l.assignmentId && (l.subs.length || (ctx.needs.get(l.needKey)?.typeId && ctx.subActivities[ctx.needs.get(l.needKey)!.typeId!]?.length)) ? <SubsDialog person={person} line={l} /> : null}
+              {(l.kind === "activity" || l.kind === "booking") && l.assignmentId && (l.subs.some((x) => x.when !== "during") || (l.typeId && ctx.subActivities[l.typeId]?.some((x) => x.when !== "during"))) ? <SubsDialog person={person} line={l} /> : null}
               <TakeOff person={person} lines={lines} />
             </div>
           ) : null}
@@ -261,7 +274,7 @@ function ShiftDialog({ person, shift }: { person: PersonDay; shift: (Span & { id
 }
 
 type SubChoice = { key: string; subActivityId: string | null; name: string; when: string; times: string[]; on: boolean };
-const WHEN_WORDS: Record<string, string> = { start: "at the start", end: "at the end", during: "any time while on it" };
+const WHEN_WORDS: Record<string, string> = { start: "at the start", end: "at the end" };
 
 /** Which sub-activities they do while on it that day (owner, 20 October 2026): the activity's
  *  list from Admin, ticked as they are now, with the times for one at set times (owner, 21
@@ -274,12 +287,12 @@ function SubsDialog({ person, line }: { person: PersonDay; line: Line }) {
     const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
     const timesNow = (name: string) => line.subs.filter((x) => same(x.name, name) && x.at !== null).map((x) => clock(x.at!));
     const inStretch = (times: readonly number[]) => times.filter((m) => m >= line.start && m <= line.end);
-    const fromList = list.map((x) => {
+    const fromList = list.filter((x) => x.when !== "during").map((x) => {
       const on = line.subs.some((y) => same(y.name, x.name));
       const usual = inStretch(x.times);
       return { key: x.id, subActivityId: x.id, name: x.name, when: x.when, times: on && timesNow(x.name).length ? timesNow(x.name) : (usual.length ? usual : [line.start]).map(clock), on };
     });
-    const extra = [...new Map(line.subs.filter((x) => !list.some((y) => same(y.name, x.name))).map((x) => [x.name.toLowerCase(), x])).values()]
+    const extra = [...new Map(line.subs.filter((x) => x.when !== "during" && !list.some((y) => same(y.name, x.name))).map((x) => [x.name.toLowerCase(), x])).values()]
       .map((x, i) => ({ key: `kept-${i}`, subActivityId: null, name: x.name, when: x.when, times: x.when === "at" ? timesNow(x.name) : [], on: true }));
     return [...fromList, ...extra];
   };

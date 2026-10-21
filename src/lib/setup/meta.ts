@@ -33,7 +33,7 @@ export const SUB_WHEN = {
   start: "At the start",
   end: "At the end",
   at: "At set times",
-  during: "Any time while on it",
+  during: "Any time: placed on the Plan",
 } as const;
 export type SubWhen = keyof typeof SUB_WHEN;
 export const SUB_WHENS = Object.keys(SUB_WHEN) as SubWhen[];

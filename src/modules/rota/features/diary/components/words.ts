@@ -49,5 +49,6 @@ export function warningWords(w: Warning, young: YoungBand | null = null) {
   }
 }
 
-/** What someone does while on it: "10:30 Open the cash till · Answer the phone · 11:30 Close the cash till". */
-export const subsWords = (l: Pick<Line, "subs">) => l.subs.map((x) => (x.at !== null ? `${clock(x.at)} ${x.name}` : x.name)).join(" · ");
+/** What someone does while on it: "10:30 Open the cash till · 11:00 Answer the phone · 11:30 Close
+ *  the cash till". One done any time that is not placed yet says so. */
+export const subsWords = (l: Pick<Line, "subs">) => l.subs.map((x) => (x.at !== null ? `${clock(x.at)} ${x.name}` : `${x.name}, not placed yet`)).join(" · ");

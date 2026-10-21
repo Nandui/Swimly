@@ -28,9 +28,10 @@ function times(start: string, end: string): { ok: true; start: number; end: numb
   return slot ? { ok: false, error: slot } : { ok: true, start: s, end: e };
 }
 /** An activity's usual sub-activities for someone on it for a stretch, ready to save: one at set
- *  times keeps the times inside the stretch, and is left off when none are. */
+ *  times keeps the times inside the stretch, and is left off when none are. One done any time is
+ *  placed on the Plan instead (owner, 21 October 2026), so it does not come along. */
 function usualSubs(all: Awaited<ReturnType<typeof subActivitiesFor>>, typeId: string, t: { start: number; end: number }) {
-  return (all[typeId] ?? []).flatMap((x) => {
+  return (all[typeId] ?? []).filter((x) => x.when !== "during").flatMap((x) => {
     const times = x.when === "at" ? x.times.filter((m) => m >= t.start && m <= t.end) : [];
     return x.when === "at" && !times.length ? [] : [{ subActivityId: x.id, name: x.name, when: x.when, atMinutes: times[0] ?? null, times }];
   }).map((x, i) => ({ ...x, sortOrder: i }));
@@ -362,7 +363,8 @@ export type LineSubsInput = z.input<typeof subsSchema>;
 
 /** Which sub-activities someone does while on an activity that day, and when (owner, 20 October
  *  2026: Till 1's "open the cash till" at the start, "close" at the end), replacing the ones
- *  before. One at a set time keeps inside their stretch. */
+ *  before. One at a set time keeps inside their stretch. Ones done any time are placed with
+ *  `placeSub` and kept as they are. */
 export async function saveLineSubs(input: LineSubsInput, changeInput: Change = {}): Promise<ActionResult> {
   const parsed = subsSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
@@ -374,7 +376,7 @@ export async function saveLineSubs(input: LineSubsInput, changeInput: Change = {
   const row = await prisma.rotaAssignment.findFirst({ where: { id: d.id, userId: d.userId, need: { siteId: d.siteId } }, select: { id: true, startMinutes: true, endMinutes: true, need: { select: { date: true, typeId: true } } } });
   if (!row || iso(row.need.date) !== d.date) return fail("That is no longer on the day.");
   const subs: { subActivityId: string | null; name: string; when: string; atMinutes: number | null; times: number[] }[] = [];
-  for (const x of d.subs) {
+  for (const x of d.subs.filter((y) => y.when !== "during")) {
     const times = x.when === "at" ? x.times.map(parseClock) : [];
     if (x.when === "at" && (!times.length || times.some((m) => m === null || m < row.startMinutes || m > row.endMinutes))) {
       return fail(`Give ${x.name} its times while they are on it, ${clock(row.startMinutes)} to ${clock(row.endMinutes)}.`);
@@ -383,13 +385,73 @@ export async function saveLineSubs(input: LineSubsInput, changeInput: Change = {
     subs.push({ subActivityId: x.subActivityId, name: x.name, when: x.when, atMinutes: sorted[0] ?? null, times: sorted });
   }
   const person = await staffContact(d.userId, at.site.orgId);
-  const words = subs.map((x) => (x.times.length ? `${x.name} at ${x.times.map(clock).join(" and ")}` : x.when === "during" ? x.name : `${x.name} at the ${x.when}`)).join(", ") || "none";
+  const words = subs.map((x) => (x.times.length ? `${x.name} at ${x.times.map(clock).join(" and ")}` : `${x.name} at the ${x.when}`)).join(", ") || "none";
   await prisma.$transaction(async (tx) => {
-    await tx.rotaAssignmentSub.deleteMany({ where: { assignmentId: row.id } });
+    await tx.rotaAssignmentSub.deleteMany({ where: { assignmentId: row.id, when: { not: "during" } } });
     if (subs.length) await tx.rotaAssignmentSub.createMany({ data: subs.map((x, i) => ({ ...x, assignmentId: row.id, sortOrder: i })) });
     await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "update", entity: "RotaAssignment", entityId: row.id, clubId: d.siteId,
       summary: `Set ${person?.name ?? "someone"}'s sub-activities on ${d.date}, ${clock(row.startMinutes)}–${clock(row.endMinutes)}: ${words}` }, tx);
     if (at.live) await logLive(tx, at, d.date, "changed", `${person?.name ?? "Someone"}'s sub-activities: ${words}`, d.userId, change);
+  });
+  refresh();
+  return ok();
+}
+
+const placeSchema = z.object({
+  siteId: z.string().min(1),
+  date: z.string().refine(isDateOnly, "Choose a day."),
+  departmentId: z.string().min(1),
+  /** The activity or booking place they are on. */
+  id: z.string().min(1),
+  userId: z.string().min(1),
+  /** The placed one to move or take off; none to place a new one. */
+  subId: z.string().min(1).nullable(),
+  /** The activity's sub-activity (Admin, Activities) when placing a new one. */
+  subActivityId: z.string().min(1).nullable(),
+  /** When they do it, like 14:30; empty to take it off. */
+  at: z.string(),
+});
+export type PlaceSubInput = z.input<typeof placeSchema>;
+
+/** Places a sub-activity done any time on someone's stretch on the activity (owner, 21 October
+ *  2026: "the sub activities can be assigned at any time, during that activity, directly on the
+ *  plan"), moves one placed before, or takes it off (`at` empty). Each placing is its own record,
+ *  so the phone can be placed at 12:30 and again at 15:00. */
+export async function placeSub(input: PlaceSubInput, changeInput: Change = {}): Promise<ActionResult> {
+  const parsed = placeSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const change = changeSchema.parse(changeInput);
+  const d = parsed.data;
+  const at = await allowedForPerson(d.siteId, d.date, d.departmentId, d.userId);
+  if (!at.ok) return fail(at.error);
+  if (at.live && !change.reason) return fail(NEEDS_REASON);
+  const row = await prisma.rotaAssignment.findFirst({ where: { id: d.id, userId: d.userId, need: { siteId: d.siteId } },
+    select: { id: true, startMinutes: true, endMinutes: true, need: { select: { date: true, typeId: true } }, subs: { select: { id: true, name: true, when: true, sortOrder: true } } } });
+  if (!row || iso(row.need.date) !== d.date) return fail("That is no longer on the day.");
+  const placed = d.subId ? row.subs.find((x) => x.id === d.subId && x.when === "during") : null;
+  if (d.subId && !placed) return fail("That sub-activity is no longer on their time. Refresh and try again.");
+  const minutes = d.at ? parseClock(d.at) : null;
+  if (d.at && (minutes === null || minutes < row.startMinutes || minutes > row.endMinutes)) {
+    return fail(`Choose a time while they are on it, ${clock(row.startMinutes)} to ${clock(row.endMinutes)}.`);
+  }
+  let name = placed?.name ?? "";
+  if (!placed) {
+    if (minutes === null) return fail("Choose when they do it.");
+    const sub = d.subActivityId ? (await subActivitiesFor([row.need.typeId]))[row.need.typeId]?.find((x) => x.id === d.subActivityId && x.when === "during") : null;
+    if (!sub) return fail("That sub-activity is no longer on this activity in Admin, Activities.");
+    name = sub.name;
+  }
+  const person = await staffContact(d.userId, at.site.orgId);
+  const who = person?.name ?? "Someone";
+  const words = minutes === null ? `${name} taken off` : placed ? `${name} moved to ${clock(minutes)}` : `${name} at ${clock(minutes)}`;
+  await prisma.$transaction(async (tx) => {
+    if (placed && minutes === null) await tx.rotaAssignmentSub.delete({ where: { id: placed.id } });
+    else if (placed) await tx.rotaAssignmentSub.update({ where: { id: placed.id }, data: { atMinutes: minutes, times: [minutes!] } });
+    else await tx.rotaAssignmentSub.create({ data: { assignmentId: row.id, subActivityId: d.subActivityId, name, when: "during", atMinutes: minutes, times: [minutes!],
+      sortOrder: Math.max(-1, ...row.subs.map((x) => x.sortOrder)) + 1 } });
+    await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "update", entity: "RotaAssignment", entityId: row.id, clubId: d.siteId,
+      summary: `${who}'s sub-activity on ${d.date}, ${clock(row.startMinutes)}–${clock(row.endMinutes)}: ${words}` }, tx);
+    if (at.live) await logLive(tx, at, d.date, "changed", `${who}'s sub-activity: ${words}`, d.userId, change);
   });
   refresh();
   return ok();

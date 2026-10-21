@@ -109,6 +109,9 @@ function WhosWhere() {
   const at = picked !== null ? Number(picked) : now ?? from;
   const times = Array.from({ length: Math.floor((to - from) / 30) }, (_, i) => from + i * 30);
   const where = whoIsWhere(diary, at);
+  // What people do while on things in the half hour shown: the till, cash drops, the phone placed on the Plan.
+  const around = diary.people.flatMap((p) => p.lines.flatMap((l) => l.subs.filter((x) => x.at !== null && x.at >= at && x.at < at + 30)
+    .map((x) => ({ at: x.at!, name: p.name, what: x.name })))).sort((a, b) => a.at - b.at || a.name.localeCompare(b.name));
   const resting = diary.people.filter((p) => p.breaks.some((b) => b.start <= at && at < b.end)).map((p) => p.name);
   const next = nextChange(diary, at);
   const nextWords = next ? [
@@ -142,6 +145,12 @@ function WhosWhere() {
           ))}
         </div>
       ) : <p className="diary-muted">Nothing is on at {clock(at)}.</p>}
+      {around.length ? (
+        <div className="diary-around">
+          <span className="diary-caption">Sub-activities, {clock(at)} to {clock(at + 30)}</span>
+          <ul>{around.map((x, i) => <li key={i}><span className="tabular-nums diary-muted">{clock(x.at)}</span><span>{firstName(x.name)}: {x.what}</span></li>)}</ul>
+        </div>
+      ) : null}
       {resting.length ? <p className="diary-muted"><Coffee aria-hidden="true" className="diary-inline-icon" />On a break: {listWords(resting)}</p> : null}
       {next && nextWords ? <p className="diary-next">Next, at <span className="tabular-nums">{clock(next.at)}</span>: {nextWords}.</p> : null}
     </section>

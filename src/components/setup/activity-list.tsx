@@ -81,7 +81,7 @@ export function SubActivitiesDialog({ activity, subs }: { activity: { id: string
     <FormDialog portalClassName={THEME} width="sm:max-w-2xl" onOpen={() => setRows(start())}
       trigger={<Button variant="outline"><ListChecks aria-hidden="true" />Sub-activities{subs.length ? ` (${subs.length})` : ""}</Button>}
       title={`${activity.name}: sub-activities`}
-      description="What is done while on it, and when. Usual ones are given to whoever is put on it; the Plan can add or take off any of them for a day."
+      description="What is done while on it, and when. Usual ones are given to whoever is put on it; the Plan can add or take off any of them for a day. One done any time is placed on someone's time on the Plan."
       submitLabel="Save sub-activities" successMessage="Sub-activities saved"
       submit={() => saveSubActivities(activity.id, rows.map((r) => ({ id: r.id, name: r.name, when: r.when, times: r.when === "at" ? r.times : [], usual: r.usual })))}>
       {rows.length ? (
@@ -102,10 +102,14 @@ export function SubActivitiesDialog({ activity, subs }: { activity: { id: string
                 </Field>
               </div>
               {r.when === "at" ? <SubTimes id={`${fid}-${r.key}`} name={r.name || `sub-activity ${i + 1}`} times={r.times} onChange={(times) => set(r.key, { times })} /> : null}
-              <div className="flex min-h-11 items-center gap-2 sm:col-span-9">
-                <Checkbox id={`${fid}-${r.key}-usual`} checked={r.usual} onCheckedChange={(v) => set(r.key, { usual: v === true })} />
-                <Label htmlFor={`${fid}-${r.key}-usual`} className="font-normal">Usual: give it to whoever is put on {activity.name}</Label>
-              </div>
+              {r.when === "during" ? (
+                <p className="flex min-h-11 items-center text-sm text-ui-muted-foreground sm:col-span-9">The Plan places it at a time on someone&apos;s time on {activity.name}.</p>
+              ) : (
+                <div className="flex min-h-11 items-center gap-2 sm:col-span-9">
+                  <Checkbox id={`${fid}-${r.key}-usual`} checked={r.usual} onCheckedChange={(v) => set(r.key, { usual: v === true })} />
+                  <Label htmlFor={`${fid}-${r.key}-usual`} className="font-normal">Usual: give it to whoever is put on {activity.name}</Label>
+                </div>
+              )}
               <div className="flex justify-end sm:col-span-3">
                 <Button type="button" variant="ghost" onClick={() => setRows((list) => list.filter((x) => x.key !== r.key))}><Trash2 aria-hidden="true" />Remove</Button>
               </div>

@@ -448,7 +448,8 @@ model RotaAssignmentSub {
   assignmentId  String
   subActivityId String?
   name          String
-  /// "start", "end", "at" (at `atMinutes`) or "during" (any time while they are on it).
+  /// "start", "end", "at" (at `atMinutes`) or "during" (any time while they are on it, placed on
+  /// the Plan at `atMinutes`; none for one saved before it could be placed).
   when          String
   atMinutes     Int?
   /// Its set times when it has more than one; `atMinutes` keeps the first.

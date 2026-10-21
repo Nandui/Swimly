@@ -216,10 +216,24 @@ async function seedRota(db: PrismaClient) {
     { id: "rat_teach", orgId: ORG, departmentId: "dept_aquatics", name: "Teaching", icon: "teaching", fromClasses: true, sortOrder: 1 },
     { id: "rat_desk", orgId: ORG, departmentId: "dept_reception", name: "Reception", icon: "reception", sortOrder: 2 },
   ] });
+  // Reception's sub-activities (Admin, Activities): the till at the start and end, cash drops at
+  // set times, and the phone, which the Plan places on someone's time.
+  await db.subActivity.createMany({ data: [
+    { id: "sub_open", activityTypeId: "rat_desk", name: "Open the cash till", when: "start", sortOrder: 0 },
+    { id: "sub_phone", activityTypeId: "rat_desk", name: "Answer the phone", when: "during", sortOrder: 1 },
+    { id: "sub_drop", activityTypeId: "rat_desk", name: "Cash drop", when: "at", atMinutes: 960, times: [960], sortOrder: 2 },
+    { id: "sub_close", activityTypeId: "rat_desk", name: "Close the cash till", when: "end", sortOrder: 3 },
+  ] });
   const h = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3));
   const need = async (offset: number, typeId: string, place: string, start: string, end: string, places: number, people: [number, string, string, string][]) =>
     db.rotaNeed.create({ data: { orgId: ORG, siteId: HILLVIEW, date: day(offset), typeId, place, startMinutes: h(start), endMinutes: h(end), places, ...by,
-      assignments: { create: people.map(([placeNo, userId, a, b]) => ({ place: placeNo, userId, startMinutes: h(a), endMinutes: h(b), ...by })) } } });
+      assignments: { create: people.map(([placeNo, userId, a, b]) => ({ place: placeNo, userId, startMinutes: h(a), endMinutes: h(b), ...by,
+        subs: typeId === "rat_desk" ? { create: [
+          { subActivityId: "sub_open", name: "Open the cash till", when: "start", sortOrder: 0 },
+          { subActivityId: "sub_phone", name: "Answer the phone", when: "during", sortOrder: 1 },
+          { subActivityId: "sub_drop", name: "Cash drop", when: "at", atMinutes: 960, times: [960], sortOrder: 2 },
+          { subActivityId: "sub_close", name: "Close the cash till", when: "end", sortOrder: 3 },
+        ] } : undefined })) } } });
   // This week at Hillview: two on the main pool all day with a lunchtime gap, the learner pool
   // with an evening gap, and reception partly covered. Riley is on today but rang in sick.
   for (let offset = 0; offset < 7; offset++) {
