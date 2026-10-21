@@ -14,9 +14,8 @@ export const coinageStatuses = {
 } satisfies Record<string, StatusMeta>;
 export type CoinageStatus = keyof typeof coinageStatuses;
 
-/** The coins and notes a till takes, largest first. Keys are the face value in cents. */
+/** The coins a till takes, largest first (coins only, owner decision 21 October 2026). Keys are the face value in cents. */
 export const denominations = [
-  { cents: 2000, label: "€20 notes" }, { cents: 1000, label: "€10 notes" }, { cents: 500, label: "€5 notes" },
   { cents: 200, label: "€2 coins" }, { cents: 100, label: "€1 coins" }, { cents: 50, label: "50c coins" },
   { cents: 20, label: "20c coins" }, { cents: 10, label: "10c coins" }, { cents: 5, label: "5c coins" },
   { cents: 2, label: "2c coins" }, { cents: 1, label: "1c coins" },
@@ -40,7 +39,7 @@ export type CoinageResult = { ok: true; id: string; version: number; warning?: s
 
 export const coinageNumber = (number: number) => `CO-${String(number).padStart(6, "0")}`;
 export const euros = (cents: number | null) => cents === null ? "Not entered" : new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(cents / 100);
-/** The denominations a request asks for, largest first, with how many coins or notes that is. */
+/** The denominations a request asks for, largest first, with how many coins that is. */
 export const coinageLines = (lines: CoinageLines) => denominations.filter(d => (lines[String(d.cents)] ?? 0) > 0)
   .map(d => ({ ...d, amountCents: lines[String(d.cents)]!, pieces: lines[String(d.cents)]! / d.cents }));
 export const editableCoinage = (row: { status: string; creatorId: string }, who: CoinageActor) => who.request && (row.status === "NEEDS_INFORMATION" || (row.status === "DRAFT" && row.creatorId === who.id));
@@ -65,7 +64,7 @@ export function coinageNextActions(row: { status: string; creatorId: string; han
 }
 /** The one line under "Next action" that says whose move it is. */
 export function coinageNextStep(status: string) {
-  return status === "DRAFT" ? "Add the coins and notes needed and send it to accounts when ready."
+  return status === "DRAFT" ? "Add the coins needed and send it to accounts when ready."
     : status === "NEEDS_INFORMATION" ? "The desk needs to answer the accounts query and send it again."
     : status === "APPROVED" ? "Accounts needs to order the coinage, then record the order here."
     : status === "SUBMITTED" || status === "IN_REVIEW" ? "Accounts needs to check the request and decide."

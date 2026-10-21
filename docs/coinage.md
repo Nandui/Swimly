@@ -1,6 +1,6 @@
 # Coinage
 
-Coinage is where the desks ask accounts for coins and notes for their tills, and where accounts
+Coinage is where the desks ask accounts for coins for their tills (coins only, no notes), and where accounts
 decides and records the order (owner request, 21 October 2026; ADR 0014). It works the way
 [Refunds](refunds.md) does: the same steps, the same access shape and the same staff emails. It
 never orders anything itself; the order is placed with the bank or cash carrier outside Turnfin.
@@ -8,10 +8,10 @@ never orders anything itself; the order is placed with the bank or cash carrier 
 ## The desk and accounts
 
 1. The desk opens **Request coinage**: the site (preset when the person works at exactly one), who it
-   is for (a till, desk or area), the day it is needed by, and for each coin or note the value in
-   euro (€50 of €2 coins is 25 coins). Each value must be a whole number of that coin or note. The
+   is for (a till, desk or area), the day it is needed by, and for each coin the value in
+   euro (€50 of €2 coins is 25 coins). Each value must be a whole number of that coin. The
    total adds up as they type. A draft needs only the site; sending needs who it is for, a needed-by
-   day of today or later and at least one coin or note. Amounts are stored as whole cents per
+   day of today or later and at least one coin. Amounts are stored as whole cents per
    denomination (`lines`, keyed by the face value in cents) with the total.
 2. **Save draft** keeps it private to whoever started it. **Send to accounts** shares it.
 3. The list starts on what needs the person's team (accounts: waiting for review and to order; the
@@ -20,7 +20,7 @@ never orders anything itself; the order is placed with the bank or cash carrier 
 4. Accounts can **Take this on** (an assignment, not a lock) and **Approve**, **Decline** (with a
    reason) or **Ask for more information** (with a reason). Nobody decides their own request.
 5. A request sent back can be changed by the desk and sent again. Every step stays in the history
-   with who did it, when, the total and, on each save or send, the coins and notes asked for.
+   with who did it, when, the total and, on each save or send, the coins asked for.
 6. An approved request shows **Awaiting order**. Once accounts has ordered it, **Record the order**
    takes the day ordered, the delivery day expected and the order reference, and closes it as
    **Ordered**. Recording it once is all; it cannot change after.

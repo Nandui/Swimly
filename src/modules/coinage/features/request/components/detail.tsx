@@ -22,15 +22,15 @@ function Facts({ items, stacked }: { items: [string, string][]; stacked?: boolea
   </div>)}</dl>;
 }
 
-/** The coins and notes asked for, with how many of each and the total. */
+/** The coins asked for, with how many of each and the total. */
 function Lines({ lines, total }: { lines: CoinageLines; total: number | null }) {
   const rows = coinageLines(lines);
-  if (!rows.length) return <p className="text-sm text-ui-muted-foreground">No coins or notes added yet.</p>;
+  if (!rows.length) return <p className="text-sm text-ui-muted-foreground">No coins added yet.</p>;
   return <Table>
-    <TableHeader><TableRow><TableHead>Coin or note</TableHead><TableHead className="text-right">How many</TableHead><TableHead className="text-right">Value</TableHead></TableRow></TableHeader>
+    <TableHeader><TableRow><TableHead>Coin</TableHead><TableHead className="text-right">How many</TableHead><TableHead className="text-right">Value</TableHead></TableRow></TableHeader>
     <TableBody>{rows.map(line => <TableRow key={line.cents}>
       <TableCell className="font-medium">{line.label}</TableCell>
-      <TableCell className="text-right tabular-nums">{plural(line.pieces, line.label.endsWith("notes") ? "note" : "coin")}</TableCell>
+      <TableCell className="text-right tabular-nums">{plural(line.pieces, "coin")}</TableCell>
       <TableCell className="text-right tabular-nums">{euros(line.amountCents)}</TableCell>
     </TableRow>)}</TableBody>
     <TableFooter><TableRow><TableCell colSpan={2} className="font-semibold">Total</TableCell><TableCell className="text-right font-semibold tabular-nums">{euros(total)}</TableCell></TableRow></TableFooter>
@@ -69,7 +69,7 @@ export function CoinageDetail({ data, who, sites }: { data: Detail; who: Coinage
       : <div className="grid min-w-0 items-start gap-4 xl:grid-cols-3">
         <div className="flex min-w-0 flex-col gap-4 xl:col-span-2">
           <section className="pc-panel" aria-labelledby="coinage-lines-heading">
-            <h2 id="coinage-lines-heading" className="text-lg font-semibold">Coins and notes</h2>
+            <h2 id="coinage-lines-heading" className="text-lg font-semibold">Coins</h2>
             <Lines lines={row.lines} total={row.totalCents} />
           </section>
           <section className="pc-panel" aria-labelledby="coinage-details-heading">
@@ -79,7 +79,7 @@ export function CoinageDetail({ data, who, sites }: { data: Detail; who: Coinage
           {row.status === "ORDERED" && <section className="pc-panel" aria-labelledby="coinage-order-heading">
             <h2 id="coinage-order-heading" className="text-lg font-semibold">The order</h2>
             <Facts items={[["Ordered on", day(row.orderedOn)], ["Delivery expected", day(row.deliveryOn)], ["Order reference", row.orderReference || "Not entered"], ["Recorded by", row.orderedByName || "Not recorded"]]} />
-            <p className="text-sm text-ui-muted-foreground">The order was placed outside Turnfin. Check the delivery against the coins and notes above.</p>
+            <p className="text-sm text-ui-muted-foreground">The order was placed outside Turnfin. Check the delivery against the coins above.</p>
           </section>}
           {history}
         </div>

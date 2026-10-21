@@ -10,7 +10,7 @@ export const coinageModule: ModuleManifest = {
   id: "coinage",
   group: "front-of-house",
   name: "Coinage",
-  description: "Coins and notes for the tills, requested at the desk and ordered by accounts",
+  description: "Coins for the tills, requested at the desk and ordered by accounts",
   icon: Coins,
   href: "/coinage/overview",
   logName: "Coinage",

@@ -66,14 +66,14 @@ export function CoinageRequestForm({ id, row, sites, defaultSite = "", actions, 
       </section>
       <section className="pc-panel" aria-labelledby="coinage-lines-heading">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 id="coinage-lines-heading" className="text-lg font-semibold">Coins and notes</h2>
+          <h2 id="coinage-lines-heading" className="text-lg font-semibold">Coins</h2>
           <p className="font-semibold tabular-nums" aria-live="polite">Total {euros(total)}</p>
         </div>
-        <p className="text-sm text-ui-muted-foreground">Enter the value in euro for each kind you need, such as 50.00 for €50 of €2 coins. Leave the rest empty.</p>
+        <p className="text-sm text-ui-muted-foreground">Enter the value in euro for each coin you need, such as 50.00 for €50 of €2 coins. Leave the rest empty.</p>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {denominations.map(d => {
             const key = `line${d.cents}` as const, cents = typedCents(fields[key]);
-            const count = cents && cents % d.cents === 0 ? plural(cents / d.cents, d.label.endsWith("notes") ? "note" : "coin") : undefined;
+            const count = cents && cents % d.cents === 0 ? plural(cents / d.cents, "coin") : undefined;
             return <Input key={d.cents} id={`coinage-${key}`} name={key} label={`${d.label} (€)`} value={fields[key] ?? ""} onChange={value => change(key, value)} inputMode="decimal" maxLength={10} description={count} />;
           })}
         </div>
@@ -81,7 +81,7 @@ export function CoinageRequestForm({ id, row, sites, defaultSite = "", actions, 
       <section className="pc-panel" aria-labelledby="coinage-notes-heading"><h2 id="coinage-notes-heading" className="text-lg font-semibold">Notes for accounts</h2>
         <Textarea id="coinage-notes" name="notes" label="Notes" optional value={fields.notes} onChange={event => change("notes", event.target.value)} maxLength={4000} rows={3} placeholder="Anything accounts should know, such as a busy weekend or an event." />
       </section>
-      <p className="pc-note text-sm"><CircleHelp aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-ui-primary" /><span>A draft needs only the site. Before sending, also add who it is for, when it is needed and at least one coin or note.</span></p>
+      <p className="pc-note text-sm"><CircleHelp aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-ui-primary" /><span>A draft needs only the site. Before sending, also add who it is for, when it is needed and at least one coin.</span></p>
     </fieldset>
     {row ? null : <>
       {feedback}

@@ -37,7 +37,7 @@ A role holds one level for each module (`StaffRole.levels`), plus up to two extr
 | Swim school | Desk (every swimmer, booking, move, waiting list and assessment booking), Manage (programmes, levels, classes and reports) | Can cancel classes (the duty manager page) |
 | Pool deck | Teach (the class instructor view only: own classes, attendance, competencies, assessments, covering), Lead (also any class's attendance) | |
 | Refunds | Use (log and follow requests), Manage (decide requests and record payments) | |
-| Coinage | Use (request coins and notes for a till and follow it), Manage (decide requests and record the orders) | |
+| Coinage | Use (request coins for a till and follow it), Manage (decide requests and record the orders) | |
 | Docs | Read, Write, Manage | Can approve, never their own |
 | Training | Trainer (sign off practical training), Manage (courses, assigning, certificates) | |
 | Rota | View, Plan, Run | |

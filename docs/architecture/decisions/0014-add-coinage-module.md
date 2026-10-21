@@ -4,7 +4,7 @@
 
 ## Context
 Fernando asked (21 October 2026) for "a new option for coinage request, similar to the refunds,
-goes to accounts": the desks ask for coins and notes for their tills, and accounts decides and
+goes to accounts": the desks ask for coins for their tills, and accounts decides and
 orders them. A new module changes the module map, which CLAUDE.md asks the owner to approve; his
 request is that approval. The rules are in [docs/coinage.md](../../coinage.md).
 

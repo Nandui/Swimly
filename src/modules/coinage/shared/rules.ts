@@ -16,7 +16,7 @@ const fieldsSchema = z.object({
   neededBy: text(10).refine(v => !v || isDateOnly(v), "Choose a valid date for when it is needed."),
 }).catchall(z.unknown());
 /** The form's fields, with one euro amount per denomination (`line200` for €2 coins). Each amount
- *  must be a whole number of that coin or note. */
+ *  must be a whole number of that coin. */
 export function parseFields(input: unknown, submit: boolean, now = today()) {
   const parsed = fieldsSchema.safeParse(input);
   if (!parsed.success) throw new CoinageError(parsed.error.issues[0].message);
@@ -31,7 +31,7 @@ export function parseFields(input: unknown, submit: boolean, now = today()) {
     lines[String(d.cents)] = cents; total += cents;
   }
   if (submit) {
-    if (!forWhom || !neededBy || !total) throw new CoinageError("Add who it is for, when it is needed and at least one coin or note before sending.");
+    if (!forWhom || !neededBy || !total) throw new CoinageError("Add who it is for, when it is needed and at least one coin before sending.");
     if (neededBy < now) throw new CoinageError("Choose today or a later day for when it is needed.");
   }
   return { clubId, forWhom, notes, neededBy, lines, totalCents: total || null };

@@ -1,6 +1,6 @@
 # Coinage
 
-**Purpose:** moves a till's request for coins and notes from the desk to accounts.
+**Purpose:** moves a till's request for coins from the desk to accounts.
 
 The rules for the screens, statuses and emails are in [docs/coinage.md](../../../docs/coinage.md) (ADR 0014). It mirrors Refunds' shape without importing it.
 
@@ -16,7 +16,7 @@ The rules for the screens, statuses and emails are in [docs/coinage.md](../../..
 
 ## Data owned
 Declared in `prisma/schema/coinage.prisma`:
-- `CoinageRequest` — one request: site, who for, needed by, the coins and notes, its status, version and order.
+- `CoinageRequest` — one request: site, who for, needed by, the coins, its status, version and order.
 - `CoinageEvent` — the history of every change, each with a snapshot.
 - `CoinageNotification` — status emails waiting to be sent, sent or failed.
 

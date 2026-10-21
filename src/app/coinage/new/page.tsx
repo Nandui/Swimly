@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "New coinage request" };
 export default async function NewCoinagePage() {
   await screenPage("coinage", "coinage.request");
   const sites = await coinageSites();
-  return <PageShell header={<PageHeader title="Request coinage" description="Ask accounts for coins and notes for a till. They check the request, order it and record the order here." />}>
+  return <PageShell header={<PageHeader title="Request coinage" description="Ask accounts for coins for a till. They check the request, order it and record the order here." />}>
     <CoinageRequestForm id={randomUUID()} sites={sites} defaultSite={await coinageDefaultSite(sites)} />
   </PageShell>;
 }

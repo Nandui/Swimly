@@ -46,14 +46,14 @@ const create = (overrides: Partial<CoinageFields> = {}, action: 'save' | 'submit
 const command = (row: { id: string; version: number }, action: CoinageCommand['action'], more: Partial<CoinageCommand> = {}): CoinageCommand => ({ id: row.id, version: row.version, operationId: randomUUID(), action, ...more });
 const order = { orderedOn: '2026-01-02', deliveryOn: '2026-01-05', orderReference: 'EXAMPLE-ORDER' };
 
-test('amounts are whole coins or notes in cents, and sending needs who, when and something to send', () => {
+test('amounts are whole coins in cents, and sending needs who, when and something to send', () => {
   assert.equal(money('0.29'), 29); assert.equal(money(''), null);
   for (const value of ['-1', '1e3', '12.345', 'NaN']) assert.throws(() => money(value));
   const parsed = parseFields(fields, true, '2026-10-21');
   assert.deepEqual(parsed.lines, { 200: 5000, 100: 2000, 5: 250 }); assert.equal(parsed.totalCents, 7250);
   assert.deepEqual(coinageLines(parsed.lines).map(line => [line.label, line.pieces]), [['€2 coins', 25], ['€1 coins', 20], ['5c coins', 50]]);
   assert.throws(() => parseFields({ ...fields, line200: '51' }, true, '2026-10-21'), /whole number of them/);
-  assert.throws(() => parseFields({ ...fields, line200: '', line100: '', line5: '' }, true, '2026-10-21'), /at least one coin or note/);
+  assert.throws(() => parseFields({ ...fields, line200: '', line100: '', line5: '' }, true, '2026-10-21'), /at least one coin/);
   assert.throws(() => parseFields({ ...fields, forWhom: '' }, true, '2026-10-21'), /who it is for/);
   assert.throws(() => parseFields({ ...fields, neededBy: '2026-10-20' }, true, '2026-10-21'), /today or a later day/);
   assert.equal(parseFields({ clubId: 'x', forWhom: '', neededBy: '', notes: '' }, false).totalCents, null);
