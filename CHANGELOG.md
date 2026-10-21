@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.61.0 · 21 October 2026 · Admin: search and filters on Staff
+
+- **Admin › Staff** now has a **Find a person** box at the top. Start typing a name or email and the list narrows as you type.
+- Beside it, choose **Everyone**, **Can sign in** or **Deactivated**, each with how many people it shows.
+- Under it, pick a **Role**, where they **Work at** and a **Department**. Each choice shows how many people have it. Someone who works at every site shows under each site.
+- The search and the choices work together, the page says how many people match, and **Clear all** brings everyone back.
+- Open a person and press **Staff** to come back: the list is just as you left it.
+
 ## 1.59.1 · 21 October 2026 · Rota: take someone off from their block on the Plan
 
 - On the rota **Plan**, tap a block on someone's row in **The day, person by person** (an area, an activity, a class or a booking). It now opens just that block, with **Take them off** and **Change time** right there, and their whole day one tap away. Before, the block opened their whole day and taking them off was a small link inside it.
