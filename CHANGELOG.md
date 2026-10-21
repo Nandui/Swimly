@@ -4,6 +4,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.50.0 · 21 October 2026 · Coinage: ask accounts for change for the tills
+
+- **Coinage** is new, beside Refunds under Front of house. The desk asks accounts for coins and notes for a till, and accounts decides and records the order, the same way refund requests go to finance.
+- **Request coinage** asks for the site, the till or area it is for, the day it is needed by, and how much of each coin and note in euro (for example €50 of €2 coins). Turnfin shows how many coins or notes that is and adds up the total. Save a draft or send it to accounts.
+- Accounts gets an email when a request arrives, and can take it on, approve it, decline it or ask the desk for more information. Nobody decides their own request.
+- Once ordered, accounts records the day it was ordered, the delivery day and the order reference. The desk gets an email at each step and can follow every request, with its full history, under **Coinage requests**.
+- Home shows accounts how many requests wait to be decided and ordered, and the desk a **Request coinage** button.
+- Coinage stays hidden until an administrator gives roles a level in **Admin > Roles**: **Use** for the desks, **Manage** for accounts.
+
 ## 1.48.1 · 21 October 2026 · The booking site sells Academy courses only
 
 - The booking site (academy.leisureworldcork.com) now shows only Academy courses, such as lifeguard and swim teacher qualifications. Customers still hold a place there without paying, and reception phones them within 72 hours to take payment.
