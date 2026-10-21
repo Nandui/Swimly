@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.53.0 · 21 October 2026 · Areas need people on an activity, and sub-activities at several times
+
+- In **Admin > Areas**, an area's **Staff needed** can now ask for people on an activity: for example, Reception needs **at least 1 on Serving customers**, from 09:00 to 21:00. Leave the times empty for whenever the area is open. Add as many lines as you need, such as a second one for 2 people at the busy time.
+- On the rota **Plan**, only people actually on that activity in the area (or in one of its parts, such as Till 1) count. If nobody is on it for a stretch, it shows under **Not covered yet** with the time and the reason, such as "Nobody on it yet".
+- **Choose someone** for one of these puts the person on that activity in the area, so their day says what they are doing there and the activity's usual sub-activities come with it.
+- Your existing lines, such as "2 lifeguards while open", work as before.
+- **Sub-activities** can now happen at several set times: for example, a cash drop at 12:00 and 16:00. Set the times in **Admin > Activities > Sub-activities**, and add or remove times for one person's day from their day on the Plan.
 ## 1.52.0 · 21 October 2026 · Coinage: ask accounts for change for the tills
 
 - **Coinage** is new, beside Refunds under Front of house. The desk asks accounts for coins for a till, and accounts decides and records the order, the same way refund requests go to finance.

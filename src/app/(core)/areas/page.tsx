@@ -17,7 +17,7 @@ export const metadata: Metadata = { title: "Areas" };
  *  assessments pick from, in this order. */
 export default async function AreasPage() {
   await screenPage("areas", "setup.view");
-  const { sites, canKeep, qualifications } = await areasPage();
+  const { sites, canKeep, qualifications, activities } = await areasPage();
   return (
     <PageShell spacing="roomy" header={<PageHeader title="Areas" description="Where work happens at each site, how many lanes a pool has, and the staff each needs while it is open. The rota, bookings, swim classes and short courses pick from these, in this order, and can take a pool whole or by lane." />}>
       {sites.length === 0 ? <EmptyState icon="building" title="No open sites" hint="Add a site under Sites first." /> : sites.map((site) => {
@@ -48,7 +48,7 @@ export default async function AreasPage() {
                         {staffingWords(area) ? <span className="pc-row-hint">{staffingWords(area)}</span> : null}
                         {area.together.map((t) => {
                           const other = site.areas.find((a) => a.id === t.withAreaId);
-                          const type = t.typeId ? area.minimums.find((m) => m.typeId === t.typeId)?.typeName ?? "qualified" : "anyone";
+                          const type = t.typeId ? area.minimums.find((m) => !m.activityTypeId && m.typeId === t.typeId)?.typeName ?? "qualified" : "anyone";
                           return other ? <span key={`${t.withAreaId}-${t.typeId ?? ""}`} className="pc-row-hint">Covered from {other.name} while both are open: {t.count} {type} in all</span> : null;
                         })}</span>
                       <span className="pc-row-trail">
@@ -57,7 +57,7 @@ export default async function AreasPage() {
                           {!area.archivedAt ? <MoveArea id={area.id} name={area.name} first={at === 0} last={at === live.length - 1} /> : null}
                           <SaveArea siteId={site.id} siteName={site.name} departments={site.departments} parents={parents}
                             area={{ ...area, hasSubAreas: live.some((a) => a.parentId === area.id) }} />
-                          {!area.archivedAt ? <AreaStaffing area={area} qualifications={qualifications} others={live.filter((a) => a.id !== area.id)} /> : null}
+                          {!area.archivedAt ? <AreaStaffing area={area} qualifications={qualifications} activities={activities} others={live.filter((a) => a.id !== area.id)} /> : null}
                           <ArchiveArea id={area.id} name={area.name} archived={!!area.archivedAt} />
                         </> : null}
                       </span>

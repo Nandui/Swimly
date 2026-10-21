@@ -6,7 +6,7 @@ import type { YoungBand } from "@/modules/rota/shared/constants";
 import { lanesInPlace } from "@/modules/rota/shared/lanes";
 import { shortWeight, without, type AreaMinimum, type Presence } from "@/modules/rota/shared/staffing";
 import type { AreaTogether, WeekHour } from "@/lib/setup/area-staffing";
-import { areaMinimumsOver, areaNeedsOn, areaTypeId, lessOff, type OffSpan } from "@/modules/rota/shared/area-needs";
+import { ACTIVITY_NEED, areaMinimumsOver, areaNeedsOn, areaTypeId, lessOff, type OffSpan } from "@/modules/rota/shared/area-needs";
 
 /** One day at one site, as every Rota screen draws it (Plan, Today, Turnfin Me): its **areas**
  *  (the site's list in Admin, Areas: Main pool, Learner pool, Front desk; owner decisions, 6 and 7
@@ -41,10 +41,13 @@ export type DayAreaAssignment = { id: string; areaId: string; typeId: string | n
  *  activity `area:<area>:<type>`, the need that and `:<date>`, a person on it `area:<row>`. */
 export { areaTypeId };
 export const isAreaNeed = (id: string | null | undefined) => !!id && id.startsWith("area:");
-/** The area, type of staff and date an area need's id names; null for any other need. */
-export function areaNeedOf(needId: string): { areaId: string; typeId: string | null; date: string } | null {
+/** The area, type of staff (or activity, for an activity line: owner, 21 October 2026) and date
+ *  an area need's id names; null for any other need. */
+export function areaNeedOf(needId: string): { areaId: string; typeId: string | null; activityTypeId: string | null; date: string } | null {
   const [prefix, areaId, type, date] = needId.split(":");
-  return prefix === "area" && areaId && type && date ? { areaId, typeId: type === "*" ? null : type, date } : null;
+  if (prefix !== "area" || !areaId || !type || !date) return null;
+  if (type.startsWith(ACTIVITY_NEED)) return { areaId, typeId: null, activityTypeId: type.slice(ACTIVITY_NEED.length), date };
+  return { areaId, typeId: type === "*" ? null : type, activityTypeId: null, date };
 }
 /** The stored row behind a person on an area need (`area:<row>`), or null. */
 export const areaAssignmentRow = (id: string) => (id.startsWith("area:") ? id.slice(5) : null);
@@ -137,6 +140,8 @@ export type Day = { date: string; zones: DayZone[]; groups: Group[]; people: Per
 /** A site's area as the day takes it: a name, or a name with its lanes, the hours it is open and
  *  the staff it needs then (Admin, Areas). */
 export type DayArea = string | { id?: string; name: string; lanes: number; openFrom?: number | null; openUntil?: number | null; weekHours?: readonly WeekHour[]; minimums?: AreaMinimum[];
+  /** The area it is part of: people on an activity in a sub-area count for the area's activity lines. */
+  parentName?: string | null;
   /** Staff in another area covering this one while both are open. */
   together?: readonly AreaTogether[] };
 
@@ -174,11 +179,25 @@ export function buildDay(input: {
   // it needs, on every department's plan. Only the people put on these count toward the area.
   // An area covered from another while both are open needs none of that type then, and the
   // other area needs the joint number in all (area-needs.ts).
+  // An area's activity line counts the people on that activity in the area or its parts.
+  const areaNames = (areaId: string) => {
+    const a = siteAreas.find((x) => "id" in x && x.id === areaId);
+    if (!a) return new Set<string>();
+    return new Set([a.name, ...siteAreas.filter((x) => "parentName" in x && x.parentName?.toLowerCase() === a.name.toLowerCase()).map((x) => x.name)].map((n) => n.toLowerCase()));
+  };
+  const onActivity = (areaId: string, activityTypeId: string) => {
+    const names = areaNames(areaId);
+    const needIds = new Set(input.needs.filter((n) => n.typeId === activityTypeId && names.has(n.place.split(",")[0].trim().toLowerCase())).map((n) => n.id));
+    return input.assignments.filter((a) => needIds.has(a.needId) && !input.off?.has(a.userId)).map((a) => ({ start: a.startMinutes, end: a.endMinutes }));
+  };
   const areaNeeds: DayNeed[] = [];
-  const own = areaNeedsOn(siteAreas.flatMap((a) => (a.id ? [{ ...a, id: a.id }] : [])), input.date);
+  const own = areaNeedsOn(siteAreas.flatMap((a) => (a.id ? [{ ...a, id: a.id }] : [])), input.date, onActivity);
   for (const n of own) {
     const id = n.typeId;
-    types.set(id, { id, name: areaNeedName(n.qualificationTypeId ? n.typeName ?? "Qualified" : null), icon: "activity", departmentId: ANY_DEPARTMENT, requiredTypeId: n.qualificationTypeId,
+    const activity = n.activityTypeId ? types.get(n.activityTypeId) : undefined;
+    if (n.activityTypeId) types.set(id, { id, name: activity?.name ?? n.activityName ?? "Activity", icon: activity?.icon ?? "activity", departmentId: ANY_DEPARTMENT,
+      requiredTypeId: activity?.requiredTypeId ?? null, requiredName: activity?.requiredName ?? null, fromClasses: false });
+    else types.set(id, { id, name: areaNeedName(n.qualificationTypeId ? n.typeName ?? "Qualified" : null), icon: "activity", departmentId: ANY_DEPARTMENT, requiredTypeId: n.qualificationTypeId,
       requiredName: n.qualificationTypeId ? n.typeName : null, fromClasses: false });
     areaNeeds.push({ id: n.id, typeId: id, place: n.areaName, startMinutes: n.startMinutes, endMinutes: n.endMinutes, places: n.places, note: "", repeatTitle: null, off: n.off, together: n.together });
   }
@@ -235,7 +254,8 @@ export function buildDay(input: {
       start: need.startMinutes, end: need.endMinutes, lanes: [...(need.lanes ?? [])], departmentId: type.departmentId, groupKey: g.key, needId: need.id, places: need.places, gaps: 0, href: null });
     const mine = assignments.filter((a) => a.needId === need.id);
     const gaps = needGaps(need, mine).flatMap((x) => lessOff(x, x.place, need.off).map((s) => ({ ...x, ...s })));
-    for (let place = 1; place <= need.places; place++) {
+    // A need for nobody (an area's activity line is filled on the activity itself) still shows who is on it.
+    for (let place = 1; place <= Math.max(need.places, ...mine.map((a) => a.place)); place++) {
       const lane: Lane = [
         ...mine.filter((a) => a.place === place).map((a): Block => {
           add(a.userId, { start: a.startMinutes, end: a.endMinutes, label: type.name });

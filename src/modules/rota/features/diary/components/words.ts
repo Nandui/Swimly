@@ -18,6 +18,10 @@ export const lineTitle = (l: Pick<Line, "kind" | "area" | "title">) => (l.kind =
 /** Under it: the role for an area ("Lifeguard on duty", with the area it is part of), else where. */
 export const lineWhere = (l: Pick<Line, "kind" | "area" | "title" | "group">) => (l.kind === "area" ? `${l.title}${l.group ? `, ${l.group}` : ""}` : placeWords(l));
 
+/** A need's short name on the timeline: an area's staff on duty by the area, anything else
+ *  (an area's activity line too: "Serving customers") by what it is. */
+export const needName = (n: Pick<Need, "kind" | "area" | "title" | "onActivity">) => (n.kind === "area" && !n.onActivity ? n.area || n.title : n.title);
+
 /** A need in a few words: "Lifeguard on duty, Pool › 25 m", "Party: Murphy (Party host), Main pool". */
 export const needWords = (n: Need) => `${n.title}${n.detail && n.kind === "booking" ? ` (${n.detail})` : ""}${n.area ? `, ${placeWords(n)}` : ""}`;
 
