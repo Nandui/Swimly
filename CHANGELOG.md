@@ -4,13 +4,20 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.61.0 · 21 October 2026 · Rota: people on an area's activities cover the area
+## 1.62.0 · 21 October 2026 · Rota: people on an area's activities cover the area
 
 - On the rota **Plan**, someone on an activity in an area now counts towards the staff that area needs, for the time of that activity. If Reception needs at least one person and Maeve is on Till 2 at Reception from 12:00 to 15:15, Reception is covered then and the gap shrinks to the times nobody is there.
 - This works for an area's parts too: someone on an activity at Till 2, which is part of Reception, covers Reception.
 - When an area asks for a qualification, such as lifeguards on the pool, only an activity that needs that same qualification counts. An aqua-fit instructor is still not one of the pool's lifeguards.
 - Tap an area's gap, on the **Not covered** row or under **Not covered yet**, to choose someone for that exact time. A new **Put them on** choice picks which of the area's activities they do, or the area itself. If that activity is already on there with a free place, they take it, which fills both.
 - **Today** counts people the same way.
+
+## 1.61.0 · 21 October 2026 · HR procedures in Docs
+
+- Ten HR procedures are ready to add to **Docs**, each short and step by step: reporting an absence, sickness on the day, keeping in touch and the return-to-work talk, repeated absence, long-term sickness, lateness and not turning up, annual leave, force majeure and other leave, and keeping absence records private. A starting page lists them all.
+- Each one says who does what, by when, and where it goes in Turnfin, such as **Report an absence** and **Return to work** in Rota.
+- To add them, open **Docs**, **Administration**, **HR procedures** and choose **Add the HR procedures**. They arrive as your drafts, for every site. Clicking again never adds a second copy.
+- Where one says **Set by LeisureWorld** (a phone number, a time, a number of days), fill it in from the staff handbook, then send it for approval as usual. Once approved, everyone with Docs can read it.
 
 ## 1.60.0 · 21 October 2026 · Pictures for suppliers in Purchasing
 
