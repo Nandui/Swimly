@@ -18,7 +18,7 @@ export function rangeKey(value: unknown): RangeKey {
 }
 
 /** A date written as YYYY-MM-DD that is a real calendar day. */
-export function isoDate(value: unknown): string | null {
+function isoDate(value: unknown): string | null {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
   const d = new Date(`${value}T00:00:00Z`);
   return Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== value ? null : value;

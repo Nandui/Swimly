@@ -224,7 +224,7 @@ function placeAt(places: PlaceRow[], studentId: string, levelId: string, date: s
 
 export type ClassRow = ReturnType<typeof buildClassRows>[number];
 
-export function buildClassRows(ds: Dataset) {
+function buildClassRows(ds: Dataset) {
   const { period } = ds;
   const counts = placesByCourse(ds);
   const waiting = new Map<string, number>();
