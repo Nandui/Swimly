@@ -7,7 +7,7 @@ import { staffContact } from "@/lib/directory";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { placeProblem } from "@/lib/setup/data";
-import { ageOn, centsOf, clockOf, MAX_WEEKS, SHORT_COURSE_PAYMENTS, takesPlace, weeklyDates } from "@/modules/short-courses/shared/rules";
+import { ageOn, appCourseArea, centsOf, clockOf, MAX_WEEKS, SHORT_COURSE_PAYMENTS, takesPlace, weeklyDates } from "@/modules/short-courses/shared/rules";
 import { atSite, courseFor, iso, optionalDate, refresh } from "@/modules/short-courses/shared/server";
 import { chose, copiedFrom, keepBooked, resolveSwimmer, swimmerChoiceSchema, type SwimmerChoiceInput } from "@/modules/short-courses/shared/swimmers";
 import { members } from "@/modules/contributions";
@@ -25,7 +25,7 @@ const courseSchema = z.object({
   price: z.string().trim().default("0"),
   instructorId: z.string().min(1, "Choose the instructor."),
   note: z.string().trim().max(500).default(""),
-  /** Shown on the public booking site until its first session (phase 2). */
+  /** A Pool course only: shown in the parents app until its first session (owner decision, 21 October 2026). */
   bookOnline: z.boolean().default(false),
   /** A new course only: its weekly sessions are made from these. */
   firstDay: z.string().default(""),
@@ -52,11 +52,12 @@ export async function saveCourse(id: string | null, input: CourseInput): Promise
   if (before && d.capacity < before._count.participants) return fail(`${before._count.participants} people are booked on it. Withdraw some first, or keep at least that many places.`);
   const typeId = before?.typeId ?? d.typeId;
   const [type, instructor] = await Promise.all([
-    prisma.shortCourseType.findFirst({ where: { id: typeId, orgId: at.site.orgId, ...(before ? {} : { archivedAt: null }) }, select: { name: true } }),
+    prisma.shortCourseType.findFirst({ where: { id: typeId, orgId: at.site.orgId, ...(before ? {} : { archivedAt: null }) }, select: { name: true, area: true } }),
     staffContact(d.instructorId, at.site.orgId, { activeOnly: true }),
   ]);
   if (!type) return fail("That course is no longer on the list.");
   if (!instructor) return fail("That instructor is no longer active.");
+  if (d.bookOnline && !appCourseArea(type.area)) return fail("Only Pool courses can be shown in the parents app.");
   let schedule: { dates: string[]; start: number; end: number } | null = null;
   if (!id) {
     if (!isDateOnly(d.firstDay)) return fail("Choose the first day.");
@@ -75,8 +76,8 @@ export async function saveCourse(id: string | null, input: CourseInput): Promise
       await tx.shortCourseSession.createMany({ data: schedule.dates.map((date) => ({ courseId: r.id, date: parseDateOnly(date), startMinutes: schedule.start, endMinutes: schedule.end, place: d.place })) });
     }
     await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: id ? "update" : "create", entity: "ShortCourse", entityId: r.id, clubId: siteId,
-      summary: id ? `Changed the ${type.name} course at ${at.site.name}: ${d.capacity} places, instructor ${instructor.name}${d.bookOnline ? ", open for online booking" : ", not online"}`
-        : `Put on ${type.name} at ${at.site.name}: ${d.weeks} weekly sessions from ${d.firstDay}, ${d.start}–${d.end}${d.place ? ` in ${d.place}` : ""}, ${d.capacity} places, instructor ${instructor.name}${d.bookOnline ? ", open for online booking" : ""}` }, tx);
+      summary: id ? `Changed the ${type.name} course at ${at.site.name}: ${d.capacity} places, instructor ${instructor.name}${d.bookOnline ? ", shown in the parents app" : ", not in the parents app"}`
+        : `Put on ${type.name} at ${at.site.name}: ${d.weeks} weekly sessions from ${d.firstDay}, ${d.start}–${d.end}${d.place ? ` in ${d.place}` : ""}, ${d.capacity} places, instructor ${instructor.name}${d.bookOnline ? ", shown in the parents app" : ""}` }, tx);
     return r;
   });
   refresh(row.id);

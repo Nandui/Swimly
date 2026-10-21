@@ -13,6 +13,7 @@ export async function getClubs() {
       name: true,
       code: true,
       address: true,
+      phone: true,
       archivedAt: true,
       orgId: true,
     },

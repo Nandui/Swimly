@@ -1,4 +1,4 @@
-import { liveSiteIds, liveSites, withSiteStatus, type SiteStatusRef } from "@/lib/directory";
+import { liveSiteIds, liveSites, sitePhones, withSiteStatus, type SiteStatusRef } from "@/lib/directory";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
@@ -51,8 +51,11 @@ function sessionDto(session: PublicSession, curriculum: SharedCurriculum) {
     bookable: availability.open && availability.spaces !== 0, cancelled: Boolean(session.cancelledAt) };
 }
 
+/** Live sites with their reception phone (empty when none is set). */
 export async function listSites() {
-  return { items: await liveSites() };
+  const sites = await liveSites();
+  const phones = await sitePhones(sites.map((s) => s.id));
+  return { items: sites.map((s) => ({ ...s, phone: phones.get(s.id) ?? "" })) };
 }
 
 export async function getPublicSession(id: string) {

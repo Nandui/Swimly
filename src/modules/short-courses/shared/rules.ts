@@ -73,6 +73,14 @@ export const toPhone = (p: { source: string; status: string; payment: string; ca
 
 export const takesPlace = (status: string) => status === "booked";
 
+/** Only Pool courses can be shown in the parents app (owner decision, 21 October 2026). */
+export const appCourseArea = (area: string) => area === "pool";
+
+/** Shown in the parents app: a Pool course Manage ticked, still planned, its first session to come. */
+export function inParentsApp(c: { bookOnline: boolean; status: string; cancelledAt: Date | null }, area: string, firstDay: string | null, today: string) {
+  return c.bookOnline && appCourseArea(area) && !c.cancelledAt && c.status === "planned" && !!firstDay && firstDay > today;
+}
+
 export function courseState(c: { status: string; cancelledAt: Date | null }, firstDay: string | null, today: string): ShortCourseState {
   if (c.cancelledAt || c.status === "cancelled") return "cancelled";
   if (c.status === "finished") return "finished";

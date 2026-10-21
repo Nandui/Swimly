@@ -11,11 +11,20 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - In **Admin, Areas**, each line in **Staff needed** now has a **Role** (from Admin, Positions) and **Who can fill it**. Choosing a role fills in the qualification it needs; change it only if that area needs something else. Areas you set up before already show the role that needs their certificate, so nothing needs entering again. Open them once to check the role is right.
 - Lines that ask for people on an activity, such as **at least 1 on Serving customers**, stay as they are and show next to the roles.
 
+## 1.57.0 · 21 October 2026 · Swimming courses in the parents app
+
+- Swimming courses can now be booked in the parents app. When you put on or change a **Pool** course, tick **Show in the parents app** and it shows there until its first session.
+- Courses for 18 and over are for adults, who sign up in the app with their own account and book a place for themselves. Their first booking adds them to the swimmer records. Other courses show to parents, who book a place for one of their children if the child is old enough.
+- A place booked in the app is held, not paid. It shows on the course and on the **To phone** list, already linked to the swimmer, with a reference and the 72 hours you have to phone them and take payment.
+- When a course is full, the app says so and gives the centre's phone number. There is no waiting list in the app.
+- Each site now has a **Reception phone** in **Admin > Sites**. Fill it in so the app can show it.
+
 ## 1.56.1 · 21 October 2026 · Places at each level show how full each level is
 
 - In **Analytics**, **Places at each level** now gives every level a bar the same length, so you can compare them at a glance. The blue part is how much of that level is filled and the grey part is what is free.
 - Each level shows how full it is as a percentage at the end of its row. Anyone waiting is shown beside the figures with an orange dot.
 - When you open a slot in **When classes are full**, its levels use the same bars and percentages.
+
 ## 1.56.0 · 21 October 2026 · A clear check before every move and enrolment
 
 - Whenever you move or enrol a swimmer, Turnfin now shows one clear picture of what is about to happen before anything changes: the swimmer's name in large type, the class they leave (it ends today) and the class they join (it starts today), each with its day, time, level and centre.

@@ -670,6 +670,11 @@ model ParentAccount {
   email          String                 @unique
   name           String?
   phone          String?
+  /// "family" (a parent with children in lessons) or "adult" (books swimming courses
+  /// for themselves). One email is one kind; separate accounts, owner decision 21 Oct 2026.
+  kind           String                 @default("family")
+  /// An adult account's own swimmer record, made on their first course booking.
+  swimmerId      String?                @unique
   isActive       Boolean                @default(true)
   createdAt      DateTime               @default(now())
   updatedAt      DateTime               @updatedAt

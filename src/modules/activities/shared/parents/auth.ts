@@ -41,8 +41,15 @@ export async function requestCode(request: Request) {
   return { challengeId: id, expiresAt: expiresAt.toISOString() };
 }
 
+/** A family account (a parent with children in lessons) or an adult one (books swimming courses
+ *  for themselves). One email is one kind: separate accounts (owner decision, 21 October 2026). */
+export const ACCOUNT_KINDS = ["family", "adult"] as const;
+export type AccountKind = (typeof ACCOUNT_KINDS)[number];
+const kindOf = (account: Pick<ParentAccount, "kind">): AccountKind => (account.kind === "adult" ? "adult" : "family");
+
 export async function verifyCode(request: Request) {
-  const { challengeId, code } = await readBody(request, z.object({ challengeId: z.string().regex(/^[A-Za-z0-9_-]{43}$/), code: z.string().regex(/^\d{6}$/) }).strict());
+  const { challengeId, code, kind } = await readBody(request, z.object({ challengeId: z.string().regex(/^[A-Za-z0-9_-]{43}$/), code: z.string().regex(/^\d{6}$/),
+    kind: z.enum(ACCOUNT_KINDS).default("family") }).strict());
   await rateLimit(`verify-ip:${requestIp(request)}`, 60, 3600);
   const candidate = await prisma.parentSignInChallenge.findUnique({ where: { id: challengeId }, select: { email: true } });
   const token = opaqueToken(), now = new Date(), expiresAt = new Date(now.getTime() + 7 * 86400_000);
@@ -60,20 +67,36 @@ export async function verifyCode(request: Request) {
     if (!matches) return null;
     let parent = await tx.parentAccount.findUnique({ where: { email: challenge.email } });
     if (parent && !parent.isActive) return null;
+    // The code is used either way; the other kind of account is told to use another email.
+    if (parent && kindOf(parent) !== kind) return { wrongKind: kindOf(parent) } as const;
     if (!parent) {
-      parent = await tx.parentAccount.create({ data: { email: challenge.email } });
-      await parentAudit(tx, parent, "create", "ParentAccount", parent.id, "Created a verified parent account");
+      parent = await tx.parentAccount.create({ data: { email: challenge.email, kind } });
+      await parentAudit(tx, parent, "create", "ParentAccount", parent.id, kind === "adult" ? "Created a verified adult account for swimming courses" : "Created a verified parent account");
     }
     const session = await tx.parentSession.create({ data: { parentId: parent.id, tokenHash: digest(`session:${token}`), expiresAt } });
     await parentAudit(tx, parent, "sign-in", "ParentSession", session.id, "Signed in to the parent API");
     return parent;
   });
   if (!account) throw new ParentApiError(401, "INVALID_CODE", "That code is incorrect or has expired. Request a new code if needed.");
+  if ("wrongKind" in account) {
+    throw new ParentApiError(409, "ACCOUNT_KIND", account.wrongKind === "adult"
+      ? "This email is already used for adult swimming courses. Use a different email for your family account."
+      : "This email is already used for a family account. Use a different email to book adult swimming courses.");
+  }
   return { accessToken: token, tokenType: "Bearer", expiresAt: expiresAt.toISOString(), parent: parentProfile(account) };
 }
 
 export function parentProfile(account: ParentAccount) {
-  return { id: account.id, email: account.email, name: account.name, phone: account.phone };
+  return { id: account.id, email: account.email, name: account.name, phone: account.phone, kind: kindOf(account) };
+}
+
+/** Children, link requests, assessments and corrections belong to family accounts. */
+export function requireFamily(account: Pick<ParentAccount, "kind">) {
+  if (kindOf(account) !== "family") throw new ParentApiError(403, "FAMILY_ACCOUNT_ONLY", "This is an adult courses account. Children's lessons need a family account with a different email.");
+}
+
+export function isAdult(account: Pick<ParentAccount, "kind">) {
+  return kindOf(account) === "adult";
 }
 
 export async function authenticateParent(request: Request): Promise<ParentIdentity> {

@@ -92,7 +92,7 @@ export async function newCourseOptions() {
   const [siteRows, types] = await Promise.all([
     liveSitesOf(who.orgId ?? null).then((rows) => rows.filter((s) => sites.kind === "all" || sites.siteIds.has(s.id)).map(({ id, name }) => ({ id, name }))),
     prisma.shortCourseType.findMany({ where: { orgId: who.orgId ?? undefined, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-      select: { id: true, name: true, weeks: true, sessionMinutes: true } }),
+      select: { id: true, name: true, area: true, weeks: true, sessionMinutes: true } }),
   ]);
   const perSite = await Promise.all(siteRows.map(async (s) => ({ siteId: s.id, people: await activeStaffAtSite(who.orgId ?? null, s.id), areas: await areaLanesAt(s.id) })));
   return { who, sites: siteRows, types, perSite, today: today() };

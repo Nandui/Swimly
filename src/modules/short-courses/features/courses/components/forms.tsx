@@ -23,7 +23,7 @@ import { readSwimmerChoice, SwimmerPicker, type PickedSwimmer } from "@/modules/
 /* ---------- Courses ---------- */
 
 export type CourseEdit = { id: string; siteId: string; typeId: string; capacity: number; priceCents: number; instructorId: string; note: string; bookOnline: boolean };
-type TypeOption = Option & { weeks: number; sessionMinutes: number };
+type TypeOption = Option & { area: string; weeks: number; sessionMinutes: number };
 type SiteOptions = { siteId: string; people: Person[]; areas: AreaWithLanes[] };
 
 /** Put a course on with its weekly sessions, or change its places, price and instructor. */
@@ -87,6 +87,15 @@ export function CourseDialog({ course, sites, types, perSite, today, trigger }: 
         <Field label="Places" htmlFor={`${fid}-cap`}><Input id={`${fid}-cap`} name="capacity" type="number" min={1} max={200} required defaultValue={course?.capacity ?? 12} className="min-h-11" /></Field>
         <Field label="Price (€)" htmlFor={`${fid}-price`} hint="For the whole course."><Input id={`${fid}-price`} name="price" inputMode="decimal" defaultValue={course ? amount(course.priceCents) : ""} placeholder="90" className="min-h-11" /></Field>
       </div>
+      {type?.area === "pool" ? (
+        <div className="flex items-start gap-3">
+          <Checkbox id={`${fid}-app`} name="bookOnline" defaultChecked={course?.bookOnline ?? false} className="mt-1" />
+          <Label htmlFor={`${fid}-app`} className="grid gap-1 font-normal">
+            <span className="font-medium">Show in the parents app</span>
+            <span className="text-sm text-ui-muted-foreground">People hold a place until the first session and the desk phones them within 72 hours to take payment. 18 and over goes to adults, younger to parents.</span>
+          </Label>
+        </div>
+      ) : null}
       <Field label="Note" htmlFor={`${fid}-note`} optional><Textarea id={`${fid}-note`} name="note" maxLength={500} defaultValue={course?.note} /></Field>
     </FormDialog>
   );

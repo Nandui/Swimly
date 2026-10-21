@@ -37,11 +37,43 @@ deployed. No parent screens have been added to the staff or Instructor workspace
 | GET | `/assessment-sessions` | Published assessment availability; no login needed |
 | GET | `/assessment-sessions/{sessionId}` | One open, published session; full sessions remain readable |
 | GET, POST | `/assessment-bookings` | Read linked children's bookings or book an assessment |
+| GET | `/courses`, `/courses/{courseId}` | Swimming courses open in the app; no login needed |
+| POST | `/course-holds` | Hold a place on a course for yourself (adult account) or a linked child (family account) |
+| GET | `/course-bookings` | Places on swimming courses: an adult's own, or each linked child's |
 
 No v1 endpoint exposes medical notes, staff notes, raw activity logs, contact
 details from a swimmer record, other families, whole-class attendance registers or class
 transfers. Parents cannot edit existing swimmer details directly, cancel bookings, or
 move children between weekly classes in v1; they propose corrections instead (below).
+
+## Swimming courses and adult accounts
+
+Owner decisions, 21 October 2026. Swimming short courses (most of them adult lessons, 18 and over)
+are booked in the parents app as well as at the desk.
+
+- **Which courses.** A Pool short course whose run Manage ticked **Show in the parents app**, until
+  its first session (docs/short-courses.md). Short courses owns them and registers them through the
+  `registerAppCourses` seam in `src/modules/contributions.ts`; this API never reads short-course
+  tables. Each course carries its site's reception phone (Admin, Sites).
+- **Two kinds of account.** `POST /auth/verify-code` takes `kind`: `family` (the default, everything
+  above) or `adult`. One email is one kind; signing in with the other kind returns 409
+  `ACCOUNT_KIND`, and the person uses a different email. Adult accounts have no children part:
+  children, link requests, assessments and corrections return 403 `FAMILY_ACCOUNT_ONLY`.
+- **Who books what.** A course with a minimum age of 18 or more is `forAdults`: an adult account books
+  it for themselves. The rest are booked by a family account for a linked child (`childId`), whose
+  age on the first day is checked against the minimum.
+- **An adult's swimmer record.** Their first booking sends `me` (first name, last name, date of
+  birth) and makes their swimmer record at the course's site, linked to the account
+  (`ParentAccount.swimmerId`), in the same transaction as the place. As for a new child, nobody is
+  matched by name or birthday; staff merge duplicates. `GET /me` then returns it as `swimmer`.
+- **Holding a place** books them on with payment owed, linked to the swimmer, a reference
+  ("SC-4K8PZ") and the desk's 72-hour deadline to phone (`callBy`). It shows on Short courses'
+  **To phone** list like any place held online. Nothing is paid in the app.
+- **Full** courses return 409 `FULL` with the site's phone in the message. There is no waiting list
+  in the app; the desk still keeps its own.
+- `GET /course-bookings` lists places for the adult's own swimmer record, or each linked child,
+  however they were booked: held (to pay), booked, finished, withdrawn or cancelled, with the next
+  session and how many registers they were at.
 
 ## Weekly lessons and attendance
 

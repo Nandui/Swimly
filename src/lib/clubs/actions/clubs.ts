@@ -63,6 +63,13 @@ const clubSchema = z.object({
     .max(400, "Keep the address under 400 characters.")
     .transform((v) => v.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).join("\n"))
     .default(""),
+  /** The reception number the public ring; empty when none is set. */
+  phone: z
+    .string()
+    .trim()
+    .max(30, "Keep the phone number under 30 characters.")
+    .refine((v) => v === "" || (/^\+?[0-9 ().-]+$/.test(v) && v.replace(/\D/g, "").length >= 7), "Enter a phone number with at least 7 digits, like 021 000 0000.")
+    .default(""),
 });
 
 export type ClubInput = z.input<typeof clubSchema>;
@@ -78,7 +85,7 @@ export async function createClub(input: ClubInput): Promise<ActionResult> {
 
   const parsed = clubSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
-  const { name, code, address } = parsed.data;
+  const { name, code, address, phone } = parsed.data;
   const orgId = await organisationOf(session.user.id);
   if (!orgId) return fail("Your account has no organisation.");
 
@@ -90,7 +97,7 @@ export async function createClub(input: ClubInput): Promise<ActionResult> {
   const created = await onUniqueViolation(
     () => prisma.$transaction(async (tx) => {
       const created = await tx.club.create({
-        data: { name, code, address, orgId, sortOrder: (last?.sortOrder ?? -1) + 1 },
+        data: { name, code, address, phone, orgId, sortOrder: (last?.sortOrder ?? -1) + 1 },
         select: { id: true, name: true },
       });
 
@@ -119,24 +126,24 @@ export async function updateClub(id: string, input: ClubInput): Promise<ActionRe
 
   const parsed = clubSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
-  const { name, code, address } = parsed.data;
+  const { name, code, address, phone } = parsed.data;
 
   const existing = await prisma.club.findUnique({
     where: { id },
-    select: { id: true, name: true, code: true, address: true, orgId: true },
+    select: { id: true, name: true, code: true, address: true, phone: true, orgId: true },
   });
   if (!existing) return fail("That site no longer exists.");
   // Sites added before 1.12.4 were saved without an organisation; saving one
   // gives it the administrator's, so the modules list it.
   const orgId = existing.orgId ?? await organisationOf(session.user.id);
   const joins = !existing.orgId && orgId !== null;
-  if (existing.name === name && existing.code === code && existing.address === address && !joins) return ok();
+  if (existing.name === name && existing.code === code && existing.address === address && existing.phone === phone && !joins) return ok();
 
   const updated = await onUniqueViolation(
     () => prisma.$transaction(async (tx) => {
       const updated = await tx.club.update({
         where: { id },
-        data: { name, code, address, ...(joins ? { orgId } : {}) },
+        data: { name, code, address, phone, ...(joins ? { orgId } : {}) },
         select: { id: true, name: true },
       });
 
@@ -147,7 +154,9 @@ export async function updateClub(id: string, input: ClubInput): Promise<ActionRe
         entity: "Club",
         entityId: id,
         clubId: id,
-        summary: existing.name === updated.name && existing.code === code && existing.address !== address
+        summary: existing.name === updated.name && existing.code === code && existing.address === address && existing.phone !== phone
+          ? `${phone ? "Set" : "Cleared"} ${updated.name}'s reception phone${phone ? `: ${phone}` : ""}`
+          : existing.name === updated.name && existing.code === code && existing.address !== address
           ? `${address ? "Set" : "Cleared"} ${updated.name}'s address${address ? `: ${address.replace(/\n/g, ", ")}` : ""}`
           : existing.name === updated.name && existing.code === code
           ? `Added ${updated.name} to the organisation`

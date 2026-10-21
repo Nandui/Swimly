@@ -13,10 +13,10 @@ import {
   updateClub,
 } from "@/lib/clubs/actions/clubs";
 
-type Club = { id: string; name: string; code?: string | null; address?: string; archivedAt: Date | null };
+type Club = { id: string; name: string; code?: string | null; address?: string; phone?: string; archivedAt: Date | null };
 
 function readInput(formData: FormData) {
-  return { name: String(formData.get("name") ?? ""), code: String(formData.get("code") ?? ""), address: String(formData.get("address") ?? "") };
+  return { name: String(formData.get("name") ?? ""), code: String(formData.get("code") ?? ""), address: String(formData.get("address") ?? ""), phone: String(formData.get("phone") ?? "") };
 }
 
 function ClubFields({ club }: { club?: Club }) {
@@ -37,6 +37,9 @@ function ClubFields({ club }: { club?: Club }) {
       </Field>
       <Field label="Address" optional htmlFor="address" hint="One line per line, with the Eircode. Suppliers deliver purchase orders here.">
         <Textarea id="address" name="address" rows={4} maxLength={400} defaultValue={club?.address ?? ""} />
+      </Field>
+      <Field label="Reception phone" optional htmlFor="phone" hint="The number the public ring. The parents app shows it when a course is full.">
+        <Input id="phone" name="phone" type="tel" maxLength={30} defaultValue={club?.phone ?? ""} placeholder="021 000 0000" />
       </Field>
     </>
   );

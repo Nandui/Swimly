@@ -424,6 +424,9 @@ model Club {
   /// The site's postal address, one line per line: where suppliers deliver
   /// purchase orders (owner request, 15 October 2026). Empty until set.
   address    String    @default("")
+  /// The reception phone number the public ring, e.g. when a course in the
+  /// parents app is full (owner request, 21 October 2026). Empty until set.
+  phone      String    @default("")
 
   organisation        Organisation?         @relation(fields: [orgId], references: [id], onDelete: Restrict)
   programmes          Programme[]
