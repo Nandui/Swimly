@@ -4,6 +4,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.55.1 · 21 October 2026 · Places at each level show how full each level is
+
+- In **Analytics**, **Places at each level** now gives every level a bar the same length, so you can compare them at a glance. The blue part is how much of that level is filled and the grey part is what is free.
+- Each level shows how full it is as a percentage at the end of its row. Anyone waiting is shown beside the figures with an orange dot.
+- When you open a slot in **When classes are full**, its levels use the same bars and percentages.
+
 ## 1.55.0 · 21 October 2026 · Short courses book people from the swimmer records
 
 - **Book someone on** (short courses) and **Add a candidate** (Academy courses) now start with **Find the swimmer**. Search by name, member number, date of birth or a parent's name, and pick the right person. Their member number, contacts, emergency contact and medical notes come with them.

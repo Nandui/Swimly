@@ -201,19 +201,26 @@ a.ins-board-row:focus-visible { outline: 2px solid var(--pc-focus); outline-offs
 
 /* ── Places at each level: filled, free and waiting as one bar each. */
 .turnfin-app .ins-levels { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; }
-.turnfin-app .ins-levels li { display: grid; grid-template-columns: minmax(7rem, 0.7fr) minmax(0, 1.4fr); grid-template-areas: 'name bar' 'name text'; align-items: center; gap: 4px 16px; padding: 8px 0; }
+.turnfin-app .ins-levels li { display: grid; grid-template-columns: minmax(7rem, 0.7fr) minmax(0, 1.4fr) 4.5rem; grid-template-areas: 'name bar full' 'name text full'; align-items: center; gap: 4px 16px; padding: 8px 0; }
 .turnfin-app .ins-levels li + li { border-top: 1px solid var(--pc-line); }
 .turnfin-app .ins-levels-name { grid-area: name; display: flex; flex-direction: column; font-size: 14px; }
 .turnfin-app .ins-levels-name span { color: var(--pc-ink-muted); font-size: 12px; }
+/* Every bar is the level's own places, so each runs the full width and the filled part is its share. */
 .turnfin-app .ins-levels-bar { grid-area: bar; display: flex; gap: 2px; height: 14px; }
 .turnfin-app .ins-levels-bar > span { height: 100%; min-width: 4px; }
 .turnfin-app .ins-levels-bar > span:first-child { border-top-left-radius: 999px; border-bottom-left-radius: 999px; }
 .turnfin-app .ins-levels-bar > span:last-child { border-top-right-radius: 999px; border-bottom-right-radius: 999px; }
 .turnfin-app .ins-levels-bar [data-part='filled'] { background: var(--ins-a); }
 .turnfin-app .ins-levels-bar [data-part='free'] { background: var(--ins-previous); }
-.turnfin-app .ins-levels-bar [data-part='waiting'] { background: var(--ins-b); }
-.turnfin-app .ins-levels-text { grid-area: text; font-size: 13px; color: var(--pc-ink-muted); }
+.turnfin-app .ins-levels-full { grid-area: full; display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15; white-space: nowrap; }
+.turnfin-app .ins-levels-full strong { color: var(--pc-ink); font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.turnfin-app .ins-levels-full span { color: var(--pc-ink-muted); font-size: 12px; }
+.turnfin-app .ins-levels-text { grid-area: text; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 12px; font-size: 13px; color: var(--pc-ink-muted); }
 .turnfin-app .ins-levels-text strong { color: var(--pc-ink); }
+.turnfin-app .ins-levels-waiting { display: inline-flex; align-items: center; gap: 6px; color: var(--pc-ink); font-weight: 700; }
+@media (max-width: 520px) {
+  .turnfin-app .ins-levels li { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'name full' 'bar bar' 'text text'; }
+}
 
 /* ── Short named lists inside a card. */
 .turnfin-app .ins-mini { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
@@ -421,6 +428,7 @@ a.ins-kpi:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2p
   .turnfin-app :is(.ins-panel, .ins-drill-link, .ins-tile, .ins-kpi) { border: 1px solid CanvasText; }
   .turnfin-app :is(.ins-switch-item, .ins-pill, .ins-tile)[aria-current], .turnfin-app :is(.ins-pill, .ins-tile)[aria-pressed='true'] { outline: 2px solid Highlight; }
   .turnfin-app :is([data-slot='progress-indicator'], .ins-split-bar > span, .ins-levels-bar > span) { background: Highlight; }
+  .turnfin-app .ins-levels-bar > [data-part='free'] { background: Canvas; box-shadow: inset 0 0 0 1px CanvasText; }
 }
 @container ins-main (max-width: 539px) { .turnfin-app .ins-kpis .ins-kpi-cell:last-child:nth-child(odd) { grid-column: span 2; } }
 /* Tabs inside a narrow panel scroll sideways instead of wrapping over the rows beneath them. */

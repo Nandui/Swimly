@@ -66,7 +66,10 @@ Filters, all carried from page to page by `reportQuery` (`server/period.ts`):
   joined, left, places filled and waiting, each with its chart; a day × class start time heat
   map of places filled with a dot where someone waits (pressing a slot opens its levels,
   grouped by programme, with places filled, free and waiting and links to each class),
-  beside the full and nearly empty classes; places at each level; who left by reason or level; assessments to places;
+  beside the full and nearly empty classes; places at each level (owner, 21 October 2026:
+  every level's bar is its own places at full width, the filled share in blue, with its
+  % full at the end of the row and anyone waiting in amber; an opened slot's levels use
+  the same `PlacesRow`); who left by reason or level; assessments to places;
   the next four weeks; ages.
 - **Reception** (`/analytics/reception`): worth a look first; tiles for jobs done, on
   time, still waiting, new swimmers complete, unenrols with a reason and undone in a
