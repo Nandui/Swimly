@@ -36,6 +36,8 @@ export type DiaryState = DiaryData & {
   hoursMap: ReadonlyMap<string, { week: number; contract: number | null }>;
   fill: (needKey: string, span: Span, why?: string | null) => void;
   person: (userId: string) => void;
+  /** One thing on someone's day, opened from its block. */
+  line: (userId: string, key: string) => void;
 };
 
 export const DiaryContext = createContext<DiaryState | null>(null);

@@ -379,6 +379,7 @@
 .turnfin-module .diary-card-steps > li[data-tone="booking"] { border-inline-start-color: var(--pc-on-block-assess); }
 .turnfin-module .diary-card-steps > li[data-tone="break"], .turnfin-module .diary-card-steps > li[data-tone="off"] { border-inline-start-style: dashed; color: var(--pc-ink-muted); }
 .turnfin-module .diary-card-steps > li[data-tone="free"] { border-inline-start-style: dotted; border-inline-start-color: var(--pc-primary); color: var(--pc-primary); }
+.turnfin-module .diary-card-step { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; height: auto; min-height: 44px; margin: -4px 0; padding: 0; color: var(--pc-ink); font-weight: 400; white-space: normal; text-align: start; }
 
 /* The sheets: choosing someone, and someone's day */
 .turnfin-module .diary-sheet { overflow-y: auto; }
