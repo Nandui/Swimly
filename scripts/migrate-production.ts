@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { execFileSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";
 import { databasePlan } from "../src/lib/database-environment";
@@ -15,12 +15,29 @@ if (plan.errors.length) {
 }
 if (plan.migrate) {
   const require = createRequire(import.meta.url);
-  console.log(`Applying committed database migrations (${process.env.VERCEL_ENV === "production" ? "production" : "development database"}).`);
+  const production = process.env.VERCEL_ENV === "production";
+  console.log(`Applying committed database migrations (${production ? "production" : "development database"}).`);
   const prismaCli = resolve(dirname(require.resolve("prisma/package.json")), "build/index.js");
-  execFileSync(process.execPath, [prismaCli, "migrate", "deploy"], {
-    stdio: "inherit",
-    env: process.env,
-  });
+  const deploy = () => {
+    const run = spawnSync(process.execPath, [prismaCli, "migrate", "deploy"], { env: process.env, encoding: "utf8" });
+    process.stdout.write(run.stdout ?? "");
+    process.stderr.write(run.stderr ?? "");
+    return { ok: run.status === 0, unreachable: /\bP10(01|02|17)\b/.test(`${run.stdout}${run.stderr}`) };
+  };
+  // A preview's development database (a Neon branch) can be asleep, expired or replaced; that is
+  // no reason to refuse to build the code (owner, 21 October 2026: "lets not do this again").
+  // Production always stops on any failure, and a migration that fails stops a preview too.
+  let result = deploy();
+  for (let attempt = 1; !production && !result.ok && result.unreachable && attempt <= 3; attempt++) {
+    console.warn(`warn  The development database did not answer. Trying again in ${attempt * 10} seconds.`);
+    await new Promise((done) => setTimeout(done, attempt * 10_000));
+    result = deploy();
+  }
+  if (!result.ok && !production && result.unreachable) {
+    console.warn("warn  The development database cannot be reached, so this preview builds without migrating it. Its pages will fail until the database is back: check the Neon branch the Preview DATABASE_URL points at (docs/database-operations.md).");
+  } else if (!result.ok) {
+    process.exit(1);
+  }
 } else {
   console.log("Skipping database migrations: this is local work, or a deployment that shares production's database.");
 }
