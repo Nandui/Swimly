@@ -16,7 +16,7 @@ const outcome = (o: string) => (ACADEMY_CALL_META[o as AcademyCallOutcome]?.labe
  *  booking site and still owes, soonest deadline first. We cannot take payment online, so reception
  *  phones within 72 hours. Overdue places stay held until someone records a call. */
 export default async function AcademyCallsPage() {
-  const { people, overdue, soon } = await toCall();
+  const { people, overdue, soon, swimmerRecords } = await toCall();
   return (
     <PageShell spacing="roomy" header={<PageHeader title="To call for payment"
         description="People who held a place online. Phone them within 72 hours of holding it to take payment, soonest deadline first."
@@ -50,8 +50,9 @@ export default async function AcademyCallsPage() {
                   </span>
                   <span className="pc-row-trail">
                     <Tag meta={ACADEMY_CALL_DUE_META[p.due]} label={p.due === "overdue" ? p.label : `Call by ${p.label}`} />
-                    <CallDialog primary={p.due === "overdue"} course={`${p.course.type.name} at ${p.course.site.name}`} priceCents={p.course.priceCents}
+                    <CallDialog swimmerRecords={swimmerRecords} primary={p.due === "overdue"} course={`${p.course.type.name} at ${p.course.site.name}`} priceCents={p.course.priceCents}
                       person={{ id: p.id, name: p.name, phone: p.phone, phone2: p.phone2, callTimes: p.callTimes, reference: p.reference, heldAt: formatDateTime(p.createdAt),
+                        linked: Boolean(p.swimmerId || p.userId), email: p.email, dateOfBirth: p.dateOfBirth ? p.dateOfBirth.toISOString().slice(0, 10) : null,
                         calls: p.calls.map((c) => ({ outcome: c.outcome, byName: c.byName, at: formatDateTime(c.createdAt), note: c.note })) }} />
                   </span>
                 </li>

@@ -1,7 +1,7 @@
 import "server-only";
 import { can, requireSession } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
-import { togetherOf, weekHoursOf } from "@/lib/setup/area-staffing";
+import { minimumOf, togetherOf, weekHoursOf } from "@/lib/setup/area-staffing";
 import { lanesInPlace } from "@/lib/setup/lanes";
 import type { PermissionKey } from "@/lib/staff/permissions";
 
@@ -22,7 +22,7 @@ export async function activityListPage() {
     prisma.activityType.findMany({
       where: { orgId }, orderBy: [{ archivedAt: { sort: "asc", nulls: "first" } }, { sortOrder: "asc" }, { name: "asc" }],
       select: { id: true, name: true, icon: true, departmentId: true, requiredTypeId: true, fromClasses: true, archivedAt: true, department: { select: { name: true } }, requiredType: { select: { name: true } },
-        subs: { where: { archivedAt: null }, orderBy: { sortOrder: "asc" }, select: { id: true, name: true, when: true, atMinutes: true, usual: true } } },
+        subs: { where: { archivedAt: null }, orderBy: { sortOrder: "asc" }, select: { id: true, name: true, when: true, atMinutes: true, times: true, usual: true } } },
     }),
     prisma.department.findMany({ where: { orgId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
     prisma.qualificationType.findMany({ where: { orgId, archivedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
@@ -41,14 +41,17 @@ export async function areasPage() {
     where: { orgId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     select: { id: true, name: true, code: true, areas: { orderBy: [{ archivedAt: { sort: "asc", nulls: "first" } }, { sortOrder: "asc" }, { name: "asc" }],
       select: { id: true, name: true, lanes: true, archivedAt: true, openFrom: true, openUntil: true, weekHours: true, together: true, departmentId: true, parentId: true,
-        staffing: { orderBy: { sortOrder: "asc" }, select: { count: true, qualificationTypeId: true, qualificationType: { select: { name: true } } } } } } },
+        staffing: { orderBy: { sortOrder: "asc" }, select: { count: true, qualificationTypeId: true, qualificationType: { select: { name: true } }, activityTypeId: true, fromMinutes: true, untilMinutes: true, activityType: { select: { name: true } } } } } } },
   });
   // Departments for every site (none tied to a site) as well as each site's own.
   const departments = await prisma.department.findMany({ where: { orgId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true, clubId: true } });
   const qualifications = await prisma.qualificationType.findMany({ where: { orgId, archivedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } });
-  return { canKeep: keeps("setup.areas"), qualifications, sites: sites.map((site) => {
+  // What an area's line can ask people to be on (owner, 21 October 2026); swim classes come from the timetable.
+  const activities = await prisma.activityType.findMany({ where: { orgId, archivedAt: null, fromClasses: false }, orderBy: [{ department: { sortOrder: "asc" } }, { sortOrder: "asc" }, { name: "asc" }],
+    select: { id: true, name: true, department: { select: { name: true } } } });
+  return { canKeep: keeps("setup.areas"), qualifications, activities: activities.map((a) => ({ id: a.id, name: a.name, departmentName: a.department.name })), sites: sites.map((site) => {
     const areas = site.areas.map(({ staffing, weekHours, together, ...area }) => ({ ...area, weekHours: weekHoursOf(weekHours), together: togetherOf(together),
-      minimums: staffing.map((m) => ({ count: m.count, typeId: m.qualificationTypeId, typeName: m.qualificationType?.name ?? null })) }));
+      minimums: staffing.map(minimumOf) }));
     // Each top-level area followed by its sub-areas (owner, 20 October 2026).
     const top = areas.filter((a) => !a.parentId || !areas.some((p) => p.id === a.parentId));
     return { ...site, departments: departments.filter((d) => !d.clubId || d.clubId === site.id).map(({ id, name }) => ({ id, name })),

@@ -451,6 +451,8 @@ model RotaAssignmentSub {
   /// "start", "end", "at" (at `atMinutes`) or "during" (any time while they are on it).
   when          String
   atMinutes     Int?
+  /// Its set times when it has more than one; `atMinutes` keeps the first.
+  times         Int[]   @default([])
   sortOrder     Int     @default(0)
 
   assignment  RotaAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)

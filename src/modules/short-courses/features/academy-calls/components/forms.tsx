@@ -11,6 +11,7 @@ import { logCall } from "@/modules/short-courses/features/academy-calls/server/a
 import { ACADEMY_CALL_META, ACADEMY_CALL_OUTCOMES, ACADEMY_CALL_TIMES, euro } from "@/modules/short-courses/shared/academy-rules";
 
 import { amount, text, THEME, useRefresh } from "@/modules/short-courses/shared/components/form-kit";
+import { readSwimmerChoice, splitName, SwimmerPicker } from "@/modules/short-courses/shared/components/swimmer-picker";
 
 /** Phoning people who held a place online (docs/academy.md). */
 
@@ -18,6 +19,8 @@ import { amount, text, THEME, useRefresh } from "@/modules/short-courses/shared/
 
 export type CallPerson = {
   id: string; name: string; phone: string; phone2: string; callTimes: string[]; reference: string | null; heldAt: string;
+  /** Linked to a swimmer record already (or one of our staff), so taking payment does not ask. */
+  linked?: boolean; email?: string; dateOfBirth?: string | null;
   calls: { outcome: string; byName: string; at: string; note: string }[];
 };
 
@@ -30,10 +33,12 @@ const CALL_HINT: Record<string, string> = {
 
 /** Log a call (owner decision, 8 October 2026): what happened, kept with who called and when, so
  *  whoever picks up the list next sees what has been tried. */
-export function CallDialog({ person, course, priceCents, primary }: { person: CallPerson; course: string; priceCents: number; primary?: boolean }) {
+export function CallDialog({ person, course, priceCents, primary, swimmerRecords = false }: { person: CallPerson; course: string; priceCents: number; primary?: boolean; swimmerRecords?: boolean }) {
   const refresh = useRefresh();
   const [outcome, setOutcome] = useState("");
   const fid = `call-${person.id}`;
+  // Paid confirms the place, so someone not on the swimmer records yet is found or added there.
+  const matching = outcome === "paid" && swimmerRecords && !person.linked;
   const facts: [string, ReactNode][] = [
     ["Mobile", <a key="p" href={`tel:${person.phone.replace(/[^\d+]/g, "")}`} className="font-semibold tabular-nums">{person.phone}</a>],
     ...(person.phone2 ? [["Other number", <a key="p2" href={`tel:${person.phone2.replace(/[^\d+]/g, "")}`} className="font-semibold tabular-nums">{person.phone2}</a>] as [string, ReactNode]] : []),
@@ -46,7 +51,8 @@ export function CallDialog({ person, course, priceCents, primary }: { person: Ca
       trigger={<Button variant={primary ? "default" : "outline"}><Phone aria-hidden="true" />Log a call</Button>}
       title={`Log a call: ${person.name}`} description={`${course} · ${priceCents ? `${euro(priceCents)} to pay` : "no charge"}`}
       submitLabel="Save call" successMessage="Call saved" onSuccess={() => { setOutcome(""); refresh(); }}
-      submit={(fd) => logCall(person.id, { outcome: text(fd, "outcome"), amount: text(fd, "amount"), receipt: text(fd, "receipt"), note: text(fd, "note") })}>
+      submit={(fd) => logCall(person.id, { outcome: text(fd, "outcome"), amount: text(fd, "amount"), receipt: text(fd, "receipt"), note: text(fd, "note"),
+        swimmer: matching ? readSwimmerChoice(fd) : undefined })}>
       <dl className="flex flex-col rounded-2xl bg-ui-muted px-4 py-1 text-sm">
         {facts.map(([label, value]) => (
           <div key={label} className="flex min-h-9 flex-wrap items-center justify-between gap-x-4 py-1"><dt className="text-ui-muted-foreground">{label}</dt><dd className="text-right wrap-anywhere">{value}</dd></div>
@@ -61,6 +67,8 @@ export function CallDialog({ person, course, priceCents, primary }: { person: Ca
           <Field label="Till receipt" htmlFor={`${fid}-receipt`} optional><Input id={`${fid}-receipt`} name="receipt" maxLength={60} className="min-h-11" /></Field>
         </div>
       ) : null}
+      {matching ? <SwimmerPicker fid={fid} label="Find them on the swimmer records" initialQuery={person.name}
+        prefill={{ ...splitName(person.name), contactPhone: person.phone, contactEmail: person.email, dateOfBirth: person.dateOfBirth ?? undefined }} /> : null}
       <Field label="Note" htmlFor={`${fid}-note`} optional><Input id={`${fid}-note`} name="note" maxLength={300} placeholder={outcome === "call-back" ? "After 17:00 today" : undefined} className="min-h-11" /></Field>
     </FormDialog>
   );

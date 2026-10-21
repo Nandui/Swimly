@@ -1,4 +1,4 @@
-import { Ban, CalendarClock, CircleCheck, CircleDashed, Clock, Coins, Dumbbell, FileWarning, Globe, HandCoins, Hourglass, PersonStanding, PlayCircle, Shapes, Ticket, TriangleAlert, Wallet, Waves } from "lucide-react";
+import { Ban, BriefcaseMedical, UserRoundX, CalendarClock, CircleCheck, CircleDashed, Clock, Coins, Dumbbell, FileWarning, Globe, HandCoins, Hourglass, PersonStanding, PlayCircle, Shapes, Ticket, TriangleAlert, Wallet, Waves } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 
 /** The rules for short courses (owner decision, 13 October 2026; docs/short-courses.md). Pure,
@@ -44,6 +44,14 @@ export const SHORT_COURSE_PLACE_META = {
 /** A course that asks for a health form, from someone who has not handed one in. */
 export const HEALTH_FORM_META = {
   missing: { label: "No health form", color: "orange", icon: FileWarning },
+} as const satisfies Record<string, StatusMeta>;
+
+/** A booking's swimmer record (owner request, 21 October 2026), for short courses and Academy
+ *  courses alike: medical notes on file (read in the person's dialog, never in a list), or a
+ *  booking made before the records that still needs linking. */
+export const SWIMMER_RECORD_META = {
+  medical: { label: "Medical notes", color: "red", icon: BriefcaseMedical },
+  unlinked: { label: "No swimmer record", color: "gray", icon: UserRoundX },
 } as const satisfies Record<string, StatusMeta>;
 
 /** Online booking (phase 2): a place held on the booking site, and how soon the desk must phone

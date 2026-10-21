@@ -92,6 +92,11 @@ model ShortCourseSession {
 model ShortCourseParticipant {
   id            String    @id @default(cuid())
   courseId      String
+  /// Their swimmer record (the swim school's `Student` id, read through the member directory in
+  /// src/modules/contributions.ts; owner request, 21 October 2026). Null for bookings made before
+  /// then, and for places held online until the desk links them. Name, phone, email and date of
+  /// birth below are copied from it when linked.
+  swimmerId     String?
   name          String
   email         String    @default("")
   phone         String    @default("")
@@ -123,6 +128,7 @@ model ShortCourseParticipant {
 
   @@index([courseId, status])
   @@index([source, payment, status])
+  @@index([swimmerId])
   @@map("short_courses_participants")
 }
 

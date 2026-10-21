@@ -11,9 +11,11 @@ import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-sel
 import { Textarea } from "@/components/shadcn/textarea";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { PlaceLanesField, type AreaWithLanes } from "@/components/ui/lane-picker";
-import { removeSession, saveCourse, saveParticipant, saveSession, setCourseStatus, setPlace, takeRegister } from "@/modules/short-courses/features/courses/server/actions";
+import { linkParticipant, removeSession, saveCourse, saveParticipant, saveSession, setCourseStatus, setPlace, takeRegister } from "@/modules/short-courses/features/courses/server/actions";
 import { clock, clockOf, MAX_WEEKS, SHORT_COURSE_PAYMENT_META, SHORT_COURSE_PAYMENTS } from "@/modules/short-courses/shared/rules";
 import { amount, PersonSelect, text, THEME, useRefresh, type Option, type Person } from "@/modules/short-courses/shared/components/form-kit";
+import { BirthDateField, SwimmerCard, SwimmerLinkDialog, type SwimmerCardData } from "@/modules/short-courses/shared/components/swimmer-card";
+import { readSwimmerChoice, SwimmerPicker, type PickedSwimmer } from "@/modules/short-courses/shared/components/swimmer-picker";
 
 /** The course dialogs (docs/short-courses.md): putting a course on, its sessions, booking people
  *  and the waiting list, and registers. */
@@ -138,7 +140,7 @@ export function SessionDialog({ courseId, session, areas, suggest, trigger }: { 
 /** A session's register: everyone booked is ticked as there; untick whoever was not. */
 export function RegisterDialog({ session, people, trigger }: {
   session: { id: string; label: string; marks: Record<string, boolean>; taken: boolean };
-  people: { id: string; name: string }[]; trigger?: ReactNode;
+  people: { id: string; name: string; memberNumber?: string | null; medical?: boolean }[]; trigger?: ReactNode;
 }) {
   const refresh = useRefresh();
   return (
@@ -152,7 +154,10 @@ export function RegisterDialog({ session, people, trigger }: {
           {people.map((p) => (
             <li key={p.id} className="pc-row">
               <Checkbox id={`screg-${session.id}-${p.id}`} name={`there-${p.id}`} defaultChecked={session.taken ? session.marks[p.id] ?? false : true} />
-              <Label htmlFor={`screg-${session.id}-${p.id}`} className="pc-row-body font-normal">{p.name}</Label>
+              <Label htmlFor={`screg-${session.id}-${p.id}`} className="pc-row-body font-normal">
+                <span className="pc-row-title">{p.name}</span>
+                {p.memberNumber || p.medical ? <span className="pc-row-hint">{[p.memberNumber ? `Member ${p.memberNumber}` : null, p.medical ? "Medical notes on file" : null].filter(Boolean).join(" · ")}</span> : null}
+              </Label>
             </li>
           ))}
         </ul>
@@ -163,32 +168,50 @@ export function RegisterDialog({ session, people, trigger }: {
 
 /* ---------- People ---------- */
 
-export type PersonEdit = { id: string; name: string; email: string; phone: string; dateOfBirth: string | null; payment: string; paidCents: number; healthFormOn: string | null; note: string };
+export type PersonEdit = { id: string; name: string; email: string; phone: string; dateOfBirth: string | null; payment: string; paidCents: number; healthFormOn: string | null; note: string;
+  swimmerId: string | null; swimmer: SwimmerCardData | null };
 
-/** Book someone on, or onto the waiting list when the course is full; or change their details. */
-export function PersonDialog({ courseId, person, priceCents, full, healthForm, minAge, trigger }: {
-  courseId: string; person?: PersonEdit; priceCents: number; full: boolean; healthForm: boolean; minAge: number | null; trigger?: ReactNode;
+/** Book someone on, or onto the waiting list when the course is full; or change their payment and
+ *  health form. A new booking starts with "Find the swimmer" (owner request, 21 October 2026): the
+ *  person is picked on the swimmer records or added there. With the swim school switched off, and
+ *  for older bookings not linked yet, their name and contacts are typed here as before. */
+export function PersonDialog({ courseId, person, priceCents, full, healthForm, minAge, swimmerRecords, canOpenSwimmers, trigger }: {
+  courseId: string; person?: PersonEdit; priceCents: number; full: boolean; healthForm: boolean; minAge: number | null;
+  swimmerRecords: boolean; canOpenSwimmers: boolean; trigger?: ReactNode;
 }) {
   const refresh = useRefresh();
   const fid = person ? `scp-${person.id}` : "scp-new";
   const waiting = !person && full;
+  const [picked, setPicked] = useState<PickedSwimmer | "new" | null>(null);
+  const picking = swimmerRecords && !person;
+  const typed = !picking && !person?.swimmerId;
+  const linkedNoBirth = Boolean(person?.swimmerId) && !person?.swimmer?.dateOfBirth && !person?.dateOfBirth;
+  const askBirth = !!minAge && ((picked && picked !== "new" && !picked.dateOfBirth) || linkedNoBirth);
   return (
     <FormDialog portalClassName={THEME} width="sm:max-w-lg"
       trigger={trigger ?? <Button variant={waiting ? "outline" : "default"}><UserPlus aria-hidden="true" />{waiting ? "Add to waiting list" : "Book someone on"}</Button>}
       title={person ? `Change ${person.name}` : waiting ? "Add to the waiting list" : "Book someone on"}
-      description={waiting ? "The course is full. They are offered the next free place, in the order they were added." : "Payment is taken at the till and recorded here."}
-      submitLabel={person ? "Save" : waiting ? "Add to waiting list" : "Book on"} successMessage={person ? "Saved" : waiting ? "Added to the waiting list" : "Booked on"} onSuccess={refresh}
+      description={waiting ? "The course is full. They are offered the next free place, in the order they were added." : picking ? "Find them on the swimmer records, or add them there. Payment is taken at the till and recorded here." : "Payment is taken at the till and recorded here."}
+      submitLabel={person ? "Save" : waiting ? "Add to waiting list" : "Book on"} successMessage={person ? "Saved" : waiting ? "Added to the waiting list" : "Booked on"}
+      onSuccess={() => { setPicked(null); refresh(); }} onClose={() => setPicked(null)}
       submit={(fd) => saveParticipant(courseId, person?.id ?? null, {
         name: text(fd, "name"), email: text(fd, "email"), phone: text(fd, "phone"), dateOfBirth: text(fd, "dateOfBirth"),
         payment: text(fd, "payment"), paid: text(fd, "paid"), healthFormOn: text(fd, "healthFormOn"), note: text(fd, "note"), waiting,
+        swimmer: picking ? readSwimmerChoice(fd) : undefined,
       })}>
+      {picking ? <SwimmerPicker fid={fid} needsDateOfBirth={!!minAge} onPick={setPicked} /> : null}
+      {person?.swimmer ? <SwimmerCard swimmer={person.swimmer} canOpen={canOpenSwimmers} /> : null}
+      {person?.swimmerId && !person.swimmer ? <p className="pc-row-hint">Linked to a swimmer record that cannot be read right now; the details copied when it was linked are kept.</p> : null}
+      {person && typed && swimmerRecords ? <p className="pc-row-hint">Booked before the swimmer records. Use Link to swimmer on their row to match them.</p> : null}
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Name" htmlFor={`${fid}-name`}><Input id={`${fid}-name`} name="name" required minLength={2} maxLength={120} defaultValue={person?.name} className="min-h-11" /></Field>
-        <Field label="Phone" htmlFor={`${fid}-phone`} optional><Input id={`${fid}-phone`} name="phone" type="tel" maxLength={40} defaultValue={person?.phone} className="min-h-11" /></Field>
-        <Field label="Email" htmlFor={`${fid}-email`} optional><Input id={`${fid}-email`} name="email" type="email" maxLength={200} defaultValue={person?.email} className="min-h-11" /></Field>
-        <Field label="Date of birth" htmlFor={`${fid}-dob`} optional={!minAge} hint={minAge ? `The course is for ${minAge} and over.` : undefined}>
-          <Input id={`${fid}-dob`} name="dateOfBirth" type="date" required={!!minAge} defaultValue={person?.dateOfBirth ?? ""} className="min-h-11" />
-        </Field>
+        {typed ? <>
+          <Field label="Name" htmlFor={`${fid}-name`}><Input id={`${fid}-name`} name="name" required minLength={2} maxLength={120} defaultValue={person?.name} className="min-h-11" /></Field>
+          <Field label="Phone" htmlFor={`${fid}-phone`} optional><Input id={`${fid}-phone`} name="phone" type="tel" maxLength={40} defaultValue={person?.phone} className="min-h-11" /></Field>
+          <Field label="Email" htmlFor={`${fid}-email`} optional><Input id={`${fid}-email`} name="email" type="email" maxLength={200} defaultValue={person?.email} className="min-h-11" /></Field>
+          <Field label="Date of birth" htmlFor={`${fid}-dob`} optional={!minAge} hint={minAge ? `The course is for ${minAge} and over.` : undefined}>
+            <Input id={`${fid}-dob`} name="dateOfBirth" type="date" required={!!minAge} defaultValue={person?.dateOfBirth ?? ""} className="min-h-11" />
+          </Field>
+        </> : askBirth && minAge ? <BirthDateField fid={fid} defaultValue={person?.dateOfBirth} minAge={minAge} /> : null}
         <Field label="Payment" htmlFor={`${fid}-pay`}>
           <NativeSelect id={`${fid}-pay`} name="payment" defaultValue={person?.payment ?? "owed"} className="min-h-11 w-full">
             {SHORT_COURSE_PAYMENTS.map((p) => <NativeSelectOption key={p} value={p}>{SHORT_COURSE_PAYMENT_META[p].label}</NativeSelectOption>)}
@@ -202,6 +225,12 @@ export function PersonDialog({ courseId, person, priceCents, full, healthForm, m
       <Field label="Note" htmlFor={`${fid}-note`} optional><Textarea id={`${fid}-note`} name="note" maxLength={500} defaultValue={person?.note} /></Field>
     </FormDialog>
   );
+}
+
+/** Link a booking made before the swimmer records, or held online, to the person's record. */
+export function LinkPersonButton({ id, name, email, phone, dateOfBirth, minAge }: { id: string; name: string; email: string; phone: string; dateOfBirth: string | null; minAge: number | null }) {
+  return <SwimmerLinkDialog name={name} needsDateOfBirth={!!minAge} prefill={{ contactEmail: email, contactPhone: phone, dateOfBirth: dateOfBirth ?? undefined }}
+    submit={(choice) => linkParticipant(id, choice)} />;
 }
 
 /** Move someone between a place, the waiting list and withdrawn. */

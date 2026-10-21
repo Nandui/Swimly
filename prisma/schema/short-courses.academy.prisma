@@ -95,6 +95,10 @@ model AcademyCandidate {
   id                 String    @id @default(cuid())
   courseId           String
   userId             String?
+  /// A member of the public's swimmer record (the swim school's `Student` id; owner request,
+  /// 21 October 2026). Null for staff, for candidates added before then, and for places held
+  /// online until the desk links them on the call.
+  swimmerId          String?
   name               String
   email              String    @default("")
   phone              String    @default("")
@@ -138,6 +142,7 @@ model AcademyCandidate {
 
   @@index([courseId])
   @@index([userId])
+  @@index([swimmerId])
   @@index([source, payment, status])
 }
 

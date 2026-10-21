@@ -8,7 +8,7 @@ import { logAudit } from "@/lib/audit";
 import { departmentById } from "@/lib/directory";
 import { prisma } from "@/lib/prisma";
 import { ACTIVITY_ICON_KEYS, SUB_WHEN, SUB_WHENS } from "@/lib/setup/meta";
-import { WEEKDAYS, hoursWords, type WeekHour } from "@/lib/setup/area-staffing";
+import { WEEKDAYS, hoursWords, minimumWords, type WeekHour } from "@/lib/setup/area-staffing";
 import { Prisma } from "@/generated/prisma/client";
 import { renameAreaEverywhere } from "@/modules/server";
 
@@ -58,7 +58,8 @@ const subsSchema = z.array(z.object({
   id: z.string().trim().max(64).default(""),
   name: z.string().trim().min(2, "Name each sub-activity, for example Open the cash till.").max(60, "Keep each name under 60 characters."),
   when: z.enum(SUB_WHENS),
-  at: z.string().trim().default(""),
+  /** Its set times, like 12:00 and 16:00, when `when` is "at". */
+  times: z.array(z.string().trim()).max(12, "Up to 12 times for each sub-activity.").default([]),
   usual: z.boolean(),
 })).max(20, "Up to 20 sub-activities.");
 export type SubActivitiesInput = z.input<typeof subsSchema>;
@@ -73,24 +74,25 @@ export async function saveSubActivities(activityTypeId: string, input: SubActivi
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const type = await prisma.activityType.findFirst({ where: { id: activityTypeId, orgId: session.user.orgId ?? undefined }, select: { name: true, subs: { where: { archivedAt: null }, select: { id: true } } } });
   if (!type) return fail("That activity is no longer on the list.");
-  const rows: (z.output<typeof subsSchema>[number] & { atMinutes: number | null })[] = [];
+  const rows: (Omit<z.output<typeof subsSchema>[number], "times"> & { atMinutes: number | null; times: number[] })[] = [];
   for (const s of parsed.data) {
-    const at = s.when === "at" ? clockMinutes(s.at) : null;
-    if (s.when === "at" && at === null) return fail(`Give ${s.name} a time, like 11:00.`);
-    rows.push({ ...s, atMinutes: at });
+    const times = s.when === "at" ? s.times.map(clockMinutes) : [];
+    if (s.when === "at" && (!times.length || times.some((t) => t === null))) return fail(`Give ${s.name} its times, like 12:00 and 16:00.`);
+    const sorted = [...new Set(times as number[])].sort((a, b) => a - b);
+    rows.push({ ...s, atMinutes: sorted[0] ?? null, times: sorted });
   }
   if (new Set(rows.map((r) => r.name.toLowerCase())).size !== rows.length) return fail("Each sub-activity once.");
   const kept = new Set(rows.map((r) => r.id).filter(Boolean));
   await prisma.$transaction(async (tx) => {
     for (const [i, r] of rows.entries()) {
-      const data = { name: r.name, when: r.when, atMinutes: r.atMinutes, usual: r.usual, sortOrder: i };
+      const data = { name: r.name, when: r.when, atMinutes: r.atMinutes, times: r.times, usual: r.usual, sortOrder: i };
       if (r.id && type.subs.some((x) => x.id === r.id)) await tx.subActivity.update({ where: { id: r.id }, data });
       else await tx.subActivity.create({ data: { ...data, activityTypeId } });
     }
     const gone = type.subs.filter((x) => !kept.has(x.id)).map((x) => x.id);
     if (gone.length) await tx.subActivity.updateMany({ where: { id: { in: gone } }, data: { archivedAt: new Date() } });
     await logAudit({ actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: "update", entity: "ActivityType", entityId: activityTypeId, clubId: null,
-      summary: `Set ${type.name}'s sub-activities: ${rows.map((r) => `${r.name} (${r.when === "at" ? `at ${s2(r.atMinutes!)}` : SUB_WHEN[r.when].toLowerCase()}${r.usual ? "" : ", when chosen"})`).join(", ") || "none"}` }, tx);
+      summary: `Set ${type.name}'s sub-activities: ${rows.map((r) => `${r.name} (${r.when === "at" ? `at ${r.times.map(s2).join(" and ")}` : SUB_WHEN[r.when].toLowerCase()}${r.usual ? "" : ", when chosen"})`).join(", ") || "none"}` }, tx);
   });
   refresh("/activity-list");
   return ok();
@@ -173,7 +175,11 @@ const staffingSchema = z.object({
   lines: z.array(z.object({
     count: z.coerce.number().int("Give a whole number of staff.").min(1, "Give at least 1 staff, or remove the line.").max(30, "Up to 30 staff."),
     typeId: z.string().trim().max(64).default("").transform((v) => v || null),
-  })).max(8, "Up to 8 lines."),
+    /** People on this activity there (owner, 21 October 2026), between `from` and `until` or whenever it is open. */
+    activityTypeId: z.string().trim().max(64).default("").transform((v) => v || null),
+    from: clockTime.default(""),
+    until: clockTime.default(""),
+  })).max(12, "Up to 12 lines."),
   openFrom: clockTime.default(""),
   openUntil: clockTime.default(""),
   /** A weekday's own hours, Monday 0; both empty is closed that day. Weekdays left out keep every day's. */
@@ -197,7 +203,12 @@ export async function saveAreaStaffing(id: string, input: AreaStaffingInput): Pr
   const orgId = session.user.orgId;
   const parsed = staffingSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
-  const { lines } = parsed.data;
+  const lines = parsed.data.lines.map((l) => ({ ...l, typeId: l.activityTypeId ? null : l.typeId, from: l.activityTypeId ? minutesOf(l.from) : null, until: l.activityTypeId ? minutesOf(l.until) : null }));
+  const duty = lines.filter((l) => !l.activityTypeId);
+  const onActivities = lines.filter((l) => l.activityTypeId);
+  if (onActivities.some((l) => (l.from === null) !== (l.until === null))) return fail("Give an activity line both times, or leave both empty for whenever it is open.");
+  if (onActivities.some((l) => l.from !== null && l.until !== null && l.until <= l.from)) return fail("An activity line has to end after it starts, on the same day.");
+  if (new Set(onActivities.map((l) => `${l.activityTypeId}|${l.from}|${l.until}`)).size !== onActivities.length) return fail("Each activity and time once: change its number instead.");
   const openFrom = minutesOf(parsed.data.openFrom), openUntil = minutesOf(parsed.data.openUntil);
   if ((openFrom === null) !== (openUntil === null)) return fail("Give both opening times, or leave both empty.");
   if (openFrom !== null && openUntil !== null && openUntil <= openFrom) return fail("It has to close after it opens, on the same day.");
@@ -209,25 +220,31 @@ export async function saveAreaStaffing(id: string, input: AreaStaffingInput): Pr
     if (!days.some((x) => x.day === d.day)) days.push({ day: d.day, from, until });
   }
   days.sort((a, b) => a.day - b.day);
-  if (lines.length && openFrom === null && !days.some((d) => d.from !== null)) return fail("Give the hours it is open, when it needs these staff.");
+  if (lines.some((l) => l.from === null) && openFrom === null && !days.some((d) => d.from !== null)) return fail("Give the hours it is open, when it needs these staff.");
   const area = await prisma.siteArea.findFirst({ where: { id, orgId: orgId ?? undefined }, select: { name: true, siteId: true, site: { select: { name: true } } } });
   if (!area) return fail("That area no longer exists.");
   const { together } = parsed.data;
   const others = together.length ? await prisma.siteArea.findMany({ where: { siteId: area.siteId, archivedAt: null, id: { in: together.map((t) => t.withAreaId), not: id } }, select: { id: true, name: true } }) : [];
   if (together.some((t) => !others.some((o) => o.id === t.withAreaId))) return fail("Choose another open area at this site to cover it.");
-  if (together.some((t) => !lines.some((l) => l.typeId === t.typeId))) return fail("It can only be covered for a type of staff it needs. Add that type of staff above first.");
+  if (together.some((t) => !duty.some((l) => l.typeId === t.typeId))) return fail("It can only be covered for a type of staff it needs. Add that type of staff above first.");
   if (new Set(together.map((t) => `${t.withAreaId}|${t.typeId ?? ""}`)).size !== together.length) return fail("Each area and type of staff once.");
   const typeIds = [...new Set(lines.flatMap((l) => (l.typeId ? [l.typeId] : [])))];
   const types = typeIds.length ? await prisma.qualificationType.findMany({ where: { id: { in: typeIds }, orgId: orgId ?? undefined }, select: { id: true, name: true } }) : [];
   if (types.length !== typeIds.length) return fail("That qualification is no longer offered.");
-  if (new Set(lines.map((l) => l.typeId ?? "")).size !== lines.length) return fail("Each type of staff once: add to its number instead.");
+  if (new Set(duty.map((l) => l.typeId ?? "")).size !== duty.length) return fail("Each type of staff once: add to its number instead.");
+  const activityIds = [...new Set(onActivities.map((l) => l.activityTypeId!))];
+  const activities = activityIds.length ? await prisma.activityType.findMany({ where: { id: { in: activityIds }, orgId: orgId ?? undefined, archivedAt: null, fromClasses: false }, select: { id: true, name: true } }) : [];
+  if (activities.length !== activityIds.length) return fail("That activity is no longer on the list.");
   const name = new Map(types.map((t) => [t.id, t.name]));
-  const words = lines.length ? lines.map((l) => `${l.count} ${l.typeId ? name.get(l.typeId) : "anyone"}`).join(", ") : "no minimum";
+  const activityName = new Map(activities.map((a) => [a.id, a.name]));
+  const words = lines.length ? lines.map((l) => minimumWords({ count: l.count, typeId: l.typeId, typeName: l.typeId ? name.get(l.typeId) ?? null : null, activityTypeId: l.activityTypeId,
+    activityName: l.activityTypeId ? activityName.get(l.activityTypeId) ?? null : null, from: l.from, until: l.until })).join(", ") : "no minimum";
   const hours = lines.length ? `, ${hoursWords({ openFrom, openUntil, weekHours: days })}` : "";
   const covered = together.map((t) => `, covered from ${others.find((o) => o.id === t.withAreaId)!.name} while both are open (${t.count} ${t.typeId ? name.get(t.typeId) : "anyone"} in all)`).join("");
   await prisma.$transaction(async (tx) => {
     await tx.siteAreaStaffing.deleteMany({ where: { areaId: id } });
-    if (lines.length) await tx.siteAreaStaffing.createMany({ data: lines.map((l, i) => ({ areaId: id, count: l.count, qualificationTypeId: l.typeId, sortOrder: i })) });
+    if (lines.length) await tx.siteAreaStaffing.createMany({ data: lines.map((l, i) => ({ areaId: id, count: l.count, qualificationTypeId: l.typeId, activityTypeId: l.activityTypeId,
+      fromMinutes: l.from, untilMinutes: l.until, sortOrder: i })) });
     await tx.siteArea.update({ where: { id }, data: { openFrom, openUntil, weekHours: days.length ? days : Prisma.DbNull, together: together.length ? together : Prisma.DbNull } });
     await logAudit({ actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: "update", entity: "SiteArea", entityId: id, clubId: area.siteId,
       summary: `Set ${area.site.name}'s area ${area.name} to ${words}${hours}${covered}` }, tx);

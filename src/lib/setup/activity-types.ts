@@ -1,4 +1,5 @@
 import type { Prisma } from "@/generated/prisma/client";
+import { subTimes } from "@/lib/setup/meta";
 
 /** Core's activity list (Admin, Activities; kept there since 7 October 2026 so every module
  *  uses the same list): what the rota plans and covers, each with the department that plans
@@ -43,7 +44,8 @@ export async function activityTypeIdsIn(departmentId: string, opts: { liveOnly?:
   return rows.map((row) => row.id);
 }
 
-export type SubActivityRef = { id: string; name: string; when: string; at: number | null; usual: boolean };
+/** `at` is its first set time, `times` all of them (empty unless `when` is "at"). */
+export type SubActivityRef = { id: string; name: string; when: string; at: number | null; times: number[]; usual: boolean };
 
 /** Each activity's open sub-activities (Admin, Activities; owner, 20 October 2026), in order,
  *  by activity id: the smaller jobs done by whoever is on it, such as opening the cash till.
@@ -56,8 +58,11 @@ export async function subActivitiesFor(typeIds: readonly (string | null | undefi
   const rows = await prisma.subActivity.findMany({
     where: { activityTypeId: { in: wanted }, archivedAt: null, ...(opts.usualOnly ? { usual: true } : {}) },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    select: { id: true, activityTypeId: true, name: true, when: true, atMinutes: true, usual: true },
+    select: { id: true, activityTypeId: true, name: true, when: true, atMinutes: true, times: true, usual: true },
   });
-  for (const r of rows) (out[r.activityTypeId] ??= []).push({ id: r.id, name: r.name, when: r.when, at: r.atMinutes, usual: r.usual });
+  for (const r of rows) {
+    const times = r.when === "at" ? subTimes(r) : [];
+    (out[r.activityTypeId] ??= []).push({ id: r.id, name: r.name, when: r.when, at: times[0] ?? null, times, usual: r.usual });
+  }
   return out;
 }
