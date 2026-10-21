@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.56.0 · 21 October 2026 · A clear check before every move and enrolment
+
+- Whenever you move or enrol a swimmer, Turnfin now shows one clear picture of what is about to happen before anything changes: the swimmer's name in large type, the class they leave (it ends today) and the class they join (it starts today), each with its day, time, level and centre.
+- When the move takes a swimmer from one centre to another, a **Transfer between centres** banner shows both centres in large type, so a change of centre cannot be missed.
+- The confirm button waits five seconds before you can press it ("Confirm move in 5", then "Confirm move"). If you go back and change something, the wait starts again. **Cancel** and **Back** always work straight away.
+- This covers enrolling from a class page, from a swimmer's profile and from **Awaiting enrolment**, enrolling from a waitlist, moving a swimmer to another class (including from **Awaiting moves**), and **Move them here** on **Together**.
+- The check also lists anything worth knowing: a level change, a level they haven't finished yet, a child assessed at another centre, and the Legend agreement.
+
 ## 1.55.0 · 21 October 2026 · Short courses book people from the swimmer records
 
 - **Book someone on** (short courses) and **Add a candidate** (Academy courses) now start with **Find the swimmer**. Search by name, member number, date of birth or a parent's name, and pick the right person. Their member number, contacts, emergency contact and medical notes come with them.
