@@ -10,6 +10,16 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - When you are trying another level, the page says so in a blue **What if** box, and each heading and each child it applies to carries a **What if** tag. Nothing changes on the child's record or class; **Back to their levels now** takes you back.
 - A child with no class level yet can be given a level to try, so you can still see what would suit the family.
 - The page has a calmer look: one row per child, **Start again** at the top, and each option shows the class time first, the class, and how many places are taken. On a phone the rows stack neatly.
+## 1.48.2 · 21 October 2026 · Competencies start as Not achieved
+
+- Every competency now starts as **Not achieved** until an instructor marks it. A swimmer's profile shows **Not achieved** where it used to say **Not marked**, and the choice of mark is now just **Not achieved** or **Achieved**, the same as on the pool deck.
+- Nothing already marked has changed: every **Achieved** and **Not achieved** stays exactly as it was, with who marked it and when.
+- In the parents app, a skill nobody has marked yet in the child's current level now shows as **Practising** instead of **Not assessed yet**. The "skills achieved" count is the same as before.
+
+## 1.48.1 · 21 October 2026 · The booking site sells Academy courses only
+
+- The booking site (academy.leisureworldcork.com) now shows only Academy courses, such as lifeguard and swim teacher qualifications. Customers still hold a place there without paying, and reception phones them within 72 hours to take payment.
+- Short courses are booked at the desk only. The **Open for online booking** tick is gone from short courses.
 
 ## 1.48.0 · 20 October 2026 · Rota: a new Plan, the day's diary
 

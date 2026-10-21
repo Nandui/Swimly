@@ -224,7 +224,9 @@ come from this released data; current class level comes from current enrolment.
 
 No scheduled publication job is needed. Re-fetch progress after midnight and
 when returning to the app. The response includes programme/level labels,
-competencies with NOT_ASSESSED/WORKING_ON/ACHIEVED, achieved/total counts, frozen
+competencies with NOT_ASSESSED/WORKING_ON/ACHIEVED (an unmarked skill in a
+current level is WORKING_ON, because competencies start as Not achieved),
+achieved/total counts, frozen
 completion totals and assessment placements. It does not expose pending counts
 or a next-change timestamp. Content and curriculum descriptions are shared
 definitions and are not subject to the teaching-record delay.
