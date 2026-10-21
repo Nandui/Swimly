@@ -11,6 +11,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - Choose **Change picture** to replace it, or **Remove picture** to take it off. A supplier without a picture shows its initials, as before.
 - Only people who manage Purchasing can add, change or remove a picture. Everyone who uses Purchasing sees it.
 
+## 1.59.1 · 21 October 2026 · Rota: take someone off from their block on the Plan
+
+- On the rota **Plan**, tap a block on someone's row in **The day, person by person** (an area, an activity, a class or a booking). It now opens just that block, with **Take them off** and **Change time** right there, and their whole day one tap away. Before, the block opened their whole day and taking them off was a small link inside it.
+- On a phone, each line on a person's card opens the same way.
+- Taking someone off keeps the rest of their day. If that time was not part of a shift you gave them, a tick, already on, keeps it in their day as **Give this time**, so their hours stay and you can give it to something else.
+- The time they were on shows under **Not covered yet** again when nobody else is on it.
+
 ## 1.59.0 · 21 October 2026 · Rota: place "any time" sub-activities on the Plan
 
 - A sub-activity done **any time** while someone is on an activity, such as **Answer the phone** on Reception, is now placed straight on the rota **Plan**, at the moment you choose.
