@@ -25,6 +25,7 @@ function fixture() {
       findMany: async () => row.status === "ACTIVE" && row.scheduledEndOn && row.scheduledEndOn <= parseDateOnly(day) ? [{ id: row.id, courseId: row.courseId }] : [],
       update: async ({ data }: { data: object }) => { assert.equal(locked, true); Object.assign(row, data); return row; },
     },
+    user: { findUnique: async () => ({ actsAsSystem: false }) },
     auditLog: { create: async ({ data }: { data: { summary: string } }) => { if (auditFails) throw new Error("Audit failed"); audits.push(data); } },
   };
   const prisma = { ...tx, $transaction: async (run: (client: typeof tx) => Promise<unknown>) => {

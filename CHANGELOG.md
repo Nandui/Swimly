@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.60.0 · 21 October 2026 · Enrolments and moves done as development work
+
+- Enrolments, moves between classes or centres and unenrolments done by Fernando Serina's account were mostly set-up work run for the developers, not real desk work. They now show as **System - scripted action done via development** in **Activity**, in a swimmer's **History** and in the Together records, instead of his name.
+- They are left out of **Swim school analytics**: they no longer count as new swimmers, leavers or moves, or as anyone's work on the **Reception** dashboard. The swimmers themselves still count in classes, places and "% full" while they hold the place.
+- This covers what his account did before today as well as from now on. Nothing has been deleted, and the log still knows which account did it.
+- A superadmin can do the same for any account: open the person on **Staff** and choose **Mark place changes as system**. **Count their place changes again** stops it for new changes; earlier ones stay marked.
+- While an account is marked, the confirmation before an enrolment or a move says that it will be recorded as system.
+
 ## 1.59.0 · 21 October 2026 · Rota: place "any time" sub-activities on the Plan
 
 - A sub-activity done **any time** while someone is on an activity, such as **Answer the phone** on Reception, is now placed straight on the rota **Plan**, at the moment you choose.

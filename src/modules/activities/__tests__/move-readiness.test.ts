@@ -36,7 +36,7 @@ before(async () => {
     },
     "@/lib/clubs/current": { currentClubId: async () => state.clubId, currentClubIdIfAny: async () => state.clubId },
     "@/lib/format": { ...await import("@/lib/format"), today: () => "2026-09-21" },
-    "@/lib/audit": { logAudit: async (input: { action: string }, tx: typeof db) => {
+    "@/lib/audit": { isSystemActor: async () => false, logAudit: async (input: { action: string }, tx: typeof db) => {
       if (state.auditFails || state.failedAction === input.action) throw Error("audit failure");
       await tx.auditLog.create({ data: input as Parameters<typeof db.auditLog.create>[0]["data"] });
     } },

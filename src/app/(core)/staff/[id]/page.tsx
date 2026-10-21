@@ -7,7 +7,7 @@ import { Button } from "@/components/shadcn/button";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
-import { SuperadminToggle, WorksAt } from "@/components/people/people-actions";
+import { SuperadminToggle, SystemActorToggle, WorksAt } from "@/components/people/people-actions";
 import { EditPerson, ResetPersonPassword, SetPersonActive } from "@/components/staff/person-actions";
 import { canSee } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
@@ -52,6 +52,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
           <span className="inline-flex flex-wrap items-center gap-2">
             <span className="wrap-anywhere">{person.email}</span>
             {person.isSuperadmin ? <Tag meta={PERSON_STATUS_META.superadmin} /> : null}
+            {person.actsAsSystem ? <Tag meta={PERSON_STATUS_META.system} /> : null}
             {!person.isActive ? <Tag meta={PERSON_STATUS_META.deactivated} /> : null}
             {!person.hasPassword ? <Tag meta={STAFF_STATUS_META.noPassword} /> : null}
           </span>
@@ -60,6 +61,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
           <>
             {canSee(session, "hr") ? <Button asChild variant="ghost"><UiLink href={`/hr/people/${person.id}`}>HR file</UiLink></Button> : null}
             {session.user.isSuperadmin && person.isActive ? <SuperadminToggle userId={person.id} name={person.name} value={person.isSuperadmin} /> : null}
+            {session.user.isSuperadmin ? <SystemActorToggle userId={person.id} name={person.name} value={person.actsAsSystem} /> : null}
             <ResetPersonPassword person={person} />
             <SetPersonActive person={person} />
           </>

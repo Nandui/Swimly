@@ -14,6 +14,7 @@ import { SCHOOL_TIMEZONE } from "@/lib/format";
 import { currentClubIdIfAny } from "@/lib/clubs/current";
 import type { SiteFilter } from "@/lib/policy/types";
 import { prisma } from "@/lib/prisma";
+import { SYSTEM_ACTOR_LABEL } from "@/lib/system-actor";
 
 type AuditInput = {
   actorId?: string | null;
@@ -70,6 +71,30 @@ export const MODULE_OF_ENTITY: Readonly<Record<string, string>> = {
   ClassPlannedTeacher: "Swim school",
 };
 
+export { SYSTEM_ACTOR_LABEL };
+
+/** The audited actions that change a swimmer's class place: enrolments,
+ *  waiting lists, moves and unenrolments. Only these are marked as system;
+ *  everything else such an account does still carries their own name. */
+export const PLACE_CHANGE_ACTIONS = ["enrol", "waitlist", "transfer", "transfer-out", "withdraw", "complete", "schedule-withdrawal", "cancel-withdrawal"] as const;
+const PLACE_CHANGES = new Set<string>(PLACE_CHANGE_ACTIONS);
+
+function marksAsSystem(entity: string, action: string) {
+  return entity === "Enrolment" && PLACE_CHANGES.has(action);
+}
+
+/** The name to show for a log entry: the system label for a system entry. */
+export function actorLabel(entry: { actorName: string; system: boolean }) {
+  return entry.system ? SYSTEM_ACTOR_LABEL : entry.actorName;
+}
+
+/** Whether this account's place changes are recorded as system, e.g. to warn
+ *  them in a move's confirmation. */
+export async function isSystemActor(actorId: string | null | undefined) {
+  if (!actorId) return false;
+  return (await prisma.user.findUnique({ where: { id: actorId }, select: { actsAsSystem: true } }))?.actsAsSystem === true;
+}
+
 /** Rows that belong to no club, so their audit entries belong to none either
  *  and show up in every club's activity. */
 // Organisation-level records (People core) belong to no single site either.
@@ -92,7 +117,10 @@ export async function logAudit(
         : await currentClubIdIfAny();
 
   const moduleName = input.module ?? MODULE_OF_ENTITY[input.entity] ?? null;
-  await db.auditLog.create({ data: { ...input, clubId, module: moduleName } });
+  const system = marksAsSystem(input.entity, input.action) && input.actorId
+    ? (await db.user.findUnique({ where: { id: input.actorId }, select: { actsAsSystem: true } }))?.actsAsSystem === true
+    : false;
+  await db.auditLog.create({ data: { ...input, clubId, module: moduleName, ...(system ? { system } : {}) } });
 }
 
 /** Which of these audited actions were recorded for these records, e.g. to
@@ -116,10 +144,10 @@ export async function moduleAuditTrail(module: string, sites: SiteFilter, page: 
     ...(sites.kind === "all" ? {} : { OR: [{ clubId: { in: [...sites.siteIds] } }, { clubId: null }] }),
   };
   const [rows, total] = await Promise.all([
-    prisma.auditLog.findMany({ where, orderBy: { createdAt: "desc" }, skip: page.skip, take: page.take, select: { id: true, actorName: true, action: true, summary: true, createdAt: true, clubId: true } }),
+    prisma.auditLog.findMany({ where, orderBy: { createdAt: "desc" }, skip: page.skip, take: page.take, select: { id: true, actorName: true, system: true, action: true, summary: true, createdAt: true, clubId: true } }),
     prisma.auditLog.count({ where }),
   ]);
-  return { rows, total };
+  return { rows: rows.map(({ system, ...row }) => ({ ...row, actorName: actorLabel({ actorName: row.actorName, system }) })), total };
 }
 
 /** The audit trail of some records of one type, oldest first (the latest `take`): who did what and when. For an
@@ -129,12 +157,12 @@ export async function auditTrailFor(entity: string, entityIds: readonly string[]
   const rows = await prisma.auditLog.findMany({
     where: { entity, entityId: { in: [...entityIds] } },
     orderBy: { createdAt: "desc" }, take,
-    select: { id: true, entityId: true, actorName: true, action: true, summary: true, createdAt: true },
+    select: { id: true, entityId: true, actorName: true, system: true, action: true, summary: true, createdAt: true },
   });
-  return rows.reverse();
+  return rows.reverse().map(({ system, ...row }) => ({ ...row, actorName: actorLabel({ actorName: row.actorName, system }) }));
 }
 
-/** Who did how much, from the log: entries grouped by person, module, record type, action, site, local
+/** Who did how much, from the log (system entries left out): entries grouped by person, module, record type, action, site, local
  *  day and hour, between two local dates (Europe/Dublin, both inclusive). For a manager's view of the work
  *  done in some modules; counts only, never summaries. `siteIds` null means every site; otherwise the
  *  entries at those sites plus the organisation-wide ones (no site), which belong to every site. The caller
@@ -147,7 +175,7 @@ export async function auditWorkload(query: { modules: readonly string[]; siteIds
     SELECT "actorId", "actorName", module, entity, action, "clubId",
       ${local}::date::text AS day, EXTRACT(HOUR FROM ${local})::int AS hour, COUNT(*)::int AS count
     FROM "AuditLog"
-    WHERE module IN (${Prisma.join([...query.modules])})
+    WHERE module IN (${Prisma.join([...query.modules])}) AND NOT system
       AND ${local}::date BETWEEN ${query.from}::date AND ${query.to}::date
       ${query.siteIds ? Prisma.sql`AND ("clubId" IS NULL OR "clubId" IN (${Prisma.join([...query.siteIds])}))` : Prisma.empty}
     GROUP BY "actorId", "actorName", module, entity, action, "clubId", day, hour`);
@@ -155,13 +183,13 @@ export async function auditWorkload(query: { modules: readonly string[]; siteIds
 
 /** When each of some audited actions happened to records of one type, between two local dates
  *  (Europe/Dublin, inclusive): who, where and when, never summaries. For timing work (how long a place
- *  stood before it was undone). Site filtering as in `auditWorkload`. */
-export type AuditEventRow = { entityId: string; action: string; actorId: string | null; actorName: string; clubId: string | null; at: Date };
+ *  stood before it was undone). System entries come back marked, for the caller to leave out. Site filtering as in `auditWorkload`. */
+export type AuditEventRow = { entityId: string; action: string; actorId: string | null; actorName: string; clubId: string | null; at: Date; system: boolean };
 export async function auditEvents(query: { entity: string; actions: readonly string[]; siteIds: readonly string[] | null; from: string; to: string }): Promise<AuditEventRow[]> {
   if (query.actions.length === 0 || query.siteIds?.length === 0) return [];
   const local = Prisma.sql`(("createdAt" AT TIME ZONE 'UTC') AT TIME ZONE ${SCHOOL_TIMEZONE})`;
   return prisma.$queryRaw<AuditEventRow[]>(Prisma.sql`
-    SELECT "entityId", action, "actorId", "actorName", "clubId", "createdAt" AS at
+    SELECT "entityId", action, "actorId", "actorName", "clubId", "createdAt" AS at, system
     FROM "AuditLog"
     WHERE entity = ${query.entity} AND action IN (${Prisma.join([...query.actions])}) AND "entityId" IS NOT NULL
       AND ${local}::date BETWEEN ${query.from}::date AND ${query.to}::date
