@@ -60,7 +60,13 @@ keeps the waiting list.
   withdrawn person can be put back (onto the waiting list when the course is full). Refunds are
   handled at the till.
 
-## Online booking (phase 2, 15 October 2026)
+## Online booking (phase 2, 15 October 2026; switched off 21 October 2026)
+
+**Off since 21 October 2026 (owner choice):** the booking site sells only the Academy's courses.
+The **Open for online booking** tick is gone from the course dialog, saving a course turns it off,
+and the API neither lists nor books short courses, even ones ticked before. A customer still sees
+a short course booked at the desk under their email in **My bookings**. What follows is how it
+worked, kept so it can be switched back on (docs/academy.md).
 
 The public book on the same site as the Academy's courses, `academy.leisureworldcork.com`
 (`apps/academy`, docs/academy.md, ADR 0011), the same way: we cannot take payment online, so a
