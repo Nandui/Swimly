@@ -4,6 +4,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.48.1 · 21 October 2026 · Competencies start as Not achieved
+
+- Every competency now starts as **Not achieved** until an instructor marks it. A swimmer's profile shows **Not achieved** where it used to say **Not marked**, and the choice of mark is now just **Not achieved** or **Achieved**, the same as on the pool deck.
+- Nothing already marked has changed: every **Achieved** and **Not achieved** stays exactly as it was, with who marked it and when.
+- In the parents app, a skill nobody has marked yet in the child's current level now shows as **Practising** instead of **Not assessed yet**. The "skills achieved" count is the same as before.
+
 ## 1.48.0 · 20 October 2026 · Rota: a new Plan, the day's diary
 
 - **Plan** is new, built from the start as the day's diary: open a day and anyone can see who is where, when they change, their breaks and what still needs someone. Everything already planned is still there.
