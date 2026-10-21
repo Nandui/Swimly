@@ -341,6 +341,85 @@ export async function deskMeasuresFor(query: DeskMeasureQuery, except?: string) 
 }
 
 // ---------------------------------------------------------------------------
+// Members: the swimmer records other modules enrol from
+// ---------------------------------------------------------------------------
+
+/** One person on the centre's swimmer records (owner request, 21 October 2026: short courses and
+ *  the Academy enrol people from the swimmer database, so a booking carries their member number,
+ *  contacts and medical notes). The swim school owns these records and registers the directory;
+ *  other modules keep only the id. Medical notes come back only when the caller says its viewer
+ *  may read them (`medical`), otherwise just whether any are on file. */
+export type Member = {
+  id: string;
+  memberNumber: string | null;
+  firstName: string;
+  lastName: string;
+  /** ISO date. */
+  dateOfBirth: string | null;
+  active: boolean;
+  contactName: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  emergencyName: string | null;
+  emergencyPhone: string | null;
+  emergencyRelationship: string | null;
+  hasMedicalNotes: boolean;
+  medicalNotes: string | null;
+};
+/** A search result: enough to tell two people with the same name apart. */
+export type MemberHit = Pick<Member, "id" | "memberNumber" | "firstName" | "lastName" | "dateOfBirth" | "active" | "contactName">;
+/** A person who is not on the records yet. Empty strings mean "not given". */
+export type NewMember = {
+  firstName: string; lastName: string; dateOfBirth: string; memberNumber: string;
+  contactName: string; contactEmail: string; contactPhone: string;
+  emergencyName: string; emergencyPhone: string; emergencyRelationship: string; medicalNotes: string;
+};
+export type MemberDirectory = {
+  /** Every word must match a name, the member number, a contact's name, email or phone, or the
+   *  date of birth (2015-03-04 or 4/3/2015). At most 20, best first. */
+  search(q: string): Promise<MemberHit[]>;
+  byIds(ids: readonly string[], options: { medical: boolean }): Promise<Map<string, Member>>;
+  /** Adds them at a site, audited as added from the calling module. Refuses a person already on
+   *  the records with the same name and date of birth, or a member number in use. */
+  create(input: NewMember, context: { siteId: string; by: { id: string; name: string }; via: string }): Promise<{ ok: true; id: string } | { ok: false; error: string }>;
+};
+
+let memberDirectory: MemberDirectory | null = null;
+
+export function registerMemberDirectory(directory: MemberDirectory) {
+  memberDirectory = directory;
+}
+
+/** The swimmer records, or null when the swim school is switched off: callers then keep their own
+ *  name-only entry. The caller has already checked its own permission for the person it serves. */
+export async function members(): Promise<MemberDirectory | null> {
+  await modulesLoaded();
+  return memberDirectory;
+}
+
+/** What other modules hold about one member, for their swimmer profile: "Couch to 5k at
+ *  Riverside", "6 Oct to 10 Nov · booked". Titles and dates only, never payment or notes. */
+export type MemberHistoryEntry = { id: string; title: string; detail: string; /** ISO date it starts. */ on: string; module: string };
+export type MemberHistorySource = { id: string; list(memberId: string): Promise<MemberHistoryEntry[]> };
+const memberHistorySources: MemberHistorySource[] = [];
+
+export function registerMemberHistory(source: MemberHistorySource) {
+  const at = memberHistorySources.findIndex((s) => s.id === source.id);
+  if (at >= 0) memberHistorySources[at] = source;
+  else memberHistorySources.push(source);
+}
+
+/** Every module's entries for this member, newest first. A failing source is left out. */
+export async function memberHistoryFor(memberId: string): Promise<MemberHistoryEntry[]> {
+  await modulesLoaded();
+  const lists = await Promise.all(memberHistorySources.map((s) => s.list(memberId).catch((error) => {
+    console.error(`Member history from ${s.id} failed`, error);
+    return [] as MemberHistoryEntry[];
+  })));
+  return lists.flat().sort((a, b) => b.on.localeCompare(a.on));
+}
+
+// ---------------------------------------------------------------------------
 // Events
 // ---------------------------------------------------------------------------
 

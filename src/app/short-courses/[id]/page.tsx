@@ -6,8 +6,8 @@ import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import {
-  clock, CourseDialog, CourseStatusButton, euro, HEALTH_FORM_META, newCourseOptions, PersonDialog, PlaceButton, RegisterDialog, SessionDialog,
-  SHORT_COURSE_AREA_META, SHORT_COURSE_CALL_DUE_META, SHORT_COURSE_META, SHORT_COURSE_ONLINE_META, SHORT_COURSE_PAYMENT_META, SHORT_COURSE_PLACE_META, shortCourse,
+  clock, CourseDialog, CourseStatusButton, euro, HEALTH_FORM_META, LinkPersonButton, newCourseOptions, PersonDialog, PlaceButton, RegisterDialog, SessionDialog,
+  SHORT_COURSE_AREA_META, SHORT_COURSE_CALL_DUE_META, SHORT_COURSE_META, SHORT_COURSE_ONLINE_META, SHORT_COURSE_PAYMENT_META, SHORT_COURSE_PLACE_META, shortCourse, SWIMMER_RECORD_META,
   type ShortCourseArea, type ShortCoursePayment, type ShortCourseView,
 } from "@/modules/short-courses/features/courses";
 import { addDaysIso, formatDate, plural } from "@/lib/format";
@@ -22,7 +22,7 @@ type Person = ShortCourseView["booked"][number];
  *  registers, Manage puts the course on and moves its sessions. */
 export default async function ShortCoursePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { course, booked, waiting, withdrawn, canRun, canManage, areas, today } = await shortCourse(id);
+  const { course, booked, waiting, withdrawn, canRun, canManage, areas, today, swimmerRecords, canOpenSwimmers } = await shortCourse(id);
   const options = canManage ? await newCourseOptions() : null;
   const area = SHORT_COURSE_AREA_META[course.type.area as ShortCourseArea] ?? SHORT_COURSE_AREA_META.other;
   const closed = course.state === "cancelled" || course.state === "finished";
@@ -35,8 +35,17 @@ export default async function ShortCoursePage({ params }: { params: Promise<{ id
     startMinutes: lastSession.startMinutes, endMinutes: lastSession.endMinutes, place: lastSession.place } : undefined;
   const personDialog = (p?: Person) => (
     <PersonDialog courseId={course.id} priceCents={course.priceCents} full={full} healthForm={course.type.healthForm} minAge={course.type.minAge}
-      person={p} trigger={p ? <Button variant="outline" size="icon" aria-label={`Change ${p.name}`}><Pencil aria-hidden="true" /></Button> : undefined} />
+      swimmerRecords={swimmerRecords} canOpenSwimmers={canOpenSwimmers} person={p} trigger={p ? <Button variant="outline" size="icon" aria-label={`Change ${p.name}`}><Pencil aria-hidden="true" /></Button> : undefined} />
   );
+  /** Member number first, then how to reach them: from their swimmer record when linked. */
+  const reach = (p: Person) => [p.swimmer?.memberNumber ? `Member ${p.swimmer.memberNumber}` : null, p.swimmer?.contactPhone || p.phone || p.swimmer?.contactEmail || p.email || null];
+  /** The swimmer record's tags: medical notes on file, or not linked yet (with the button to link). */
+  const recordTags = (p: Person) => <>
+    {p.swimmer?.hasMedicalNotes ? <Tag meta={SWIMMER_RECORD_META.medical} /> : null}
+    {swimmerRecords && !p.swimmerId ? <Tag meta={SWIMMER_RECORD_META.unlinked} /> : null}
+  </>;
+  const linkButton = (p: Person) => swimmerRecords && !p.swimmerId && !closed
+    ? <LinkPersonButton id={p.id} name={p.name} email={p.email} phone={p.phone} dateOfBirth={p.dateOfBirth} minAge={course.type.minAge} /> : null;
   const facts: [string, string][] = [
     ["Instructor", course.instructor.name],
     ["Places", `${course.taken} of ${course.capacity} booked${waiting.length ? `, ${waiting.length} waiting` : ""}`],
@@ -82,15 +91,17 @@ export default async function ShortCoursePage({ params }: { params: Promise<{ id
               <li key={p.id} className="pc-row">
                 <span className="pc-row-body">
                   <span className="pc-row-title">{p.name}</span>
-                  <span className="pc-row-hint">{[p.phone || p.email || null, p.online?.phone2 || null, course.held ? `at ${p.attended} of ${course.held}` : null,
+                  <span className="pc-row-hint">{[...reach(p), p.online?.phone2 || null, course.held ? `at ${p.attended} of ${course.held}` : null,
                     p.owed ? `${euro(p.owed)} to pay` : p.paidCents ? `${euro(p.paidCents)} paid` : null, p.online?.reference ?? null,
                     p.online?.call ? `${p.online.call.due === "overdue" ? p.online.call.label : `phone by ${p.online.call.label}`}${p.online.callTimes.length ? `, best ${p.online.callTimes.join(", ").toLowerCase()}` : ""}` : null,
                     p.note || null].filter(Boolean).join(" · ")}</span>
                 </span>
                 <span className="pc-row-trail flex-wrap">
                   {p.online?.call ? <Tag meta={SHORT_COURSE_CALL_DUE_META[p.online.call.due]} /> : p.online ? <Tag meta={SHORT_COURSE_ONLINE_META.online} /> : null}
+                  {recordTags(p)}
                   {course.type.healthForm && !p.healthFormOn ? <Tag meta={HEALTH_FORM_META.missing} /> : null}
                   <Tag meta={SHORT_COURSE_PAYMENT_META[p.payment as ShortCoursePayment] ?? SHORT_COURSE_PAYMENT_META.owed} />
+                  {linkButton(p)}
                   {personDialog(p)}
                   {!closed ? <PlaceButton id={p.id} name={p.name} to="withdrawn" label="Withdraw" destructive title={`Withdraw ${p.name}?`}
                     description={waiting.length ? `Their place is freed for ${waiting[0].name}, first on the waiting list.` : "Their place is freed. Their record and register marks stay."} /> : null}
@@ -112,11 +123,13 @@ export default async function ShortCoursePage({ params }: { params: Promise<{ id
               <li key={p.id} className="pc-row">
                 <span className="pc-row-body">
                   <span className="pc-row-title">{i + 1}. {p.name}</span>
-                  <span className="pc-row-hint">{[p.phone || null, p.online?.phone2 || null, p.email || null, `added ${formatDate(p.createdAt)}`, p.online?.reference ?? null, p.note || null].filter(Boolean).join(" · ")}</span>
+                  <span className="pc-row-hint">{[...reach(p), p.online?.phone2 || null, `added ${formatDate(p.createdAt)}`, p.online?.reference ?? null, p.note || null].filter(Boolean).join(" · ")}</span>
                 </span>
                 <span className="pc-row-trail flex-wrap">
                   {p.online ? <Tag meta={SHORT_COURSE_ONLINE_META.online} /> : null}
+                  {recordTags(p)}
                   <Tag meta={SHORT_COURSE_PLACE_META.waiting} />
+                  {linkButton(p)}
                   {personDialog(p)}
                   {!closed && free > 0 ? <PlaceButton id={p.id} name={p.name} to="booked" label="Give the place" primary={i === 0} title={`Give ${p.name} a place?`} description="They are booked on. Record their payment next." /> : null}
                   {!closed ? <PlaceButton id={p.id} name={p.name} to="withdrawn" label="Remove" destructive title={`Take ${p.name} off the waiting list?`} description="They stay on the record as withdrawn." /> : null}
@@ -144,7 +157,7 @@ export default async function ShortCoursePage({ params }: { params: Promise<{ id
                     <span className="pc-row-hint">{[s.place || "No area", s.note || null, s.registerAt ? `register by ${s.registerBy}: ${there} there` : s.date <= today ? "register not taken" : null].filter(Boolean).join(" · ")}</span>
                   </span>
                   <span className="pc-row-trail">
-                    {canRun && !closed && s.date <= today ? <RegisterDialog session={{ id: s.id, label: day(s.date), marks, taken: !!s.registerAt }} people={booked.map((p) => ({ id: p.id, name: p.name }))} /> : null}
+                    {canRun && !closed && s.date <= today ? <RegisterDialog session={{ id: s.id, label: day(s.date), marks, taken: !!s.registerAt }} people={booked.map((p) => ({ id: p.id, name: p.name, memberNumber: p.swimmer?.memberNumber, medical: p.swimmer?.hasMedicalNotes }))} /> : null}
                     {canManage && !closed ? <SessionDialog courseId={course.id} areas={areas} session={{ id: s.id, date: s.date, startMinutes: s.startMinutes, endMinutes: s.endMinutes, place: s.place, note: s.note }}
                       trigger={<Button variant="outline" size="icon" aria-label={`Change the session on ${day(s.date)}`}><Pencil aria-hidden="true" /></Button>} /> : null}
                   </span>
@@ -163,7 +176,7 @@ export default async function ShortCoursePage({ params }: { params: Promise<{ id
               <li key={p.id} className="pc-row" data-muted="">
                 <span className="pc-row-body">
                   <span className="pc-row-title">{p.name}</span>
-                  <span className="pc-row-hint">{[p.phone || p.email || null, p.paidCents ? `${euro(p.paidCents)} paid` : null].filter(Boolean).join(" · ")}</span>
+                  <span className="pc-row-hint">{[...reach(p), p.paidCents ? `${euro(p.paidCents)} paid` : null].filter(Boolean).join(" · ")}</span>
                 </span>
                 <span className="pc-row-trail flex-wrap">
                   <Tag meta={SHORT_COURSE_PLACE_META.withdrawn} />

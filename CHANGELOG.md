@@ -4,6 +4,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.55.0 · 21 October 2026 · Short courses book people from the swimmer records
+
+- **Book someone on** (short courses) and **Add a candidate** (Academy courses) now start with **Find the swimmer**. Search by name, member number, date of birth or a parent's name, and pick the right person. Their member number, contacts, emergency contact and medical notes come with them.
+- If they are not on the swimmer records yet, choose **Add them as a new swimmer**, fill in their details, and they are added and booked on in one go. Turnfin tells you if someone with the same name and date of birth is already there, so nobody is added twice. Adults on gym and lifeguard courses get a swimmer record too; staff on Academy courses stay as staff.
+- Each person on a course shows their **member number**, and a red **Medical notes** tag when there are any. Open the pencil to read their full record, with **Open their profile** if you can see Swimmers. Change their details on the swimmer record, and every course they are on follows.
+- The register shows each person's member number too.
+- People booked before today show **No swimmer record** and a **Link to swimmer** button, so you can match them up when you have a moment. Nothing else about them changes.
+- When you log a call as **Paid** for an Academy place held online, Turnfin asks you to find them on the swimmer records or add them first. Their details from the booking are filled in for you.
+- A swimmer's profile now lists the short courses and Academy courses they have been on, under **Details**, in **Other courses**.
 ## 1.54.0 · 21 October 2026 · The Academy booking site looks like the parents app
 
 - The Academy booking site, where people book lifeguard and swim teacher courses, now looks like the LeisureWorld Aquatics parents app: the same navy bar with the LeisureWorld logo, the same font, blue headings and orange dates, and the same cards.

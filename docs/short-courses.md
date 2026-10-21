@@ -16,7 +16,7 @@ booking site; phase 3 adds "run it again" and reports.
 | Course on the list | `ShortCourseType` (`short_courses_types`) | A course we offer: "Couch to 5k". Where (pool, gym, studio, other), what it is, how many weeks and minutes a session a new run starts with, minimum age, and whether it asks for a health form (a PAR-Q for the gym). Archived, never deleted. |
 | Course | `ShortCourse` (`short_courses_courses`) | One run at a site: places, price, instructor, note. Planned, then **running** once its first session comes (worked out), then finished or cancelled. |
 | Session | `ShortCourseSession` (`short_courses_sessions`) | A dated session in one of the site's areas (Admin, Areas), with who took its register. |
-| Person | `ShortCourseParticipant` (`short_courses_participants`) | A member of the public by name, phone, email and (when the course has a minimum age) date of birth; booked, waiting or withdrawn; payment (paid, deposit, owed, no charge) and the amount paid; the day their health form came in. |
+| Person | `ShortCourseParticipant` (`short_courses_participants`) | Someone on the swimmer records (`swimmerId`, since 21 October 2026), with the name, phone, email and date of birth copied from that record; booked, waiting or withdrawn; payment (paid, deposit, owed, no charge) and the amount paid; the day their health form came in. Older bookings keep a typed name until they are linked. |
 | Attendance | `ShortCourseAttendance` (`short_courses_attendance`) | Whether they were at a session. |
 
 The tables keep plain ids for the site, the instructor and the organisation and read Core only
@@ -43,6 +43,31 @@ number booked.
 Anyone with View at the course's site books people on, records the payment taken at the till and
 keeps the waiting list.
 
+- **From the swimmer records** (owner request, 21 October 2026: "the enrolment of candidates or
+  participants needs to be done via the database of swimmers"). **Book someone on** starts with
+  **Find the swimmer**: search by name, member number, date of birth (2015-03-04 or 4/3/2015) or
+  a contact's name, email or phone, and pick the person. Someone not there is added with **Add
+  them as a new swimmer** (name, date of birth, member number, contact, phone, email, emergency
+  contact, medical notes), at the course's site, audited by the swim school as "Added … (from
+  Short courses)". The same name and date of birth already on the records, or a member number in
+  use, is refused with the person to pick instead. Adults on gym and studio courses get a swimmer
+  record too. One swimmer is booked once per course.
+- **What the booking shows.** The member number on the row, the waiting list and the register,
+  and **Medical notes** when any are on file. The person's dialog shows the record: member
+  number, date of birth, contact, phone, email, emergency contact and the medical notes (to anyone
+  working the course at its site: View books them, Instructor teaches them; never in a list), with
+  **Open their profile** for staff who can open Swimmers. Details are changed on the swimmer
+  record; the booking copies name, phone, email and date of birth from it each time it is saved, so
+  My bookings and the booking emails keep working. A place held online keeps the email and phone
+  it was booked with.
+- **Older bookings** stay as they were, tagged **No swimmer record**, with **Link to swimmer** on
+  the row (pick or add, as above). Their typed details can still be changed until then.
+- **Each swimmer's profile** lists the short courses and Academy courses they have been on, under
+  Details (**Other courses**).
+- With the swim school switched off there are no swimmer records, and people are typed by name as
+  before. The records belong to the swim school; Short courses keeps only the id and reads them
+  through the member directory seam (ADR 0014).
+
 - **Places.** Only a booking takes a place. The course row is locked while places are counted, so
   the last place is never taken twice.
 - **Waiting list.** When the course is full, the desk adds people to the waiting list instead. It
@@ -53,7 +78,8 @@ keeps the waiting list.
 - **Payment.** Paid with no amount records the full price. "Still to pay" on the course adds up
   what each booked person owes (the price less what they paid; nothing for paid or no charge).
 - **Age.** When the course has a minimum age, the date of birth is required and checked against
-  the first day.
+  the first day. It comes from the swimmer record; when the record has none, the dialog asks for
+  it and keeps it on the booking.
 - **Health form.** When the course asks for one, the day it came in is recorded, and anyone
   booked without one shows **No health form**.
 - **Withdrawing** frees the place and keeps the person and their register marks on the course. A
@@ -122,8 +148,8 @@ with a place free for the waiting list, and courses starting in the next two wee
 
 ## Files
 
-- Schema: `prisma/schema/short-courses.prisma`, migrations `20261103120000_short_courses` and `20261108120000_short_courses_online` (additive).
-- `src/modules/short-courses/`: `shared/` (`rules.ts`, pure; `access.ts`; `server.ts` and `reads.ts`; the dialogs' `components/form-kit.tsx`; `public-booking.ts`, the booking site's shape), and the features `courses`, `course-types`, `booking` (the booking site's API and both kinds of course on it) and `workspace`, plus the Academy's (docs/academy.md). See its README.md.
+- Schema: `prisma/schema/short-courses.prisma`, migrations `20261103120000_short_courses`, `20261108120000_short_courses_online` and `20261129150000_short_courses_swimmers` (additive).
+- `src/modules/short-courses/`: `shared/` (`rules.ts`, pure; `access.ts`; `server.ts` and `reads.ts`; the dialogs' `components/form-kit.tsx`; the swimmer records: `swimmers.ts`, `swimmer-search.ts`, `components/swimmer-picker.tsx` and `components/swimmer-card.tsx`; `public-booking.ts`, the booking site's shape), and the features `courses`, `course-types`, `booking` (the booking site's API and both kinds of course on it) and `workspace`, plus the Academy's (docs/academy.md). See its README.md.
 - UI: `src/app/short-courses/` (courses, a course, the course list, the starter page).
 - Tests: `rules.test.ts` and `__tests__/short-courses.test.ts` (end to end on an isolated database).
 - Sandbox: Couch to 5k at Hillview two weeks in, with two people waiting for a free place; Adult swim lessons at Riverside starting in ten days, open online, with one invented place held online and overdue for a call.

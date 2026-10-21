@@ -11,6 +11,7 @@ import { today } from "@/lib/format";
  *  who to phone, log calls, and take payment. Invented people only. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let router: typeof import("../features/booking/server/router");
+let swimmerRecords = false;
 let actions: typeof import("../features/academy-calls/server/actions");
 let data: typeof import("../features/academy-calls/server/data");
 const ORG = "org_leisureworld";
@@ -96,8 +97,11 @@ before(async () => {
     "server-only": {},
     react: { cache: <T,>(fn: T) => fn },
   };
-  actions = serverModule("src/modules/short-courses/features/academy-calls/server/actions.ts", staff);
-  data = serverModule("src/modules/short-courses/features/academy-calls/server/data.ts", staff);
+  // The swimmer records (the swim school's member directory), switched on for the paid call.
+  const directory = serverModule<typeof import("@/modules/activities/features/students/server/members")>("src/modules/activities/features/students/server/members.ts", staff).memberDirectory;
+  const seam = { "@/modules/contributions": { members: async () => (swimmerRecords ? directory : null) } };
+  actions = serverModule("src/modules/short-courses/features/academy-calls/server/actions.ts", { ...staff, ...seam });
+  data = serverModule("src/modules/short-courses/features/academy-calls/server/data.ts", { ...staff, ...seam });
 });
 after(async () => { process.env = originalEnv; await fixture?.close(); });
 
@@ -176,9 +180,16 @@ test("staff see who to phone, soonest first, and every Academy level can log a c
   const [a, b] = before.people;
   assert.equal((await actions.logCall(a.id, { outcome: "paid", amount: "" })).ok, false, "paid needs the amount");
   assert.equal((await actions.logCall(a.id, { outcome: "no-answer" })).ok, true);
-  assert.equal((await actions.logCall(a.id, { outcome: "paid", amount: "100", receipt: "T-1" })).ok, true);
+  swimmerRecords = true;
+  assert.equal((await actions.logCall(a.id, { outcome: "paid", amount: "100", receipt: "T-1" })).ok, false, "taking payment finds them on the swimmer records first");
+  const newSwimmer = { firstName: "Candidate", lastName: "A", dateOfBirth: "", memberNumber: "SYN-2001", contactName: "", contactEmail: "other@example.test", contactPhone: "087 000 0000", emergencyName: "", emergencyPhone: "", emergencyRelationship: "", medicalNotes: "" };
+  assert.equal((await actions.logCall(a.id, { outcome: "paid", amount: "100", receipt: "T-1", swimmer: { newSwimmer } })).ok, true);
+  swimmerRecords = false;
   const deposit = await fixture.prisma.academyCandidate.findUniqueOrThrow({ where: { id: a.id }, include: { calls: true } });
   assert.deepEqual([deposit.payment, deposit.paidCents, deposit.calls.length], ["deposit", 10000, 2], "less than the price is a deposit");
+  const record = await fixture.prisma.student.findFirstOrThrow({ where: { memberNumber: "SYN-2001" } });
+  assert.equal(deposit.swimmerId, record.id, "linked to the swimmer added on the call");
+  assert.notEqual(deposit.email, "other@example.test", "a place held online keeps the email it was booked with");
   assert.equal((await actions.logCall(b.id, { outcome: "not-going-ahead", note: "Changed plans" })).ok, true);
   assert.equal((await fixture.prisma.academyCandidate.findUniqueOrThrow({ where: { id: b.id } })).status, "withdrawn");
   assert.deepEqual((await data.toCall()).people, [], "a deposit and a withdrawal both leave the list");

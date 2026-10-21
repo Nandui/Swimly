@@ -54,6 +54,7 @@ It never queries Core tables. It reads people and sites through `src/lib/directo
 - Site summary: programmes, swimmers and classes on Sites.
 - Starter page items (`registerHomeCard`; Home counts the ones that need the person): Swim school (today's classes and assessments, swimmers awaiting enrolment, parent updates) and Pool deck (the viewer's classes today).
 - Area rename: classes and assessment sessions follow an area renamed in Admin.
+- Member directory (`registerMemberDirectory`, `features/students/server/members.ts`): the swimmer records other modules book people from (owner request, 21 October 2026, ADR 0014). Short courses and the Academy search, read (medical notes only when they say their viewer may) and add swimmers; the swim school writes and audits every add. The swimmer profile's **Other courses** reads `memberHistoryFor`.
 - Menu entries, levels and permissions: `manifest.ts` (Swim school and Pool deck), listed in `src/app/modules.ts`.
 
 ## Permissions
@@ -61,6 +62,6 @@ It never queries Core tables. It reads people and sites through `src/lib/directo
 - Pool deck: `attendance.mark`, `attendance.markAny`, `attendance.cover`, `progression.assess`, `progression.complete`, `assessments.run`.
 
 ## Depends on
-- Platform: auth and the session, the policy engine, permissions, audit, the database client, `src/lib/directory.ts`, home cards, site summaries and commitments.
+- Platform: auth and the session, the policy engine, permissions, audit, the database client, `src/lib/directory.ts`, home cards, site summaries, commitments, the member directory and member history.
 - The UI kit's account menu, working-site switcher and wrong-site notice (`src/components/ui`: `account-menu.tsx`, `club-switcher.tsx`, `wrong-club.tsx`); switching runs Core's `switchClub` through the frame context.
 - Other modules: none.

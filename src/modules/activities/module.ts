@@ -3,7 +3,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import { visibleScreens, type ScreenKey } from "@/lib/staff/screens";
-import { registerAreaRename, registerCommitments, registerHomeCard, registerSiteSummary, type Commitment, type HomeIcon, type HomeItem, type HomeSession } from "@/modules/contributions";
+import { registerAreaRename, registerCommitments, registerHomeCard, registerMemberDirectory, registerSiteSummary, type Commitment, type HomeIcon, type HomeItem, type HomeSession } from "@/modules/contributions";
 import { formatTime, isDateOnly, minutesNow, parseDateOnly, plural, today } from "@/lib/format";
 import { logAudit } from "@/lib/audit";
 import { staffByIds } from "@/lib/directory";
@@ -15,6 +15,7 @@ import { USUAL_INSTRUCTOR_UNTIL, getCoursesOnDate } from "@/modules/activities/s
 import { getAwaitingEnrolment } from "@/modules/activities/features/enrolment/server/data/awaiting-enrolment";
 import { getTodayAssessments } from "@/modules/activities/shared/today/assessments";
 import { sessionState } from "@/modules/activities/shared/today/calendar";
+import { memberDirectory } from "@/modules/activities/features/students/server/members";
 
 
 /** Who teaches which class when, for the rota's plan and its clash check: each class on each
@@ -207,3 +208,7 @@ registerAreaRename({
     return changed;
   },
 });
+
+/** The swimmer records other modules book people from (owner request, 21 October 2026): Short
+ *  courses and the Academy search, read and add swimmers here, and keep only the id. */
+registerMemberDirectory(memberDirectory);

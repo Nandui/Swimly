@@ -13,19 +13,19 @@ Two kinds of course: six and eight week courses, and the Academy's lifeguard and
 - `course-types` — the course list: what we offer, where, and the weeks and session length a new run starts with (`/short-courses/types`).
 - `workspace` — the frame, its one page list (`pages.ts`, for the page bar and the starter page `/short-courses/overview`) and the access check (`src/app/short-courses/layout.tsx`).
 
-`shared/` holds what two or more features use: the pure rules (`rules.ts`, `academy-rules.ts`, each tested beside it), the access checks (`access.ts`, `academy-access.ts`), access at a course's site and page refreshes for writes (`server.ts`, `academy-server.ts`), site scoping for reads (`reads.ts`), the dialogs' common fields (`components/form-kit.tsx`) and the booking site's shape (`public-booking.ts`).
+`shared/` holds what two or more features use: the pure rules (`rules.ts`, `academy-rules.ts`, each tested beside it), the access checks (`access.ts`, `academy-access.ts`), access at a course's site and page refreshes for writes (`server.ts`, `academy-server.ts`), site scoping for reads (`reads.ts`), the dialogs' common fields (`components/form-kit.tsx`), the booking site's shape (`public-booking.ts`), and booking from the swimmer records (`swimmers.ts`, the search action `swimmer-search.ts`, `components/swimmer-picker.tsx` and `components/swimmer-card.tsx`; ADR 0014).
 
 ## Public API (index.ts)
-- The status maps (`SHORT_COURSE_META`, `SHORT_COURSE_AREA_META`, `SHORT_COURSE_PAYMENT_META`, `SHORT_COURSE_PLACE_META`, `SHORT_COURSE_ONLINE_META`, `SHORT_COURSE_CALL_DUE_META`, `HEALTH_FORM_META`), for Core's tone check. The Rota sees sessions through commitments, registered in `module.ts`.
+- The status maps (`SHORT_COURSE_META`, `SHORT_COURSE_AREA_META`, `SHORT_COURSE_PAYMENT_META`, `SHORT_COURSE_PLACE_META`, `SHORT_COURSE_ONLINE_META`, `SHORT_COURSE_CALL_DUE_META`, `HEALTH_FORM_META`, `SWIMMER_RECORD_META`), for Core's tone check. The Rota sees sessions through commitments, registered in `module.ts`.
 
 ## Data owned
 Declared in `prisma/schema/short-courses.prisma` and, for Academy courses (table names kept, ADR 0002), `prisma/schema/short-courses.academy.prisma`:
 - `short_courses_types` (`ShortCourseType`) — the course list.
 - `short_courses_courses`, `short_courses_sessions` (`ShortCourse`, `ShortCourseSession`) — a course and its sessions.
-- `short_courses_participants`, `short_courses_attendance` (`ShortCourseParticipant`, `ShortCourseAttendance`) — who is booked or waiting, and their register marks.
+- `short_courses_participants`, `short_courses_attendance` (`ShortCourseParticipant`, `ShortCourseAttendance`) — who is booked or waiting (with their swimmer record's id, `swimmerId`), and their register marks.
 
 - `AcademyCourseType`, `AcademyCourse`, `AcademySession` — the Academy course list, a course and its sessions.
-- `AcademyCandidate`, `AcademyAttendance`, `AcademyCall` — candidates, their register marks and payment calls.
+- `AcademyCandidate`, `AcademyAttendance`, `AcademyCall` — candidates (a member of the public with their `swimmerId`), their register marks and payment calls.
 - `AcademyEmailCheck` — email codes and sign-in tokens for the booking site.
 
 Sites, staff and areas are read through Core's functions; Academy tables keep their relations to Core's qualification types (enforced by the boundary lint).
@@ -38,13 +38,14 @@ Sites, staff and areas are read through Core's functions; Academy tables keep th
 - Commitments `short-courses.sessions` and `academy.sessions`: each session for its instructor, or tutor and assessor, so the Rota shows and counts it.
 - Area renames `short-courses.places`: sessions follow a renamed area.
 - Starter page items (`registerHomeCard`): places booked online to phone about, registers to take today, courses with a place free for the waiting list, courses starting in the next two weeks, for both kinds of course.
+- Member history `short-courses.bookings` and `short-courses.academy-candidates`: the courses a swimmer has been on, for their profile.
 - Menu entry, levels and permissions: `manifest.ts`, listed in `src/app/modules.ts`. A role's old Academy level still counts here (`formerly`).
 
 ## Permissions
 - `short-courses.read`, `short-courses.run`, `short-courses.manage`, and for Academy courses `academy.read`, `academy.run`, `academy.manage`; each level gives both of its rank.
 
 ## Depends on
-- Platform: the policy engine, audit, email (`src/lib/email`), the public API kit (`src/lib/public-api`), areas (`src/lib/setup`), the database client, commitments, area renames and home cards (`src/modules/contributions`).
+- Platform: the policy engine, audit, email (`src/lib/email`), the public API kit (`src/lib/public-api`), areas (`src/lib/setup`), the database client, commitments, area renames, home cards, the member directory and member history (`src/modules/contributions`).
 - Core reads (never Core tables; enforced by the boundary lint): sites and staff through `src/lib/directory.ts` (`liveSiteById`, `liveSitesOf`, `withSites`, `withStaff`, `staffContact`, `activeStaffAtSite`); qualification types and the qualifications an Academy pass records through `src/lib/qualifications.ts`.
 - The UI kit's workspace frame `ModuleShell` and `AreaSelect` (`src/components/ui`).
-- Other modules: none.
+- Other modules: none imported. The swim school's swimmer records are read and added through the member directory seam (a direct call: the booking needs the answer), and work without it.

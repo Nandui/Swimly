@@ -54,8 +54,9 @@ before(async () => {
   };
   contributions = serverModule<typeof import("@/modules/contributions")>("src/modules/contributions.ts", { ...d, "@/modules/server": {} });
   serverModule("src/modules/short-courses/module.ts", { ...d, "@/modules/contributions": contributions });
-  actions = { ...serverModule<object>("src/modules/short-courses/features/academy-types/server/actions.ts", d), ...serverModule<object>("src/modules/short-courses/features/academy-courses/server/actions.ts", d) } as typeof actions;
-  data = serverModule("src/modules/short-courses/features/academy-courses/server/data.ts", d);
+  const withSeam = { ...d, "@/modules/contributions": contributions };
+  actions = { ...serverModule<object>("src/modules/short-courses/features/academy-types/server/actions.ts", d), ...serverModule<object>("src/modules/short-courses/features/academy-courses/server/actions.ts", withSeam) } as typeof actions;
+  data = serverModule("src/modules/short-courses/features/academy-courses/server/data.ts", withSeam);
 });
 after(async () => { await fixture?.close(); });
 

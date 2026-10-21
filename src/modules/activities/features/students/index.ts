@@ -5,6 +5,7 @@ export { ApplyParentChange, DeclineParentChange } from "@/modules/activities/fea
 export { SwimmerBrowser } from "@/modules/activities/features/students/components/swimmer-browser";
 export { SwimmerProfile } from "@/modules/activities/features/students/components/swimmer-profile";
 export { createStudent, type StudentInput, updateStudent } from "@/modules/activities/features/students/server/actions/students";
+export { getSwimmerOtherCourses } from "@/modules/activities/features/students/server/data/other-courses";
 export { getSwimmerHistory } from "@/modules/activities/features/students/server/data/history";
 export { listParentChangeRequests } from "@/modules/activities/features/students/server/data/parent-changes";
 export { getStudent, getStudentCounts, getStudents, STUDENTS_PER_PAGE } from "@/modules/activities/features/students/server/data/students";
