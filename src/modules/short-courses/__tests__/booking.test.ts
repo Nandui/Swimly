@@ -117,7 +117,7 @@ test("the booking site sees only courses put online that have not started, and n
   const res = await call("courses");
   const text = await res.clone().text();
   const { courses } = await res.json();
-  assert.deepEqual(courses.map((c: { id: string }) => c.id), [onlineCourse, shortCourse], "not the staff-only course, not the one that started today; short courses too");
+  assert.deepEqual(courses.map((c: { id: string }) => c.id), [onlineCourse], "not the staff-only course, not the one that started today, not short courses");
   assert.equal(courses[0].placesLeft, 2);
   assert.equal(courses[0].price, "€395.00");
   assert.deepEqual(courses[0].checks, ["Swim test"], "age is said as the minimum age instead");
@@ -189,30 +189,12 @@ test("staff see who to phone, soonest first, and every Academy level can log a c
   assert.ok(audit.every((r) => r.module === "Short courses" && r.actorName === "Desk B"));
 });
 
-test("a short course: a place held online, then its waiting list once full", async () => {
-  const { course } = await (await call(`courses/${shortCourse}`)).json();
-  assert.deepEqual([course.source, course.group, course.categoryLabel, course.checks, course.askDateOfBirth, course.waitingList, course.price],
-    ["short-courses", "course", "Gym", ["Health form"], false, true, "€60.00"]);
+test("short courses are not sold online, even ticked (owner choice, 21 October 2026)", async () => {
+  assert.equal((await call(`courses/${shortCourse}`)).status, 404);
   const token = await checkEmail("runner.a@example.test");
   const res = await call("bookings", "POST", { courseId: shortCourse, name: "Runner A", phone: "087 111 1111", callTimes: ["evening"] }, token);
-  assert.equal(res.status, 201, "no date of birth needed without a minimum age");
-  const body = await res.json();
-  assert.equal(body.outcome, "held");
-  assert.match(body.reference, /^SC-[A-Z2-9]{5}$/);
-  const row = await fixture.prisma.shortCourseParticipant.findFirstOrThrow({ where: { reference: body.reference } });
-  assert.deepEqual([row.source, row.status, row.payment, row.callTimes], ["online", "booked", "owed", ["evening"]]);
-  assert.equal(row.callBy!.getTime() - row.createdAt.getTime(), 72 * 3_600_000);
-  assert.equal(held.at(-1)!.reference, body.reference);
-
-  const other = await checkEmail("runner.b@example.test");
-  const full = await call("bookings", "POST", { courseId: shortCourse, name: "Runner B", phone: "087 222 2222" }, other);
-  assert.equal((await full.json()).error.code, "FULL");
-  const wait = await call("bookings", "POST", { courseId: shortCourse, name: "Runner B", phone: "087 222 2222", waitingList: true }, other);
-  assert.equal(wait.status, 201);
-  const waiting = await wait.json();
-  assert.deepEqual([waiting.outcome, waiting.callBy], ["waiting", null]);
-  assert.equal((await fixture.prisma.shortCourseParticipant.findFirstOrThrow({ where: { reference: waiting.reference } })).status, "waiting");
-  assert.equal((await call("bookings", "POST", { courseId: shortCourse, name: "Runner B", phone: "087 222 2222", waitingList: true }, other)).status, 409, "once on the list");
+  assert.equal(res.status, 404);
+  assert.equal(await fixture.prisma.shortCourseParticipant.count({ where: { courseId: shortCourse } }), 0, "no place held");
 });
 
 test("a customer sees only their own bookings, from every module, and signing out ends the token", async () => {

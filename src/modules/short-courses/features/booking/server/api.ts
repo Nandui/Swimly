@@ -9,8 +9,8 @@ import { sendCode, sendHeld } from "@/modules/short-courses/features/booking/ser
 import { AcademyApiError, academyApiConfig, emailSchema, idSchema, notFound, readBody } from "@/modules/short-courses/features/booking/server/http";
 
 /** The booking site's API (owner decision, 8 October 2026; docs/academy.md): the public see
- *  every course offered online (Academy courses and short courses), check their email with a
- *  code, hold places and see their own bookings.
+ *  the Academy courses offered online, check their email with a code, hold places and see their
+ *  own bookings. Since 21 October 2026 (owner choice) short courses are not sold online.
  *
  *  - Anyone can read the courses put online that have not started.
  *  - Holding a place or seeing your bookings needs an email checked with a code; the check gives
@@ -20,8 +20,11 @@ import { AcademyApiError, academyApiConfig, emailSchema, idSchema, notFound, rea
  *
  *  Nothing here returns staff names, other customers or anything entered by staff. */
 
-/** Both kinds of course the site sells: the Academy's qualifications and the weekly courses. */
-const SOURCES = [academyPublicCourses, shortCoursePublicCourses];
+/** What the site sells: the Academy's qualifications only (owner choice, 21 October 2026). */
+const ON_SALE = [academyPublicCourses];
+/** Whose bookings a customer sees: both kinds, so a short course booked at the desk under their
+ *  email still shows under My bookings. */
+const BOOKED = [academyPublicCourses, shortCoursePublicCourses];
 
 const CODE_MS = 10 * 60 * 1000;
 const TOKEN_MS = 7 * 24 * 60 * 60 * 1000;
@@ -34,17 +37,17 @@ function requestIp(request: Request) {
 }
 const tooMany = () => new AcademyApiError(429, "RATE_LIMITED", "Too many attempts. Wait a while and try again.");
 
-/* ---------- Courses, of both kinds ---------- */
+/* ---------- Courses on sale ---------- */
 
 /** Every course open online, soonest first; full ones too. */
 export async function courses() {
-  const lists = await Promise.all(SOURCES.map((source) => source.list()));
+  const lists = await Promise.all(ON_SALE.map((source) => source.list()));
   return { courses: lists.flat().sort((a, b) => (a.firstDay ?? "").localeCompare(b.firstDay ?? "")) };
 }
 
-/** The source that has this course open online, and the course. Ids are unique across tables. */
+/** The source that has this course open online, and the course. */
 async function findCourse(id: string) {
-  for (const source of SOURCES) {
+  for (const source of ON_SALE) {
     const found = await source.one(id);
     if (found) return { source, course: found };
   }
@@ -127,7 +130,7 @@ export async function book(request: Request) {
  *  desk entered with this address. Newest first within each state. */
 export async function myBookings(request: Request) {
   const email = await checkedEmail(request);
-  const lists = await Promise.all(SOURCES.map((source) => source.bookingsFor(email)));
+  const lists = await Promise.all(BOOKED.map((source) => source.bookingsFor(email)));
   const order = { "to-pay": 0, waiting: 1, booked: 2, done: 3, withdrawn: 4, cancelled: 5 } as const;
   const bookings = lists.flat().sort((a, b) => order[a.state] - order[b.state] || (a.firstDay ?? "").localeCompare(b.firstDay ?? ""));
   return { email, bookings };

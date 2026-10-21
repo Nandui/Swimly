@@ -4,6 +4,11 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.48.1 · 21 October 2026 · The booking site sells Academy courses only
+
+- The booking site (academy.leisureworldcork.com) now shows only Academy courses, such as lifeguard and swim teacher qualifications. Customers still hold a place there without paying, and reception phones them within 72 hours to take payment.
+- Short courses are booked at the desk only. The **Open for online booking** tick is gone from short courses.
+
 ## 1.48.0 · 20 October 2026 · Rota: a new Plan, the day's diary
 
 - **Plan** is new, built from the start as the day's diary: open a day and anyone can see who is where, when they change, their breaks and what still needs someone. Everything already planned is still there.

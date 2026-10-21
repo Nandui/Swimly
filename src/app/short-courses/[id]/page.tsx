@@ -45,7 +45,6 @@ export default async function ShortCoursePage({ params }: { params: Promise<{ id
     ["Still to pay", owed ? euro(owed) : "Nothing"],
     ["Who it is for", course.type.minAge ? `${course.type.minAge} and over` : "Any age"],
     ["Health form", course.type.healthForm ? "Asked for" : "Not asked for"],
-    ["Online booking", course.bookOnline ? (course.state === "planned" ? "Open until the first session" : "Closed once it started") : "Off"],
   ];
   return (
     <PageShell spacing="roomy" header={<PageHeader back={{ href: "/short-courses", label: "Courses" }} title={course.type.name} description={`${course.site.name} · ${dates}`}
