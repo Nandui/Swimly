@@ -4,6 +4,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.49.0 · 21 October 2026 · Together: try other levels
+
+- **Together** can now answer "what if": beside each child you have picked, choose **Their level now** or another level, such as "what if Robin moved up to Seals and Poppy stayed in Seals". The times update straight away.
+- When you are trying another level, the page says so in a blue **What if** box, and each heading and each child it applies to carries a **What if** tag. Nothing changes on the child's record or class; **Back to their levels now** takes you back.
+- A child with no class level yet can be given a level to try, so you can still see what would suit the family.
+- The page has a calmer look: one row per child, **Start again** at the top, and each option shows the class time first, the class, and how many places are taken. On a phone the rows stack neatly.
 ## 1.48.2 · 21 October 2026 · Competencies start as Not achieved
 
 - Every competency now starts as **Not achieved** until an instructor marks it. A swimmer's profile shows **Not achieved** where it used to say **Not marked**, and the choice of mark is now just **Not achieved** or **Achieved**, the same as on the pool deck.
