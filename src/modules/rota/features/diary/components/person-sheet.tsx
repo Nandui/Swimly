@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Clock, Coffee, Flag, ListChecks, Moon, Plus, X } from "lucide-react";
+import { Clock, Coffee, Flag, ListChecks, Moon, Plus, UserMinus, X } from "lucide-react";
 import { SubPlace, SubsToPlace } from "@/modules/rota/features/diary/components/sub-place";
 import { Button } from "@/components/shadcn/button";
 import { Checkbox } from "@/components/shadcn/checkbox";
@@ -144,7 +144,7 @@ function FreeStep({ person, free }: { person: PersonDay; free: Span }) {
   );
 }
 
-function ChangeTime({ person, line }: { person: PersonDay; line: Line }) {
+export function ChangeTime({ person, line }: { person: PersonDay; line: Line }) {
   const ctx = useDiary();
   const need = ctx.needs.get(line.needKey);
   return (
@@ -162,24 +162,41 @@ function ChangeTime({ person, line }: { person: PersonDay; line: Line }) {
   );
 }
 
-function TakeOff({ person, lines }: { person: PersonDay; lines: Line[] }) {
+/** Taking someone off what they are on: their shift and the rest of their day stay, and the time
+ *  shows under Not covered yet again when nobody else is on it. */
+export function TakeOff({ person, lines, label = "Take off" }: { person: PersonDay; lines: Line[]; label?: string }) {
   const ctx = useDiary();
+  const first = firstName(person.name);
   const what = lines.length > 1 ? `${lines.length} swim classes` : lineTitle(lines[0]);
+  const whole = lines.length > 1 ? { start: lines[0].start, end: lines[lines.length - 1].end } : lines[0];
+  // Time no shift of theirs holds would leave their day with it (owner, 21 October 2026): keep it, to give to something else.
+  const unheld = lines.some((l) => !person.shifts.some((x) => x.start <= l.start && x.end >= l.end));
+  const [keep, setKeep] = useState(true);
+  const id = `diary-off-${lines[0].key}`;
   return (
-    <FormDialog portalClassName={PORTAL} destructive title={`Take ${firstName(person.name)} off ${what}?`} description="That time will need someone again." cancelLabel="Keep them on"
-      submitLabel="Take off" successMessage={`${person.name} is off ${what}.`}
-      trigger={<Button variant="ghost">Take off</Button>}
+    <FormDialog portalClassName={PORTAL} destructive title={`Take ${first} off ${what}?`}
+      description={`${unheld ? "The rest of their day stays as it is" : "Their shift and the rest of their day stay as they are"}. If nobody else is on it, ${spanWords(whole)} shows under Not covered yet again.`}
+      cancelLabel="Keep them on" submitLabel="Take off" successMessage={`${person.name} is off ${what}.`}
+      onOpen={() => setKeep(true)}
+      trigger={<Button variant="outline"><UserMinus aria-hidden="true" />{label}</Button>}
       submit={async (f) => {
         const change = ctx.live ? changeOf(f) : {};
         for (const l of lines) {
-          const id = l.kind === "class" ? ctx.needs.get(l.needKey)?.classRef : l.assignmentId;
-          if (!id) continue;
-          const result = await removeLine({ siteId: ctx.siteId, date: ctx.date, departmentId: ctx.departmentFor!, kind: l.kind, id, userId: person.userId }, change);
+          const ref = l.kind === "class" ? ctx.needs.get(l.needKey)?.classRef : l.assignmentId;
+          if (!ref) continue;
+          const result = await removeLine({ siteId: ctx.siteId, date: ctx.date, departmentId: ctx.departmentFor!, kind: l.kind, id: ref, userId: person.userId }, change,
+            unheld && keep ? { start: clock(l.start), end: clock(l.end) } : null);
           if (!result.ok) return result;
         }
         return { ok: true };
       }}>
-      {ctx.live ? <ChangeFields id={`diary-off-${lines[0].key}`} /> : null}
+      {unheld ? (
+        <div className="diary-sub-check">
+          <Checkbox id={`${id}-keep`} checked={keep} onCheckedChange={(v) => setKeep(v === true)} />
+          <Label htmlFor={`${id}-keep`} className="font-normal">Keep {spanWords(whole)} in {first}&apos;s day, to give to something else</Label>
+        </div>
+      ) : null}
+      {ctx.live ? <ChangeFields id={id} /> : null}
     </FormDialog>
   );
 }
