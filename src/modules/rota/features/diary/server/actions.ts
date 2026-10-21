@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import type { Prisma } from "@/generated/prisma/client";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
 import { areasAt, departmentById, staffContact } from "@/lib/directory";
@@ -11,7 +12,7 @@ import { notifyShiftChange } from "@/lib/staff-api/notify";
 import { planTeacher } from "@/modules/rota/shared/actions";
 import { areaNeedsOn } from "@/modules/rota/shared/area-needs";
 import { clock, parseClock, slotProblem } from "@/modules/rota/shared/constants";
-import { NEEDS_REASON, allowedFor, allowedForPerson, changeSchema, iso, logLive, refresh, shared } from "@/modules/rota/shared/writes";
+import { NEEDS_REASON, type Allowed, allowedFor, allowedForPerson, changeSchema, iso, logLive, refresh, shared } from "@/modules/rota/shared/writes";
 
 /** Writing in the day's diary (owner, 20 October 2026): put someone on something that needs
  *  people for a stretch (their day follows from what they are on), change or take off what
@@ -54,6 +55,9 @@ const fillSchema = z.object({
   userId: z.string().min(1, "Choose who."),
   start: z.string(),
   end: z.string(),
+  /** For an area's staff needed: the activity there to put them on (owner, 21 October 2026),
+   *  which covers the area for its time. Left out, they cover the area itself. */
+  activityTypeId: z.string().nullish(),
 });
 export type FillInput = z.input<typeof fillSchema>;
 
@@ -76,6 +80,15 @@ export async function fillNeed(input: FillInput, changeInput: Change = {}): Prom
     if (!need) return fail("That area no longer needs these staff that day. Check its hours and staff under Admin, Areas.");
     if (t.start < need.startMinutes || t.end > need.endMinutes) return fail(`Keep the time inside the hours it is open, ${clock(need.startMinutes)} to ${clock(need.endMinutes)}.`);
     if (need.activityTypeId) return fillAreaActivity({ ...d, need: { ...need, activityTypeId: need.activityTypeId }, t }, change);
+    if (d.activityTypeId) {
+      // That activity already on in the area with a place free then: they take it, filling both.
+      const parts = new Set([need.areaName, ...areas.filter((a) => a.parentName === need.areaName).map((a) => a.name)].map((n) => n.toLowerCase()));
+      const onDay = await prisma.rotaNeed.findMany({ where: { siteId: d.siteId, date: parseDateOnly(d.date), typeId: d.activityTypeId, repeatId: null, places: { gt: 0 },
+        startMinutes: { lte: t.start }, endMinutes: { gte: t.end } }, select: { id: true, place: true, places: true, assignments: { select: { startMinutes: true, endMinutes: true } } } });
+      const free = onDay.find((n) => parts.has(n.place.split(",")[0].trim().toLowerCase()) && n.assignments.filter((a) => a.startMinutes < t.end && t.start < a.endMinutes).length < n.places);
+      if (free) return fillNeed({ ...input, kind: "activity", needId: free.id, activityTypeId: null }, changeInput);
+      return fillAreaActivity({ ...d, need: { ...need, activityTypeId: d.activityTypeId }, t }, change);
+    }
     const at = await allowedForPerson(d.siteId, d.date, d.departmentId, d.userId);
     if (!at.ok) return fail(at.error);
     if (at.live && !change.reason) return fail(NEEDS_REASON);
@@ -120,15 +133,17 @@ export async function fillNeed(input: FillInput, changeInput: Change = {}): Prom
 }
 
 /** Fill an area's activity line (owner, 21 October 2026: Reception needs at least one person on
- *  Serving customers): the person is put on that activity in the area, so their day says what
+ *  Serving customers), or its staff needed with an activity there (owner, the same evening: "if
+ *  that activity is for reception ... its covered"): the person is put on that activity in the area, so their day says what
  *  they do there and the activity's usual sub-activities come with it. The day keeps one record of
  *  the activity in the area for this, asking for nobody itself, stretched to the line's hours. */
 async function fillAreaActivity(d: z.output<typeof fillSchema> & { need: ReturnType<typeof areaNeedsOn>[number] & { activityTypeId: string }; t: { start: number; end: number } }, change: z.output<typeof changeSchema>): Promise<ActionResult> {
   const { need, t } = d;
   const type = await activityTypeById(need.activityTypeId);
-  if (!type) return fail("That activity is no longer on the list. Check the area's staff under Admin, Areas.");
+  if (!type || type.archivedAt || type.fromClasses) return fail("That activity is no longer on the list. Check the area's staff under Admin, Areas.");
   const at = await allowedForPerson(d.siteId, d.date, d.departmentId, d.userId);
   if (!at.ok) return fail(at.error);
+  if (type.orgId !== at.site.orgId) return fail("That activity is no longer on the list. Check the area's staff under Admin, Areas.");
   if (at.live && !change.reason) return fail(NEEDS_REASON);
   const person = await staffContact(d.userId, at.site.orgId, { activeOnly: true });
   if (!person) return fail("That person is no longer active.");
@@ -209,12 +224,23 @@ export async function changeLine(input: LineInput & { start: string; end: string
 }
 
 /** Take someone off what they are on; that time needs someone again. */
-export async function removeLine(input: LineInput, changeInput: Change = {}): Promise<ActionResult> {
+export async function removeLine(input: LineInput, changeInput: Change = {}, keep: { start: string; end: string } | null = null): Promise<ActionResult> {
   const parsed = lineSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const change = changeSchema.parse(changeInput);
   const d = parsed.data;
-  if (d.kind === "class") return planTeacher({ siteId: d.siteId, date: d.date, classRef: d.id, userId: null, departmentId: d.departmentId }, change);
+  const kept = keep ? times(keep.start, keep.end) : null;
+  if (kept && !kept.ok) return fail(kept.error);
+  if (d.kind === "class") {
+    const result = await planTeacher({ siteId: d.siteId, date: d.date, classRef: d.id, userId: null, departmentId: d.departmentId }, change);
+    if (!result.ok || !kept?.ok) return result;
+    const at = await allowedForPerson(d.siteId, d.date, d.departmentId, d.userId);
+    if (!at.ok) return fail(at.error);
+    const name = (await staffContact(d.userId, at.site.orgId))?.name ?? "Someone";
+    await prisma.$transaction((tx) => keepTime(tx, at, d, kept, name, change));
+    refresh();
+    return ok();
+  }
   const at = await allowedForPerson(d.siteId, d.date, d.departmentId, d.userId);
   if (!at.ok) return fail(at.error);
   if (at.live && !change.reason) return fail(NEEDS_REASON);
@@ -227,6 +253,7 @@ export async function removeLine(input: LineInput, changeInput: Change = {}): Pr
       await tx.rotaAreaAssignment.delete({ where: { id: row.id } });
       await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "delete", entity: "RotaAreaAssignment", entityId: row.id, clubId: d.siteId, summary: `Took ${name} off an area, ${d.date} ${clock(row.startMinutes)}–${clock(row.endMinutes)}` }, tx);
       if (at.live) await logLive(tx, at, d.date, "removed", `${name} taken off an area, ${clock(row.startMinutes)} to ${clock(row.endMinutes)}`, d.userId, change, d.userId);
+      if (kept) await keepTime(tx, at, d, { start: row.startMinutes, end: row.endMinutes }, name, change);
     });
   } else {
     const row = await prisma.rotaAssignment.findFirst({ where: { id: d.id, userId: d.userId, need: { siteId: d.siteId } }, select: { id: true, startMinutes: true, endMinutes: true, need: { select: { date: true } } } });
@@ -235,11 +262,34 @@ export async function removeLine(input: LineInput, changeInput: Change = {}): Pr
       await tx.rotaAssignment.delete({ where: { id: row.id } });
       await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "delete", entity: "RotaAssignment", entityId: row.id, clubId: d.siteId, summary: `Took ${name} off an activity, ${d.date} ${clock(row.startMinutes)}–${clock(row.endMinutes)}` }, tx);
       if (at.live) await logLive(tx, at, d.date, "removed", `${name} taken off an activity, ${clock(row.startMinutes)} to ${clock(row.endMinutes)}`, d.userId, change, d.userId);
+      if (kept) await keepTime(tx, at, d, { start: row.startMinutes, end: row.endMinutes }, name, change);
     });
   }
   refresh();
   if (await shared(prisma, d.siteId, d.departmentId, d.date)) await notifyShiftChange(d.userId, `A change to your day at ${at.site.name} on ${d.date}: you are off something you were on. Check your day.`);
   return ok();
+}
+
+/** The time someone was taken off stays in their day, to give to something else (owner, 21
+ *  October 2026): a shift holds whatever of it no shift of theirs held already. */
+async function keepTime(tx: Prisma.TransactionClient, at: Extract<Allowed, { ok: true }>,
+  d: z.output<typeof lineSchema>, span: { start: number; end: number }, name: string, change: z.output<typeof changeSchema>) {
+  const held = await tx.rotaPlanShift.findMany({ where: { siteId: d.siteId, userId: d.userId, date: parseDateOnly(d.date), startMinutes: { lt: span.end }, endMinutes: { gt: span.start } },
+    select: { startMinutes: true, endMinutes: true }, orderBy: { startMinutes: "asc" } });
+  const pieces: { start: number; end: number }[] = [];
+  let from = span.start;
+  for (const h of held) {
+    if (h.startMinutes > from) pieces.push({ start: from, end: Math.min(h.startMinutes, span.end) });
+    from = Math.max(from, h.endMinutes);
+  }
+  if (from < span.end) pieces.push({ start: from, end: span.end });
+  for (const p of pieces) {
+    const row = await tx.rotaPlanShift.create({ data: { orgId: at.site.orgId, siteId: d.siteId, departmentId: d.departmentId, date: parseDateOnly(d.date), userId: d.userId,
+      startMinutes: p.start, endMinutes: p.end, createdById: at.actor.id, createdByName: at.actor.name } });
+    await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "create", entity: "RotaPlanShift", entityId: row.id, clubId: d.siteId,
+      summary: `Kept ${name}'s time in their day after taking them off, ${d.date} ${clock(p.start)}–${clock(p.end)}` }, tx);
+    if (at.live) await logLive(tx, at, d.date, "added", `${name} kept in ${clock(p.start)} to ${clock(p.end)}, nothing given yet`, d.userId, change);
+  }
 }
 
 const shiftSchema = z.object({

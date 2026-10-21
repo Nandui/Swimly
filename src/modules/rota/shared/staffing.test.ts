@@ -59,14 +59,17 @@ test("an area's need is on the Plan in its own right, with a place for each staf
   assert.deepEqual(day("2026-10-24", []).groups[0].needs.map((n) => [n.startMinutes, n.endMinutes]), [[h("09:00"), h("13:00")]]);
 });
 
-test("staff on bookings or activities in the area do not fill its need", () => {
-  const d = day("2026-10-23", [], {
-    needs: [{ id: "lg", typeId: "guard", place: "25m pool", startMinutes: h("07:00"), endMinutes: h("14:00"), places: 2, note: "", repeatTitle: null }],
-    assignments: [{ id: "a1", needId: "lg", place: 1, userId: "aoife", startMinutes: h("07:00"), endMinutes: h("14:00") }, { id: "a2", needId: "lg", place: 2, userId: "ciara", startMinutes: h("07:00"), endMinutes: h("14:00") }],
-  });
-  assert.equal(d.groups.find((x) => isAreaNeed(x.typeId))!.gapCount, 2);
+test("staff on an activity in the area fill its need for that time (owner, 21 October 2026); on a booking they do not", () => {
+  const assignments = [{ id: "a1", needId: "lg", place: 1, userId: "aoife", startMinutes: h("07:00"), endMinutes: h("14:00") }, { id: "a2", needId: "lg", place: 2, userId: "ciara", startMinutes: h("07:00"), endMinutes: h("10:00") }];
+  const lifeguarding = { id: "lg", typeId: "guard", place: "25m pool", startMinutes: h("07:00"), endMinutes: h("14:00"), places: 2, note: "", repeatTitle: null };
+  const d = day("2026-10-23", [], { needs: [lifeguarding], assignments });
+  const area = d.groups.find((x) => isAreaNeed(x.typeId))!;
+  assert.equal(area.gapCount, 1);
+  assert.deepEqual(dayGaps(d).filter((g) => g.group === area).map((g) => [g.start, g.end]), [[h("10:00"), h("14:00")]], "Ciara's place after she leaves");
+  const booked = day("2026-10-23", [], { needs: [{ ...lifeguarding, repeatTitle: "Lane hire" }], assignments });
+  assert.equal(booked.groups.find((x) => isAreaNeed(x.typeId))!.gapCount, 2);
   // And a break never takes them off the activity (the old rule).
-  assert.ok(d.people.every((p) => p.shift.parts.every((x) => x.unplaced.length === 2 && !x.breaks.length)));
+  assert.ok(d.people.every((p) => p.shift.parts.every((x) => !x.breaks.length)));
 });
 
 test("someone not holding the qualification shows a warning on the place, never refused", () => {

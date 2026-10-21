@@ -59,6 +59,8 @@ export async function diaryWeek(input: { site?: string; dept?: string; day?: str
     canShare: !!department && (site.run || (site.plan && mine.has(department.id))),
     /** What can be added to the day: the department's activities (not swim classes, which come from the timetable). */
     types: types.filter((t) => !t.fromClasses && (!changeFor || t.departmentId === changeFor.id)).map((t) => ({ id: t.id, name: t.name })),
+    /** Every activity, for putting someone on one in an area to cover its staff needed. */
+    activities: types.filter((t) => !t.fromClasses).map((t) => ({ id: t.id, name: t.name, departmentId: t.departmentId, requiredTypeId: t.requiredTypeId })),
     areas: (await areasAt(site.id)).map((a) => ({ name: a.name, lanes: a.lanes, parentName: a.parentName })),
     /** Each activity's sub-activities, to choose from on someone's line. */
     subActivities: await subActivitiesFor(types.map((t) => t.id)),

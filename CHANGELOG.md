@@ -4,13 +4,49 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.60.0 · 21 October 2026 · Enrolments and moves done as development work
+## 1.64.0 · 21 October 2026 · Enrolments and moves done as development work
 
 - Enrolments, moves between classes or centres and unenrolments done by Fernando Serina's account were mostly set-up work run for the developers, not real desk work. They now show as **System - scripted action done via development** in **Activity**, in a swimmer's **History** and in the Together records, instead of his name.
 - They are left out of **Swim school analytics**: they no longer count as new swimmers, leavers or moves, or as anyone's work on the **Reception** dashboard. The swimmers themselves still count in classes, places and "% full" while they hold the place.
 - This covers what his account did before today as well as from now on. Nothing has been deleted, and the log still knows which account did it.
 - A superadmin can do the same for any account: open the person on **Staff** and choose **Mark place changes as system**. **Count their place changes again** stops it for new changes; earlier ones stay marked.
 - While an account is marked, the confirmation before an enrolment or a move says that it will be recorded as system.
+## 1.63.0 · 21 October 2026 · Admin: search and filters on Staff
+
+- **Admin › Staff** now has a **Find a person** box at the top. Start typing a name or email and the list narrows as you type.
+- Beside it, choose **Everyone**, **Can sign in** or **Deactivated**, each with how many people it shows.
+- Under it, pick a **Role**, where they **Work at** and a **Department**. Each choice shows how many people have it. Someone who works at every site shows under each site.
+- The search and the choices work together, the page says how many people match, and **Clear all** brings everyone back.
+- Open a person and press **Staff** to come back: the list is just as you left it.
+
+## 1.62.0 · 21 October 2026 · Rota: people on an area's activities cover the area
+
+- On the rota **Plan**, someone on an activity in an area now counts towards the staff that area needs, for the time of that activity. If Reception needs at least one person and Maeve is on Till 2 at Reception from 12:00 to 15:15, Reception is covered then and the gap shrinks to the times nobody is there.
+- This works for an area's parts too: someone on an activity at Till 2, which is part of Reception, covers Reception.
+- When an area asks for a qualification, such as lifeguards on the pool, only an activity that needs that same qualification counts. An aqua-fit instructor is still not one of the pool's lifeguards.
+- Tap an area's gap, on the **Not covered** row or under **Not covered yet**, to choose someone for that exact time. A new **Put them on** choice picks which of the area's activities they do, or the area itself. If that activity is already on there with a free place, they take it, which fills both.
+- **Today** counts people the same way.
+
+## 1.61.0 · 21 October 2026 · HR procedures in Docs
+
+- Ten HR procedures are ready to add to **Docs**, each short and step by step: reporting an absence, sickness on the day, keeping in touch and the return-to-work talk, repeated absence, long-term sickness, lateness and not turning up, annual leave, force majeure and other leave, and keeping absence records private. A starting page lists them all.
+- Each one says who does what, by when, and where it goes in Turnfin, such as **Report an absence** and **Return to work** in Rota.
+- To add them, open **Docs**, **Administration**, **HR procedures** and choose **Add the HR procedures**. They arrive as your drafts, for every site. Clicking again never adds a second copy.
+- Where one says **Set by LeisureWorld** (a phone number, a time, a number of days), fill it in from the staff handbook, then send it for approval as usual. Once approved, everyone with Docs can read it.
+
+## 1.60.0 · 21 October 2026 · Pictures for suppliers in Purchasing
+
+- Each supplier in **Purchasing** can now have a picture, such as its logo or a photo. Open the supplier from **Suppliers** and choose **Add a picture**. On a phone you can take a photo or pick one you already have.
+- The picture shows on the supplier's tile in **Suppliers**, at the top of its page, next to the supplier you pick on a **New order**, and at the top of each order.
+- Choose **Change picture** to replace it, or **Remove picture** to take it off. A supplier without a picture shows its initials, as before.
+- Only people who manage Purchasing can add, change or remove a picture. Everyone who uses Purchasing sees it.
+
+## 1.59.1 · 21 October 2026 · Rota: take someone off from their block on the Plan
+
+- On the rota **Plan**, tap a block on someone's row in **The day, person by person** (an area, an activity, a class or a booking). It now opens just that block, with **Take them off** and **Change time** right there, and their whole day one tap away. Before, the block opened their whole day and taking them off was a small link inside it.
+- On a phone, each line on a person's card opens the same way.
+- Taking someone off keeps the rest of their day. If that time was not part of a shift you gave them, a tick, already on, keeps it in their day as **Give this time**, so their hours stay and you can give it to something else.
+- The time they were on shows under **Not covered yet** again when nobody else is on it.
 
 ## 1.59.0 · 21 October 2026 · Rota: place "any time" sub-activities on the Plan
 

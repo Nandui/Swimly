@@ -13,23 +13,26 @@ import { DiaryContext, useDiary, type DiaryData, type DiaryState } from "@/modul
 import { AddSomeone, AddToDay } from "@/modules/rota/features/diary/components/day-forms";
 import { FillSheet, type FillTarget } from "@/modules/rota/features/diary/components/fill-sheet";
 import { useNowMinute } from "@/modules/rota/features/diary/components/now";
+import { LineDialog } from "@/modules/rota/features/diary/components/line-dialog";
 import { PersonSheet } from "@/modules/rota/features/diary/components/person-sheet";
 import { firstName, hoursWords, lineTitle, subsWords, listWords, needName, needWords, partsWords, span as spanWords, toneOf } from "@/modules/rota/features/diary/components/words";
 
 /** The day's diary (owner, 20 October 2026: "the plan, the diary, the actual guide for the day
  *  ... readable and understood by anyone"): what is not covered yet, who's where at a moment,
- *  then the day person by person in plain words. Tap a person for their day as a list; tap
- *  anything not covered to choose someone. */
+ *  then the day person by person in plain words. Tap a person for their day as a list, a block
+ *  on their row to change or take them off it; tap anything not covered to choose someone. */
 export function Diary(props: DiaryData) {
   const [fill, setFill] = useState<FillTarget | null>(null);
   const [person, setPerson] = useState<string | null>(null);
+  const [line, setLine] = useState<{ userId: string; key: string } | null>(null);
   const state = useMemo<DiaryState>(() => ({
     ...props,
     needs: new Map(props.diary.needs.map((n) => [n.key, n])),
     candidateInput: { staff: props.pool.staff, held: props.pool.held, off: new Set(props.pool.off), elsewhere: new Map(Object.entries(props.pool.elsewhere)), departmentId: props.departmentId, date: props.date },
     hoursMap: new Map(Object.entries(props.hours)),
     fill: (needKey, span, why = null) => { setPerson(null); setFill({ needKey, span, why }); },
-    person: (userId) => { setFill(null); setPerson(userId); },
+    person: (userId) => { setFill(null); setLine(null); setPerson(userId); },
+    line: (userId, key) => { setFill(null); setPerson(null); setLine({ userId, key }); },
   }), [props]);
   return (
     <DiaryContext.Provider value={state}>
@@ -42,6 +45,7 @@ export function Diary(props: DiaryData) {
       </div>
       <FillSheet target={fill} onClose={() => setFill(null)} />
       <PersonSheet userId={person} onClose={() => setPerson(null)} />
+      <LineDialog target={line} onClose={() => setLine(null)} />
     </DiaryContext.Provider>
   );
 }
@@ -243,8 +247,9 @@ function HoleRows({ rows, f, hours, now }: { rows: Hole[][]; f: (t: number) => n
 }
 
 function PersonRow({ person, f, hours, now }: { person: PersonDay; f: (t: number) => number; hours: number[]; now: number | null }) {
-  const { person: open } = useDiary();
+  const { person: open, line: openLine, canChange, departmentFor } = useDiary();
   const label = `${person.name}: ${partsWords(person)}`;
+  const changes = canChange && !!departmentFor;
   return (
     <div className="diary-row">
       <Button variant="ghost" className="diary-row-label" onClick={() => open(person.userId)} aria-label={`${label}. Open their day`}>
@@ -254,7 +259,8 @@ function PersonRow({ person, f, hours, now }: { person: PersonDay; f: (t: number
       <Track f={f} hours={hours} now={now}>
         {person.lines.map((l) => (
           <Button variant="ghost" key={l.key} className={`diary-block absolute inset-y-1 ${stretchOf(f(l.start), f(l.end))}`} data-tone={toneOf(l.kind)}
-            title={`${lineTitle(l)}, ${spanWords(l)}${l.subs.length ? `: ${subsWords(l)}` : ""}`} aria-label={`${person.name} on ${lineTitle(l)}, ${spanWords(l)}${l.subs.length ? `: ${subsWords(l)}` : ""}`} onClick={() => open(person.userId)}>
+            title={`${lineTitle(l)}, ${spanWords(l)}${l.subs.length ? `: ${subsWords(l)}` : ""}`} aria-label={`${person.name} on ${lineTitle(l)}, ${spanWords(l)}${l.subs.length ? `: ${subsWords(l)}` : ""}${changes ? ". Change or take off" : ". Open their day"}`}
+            onClick={() => (changes ? openLine(person.userId, l.key) : open(person.userId))}>
             <span className="diary-block-title">{lineTitle(l)}</span><span className="diary-block-time tabular-nums">{spanWords(l)}</span>
           </Button>
         ))}
@@ -276,7 +282,8 @@ function PersonRow({ person, f, hours, now }: { person: PersonDay; f: (t: number
 
 /** On a phone, each person's day reads as a short list. */
 function PersonCard({ person }: { person: PersonDay }) {
-  const { person: open } = useDiary();
+  const { person: open, line: openLine, canChange, departmentFor } = useDiary();
+  const changes = canChange && !!departmentFor;
   const steps = stepsOf(person).filter((s) => s.kind !== "finish");
   return (
     <li className="diary-card">
@@ -289,8 +296,14 @@ function PersonCard({ person }: { person: PersonDay }) {
         {steps.map((s, i) => (
           <li key={i} data-tone={s.kind === "work" ? toneOf(s.line.kind) : s.kind}>
             <span className="tabular-nums">{clock(s.start)}</span>
-            <span>{s.kind === "work" ? (s.count > 1 ? `${s.count} swim classes` : lineTitle(s.line)) : s.kind === "break" ? `Break, ${s.end - s.start} min` : s.kind === "free" ? "Nothing given yet" : "Off"}
-              {s.kind === "work" && s.line.subs.length ? <span className="diary-subs">{subsWords(s.line)}</span> : null}</span>
+            {s.kind === "work" && s.count === 1 && changes ? (
+              <Button variant="ghost" className="diary-card-step" aria-label={`${lineTitle(s.line)}, ${spanWords(s)}. Change or take off`} onClick={() => openLine(person.userId, s.line.key)}>
+                {lineTitle(s.line)}{s.line.subs.length ? <span className="diary-subs">{subsWords(s.line)}</span> : null}
+              </Button>
+            ) : (
+              <span>{s.kind === "work" ? (s.count > 1 ? `${s.count} swim classes` : lineTitle(s.line)) : s.kind === "break" ? `Break, ${s.end - s.start} min` : s.kind === "free" ? "Nothing given yet" : "Off"}
+                {s.kind === "work" && s.line.subs.length ? <span className="diary-subs">{subsWords(s.line)}</span> : null}</span>
+            )}
           </li>
         ))}
         {person.parts.length ? <li data-tone="finish"><span className="tabular-nums">{clock(person.parts[person.parts.length - 1].end)}</span><span>Finishes</span></li> : null}

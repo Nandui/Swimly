@@ -7,16 +7,19 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/shadcn/sheet";
 import { Notice } from "@/components/ui-kit/notice";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { toast } from "@/components/ui/toast";
 import { clock, parseClock } from "@/modules/rota/shared/constants";
 import { ChangeFields, changeOf } from "@/modules/rota/shared/components/change-fields";
 import { duration } from "@/modules/rota/shared/shifts";
-import { candidates, type Candidate, type Need, type Span } from "@/modules/rota/features/diary/model";
+import { candidates, coverActivities, type Candidate, type Need, type Span } from "@/modules/rota/features/diary/model";
 import { fillNeed } from "@/modules/rota/features/diary/server/actions";
 import { useDiary } from "@/modules/rota/features/diary/components/context";
 import { needWords, span as spanWords } from "@/modules/rota/features/diary/components/words";
 
 export type FillTarget = { needKey: string; span: Span; why: string | null };
+/** Covering an area itself rather than through one of its activities. */
+const AREA_ITSELF = "area";
 
 /** Choosing who fills a need for a stretch (owner, 20 October 2026: best fits on top, anyone from
  *  another department straight away). Each person says what taking it does to their day. */
@@ -47,6 +50,10 @@ function FillBody({ need, target, onDone }: { need: Need; target: FillTarget; on
   const best = list.filter((c) => c.ok && c.own);
   const lent = list.filter((c) => c.ok && !c.own);
   const cannot = list.filter((c) => !c.ok);
+  // An area's staff needed is covered by putting someone on one of its activities there.
+  const covering = useMemo(() => coverActivities(need, ctx.activities, ctx.diary.people.flatMap((p) => p.lines)), [need, ctx.activities, ctx.diary]);
+  const [onto, setOnto] = useState(covering[0]?.id ?? AREA_ITSELF);
+  const activity = covering.find((a) => a.id === onto) ?? null;
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -57,9 +64,9 @@ function FillBody({ need, target, onDone }: { need: Need; target: FillTarget; on
     setError(null);
     start(async () => {
       const result = await fillNeed({ siteId: ctx.siteId, date: ctx.date, departmentId: ctx.departmentFor!, kind: need.kind, needId: need.needId, classRef: need.classRef,
-        userId: who.userId, start: clock(span.start), end: clock(span.end) }, change);
+        userId: who.userId, start: clock(span.start), end: clock(span.end), activityTypeId: activity?.id ?? null }, change);
       if (!result.ok) { setError(result.error); return; }
-      toast.success(`${who.name} is on ${need.title}, ${spanWords(span)}.`);
+      toast.success(`${who.name} is on ${activity ? `${activity.name} in ${need.area}` : need.title}, ${spanWords(span)}.`);
       onDone();
     });
   }
@@ -79,6 +86,11 @@ function FillBody({ need, target, onDone }: { need: Need; target: FillTarget; on
             <Input type="time" label="To" step={300} value={to} onChange={setTo} min={clock(need.start)} max={clock(need.end)} required />
           </fieldset>
         )}
+        {covering.length ? (
+          <Select label="Put them on" value={onto} onValueChange={setOnto}
+            description={`Whoever is on a ${need.area} activity covers ${need.area} for that time.`}
+            options={[...covering.map((a) => ({ value: a.id, label: a.name })), { value: AREA_ITSELF, label: `${need.area} itself, no activity` }]} />
+        ) : null}
         {ctx.live ? <ChangeFields id="diary-fill" /> : null}
         <Group title="Best fits" hint="Free then, can do it, from this department" people={best} pending={pending} empty="Nobody in this department is free and able then." />
         {lent.length ? <Group title="From other departments" hint="Free then and able: they are lent for this" people={lent} pending={pending} /> : null}

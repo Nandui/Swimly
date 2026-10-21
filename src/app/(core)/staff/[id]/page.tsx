@@ -16,6 +16,7 @@ import { PERSON_STATUS_META } from "@/lib/people/constants";
 import { STAFF_STATUS_META } from "@/lib/staff/constants";
 import { getPersonDetail } from "@/lib/people/data";
 import { listRolesForPicker } from "@/lib/staff/data/roles";
+import { staffBackHref } from "@/lib/staff/filters";
 import { cleanLevels, describeLevels, levelsFromAccess } from "@/lib/staff/levels";
 
 /** One read per request, shared by the page and its tab title. */
@@ -31,9 +32,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
  *  sites it applies at. Account administration only. Their details (position,
  *  employment, contact, qualifications) are HR's, on their HR file
  *  (owner decision, 8 October 2026). */
-export default async function PersonPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function PersonPage({ params, searchParams }: PageProps<"/staff/[id]">) {
   const session = await screenPage("staff", "staff.manage");
   const { id } = await params;
+  // Back to the Staff list as it was left: its search and filters ride along in `back`.
+  const backHref = staffBackHref((await searchParams).back);
   const [person, roles, sites] = await Promise.all([
     loadPerson(id), listRolesForPicker(),
     prisma.club.findMany({ where: { orgId: session.user.orgId ?? undefined, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
@@ -46,7 +49,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
 
   return (
     <PageShell header={<PageHeader
-        back={{ href: "/staff", label: "Staff" }}
+        back={{ href: backHref, label: "Staff" }}
         title={person.name}
         description={
           <span className="inline-flex flex-wrap items-center gap-2">

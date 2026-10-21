@@ -14,6 +14,10 @@ model Supplier {
   email         String    @default("")
   phone         String    @default("")
   note          String    @default("")
+  /// Its logo or a photo, a 512px WebP square (owner request, 21 October 2026); the
+  /// version (a hash of the bytes) names it in the picture's address. Null: its initials.
+  pictureData    Bytes?
+  pictureVersion String?
   archivedAt    DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt

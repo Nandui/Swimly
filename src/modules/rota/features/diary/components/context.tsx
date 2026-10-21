@@ -24,6 +24,8 @@ export type DiaryData = {
   pool: { staff: DiaryInput["staff"]; held: readonly Held[]; off: readonly string[]; elsewhere: Record<string, readonly (Span & { label: string })[]> };
   departmentNames: Record<string, string>;
   types: readonly { id: string; name: string }[];
+  /** Every activity, for covering an area's staff needed with one there. */
+  activities: readonly { id: string; name: string; departmentId: string; requiredTypeId: string | null }[];
   areas: readonly { name: string; parentName: string | null }[];
   /** Each activity's sub-activities (Admin, Activities), by activity. */
   subActivities: Record<string, readonly { id: string; name: string; when: string; at: number | null; times: readonly number[]; usual: boolean }[]>;
@@ -36,6 +38,8 @@ export type DiaryState = DiaryData & {
   hoursMap: ReadonlyMap<string, { week: number; contract: number | null }>;
   fill: (needKey: string, span: Span, why?: string | null) => void;
   person: (userId: string) => void;
+  /** One thing on someone's day, opened from its block. */
+  line: (userId: string, key: string) => void;
 };
 
 export const DiaryContext = createContext<DiaryState | null>(null);

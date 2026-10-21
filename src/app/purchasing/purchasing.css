@@ -236,6 +236,10 @@
 .turnfin-app .po-desk .po-tile-sub { margin: 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); overflow-wrap: anywhere; }
 .turnfin-app .po-desk .po-monogram { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 14px; background: var(--pc-primary-soft); color: var(--pc-primary-ink, var(--pc-primary)); font-weight: 800; font-size: 17px; letter-spacing: -0.02em; }
 .turnfin-app .po-desk .po-monogram[data-size='lg'] { width: 72px; height: 72px; border-radius: 22px; font-size: 28px; }
+/* Its picture (a white square, so dark logos read in dark mode) or its initials in the tint. */
+.turnfin-app .po-desk .po-monogram:has(.po-picture) { background: var(--pc-surface); box-shadow: 0 0 0 1px var(--po-hair); }
+.turnfin-app .po-desk .po-monogram .po-picture { object-fit: cover; }
+.turnfin-app .po-desk .po-monogram .po-initials { border-radius: inherit; background: transparent; color: inherit; font-size: inherit; font-weight: inherit; box-shadow: none; }
 .turnfin-app .po-desk .po-tile-facts { display: flex; flex-wrap: wrap; gap: 6px; margin: auto 0 0; padding: 0; list-style: none; }
 .turnfin-app .po-desk .po-tile-facts > li, .turnfin-app .po-desk .po-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 10px; border-radius: 999px; background: var(--pc-surface); box-shadow: inset 0 0 0 1px var(--po-hair); color: var(--pc-ink-muted); font-size: var(--pc-text-caption); font-weight: 600; font-variant-numeric: tabular-nums; }
 .turnfin-app .po-desk .po-tile-facts > li > svg, .turnfin-app .po-desk .po-chip > svg { width: 14px; height: 14px; }

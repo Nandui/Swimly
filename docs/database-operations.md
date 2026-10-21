@@ -134,6 +134,12 @@ it. Previews now migrate that branch, never swimly-db's main. Branches expire
 unless the expiry is removed in Neon. Treat previews as holding real personal
 data, and remember they can email real people.
 
+On 21 October 2026 that branch expired and every preview failed (P1001). It now
+has no expiry. If a preview build ever warns that the development database
+cannot be reached, the build still finishes, but its pages fail until the branch
+is back: check the `preview` branch in Neon (state, expiry), and that the
+Preview `DATABASE_URL` / `DATABASE_URL_UNPOOLED` point at its endpoint.
+
 Both read production in a read-only transaction, write only to a database that
 already has every migration production has, and dry-run unless given `--confirm`.
 

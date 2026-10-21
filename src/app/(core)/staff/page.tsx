@@ -33,6 +33,18 @@ import { expandPermissions } from "@/lib/staff/permissions";
 import { listRolesForPicker, type RoleOption } from "@/lib/staff/data/roles";
 import { listPeopleForDisplay, type Person } from "@/lib/staff/data/staff";
 import { AppIcon } from "@/components/ui-kit/app-icon";
+import { StaffFilterBar, type StaffFilterPicker } from "@/components/staff/staff-filters";
+import { prisma } from "@/lib/prisma";
+import {
+  STAFF_SHOW,
+  countBy,
+  filterPeople,
+  filtersChosen,
+  readStaffFilters,
+  staffFiltersQuery,
+  type FilterablePerson,
+  type StaffShow,
+} from "@/lib/staff/filters";
 
 export const metadata: Metadata = { title: "Staff" };
 
@@ -40,15 +52,38 @@ export default async function StaffPage(props: PageProps<"/staff">) {
   const session = await screenPage("staff", "staff.manage");
   const params = await props.searchParams;
 
-  const [people, roles] = await Promise.all([
+  const orgId = session.user.orgId ?? undefined;
+  const [everyone, roles, sites, departments] = await Promise.all([
     listPeopleForDisplay(),
     listRolesForPicker(),
+    prisma.club.findMany({ where: { orgId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
+    prisma.department.findMany({ where: { orgId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
   ]);
-  const active = people.filter((p) => p.isActive);
-  const inactive = people.filter((p) => !p.isActive);
-  const keyholders = active.filter((p) =>
+  const filters = readStaffFilters(params);
+  const people: FilterRow[] = everyone.map((person) => ({ ...person, departmentIds: person.departments.map((d) => d.departmentId) }));
+  const shown = filterPeople(people, filters);
+  const active = shown.filter((p) => p.isActive);
+  const inactive = shown.filter((p) => !p.isActive);
+  const allActive = people.filter((p) => p.isActive);
+  const keyholders = allActive.filter((p) =>
     expandPermissions(p.staffRole?.permissions ?? []).has("staff.manage"),
   ).length;
+  // Each person's link carries the list as it is, so their page's back link returns to it.
+  const back = staffFiltersQuery(filters);
+  const personHref = (id: string) => (back ? `/staff/${id}?back=${encodeURIComponent(back)}` : `/staff/${id}`);
+
+  const byShow = countBy(people, filters, "show", (p) => ["all", p.isActive ? "active" : "inactive"]);
+  const showCounts = Object.fromEntries((Object.keys(STAFF_SHOW) as StaffShow[]).map((key) => [key, byShow.get(key) ?? 0])) as Record<StaffShow, number>;
+  const allSiteIds = sites.map((s) => s.id);
+  const byRole = countBy(people, filters, "role", (p) => (p.staffRoleId ? [p.staffRoleId] : []));
+  const bySite = countBy(people, filters, "site", (p) => (p.siteIds.length ? p.siteIds : allSiteIds));
+  const byDepartment = countBy(people, filters, "department", (p) => p.departmentIds);
+  const pickers: StaffFilterPicker[] = [
+    { key: "role" as const, label: "Role", all: "All roles", options: roles.map((r) => ({ value: r.id, label: r.name, count: byRole.get(r.id) ?? 0 })) },
+    { key: "site" as const, label: "Works at", all: "All sites", options: sites.map((s) => ({ value: s.id, label: s.name, count: bySite.get(s.id) ?? 0 })) },
+    { key: "department" as const, label: "Department", all: "All departments", options: departments.map((d) => ({ value: d.id, label: d.name, count: byDepartment.get(d.id) ?? 0 })) },
+  ].filter((picker) => picker.options.length > 1 || filters[picker.key]);
+  const filtering = filtersChosen(filters);
 
   return (
     <PageShell header={<PageHeader
@@ -67,26 +102,42 @@ export default async function StaffPage(props: PageProps<"/staff">) {
         }
       />}>
 
-      {active.length === 0 ? (
+      {people.length > 0 ? (
+        <StaffFilterBar filters={filters} showCounts={showCounts} pickers={pickers} shown={shown.length} total={people.length} />
+      ) : null}
+
+      {filtering && shown.length === 0 ? (
+        <EmptyState
+          icon="searchX"
+          title="Nobody matches"
+          hint="Check the spelling, or clear the search and filters to see everyone."
+          action={<Button asChild variant="outline"><UiLink href="/staff">Clear all</UiLink></Button>}
+        />
+      ) : allActive.length === 0 ? (
         <EmptyState
           icon="users"
           title="Nobody can sign in yet"
           hint="Add the people who take attendance and run the desk. Give each of them the role that lets them do their job and no more."
           action={<AddPerson roles={roles} />}
         />
-      ) : (
-        <section className="pc-panel" aria-label="Staff">
-          <p className="text-sm text-ui-muted-foreground">
-            {plural(active.length, "person", "people")} can sign in, across {plural(roles.length, "role")}.{" "}
-            {keyholders} of them can manage accounts. There is no sign-up and no invitation email.
-          </p>
-          <PeopleTable
-            people={active}
-            roles={roles}
-            currentUserId={session.user.id}
-          />
-        </section>
-      )}
+      ) : active.length > 0 ? (
+        filtering ? (
+          <section className="pc-panel" aria-labelledby="staff-can-sign-in">
+            <div className="pc-panel-head">
+              <h2 id="staff-can-sign-in" className="text-lg font-semibold">Can sign in</h2>
+            </div>
+            <PeopleTable people={active} roles={roles} currentUserId={session.user.id} personHref={personHref} />
+          </section>
+        ) : (
+          <section className="pc-panel" aria-label="Staff">
+            <p className="text-sm text-ui-muted-foreground">
+              {plural(allActive.length, "person", "people")} can sign in, across {plural(roles.length, "role")}.{" "}
+              {keyholders} of them can manage accounts. There is no sign-up and no invitation email.
+            </p>
+            <PeopleTable people={active} roles={roles} currentUserId={session.user.id} personHref={personHref} />
+          </section>
+        )
+      ) : null}
 
       {inactive.length > 0 ? (
         <section className="pc-panel" aria-labelledby="staff-deactivated">
@@ -100,6 +151,7 @@ export default async function StaffPage(props: PageProps<"/staff">) {
             people={inactive}
             roles={roles}
             currentUserId={session.user.id}
+            personHref={personHref}
           />
         </section>
       ) : null}
@@ -118,14 +170,18 @@ function PersonActions({ person, roles }: { person: Person; roles: RoleOption[] 
   );
 }
 
+type FilterRow = Person & FilterablePerson;
+
 function PeopleTable({
   people,
   roles,
   currentUserId,
+  personHref,
 }: {
   people: Person[];
   roles: RoleOption[];
   currentUserId?: string;
+  personHref: (id: string) => string;
 }) {
   return (
     <Table className="w-full [&_td]:whitespace-normal [&_th]:whitespace-normal">
@@ -148,7 +204,7 @@ function PeopleTable({
             <TableRow key={person.id}>
               <TableCell>
                 <div className="min-w-0 flex gap-3 items-center">
-                  <UiLink href={`/staff/${person.id}`} className="min-w-0 flex gap-3 items-center rounded-card underline-offset-4 hover:[&_.pc-row-title]:underline">
+                  <UiLink href={personHref(person.id)} className="min-w-0 flex gap-3 items-center rounded-card underline-offset-4 hover:[&_.pc-row-title]:underline">
                     <Avatar size="lg" aria-hidden="true"><AvatarFallback>{nameInitials(person.name)}</AvatarFallback></Avatar>
                     <span className="min-w-0 flex flex-col">
                       <span className="pc-row-title inline-flex min-h-6 flex-wrap items-center gap-x-2">

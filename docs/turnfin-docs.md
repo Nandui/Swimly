@@ -171,3 +171,17 @@ and the body converted from Markdown (`src/modules/docs/features/import/server/m
 stays a draft; any other is submitted by `--author` and approved by `--approver` through the
 normal workflow and audit, so it is published. References already in Docs are skipped, so it
 can run again; a dry run prints counts first.
+
+## HR procedures (21 October 2026)
+
+Docs ships LeisureWorld's everyday HR procedures, HR-SOP-00 to HR-SOP-09 (absence, sickness on
+the day, keeping in touch and return to work, repeated and long-term absence, lateness, annual
+leave, force majeure and other leave, records and medical privacy), as Markdown in
+`src/modules/docs/features/import/content/hr-procedures.ts`. A Docs administrator adds them in
+**Administration › HR procedures** with **Add the HR procedures**: each becomes a draft owned by
+them and filed under every site (`DocumentService.addReadyMade`, one transaction, a `created`
+audit row per document and one `ready_made_added` row). A reference already in Docs is skipped,
+so a second click adds only what is missing, and the panel shows which are in Docs. They stay
+drafts because the handbook details marked "Set by LeisureWorld" must be filled in before an
+independent approver publishes them. Changing the Markdown later does not change documents
+already in Docs. `hr-procedures.test.ts` checks the pages and the add.

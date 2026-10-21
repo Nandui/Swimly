@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
-import { AddRule, APPROVAL_LIST_META, ArchiveProduct, ArchiveSupplier, euro, ProductDialog, RemoveRule, SupplierDialog, SupplierMonogram, supplierPage } from "@/modules/purchasing/features/suppliers";
+import { AddRule, APPROVAL_LIST_META, ArchiveProduct, ArchiveSupplier, euro, ProductDialog, RemoveRule, SupplierDialog, SupplierPicture, SupplierPictureControls, supplierPage } from "@/modules/purchasing/features/suppliers";
 
 export const metadata: Metadata = { title: "Supplier" };
 
@@ -31,18 +31,19 @@ export default async function SupplierPage({ params }: { params: Promise<{ id: s
           {who.request && !s.archivedAt && live.length ? <Button asChild><Link href={`/purchasing/new?supplier=${s.id}`}><FilePlus2 aria-hidden="true" />New order</Link></Button> : null}
         </>} />}>
 
-      {contact.length ? (
-        <section aria-labelledby="sup-who" className="po-card po-supplier-hero">
-          <SupplierMonogram name={s.name} size="lg" />
-          <div className="flex min-w-0 flex-col gap-3">
-            <span className="po-eyebrow">Approved supplier</span>
-            <h2 id="sup-who" className="sr-only">Contact details</h2>
+      <section aria-labelledby="sup-who" className="po-card po-supplier-hero">
+        <SupplierPicture id={s.id} name={s.name} version={s.pictureVersion} size="lg" />
+        <div className="flex min-w-0 flex-col gap-3">
+          <span className="po-eyebrow">Approved supplier</span>
+          <h2 id="sup-who" className="sr-only">Picture and contact details</h2>
+          {contact.length ? (
             <ul className="po-contact">
               {contact.map(([label, v]) => <li key={label}><span className="po-label">{label}</span><span>{v}</span></li>)}
             </ul>
-          </div>
-        </section>
-      ) : null}
+          ) : null}
+          {who.manage ? <SupplierPictureControls id={s.id} name={s.name} hasPicture={!!s.pictureVersion} /> : null}
+        </div>
+      </section>
 
       <section aria-labelledby="sup-products" className="po-card">
         <div className="po-card-head">
