@@ -374,7 +374,7 @@
                     "items": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/NameAndId"
+                        "$ref": "#/components/schemas/Site"
                       }
                     }
                   },
@@ -675,7 +675,7 @@
     "/access-requests": {
       "get": {
         "operationId": "listParentAccessRequests",
-        "summary": "List only this parent’s linking requests and staff replies",
+        "summary": "List only this parent\u2019s linking requests and staff replies",
         "tags": [
           "Parents"
         ],
@@ -800,7 +800,7 @@
     "/children/{childId}/lessons": {
       "get": {
         "operationId": "getChildLessons",
-        "summary": "Read a linked child’s next weekly lesson and 12-week attendance report",
+        "summary": "Read a linked child\u2019s next weekly lesson and 12-week attendance report",
         "tags": [
           "Parents"
         ],
@@ -836,7 +836,176 @@
             }
           }
         ],
-        "description": "Current guardian approval is required, across all sites. Finds the earliest enrolled, non-cancelled occurrence ending after now within 90 days, including date-specific teaching cover. End dates are exclusive. Attendance uses only this child’s saved records for completed lessons over the last 84 dates inclusive. Late counts as attended; cancellations and missing records do not affect the percentage. No staff notes or other children are exposed. Lesson details use the current timetable; skill publication is unchanged."
+        "description": "Current guardian approval is required, across all sites. Finds the earliest enrolled, non-cancelled occurrence ending after now within 90 days, including date-specific teaching cover. End dates are exclusive. Attendance uses only this child\u2019s saved records for completed lessons over the last 84 dates inclusive. Late counts as attended; cancellations and missing records do not affect the percentage. No staff notes or other children are exposed. Lesson details use the current timetable; skill publication is unchanged."
+      }
+    },
+    "/courses": {
+      "get": {
+        "operationId": "listCourses",
+        "summary": "List swimming courses open in the app, full ones too",
+        "tags": [
+          "Courses"
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Course"
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error; see code. Responses are never cacheable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/courses/{courseId}": {
+      "get": {
+        "operationId": "getCourse",
+        "summary": "Read one open course",
+        "tags": [
+          "Courses"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Course"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error; see code. Responses are never cacheable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/course-holds": {
+      "post": {
+        "operationId": "holdCoursePlace",
+        "summary": "Hold a place; reception phones within 72 hours to take payment",
+        "tags": [
+          "Courses"
+        ],
+        "description": "409 codes: PROFILE_REQUIRED, DETAILS_REQUIRED, FULL (message names the site's phone), ALREADY_BOOKED, TOO_YOUNG, NOT_FOR_ADULTS, ADULTS_ONLY, CHILD_INACTIVE.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourseHold"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Held",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseHoldReceipt"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error; see code. Responses are never cacheable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/course-bookings": {
+      "get": {
+        "operationId": "listCourseBookings",
+        "summary": "Places on swimming courses: an adult's own, or each linked child's",
+        "tags": [
+          "Courses"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CourseBooking"
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error; see code. Responses are never cacheable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
       }
     }
   },
@@ -895,13 +1064,49 @@
               "string",
               "null"
             ]
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "family",
+              "adult"
+            ]
+          },
+          "swimmer": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "GET /me only: an adult account's own swimmer record, once their first course booking made it.",
+            "properties": {
+              "firstName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              },
+              "dateOfBirth": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date"
+              },
+              "memberNumber": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
           }
         },
         "required": [
           "id",
           "email",
           "name",
-          "phone"
+          "phone",
+          "kind"
         ],
         "additionalProperties": false
       },
@@ -1406,6 +1611,15 @@
           "code": {
             "type": "string",
             "pattern": "^[0-9]{6}$"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "family",
+              "adult"
+            ],
+            "default": "family",
+            "description": "The kind of account a new email creates. An existing email of the other kind returns 409 ACCOUNT_KIND."
           }
         },
         "required": [
@@ -1832,6 +2046,335 @@
           "attendance"
         ],
         "additionalProperties": false
+      },
+      "Site": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string",
+            "description": "Reception phone; empty when not set."
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "phone"
+        ],
+        "additionalProperties": false
+      },
+      "Course": {
+        "type": "object",
+        "description": "A Pool short course shown in the parents app until its first session. forAdults (minimum age 18 or more) are booked by adult accounts for themselves; the rest by family accounts for a linked child.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "site": {
+            "$ref": "#/components/schemas/Site"
+          },
+          "minAge": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "forAdults": {
+            "type": "boolean"
+          },
+          "priceCents": {
+            "type": "integer"
+          },
+          "price": {
+            "type": "string"
+          },
+          "placesLeft": {
+            "type": "integer"
+          },
+          "full": {
+            "type": "boolean",
+            "description": "No waiting list in the app: phone the site."
+          },
+          "firstDay": {
+            "type": "string",
+            "format": "date"
+          },
+          "lastDay": {
+            "type": "string",
+            "format": "date"
+          },
+          "sessions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "start": {
+                  "type": "string"
+                },
+                "end": {
+                  "type": "string"
+                },
+                "place": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "date",
+                "start",
+                "end",
+                "place"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "site",
+          "minAge",
+          "forAdults",
+          "priceCents",
+          "price",
+          "placesLeft",
+          "full",
+          "firstDay",
+          "lastDay",
+          "sessions"
+        ]
+      },
+      "CourseHold": {
+        "type": "object",
+        "properties": {
+          "courseId": {
+            "type": "string"
+          },
+          "childId": {
+            "type": "string",
+            "description": "Family accounts: the linked child."
+          },
+          "me": {
+            "type": "object",
+            "description": "Adult accounts, first booking only: makes their swimmer record.",
+            "properties": {
+              "firstName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              },
+              "dateOfBirth": {
+                "type": "string",
+                "format": "date"
+              }
+            },
+            "required": [
+              "firstName",
+              "lastName",
+              "dateOfBirth"
+            ],
+            "additionalProperties": false
+          },
+          "callTimes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "morning",
+                "afternoon",
+                "evening"
+              ]
+            },
+            "maxItems": 3
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "courseId"
+        ],
+        "additionalProperties": false
+      },
+      "CourseHoldReceipt": {
+        "type": "object",
+        "properties": {
+          "hold": {
+            "type": "object",
+            "properties": {
+              "reference": {
+                "type": "string"
+              },
+              "callBy": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "course": {
+                "type": "string"
+              },
+              "site": {
+                "type": "string"
+              },
+              "firstDay": {
+                "type": "string",
+                "format": "date"
+              },
+              "price": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "reference",
+              "callBy",
+              "course",
+              "site",
+              "firstDay",
+              "price"
+            ]
+          }
+        },
+        "required": [
+          "hold"
+        ]
+      },
+      "CourseBooking": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "courseId": {
+            "type": "string"
+          },
+          "swimmerId": {
+            "type": "string"
+          },
+          "person": {
+            "type": "string",
+            "description": "First name of who the place is for."
+          },
+          "name": {
+            "type": "string"
+          },
+          "site": {
+            "type": "string"
+          },
+          "reference": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "to-pay",
+              "booked",
+              "waiting",
+              "done",
+              "withdrawn",
+              "cancelled"
+            ]
+          },
+          "firstDay": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "lastDay": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "sessions": {
+            "type": "integer"
+          },
+          "next": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "start": {
+                    "type": "string"
+                  },
+                  "end": {
+                    "type": "string"
+                  },
+                  "place": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "date",
+                  "start",
+                  "end",
+                  "place"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "marked": {
+            "type": "integer"
+          },
+          "attended": {
+            "type": "integer"
+          },
+          "price": {
+            "type": "string"
+          },
+          "callBy": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "courseId",
+          "swimmerId",
+          "person",
+          "name",
+          "site",
+          "reference",
+          "state",
+          "firstDay",
+          "lastDay",
+          "sessions",
+          "next",
+          "marked",
+          "attended",
+          "price",
+          "callBy"
+        ]
       }
     }
   }

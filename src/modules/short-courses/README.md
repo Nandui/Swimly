@@ -5,7 +5,7 @@
 Two kinds of course: six and eight week courses, and the Academy's lifeguard and swim teacher qualifications, which joined this module on 15 October 2026 ([ADR 0011](../../../docs/architecture/decisions/0011-merge-academy-into-short-courses.md)). The rules are in [docs/short-courses.md](../../../docs/short-courses.md) and [docs/academy.md](../../../docs/academy.md).
 
 ## Features
-- `courses` — put a course on with its weekly sessions, book people on with their payment, keep the waiting list and take registers (`/short-courses`, `/short-courses/[id]`); its sessions as Rota commitments, area renames and the home card.
+- `courses` — put a course on with its weekly sessions, book people on with their payment, keep the waiting list and take registers (`/short-courses`, `/short-courses/[id]`); its sessions as Rota commitments, area renames and the home card; the Pool courses shown in the parents app (`server/parents-app.ts`).
 - `academy-courses` — put an Academy course on, its sessions, candidates, pre-course checks, registers and results (`/short-courses/academy`, `/short-courses/academy/[id]`); its sessions as Rota commitments and home card items.
 - `academy-types` — the Academy course list: what we deliver and the qualification each grants (`/short-courses/academy/types`).
 - `academy-calls` — phoning people who held an Academy place online, to take payment (`/short-courses/academy/calls`, and from a course).
@@ -37,6 +37,7 @@ Sites, staff and areas are read through Core's functions; Academy tables keep th
 ## Registration (module.ts)
 - Commitments `short-courses.sessions` and `academy.sessions`: each session for its instructor, or tutor and assessor, so the Rota shows and counts it.
 - Area renames `short-courses.places`: sessions follow a renamed area.
+- Parents app courses (`registerAppCourses`): ticked Pool courses listed and held in the swim school's parent API, never reading these tables from there.
 - Starter page items (`registerHomeCard`): places booked online to phone about, registers to take today, courses with a place free for the waiting list, courses starting in the next two weeks, for both kinds of course.
 - Member history `short-courses.bookings` and `short-courses.academy-candidates`: the courses a swimmer has been on, for their profile.
 - Menu entry, levels and permissions: `manifest.ts`, listed in `src/app/modules.ts`. A role's old Academy level still counts here (`formerly`).

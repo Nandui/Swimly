@@ -54,13 +54,14 @@ export default async function ShortCoursePage({ params }: { params: Promise<{ id
     ["Still to pay", owed ? euro(owed) : "Nothing"],
     ["Who it is for", course.type.minAge ? `${course.type.minAge} and over` : "Any age"],
     ["Health form", course.type.healthForm ? "Asked for" : "Not asked for"],
+    ...(course.type.area === "pool" ? [["Parents app", course.bookOnline ? "Shown until the first session" : "Not shown"] as [string, string]] : []),
   ];
   return (
     <PageShell spacing="roomy" header={<PageHeader back={{ href: "/short-courses", label: "Courses" }} title={course.type.name} description={`${course.site.name} · ${dates}`}
         status={<><Tag meta={SHORT_COURSE_META[course.state]} /><Tag meta={area} /></>}
         actions={canManage ? <>
           {options && !closed ? <CourseDialog course={{ id: course.id, siteId: course.siteId, typeId: course.typeId, capacity: course.capacity, priceCents: course.priceCents, instructorId: course.instructorId, note: course.note, bookOnline: course.bookOnline }}
-            sites={[{ id: course.siteId, name: course.site.name }]} types={[{ id: course.typeId, name: course.type.name, weeks: course.sessions.length, sessionMinutes: 60 }]}
+            sites={[{ id: course.siteId, name: course.site.name }]} types={[{ id: course.typeId, name: course.type.name, area: course.type.area, weeks: course.sessions.length, sessionMinutes: 60 }]}
             perSite={options.perSite.some((s) => s.siteId === course.siteId) ? options.perSite : [{ siteId: course.siteId, people: [], areas }]} today={today}
             trigger={<Button variant="outline"><Pencil aria-hidden="true" />Change</Button>} /> : null}
           {!closed ? <CourseStatusButton id={course.id} to="finished" label="Finish" title="Mark the course finished?" description="It moves to finished courses. Registers and payments stay on the record." /> : null}

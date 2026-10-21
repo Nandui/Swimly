@@ -89,8 +89,8 @@ keeps the waiting list.
 ## Online booking (phase 2, 15 October 2026; switched off 21 October 2026)
 
 **Off since 21 October 2026 (owner choice):** the booking site sells only the Academy's courses.
-The **Open for online booking** tick is gone from the course dialog, saving a course turns it off,
-and the API neither lists nor books short courses, even ones ticked before. A customer still sees
+The booking site's API neither lists nor books short courses. The same tick is now **Show in the
+parents app**, for Pool courses only (see In the parents app, below). A customer still sees
 a short course booked at the desk under their email in **My bookings**. What follows is how it
 worked, kept so it can be switched back on (docs/academy.md).
 
@@ -117,6 +117,23 @@ booking holds a place and the desk phones within 72 hours to take payment.
   not going ahead. The home card counts them, flagged when any are past 72 hours. Overdue places
   stay held until someone acts.
 - Customers see these bookings, and any the desk entered under their email, in **My bookings**.
+
+## In the parents app (21 October 2026)
+
+Owner decisions, 21 October 2026: swimming courses are booked in the parents app
+(swimschool.leisureworldcork.com, docs/parent-app.md).
+
+- **Which courses.** Only courses whose place on the course list is **Pool** offer **Show in the
+  parents app** in the course dialog (`ShortCourse.bookOnline`, the old online tick). A ticked course
+  shows until its first session (`inParentsApp`). The course page says whether it is shown.
+- **Adults and children.** A minimum age of 18 or more is an adult course, booked by an adult for
+  themselves; the rest are booked by parents for a linked child.
+- **Holding a place** books the swimmer on, linked to their swimmer record, with payment owed,
+  `source` online, a reference and `callBy` 72 hours later, made by "Parents app". They are on the
+  **To phone** list like anyone who held a place online, and the call needs no swimmer picking.
+- **Full** is full: the app shows the site's reception phone (Admin, Sites). No waiting list online.
+- The code is `features/courses/server/parents-app.ts`, registered in `module.ts` through
+  `registerAppCourses`.
 
 ## Registers
 

@@ -1,5 +1,6 @@
 import "server-only";
 import { emit, type EventName, type PlatformEvents } from "@/platform/events";
+import type { Prisma } from "@/generated/prisma/client";
 
 /** What a module adds to Core's own screens, without Core importing the module.
  *
@@ -429,4 +430,90 @@ export async function memberHistoryFor(memberId: string): Promise<MemberHistoryE
 export async function announce<K extends EventName>(name: K, payload: PlatformEvents[K]): Promise<void> {
   await modulesLoaded();
   await emit(name, payload);
+}
+
+// ---------------------------------------------------------------------------
+// Swimming courses in the parents app
+// ---------------------------------------------------------------------------
+
+/** A swimming course people book in the parents app (owner decisions, 21 October 2026): a Pool
+ *  short course Manage ticked "Show in the parents app", until its first session. A minimum age of
+ *  18 or more is an adult course; the rest are booked by parents for a child. Short courses owns
+ *  the courses and registers them; the swim school's parent API lists and holds through this, so
+ *  it never reads short-course tables. Never staff names, other people or notes. */
+export type AppCourse = {
+  id: string;
+  name: string;
+  description: string;
+  site: { id: string; name: string; phone: string };
+  minAge: number | null;
+  priceCents: number;
+  /** "€60", or "Free". */
+  price: string;
+  placesLeft: number;
+  /** ISO dates. */
+  firstDay: string;
+  lastDay: string;
+  sessions: { date: string; start: string; end: string; place: string }[];
+};
+/** Holding a place for one swimmer: payment owed, the desk phones within 72 hours. */
+export type AppCourseHold = {
+  courseId: string;
+  swimmerId: string;
+  /** The person taking the course, as on their swimmer record. */
+  name: string;
+  /** ISO date, for the minimum age. */
+  dateOfBirth: string | null;
+  /** The account's email and phone: who the desk phones. */
+  email: string;
+  phone: string;
+  callTimes: string[];
+  note: string;
+  /** Who booked it, for the audit log: "Sam Doyle (parents app)". */
+  by: string;
+};
+export type AppCourseHeld = { reference: string; callBy: string; course: string; site: string; firstDay: string; price: string };
+/** One swimmer's place on an app course, for "My courses". */
+export type AppCourseBooking = {
+  id: string;
+  courseId: string;
+  swimmerId: string;
+  name: string;
+  site: string;
+  reference: string | null;
+  /** to-pay: held, the desk phones; booked: paid or no charge; done; withdrawn; cancelled. */
+  state: "to-pay" | "booked" | "waiting" | "done" | "withdrawn" | "cancelled";
+  firstDay: string | null;
+  lastDay: string | null;
+  sessions: number;
+  next: { date: string; start: string; end: string; place: string } | null;
+  /** Sessions with a register taken, and how many of those they were at. */
+  marked: number;
+  attended: number;
+  price: string;
+  callBy: string | null;
+};
+/** Thrown for anything the person can fix or should be told, with an API code. */
+export class AppCourseError extends Error {
+  constructor(readonly status: number, readonly code: string, message: string) { super(message); }
+}
+export type AppCourses = {
+  list(): Promise<AppCourse[]>;
+  one(id: string): Promise<AppCourse | null>;
+  /** Runs inside the caller's transaction, so a swimmer made for the booking goes with it. */
+  hold(tx: Prisma.TransactionClient, input: AppCourseHold): Promise<AppCourseHeld>;
+  /** Places on swimming courses for these swimmers (booked in the app or at the desk), newest first. */
+  bookingsFor(swimmerIds: readonly string[]): Promise<AppCourseBooking[]>;
+};
+
+let appCourseSource: AppCourses | null = null;
+
+export function registerAppCourses(source: AppCourses) {
+  appCourseSource = source;
+}
+
+/** The parents app's courses, or null when Short courses is switched off. */
+export async function appCourses(): Promise<AppCourses | null> {
+  await modulesLoaded();
+  return appCourseSource;
 }
