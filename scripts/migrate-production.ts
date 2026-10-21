@@ -30,7 +30,8 @@ if (plan.migrate) {
   let result = deploy();
   for (let attempt = 1; !production && !result.ok && result.unreachable && attempt <= 3; attempt++) {
     console.warn(`warn  The development database did not answer. Trying again in ${attempt * 10} seconds.`);
-    await new Promise((done) => setTimeout(done, attempt * 10_000));
+    // tsx runs this as CommonJS, where a top-level await does not load: wait without one.
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, attempt * 10_000);
     result = deploy();
   }
   if (!result.ok && !production && result.unreachable) {
