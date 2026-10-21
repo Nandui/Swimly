@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { AdminView, type AuditEvent, canManage, database, requireMember, rows, workspace } from "@/modules/docs/features/admin";
+import { hrProcedureStatus, ReadyMadeProcedures } from "@/modules/docs/features/import";
 import type { Metadata } from 'next';
 export const metadata: Metadata = { title: 'Administration' };
 export default async function AdminPage() {
@@ -15,6 +16,7 @@ export default async function AdminPage() {
         "SELECT * FROM audit_events WHERE action NOT IN ('editing_session','editing_released') ORDER BY created_at DESC LIMIT 100",
       )}
       mail={[]}
+      hrProcedures={<ReadyMadeProcedures items={await hrProcedureStatus(db)} />}
     />
   );
 }

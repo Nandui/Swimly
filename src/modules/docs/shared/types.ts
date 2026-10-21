@@ -189,6 +189,7 @@ export function toWorkspaceMember(m: Member, viewer: Member): WorkspaceMember {
 /** Sentence-case words for each audit action Docs writes (history and administration). */
 const DOC_EVENT_LABELS: Record<string, string> = {
   created: 'Document created',
+  ready_made_added: 'Ready-made documents added',
   draft_started: 'Draft started',
   restored_to_draft: 'Version restored as a draft',
   draft_saved: 'Draft edited',

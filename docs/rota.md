@@ -133,6 +133,18 @@ it.
     them under the area's line (`heldByAreaLine` hides the record itself). Today and the old
     timeline (`buildDay`) take people on the activity off the line's places. Lines without an
     activity ("2 holding NPLQ while open") work as before. Different activities still add up.
+  - **Activities cover their area's staff needed** (owner, 21 October 2026: "if that activity is
+    for reception, it means that whatever that time of that activity means its covered"): an
+    area's Staff needed lines without an activity also count anyone on an **activity** (not a
+    booking or a swim class) in the area or its sub-areas, for that activity's time
+    (`Need.coveredBy`, `coversArea` in the diary; `OnArea` in `areaNeedsOn` for Today and the old
+    timeline). An activity asking for a qualification that one of the area's lines asks for counts
+    only for that line; any other counts only for a line asking for none, so an aqua-fit instructor
+    is still not one of the pool's lifeguards. **Choose someone** on such a hole, from Not covered
+    yet or a block on the Not covered row, asks **Put them on**: the area's department's activities
+    that fit (`coverActivities`, those already on there that day first), or the area itself. On an
+    activity, they take a free place on that activity already in the area at that time (filling
+    both), or else the day's holding record in the area (`fillAreaActivity`).
   - **Choose someone** (`candidates`): best fits first (free then, able, own department), then
     other departments' people, borrowed straight away (`allowedForPerson`), then who can't and why
     ("Busy: Main pool 11:30–15:00", "Needs NPLQ", "Off today"); each with what it does to their day

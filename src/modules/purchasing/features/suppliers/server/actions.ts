@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { fail, ok, onUniqueViolation, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
+import { squarePicture } from "@/lib/images/square-picture";
 import { roleById, withRoles } from "@/lib/directory";
 import { prisma } from "@/lib/prisma";
 import { requirePurchasingActor } from "@/modules/purchasing/shared/access";
@@ -58,6 +59,32 @@ export async function setSupplierArchived(id: string, archived: boolean): Promis
     await logAudit({ actorId: who.id, actorName: who.name, action: archived ? "archive" : "restore", entity: "Supplier", entityId: id, clubId: null, summary: `${archived ? "Removed" : "Restored"} ${supplier.name} ${archived ? "from" : "to"} the approved suppliers` }, tx);
   });
   revalidate();
+  return ok();
+}
+
+/** A supplier's picture (its logo or a photo): a new one replaces the old, an empty
+ *  form takes it off and its initials show again. */
+export async function setSupplierPicture(id: string, form: FormData): Promise<ActionResult> {
+  const who = await manager();
+  if (!who) return fail(NOT_MANAGER);
+  const supplier = await prisma.supplier.findFirst({ where: { id, orgId: who.orgId! }, select: { name: true } });
+  if (!supplier) return fail("That supplier no longer exists.");
+  const file = form instanceof FormData ? form.get("picture") : null;
+  let data: { pictureData: Uint8Array<ArrayBuffer> | null; pictureVersion: string | null } = { pictureData: null, pictureVersion: null };
+  if (file !== null) {
+    if (!(file instanceof File) || (file.size === 0 && !file.name)) return fail("Choose a picture first.");
+    const picture = await squarePicture(file, { solid: true });
+    if (!picture.ok) return picture;
+    data = { pictureData: picture.bytes, pictureVersion: picture.version };
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.supplier.update({ where: { id }, data });
+    await logAudit({ actorId: who.id, actorName: who.name, action: "update", entity: "Supplier", entityId: id, clubId: null,
+      summary: data.pictureData ? `Changed the picture of ${supplier.name}` : `Took the picture off ${supplier.name}` }, tx);
+  });
+  revalidate();
+  revalidatePath(`/purchasing/suppliers/${id}`);
+  revalidatePath("/purchasing/new");
   return ok();
 }
 

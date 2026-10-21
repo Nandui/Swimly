@@ -9,7 +9,8 @@ import { validateBody } from "@/modules/docs/shared/content";
 import { findMember, type Database, type Sql } from "@/modules/docs/shared/database";
 import { canApprove, canWrite } from "@/modules/docs/shared/types";
 import { DocumentService } from "@/modules/docs/shared/domain";
-import { parseNotionPage, type NotionPage } from "@/modules/docs/features/import";
+// The server part only: the feature entry also carries the Administration panel.
+import { parseNotionPage, type NotionPage } from "@/modules/docs/features/import/server/notion-import";
 import { staffDirectory } from "@/modules/docs/shared/staff-directory-data";
 import { docsStorageConfig } from "@/modules/docs/shared/storage-config";
 
