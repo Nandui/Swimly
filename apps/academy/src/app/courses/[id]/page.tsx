@@ -3,12 +3,14 @@
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Award, CalendarDays, ClipboardCheck, Clock, Hourglass, LogOut, MapPin, Wallet } from "lucide-react";
+import { Award, CalendarDays, ClipboardCheck, Clock, Hourglass, LogOut, MapPin, PhoneCall, Wallet } from "lucide-react";
 import { ApiError, api, message, signOut, type Course, type Hold } from "@/lib/api";
 import { day, longDay, placesMeta, rhythm, span } from "@/lib/format";
 import { useSession } from "@/lib/use-session";
 import { EmailCheck } from "@/components/email-check";
 import { Button } from "@/components/shadcn/button";
+import { Card } from "@/components/shadcn/card";
+import { DateBlock } from "@/components/date-block";
 import { Frame, Loading, Notice, Tag } from "@/components/ui";
 import { ChoiceRow } from "@/components/ui/choice-row";
 import { Input } from "@/components/ui/input";
@@ -71,7 +73,7 @@ export default function CoursePage() {
         description={course.description || undefined} />}>
       <div className="course-layout">
         <div className="flex flex-col gap-4 course-info">
-          <section className="pc-panel" aria-label="About the course">
+          <Card asChild className="lw-panel"><section aria-label="About the course">
             <ul className="facts">
               <li><CalendarDays aria-hidden="true" /><span><strong>{span(course.firstDay, course.lastDay)}</strong><br /><span className="text-ui-muted-foreground">{rhythm(course)}</span></span></li>
               <li><MapPin aria-hidden="true" /><span>{[course.site, ...places].join(", ")}</span></li>
@@ -79,20 +81,20 @@ export default function CoursePage() {
               {course.checks.length ? <li><ClipboardCheck aria-hidden="true" /><span>Before you start: {course.checks.map((c) => c.charAt(0).toLowerCase() + c.slice(1)).join(", ")}. We tell you how when we phone.</span></li> : null}
               <li><Wallet aria-hidden="true" /><span>{course.priceCents ? `${course.price} for the whole course, paid by phone after you book.` : "Free."}</span></li>
             </ul>
-          </section>
+          </section></Card>
         </div>
         {course.sessions.length > 1 ? (
-            <section className="pc-panel course-dates" aria-labelledby="dates-h">
+            <Card asChild className="lw-panel course-dates"><section aria-labelledby="dates-h">
               <h2 id="dates-h">Dates</h2>
               <ol className="dates">
                 {course.sessions.map((s) => (
-                  <li key={`${s.date}-${s.start}`}><span>{longDay(s.date)}</span><span className="text-ui-muted-foreground tabular-nums">{s.start} to {s.end}{s.place && places.length > 1 ? `, ${s.place}` : ""}</span></li>
+                  <li key={`${s.date}-${s.start}`}><DateBlock date={s.date} quiet /><span className="flex flex-col"><span className="font-semibold">{longDay(s.date)}</span><span className="text-ui-muted-foreground tabular-nums">{s.start} to {s.end}{s.place && places.length > 1 ? `, ${s.place}` : ""}</span></span></li>
                 ))}
               </ol>
-            </section>
+            </section></Card>
           ) : null}
 
-        <aside className="pc-panel book-panel" aria-labelledby="book-h">
+        <Card asChild className="lw-panel book-panel"><aside aria-labelledby="book-h">
           <div className="flex flex-col items-start gap-2">
             <p className="price large">{course.price}</p>
             <Tag meta={placesMeta(course)} />
@@ -121,13 +123,13 @@ export default function CoursePage() {
               </fieldset>
               <Textarea id="note" name="note" label="Anything we should know" optional maxLength={500}
                 description="Please don't include medical details. We ask for those separately." />
-              <Notice title="What happens next">{full
+              <Notice title="What happens next" icon={PhoneCall}>{full
                 ? "You join the waiting list in the order you signed up. If a place comes up, we phone you to offer it and take payment."
                 : `We hold your place and phone you within 72 hours to take payment${course.priceCents ? ` of ${course.price}` : ""}. Your place is confirmed once you have paid.`}</Notice>
               <Button type="submit" className="w-full" disabled={busy}>{busy ? "Sending…" : full ? <><Hourglass aria-hidden="true" />Join the waiting list</> : "Hold my place"}</Button>
             </form>
           )}
-        </aside>
+        </aside></Card>
       </div>
       </PageShell>
     </Frame>
@@ -144,13 +146,13 @@ function Done({ held, course }: { held: Hold; course: Course }) {
         description={<span role="status">{waiting
           ? `If a place comes up on ${held.course.name}, we will phone you on ${held.phone} to offer it.`
           : `We will phone you on ${held.phone} by ${held.callByLabel} to take payment of ${course.price}. Your place is confirmed once you have paid.`}</span>} />}>
-      <section className="pc-panel" aria-label="Your booking">
+      <Card asChild className="lw-panel"><section aria-label="Your booking">
         <dl className="summary">
           <div><dt>Course</dt><dd>{held.course.name}</dd></div>
           <div><dt>Starts</dt><dd>{held.course.starts}, {held.course.site}</dd></div>
           <div><dt>Reference</dt><dd className="tabular-nums">{held.reference}</dd></div>
         </dl>
-      </section>
+      </section></Card>
       <p className="text-ui-muted-foreground">We emailed you these details. {waiting ? "" : "If we can't reach you within 72 hours, we may give the place to someone else. "}To change your number, reply to the email.</p>
       <div className="flex flex-wrap items-center gap-2">
         <Button asChild><Link href="/bookings">See my bookings</Link></Button>

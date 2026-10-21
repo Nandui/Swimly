@@ -4,7 +4,7 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.54.0 · 21 October 2026 · Short courses book people from the swimmer records
+## 1.55.0 · 21 October 2026 · Short courses book people from the swimmer records
 
 - **Book someone on** (short courses) and **Add a candidate** (Academy courses) now start with **Find the swimmer**. Search by name, member number, date of birth or a parent's name, and pick the right person. Their member number, contacts, emergency contact and medical notes come with them.
 - If they are not on the swimmer records yet, choose **Add them as a new swimmer**, fill in their details, and they are added and booked on in one go. Turnfin tells you if someone with the same name and date of birth is already there, so nobody is added twice. Adults on gym and lifeguard courses get a swimmer record too; staff on Academy courses stay as staff.
@@ -13,6 +13,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - People booked before today show **No swimmer record** and a **Link to swimmer** button, so you can match them up when you have a moment. Nothing else about them changes.
 - When you log a call as **Paid** for an Academy place held online, Turnfin asks you to find them on the swimmer records or add them first. Their details from the booking are filled in for you.
 - A swimmer's profile now lists the short courses and Academy courses they have been on, under **Details**, in **Other courses**.
+## 1.54.0 · 21 October 2026 · The Academy booking site looks like the parents app
+
+- The Academy booking site, where people book lifeguard and swim teacher courses, now looks like the LeisureWorld Aquatics parents app: the same navy bar with the LeisureWorld logo, the same font, blue headings and orange dates, and the same cards.
+- Courses are shown as cards with the start date on the left, two side by side on a computer. My bookings shows each booking the same way.
+- There is a light and dark switch at the top right, as on the parents app.
+- Nothing about booking has changed: people still hold a place with a code sent to their email, and you still phone them within 72 hours to take payment.
+
 ## 1.53.0 · 21 October 2026 · Areas need people on an activity, and sub-activities at several times
 
 - In **Admin > Areas**, an area's **Staff needed** can now ask for people on an activity: for example, Reception needs **at least 1 on Serving customers**, from 09:00 to 21:00. Leave the times empty for whenever the area is open. Add as many lines as you need, such as a second one for 2 people at the busy time.
