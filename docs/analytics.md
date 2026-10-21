@@ -1,7 +1,8 @@
 # Analytics
 
-`/analytics` is the swim school's reports, for Swim school **Manage** only (the
-`analytics` screen, `courses.manage`). Code: `src/modules/activities/features/analytics`
+`/analytics` is the swim school's reports, for managers only (owner decision, 21 October
+2026): the **Analytics** module in the Managers group, one level, **View** (the `analytics`
+screen, `analytics.view`, at the person's sites). Swim school Manage no longer opens it. Code: `src/modules/activities/features/analytics`
 (`server/insight-queries.ts` reads, `server/swimmers.ts`, `server/teaching.ts` and
 `server/insights.ts` compute, `components/insights/` draws). Styles are in
 `src/app/(activities)/analytics/analytics.css`.
@@ -31,7 +32,7 @@ link back to it:
   (`/analytics/instructors`). `/analytics/teachers` redirects to the pool deck's teacher
   table, keeping its filters.
 
-All three need Swim school Manage (the `analytics` screen). They follow the mockups the
+All three need Analytics View (the `analytics` screen). They follow the mockups the
 owner approved on 20 October 2026, in Turnfin's Poolside look (`analytics.css`: white
 panels, pills, one blue for data, an orange second series validated against it). Each
 opens with Worth a look first, then headline tiles that each switch one chart
