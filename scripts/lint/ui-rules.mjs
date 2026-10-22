@@ -14,8 +14,10 @@
 // Run by `npm run lint` in each app. Exits 1 and lists every problem when a rule is broken.
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const root = resolve(dirname(new URL(import.meta.url).pathname), "../..");
+// fileURLToPath, not URL.pathname: on Windows the pathname is "/C:/…", which resolves to "C:\C:\…".
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const APPS = [".", "apps/me", "apps/academy"];
 const problems = [];
 
