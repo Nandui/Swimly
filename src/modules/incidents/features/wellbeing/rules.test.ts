@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  linkProblem, MAX_WELLBEING_TO, recipientList, recipientsProblem, tokenShape, updateProblem, wellbeingExpiry, wellbeingRequestSchema,
+  followUpLabels, hrRequestKind, linkProblem, MAX_WELLBEING_TO, recipientList, recipientsProblem, tokenShape, updateProblem, wellbeingExpiry, wellbeingRequestSchema,
   wellbeingState, wellbeingUpdateSchema,
 } from "./rules";
 
@@ -46,4 +46,21 @@ test("a request needs a reason, and an update needs what was done and what happe
   assert.equal(updateProblem({ ...update, nextSteps: "Call again on Monday." }, "2026-10-20", "2026-10-22"), null);
   assert.match(updateProblem({ ...update, doneOn: "2026-10-23", finished: true }, "2026-10-20", "2026-10-22")!, /future/);
   assert.match(updateProblem({ ...update, doneOn: "2026-10-19", finished: true }, "2026-10-20", "2026-10-22")!, /before HR was asked/);
+});
+
+test("a request is a wellbeing check unless it lets HR know about a staff member", () => {
+  const check = wellbeingRequestSchema.parse({ userId: "u1", name: "", reason: "Shaken after the rescue at the deep end.", followUps: ["time_off"], shareReport: true });
+  assert.equal(check.kind, "wellbeing");
+  assert.deepEqual(check.followUps, []);
+  assert.equal(check.shareReport, false);
+  const inform = wellbeingRequestSchema.parse({ kind: "inform", userId: "u1", name: "", reason: "Cut her knee on the deck step.", followUps: ["return_to_work", "time_off", "time_off"], shareReport: true });
+  assert.deepEqual(inform.followUps, ["return_to_work", "time_off"]);
+  assert.equal(inform.shareReport, true);
+  assert.equal(wellbeingRequestSchema.safeParse({ kind: "inform", userId: "u1", name: "", reason: "Cut her knee.", followUps: ["payroll"] }).success, false);
+  const short = wellbeingRequestSchema.safeParse({ kind: "inform", userId: "u1", name: "", reason: "Hurt" });
+  assert.equal(short.success, false);
+  assert.match(short.error!.issues[0].message, /what HR should know/);
+  assert.equal(hrRequestKind("inform"), "inform");
+  assert.equal(hrRequestKind("anything else"), "wellbeing");
+  assert.deepEqual(followUpLabels(["conduct", "time_off", "gone"]), ["Time off work", "Their part in what happened"]);
 });

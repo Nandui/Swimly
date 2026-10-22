@@ -1,7 +1,29 @@
 import { z } from "zod";
 
-/** The pure rules for wellbeing checks (docs/incidents.md, "Wellbeing checks"),
- *  kept apart from the database so they are tested on their own. */
+/** The pure rules for asking HR from a report (docs/incidents.md, "Asking HR"):
+ *  a wellbeing check, or letting HR know a staff member was in the incident.
+ *  Kept apart from the database so they are tested on their own. */
+
+/** What the request asks of HR (owner request, 22 October 2026: "it could be a
+ *  simple wellbeing check but also informing HR of an incident that has staff in it"). */
+export const HR_REQUEST_KINDS = {
+  wellbeing: { label: "Wellbeing check", ask: "Check on someone's wellbeing", hint: "HR checks how they are after what happened." },
+  inform: { label: "Staff member in an incident", ask: "Let HR know a staff member was in this incident", hint: "They were hurt or involved, and HR may need to follow up." },
+} as const;
+export type HrRequestKind = keyof typeof HR_REQUEST_KINDS;
+export const hrRequestKind = (kind: string): HrRequestKind => (kind === "inform" ? "inform" : "wellbeing");
+
+/** What HR may need to follow up, ticked when letting HR know about an incident. */
+export const HR_FOLLOW_UPS = {
+  time_off: "Time off work",
+  return_to_work: "Return to work",
+  support: "Support, such as the employee assistance line",
+  conduct: "Their part in what happened",
+} as const;
+export type HrFollowUp = keyof typeof HR_FOLLOW_UPS;
+const FOLLOW_UP_KEYS = Object.keys(HR_FOLLOW_UPS) as [HrFollowUp, ...HrFollowUp[]];
+/** The follow-ups as people read them, in the list's order, ignoring any no longer offered. */
+export const followUpLabels = (keys: string[]) => FOLLOW_UP_KEYS.filter((k) => keys.includes(k)).map((k) => HR_FOLLOW_UPS[k]);
 
 /** How long an emailed link works. Sending it again, or HR saying what happens
  *  next, gives the link as long again. */
@@ -27,7 +49,7 @@ export function wellbeingState(c: { status: string; expiresAt: Date; updates: nu
 /** Whether a link still takes updates, and what to tell HR if not. */
 export function linkProblem(c: { status: string; expiresAt: Date }, now = new Date()): string | null {
   if (c.status === "cancelled") return "This request has been cancelled.";
-  if (c.status === "done") return "This check is finished: nothing more was needed.";
+  if (c.status === "done") return "This request is finished: nothing more was needed.";
   if (c.expiresAt <= now) return "This link has expired.";
   return null;
 }
@@ -45,11 +67,18 @@ export function recipientsProblem(list: string[]): string | null {
 const text = (max: number) => z.string().trim().max(max);
 
 export const wellbeingRequestSchema = z.object({
+  kind: z.enum(["wellbeing", "inform"]).default("wellbeing"),
   /** A staff member's id, or empty to type the name of someone else. */
   userId: text(64),
   name: text(200),
-  reason: text(2000).min(10, "Say why a check is needed, in a sentence or two."),
-});
+  reason: text(2000),
+  /** Only when letting HR know: what they may need to follow up. */
+  followUps: z.array(z.enum(FOLLOW_UP_KEYS)).max(FOLLOW_UP_KEYS.length).default([]),
+  /** Only when letting HR know: show HR what happened, as written on the report, and the person's injury. */
+  shareReport: z.boolean().default(false),
+}).superRefine((r, ctx) => {
+  if (r.reason.length < 10) ctx.addIssue({ code: "custom", path: ["reason"], message: r.kind === "inform" ? "Say what HR should know, in a sentence or two." : "Say why a check is needed, in a sentence or two." });
+}).transform((r) => (r.kind === "inform" ? { ...r, followUps: [...new Set(r.followUps)] } : { ...r, followUps: [], shareReport: false }));
 export type WellbeingRequestInput = z.input<typeof wellbeingRequestSchema>;
 
 export const wellbeingUpdateSchema = z.object({

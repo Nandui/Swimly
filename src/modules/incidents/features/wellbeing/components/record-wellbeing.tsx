@@ -16,9 +16,9 @@ import type { WellbeingLink } from "@/modules/incidents/features/wellbeing/serve
 
 const day = (iso: string) => formatDate(new Date(`${iso}T12:00:00Z`));
 
-/** The page HR's emailed link opens (docs/incidents.md, "Wellbeing checks"): who
- *  to check on and why, what HR has recorded so far, and a form for what they
- *  did, when, and what happens next. Nothing else of the report. */
+/** The page HR's emailed link opens (docs/incidents.md, "Asking HR"): who it is
+ *  about and why, what happened when whoever asked chose to show it, what HR has
+ *  recorded so far, and a form for what they did, when, and what happens next. */
 export function RecordWellbeing({ token, link }: { token: string; link: WellbeingLink }) {
   const router = useRouter();
   const [byName, setByName] = useState(link.updates.at(-1)?.byName ?? "");
@@ -40,14 +40,20 @@ export function RecordWellbeing({ token, link }: { token: string; link: Wellbein
     router.refresh();
   }
 
+  const inform = link.kind === "inform";
   return (
-    <PageShell spacing="roomy" header={<PageHeader title="Wellbeing check"
-      description={`${link.requestedByName} at ${link.site} asked HR for this on ${formatDateTime(link.createdAt)}, after incident ${link.reference} on ${link.occurredOn}.`} />}>
+    <PageShell spacing="roomy" header={<PageHeader title={inform ? "A staff member was in an incident" : "Wellbeing check"}
+      description={inform
+        ? `${link.requestedByName} at ${link.site} let HR know on ${formatDateTime(link.createdAt)}, about incident ${link.reference} on ${link.occurredOn}.`
+        : `${link.requestedByName} at ${link.site} asked HR for this on ${formatDateTime(link.createdAt)}, after incident ${link.reference} on ${link.occurredOn}.`} />}>
 
       <div className="pc-note flex-col items-start gap-1">
-        <p className="text-sm font-semibold">Who to check on: {link.personName}</p>
+        <p className="text-sm font-semibold">{inform ? "Staff member" : "Who to check on"}: {link.personName}</p>
         <p className="text-sm whitespace-pre-line">{link.reason}</p>
+        {link.followUps.length ? <p className="text-sm"><span className="font-semibold">HR may need to follow up: </span>{link.followUps.join(", ")}.</p> : null}
       </div>
+
+      {link.report ? <WhatHappened report={link.report} occurredOn={link.occurredOn} /> : null}
 
       {link.updates.length ? (
         <div className="flex flex-col gap-2">
@@ -77,9 +83,9 @@ export function RecordWellbeing({ token, link }: { token: string; link: Wellbein
         <div className="flex flex-col gap-2">
           <Label htmlFor="wb-what">What you did</Label>
           <Textarea id="wb-what" value={whatDone} onChange={(e) => setWhatDone(e.target.value)} rows={4} required minLength={5} maxLength={4000} disabled={busy}
-            placeholder="Such as: phoned them at home, they are coping well and were offered the employee assistance line" />
+            placeholder={inform ? "Such as: spoke with them and their manager, they are taking two days off" : "Such as: phoned them at home, they are coping well and were offered the employee assistance line"} />
         </div>
-        <ChoiceRow type="checkbox" title="Nothing more is needed" hint="This finishes the check and closes this link."
+        <ChoiceRow type="checkbox" title="Nothing more is needed" hint="This finishes the request and closes this link."
           checked={finished} onCheckedChange={(v) => setFinished(v === true)} disabled={busy} />
         {finished ? null : (
           <div className="flex flex-col gap-2">
@@ -98,6 +104,27 @@ export function RecordWellbeing({ token, link }: { token: string; link: Wellbein
         What you write is kept with the incident report and read only by the managers who sign off incidents and by {link.requestedByName}. Keep to what they need to know. This link works until {formatDate(link.expiresAt)}; please don&rsquo;t forward it.
       </p>
     </PageShell>
+  );
+}
+
+/** What happened, as written on the report, and this person's own injury entry. */
+function WhatHappened({ report: r, occurredOn }: { report: NonNullable<WellbeingLink["report"]>; occurredOn: string }) {
+  const i = r.injury;
+  const care = i ? [i.firstAid ? `First aid: ${i.firstAid}${i.firstAidBy ? `, by ${i.firstAidBy}` : ""}` : null, i.ambulance ? "An ambulance was called" : null, i.hospital ? "They went to hospital" : null].filter(Boolean) : [];
+  return (
+    <section aria-labelledby="wb-what-h" className="flex flex-col gap-2">
+      <h2 id="wb-what-h" className="text-base font-semibold">What happened</h2>
+      <div className="flex flex-col gap-2 rounded-card border border-ui-border p-4">
+        <p className="text-sm text-ui-muted-foreground">{[r.what, r.category, `${occurredOn} at ${r.at}`, r.area].filter(Boolean).join(" · ")}</p>
+        <p className="text-sm whitespace-pre-line">{r.description}</p>
+        {r.immediateAction ? <p className="text-sm whitespace-pre-line"><span className="font-semibold">Done straight away: </span>{r.immediateAction}</p> : null}
+        {i ? (
+          i.injured ? (
+            <p className="text-sm"><span className="font-semibold">Their injury: </span>{[i.bodyPart, i.injury].filter(Boolean).join(", ") || "Recorded as hurt"}{care.length ? `. ${care.join(". ")}.` : "."}</p>
+          ) : <p className="text-sm"><span className="font-semibold">Their injury: </span>Not hurt, as recorded on the report.</p>
+        ) : null}
+      </div>
+    </section>
   );
 }
 
