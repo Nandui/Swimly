@@ -3,7 +3,7 @@ import { after, before, test } from "node:test";
 import { isolatedPrisma } from "@/test/pglite-prisma";
 import { serverModule } from "@/test/server-module";
 import { addDaysIso, today } from "@/lib/format";
-import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
+import { ADMINISTRATOR_PERMISSIONS, expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 
 /** Incidents end to end on an isolated database: reporting at your own sites,
  *  serious alerts, who sees what, triage and sign-off by someone else, and the
@@ -46,6 +46,10 @@ before(async () => {
   for (const [id, role, sites] of [["mia", "r-life", []], ["dan", "r-duty", []], ["gina", "r-gm", []], ["carl", "r-gm", ["churchfield"]]] as const) {
     await db.user.create({ data: { id, name: id, email: `${id}@example.invalid`, staffRoleId: role, orgId: ORG, siteIds: sites.map(() => churchfield) } });
   }
+  // An administrator (Admin: Manage, so Manage in Incidents too) and the superadmin, who has no role.
+  await db.staffRole.create({ data: { id: "r-admin", name: "Administrator", permissions: [...ADMINISTRATOR_PERMISSIONS], screens: [] } });
+  await db.user.create({ data: { id: "ada", name: "ada", email: "ada@example.invalid", staffRoleId: "r-admin", orgId: ORG } });
+  await db.user.create({ data: { id: "sam", name: "sam", email: "sam@example.invalid", isSuperadmin: true, orgId: ORG } });
   const d = {
     "@/lib/prisma": { prisma: fixture.prisma },
     "@/lib/authz": {
@@ -112,15 +116,16 @@ test("a near miss: reported at your own site, triaged and closed by someone else
   assert.ok(log.every((l) => l.module === "Incidents" && l.clubId === bishopstown));
 });
 
-test("a serious accident alerts everyone who triages at the site, and only a manager closes it", async () => {
+test("a serious accident alerts only Manage at the site, and only a manager closes it", async () => {
   reporter();
   const child = { type: "swimmer" as const, ageGroup: "child" as const, name: "Sample Child", contact: "", injured: true, bodyPart: "Head", injury: "Bump", firstAid: "Cold compress", firstAidBy: "mia", ambulance: false, hospital: true };
   const sent = await report.submitReport({ ...nearMiss(), kind: "accident", category: "struck", people: [child] });
   assert.ok(sent.ok);
   const row = await fixture.prisma.incidentReport.findUniqueOrThrow({ where: { id: sent.id! }, include: { notifications: true } });
   assert.equal(row.serious, true);
-  // Dan and Gina cover every site; Carl only Churchfield. No email is set up in tests, so each job records why.
-  assert.deepEqual(row.notifications.map((n) => [n.recipientId, n.status, n.error]).sort(), [["dan", "FAILED", "Email is not set up."], ["gina", "FAILED", "Email is not set up."]]);
+  // Gina has Manage everywhere; Carl only at Churchfield; Dan only Investigate; Ada is an administrator; Sam the superadmin.
+  // No email is set up in tests, so each job records why.
+  assert.deepEqual(row.notifications.map((n) => [n.recipientId, n.status, n.error]).sort(), [["gina", "FAILED", "Email is not set up."]]);
 
   as("dan", [], [at(churchfield, ["incidents.reports.review"])]);
   await assert.rejects(data.incidentReport(row.id), NotFound, "not at the sites they triage");

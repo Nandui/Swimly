@@ -4,6 +4,11 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.63.1 · 22 October 2026 · Incidents: who gets the serious report email
+
+- When a serious incident is reported, the email now goes only to the operations manager (anyone whose role has **Manage** in Incidents for that centre). Nobody else gets it.
+- Centre managers, other administrators and the developer account no longer get this email. They still see serious reports in **Incidents** and can triage them as before.
+
 ## 1.63.0 · 21 October 2026 · Admin: search and filters on Staff
 
 - **Admin › Staff** now has a **Find a person** box at the top. Start typing a name or email and the list narrows as you type.

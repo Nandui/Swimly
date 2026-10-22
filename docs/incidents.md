@@ -24,9 +24,10 @@ defaults on 11 October 2026 ([ADR 0008](architecture/decisions/0008-add-incident
    who triages it, even after closing.
 2. **Serious alert.** A report is serious when anyone involved went by ambulance or to
    hospital or a doctor, or its category always is (rescue from the water, chemical, lost
-   child). The email goes at once to everyone whose role has Incidents **Investigate** or
-   **Manage** at the site (no sites ticked means every site): the centre manager and the
-   operations manager, names nobody and carries no injury details. Each email
+   child). The email goes at once to everyone whose own role has Incidents **Manage** at
+   the site (no sites ticked means every site): the operations manager. Nobody else
+   gets it: not Investigate, not administrators through Admin: Manage, and not the
+   superadmin, a developer account (owner decision, 22 October 2026). It names nobody and carries no injury details. Each email
    is a row in `incidents_notifications`; a failure shows on the report as a warning.
 3. **Triage** (Investigate, never your own). Two severities on one 1 to 5 scale: what happened
    and the worst that realistically could have; the worse of the two is the level. Four HSA
@@ -202,8 +203,8 @@ investigates it, and a serious one needs another Manage holder at the site to cl
 | Level | Permission | Sees |
 | --- | --- | --- |
 | Report | `incidents.reports.create` | Their own reports, in full, and how they were closed |
-| Investigate | `incidents.reports.review` | Every report at the sites they cover, injury details included; the serious alerts; triage and closing low-risk ones; statements, the root cause and actions; CCTV footage requests and videos |
-| Manage | `incidents.reports.signoff` | Also closing serious and moderate reports (only the operations manager holds it, owner decision 12 October 2026), reopening closed ones, the full record for the insurer, reports past their keeping period, and who opened each report's injury details |
+| Investigate | `incidents.reports.review` | Every report at the sites they cover, injury details included; triage and closing low-risk ones; statements, the root cause and actions; CCTV footage requests and videos |
+| Manage | `incidents.reports.signoff` | Also the serious alert emails, closing serious and moderate reports (only the operations manager holds it, owner decision 12 October 2026), reopening closed ones, the full record for the insurer, reports past their keeping period, and who opened each report's injury details |
 
 Reach is the sites a person works at. Opening someone else's report that names people writes
 an `incidents_access_events` row. Every change writes one audit row under Incidents.
