@@ -10,6 +10,6 @@ export function incidentPages(who: { review: boolean; signoff?: boolean }): (Mod
     { href: "/incidents/new", label: "Report", icon: FilePlus2, description: "Report an accident, an incident or a near miss in two minutes", match: (p) => p.startsWith("/incidents/new") },
     { href: "/incidents", label: "Reports", icon: ListChecks, description: "Your reports and, if you triage, every report at your sites", match: (p) => p === "/incidents" || /^\/incidents\/(?!new|overview|insights|settings)/.test(p) },
     ...(who.review ? [{ href: "/incidents/insights", label: "Insights", icon: ChartColumn, description: "Trends by month, kind, place and time of day at your sites", match: (p: string) => p.startsWith("/incidents/insights") }] : []),
-    ...(who.signoff ? [{ href: "/incidents/settings", label: "Settings", icon: Settings, description: "Who gets wellbeing check requests", match: (p: string) => p.startsWith("/incidents/settings") }] : []),
+    ...(who.signoff ? [{ href: "/incidents/settings", label: "Settings", icon: Settings, description: "Who gets requests to HR", match: (p: string) => p.startsWith("/incidents/settings") }] : []),
   ];
 }

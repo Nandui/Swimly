@@ -10,7 +10,7 @@ The flow, rules and decisions are in [docs/incidents.md](../../../docs/incidents
 - `investigation` — witness statements, the 5 whys and root cause, actions with owners and their reminder emails, Your actions, and reopening (on `/incidents/[id]` and `/incidents`; reminders from `/api/cron/incidents`).
 - `files` — photos and documents on a report (`/api/incidents/files`).
 - `footage` — CCTV footage requests: emailing whoever holds it a link that uploads to the report without signing in (`/footage/[token]`, `/api/incidents/footage/*`), the videos in a private Vercel Blob store, and watching them (on `/incidents/[id]`).
-- `wellbeing` — wellbeing checks: asking HR, by email to the addresses in Incidents › Settings (`/incidents/settings`), to check on someone after an incident; HR records what they did, when and what happens next through a no-sign-in link (`/wellbeing/[token]`). What HR writes is read only by Manage at the site and whoever asked.
+- `wellbeing` — Ask HR: asking HR, by email to the addresses in Incidents › Settings (`/incidents/settings`), to check on someone after an incident, or letting HR know a staff member was in it (what HR may follow up, and optionally what happened and their injury); HR records what they did, when and what happens next through a no-sign-in link (`/wellbeing/[token]`). What HR writes is read only by Manage at the site and whoever asked.
 - `insights` — trends for those who triage and the reports past their keeping period (`/incidents/insights`).
 - `export` — one report's full record to print or save as a PDF for the insurer (`/incidents/[id]/export`, Manage).
 - `staff` — a staff member's incidents and injuries for their HR personal file and subject access export (registered in `module.ts`).
@@ -38,7 +38,7 @@ Declared in `prisma/schema/incidents.prisma`, migrations `20261031120000_inciden
 - `incidents_footage_requests` (`IncidentFootageRequest`) — who was asked for CCTV footage, what for, the link's hashed secret and expiry, and the email's outcome (migration `20261125120000_incident_footage_requests`).
 - `incidents_footage` (`IncidentFootage`) — each video sent through a link: its name, size, who sent it and where it is in the Blob store; hidden when removed.
 - `incidents_settings` (`IncidentsSettings`) — one row per organisation: who gets wellbeing check requests and who is copied on them (migrations `20261203090000_incident_wellbeing_checks`, `20261204090000_incident_wellbeing_copy`, `20261204100000_incident_wellbeing_site_copy`), for every site and per site.
-- `incidents_wellbeing_checks` (`IncidentWellbeingCheck`) — who HR was asked to check on and why, the addresses it went to, the link's hashed secret and expiry, its state and the email's outcome.
+- `incidents_wellbeing_checks` (`IncidentWellbeingCheck`) — the kind (wellbeing check, or a staff member in the incident, with follow-ups and whether HR sees what happened; migration `20261206120000_incident_hr_request_kind`), who it is about and why, the addresses it went to, the link's hashed secret and expiry, its state and the email's outcome.
 - `incidents_wellbeing_updates` (`IncidentWellbeingUpdate`) — what HR recorded through the link: who, the day, what they did and what happens next. Never changed or deleted.
 
 ## Events

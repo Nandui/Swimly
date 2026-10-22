@@ -5,12 +5,12 @@ import { emailSender } from "@/lib/email/sender";
 import { formatDate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { incidentNumber } from "@/modules/incidents/shared/types";
-import { recipientList } from "@/modules/incidents/features/wellbeing/rules";
+import { hrRequestKind, recipientList } from "@/modules/incidents/features/wellbeing/rules";
 import { wellbeingCopies } from "@/modules/incidents/features/wellbeing/server/settings";
 
-/** The wellbeing check emails (docs/incidents.md, "Wellbeing checks"). The
- *  request goes to each address in Incidents > Settings and says who asked, the
- *  site and the report number, and the link; who the check is for and why are
+/** The emails for asking HR (docs/incidents.md, "Asking HR"). The request goes
+ *  to each address in Incidents > Settings and says what kind it is, who asked,
+ *  the site and the report number, and the link; who it is about and why are
  *  only behind the link. Replies go to whoever asked, who is copied in, as with
  *  CCTV footage, along with the Copy to addresses in Settings for every site
  *  and for the report's site (owner requests, 22 October 2026). When HR records something, whoever asked is told to look at
@@ -28,10 +28,14 @@ export async function sendWellbeingRequest(checkId: string, token: string, origi
     const config = emailSender("Turnfin Incidents");
     if (!config && !devLog()) throw new Error("Email is not set up.");
     const [site, asker, copies] = await Promise.all([siteName(c.report.siteId), staffAccess(c.requestedById), wellbeingCopies(c.report.orgId, c.report.siteId)]);
-    const subject = `Wellbeing check request from ${site}`;
+    const reference = incidentNumber(c.report.number);
+    const inform = hrRequestKind(c.kind) === "inform";
+    const subject = inform ? `Staff member in an incident at ${site}` : `Wellbeing check request from ${site}`;
     const text = "Hello,\r\n\r\n"
-      + `${c.requestedByName} at ${site} is asking HR to check on someone's wellbeing after incident ${incidentNumber(c.report.number)}.\r\n\r\n`
-      + `Open the link to see who it is for and why, and to record what you did, when, and what happens next. No sign-in is needed, and the link works until ${formatDate(c.expiresAt)}:\r\n${origin}/wellbeing/${token}\r\n\r\n`
+      + (inform
+        ? `${c.requestedByName} at ${site} is letting HR know that a staff member was in incident ${reference}, in case HR needs to follow up.\r\n\r\n`
+        : `${c.requestedByName} at ${site} is asking HR to check on someone's wellbeing after incident ${reference}.\r\n\r\n`)
+      + `Open the link to see who it is about and why, and to record what you did, when, and what happens next. No sign-in is needed, and the link works until ${formatDate(c.expiresAt)}:\r\n${origin}/wellbeing/${token}\r\n\r\n`
       + "The link opens this one request and nothing else. It is private, so please don't forward it.\r\n\r\n"
       + `Reply to this email to reach ${c.requestedByName}.`;
     for (const to of recipientList(c.sentTo)) {
@@ -61,8 +65,9 @@ export async function sendWellbeingUpdated(checkId: string, finished: boolean, o
     const asker = await staffAccess(c.requestedById);
     if (!asker?.isActive || !asker.email) return;
     const reference = incidentNumber(c.report.number);
-    const subject = `Wellbeing check ${finished ? "finished" : "updated"} for ${reference}`;
-    const text = `HR has ${finished ? "finished" : "recorded an update on"} the wellbeing check you asked for on incident ${reference}.\r\n\r\n`
+    const what = hrRequestKind(c.kind) === "inform" ? "request" : "wellbeing check";
+    const subject = `HR ${finished ? "finished" : "updated"} the ${what} for ${reference}`;
+    const text = `HR has ${finished ? "finished" : "recorded an update on"} the ${what} you sent on incident ${reference}.\r\n\r\n`
       + `Read it on the report:\r\n${origin}/incidents/${c.report.id}#inc-wellbeing-h\r\n\r\nStaff sign-in is required.`;
     if (devLog()) console.info(`[incidents email] to ${asker.email}: ${subject}\n${text}`);
     else if (config) await sendGoogleEmail(asker.email, subject, { text }, config);

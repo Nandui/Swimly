@@ -143,19 +143,37 @@ footage, by an email with a direct link to upload it, so the footage is attached
   Without it the panel says footage storage isn't set up and offers nothing to send. The
   sandbox prints the email instead of sending it (`INCIDENTS_EMAIL_DEV_LOG`).
 
-## Wellbeing checks (owner request, 22 October 2026)
+## Asking HR (wellbeing checks, owner request, 22 October 2026)
 
 Fernando asked for a way to ask HR for a wellbeing check from an incident, working like the
 CCTV footage requests, where the HR person records what they did, when, and what is expected
-now, and for him to decide who gets these emails.
+now, and for him to decide who gets these emails. Later the same day he asked for it to cover
+more than wellbeing: "it could be a simple wellbeing check but also informing HR of an incident
+that has staff in it". The section on the report is **Ask HR**, and each request has a kind
+(`incidents_wellbeing_checks.kind`, the tables keep their first name):
+
+- **Check on someone's wellbeing** (`wellbeing`): as below.
+- **Let HR know a staff member was in this incident** (`inform`): for staff who were hurt or
+  involved, when HR may need to follow up. Whoever asks says what HR should know, may tick what
+  HR may need to follow up (`followUps`: time off work, return to work, support, their part in
+  what happened; HR decides), and may tick **Show HR what happened** (`shareReport`, ticked to
+  start). Then the link also shows the report's kind, category, day, time, area, what happened
+  and what was done straight away, as written, and that person's own injury entry from the
+  report (matched by their staff record, or by the name typed), never anyone else's. Each
+  opening of the link with it shown is in the report's read log ("HR, through the link from
+  …"), like any other read of injuries. The email says it is about a staff member in an
+  incident; who and why stay behind the link. The history says "HR told about a staff member
+  involved".
+
+Everything else, below, is the same for both kinds.
 
 - **Who gets them.** The addresses in **Incidents › Settings** (`/incidents/settings`, also
   listed in Admin under Modules), kept in `incidents_settings.wellbeingTo`: up to 10, such as
   HR's shared inbox. A list he edits, not a role. Only Incidents: Manage opens Settings; each
   change is in the audit log. With no addresses, the report says so and nothing can be sent.
 - **Who asks.** Anyone who triages reports at the site, while the report is open, as with
-  footage. Not on your own report, unless you hold Manage. On the report: **Wellbeing checks ›
-  Ask HR for a wellbeing check**: who (staff named on the report first, then everyone at the
+  footage. Not on your own report, unless you hold Manage. On the report: **Ask HR › Ask HR**:
+  the kind, who (staff named on the report first, then everyone at the
   site, or a typed name) and why, in a sentence or two, without medical details.
 - **The email** (`incidents_wellbeing_checks.emailedAt`, or `emailError` on the request) goes to
   each address and names who asked, the site, the report number and the link. Who the check is
@@ -176,7 +194,7 @@ now, and for him to decide who gets these emails.
 - **What HR records** (`incidents_wellbeing_updates`, never changed or deleted): their name, the
   day they did it (not before the request, not in the future), what they did, and what happens
   now, or that nothing more is needed. Each one is in the report's history and the audit log
-  under the name typed ("Pat Example (HR, wellbeing link)"), without what was written, and
+  under the name typed ("Pat Example (HR, link)"), without what was written, and
   whoever asked gets an email to look at the report.
 - **Who sees what.** What HR writes is health information about a person. Those who triage at
   the site see the request, its state (Waiting for HR, HR following up, Done, Link expired,

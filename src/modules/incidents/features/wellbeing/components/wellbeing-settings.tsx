@@ -11,7 +11,7 @@ import { saveWellbeingSettings } from "@/modules/incidents/features/wellbeing/se
 
 const THEME = "turnfin-docs turnfin-module";
 
-/** Incidents > Settings: who gets wellbeing check requests (owner request, 22
+/** Incidents > Settings: who gets requests to HR (owner request, 22
  *  October 2026). A list of addresses he keeps, not a role. */
 type Site = { id: string; name: string; cc: string[] };
 
@@ -21,15 +21,15 @@ export function WellbeingSettings({ to, cc, sites, changedByName, changedAt }: {
     <section aria-labelledby="inc-set-wb-h" className="pc-panel flex flex-col gap-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
-          <h2 id="inc-set-wb-h">Who gets wellbeing check requests</h2>
+          <h2 id="inc-set-wb-h">Who gets requests to HR</h2>
           <p className="text-sm text-ui-muted-foreground">
-            When someone asks HR to check on a person after an incident, the email goes to each of these addresses. They open the link in it to record what they did.
+            When someone asks HR to check on a person after an incident, or lets HR know a staff member was in one, the email goes to each of these addresses. They open the link in it to record what they did.
           </p>
         </div>
         <FormDialog portalClassName={THEME} width="sm:max-w-lg"
           trigger={<Button variant="outline" className="min-h-11"><Mail aria-hidden="true" />{to.length ? "Change" : "Add addresses"}</Button>}
-          title="Who gets wellbeing check requests"
-          description={`Up to ${MAX_WELLBEING_TO} email addresses, such as HR's shared inbox. Leave it empty and nobody can ask for a check.`}
+          title="Who gets requests to HR"
+          description={`Up to ${MAX_WELLBEING_TO} email addresses, such as HR's shared inbox. Leave it empty and nobody can send anything to HR.`}
           submitLabel="Save" successMessage="Saved" onSuccess={() => router.refresh()}
           submit={(form) => saveWellbeingSettings(String(form.get("to") ?? ""), String(form.get("cc") ?? ""),
             Object.fromEntries(sites.map((s) => [s.id, String(form.get(`cc-${s.id}`) ?? "")])))}>
@@ -55,7 +55,7 @@ export function WellbeingSettings({ to, cc, sites, changedByName, changedAt }: {
             </li>
           ))}
         </ul>
-      ) : <p className="text-sm text-ui-muted-foreground">Nobody yet, so wellbeing checks can&rsquo;t be asked for. Add HR&rsquo;s email address.</p>}
+      ) : <p className="text-sm text-ui-muted-foreground">Nobody yet, so nothing can be sent to HR. Add HR&rsquo;s email address.</p>}
       <div className="flex flex-col gap-2">
         <h3 className="text-sm font-semibold">Copied on each request</h3>
         <ul className="pc-rows">

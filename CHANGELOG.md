@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.67.0 · 22 October 2026 · Ask HR about a staff member in an incident
+
+- On an incident report, **Wellbeing checks** is now **Ask HR**. When you send something to HR you choose what you need: **Check on someone's wellbeing**, as before, or **Let HR know a staff member was in this incident**.
+- Letting HR know is for staff who were hurt or involved. Say what HR should know, and tick what HR may need to follow up: time off work, return to work, support such as the employee assistance line, or their part in what happened.
+- You can also let HR see what happened, as written on the report, and that person's injury if they were hurt. Untick it to send only what you write.
+- Everything else works as before: the same HR addresses and Copy to lists in **Incidents settings**, HR records what they did through the link, and only the managers who sign off incidents and whoever asked can read what HR wrote.
+
 ## 1.66.0 · 22 October 2026 · Mark a development account's enrolments and moves as system
 
 - A superadmin can now mark an account whose enrolments, moves between classes or centres and unenrolments are set-up work run for the developers, not real desk work. Open the person on **Staff** and choose **Mark place changes as system**.

@@ -354,6 +354,15 @@ model IncidentsSettings {
 model IncidentWellbeingCheck {
   id              String    @id @default(cuid())
   reportId        String
+  /// What it asks of HR (owner request, 22 October 2026): wellbeing (check on
+  /// someone) | inform (a staff member was in the incident; HR may follow up).
+  kind            String    @default("wellbeing")
+  /// When letting HR know, what HR may need to follow up: time_off |
+  /// return_to_work | support | conduct (HR_FOLLOW_UPS in the feature's rules.ts).
+  followUps       String[]  @default([])
+  /// When letting HR know, whether the link also shows what happened, as written
+  /// on the report, and the person's injury. Never for a wellbeing check.
+  shareReport     Boolean   @default(false)
   /// Who the check is for, and the staff member when it is one of the team.
   personName      String
   personUserId    String?
