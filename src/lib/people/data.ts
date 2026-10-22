@@ -44,7 +44,7 @@ export async function getPersonDetail(userId: string) {
   const person = await prisma.user.findFirst({
     where: { id: userId, orgId: session.user.orgId ?? undefined },
     select: {
-      id: true, name: true, email: true, isActive: true, isSuperadmin: true, createdAt: true, passwordHash: true, siteIds: true,
+      id: true, name: true, email: true, isActive: true, isSuperadmin: true, actsAsSystem: true, createdAt: true, passwordHash: true, siteIds: true,
       staffRole: { select: { id: true, name: true, levels: true, extras: true, permissions: true, screens: true, homeName: true } },
     },
   });

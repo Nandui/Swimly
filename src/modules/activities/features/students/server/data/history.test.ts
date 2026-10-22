@@ -15,7 +15,7 @@ test("swimmer history unions, filters and pages records without losing audit bou
     CREATE TABLE "Enrolment" (id text PRIMARY KEY, "studentId" text, "courseId" text, "levelId" text, "programmeId" text, "startedOn" date);
     CREATE TABLE "AssessmentSession" (id text PRIMARY KEY, date date, "programmeId" text, "clubId" text);
     CREATE TABLE "AssessmentBooking" (id text PRIMARY KEY, "studentId" text, "sessionId" text, "outcomeLevelId" text, "assessedOn" date, "assessedByName" text, status text);
-    CREATE TABLE "AuditLog" (id text PRIMARY KEY, entity text, "entityId" text, action text, summary text, "actorName" text, "programmeId" text, "clubId" text, "createdAt" timestamp, details jsonb);
+    CREATE TABLE "AuditLog" (id text PRIMARY KEY, entity text, "entityId" text, action text, summary text, "actorName" text, "programmeId" text, "clubId" text, "createdAt" timestamp, details jsonb, system boolean NOT NULL DEFAULT false);
     CREATE TABLE "AttendanceRecord" (id text PRIMARY KEY, "studentId" text, "courseId" text, "markedAt" timestamp, "markedByName" text, date date, status text, note text);
     CREATE TABLE "Competency" (id text PRIMARY KEY, name text, "levelId" text);
     CREATE TABLE "CompetencyResult" (id text PRIMARY KEY, "studentId" text, "competencyId" text, "assessedInCourseId" text, "updatedAt" timestamp, "assessedOn" date, "assessedByName" text, status text);
@@ -53,6 +53,12 @@ test("swimmer history unions, filters and pages records without losing audit bou
     assert.ok(page.events.some(e=>e.kind==='completion')); assert.ok(page.events.some(e=>e.kind==='assessment'));
     assert.ok(page.events.some(e=>e.site==='Site B'));
     assert.ok(page.events.every(e=>!e.title.includes('SECRET')));
+  });
+  await t.test('a system entry (scripted development work) names the system, not the account',async()=>{
+    await db.exec(`INSERT INTO "AuditLog" VALUES ('scripted','Student','swimmer','update','Scripted change','Fernando Example','programme','a','2026-09-11',null,true)`);
+    const page=await getSwimmerHistory('swimmer');
+    assert.equal(page.events.find(e=>e.title==='Scripted change')?.actor,'System - scripted action done via development');
+    await db.exec(`DELETE FROM "AuditLog" WHERE id='scripted'`);
   });
   await t.test('structured corrections replace snapshots, retain before/after and filter each competency',async()=>{
     const details={version:1,kind:'competencies',levelId:'level',courseId:'class-b',date:'2026-09-01',changes:[{competencyId:'skill',name:'Front float',before:'WORKING_ON',after:'ACHIEVED'},{competencyId:'second',name:'Back float',before:null,after:'WORKING_ON'}]};

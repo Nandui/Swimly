@@ -51,7 +51,9 @@ export function levelCapacityQuery(clubIds: string[]) {
   `;
 }
 
-/** Audit timestamps are UTC timestamps without timezone. Bucket and bound
+/** Enrolments and unenrolments by day, leaving out those recorded as system
+ *  (scripted development work).
+ *  Audit timestamps are UTC timestamps without timezone. Bucket and bound
  *  them in the school's calendar, including DST and the unfinished today. */
 export function activityQuery(clubIds: string[], weekStart: string, now: Date) {
   return Prisma.sql`
@@ -68,7 +70,7 @@ function activitySource(clubIds: string[], weekStart: string, now: Date) {
     FROM "AuditLog" a
     LEFT JOIN "Enrolment" e ON e.id = a."entityId"
     LEFT JOIN "Course" c ON c.id = e."courseId"
-    WHERE a.entity = 'Enrolment' AND a.action IN ('enrol', 'withdraw')
+    WHERE a.entity = 'Enrolment' AND a.action IN ('enrol', 'withdraw') AND NOT a.system
       AND COALESCE(a."clubId", c."clubId") IN (${Prisma.join(clubIds)})
       AND a."createdAt" >= ((${weekStart}::date::timestamp AT TIME ZONE ${SCHOOL_TIMEZONE}) AT TIME ZONE 'UTC')
       AND a."createdAt" <= ${now.toISOString()}::timestamp

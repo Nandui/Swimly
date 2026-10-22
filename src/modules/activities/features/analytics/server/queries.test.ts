@@ -12,7 +12,7 @@ test("analytics SQL respects current places, site scope, event history and calen
       CREATE TABLE "Student" (id text PRIMARY KEY, status text);
       CREATE TABLE "Course" (id text PRIMARY KEY, "clubId" text, "archivedAt" timestamp, "levelId" text, capacity integer);
       CREATE TABLE "Enrolment" (id text PRIMARY KEY, "studentId" text, "courseId" text, "levelId" text, status text, "startedOn" date, "endedOn" date, "scheduledEndOn" date);
-      CREATE TABLE "AuditLog" (id text PRIMARY KEY, entity text, "entityId" text, action text, "clubId" text, "createdAt" timestamp);
+      CREATE TABLE "AuditLog" (id text PRIMARY KEY, entity text, "entityId" text, action text, "clubId" text, "createdAt" timestamp, system boolean NOT NULL DEFAULT false);
       CREATE TABLE "ClassCancellation" (id text PRIMARY KEY, "clubId" text, date date, "billingNotifiedAt" timestamp);
       CREATE TABLE "CancelledClassSwimmer" (id text PRIMARY KEY, "cancellationId" text);
       INSERT INTO "Student" VALUES ('a','ACTIVE'),('b','ACTIVE'),('inactive','INACTIVE');
@@ -45,6 +45,9 @@ test("analytics SQL respects current places, site scope, event history and calen
         ('promoted','Enrolment','promoted','enrol','site-a','2026-09-09 12:00:00'),
         ('promoted-end','Enrolment','promoted','withdraw','site-a','2026-09-12 12:00:00'),
         ('other-site','Enrolment','other','enrol','site-b','2026-09-12 12:00:00');
+      INSERT INTO "AuditLog" (id, entity, "entityId", action, "clubId", "createdAt", system) VALUES
+        ('scripted','Enrolment','active','enrol','site-a','2026-09-10 12:00:00',true),
+        ('scripted-end','Enrolment','ended','withdraw','site-a','2026-09-10 12:00:00',true);
       INSERT INTO "ClassCancellation" VALUES ('one','site-a','2026-09-01',null),('two','site-a','2026-09-12','2026-09-12'),('other','site-b','2026-09-12',null),('old','site-a','2026-08-31',null),('next','site-a','2026-10-01',null);
       INSERT INTO "CancelledClassSwimmer" VALUES ('1','one'),('2','one'),('3','two'),('4','other');
     `);

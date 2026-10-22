@@ -123,6 +123,11 @@ model User {
   /// Wrong PINs since the last success; five lock the PIN until a password sign-in.
   pinFailures   Int       @default(0)
   pinLockedAt   DateTime?
+  /// Their swim school place changes (enrolments, moves, unenrolments) are
+  /// scripted development work: the log names them "System - scripted action
+  /// done via development" and analytics leave them out (owner request,
+  /// 21 October 2026). Set by a superadmin on the person's Staff page.
+  actsAsSystem  Boolean   @default(false)
 
   // --- Own details, kept by the person in Turnfin Me and changed only after a
   // reviewer applies their request. Seen on Work by staff.manage only. ---
@@ -390,6 +395,9 @@ model AuditLog {
   summary     String
   /// Optional structured evidence for swimmer history. Older summaries remain readable.
   details     Json?
+  /// A place change by an account marked as system (`User.actsAsSystem`):
+  /// shown as the system, left out of analytics. The actor stays recorded.
+  system      Boolean  @default(false)
   createdAt   DateTime @default(now())
 
   actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)

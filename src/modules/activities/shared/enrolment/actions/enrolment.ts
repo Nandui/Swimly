@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
 import { fail, ok, type ActionResult, type ConfirmationReply, type PlannedChange } from "@/lib/action-result";
-import { logAudit } from "@/lib/audit";
+import { isSystemActor, logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
 import { capacityLabel, courseLabelWithSite as courseLabel, courseName } from "@/modules/activities/shared/courses/constants";
 import { withCourseSeat } from "@/modules/activities/shared/enrolment/seat";
@@ -16,7 +16,7 @@ import { prisma } from "@/lib/prisma";
 import { assessedElsewhere, COURSE_SELECT, OTHER_SITE, placementFor } from "@/modules/activities/shared/enrolment/rules";
 import { agreementRecord, LEGEND_AGREEMENT_META, type LegendAgreementChoice } from "@/modules/activities/shared/enrolment/legend-agreement";
 import { isLeaveReason, LEAVE_REASONS } from "@/modules/activities/shared/enrolment/leave-reasons";
-import { changePlace, levelNote } from "@/modules/activities/shared/enrolment/change";
+import { changePlace, levelNote, systemNote } from "@/modules/activities/shared/enrolment/change";
 
 /** Centre names for the confirmation's picture of the change. */
 async function centreNamer(ids: string[], tx: Prisma.TransactionClient) {
@@ -122,6 +122,7 @@ export async function enrolStudent(input: EnrolInput, confirmation?: Confirmatio
           ...(full ? ["The class is full, so they join its waitlist and do not hold a place yet."] : []),
           ...(earned ? [] : [`Placed above the level they have earned: ${placementReason}`]),
           ...(!full && legendAgreement ? [`Legend billing agreement: ${LEGEND_AGREEMENT_META[legendAgreement].label}.`] : []),
+          ...systemNote(await isSystemActor(session.user.id)),
         ],
       };
     }
@@ -264,7 +265,7 @@ export async function promoteFromWaitlist(id: string, legendAgreement?: LegendAg
           change: {
             subject: fullName(enrolment.student), kind: "enrol", from: [],
             to: changePlace(shared, centre(shared.clubId)),
-            notes: ["They leave the waitlist and take a place in the class.", `Legend billing agreement: ${LEGEND_AGREEMENT_META[legendAgreement].label}.`],
+            notes: ["They leave the waitlist and take a place in the class.", `Legend billing agreement: ${LEGEND_AGREEMENT_META[legendAgreement].label}.`, ...systemNote(await isSystemActor(session.user.id))],
           },
         },
       };
@@ -341,6 +342,7 @@ export async function transferEnrolment(id: string, toCourseId: string, placemen
               ...(elsewhere ? [`Assessed at ${elsewhere.assessedAt}. Parents are told lessons are at the centre where their child was assessed, so check with the family.`] : []),
               ...(earned ? [] : [`Placed above the level they have earned: ${reason}`]),
               "Their attendance and marks so far stay on their record.",
+              ...systemNote(await isSystemActor(session.user.id)),
             ],
           },
         },

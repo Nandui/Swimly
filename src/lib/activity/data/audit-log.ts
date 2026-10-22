@@ -1,4 +1,5 @@
 import type { Prisma } from "@/generated/prisma/client";
+import { actorLabel } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
 import { prisma } from "@/lib/prisma";
@@ -9,6 +10,7 @@ import { prisma } from "@/lib/prisma";
 const SELECT = {
   id: true,
   actorName: true,
+  system: true,
   action: true,
   entity: true,
   module: true,
@@ -16,7 +18,7 @@ const SELECT = {
   createdAt: true,
 } as const satisfies Prisma.AuditLogSelect;
 
-export type ActivityEntry = Prisma.AuditLogGetPayload<{ select: typeof SELECT }>;
+export type ActivityEntry = Omit<Prisma.AuditLogGetPayload<{ select: typeof SELECT }>, "system">;
 
 /** The club's own trail, plus what the clubs share — accounts and roles are
  *  everyone's business, and their entries carry no club. */
@@ -48,5 +50,6 @@ export async function getActivity(page = 1, moduleName?: string) {
     prisma.auditLog.count({ where }),
   ]);
 
-  return { entries, total, page: current };
+  // A system place change reads as the system, not the account that ran it.
+  return { entries: entries.map(({ system, ...entry }): ActivityEntry => ({ ...entry, actorName: actorLabel({ actorName: entry.actorName, system }) })), total, page: current };
 }

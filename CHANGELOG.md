@@ -11,6 +11,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - If the email doesn't match an active account, the sign-in page says so and you can sign in with your password as before.
 - HR records still ask for your password before they open, even after signing in with Google.
 
+## 1.66.0 · 22 October 2026 · Mark a development account's enrolments and moves as system
+
+- A superadmin can now mark an account whose enrolments, moves between classes or centres and unenrolments are set-up work run for the developers, not real desk work. Open the person on **Staff** and choose **Mark place changes as system**.
+- That account's place changes, past and future, then show as **System - scripted action done via development** in **Activity**, in a swimmer's **History** and in the Together records, instead of its name.
+- They are left out of **Swim school analytics**: they no longer count as new swimmers, leavers or moves, or as anyone's work on the **Reception** dashboard. The swimmers themselves still count in classes, places and "% full" while they hold the place.
+- Nothing is deleted, and the log still knows which account did it. **Count their place changes again** stops it for new changes; earlier ones stay marked.
+- While an account is marked, the confirmation before an enrolment or a move says that it will be recorded as system.
+- No account is marked to begin with: Fernando Serina's own account stays a normal account, and the developer login can be marked once it exists.
+
 ## 1.65.0 · 22 October 2026 · Rota: sub-activities have a start and an end
 
 - On the **Plan**, when you place a sub-activity on someone's time (such as **Answer the phone**), you now choose when it **starts** and when it **finishes**. Tap a time or type one, as before. Picking a start fills in half an hour later as the finish, which you can change.

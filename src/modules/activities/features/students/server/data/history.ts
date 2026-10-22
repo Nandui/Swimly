@@ -2,6 +2,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { AuthorizationError, can, canSee, requireSession } from "@/lib/authz";
 import { getSharedCurriculum } from "@/modules/activities/shared/curriculum/data/shared";
 import { isDateOnly } from "@/lib/format";
+import { SYSTEM_ACTOR_LABEL } from "@/lib/system-actor";
 import { prisma } from "@/lib/prisma";
 import type { HistoryEvent, HistoryPage, HistoryQuery } from "@/modules/activities/features/students/server/history";
 import { evidenceSchema, historyQuerySchema } from "@/modules/activities/features/students/server/history-schemas";
@@ -57,7 +58,7 @@ export async function getSwimmerHistory(studentId: string, query: HistoryQuery =
           WHEN a.action IN ('complete-level','revoke-level') THEN 'completion' WHEN a.entity = 'Enrolment' THEN 'enrolment'
           WHEN a.entity = 'AssessmentBooking' THEN 'assessment' ELSE 'profile' END AS kind,
         COALESCE(a.details->>'courseId', a."enrolmentCourseId") AS "courseId", a."programmeId",
-        jsonb_build_object('title', a.summary, 'actor', a."actorName", 'date', COALESCE(a.details->>'date', to_char(a."createdAt", 'YYYY-MM-DD')),
+        jsonb_build_object('title', a.summary, 'actor', CASE WHEN a.system THEN ${SYSTEM_ACTOR_LABEL} ELSE a."actorName" END, 'date', COALESCE(a.details->>'date', to_char(a."createdAt", 'YYYY-MM-DD')),
           'details', a.details, 'levelId', COALESCE(a.details->>'levelId', a."enrolmentLevelId"), 'site', club.name, 'snapshot', false) AS payload
       FROM own_audits a LEFT JOIN "Club" club ON club.id = a."clubId"
       UNION ALL

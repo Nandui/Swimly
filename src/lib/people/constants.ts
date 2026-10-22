@@ -1,4 +1,4 @@
-import { Ban, CalendarClock, CircleCheck, CirclePause, ShieldCheck, ShieldHalf, TriangleAlert } from "lucide-react";
+import { Ban, Bot, CalendarClock, CircleCheck, CirclePause, ShieldCheck, ShieldHalf, TriangleAlert } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 
 /** Qualification status tone and icon come from here, never from a call site. */
@@ -14,6 +14,7 @@ export const PERSON_STATUS_META = {
   superadmin: { label: "Superadmin", color: "purple", icon: ShieldCheck },
   deactivated: { label: "Deactivated", color: "gray", icon: CirclePause },
   restricted: { label: "Restricted", color: "purple", icon: ShieldHalf },
+  system: { label: "Place changes count as system", color: "gray", icon: Bot },
 } as const satisfies Record<string, StatusMeta>;
 
 /** How someone is employed (owner decision, 8 October 2026), on their Staff page. */

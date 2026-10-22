@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { CONTRACT_TYPES } from "@/lib/people/constants";
 import { fail, ok, onUniqueViolation, type ActionResult } from "@/lib/action-result";
-import { logAudit } from "@/lib/audit";
+import { logAudit, PLACE_CHANGE_ACTIONS } from "@/lib/audit";
 import { AuthorizationError, requirePermission, requireSession, can } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 import { guardSuperadmins, withKeyholderLock } from "@/lib/staff/keyholders";
@@ -176,6 +176,44 @@ export async function setSuperadmin(userId: string, value: boolean): Promise<Act
     if (refusal) return fail(refusal);
     await tx.user.update({ where: { id: userId }, data: { isSuperadmin: value } });
     await logAudit({ actorId: session.user.id, actorName: actorName(session), action: value ? "grant-superadmin" : "revoke-superadmin", entity: "User", entityId: userId, summary: `${value ? "Made" : "Removed"} ${person.name} ${value ? "a superadmin" : "as a superadmin"}` }, tx);
+    return ok();
+  });
+  if (result.ok) revalidate(userId);
+  return result;
+}
+
+// ---------------------------------------------------------------------------
+// System (development) account: its place changes are not a person's work
+// ---------------------------------------------------------------------------
+
+/** Mark (or stop marking) an account's swim school place changes as system:
+ *  scripted development work, shown as the system and left out of analytics
+ *  (owner request, 21 October 2026). Marking also marks their past
+ *  enrolments, moves and unenrolments; stopping only affects new ones, so
+ *  work already recorded as system stays that way. Superadmins only, because
+ *  it takes work out of the reports. */
+export async function setActsAsSystem(userId: string, value: boolean): Promise<ActionResult> {
+  const session = await requireSession();
+  if (!session.user.isSuperadmin) return fail("Only a superadmin can change whose work counts as system.");
+  if (typeof value !== "boolean") return fail("Choose yes or no.");
+  const result = await prisma.$transaction(async (tx) => {
+    const person = await tx.user.findUnique({ where: { id: userId }, select: { name: true, actsAsSystem: true, orgId: true } });
+    if (!person) return fail("That account no longer exists.");
+    if (person.orgId !== session.user.orgId) return fail("That account belongs to another organisation.");
+    if (person.actsAsSystem === value) return ok();
+    await tx.user.update({ where: { id: userId }, data: { actsAsSystem: value } });
+    const marked = value
+      ? (await tx.auditLog.updateMany({
+          where: { actorId: userId, entity: "Enrolment", action: { in: [...PLACE_CHANGE_ACTIONS] }, system: false },
+          data: { system: true },
+        })).count
+      : 0;
+    await logAudit({
+      actorId: session.user.id, actorName: actorName(session), action: value ? "mark-system" : "unmark-system", entity: "User", entityId: userId,
+      summary: value
+        ? `Marked ${person.name}'s enrolments, moves and unenrolments as system (scripted development work); ${marked} earlier ${marked === 1 ? "one" : "ones"} marked too`
+        : `Stopped marking ${person.name}'s enrolments, moves and unenrolments as system; earlier ones stay marked`,
+    }, tx);
     return ok();
   });
   if (result.ok) revalidate(userId);

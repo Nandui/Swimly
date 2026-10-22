@@ -238,7 +238,8 @@ function buildClassRows(ds: Dataset) {
     const held = mine.filter(l => l.finished && !l.cancelled);
     const enrolled = counts.get(course.id) ?? 0;
     const teachers = countBy(held.filter(l => l.teacher).map(l => l.teacher!.name));
-    const ended = own.filter(p => p.endOn && within(p.endOn, period.start, period.end));
+    // Places started or ended by a system change (scripted development work) are not joins or leaves.
+    const ended = own.filter(p => p.endOn && !p.systemEnd && within(p.endOn, period.start, period.end));
     return {
       id: course.id, name: courseName(course), levelName: index.level(course.levelId)?.name ?? course.levelName,
       programmeName: index.programmeOf(course.levelId)?.name ?? "", levelId: index.resolveLevel(course.levelId),
@@ -248,7 +249,7 @@ function buildClassRows(ds: Dataset) {
       fill: course.capacity ? enrolled / course.capacity * 100 : null,
       attendance: attendanceRate(held), lessons: held.length, cancelled: mine.filter(l => l.cancelled).length,
       averageIn: held.length ? held.reduce((s, l) => s + l.present + l.late, 0) / held.length : null,
-      joined: own.filter(p => within(p.startedOn, period.start, period.end)).length,
+      joined: own.filter(p => !p.systemStart && within(p.startedOn, period.start, period.end)).length,
       left: ended.filter(p => p.status === "WITHDRAWN").length,
       movedOut: ended.filter(p => p.status === "TRANSFERRED" || p.status === "COMPLETED").length,
       teachers,
