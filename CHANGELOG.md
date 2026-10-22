@@ -4,7 +4,7 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.65.0 · 22 October 2026 · Incidents: ask HR for a wellbeing check
+## 1.64.0 · 22 October 2026 · Incidents: ask HR for a wellbeing check
 
 - On an incident report, **Wellbeing checks** has a new button, **Ask HR for a wellbeing check**. Choose who HR should check on (staff named on the report come first) and say why in a sentence or two.
 - HR gets an email with a private link. No sign-in is needed. The link shows who to check on and why, and HR records what they did, the day they did it, and what happens now. They can come back to add the next step, or tick **Nothing more is needed** to finish it.
