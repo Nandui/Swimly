@@ -116,7 +116,7 @@ test("a near miss: reported at your own site, triaged and closed by someone else
   assert.ok(log.every((l) => l.module === "Incidents" && l.clubId === bishopstown));
 });
 
-test("a serious accident alerts only the superadmin and Manage at the site, and only a manager closes it", async () => {
+test("a serious accident alerts only Manage at the site, and only a manager closes it", async () => {
   reporter();
   const child = { type: "swimmer" as const, ageGroup: "child" as const, name: "Sample Child", contact: "", injured: true, bodyPart: "Head", injury: "Bump", firstAid: "Cold compress", firstAidBy: "mia", ambulance: false, hospital: true };
   const sent = await report.submitReport({ ...nearMiss(), kind: "accident", category: "struck", people: [child] });
@@ -125,7 +125,7 @@ test("a serious accident alerts only the superadmin and Manage at the site, and 
   assert.equal(row.serious, true);
   // Gina has Manage everywhere; Carl only at Churchfield; Dan only Investigate; Ada is an administrator; Sam the superadmin.
   // No email is set up in tests, so each job records why.
-  assert.deepEqual(row.notifications.map((n) => [n.recipientId, n.status, n.error]).sort(), [["gina", "FAILED", "Email is not set up."], ["sam", "FAILED", "Email is not set up."]]);
+  assert.deepEqual(row.notifications.map((n) => [n.recipientId, n.status, n.error]).sort(), [["gina", "FAILED", "Email is not set up."]]);
 
   as("dan", [], [at(churchfield, ["incidents.reports.review"])]);
   await assert.rejects(data.incidentReport(row.id), NotFound, "not at the sites they triage");

@@ -6,8 +6,8 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 ## 1.63.1 · 22 October 2026 · Incidents: who gets the serious report email
 
-- When a serious incident is reported, the email now goes only to the operations manager (anyone whose role has **Manage** in Incidents for that centre) and to the superadmin account (Fernando's). Nobody else gets it.
-- Centre managers and other administrators no longer get this email. They still see serious reports in **Incidents** and can triage them as before.
+- When a serious incident is reported, the email now goes only to the operations manager (anyone whose role has **Manage** in Incidents for that centre). Nobody else gets it.
+- Centre managers, other administrators and the developer account no longer get this email. They still see serious reports in **Incidents** and can triage them as before.
 
 ## 1.63.0 · 21 October 2026 · Admin: search and filters on Staff
 

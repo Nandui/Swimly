@@ -24,10 +24,10 @@ defaults on 11 October 2026 ([ADR 0008](architecture/decisions/0008-add-incident
    who triages it, even after closing.
 2. **Serious alert.** A report is serious when anyone involved went by ambulance or to
    hospital or a doctor, or its category always is (rescue from the water, chemical, lost
-   child). The email goes at once to the superadmin and to everyone whose own role has
-   Incidents **Manage** at the site (no sites ticked means every site): the operations
-   manager. Nobody else gets it: not Investigate, and not administrators through
-   Admin: Manage (owner decision, 22 October 2026). It names nobody and carries no injury details. Each email
+   child). The email goes at once to everyone whose own role has Incidents **Manage** at
+   the site (no sites ticked means every site): the operations manager. Nobody else
+   gets it: not Investigate, not administrators through Admin: Manage, and not the
+   superadmin, a developer account (owner decision, 22 October 2026). It names nobody and carries no injury details. Each email
    is a row in `incidents_notifications`; a failure shows on the report as a warning.
 3. **Triage** (Investigate, never your own). Two severities on one 1 to 5 scale: what happened
    and the worst that realistically could have; the worse of the two is the level. Four HSA

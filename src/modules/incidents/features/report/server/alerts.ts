@@ -1,22 +1,23 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
-import { activeStaffWhoseRoleHolds, activeSuperadmins, siteName, staffAccess, staffSiteIds } from "@/lib/directory";
+import { activeStaffWhoseRoleHolds, siteName, staffAccess, staffSiteIds } from "@/lib/directory";
 import { sendGoogleTextEmail } from "@/lib/email/google";
 import { emailSender } from "@/lib/email/sender";
 import { prisma } from "@/lib/prisma";
 import { incidentCategories, incidentKinds, incidentNumber, type IncidentCategory, type IncidentKind } from "@/modules/incidents/shared/types";
 
-/** Serious-report alerts (docs/incidents.md). Who gets one: the superadmin, and
- *  everyone whose own role has Incidents Manage (the operations manager) at the
- *  report's site (no sites ticked means every site). Nobody else: not Investigate,
- *  and not administrators through Admin: Manage (owner decision, 22 October 2026).
+/** Serious-report alerts (docs/incidents.md). Who gets one: everyone whose own
+ *  role has Incidents Manage (the operations manager) at the report's site (no
+ *  sites ticked means every site). Nobody else: not Investigate, not
+ *  administrators through Admin: Manage, and not the superadmin, which is a
+ *  developer account (owner decision, 22 October 2026).
  *  The jobs are written in the report's transaction; sending happens straight
  *  after it commits, and each job keeps its outcome, so a failure shows on the
  *  report instead of disappearing. The email names no one and carries no injury
  *  details: those stay in Turnfin. */
 
 export async function queueAlerts(tx: Prisma.TransactionClient, report: { id: string; siteId: string }) {
-  const recipients = new Set((await activeSuperadmins(tx)).map((person) => person.id));
+  const recipients = new Set<string>();
   for (const person of await activeStaffWhoseRoleHolds(["incidents.reports.signoff"], tx)) {
     const sites = await staffSiteIds(person.id, tx);
     if (sites.length === 0 || sites.includes(report.siteId)) recipients.add(person.id);
