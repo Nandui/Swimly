@@ -72,6 +72,22 @@ export async function activeStaffHolding(permissions: readonly string[], db?: Db
   });
 }
 
+/** Active staff whose own role names one of these permissions: administrator
+ *  access does not count. For messages meant only for the people a module's
+ *  level was given to. */
+export async function activeStaffWhoseRoleHolds(permissions: readonly string[], db?: Db): Promise<StaffRef[]> {
+  return (await client(db)).user.findMany({
+    where: { isActive: true, staffRole: { permissions: { hasSome: [...permissions] } } },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
+  });
+}
+
+/** Active superadmins (the `isSuperadmin` flag, never a permission). */
+export async function activeSuperadmins(db?: Db): Promise<StaffRef[]> {
+  return (await client(db)).user.findMany({ where: { isActive: true, isSuperadmin: true }, orderBy: { name: "asc" }, select: { id: true, name: true } });
+}
+
 /** A site's areas (Admin, Areas), in order: what a class's or an assessment's "where" picks from. */
 export async function areaNamesAt(siteId: string, db?: Pick<Prisma.TransactionClient, "siteArea">): Promise<string[]> {
   const rows = await (db ?? (await import("@/lib/prisma")).prisma).siteArea.findMany({ where: { siteId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { name: true } });
