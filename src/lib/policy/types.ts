@@ -24,7 +24,7 @@ export type Actor = {
   superadmin: boolean;
   grants: readonly Grant[];
   /** How this session proved who it is, and when (step-up for restricted data). */
-  authMethod: "password" | "pin" | "dev";
+  authMethod: "password" | "pin" | "dev" | "google";
   authAt: number | null;
 };
 

@@ -28,7 +28,8 @@ export function holdsAnywhere(actor: Actor, cap: PermissionKey): boolean {
   return actor.superadmin || grantsFor(actor, cap).length > 0;
 }
 
-/** Whether the session proved itself with a password (not a PIN) recently. */
+/** Whether the session proved itself with a password (not a PIN, not Google)
+ *  recently. A Google sign-in still confirms with the password for HR. */
 export function recentlyConfirmed(actor: Actor, now = Date.now()): boolean {
   if (actor.authMethod === "dev") return true;
   return actor.authMethod === "password" && actor.authAt !== null && now - actor.authAt <= STEP_UP_MS;

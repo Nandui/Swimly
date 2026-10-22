@@ -13,6 +13,8 @@ function fixture() {
   const { auth } = serverModule<typeof import("./auth")>("src/auth.ts", {
     "next-auth": Object.assign(() => ({ auth: async () => ({ user: { id: account.id }, expires: "2099-01-01" }), handlers: {}, signIn: async () => {}, signOut: async () => {} }), { CredentialsSignin: class extends Error {} }),
     "next-auth/providers/credentials": (options: unknown) => options,
+    "next-auth/providers/google": (options: unknown) => options,
+    "@/lib/google-sign-in": { googleSignInAvailable: () => false, googleStaffAccount: async () => ({ refused: "google_no_account" }), auditGoogleSignIn: async () => {} },
     "@/lib/prisma": { prisma: { user: { findUnique: async () => account } } },
     "@/lib/auth-cookies": { authCookies: () => undefined },
     "@/lib/dev-sign-in": { devSignInAllowed: () => false },

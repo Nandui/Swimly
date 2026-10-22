@@ -1,6 +1,7 @@
 import { cache } from "react";
 import NextAuth, { type NextAuthConfig, type Session } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 import { CredentialsSignin } from "next-auth";
 import bcrypt from "bcryptjs";
 import { authCookies } from "@/lib/auth-cookies";
@@ -12,6 +13,7 @@ import { getCurrentClub } from "@/lib/clubs/current";
 import { currentSharedDevice, SHARED_SESSION_MAX_MS } from "@/lib/devices/shared-device";
 import { authorizePin } from "@/lib/devices/pin";
 import { mayWorkAnywhere, workDeviceRequired } from "@/lib/devices/work-device";
+import { auditGoogleSignIn, googleSignInAvailable, googleStaffAccount } from "@/lib/google-sign-in";
 
 /** A correct password on a device this account may not work from. Raised only
  *  after the password matched, so it reveals nothing about other accounts. */
@@ -74,6 +76,13 @@ function providers(): NextAuthConfig["providers"] {
     }),
   ];
 
+  // Sign in with Google: only for an existing active account with the same
+  // email (src/lib/google-sign-in.ts). Registered only when the Google client
+  // is configured; it reads AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET itself.
+  if (googleSignInAvailable()) {
+    list.push(Google({ authorization: { params: { prompt: "select_account" } } }));
+  }
+
   if (devSignInAllowed()) {
     list.push(
       Credentials({
@@ -107,12 +116,34 @@ const {
 } = NextAuth({
   session: { strategy: "jwt" },
   cookies: authCookies(),
-  pages: { signIn: "/sign-in" },
+  // Errors land on the sign-in page too, which says what went wrong in plain words.
+  pages: { signIn: "/sign-in", error: "/sign-in" },
   providers: providers(),
   callbacks: {
+    // Google proves an email address, nothing more: it must belong to an
+    // active account. A refusal returns to the sign-in page with its reason.
+    async signIn({ account, profile }) {
+      if (account?.provider !== "google") return true;
+      const found = await googleStaffAccount(profile);
+      return "refused" in found ? `/sign-in?error=${found.refused}` : true;
+    },
     // The token carries who, and how and when they proved it: never what they
     // may do. A PIN switch is marked, so restricted data asks for the password.
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, profile }) {
+      if (account?.provider === "google") {
+        // The token's subject is the staff account, never Google's own id.
+        const found = await googleStaffAccount(profile);
+        if ("refused" in found) return null;
+        token.sub = found.user.id;
+        token.name = found.user.name;
+        token.email = found.user.email;
+        delete token.picture;
+        token.authMethod = "google";
+        token.authAt = Date.now();
+        token.sharedDevice = !!(await currentSharedDevice());
+        await auditGoogleSignIn(found.user);
+        return token;
+      }
       if (user) {
         token.sub = user.id;
         token.authMethod = account?.provider === "pin" ? "pin" : account?.provider === "dev-admin" ? "dev" : "password";
