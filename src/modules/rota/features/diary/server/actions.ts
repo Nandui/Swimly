@@ -458,15 +458,19 @@ const placeSchema = z.object({
   subId: z.string().min(1).nullable(),
   /** The activity's sub-activity (Admin, Activities) when placing a new one. */
   subActivityId: z.string().min(1).nullable(),
-  /** When they do it, like 14:30; empty to take it off. */
+  /** When they start it, like 14:30; empty to take it off. */
   at: z.string(),
+  /** When they finish it, like 15:00 (owner, 22 October 2026: "sub activities need a time to
+   *  start and end"). */
+  until: z.string().default(""),
 });
 export type PlaceSubInput = z.input<typeof placeSchema>;
 
 /** Places a sub-activity done any time on someone's stretch on the activity (owner, 21 October
  *  2026: "the sub activities can be assigned at any time, during that activity, directly on the
- *  plan"), moves one placed before, or takes it off (`at` empty). Each placing is its own record,
- *  so the phone can be placed at 12:30 and again at 15:00. */
+ *  plan"), from a start to an end inside it (owner, 22 October 2026), moves one placed before, or
+ *  takes it off (`at` empty). Each placing is its own record, so the phone can be placed 12:30 to
+ *  13:00 and again 15:00 to 16:00. */
 export async function placeSub(input: PlaceSubInput, changeInput: Change = {}): Promise<ActionResult> {
   const parsed = placeSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
@@ -481,9 +485,12 @@ export async function placeSub(input: PlaceSubInput, changeInput: Change = {}): 
   const placed = d.subId ? row.subs.find((x) => x.id === d.subId && x.when === "during") : null;
   if (d.subId && !placed) return fail("That sub-activity is no longer on their time. Refresh and try again.");
   const minutes = d.at ? parseClock(d.at) : null;
-  if (d.at && (minutes === null || minutes < row.startMinutes || minutes > row.endMinutes)) {
-    return fail(`Choose a time while they are on it, ${clock(row.startMinutes)} to ${clock(row.endMinutes)}.`);
+  const until = d.at ? parseClock(d.until) : null;
+  if (d.at && (minutes === null || minutes < row.startMinutes || minutes >= row.endMinutes)) {
+    return fail(`Choose a start while they are on it, ${clock(row.startMinutes)} to ${clock(row.endMinutes)}.`);
   }
+  if (d.at && (until === null || until > row.endMinutes)) return fail(`Choose when they finish it, by ${clock(row.endMinutes)}.`);
+  if (minutes !== null && until !== null && until <= minutes) return fail("It has to finish after it starts.");
   let name = placed?.name ?? "";
   if (!placed) {
     if (minutes === null) return fail("Choose when they do it.");
@@ -493,11 +500,12 @@ export async function placeSub(input: PlaceSubInput, changeInput: Change = {}): 
   }
   const person = await staffContact(d.userId, at.site.orgId);
   const who = person?.name ?? "Someone";
-  const words = minutes === null ? `${name} taken off` : placed ? `${name} moved to ${clock(minutes)}` : `${name} at ${clock(minutes)}`;
+  const when = minutes === null ? "" : `${clock(minutes)}–${clock(until!)}`;
+  const words = minutes === null ? `${name} taken off` : placed ? `${name} moved to ${when}` : `${name} ${when}`;
   await prisma.$transaction(async (tx) => {
     if (placed && minutes === null) await tx.rotaAssignmentSub.delete({ where: { id: placed.id } });
-    else if (placed) await tx.rotaAssignmentSub.update({ where: { id: placed.id }, data: { atMinutes: minutes, times: [minutes!] } });
-    else await tx.rotaAssignmentSub.create({ data: { assignmentId: row.id, subActivityId: d.subActivityId, name, when: "during", atMinutes: minutes, times: [minutes!],
+    else if (placed) await tx.rotaAssignmentSub.update({ where: { id: placed.id }, data: { atMinutes: minutes, endMinutes: until, times: [minutes!] } });
+    else await tx.rotaAssignmentSub.create({ data: { assignmentId: row.id, subActivityId: d.subActivityId, name, when: "during", atMinutes: minutes, endMinutes: until, times: [minutes!],
       sortOrder: Math.max(-1, ...row.subs.map((x) => x.sortOrder)) + 1 } });
     await logAudit({ actorId: at.actor.id, actorName: at.actor.name, action: "update", entity: "RotaAssignment", entityId: row.id, clubId: d.siteId,
       summary: `${who}'s sub-activity on ${d.date}, ${clock(row.startMinutes)}–${clock(row.endMinutes)}: ${words}` }, tx);

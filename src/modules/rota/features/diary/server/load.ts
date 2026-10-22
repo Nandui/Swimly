@@ -77,7 +77,7 @@ export async function diaryInputs(siteId: string, orgId: string | null, days: re
     areasAt(siteId),
     prisma.rotaNeed.findMany({ where: { siteId, date: range }, select: { id: true, date: true, typeId: true, place: true, startMinutes: true, endMinutes: true, places: true, note: true,
       repeat: { select: { title: true } }, assignments: { select: { id: true, needId: true, place: true, userId: true, startMinutes: true, endMinutes: true,
-        subs: { orderBy: { sortOrder: "asc" }, select: { id: true, name: true, when: true, atMinutes: true, times: true } } } } } }),
+        subs: { orderBy: { sortOrder: "asc" }, select: { id: true, name: true, when: true, atMinutes: true, endMinutes: true, times: true } } } } } }),
     prisma.rotaAreaAssignment.findMany({ where: { siteId, date: range }, select: { id: true, date: true, areaId: true, qualificationTypeId: true, place: true, userId: true, startMinutes: true, endMinutes: true } }),
     prisma.rotaPlanShift.findMany({ where: { siteId, date: range }, select: { id: true, date: true, userId: true, departmentId: true, startMinutes: true, endMinutes: true } }),
     prisma.rotaBreak.findMany({ where: { siteId, date: range }, select: { date: true, userId: true, startMinutes: true, minutes: true, paid: true } }),
@@ -116,7 +116,7 @@ export async function diaryInputs(siteId: string, orgId: string | null, days: re
       types: types.map((t) => ({ id: t.id, name: t.name, departmentId: t.departmentId, requiredTypeId: t.requiredTypeId, requiredName: t.requiredType?.name ?? null, fromClasses: t.fromClasses })),
       needs: dayNeeds.map((n) => ({ id: n.id, typeId: n.typeId, place: n.place, start: n.startMinutes, end: n.endMinutes, places: n.places, note: n.note, bookingTitle: n.repeat?.title ?? null })),
       assignments: dayNeeds.flatMap((n) => n.assignments.map((a) => ({ id: a.id, needId: a.needId, place: a.place, userId: a.userId, start: a.startMinutes, end: a.endMinutes,
-        subs: a.subs.map((x) => ({ id: x.id, name: x.name, when: x.when, at: x.atMinutes, times: x.when === "at" || x.when === "during" ? subTimes(x) : [] })) }))),
+        subs: a.subs.map((x) => ({ id: x.id, name: x.name, when: x.when, at: x.atMinutes, times: x.when === "at" || x.when === "during" ? subTimes(x) : [], until: x.endMinutes })) }))),
       // An area's need is `area:<area>:<qualification>:<date>` (areaNeedsOn); kept only while the area is.
       areaAssignments: onAreas.filter((a) => on(a.date) && areaIds.has(a.areaId)).map((a) => ({ id: a.id, needId: `area:${a.areaId}:${a.qualificationTypeId ?? "*"}:${date}`, place: a.place, userId: a.userId, start: a.startMinutes, end: a.endMinutes })),
       classes: classes.filter((c) => c.date === date).map((c) => ({ ref: c.ref!, title: c.title ?? c.label, place: c.place ?? "", start: c.startMinutes, end: c.endMinutes, userId: c.userId })),

@@ -3,10 +3,10 @@
 import { CalendarDays } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/shadcn/dialog";
-import { clock } from "@/modules/rota/shared/constants";
 import { useDiary } from "@/modules/rota/features/diary/components/context";
 import { ChangeTime, TakeOff } from "@/modules/rota/features/diary/components/person-sheet";
-import { firstName, lineTitle, lineWhere, span as spanWords } from "@/modules/rota/features/diary/components/words";
+import { SubPlace } from "@/modules/rota/features/diary/components/sub-place";
+import { firstName, lineTitle, lineWhere, span as spanWords, subTime } from "@/modules/rota/features/diary/components/words";
 
 const PORTAL = "turnfin-module";
 
@@ -30,7 +30,14 @@ export function LineDialog({ target, onClose }: { target: { userId: string; key:
             </DialogHeader>
             {placed.length ? (
               <ul className="diary-subs-list" aria-label="Sub-activities">
-                {placed.map((x, i) => <li key={i}><span className="tabular-nums">{clock(x.at!)}</span><span>{x.name}</span></li>)}
+                {placed.map((x, i) => (
+                  <li key={x.id ? `${x.id}-${x.at}` : i}>
+                    <span className="tabular-nums">{subTime(x)}</span>
+                    {x.when === "during" && x.id && line.assignmentId && ctx.canChange && ctx.departmentFor
+                      ? <SubPlace person={person} line={line} sub={{ id: x.id, name: x.name, at: x.at, until: x.until ?? null }} />
+                      : <span>{x.name}</span>}
+                  </li>
+                ))}
               </ul>
             ) : null}
             <DialogFooter>
