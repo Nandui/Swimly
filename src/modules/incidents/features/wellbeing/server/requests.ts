@@ -6,12 +6,12 @@ import { newLinkToken } from "@/modules/incidents/shared/link";
 import { IncidentError } from "@/modules/incidents/shared/rules";
 import { lockReport, recordEvent, reportRights } from "@/modules/incidents/shared/service";
 import type { IncidentsActor } from "@/modules/incidents/shared/types";
-import { wellbeingExpiry, wellbeingRequestSchema, wellbeingState, type WellbeingRequestInput } from "@/modules/incidents/features/wellbeing/rules";
+import { followUpLabels, hrRequestKind, wellbeingExpiry, wellbeingRequestSchema, wellbeingState, type WellbeingRequestInput } from "@/modules/incidents/features/wellbeing/rules";
 import { wellbeingCopies, wellbeingRecipients } from "@/modules/incidents/features/wellbeing/server/settings";
 
-/** Wellbeing checks, the staff side (docs/incidents.md, "Wellbeing checks").
- *  Whoever triages reports at the site asks HR to check on someone while the
- *  report is open, as with CCTV footage. Not on your own report, unless you hold
+/** Asking HR, the staff side (docs/incidents.md, "Asking HR"). Whoever triages
+ *  reports at the site asks HR to check on someone, or lets HR know a staff
+ *  member was in the incident, while the report is open, as with CCTV footage. Not on your own report, unless you hold
  *  Manage. Those who triage at the site see that a check was asked and how it
  *  stands; what HR wrote is health information, so only Manage at the site and
  *  whoever asked read it. The reporter sees none of it. */
@@ -50,7 +50,7 @@ export async function wellbeingOnReport(reportId: string) {
     checks: checks.map((c) => {
       const readable = rights.signoff || c.requestedById === who.id;
       return {
-        id: c.id, personName: c.personName, reason: c.reason, sentTo: c.sentTo, requestedByName: c.requestedByName, createdAt: c.createdAt,
+        id: c.id, kind: hrRequestKind(c.kind), followUps: followUpLabels(c.followUps), shareReport: c.shareReport, personName: c.personName, reason: c.reason, sentTo: c.sentTo, requestedByName: c.requestedByName, createdAt: c.createdAt,
         expiresAt: c.expiresAt, emailError: c.emailError, cancelledByName: c.cancelledByName, doneAt: c.doneAt,
         state: wellbeingState({ ...c, updates: c.updates.length }),
         readable, updateCount: c.updates.length, lastUpdateAt: c.updates.at(-1)?.createdAt ?? null,
@@ -68,16 +68,16 @@ async function personOf(who: IncidentsActor, siteId: string, input: { userId: st
     if (!person) throw new IncidentError("That person isn't on the team at this site any more. Choose someone else.");
     return { name: person.name, userId: person.id };
   }
-  if (input.name.length < 2) throw new IncidentError("Enter the name of the person HR should check on.");
+  if (input.name.length < 2) throw new IncidentError("Enter the person's name.");
   return { name: input.name, userId: null };
 }
 
 /** Creates the request and its link. The caller emails HR once this has committed. */
 export async function createWellbeingCheck(who: IncidentsActor, reportId: string, input: WellbeingRequestInput) {
   const { row, ask } = await reportFor(who, reportId);
-  if (!ask) throw new IncidentError("Only someone who triages reports at this site can ask HR for a wellbeing check.");
+  if (!ask) throw new IncidentError("Only someone who triages reports at this site can ask HR.");
   const to = await wellbeingRecipients(who.orgId);
-  if (!to.length) throw new IncidentError("Nobody is set to get wellbeing checks yet. Someone with Incidents: Manage adds HR's email in Incidents > Settings.");
+  if (!to.length) throw new IncidentError("Nobody is set to get requests to HR yet. Someone with Incidents: Manage adds HR's email in Incidents > Settings.");
   const parsed = wellbeingRequestSchema.safeParse(input);
   if (!parsed.success) throw new IncidentError(parsed.error.issues[0].message);
   const person = await personOf(who, row.siteId, parsed.data);
@@ -85,14 +85,15 @@ export async function createWellbeingCheck(who: IncidentsActor, reportId: string
   const id = await prisma.$transaction(async (tx) => {
     await lockReport(tx, reportId);
     const now = await tx.incidentReport.findUniqueOrThrow({ where: { id: reportId } });
-    if (now.status === "closed") throw new IncidentError("A closed report can't ask for a wellbeing check. Reopen it first.");
+    if (now.status === "closed") throw new IncidentError("A closed report can't ask HR for anything. Reopen it first.");
+    const { kind, followUps, shareReport } = parsed.data;
     const created = await tx.incidentWellbeingCheck.create({
       data: {
-        reportId, personName: person.name, personUserId: person.userId, reason: parsed.data.reason, sentTo: to.join(", "),
+        reportId, kind, followUps, shareReport, personName: person.name, personUserId: person.userId, reason: parsed.data.reason, sentTo: to.join(", "),
         tokenHash: link.hash, expiresAt: wellbeingExpiry(), requestedById: who.id, requestedByName: who.name,
       },
     });
-    await recordEvent(tx, now, who, "wellbeing_request");
+    await recordEvent(tx, now, who, kind === "inform" ? "wellbeing_inform" : "wellbeing_request");
     return created.id;
   });
   return { id, token: link.token };
@@ -102,9 +103,9 @@ export async function createWellbeingCheck(who: IncidentsActor, reportId: string
 export async function renewWellbeingCheck(who: IncidentsActor, checkId: string) {
   const { check, row, ask } = await checkFor(who, checkId);
   if (!ask) throw new IncidentError("Only someone who triages reports at this site can send a request again.");
-  if (check.status === "done") throw new IncidentError("This check is finished. Ask for a new one if something has changed.");
+  if (check.status === "done") throw new IncidentError("This request is finished. Ask HR again if something has changed.");
   const to = await wellbeingRecipients(who.orgId);
-  if (!to.length) throw new IncidentError("Nobody is set to get wellbeing checks. Someone with Incidents: Manage adds HR's email in Incidents > Settings.");
+  if (!to.length) throw new IncidentError("Nobody is set to get requests to HR. Someone with Incidents: Manage adds HR's email in Incidents > Settings.");
   const link = newLinkToken();
   await prisma.$transaction(async (tx) => {
     await lockReport(tx, row.id);
@@ -112,7 +113,7 @@ export async function renewWellbeingCheck(who: IncidentsActor, checkId: string) 
       where: { id: checkId, status: { not: "done" } },
       data: { tokenHash: link.hash, expiresAt: wellbeingExpiry(), status: "open", sentTo: to.join(", "), cancelledAt: null, cancelledByName: null },
     });
-    if (!changed.count) throw new IncidentError("This check is finished. Refresh the page.");
+    if (!changed.count) throw new IncidentError("This request is finished. Refresh the page.");
     await recordEvent(tx, row, who, "wellbeing_resend");
   });
   return { id: checkId, token: link.token };
