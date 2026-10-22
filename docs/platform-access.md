@@ -135,7 +135,7 @@ does not add anyone to a shared device's quick-switch list.
 
 It is on only where `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` are set (a Google Cloud
 OAuth web client whose authorised redirect URI is
-`https://<the app's address>/api/auth/callback/google`); elsewhere the button is not
+`https://<the app's address>/api/auth/callback/google`, for LeisureWorld `https://turnfin.app/api/auth/callback/google`); elsewhere the button is not
 shown and the provider is not registered. Previews have a new address every time,
 which Google cannot list, so set the two variables for Production only.
 
