@@ -59,8 +59,9 @@ export type LeaveEvent = { studentId: string; date: string; joined: string; week
 export function movements(spans: Map<string, Span[]>, today: string) {
   const joins: JoinEvent[] = [], leaves: LeaveEvent[] = [], leaving: LeaveEvent[] = [];
   for (const list of spans.values()) for (const span of list) {
-    if (span.firstPlace.inScope) joins.push({ studentId: span.studentId, date: span.start, returning: !span.first, place: span.firstPlace });
-    if (span.end === null || !span.lastPlace.inScope) continue;
+    // A join or leave made by a system change (scripted development work) is not counted.
+    if (span.firstPlace.inScope && !span.firstPlace.systemStart) joins.push({ studentId: span.studentId, date: span.start, returning: !span.first, place: span.firstPlace });
+    if (span.end === null || !span.lastPlace.inScope || span.lastPlace.systemEnd) continue;
     const event = {
       studentId: span.studentId, date: span.end, joined: span.start, weeks: weeksBetween(span.start, span.end), place: span.lastPlace,
       reason: span.lastPlace.leaveReason ?? (span.lastPlace.status === "COMPLETED" ? "finished-class" : null),

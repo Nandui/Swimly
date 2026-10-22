@@ -75,6 +75,7 @@ function fixture() {
       findMany: async () => [],
       findFirst: async () => assessedAt.length ? { session: { clubId: assessedAt[assessedAt.length - 1] } } : null,
     },
+    user: { findUnique: async () => ({ actsAsSystem: false }) },
     auditLog: { create: async ({ data }: { data: object }) => { if (auditFailureAfter !== null && audits.length >= auditFailureAfter) throw new Error("Audit unavailable"); audits.push(data); } },
   };
   const prisma = {

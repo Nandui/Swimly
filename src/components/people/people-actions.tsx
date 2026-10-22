@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ArchiveRestore, Award, Building2, CirclePause, Pencil, Plus, ShieldCheck, ShieldOff, XCircle } from "lucide-react";
+import { ArchiveRestore, Award, Bot, Building2, CirclePause, Pencil, Plus, ShieldCheck, ShieldOff, UserRound, XCircle } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Checkbox } from "@/components/shadcn/checkbox";
 import { Label } from "@/components/shadcn/label";
@@ -13,7 +13,7 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   recordQualification, revokeQualification, saveDepartment,
-  saveQualificationType, setDepartmentArchived, setQualificationTypeArchived, setSuperadmin, setWorksAt, updateEmployment, updateProfile,
+  saveQualificationType, setActsAsSystem, setDepartmentArchived, setQualificationTypeArchived, setSuperadmin, setWorksAt, updateEmployment, updateProfile,
   type EmploymentInput,
 } from "@/lib/people/actions";
 import { CONTRACT_META, CONTRACT_TYPES, hoursOf } from "@/lib/people/constants";
@@ -168,6 +168,29 @@ export function SuperadminToggle({ userId, name, value }: { userId: string; name
       confirmLabel="Make superadmin"
       successMessage="Superadmin granted"
       run={() => setSuperadmin(userId, true)}
+    />
+  );
+}
+
+/** Whether this account's enrolments, moves and unenrolments are scripted development work. */
+export function SystemActorToggle({ userId, name, value }: { userId: string; name: string; value: boolean }) {
+  return value ? (
+    <ConfirmAction
+      trigger={<Button variant="outline">{icon(UserRound)}Count their place changes again</Button>}
+      title={`Count ${name}'s place changes as their own again?`}
+      description="From now on their enrolments, moves and unenrolments carry their name and count in analytics. The ones already marked as system stay that way."
+      confirmLabel="Count them again"
+      successMessage="Their place changes count again"
+      run={() => setActsAsSystem(userId, false)}
+    />
+  ) : (
+    <ConfirmAction
+      trigger={<Button variant="outline">{icon(Bot)}Mark place changes as system</Button>}
+      title={`Mark ${name}'s place changes as system?`}
+      description={'Their enrolments, moves and unenrolments, past and future, show as "System - scripted action done via development" and are left out of analytics. Nothing is deleted, and the log still knows who did them.'}
+      confirmLabel="Mark as system"
+      successMessage="Place changes marked as system"
+      run={() => setActsAsSystem(userId, true)}
     />
   );
 }

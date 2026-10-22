@@ -50,22 +50,25 @@ async function deskData(params: ReportParams, now: Date) {
   const detailsSql = swimmerDetailsQuery(added.map(e => e.entityId));
   const details = detailsSql ? await prisma.$queryRaw<SwimmerDetailRow[]>(detailsSql) : [];
   const detailOf = new Map(details.map(d => [d.id, d]));
-  const unenrolEvents = enrolEvents.filter(e => (e.action === "withdraw" || e.action === "schedule-withdrawal") && e.at.toISOString().slice(0, 10) >= period.start);
+  // Place changes recorded as system (scripted development work) are nobody's desk work.
+  const systemPlaces = new Set(enrolEvents.filter(e => e.system).map(e => e.entityId));
+  const placeChanges = enrolEvents.filter(e => !e.system);
+  const unenrolEvents = placeChanges.filter(e => (e.action === "withdraw" || e.action === "schedule-withdrawal") && e.at.toISOString().slice(0, 10) >= period.start);
   const reasonsSql = placeReasonsQuery([...new Set(unenrolEvents.map(e => e.entityId))]);
   const reasons = reasonsSql ? await prisma.$queryRaw<PlaceReasonRow[]>(reasonsSql) : [];
   const reasonOf = new Map(reasons.map(r => [r.id, r]));
 
   const jobs: Job[] = [
     ...jobsFromRows(jobRows, now),
-    ...waitlistJobs(enrolEvents.filter(e => e.action === "waitlist" || e.action === "enrol"), period.start, period.end),
-    ...readyMoveJobs(readyMoves, enrolEvents.filter(e => e.action === "transfer")),
+    ...waitlistJobs(enrolEvents.filter(e => e.action === "waitlist" || (e.action === "enrol" && !e.system)), period.start, period.end),
+    ...readyMoveJobs(readyMoves.filter(r => !systemPlaces.has(r.newPlaceId)), placeChanges.filter(e => e.action === "transfer")),
     ...jobsFromMeasures(measures.items),
   ];
   const desk = buildDesk({
     period, work, jobs, followUps, bookings,
     newSwimmers: added.map(event => ({ event, details: detailOf.get(event.entityId) })),
     unenrols: unenrolEvents.map(event => ({ event, place: reasonOf.get(event.entityId) })),
-    placeEvents: enrolEvents.filter(e => ["enrol", "transfer", "withdraw"].includes(e.action)),
+    placeEvents: placeChanges.filter(e => ["enrol", "transfer", "withdraw"].includes(e.action)),
   });
   const sites = await sitesByIds(jobs.map(j => j.siteId));
   const siteName = (id: string | null) => (id ? sites.get(id)?.name ?? "Removed site" : null);

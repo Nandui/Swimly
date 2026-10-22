@@ -29,6 +29,9 @@ export type PlaceRow = {
   id: string; studentId: string; courseId: string; levelId: string; programmeId: string; clubId: string;
   status: string; startedOn: string; endOn: string | null; scheduledEnd: boolean; leaveReason: string | null;
   inScope: boolean; dateOfBirth: string | null;
+  /** Started or ended by a place change recorded as system (scripted development work), so not
+   *  counted as a join or a leave. The place itself still counts while it is held. */
+  systemStart?: boolean; systemEnd?: boolean;
 };
 
 /** Every class place ever held by a swimmer who has held one at these sites,
@@ -40,7 +43,13 @@ export function placesQuery(clubIds: string[]) {
     SELECT e.id, e."studentId", e."courseId", e."levelId", e."programmeId", c."clubId", e.status::text AS status,
       e."startedOn"::text AS "startedOn", COALESCE(e."endedOn", e."scheduledEndOn")::text AS "endOn",
       (e."endedOn" IS NULL AND e."scheduledEndOn" IS NOT NULL) AS "scheduledEnd", e."leaveReason",
-      c."clubId" IN (${Prisma.join(clubIds)}) AS "inScope", s."dateOfBirth"::text AS "dateOfBirth"
+      c."clubId" IN (${Prisma.join(clubIds)}) AS "inScope", s."dateOfBirth"::text AS "dateOfBirth",
+      EXISTS (SELECT 1 FROM "AuditLog" y WHERE y.entity = 'Enrolment' AND y."entityId" = e.id AND y.system
+        AND y.action IN ('enrol', 'transfer')) AS "systemStart",
+      (EXISTS (SELECT 1 FROM "AuditLog" y WHERE y.entity = 'Enrolment' AND y."entityId" = e.id AND y.system
+          AND y.action IN ('withdraw', 'complete', 'schedule-withdrawal', 'transfer-out'))
+        OR (e.status = 'TRANSFERRED' AND EXISTS (SELECT 1 FROM "AuditLog" y JOIN "Enrolment" n ON n.id = y."entityId"
+          WHERE y.entity = 'Enrolment' AND y.system AND y.action = 'transfer' AND n."studentId" = e."studentId" AND n."startedOn" = e."endedOn"))) AS "systemEnd"
     FROM "Enrolment" e
     JOIN "Course" c ON c.id = e."courseId"
     JOIN "Student" s ON s.id = e."studentId"

@@ -52,6 +52,18 @@ test("moving class or coming back within two weeks is not leaving; a longer gap 
   assert.equal(Math.round(moves.leaves.find(e => e.studentId === "s2")!.weeks), 17);
 });
 
+test("joins and leaves made by a system place change (scripted development work) are not counted, but the place is", () => {
+  const places = [
+    place("s1", "2026-03-02", null, { systemStart: true }),
+    place("s2", "2026-01-05", "2026-04-06", { leaveReason: "cost", systemEnd: true }),
+    place("s3", "2026-02-02", "2026-05-04"),
+  ];
+  const moves = movements(swimmerSpans(places), "2026-10-16");
+  assert.deepEqual(moves.joins.map(e => e.studentId).sort(), ["s2", "s3"]);
+  assert.deepEqual(moves.leaves.map(e => e.studentId), ["s3"]);
+  assert.equal(activeAt(places, "2026-04-01").swimmers.size, 3);
+});
+
 test("leaving one site for another counts at neither; only the site of the last place records a leaver", () => {
   const places = [place("s1", "2026-01-05", "2026-03-02", { status: "TRANSFERRED" }), place("s1", "2026-03-02", "2026-05-04", { clubId: "b", inScope: false })];
   const moves = movements(swimmerSpans(places), "2026-10-16");

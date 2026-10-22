@@ -10,7 +10,7 @@ import { reportPeriod } from "@/modules/activities/features/analytics/server/per
 const now = new Date("2026-10-16T12:00:00Z");
 const period = reportPeriod("4w", now);
 const event = (entityId: string, action: string, at: string, actorName = "Fiona Example", actorId = "u_fiona"): AuditEventRow =>
-  ({ entityId, action, actorId, actorName, clubId: "a", at: new Date(at) });
+  ({ entityId, action, actorId, actorName, clubId: "a", at: new Date(at), system: false });
 
 test("only the desk's own work counts: teaching and set-up are left out", () => {
   assert.equal(workKind("Swim school", "Enrolment", "enrol"), "enrol");

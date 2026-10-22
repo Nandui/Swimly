@@ -7,6 +7,21 @@ screen, `analytics.view`, at the person's sites). Swim school Manage no longer o
 `server/insights.ts` compute, `components/insights/` draws). Styles are in
 `src/app/(activities)/analytics/analytics.css`.
 
+## System place changes (owner request, 21 October 2026)
+
+An account can be marked as system (`User.actsAsSystem`, set by a superadmin with **Mark
+place changes as system** on its Staff page; meant for the developer login. No account is
+marked by default: `20261202120001_system_place_changes_no_default` undoes the earlier
+default that marked Fernando Serina's own account, owner decision 22 October 2026). Its enrolments, waitlistings, moves and
+unenrolments (`PLACE_CHANGE_ACTIONS` in `src/lib/audit.ts`) are logged with
+`AuditLog.system`, shown as "System - scripted action done via development" (Activity,
+module trails, swimmer history) and left out of analytics: `auditWorkload` skips them,
+`auditEvents` returns them marked and the Reception report drops them, the Overview's
+enrolled/unenrolled counts skip them, and a place started or ended by one
+(`PlaceRow.systemStart` / `systemEnd`) is not a join, leaver or class move. The place itself
+still counts while held (swimmers, places, % full, retention). Marking also marks the
+account's earlier entries; unmarking only affects new ones. Rows are never deleted.
+
 ## Reports (October 2026)
 
 Every report takes `?range=4w|13w|26w|52w` (default 13 weeks, starting on a Monday)
