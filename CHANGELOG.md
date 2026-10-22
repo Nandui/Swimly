@@ -4,13 +4,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.64.0 · 21 October 2026 · Enrolments and moves done as development work
+## 1.64.0 · 21 October 2026 · Mark a development account's enrolments and moves as system
 
-- Enrolments, moves between classes or centres and unenrolments done by Fernando Serina's account were mostly set-up work run for the developers, not real desk work. They now show as **System - scripted action done via development** in **Activity**, in a swimmer's **History** and in the Together records, instead of his name.
+- A superadmin can now mark an account whose enrolments, moves between classes or centres and unenrolments are set-up work run for the developers, not real desk work. Open the person on **Staff** and choose **Mark place changes as system**.
+- That account's place changes, past and future, then show as **System - scripted action done via development** in **Activity**, in a swimmer's **History** and in the Together records, instead of its name.
 - They are left out of **Swim school analytics**: they no longer count as new swimmers, leavers or moves, or as anyone's work on the **Reception** dashboard. The swimmers themselves still count in classes, places and "% full" while they hold the place.
-- This covers what his account did before today as well as from now on. Nothing has been deleted, and the log still knows which account did it.
-- A superadmin can do the same for any account: open the person on **Staff** and choose **Mark place changes as system**. **Count their place changes again** stops it for new changes; earlier ones stay marked.
+- Nothing is deleted, and the log still knows which account did it. **Count their place changes again** stops it for new changes; earlier ones stay marked.
 - While an account is marked, the confirmation before an enrolment or a move says that it will be recorded as system.
+- No account is marked to begin with: Fernando Serina's own account stays a normal account, and the developer login can be marked once it exists.
+
 ## 1.63.0 · 21 October 2026 · Admin: search and filters on Staff
 
 - **Admin › Staff** now has a **Find a person** box at the top. Start typing a name or email and the list narrows as you type.

@@ -10,8 +10,9 @@ screen, `analytics.view`, at the person's sites). Swim school Manage no longer o
 ## System place changes (owner request, 21 October 2026)
 
 An account can be marked as system (`User.actsAsSystem`, set by a superadmin with **Mark
-place changes as system** on its Staff page; Fernando Serina's account is marked by the
-`20261202120000_system_place_changes` migration). Its enrolments, waitlistings, moves and
+place changes as system** on its Staff page; meant for the developer login. No account is
+marked by default: `20261202120001_system_place_changes_no_default` undoes the earlier
+default that marked Fernando Serina's own account, owner decision 22 October 2026). Its enrolments, waitlistings, moves and
 unenrolments (`PLACE_CHANGE_ACTIONS` in `src/lib/audit.ts`) are logged with
 `AuditLog.system`, shown as "System - scripted action done via development" (Activity,
 module trails, swimmer history) and left out of analytics: `auditWorkload` skips them,
