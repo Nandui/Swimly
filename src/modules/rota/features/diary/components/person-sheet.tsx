@@ -16,7 +16,7 @@ import { ChangeFields, changeOf } from "@/modules/rota/shared/components/change-
 import { stepsOf, type Line, type PersonDay, type Span, type Step } from "@/modules/rota/features/diary/model";
 import { changeLine, fillNeed, placeBreaks, removeLine, removeShift, saveLineSubs, saveShift } from "@/modules/rota/features/diary/server/actions";
 import { useDiary } from "@/modules/rota/features/diary/components/context";
-import { firstName, hoursWords, needName, lineTitle, lineWhere, needWords, partsWords, span as spanWords, toneOf, warningWords } from "@/modules/rota/features/diary/components/words";
+import { firstName, hoursWords, needName, lineTitle, lineWhere, needWords, partsWords, span as spanWords, subTime, toneOf, warningWords } from "@/modules/rota/features/diary/components/words";
 
 const PORTAL = "turnfin-module";
 const s = (f: FormData, k: string) => String(f.get(k) ?? "");
@@ -81,9 +81,9 @@ function StepItem({ person, step }: { person: PersonDay; step: Step }) {
             <ul className="diary-subs-list" aria-label="Sub-activities">
               {l.subs.map((x, i) => (x.at === null ? null : (
                 <li key={x.id ? `${x.id}-${x.at}` : i}>
-                  <span className="tabular-nums">{clock(x.at)}</span>
+                  <span className="tabular-nums">{subTime(x)}</span>
                   {x.when === "during" && x.id && l.assignmentId && ctx.canChange && ctx.departmentFor
-                    ? <SubPlace person={person} line={l} sub={{ id: x.id, name: x.name, at: x.at }} />
+                    ? <SubPlace person={person} line={l} sub={{ id: x.id, name: x.name, at: x.at, until: x.until ?? null }} />
                     : <span>{x.name}</span>}
                 </li>
               )))}

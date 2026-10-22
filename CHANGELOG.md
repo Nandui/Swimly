@@ -4,7 +4,7 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 1.64.0 · 21 October 2026 · Mark a development account's enrolments and moves as system
+## 1.66.0 · 22 October 2026 · Mark a development account's enrolments and moves as system
 
 - A superadmin can now mark an account whose enrolments, moves between classes or centres and unenrolments are set-up work run for the developers, not real desk work. Open the person on **Staff** and choose **Mark place changes as system**.
 - That account's place changes, past and future, then show as **System - scripted action done via development** in **Activity**, in a swimmer's **History** and in the Together records, instead of its name.
@@ -12,6 +12,27 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - Nothing is deleted, and the log still knows which account did it. **Count their place changes again** stops it for new changes; earlier ones stay marked.
 - While an account is marked, the confirmation before an enrolment or a move says that it will be recorded as system.
 - No account is marked to begin with: Fernando Serina's own account stays a normal account, and the developer login can be marked once it exists.
+## 1.65.0 · 22 October 2026 · Rota: sub-activities have a start and an end
+
+- On the **Plan**, when you place a sub-activity on someone's time (such as **Answer the phone**), you now choose when it **starts** and when it **finishes**. Tap a time or type one, as before. Picking a start fills in half an hour later as the finish, which you can change.
+- Each placed sub-activity now shows on that person's row in **The day, person by person**, as a white strip inside what they are on, for as long as it lasts. Tap it to move it or take it off.
+- Sub-activities at a moment, such as opening the cash till at the start or a cash drop at 16:00, show there too as a short mark.
+- **Who's where** lists a sub-activity for the whole time it lasts, with its start and finish.
+- Ones you placed earlier keep their start. Open one and choose its finish to give it an end.
+
+## 1.64.1 · 22 October 2026 · Incidents: choose who is copied on wellbeing checks
+
+- **Admin › Incidents settings** has new **Copy to** boxes under who gets wellbeing check requests. Put your own email in **Copy to, every site** and you get a copy of every request sent to HR.
+- Each site has its own box too, such as for its centre manager. They are copied only when the incident was at their site.
+- The person who asked is still copied on each one, as before.
+
+## 1.64.0 · 22 October 2026 · Incidents: ask HR for a wellbeing check
+
+- On an incident report, **Wellbeing checks** has a new button, **Ask HR for a wellbeing check**. Choose who HR should check on (staff named on the report come first) and say why in a sentence or two.
+- HR gets an email with a private link. No sign-in is needed. The link shows who to check on and why, and HR records what they did, the day they did it, and what happens now. They can come back to add the next step, or tick **Nothing more is needed** to finish it.
+- The report shows each request and where it stands: **Waiting for HR**, **HR following up**, **Done**, **Link expired** or **Cancelled**. You can **Send again** or **Cancel the request**. You get an email when HR records something.
+- What HR writes stays private: only managers with Incidents Manage and the person who asked can read it. Others who triage see only that HR replied and when. The person who reported the incident sees none of it.
+- You choose who gets these emails: **Admin › Incidents settings** (or **Incidents › Settings**) holds the list of addresses, such as HR's inbox. Until you add one, nobody can ask for a check.
 
 ## 1.63.0 · 21 October 2026 · Admin: search and filters on Staff
 

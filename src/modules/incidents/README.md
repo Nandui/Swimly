@@ -10,13 +10,14 @@ The flow, rules and decisions are in [docs/incidents.md](../../../docs/incidents
 - `investigation` — witness statements, the 5 whys and root cause, actions with owners and their reminder emails, Your actions, and reopening (on `/incidents/[id]` and `/incidents`; reminders from `/api/cron/incidents`).
 - `files` — photos and documents on a report (`/api/incidents/files`).
 - `footage` — CCTV footage requests: emailing whoever holds it a link that uploads to the report without signing in (`/footage/[token]`, `/api/incidents/footage/*`), the videos in a private Vercel Blob store, and watching them (on `/incidents/[id]`).
+- `wellbeing` — wellbeing checks: asking HR, by email to the addresses in Incidents › Settings (`/incidents/settings`), to check on someone after an incident; HR records what they did, when and what happens next through a no-sign-in link (`/wellbeing/[token]`). What HR writes is read only by Manage at the site and whoever asked.
 - `insights` — trends for those who triage and the reports past their keeping period (`/incidents/insights`).
 - `export` — one report's full record to print or save as a PDF for the insurer (`/incidents/[id]/export`, Manage).
 - `staff` — a staff member's incidents and injuries for their HR personal file and subject access export (registered in `module.ts`).
 - `reports` — the lists (`/incidents`), one report's page (`/incidents/[id]`), the starter-page and Home counts, and the form's sites and areas.
 - `workspace` — the Incidents frame and its one page list (`pages.ts`) for the page bar and the starter page `/incidents/overview`.
 
-`shared/` holds what two or more features use: statuses, kinds, categories and the severity scale (`types.ts`), the pure rules (`rules.ts`, tested in `rules.test.ts`), the access check (`access.ts`) and the locked, audited write (`service.ts`).
+`shared/` holds what two or more features use: statuses, kinds, categories and the severity scale (`types.ts`), the pure rules (`rules.ts`, tested in `rules.test.ts`), the access check (`access.ts`), the locked, audited write (`service.ts`) and the emailed links' secrets for footage and wellbeing checks (`link.ts`).
 
 ## Public API (index.ts)
 - `incidentStatuses`, `seriousMeta`, `SEVERITY_META` — each status's and severity's label, tone and icon. Used by Core's status-metadata test.
@@ -36,6 +37,9 @@ Declared in `prisma/schema/incidents.prisma`, migrations `20261031120000_inciden
 - `incidents_files` (`IncidentFile`) — photos and documents, stored as bytes, hidden when removed.
 - `incidents_footage_requests` (`IncidentFootageRequest`) — who was asked for CCTV footage, what for, the link's hashed secret and expiry, and the email's outcome (migration `20261125120000_incident_footage_requests`).
 - `incidents_footage` (`IncidentFootage`) — each video sent through a link: its name, size, who sent it and where it is in the Blob store; hidden when removed.
+- `incidents_settings` (`IncidentsSettings`) — one row per organisation: who gets wellbeing check requests and who is copied on them (migrations `20261203090000_incident_wellbeing_checks`, `20261204090000_incident_wellbeing_copy`, `20261204100000_incident_wellbeing_site_copy`), for every site and per site.
+- `incidents_wellbeing_checks` (`IncidentWellbeingCheck`) — who HR was asked to check on and why, the addresses it went to, the link's hashed secret and expiry, its state and the email's outcome.
+- `incidents_wellbeing_updates` (`IncidentWellbeingUpdate`) — what HR recorded through the link: who, the day, what they did and what happens next. Never changed or deleted.
 
 ## Events
 - Emits: none. Actions stay in Incidents rather than being copied into Tasks (docs/incidents.md).

@@ -81,6 +81,7 @@ model IncidentReport {
   files         IncidentFile[]
   footageRequests IncidentFootageRequest[]
   footage       IncidentFootage[]
+  wellbeingChecks IncidentWellbeingCheck[]
 
   @@index([siteId, status])
   @@index([reporterId])
@@ -322,4 +323,83 @@ model IncidentFootage {
   @@index([requestId])
   @@index([reportId])
   @@map("incidents_footage")
+}
+
+/// Incidents' own settings, one row per organisation (owner request, 22 October
+/// 2026). Changed in Incidents > Settings by someone with Manage.
+model IncidentsSettings {
+  orgId         String   @id
+  /// Who gets wellbeing check requests (HR), as stored: "a@x, b@y"; empty for nobody yet.
+  wellbeingTo   String   @default("")
+  /// Copied (CC) on every wellbeing check request to HR, such as the operations
+  /// manager (owner request, 22 October 2026), as stored; empty for nobody.
+  wellbeingCc   String   @default("")
+  /// Copied on requests about one site only, by site id: { "<siteId>": "a@x, b@y" }
+  /// (owner request, 22 October 2026: "each site might require a different CC person").
+  wellbeingCcBySite Json @default("{}")
+  changedById   String?
+  changedByName String?
+  updatedAt     DateTime @updatedAt
+
+  @@map("incidents_settings")
+}
+
+/// A request to HR to check on someone's wellbeing after an incident (owner
+/// request, 22 October 2026), modelled on CCTV footage requests: emailed to the
+/// addresses in Incidents > Settings with a link that opens this request and
+/// nothing else, where HR records what they did, when, and what happens next.
+/// The link's token is kept only as a hash. It stops working when it expires,
+/// is cancelled, is sent again (a new link) or HR says nothing more is needed.
+/// What HR writes is shown only to Incidents: Manage at the site and to whoever asked.
+model IncidentWellbeingCheck {
+  id              String    @id @default(cuid())
+  reportId        String
+  /// Who the check is for, and the staff member when it is one of the team.
+  personName      String
+  personUserId    String?
+  /// Why, in the words of whoever asked. The link shows this and nothing else of the report.
+  reason          String
+  /// The addresses it was sent to, as sent ("a@x, b@y").
+  sentTo          String
+  tokenHash       String    @unique
+  expiresAt       DateTime
+  /// open | done | cancelled
+  status          String    @default("open")
+  requestedById   String
+  requestedByName String
+  emailedAt       DateTime?
+  emailError      String?
+  cancelledAt     DateTime?
+  cancelledByName String?
+  doneAt          DateTime?
+  createdAt       DateTime  @default(now())
+
+  report  IncidentReport          @relation(fields: [reportId], references: [id], onDelete: Restrict)
+  updates IncidentWellbeingUpdate[]
+
+  @@index([reportId])
+  @@map("incidents_wellbeing_checks")
+}
+
+/// What HR recorded through the link: who, the day of the check, what they did
+/// and what is expected now. Never changed or deleted once saved.
+model IncidentWellbeingUpdate {
+  id        String   @id @default(cuid())
+  checkId   String
+  reportId  String
+  /// The name the HR person typed.
+  byName    String
+  /// The day they did it, as YYYY-MM-DD.
+  doneOn    String
+  whatDone  String
+  /// What happens now; empty when nothing more is expected.
+  nextSteps String   @default("")
+  /// They said nothing more is needed, which finished the check.
+  finished  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  check IncidentWellbeingCheck @relation(fields: [checkId], references: [id], onDelete: Restrict)
+
+  @@index([checkId])
+  @@map("incidents_wellbeing_updates")
 }

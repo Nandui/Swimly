@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ADMIN_GROUPS, type CoreLinkKey } from "@/components/core/pages";
 import { ModuleStart } from "@/components/workspace/module-start";
-import { Award, ClipboardCheck, Euro, Files, GraduationCap, Truck, Waves } from "lucide-react";
+import { Award, ClipboardCheck, Euro, Files, GraduationCap, ShieldAlert, Truck, Waves } from "lucide-react";
 import { can, canSee } from "@/lib/authz";
 import { pageSession } from "@/lib/page-guards";
 
@@ -28,6 +28,7 @@ export default async function CoreHome() {
     { show: canSee(session, "short-courses"), href: "/short-courses/academy/types", label: "Academy courses", icon: Award, description: "The lifeguard and swim teacher courses we deliver" },
     { show: canSee(session, "tasks") && can(session, "tasks.manage"), href: "/tasks/templates", label: "Task templates", icon: ClipboardCheck, description: "What each site's daily checks ask for, for whom and when" },
     { show: canSee(session, "docs") && can(session, "docs.manage"), href: "/docs/admin", label: "Docs settings", icon: Files, description: "Document teams, templates and the risk matrix" },
+    { show: canSee(session, "incidents") && can(session, "incidents.reports.signoff"), href: "/incidents/settings", label: "Incidents settings", icon: ShieldAlert, description: "Who gets wellbeing check requests (HR)" },
   ].flatMap(({ show, ...m }) => (show ? [m] : []));
   if (modules.length) groups.push({ label: "Modules", links: modules });
   if (groups.length === 0) redirect("/");

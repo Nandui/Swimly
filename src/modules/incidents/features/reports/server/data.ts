@@ -91,7 +91,9 @@ export async function incidentReport(id: string) {
   const investigation = rights.review
     ? { statements: found.statements, actions: found.actions, whys: found.whys, rootCause: found.rootCause }
     : { statements: [], actions: [], whys: [], rootCause: "" };
-  const report = await withSite({ ...found, ...investigation }, "siteId", "site");
+  // That HR was asked to check on someone is for those who triage, not the reporter.
+  const events = rights.review ? found.events : found.events.filter((e) => !e.action.startsWith("wellbeing_"));
+  const report = await withSite({ ...found, ...investigation, events }, "siteId", "site");
   const status = report.status as IncidentStatus;
   const investigate = status === "investigating" && rights.review && !rights.own;
   return {

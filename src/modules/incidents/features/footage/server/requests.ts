@@ -8,7 +8,7 @@ import { IncidentError } from "@/modules/incidents/shared/rules";
 import { lockReport, recordEvent, reportRights } from "@/modules/incidents/shared/service";
 import type { IncidentsActor } from "@/modules/incidents/shared/types";
 import { defaultDetails, footageRequestSchema, linkExpiry, type FootageRequestInput } from "@/modules/incidents/features/footage/rules";
-import { newLinkToken } from "@/modules/incidents/features/footage/server/link";
+import { newLinkToken } from "@/modules/incidents/shared/link";
 import { storageReady } from "@/modules/incidents/features/footage/server/storage";
 
 /** CCTV footage requests, the staff side (docs/incidents.md, "CCTV footage").

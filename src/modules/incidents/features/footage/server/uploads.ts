@@ -10,7 +10,7 @@ import {
   footageName, footagePath, footageProblem, footageType, linkProblem, MAX_FOOTAGE_BYTES, MAX_FOOTAGE_FILES, tokenShape, UPLOAD_HOURS,
   uploadDoneSchema, uploadStartSchema,
 } from "@/modules/incidents/features/footage/rules";
-import { hashToken } from "@/modules/incidents/features/footage/server/link";
+import { hashToken } from "@/modules/incidents/shared/link";
 import { stored, uploadToken } from "@/modules/incidents/features/footage/server/storage";
 
 /** The emailed link's side (docs/incidents.md, "CCTV footage"): no sign-in,
