@@ -4,6 +4,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.64.1 · 22 October 2026 · Incidents: choose who is copied on wellbeing checks
+
+- **Admin › Incidents settings** has new **Copy to** boxes under who gets wellbeing check requests. Put your own email in **Copy to, every site** and you get a copy of every request sent to HR.
+- Each site has its own box too, such as for its centre manager. They are copied only when the incident was at their site.
+- The person who asked is still copied on each one, as before.
+
 ## 1.64.0 · 22 October 2026 · Incidents: ask HR for a wellbeing check
 
 - On an incident report, **Wellbeing checks** has a new button, **Ask HR for a wellbeing check**. Choose who HR should check on (staff named on the report come first) and say why in a sentence or two.

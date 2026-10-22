@@ -6,12 +6,14 @@ import { formatDate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { incidentNumber } from "@/modules/incidents/shared/types";
 import { recipientList } from "@/modules/incidents/features/wellbeing/rules";
+import { wellbeingCopies } from "@/modules/incidents/features/wellbeing/server/settings";
 
 /** The wellbeing check emails (docs/incidents.md, "Wellbeing checks"). The
  *  request goes to each address in Incidents > Settings and says who asked, the
  *  site and the report number, and the link; who the check is for and why are
  *  only behind the link. Replies go to whoever asked, who is copied in, as with
- *  CCTV footage. When HR records something, whoever asked is told to look at
+ *  CCTV footage, along with the Copy to addresses in Settings for every site
+ *  and for the report's site (owner requests, 22 October 2026). When HR records something, whoever asked is told to look at
  *  the report, without what HR wrote. Outside production,
  *  INCIDENTS_EMAIL_DEV_LOG=true prints the emails to the server console instead. */
 
@@ -19,13 +21,13 @@ const devLog = (env = process.env) => env.NODE_ENV !== "production" && env.INCID
 
 /** Emails the link to HR and records the outcome on the request. */
 export async function sendWellbeingRequest(checkId: string, token: string, origin: string) {
-  const c = await prisma.incidentWellbeingCheck.findUnique({ where: { id: checkId }, include: { report: { select: { number: true, siteId: true } } } });
+  const c = await prisma.incidentWellbeingCheck.findUnique({ where: { id: checkId }, include: { report: { select: { number: true, siteId: true, orgId: true } } } });
   if (!c) return false;
   const failures: string[] = [];
   try {
     const config = emailSender("Turnfin Incidents");
     if (!config && !devLog()) throw new Error("Email is not set up.");
-    const [site, asker] = await Promise.all([siteName(c.report.siteId), staffAccess(c.requestedById)]);
+    const [site, asker, copies] = await Promise.all([siteName(c.report.siteId), staffAccess(c.requestedById), wellbeingCopies(c.report.orgId, c.report.siteId)]);
     const subject = `Wellbeing check request from ${site}`;
     const text = "Hello,\r\n\r\n"
       + `${c.requestedByName} at ${site} is asking HR to check on someone's wellbeing after incident ${incidentNumber(c.report.number)}.\r\n\r\n`
@@ -33,7 +35,8 @@ export async function sendWellbeingRequest(checkId: string, token: string, origi
       + "The link opens this one request and nothing else. It is private, so please don't forward it.\r\n\r\n"
       + `Reply to this email to reach ${c.requestedByName}.`;
     for (const to of recipientList(c.sentTo)) {
-      const cc = asker?.email && asker.email.toLowerCase() !== to ? [asker.email] : undefined;
+      const copied = [...new Set([asker?.email?.toLowerCase(), ...copies].filter((a): a is string => !!a && a !== to))];
+      const cc = copied.length ? copied : undefined;
       try {
         if (devLog()) console.info(`[incidents email] to ${to}, cc ${cc?.join(", ") ?? "nobody"}: ${subject}\n${text}`);
         else if (config) await sendGoogleEmail(to, subject, { text, replyTo: asker?.email ?? undefined, cc }, config);

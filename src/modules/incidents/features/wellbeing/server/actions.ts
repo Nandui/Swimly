@@ -50,9 +50,9 @@ export async function cancelWellbeing(checkId: string): Promise<ActionResult> {
   });
 }
 
-export async function saveWellbeingSettings(addresses: string): Promise<ActionResult> {
+export async function saveWellbeingSettings(addresses: string, copies: string, bySite: Record<string, string>): Promise<ActionResult> {
   return guarded(async () => {
-    await saveWellbeingRecipients(await requireIncidentsActor(), addresses);
+    await saveWellbeingRecipients(await requireIncidentsActor(), addresses, copies, bySite);
     return ok();
   });
 }

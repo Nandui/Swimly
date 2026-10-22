@@ -86,7 +86,7 @@ function RequestCheck({ reportId, data }: { reportId: string; data: WellbeingOnR
       <Field label="Why a check is needed" htmlFor="inc-wb-reason" hint="A sentence or two, such as what they went through. Leave out medical details: HR will ask them.">
         <Textarea id="inc-wb-reason" name="reason" rows={4} required minLength={10} maxLength={2000} />
       </Field>
-      <p className="text-sm text-ui-muted-foreground">It goes to {data.recipients.join(", ")}.</p>
+      <p className="text-sm text-ui-muted-foreground">It goes to {data.recipients.join(", ")}, copied to {[...data.copies, "you"].join(", ")}.</p>
     </FormDialog>
   );
 }
