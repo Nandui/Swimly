@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.65.0 · 22 October 2026 · Rota: sub-activities have a start and an end
+
+- On the **Plan**, when you place a sub-activity on someone's time (such as **Answer the phone**), you now choose when it **starts** and when it **finishes**. Tap a time or type one, as before. Picking a start fills in half an hour later as the finish, which you can change.
+- Each placed sub-activity now shows on that person's row in **The day, person by person**, as a white strip inside what they are on, for as long as it lasts. Tap it to move it or take it off.
+- Sub-activities at a moment, such as opening the cash till at the start or a cash drop at 16:00, show there too as a short mark.
+- **Who's where** lists a sub-activity for the whole time it lasts, with its start and finish.
+- Ones you placed earlier keep their start. Open one and choose its finish to give it an end.
+
 ## 1.64.1 · 22 October 2026 · Incidents: choose who is copied on wellbeing checks
 
 - **Admin › Incidents settings** has new **Copy to** boxes under who gets wellbeing check requests. Put your own email in **Copy to, every site** and you get a copy of every request sent to HR.

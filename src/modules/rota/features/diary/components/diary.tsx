@@ -8,14 +8,15 @@ import { Notice } from "@/components/ui-kit/notice";
 import { leftOf, stretchOf } from "@/components/ui-kit/scale";
 import { Select } from "@/components/ui/select";
 import { clock } from "@/modules/rota/shared/constants";
-import { nextChange, stepsOf, whoIsWhere, type Hole, type PersonDay, type Span, type WhereAt } from "@/modules/rota/features/diary/model";
+import { nextChange, stepsOf, whoIsWhere, type Hole, type Line, type PersonDay, type Span, type WhereAt } from "@/modules/rota/features/diary/model";
 import { DiaryContext, useDiary, type DiaryData, type DiaryState } from "@/modules/rota/features/diary/components/context";
 import { AddSomeone, AddToDay } from "@/modules/rota/features/diary/components/day-forms";
 import { FillSheet, type FillTarget } from "@/modules/rota/features/diary/components/fill-sheet";
 import { useNowMinute } from "@/modules/rota/features/diary/components/now";
 import { LineDialog } from "@/modules/rota/features/diary/components/line-dialog";
 import { PersonSheet } from "@/modules/rota/features/diary/components/person-sheet";
-import { firstName, hoursWords, lineTitle, subsWords, listWords, needName, needWords, partsWords, span as spanWords, toneOf } from "@/modules/rota/features/diary/components/words";
+import { SubPlace } from "@/modules/rota/features/diary/components/sub-place";
+import { firstName, hoursWords, lineTitle, subsWords, subTime, listWords, needName, needWords, partsWords, span as spanWords, toneOf } from "@/modules/rota/features/diary/components/words";
 
 /** The day's diary (owner, 20 October 2026: "the plan, the diary, the actual guide for the day
  *  ... readable and understood by anyone"): what is not covered yet, who's where at a moment,
@@ -113,9 +114,10 @@ function WhosWhere() {
   const at = picked !== null ? Number(picked) : now ?? from;
   const times = Array.from({ length: Math.floor((to - from) / 30) }, (_, i) => from + i * 30);
   const where = whoIsWhere(diary, at);
-  // What people do while on things in the half hour shown: the till, cash drops, the phone placed on the Plan.
-  const around = diary.people.flatMap((p) => p.lines.flatMap((l) => l.subs.filter((x) => x.at !== null && x.at >= at && x.at < at + 30)
-    .map((x) => ({ at: x.at!, name: p.name, what: x.name })))).sort((a, b) => a.at - b.at || a.name.localeCompare(b.name));
+  // What people do while on things in the half hour shown: the till, cash drops, the phone placed
+  // on the Plan (one placed from a start to an end shows while it lasts).
+  const around = diary.people.flatMap((p) => p.lines.flatMap((l) => l.subs.filter((x) => x.at !== null && x.at < at + 30 && (x.until != null ? x.until > at : x.at >= at))
+    .map((x) => ({ at: x.at!, when: subTime(x), name: p.name, what: x.name })))).sort((a, b) => a.at - b.at || a.name.localeCompare(b.name));
   const resting = diary.people.filter((p) => p.breaks.some((b) => b.start <= at && at < b.end)).map((p) => p.name);
   const next = nextChange(diary, at);
   const nextWords = next ? [
@@ -152,7 +154,7 @@ function WhosWhere() {
       {around.length ? (
         <div className="diary-around">
           <span className="diary-caption">Sub-activities, {clock(at)} to {clock(at + 30)}</span>
-          <ul>{around.map((x, i) => <li key={i}><span className="tabular-nums diary-muted">{clock(x.at)}</span><span>{firstName(x.name)}: {x.what}</span></li>)}</ul>
+          <ul>{around.map((x, i) => <li key={i}><span className="tabular-nums diary-muted">{x.when}</span><span>{firstName(x.name)}: {x.what}</span></li>)}</ul>
         </div>
       ) : null}
       {resting.length ? <p className="diary-muted"><Coffee aria-hidden="true" className="diary-inline-icon" />On a break: {listWords(resting)}</p> : null}
@@ -216,9 +218,9 @@ function TheDay() {
   );
 }
 
-function Track({ f, hours, now, children }: { f: (t: number) => number; hours: number[]; now: number | null; children: React.ReactNode }) {
+function Track({ f, hours, now, subs = false, children }: { f: (t: number) => number; hours: number[]; now: number | null; subs?: boolean; children: React.ReactNode }) {
   return (
-    <div className="diary-track">
+    <div className="diary-track" data-subs={subs ? "" : undefined}>
       {hours.slice(1, -1).map((h) => <span key={h} className={`diary-hourline absolute inset-y-0 ${leftOf(f(h))}`} aria-hidden="true" />)}
       {children}
       {now !== null && f(now) >= 0 && f(now) <= 1 ? <span className={`diary-now absolute inset-y-0 ${leftOf(f(now))}`} aria-hidden="true" /> : null}
@@ -246,24 +248,42 @@ function HoleRows({ rows, f, hours, now }: { rows: Hole[][]; f: (t: number) => n
   ));
 }
 
+/** A sub-activity drawn inside the block of what they are on (owner, 22 October 2026: "need to be
+ *  seen on the timeline bar for that person too"): one placed from a start to an end as long as it
+ *  lasts, one at a moment (opening the till at the start, a cash drop at 12:00) as a short mark. */
+const MARK = 10;
+function SubBlock({ person, line, sub, f, changes }: { person: PersonDay; line: Line; sub: Line["subs"][number]; f: (t: number) => number; changes: boolean }) {
+  const start = Math.max(line.start, Math.min(sub.at!, line.end - MARK));
+  const end = Math.min(line.end, sub.until != null ? Math.max(sub.until, start + MARK) : start + MARK);
+  const words = `${sub.name}, ${subTime(sub)}`;
+  const cls = `diary-sub-block absolute bottom-2 ${stretchOf(f(start), f(end))}`;
+  const body = <span className="diary-block-title">{sub.name}</span>;
+  return changes && sub.when === "during" && sub.id && line.assignmentId
+    ? <SubPlace person={person} line={line} sub={{ id: sub.id, name: sub.name, at: sub.at, until: sub.until ?? null }}
+        trigger={<Button variant="ghost" className={cls} data-moment={sub.until == null ? "" : undefined} title={words} aria-label={`${person.name}: ${words}. Move or take off`}>{body}</Button>} />
+    : <span className={cls} data-moment={sub.until == null ? "" : undefined} title={words}>{body}</span>;
+}
+
 function PersonRow({ person, f, hours, now }: { person: PersonDay; f: (t: number) => number; hours: number[]; now: number | null }) {
   const { person: open, line: openLine, canChange, departmentFor } = useDiary();
   const label = `${person.name}: ${partsWords(person)}`;
   const changes = canChange && !!departmentFor;
+  const subs = person.lines.flatMap((l) => l.subs.filter((x) => x.at !== null).map((x, i) => ({ l, x, key: `${l.key}|${x.id ?? x.name}|${x.at}|${i}` })));
   return (
     <div className="diary-row">
       <Button variant="ghost" className="diary-row-label" onClick={() => open(person.userId)} aria-label={`${label}. Open their day`}>
         <span className="diary-row-name">{person.name}{person.warnings.length ? <TriangleAlert aria-label={`${person.warnings.length} to look at`} className="diary-warn" /> : null}</span>
         <span className="diary-caption tabular-nums">{person.off ? "Off today" : `${partsWords(person)}, ${hoursWords(person.paidMinutes)}`}</span>
       </Button>
-      <Track f={f} hours={hours} now={now}>
+      <Track f={f} hours={hours} now={now} subs={subs.length > 0}>
         {person.lines.map((l) => (
-          <Button variant="ghost" key={l.key} className={`diary-block absolute inset-y-1 ${stretchOf(f(l.start), f(l.end))}`} data-tone={toneOf(l.kind)}
+          <Button variant="ghost" key={l.key} className={`diary-block absolute inset-y-1 ${stretchOf(f(l.start), f(l.end))}`} data-tone={toneOf(l.kind)} data-subs={l.subs.some((x) => x.at !== null) ? "" : undefined}
             title={`${lineTitle(l)}, ${spanWords(l)}${l.subs.length ? `: ${subsWords(l)}` : ""}`} aria-label={`${person.name} on ${lineTitle(l)}, ${spanWords(l)}${l.subs.length ? `: ${subsWords(l)}` : ""}${changes ? ". Change or take off" : ". Open their day"}`}
             onClick={() => (changes ? openLine(person.userId, l.key) : open(person.userId))}>
             <span className="diary-block-title">{lineTitle(l)}</span><span className="diary-block-time tabular-nums">{spanWords(l)}</span>
           </Button>
         ))}
+        {subs.map(({ l, x, key }) => <SubBlock key={key} person={person} line={l} sub={x} f={f} changes={changes} />)}
         {person.breaks.map((b) => (
           <span key={`b${b.start}`} className={`diary-block absolute inset-y-1 ${stretchOf(f(b.start), f(b.end))}`} data-tone="break" title={`Break ${spanWords(b)}`}>
             <span className="diary-block-title">Break</span>

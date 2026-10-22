@@ -49,6 +49,10 @@ export function warningWords(w: Warning, young: YoungBand | null = null) {
   }
 }
 
-/** What someone does while on it: "10:30 Open the cash till · 11:00 Answer the phone · 11:30 Close
- *  the cash till". One done any time that is not placed yet says so. */
-export const subsWords = (l: Pick<Line, "subs">) => l.subs.map((x) => (x.at !== null ? `${clock(x.at)} ${x.name}` : `${x.name}, not placed yet`)).join(" · ");
+/** When a sub-activity is done: "12:30–13:00" for one placed with its end, "10:30" for one at a
+ *  moment (the start, the end, a set time). */
+export const subTime = (x: Line["subs"][number]) => (x.at === null ? "" : x.until != null ? `${clock(x.at)}–${clock(x.until)}` : clock(x.at));
+
+/** What someone does while on it: "10:30 Open the cash till · 11:00–12:00 Answer the phone · 11:30
+ *  Close the cash till". One done any time that is not placed yet says so. */
+export const subsWords = (l: Pick<Line, "subs">) => l.subs.map((x) => (x.at !== null ? `${subTime(x)} ${x.name}` : `${x.name}, not placed yet`)).join(" · ");

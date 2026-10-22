@@ -76,8 +76,9 @@ export type Line = Span & {
   group: string;
   /** Sub-activities they do while on it, in order: at a time, or one done any time that the Plan
    *  has not placed yet (`at` null). One at several times is here once for each; `id` is its saved
-   *  record, for moving one placed on the Plan. */
-  subs: { id?: string; name: string; when: string; at: number | null }[];
+   *  record, for moving one placed on the Plan; `until` when one placed on the Plan finishes
+   *  (owner, 22 October 2026: "sub activities need a time to start and end"). */
+  subs: { id?: string; name: string; when: string; at: number | null; until?: number | null }[];
   /** The saved record: an activity or booking place, an area place, or the class taught. */
   assignmentId: string | null;
   place: number | null;
@@ -224,14 +225,15 @@ function needsOf(input: DiaryInput): Need[] {
  *  2026: cash drops at 12:00 and 16:00). One done any time ("during") has the time the Plan placed
  *  it at, or none yet (owner, 21 October 2026: "assigned at any time during that activity,
  *  directly on the plan"). */
-export type SubIn = { id?: string; name: string; when: string; at: number | null; times?: readonly number[] };
+export type SubIn = { id?: string; name: string; when: string; at: number | null; times?: readonly number[]; until?: number | null };
 
 /** Sub-activities on the clock: at the start, at the end, at each of their times, at the time the
  *  Plan placed one done any time, or not placed yet (null). */
 export function subsAt(a: { start: number; end: number; subs?: readonly SubIn[] }): Line["subs"] {
   const at = (s: SubIn): (number | null)[] => (s.when === "start" ? [a.start] : s.when === "end" ? [a.end]
     : s.times?.length ? [...s.times] : [s.at]);
-  return (a.subs ?? []).flatMap((s) => at(s).map((t) => ({ ...(s.id ? { id: s.id } : {}), name: s.name, when: s.when, at: t })))
+  return (a.subs ?? []).flatMap((s) => at(s).map((t) => ({ ...(s.id ? { id: s.id } : {}), name: s.name, when: s.when, at: t,
+    ...(s.when === "during" && t !== null && s.until != null && s.until > t ? { until: s.until } : {}) })))
     .sort((x, y) => (x.at ?? a.start + 0.5) - (y.at ?? a.start + 0.5));
 }
 

@@ -364,6 +364,16 @@
 .turnfin-module .diary-block[data-tone="free"] { border: 1px dotted var(--pc-primary); background: none; color: var(--pc-primary); }
 .turnfin-module .diary-block[data-tone="hole"] { border: 1px dashed var(--pc-danger); background: var(--pc-danger-soft); color: var(--pc-danger); }
 .turnfin-module .diary-block[data-tone="short"] { border: 1px dashed var(--pc-warning); background: var(--pc-warning-soft); color: var(--pc-warning); }
+/* Sub-activities inside the block they belong to (owner, 22 October 2026): the row grows, the
+   block's words sit at its top and each sub-activity is a white strip along its foot, as long
+   as it lasts; one at a moment is a short mark. */
+.turnfin-module .diary-track[data-subs] { min-height: 76px; }
+.turnfin-module .diary-block[data-subs] { flex-direction: row; justify-content: flex-start; align-items: flex-start; gap: 6px; padding-top: 4px; }
+.turnfin-module .diary-sub-block { container-type: inline-size; z-index: 1; display: flex; align-items: center; justify-content: flex-start; min-width: 0; height: 24px; min-height: 0; margin-inline: 4px; padding: 0 6px; overflow: hidden; border: 1px solid var(--pc-line-strong); border-radius: 6px; background: var(--pc-surface); color: var(--pc-ink); font: inherit; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); white-space: nowrap; }
+.turnfin-module .diary-sub-block[data-moment] { margin-inline: 2px; padding: 0 3px; }
+.turnfin-module .diary-track button.diary-sub-block { padding: 0 6px; color: var(--pc-ink); cursor: pointer; }
+.turnfin-module .diary-track button.diary-sub-block[data-moment] { padding: 0 3px; }
+.turnfin-module button.diary-sub-block:hover { background: var(--pc-surface); border-color: var(--pc-primary); }
 
 /* On a phone and tablet: each person's day as a short list */
 .turnfin-module .diary-cards { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; grid-template-columns: minmax(0, 1fr); }

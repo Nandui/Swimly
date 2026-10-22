@@ -452,6 +452,9 @@ model RotaAssignmentSub {
   /// the Plan at `atMinutes`; none for one saved before it could be placed).
   when          String
   atMinutes     Int?
+  /// When one done any time ("during") finishes, placed on the Plan with its start (owner, 22
+  /// October 2026: "sub activities need a time to start and end"); none for one placed before.
+  endMinutes    Int?
   /// Its set times when it has more than one; `atMinutes` keeps the first.
   times         Int[]   @default([])
   sortOrder     Int     @default(0)
