@@ -7,7 +7,7 @@ import { IncidentError } from "@/modules/incidents/shared/rules";
 import { lockReport, recordEvent, reportRights } from "@/modules/incidents/shared/service";
 import type { IncidentsActor } from "@/modules/incidents/shared/types";
 import { wellbeingExpiry, wellbeingRequestSchema, wellbeingState, type WellbeingRequestInput } from "@/modules/incidents/features/wellbeing/rules";
-import { wellbeingRecipients } from "@/modules/incidents/features/wellbeing/server/settings";
+import { wellbeingCopies, wellbeingRecipients } from "@/modules/incidents/features/wellbeing/server/settings";
 
 /** Wellbeing checks, the staff side (docs/incidents.md, "Wellbeing checks").
  *  Whoever triages reports at the site asks HR to check on someone while the
@@ -34,16 +34,17 @@ export async function wellbeingOnReport(reportId: string) {
   const who = await requireIncidentsActor();
   const { row, rights, ask } = await reportFor(who, reportId);
   if (!rights.review) return null;
-  const [checks, to] = await Promise.all([
+  const [checks, to, copies] = await Promise.all([
     prisma.incidentWellbeingCheck.findMany({ where: { reportId }, orderBy: { createdAt: "asc" }, include: { updates: { orderBy: { createdAt: "asc" } } } }),
     wellbeingRecipients(who.orgId),
+    wellbeingCopies(who.orgId),
   ]);
   const open = row.status !== "closed";
   const people = await prisma.incidentPerson.findMany({ where: { reportId, type: "staff", userId: { not: null } }, select: { userId: true } });
   const staff = ask && open ? await activeStaffAtSite(who.orgId, row.siteId) : [];
   const involved = new Set(people.map((p) => p.userId));
   return {
-    canRequest: ask && open, canChange: ask, recipients: to, settings: who.signoff,
+    canRequest: ask && open, canChange: ask, recipients: to, copies, settings: who.signoff,
     /** Staff named on the report first, then everyone else at the site. */
     staff: [...staff.filter((p) => involved.has(p.id)), ...staff.filter((p) => !involved.has(p.id))].map((p) => ({ ...p, involved: involved.has(p.id) })),
     checks: checks.map((c) => {

@@ -13,7 +13,7 @@ const THEME = "turnfin-docs turnfin-module";
 
 /** Incidents > Settings: who gets wellbeing check requests (owner request, 22
  *  October 2026). A list of addresses he keeps, not a role. */
-export function WellbeingSettings({ to, changedByName, changedAt }: { to: string[]; changedByName: string | null; changedAt: Date | null }) {
+export function WellbeingSettings({ to, cc, changedByName, changedAt }: { to: string[]; cc: string[]; changedByName: string | null; changedAt: Date | null }) {
   const router = useRouter();
   return (
     <section aria-labelledby="inc-set-wb-h" className="pc-panel flex flex-col gap-4">
@@ -29,9 +29,12 @@ export function WellbeingSettings({ to, changedByName, changedAt }: { to: string
           title="Who gets wellbeing check requests"
           description={`Up to ${MAX_WELLBEING_TO} email addresses, such as HR's shared inbox. Leave it empty and nobody can ask for a check.`}
           submitLabel="Save" successMessage="Saved" onSuccess={() => router.refresh()}
-          submit={(form) => saveWellbeingSettings(String(form.get("to") ?? ""))}>
+          submit={(form) => saveWellbeingSettings(String(form.get("to") ?? ""), String(form.get("cc") ?? ""))}>
           <Field label="Email addresses" htmlFor="inc-set-wb-to" hint="One on each line, or separated by commas.">
             <Textarea id="inc-set-wb-to" name="to" rows={4} maxLength={2600} defaultValue={to.join("\n")} placeholder={"hr@example.com\nname@example.com"} autoComplete="off" />
+          </Field>
+          <Field label="Copy to" htmlFor="inc-set-wb-cc" optional hint="Copied on every request to HR, such as your own address. Up to 10.">
+            <Textarea id="inc-set-wb-cc" name="cc" rows={2} maxLength={2600} defaultValue={cc.join("\n")} placeholder="you@example.com" autoComplete="off" />
           </Field>
         </FormDialog>
       </div>
@@ -45,6 +48,9 @@ export function WellbeingSettings({ to, changedByName, changedAt }: { to: string
           ))}
         </ul>
       ) : <p className="text-sm text-ui-muted-foreground">Nobody yet, so wellbeing checks can&rsquo;t be asked for. Add HR&rsquo;s email address.</p>}
+      <p className="text-sm text-ui-muted-foreground">
+        {cc.length ? <>Copied on every request: <span className="break-all font-semibold text-ui-foreground">{cc.join(", ")}</span>.</> : "Nobody else is copied. Use Copy to for your own address."} The person who asked is always copied too.
+      </p>
       {changedByName && changedAt ? <p className="text-xs text-ui-muted-foreground">Last changed by {changedByName}, {formatDateTime(changedAt)}.</p> : null}
     </section>
   );

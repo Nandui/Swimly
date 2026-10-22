@@ -331,6 +331,9 @@ model IncidentsSettings {
   orgId         String   @id
   /// Who gets wellbeing check requests (HR), as stored: "a@x, b@y"; empty for nobody yet.
   wellbeingTo   String   @default("")
+  /// Copied (CC) on every wellbeing check request to HR, such as the operations
+  /// manager (owner request, 22 October 2026), as stored; empty for nobody.
+  wellbeingCc   String   @default("")
   changedById   String?
   changedByName String?
   updatedAt     DateTime @updatedAt

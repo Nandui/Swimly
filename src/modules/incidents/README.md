@@ -37,7 +37,7 @@ Declared in `prisma/schema/incidents.prisma`, migrations `20261031120000_inciden
 - `incidents_files` (`IncidentFile`) — photos and documents, stored as bytes, hidden when removed.
 - `incidents_footage_requests` (`IncidentFootageRequest`) — who was asked for CCTV footage, what for, the link's hashed secret and expiry, and the email's outcome (migration `20261125120000_incident_footage_requests`).
 - `incidents_footage` (`IncidentFootage`) — each video sent through a link: its name, size, who sent it and where it is in the Blob store; hidden when removed.
-- `incidents_settings` (`IncidentsSettings`) — one row per organisation: who gets wellbeing check requests (migration `20261203090000_incident_wellbeing_checks`).
+- `incidents_settings` (`IncidentsSettings`) — one row per organisation: who gets wellbeing check requests and who is copied on them (migrations `20261203090000_incident_wellbeing_checks`, `20261204090000_incident_wellbeing_copy`).
 - `incidents_wellbeing_checks` (`IncidentWellbeingCheck`) — who HR was asked to check on and why, the addresses it went to, the link's hashed secret and expiry, its state and the email's outcome.
 - `incidents_wellbeing_updates` (`IncidentWellbeingUpdate`) — what HR recorded through the link: who, the day, what they did and what happens next. Never changed or deleted.
 
