@@ -31,8 +31,9 @@ declare module "next-auth" {
       /** What their role gives everywhere. */
       primaryPermissions?: string[];
       /** How this session proved who it is: a password sign-in, a PIN quick
-       *  switch on a shared device, or the development bypass; and when. */
-      authMethod?: "password" | "pin" | "dev";
+       *  switch on a shared device, Sign in with Google, or the development
+       *  bypass; and when. Only a password counts for restricted data. */
+      authMethod?: "password" | "pin" | "dev" | "google";
       authAt?: number | null;
       /** Set on a shared device's quick-switch sessions. */
       sharedDevice?: boolean;
@@ -65,7 +66,7 @@ declare module "@auth/core/jwt" {
   interface JWT {
     sub?: string;
     /** How the person proved who they are, and when (never what they may do). */
-    authMethod?: "password" | "pin" | "dev";
+    authMethod?: "password" | "pin" | "dev" | "google";
     authAt?: number;
     sharedDevice?: boolean;
   }

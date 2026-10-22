@@ -21,11 +21,11 @@ import { Input } from "@/components/ui/input";
  *  `devAdminName` arrives already decided by the server: the page only passes
  *  a name when the deployment is allowed a passwordless sign-in, so the client
  *  never carries the rule and cannot be talked into showing the button. */
-export function SignInForm({ devAdminName, sharedDeviceName = null }: { devAdminName: string | null; sharedDeviceName?: string | null }) {
+export function SignInForm({ devAdminName, sharedDeviceName = null, google = false, initialError = null }: { devAdminName: string | null; sharedDeviceName?: string | null; google?: boolean; initialError?: string | null }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialError);
   const [pending, startTransition] = useTransition();
 
   function land() {
@@ -63,6 +63,19 @@ export function SignInForm({ devAdminName, sharedDeviceName = null }: { devAdmin
     });
   }
 
+  /** Off to Google and back to the home page. Google only says which email it
+   *  is; the server lets them in only if that is an active staff account. */
+  function handleGoogleSignIn() {
+    setError(null);
+    startTransition(async () => {
+      try {
+        await signIn("google", { redirectTo: "/" });
+      } catch {
+        setError("Could not sign you in with Google. Try again, or use your email and password.");
+      }
+    });
+  }
+
   function handleDevSignIn() {
     startTransition(async () => {
       try {
@@ -81,7 +94,7 @@ export function SignInForm({ devAdminName, sharedDeviceName = null }: { devAdmin
 
   return (
     <AuthFrame welcome>
-      <PageShell header={<PageHeader title="Sign in" description="Use your work email and password." />}>
+      <PageShell header={<PageHeader title="Sign in" description={google ? "Use your work email and password, or your Google account." : "Use your work email and password."} />}>
 
       {sharedDeviceName ? (
         <div className="pc-note flex-wrap">
@@ -130,6 +143,20 @@ export function SignInForm({ devAdminName, sharedDeviceName = null }: { devAdmin
           </LoadingButton>
         </div>
       </form>
+
+      {google ? (
+        <>
+          <div className="flex min-w-0 items-center gap-3">
+            <Separator className="flex-1" />
+            <span className="text-xs text-ui-muted-foreground">or</span>
+            <Separator className="flex-1" />
+          </div>
+          <Button type="button" variant="outline" onClick={handleGoogleSignIn} disabled={pending} className="w-full">
+            Sign in with Google
+          </Button>
+          <p className="text-xs text-ui-muted-foreground">Google works when it uses the same email as your Turnfin account.</p>
+        </>
+      ) : null}
 
       <p className="text-xs text-ui-muted-foreground">No account yet? Ask a manager to add you in Admin.</p>
 

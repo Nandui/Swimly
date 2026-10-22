@@ -122,6 +122,23 @@ registered device needs `work.anywhere` once `WORK_DEVICE_REQUIRED` is on. The
 self-service reads (`*/mine.ts`) and writes (`*/self.ts`) serve the staff API only.
 See docs/staff-app.md.
 
+## Sign in with Google
+
+Staff may sign in with Google instead of their password (`src/lib/google-sign-in.ts`).
+Google only proves an email address: it must be Google-verified and belong to an
+**active** staff account already (Admin › Staff). Google never creates or changes an
+account, and the session's subject is always the staff account's id. The work-PC rule
+applies as for a password. Each Google sign-in writes an audit row on the account
+(`User`, `sign_in`). The session's `authMethod` is `google`, which does not count as a
+fresh password: restricted records still ask for the password (step-up), and Google
+does not add anyone to a shared device's quick-switch list.
+
+It is on only where `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` are set (a Google Cloud
+OAuth web client whose authorised redirect URI is
+`https://<the app's address>/api/auth/callback/google`); elsewhere the button is not
+shown and the provider is not registered. Previews have a new address every time,
+which Google cannot list, so set the two variables for Production only.
+
 ## Shared devices
 
 Reception computers and poolside tablets are used by whoever is on shift. Someone who

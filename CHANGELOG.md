@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.67.0 · 22 October 2026 · Sign in with Google
+
+- The sign-in page has a new **Sign in with Google** button, under the usual email and password.
+- It works for anyone whose Google account uses the same email as their Turnfin account. Google does not create accounts: a manager still adds you in Admin first.
+- If the email doesn't match an active account, the sign-in page says so and you can sign in with your password as before.
+- HR records still ask for your password before they open, even after signing in with Google.
+
 ## 1.65.0 · 22 October 2026 · Rota: sub-activities have a start and an end
 
 - On the **Plan**, when you place a sub-activity on someone's time (such as **Answer the phone**), you now choose when it **starts** and when it **finishes**. Tap a time or type one, as before. Picking a start fills in half an hour later as the finish, which you can change.
