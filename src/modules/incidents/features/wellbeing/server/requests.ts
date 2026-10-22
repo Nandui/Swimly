@@ -37,7 +37,7 @@ export async function wellbeingOnReport(reportId: string) {
   const [checks, to, copies] = await Promise.all([
     prisma.incidentWellbeingCheck.findMany({ where: { reportId }, orderBy: { createdAt: "asc" }, include: { updates: { orderBy: { createdAt: "asc" } } } }),
     wellbeingRecipients(who.orgId),
-    wellbeingCopies(who.orgId),
+    wellbeingCopies(who.orgId, row.siteId),
   ]);
   const open = row.status !== "closed";
   const people = await prisma.incidentPerson.findMany({ where: { reportId, type: "staff", userId: { not: null } }, select: { userId: true } });

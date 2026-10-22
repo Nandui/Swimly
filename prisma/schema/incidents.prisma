@@ -334,6 +334,9 @@ model IncidentsSettings {
   /// Copied (CC) on every wellbeing check request to HR, such as the operations
   /// manager (owner request, 22 October 2026), as stored; empty for nobody.
   wellbeingCc   String   @default("")
+  /// Copied on requests about one site only, by site id: { "<siteId>": "a@x, b@y" }
+  /// (owner request, 22 October 2026: "each site might require a different CC person").
+  wellbeingCcBySite Json @default("{}")
   changedById   String?
   changedByName String?
   updatedAt     DateTime @updatedAt

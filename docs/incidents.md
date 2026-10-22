@@ -160,9 +160,11 @@ now, and for him to decide who gets these emails.
 - **The email** (`incidents_wellbeing_checks.emailedAt`, or `emailError` on the request) goes to
   each address and names who asked, the site, the report number and the link. Who the check is
   for and why are only behind the link. Whoever asked is copied in and replies go to them. The
-  **Copy to** addresses in Settings (`incidents_settings.wellbeingCc`, up to 10) are copied on
-  every request too: Fernando asked to always be copied (22 October 2026), kept as an address
-  list rather than a role so it never depends on a role's name.
+  **Copy to** addresses in Settings are copied too: those for every site
+  (`incidents_settings.wellbeingCc`) and those for the report's site only
+  (`wellbeingCcBySite`, by site id), up to 10 each. Fernando asked to always be copied, and
+  for each site to have its own (22 October 2026); kept as address lists rather than roles
+  so they never depend on a role's name.
 - **The link** (`/wellbeing/<secret>`) needs no sign-in. Its secret is 32 random bytes, kept only
   as a SHA-256 hash (`shared/link.ts`, shared with footage), and opens that one request: who,
   why, who asked, and what HR has recorded so far. It works for 30 days, and each update that

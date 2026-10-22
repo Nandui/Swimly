@@ -12,8 +12,8 @@ import { wellbeingCopies } from "@/modules/incidents/features/wellbeing/server/s
  *  request goes to each address in Incidents > Settings and says who asked, the
  *  site and the report number, and the link; who the check is for and why are
  *  only behind the link. Replies go to whoever asked, who is copied in, as with
- *  CCTV footage, along with the Copy to addresses in Settings (owner request,
- *  22 October 2026: "always cc me"). When HR records something, whoever asked is told to look at
+ *  CCTV footage, along with the Copy to addresses in Settings for every site
+ *  and for the report's site (owner requests, 22 October 2026). When HR records something, whoever asked is told to look at
  *  the report, without what HR wrote. Outside production,
  *  INCIDENTS_EMAIL_DEV_LOG=true prints the emails to the server console instead. */
 
@@ -27,7 +27,7 @@ export async function sendWellbeingRequest(checkId: string, token: string, origi
   try {
     const config = emailSender("Turnfin Incidents");
     if (!config && !devLog()) throw new Error("Email is not set up.");
-    const [site, asker, copies] = await Promise.all([siteName(c.report.siteId), staffAccess(c.requestedById), wellbeingCopies(c.report.orgId)]);
+    const [site, asker, copies] = await Promise.all([siteName(c.report.siteId), staffAccess(c.requestedById), wellbeingCopies(c.report.orgId, c.report.siteId)]);
     const subject = `Wellbeing check request from ${site}`;
     const text = "Hello,\r\n\r\n"
       + `${c.requestedByName} at ${site} is asking HR to check on someone's wellbeing after incident ${incidentNumber(c.report.number)}.\r\n\r\n`
