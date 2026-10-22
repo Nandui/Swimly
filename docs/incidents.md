@@ -143,6 +143,44 @@ footage, by an email with a direct link to upload it, so the footage is attached
   Without it the panel says footage storage isn't set up and offers nothing to send. The
   sandbox prints the email instead of sending it (`INCIDENTS_EMAIL_DEV_LOG`).
 
+## Wellbeing checks (owner request, 22 October 2026)
+
+Fernando asked for a way to ask HR for a wellbeing check from an incident, working like the
+CCTV footage requests, where the HR person records what they did, when, and what is expected
+now, and for him to decide who gets these emails.
+
+- **Who gets them.** The addresses in **Incidents › Settings** (`/incidents/settings`, also
+  listed in Admin under Modules), kept in `incidents_settings.wellbeingTo`: up to 10, such as
+  HR's shared inbox. A list he edits, not a role. Only Incidents: Manage opens Settings; each
+  change is in the audit log. With no addresses, the report says so and nothing can be sent.
+- **Who asks.** Anyone who triages reports at the site, while the report is open, as with
+  footage. Not on your own report, unless you hold Manage. On the report: **Wellbeing checks ›
+  Ask HR for a wellbeing check**: who (staff named on the report first, then everyone at the
+  site, or a typed name) and why, in a sentence or two, without medical details.
+- **The email** (`incidents_wellbeing_checks.emailedAt`, or `emailError` on the request) goes to
+  each address and names who asked, the site, the report number and the link. Who the check is
+  for and why are only behind the link. Whoever asked is copied in and replies go to them.
+- **The link** (`/wellbeing/<secret>`) needs no sign-in. Its secret is 32 random bytes, kept only
+  as a SHA-256 hash (`shared/link.ts`, shared with footage), and opens that one request: who,
+  why, who asked, and what HR has recorded so far. It works for 30 days, and each update that
+  says what happens next gives it another 30. It stops when HR ticks **Nothing more is needed**
+  (the check is **Done**), when it is cancelled (**Cancel the request**) or sent again (**Send
+  again** gives a new link, to the addresses in Settings at that moment). It keeps working after
+  the report closes, since someone's wellbeing doesn't end with the investigation. Unknown links
+  are a 404.
+- **What HR records** (`incidents_wellbeing_updates`, never changed or deleted): their name, the
+  day they did it (not before the request, not in the future), what they did, and what happens
+  now, or that nothing more is needed. Each one is in the report's history and the audit log
+  under the name typed ("Pat Example (HR, wellbeing link)"), without what was written, and
+  whoever asked gets an email to look at the report.
+- **Who sees what.** What HR writes is health information about a person. Those who triage at
+  the site see the request, its state (Waiting for HR, HR following up, Done, Link expired,
+  Cancelled) and when HR last recorded something; **only Incidents: Manage at the site and
+  whoever asked read what HR wrote**. The reporter sees none of it, not even the history lines.
+  The full record for the insurer leaves the checks out; the history there still shows that
+  one was asked.
+- The sandbox prints the emails instead of sending them (`INCIDENTS_EMAIL_DEV_LOG`).
+
 ## Insights, the full record and HR (phase 3)
 
 - **Insights** (`/incidents/insights`, Investigate and Manage, 404 for everyone else): the last
@@ -202,8 +240,8 @@ investigates it, and a serious one needs another Manage holder at the site to cl
 | Level | Permission | Sees |
 | --- | --- | --- |
 | Report | `incidents.reports.create` | Their own reports, in full, and how they were closed |
-| Investigate | `incidents.reports.review` | Every report at the sites they cover, injury details included; the serious alerts; triage and closing low-risk ones; statements, the root cause and actions; CCTV footage requests and videos |
-| Manage | `incidents.reports.signoff` | Also closing serious and moderate reports (only the operations manager holds it, owner decision 12 October 2026), reopening closed ones, the full record for the insurer, reports past their keeping period, and who opened each report's injury details |
+| Investigate | `incidents.reports.review` | Every report at the sites they cover, injury details included; the serious alerts; triage and closing low-risk ones; statements, the root cause and actions; CCTV footage requests and videos; wellbeing checks asked of HR and how they stand |
+| Manage | `incidents.reports.signoff` | Also closing serious and moderate reports (only the operations manager holds it, owner decision 12 October 2026), reopening closed ones, the full record for the insurer, reports past their keeping period, who opened each report's injury details, what HR recorded on wellbeing checks, and Incidents › Settings |
 
 Reach is the sites a person works at. Opening someone else's report that names people writes
 an `incidents_access_events` row. Every change writes one audit row under Incidents.
@@ -217,7 +255,8 @@ actions, to triage, under investigation, your reports, recently closed) and a re
 (`/incidents/[id]`). Files are served by `/api/incidents/files/[id]` and added through
 `/api/incidents/files`. CCTV videos are served by `/api/incidents/footage/[id]`; the emailed
 link's page is `/footage/[token]`, which uploads through `/api/incidents/footage/upload` and
-`/api/incidents/footage/received`.
+`/api/incidents/footage/received`. HR's wellbeing link is `/wellbeing/[token]`; Settings
+(`/incidents/settings`, Manage) holds who gets the requests.
 
 ## Decided (11 October 2026)
 

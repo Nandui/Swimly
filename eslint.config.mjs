@@ -37,7 +37,7 @@ const workModules = {
   stock: workArea("stock"),
   cctv: workArea("cctv"),
   "site-monitoring": workArea("site-monitoring"),
-  incidents: workArea("incidents", "src/app/api/incidents/**", "src/app/api/cron/incidents/**", "src/app/footage/**"),
+  incidents: workArea("incidents", "src/app/api/incidents/**", "src/app/api/cron/incidents/**", "src/app/footage/**", "src/app/wellbeing/**"),
 };
 const moduleFiles = { activities: activitiesFiles, ...workModules };
 const allModuleFiles = Object.values(moduleFiles).flat();

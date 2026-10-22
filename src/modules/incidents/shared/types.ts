@@ -84,6 +84,11 @@ export const incidentActions = {
   footage_cancel: "CCTV request cancelled",
   footage_received: "CCTV footage received",
   footage_remove: "CCTV footage removed",
+  wellbeing_request: "HR asked for a wellbeing check",
+  wellbeing_resend: "HR wellbeing check sent again",
+  wellbeing_cancel: "HR wellbeing check cancelled",
+  wellbeing_update: "HR recorded a wellbeing check",
+  wellbeing_done: "HR finished the wellbeing check",
   reopen: "Reopened",
   export: "Opened for the insurer",
 } as const;
