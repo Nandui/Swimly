@@ -44,9 +44,6 @@ function providers(): NextAuthConfig["providers"] {
         // failure shape for every reason, so the form cannot be used to find
         // out which addresses have accounts.
         if (!user?.passwordHash || !user.isActive) return null;
-        // Once Google sign-in is set up it is the way in; a password is kept
-        // only for superadmin (developer) accounts, at /sign-in/developer.
-        if (googleSignInAvailable() && !user.isSuperadmin) return null;
         if (!(await bcrypt.compare(password, user.passwordHash))) return null;
         const device = await currentSharedDevice();
         // Work is done on registered work PCs unless the person may work anywhere.

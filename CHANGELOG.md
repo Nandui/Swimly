@@ -4,6 +4,11 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.69.3 · 23 October 2026 · Sign in with your email and password again
+
+- The sign-in page has your email and password back, with **Sign in with Google** underneath. Use whichever you prefer.
+- Everyone can sign in with a password again, not only the developer account. If you don't have a password yet, ask a manager to set one for you in **Admin > Staff**.
+
 ## 1.69.2 · 23 October 2026 · Signing in works again
 
 - Signing in with Google works again. Since this morning's update, Turnfin was turning everyone away with "Google didn't ask for your password". Sorry about that.

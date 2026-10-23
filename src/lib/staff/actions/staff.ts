@@ -123,10 +123,8 @@ export async function resetPassword(id: string, password: string): Promise<Actio
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const passwordHash = await bcrypt.hash(parsed.data, BCRYPT_ROUNDS);
   const result = await prisma.$transaction(async (tx) => {
-    const existing = await tx.user.findUnique({ where: { id }, select: { id: true, name: true, email: true, isSuperadmin: true } });
+    const existing = await tx.user.findUnique({ where: { id }, select: { id: true, name: true, email: true } });
     if (!existing) return fail("That account no longer exists.");
-    // Google is the way in; only the developer (superadmin) login keeps a password.
-    if (googleSignInAvailable() && !existing.isSuperadmin) return fail(`${existing.name} signs in with Google, so they don't need a password.`);
     await tx.user.update({ where: { id }, data: { passwordHash } });
     await logAudit({
       actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: "update",

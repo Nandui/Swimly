@@ -93,8 +93,8 @@ async function passwordSignIn({ google, isSuperadmin }: { google: boolean; isSup
   return config.providers[0].authorize!({ email: row.email, password: "correct horse" });
 }
 
-test("with Google set up, only a superadmin may still sign in with a password", async () => {
-  assert.equal(await passwordSignIn({ google: true, isSuperadmin: false }), null);
+test("every account may sign in with a password, with Google set up or not", async () => {
+  assert.ok(await passwordSignIn({ google: true, isSuperadmin: false }));
   assert.ok(await passwordSignIn({ google: true, isSuperadmin: true }));
-  assert.ok(await passwordSignIn({ google: false, isSuperadmin: false }), "without Google everyone keeps the password form");
+  assert.ok(await passwordSignIn({ google: false, isSuperadmin: false }));
 });
