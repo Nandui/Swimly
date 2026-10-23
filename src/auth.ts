@@ -84,7 +84,10 @@ function providers(): NextAuthConfig["providers"] {
   // Registered only when the Google client is configured; it reads
   // AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET itself.
   if (googleSignInAvailable()) {
-    list.push(Google({ authorization: { params: { prompt: "select_account" } } }));
+    // max_age=0: Google asks for the password every time, even when someone
+    // is still signed in to Google in this browser; googleSignIn refuses a
+    // sign-in Google didn't just check (shared PCs, 23 October 2026).
+    list.push(Google({ authorization: { params: { prompt: "select_account", max_age: "0" } } }));
   }
 
   if (devSignInAllowed()) {

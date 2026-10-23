@@ -4,6 +4,11 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.69.1 · 23 October 2026 · Your password every time you sign in
+
+- Signing in with Google now always asks for your Google password, even if someone else is still signed in to Google on that computer. Nobody can get into Turnfin as you by tapping your name on a shared desk or pool deck computer.
+- If Google lets you through without asking, Turnfin says so and asks you to try again.
+
 ## 1.69.0 · 23 October 2026 · Google is the way to sign in
 
 - Turnfin now signs you in with your work Google account only. The sign-in page has one button: **Sign in with Google**.

@@ -40,7 +40,7 @@ function fixture({ rows = [] as Row[], workDevice = false, anywhere = false, dev
 const staff: Row = { id: "staff-1", name: "Synthetic Manager", email: "manager@leisureworldcork.com", isActive: true, staffRoleId: "role-1", googleId: null, avatarUrl: null, orgId: "org-lw" };
 const profile = (over: Record<string, unknown> = {}) => ({
   sub: "g-100", email: "manager@leisureworldcork.com", email_verified: true, hd: "leisureworldcork.com",
-  name: "Synthetic Manager", picture: "https://lh3.googleusercontent.com/a/synthetic", ...over,
+  name: "Synthetic Manager", picture: "https://lh3.googleusercontent.com/a/synthetic", auth_time: Math.floor(Date.now() / 1000), ...over,
 });
 
 test("Google sign-in is offered only when both Google settings are present", () => {
@@ -139,10 +139,25 @@ test("a recorded sign-in clears a PIN lock, adds a PIN holder to the work device
   assert.equal(f.audits.at(-1)?.summary, "Signed in with Google");
 });
 
+test("a sign-in Google didn't just check the password for is refused", async () => {
+  const f = fixture({ rows: [{ ...staff }] });
+  const now = Date.now();
+  assert.equal(f.freshGoogleSignIn(profile({ auth_time: Math.floor(now / 1000) - 30 }), now), true);
+  // A browser that was still signed in to Google from earlier.
+  assert.equal(f.freshGoogleSignIn(profile({ auth_time: Math.floor(now / 1000) - 60 * 60 }), now), false);
+  assert.equal(f.freshGoogleSignIn(profile({ auth_time: undefined }), now), false);
+  assert.equal(f.freshGoogleSignIn(profile({ auth_time: "1700000000" }), now), false);
+  assert.deepEqual(await f.googleSignIn(profile({ auth_time: Math.floor(now / 1000) - 60 * 60 })), { refused: "google_password" });
+  assert.deepEqual(await f.googleSignIn(profile({ auth_time: undefined })), { refused: "google_password" });
+  // Refused before anything is linked or changed.
+  assert.equal(f.rows[0].googleId, null);
+});
+
 test("refusals read as plain sentences and unknown codes as none", () => {
   const f = fixture();
   assert.match(f.googleRefusalText("google_no_account") ?? "", /can't sign in to Turnfin/);
   assert.match(f.googleRefusalText("google_waiting") ?? "", /ask your manager to give you a role/i);
+  assert.match(f.googleRefusalText("google_password") ?? "", /didn't ask for your password/);
   assert.match(f.googleRefusalText("work_device") ?? "", /work computer/);
   assert.equal(f.googleRefusalText("toString"), null);
   assert.equal(f.googleRefusalText(undefined), null);
