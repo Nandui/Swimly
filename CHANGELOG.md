@@ -4,6 +4,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.70.0 · 23 October 2026 · Instructors are chosen on the Rota
+
+- The Rota Plan is now the only place to choose who teaches each swim class. The swim school shows whoever the Plan has.
+- When you choose an instructor for a class on the Plan, you can pick **Every Tuesday** (or whichever day it runs) up to a date, instead of choosing them one day at a time. You can still change any single day afterwards.
+- Until Sunday 1 November, classes nobody has been chosen for keep the instructor the swim school had. After that they have no instructor. The Plan shows a notice while any class still relies on the old list, with a **Carry the instructors over** button that puts each class's current instructor on the Plan for the weeks you choose. Classes you've already chosen someone for stay as they are.
+- A class's page in the swim school now says whether its next teacher was chosen on the Plan or still comes from the old list, with a **Choose on the Plan** button.
 ## 1.69.2 · 23 October 2026 · Signing in works again
 
 - Signing in with Google works again. Since this morning's update, Turnfin was turning everyone away with "Google didn't ask for your password". Sorry about that.

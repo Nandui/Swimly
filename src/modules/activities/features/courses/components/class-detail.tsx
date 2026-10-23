@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
 import UiLink from "next/link";
+import { CalendarDays } from "lucide-react";
 import {
   TableHead,
   TableRow,
@@ -69,6 +70,7 @@ export function ClassDetailView({
   levelImage,
   coverName,
   nextTeacher,
+  planHref,
   sites = [],
 }: {
   course: CourseDetail;
@@ -81,7 +83,9 @@ export function ClassDetailView({
   levelImage?: ReactNode;
   coverName?: string;
   /** Who teaches the next lesson, chosen on the rota Plan (owner decision, 16 October 2026). */
-  nextTeacher?: { day: string; name: string | null };
+  nextTeacher?: { day: string; name: string | null; planned: boolean };
+  /** The rota Plan on the next lesson's day, where its teacher is chosen, for those who can open it. */
+  planHref?: string;
   /** The sites the person works at; a second one offers "Move". */
   sites?: { id: string; name: string }[];
 }) {
@@ -130,7 +134,8 @@ export function ClassDetailView({
           <ClassFact
             label="Teacher"
             value={nextTeacher?.name ?? "Not chosen yet"}
-            hint={coverName ? `${coverName} is covering today` : nextTeacher ? `${nextTeacher.day} · chosen on the rota Plan` : "Chosen on the rota Plan"}
+            hint={coverName ? `${coverName} is covering today` : nextTeacher?.name && !nextTeacher.planned ? `${nextTeacher.day} · from the swim school's old list, until 1 November` : nextTeacher ? `${nextTeacher.day} · chosen on the rota Plan` : "Chosen on the rota Plan"}
+            action={planHref ? <Button asChild variant="outline"><UiLink href={planHref}><CalendarDays aria-hidden="true" />Choose on the Plan</UiLink></Button> : undefined}
           />
           <ClassFact
             label="Places"
@@ -236,10 +241,13 @@ function ClassFact({
   label,
   value,
   hint,
+  action,
 }: {
   label: string;
   value: string;
   hint?: string;
+  /** The one thing to do about it, under the fact. */
+  action?: ReactNode;
 }) {
   return (
     <div className="pc-panel">
@@ -249,6 +257,7 @@ function ClassFact({
         {hint ? (
           <span className="text-xs text-ui-muted-foreground">{hint}</span>
         ) : null}
+        {action ? <div className="mt-3">{action}</div> : null}
       </div>
     </div>
   );

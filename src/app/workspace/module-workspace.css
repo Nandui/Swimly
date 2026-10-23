@@ -397,6 +397,7 @@
 .turnfin-module .diary-sheet-body { display: flex; flex-direction: column; gap: 20px; padding: 0 16px 24px; }
 .turnfin-module .diary-times { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0; border: 0; }
 .turnfin-module .diary-times > legend { grid-column: 1 / -1; margin-bottom: 4px; }
+.turnfin-module .diary-class-days { display: grid; gap: 12px; margin: 0; padding: 0; border: 0; }
 .turnfin-module .diary-break-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0 0 12px; padding: 0; border: 0; }
 .turnfin-module .diary-group { display: flex; flex-direction: column; gap: 8px; }
 .turnfin-module .diary-group-title { margin: 0; color: var(--pc-ink); font-size: var(--pc-text-body); font-weight: 700; }

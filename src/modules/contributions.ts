@@ -229,6 +229,9 @@ export type Commitment = {
   ref?: string;
   /** Planned for this date from another module (the rota), not the thing's usual person. */
   planned?: boolean;
+  /** The person the source has on it when nothing is planned for the date (a class's instructor
+   *  from before the rota chose them), so the rota can carry them over; null or missing for none. */
+  usualUserId?: string | null;
 };
 export type CommitmentQuery = { siteIds?: readonly string[]; userIds?: readonly string[]; from: string; to: string };
 /** Who to plan on one occurrence: `userId` null plans nobody (a gap). The source checks the
@@ -240,7 +243,14 @@ export type CommitmentSource = {
   list(query: CommitmentQuery): Promise<Commitment[]>;
   /** Lets another module plan who does one occurrence (the rota planning a class's teacher). */
   plan?(input: CommitmentPlan): Promise<{ ok: true } | { ok: false; error: string }>;
+  /** Plans many occurrences at once (every week of a class, carrying teachers over). */
+  planMany?(input: CommitmentPlanMany): Promise<CommitmentPlanManyResult>;
 };
+/** Many occurrences at one site: each date's person, or nobody. `onlyUnplanned` leaves dates that
+ *  already have someone planned as they are. Occurrences that no longer happen, have already
+ *  started, or whose person has left are skipped, never refused. */
+export type CommitmentPlanMany = { siteId: string; items: readonly { ref: string; date: string; userId: string | null }[]; by: { id: string; name: string }; onlyUnplanned?: boolean };
+export type CommitmentPlanManyResult = { ok: true; planned: number; skipped: number } | { ok: false; error: string };
 
 const commitmentSources: CommitmentSource[] = [];
 
@@ -267,6 +277,15 @@ export async function planCommitment(sourceId: string, input: CommitmentPlan) {
   const source = commitmentSources.find((s) => s.id === sourceId);
   if (!source?.plan) return { ok: false as const, error: "That can no longer be planned from here." };
   return source.plan(input);
+}
+
+/** Plan many occurrences of another module's commitment at once (owner, 23 October 2026:
+ *  instructors are assigned on the rota, every week of a class at a time). */
+export async function planCommitments(sourceId: string, input: CommitmentPlanMany): Promise<CommitmentPlanManyResult> {
+  await modulesLoaded();
+  const source = commitmentSources.find((s) => s.id === sourceId);
+  if (!source?.planMany) return { ok: false, error: "That can no longer be planned from here." };
+  return source.planMany(input);
 }
 
 /** A site's area renamed in Admin (docs/admin-setup.md): each module that stores

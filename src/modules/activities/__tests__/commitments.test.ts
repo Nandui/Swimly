@@ -10,6 +10,7 @@ import type { Commitment, CommitmentQuery, CommitmentSource } from "@/modules/co
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let list: (q: CommitmentQuery) => Promise<Commitment[]>;
 let plan: NonNullable<CommitmentSource["plan"]>;
+let planMany: NonNullable<CommitmentSource["planMany"]>;
 const date = (iso: string) => new Date(`${iso}T00:00:00Z`);
 // 5 October 2026 is a Monday.
 const MON = "2026-10-05", NEXT = "2026-10-12";
@@ -33,7 +34,8 @@ before(async () => {
     "@/lib/authz": { requireSession: async () => ({ user: {} }), requirePermission: async () => ({ user: {} }), AuthorizationError: class extends Error {} },
     "@/lib/clubs/current": { currentClubId: async () => "club_churchfield", currentClubIdIfAny: async () => "club_churchfield" },
     "@/lib/audit": { logAudit: async () => {} },
-    "@/lib/directory": { staffByIds: async (ids: string[]) => new Map(ids.filter((id) => ["tess", "cole"].includes(id)).map((id) => [id, { id, name: id }])) },
+    "@/lib/directory": { staffByIds: async (ids: string[]) => new Map(ids.filter((id) => ["tess", "cole"].includes(id)).map((id) => [id, { id, name: id }])),
+      activeStaffIds: async (ids: string[]) => new Set(ids.filter((id) => ["tess", "cole"].includes(id))) },
     "@/modules/contributions": { registerAreaRename() {}, registerCommitments: (s: (typeof sources)[number]) => sources.push(s), registerHomeCard() {}, registerMemberDirectory() {}, registerSiteSummary() {} },
     react: { cache: <T,>(fn: T) => fn },
     "next/navigation": { notFound() { throw new Error("not found"); }, redirect() { throw new Error("redirect"); } },
@@ -41,6 +43,7 @@ before(async () => {
   const classes = sources.find((s) => s.id === "activities.classes")!;
   list = classes.list;
   plan = classes.plan!;
+  planMany = classes.planMany!;
 });
 after(async () => { await fixture?.close(); });
 
@@ -91,4 +94,21 @@ test("a class that has started, is cancelled or does not run that day cannot be 
   assert.equal((await plan({ ref: "seam-tue", siteId: "club_churchfield", date: "2026-10-06", userId: "cole", by })).ok, false, "cancelled");
   assert.equal((await plan({ ref: "seam-mon", siteId: "club_churchfield", date: "2026-10-20", userId: "cole", by })).ok, false, "a Tuesday");
   assert.equal((await plan({ ref: "seam-mon", siteId: "club_bishopstown", date: MON, userId: "cole", by })).ok, false, "another site");
+});
+
+test("many dates at once: days it runs, not started or cancelled; onlyUnplanned keeps what is planned", async () => {
+  const by = { id: "tess", name: "tess" };
+  // The Monday class: the 17th is a Tuesday, the 23rd is planned with tess first, the 12th
+  // of October has started (cole covered it).
+  await plan({ ref: "seam-mon", siteId: "club_churchfield", date: "2026-11-23", userId: "tess", by });
+  const carried = await planMany({ siteId: "club_churchfield", by, onlyUnplanned: true, items: [
+    { ref: "seam-mon", date: "2026-11-16", userId: "cole" }, { ref: "seam-mon", date: "2026-11-17", userId: "cole" },
+    { ref: "seam-mon", date: "2026-11-23", userId: "cole" }, { ref: "seam-mon", date: NEXT, userId: "cole" }, { ref: "seam-mon", date: "2026-11-30", userId: "gone" },
+  ] });
+  assert.deepEqual(carried, { ok: true, planned: 1, skipped: 4 }, "only the 16th: wrong weekday, already planned, started, left");
+  const after = await list({ siteIds: ["club_churchfield"], from: "2026-11-16", to: "2026-11-23" });
+  assert.deepEqual(after.filter((c) => c.ref === "seam-mon").map((c) => [c.date, c.userId, c.planned, c.usualUserId]), [["2026-11-16", "cole", true, "tess"], ["2026-11-23", "tess", true, "tess"]]);
+  const every = await planMany({ siteId: "club_churchfield", by, items: [{ ref: "seam-mon", date: "2026-11-23", userId: "cole" }, { ref: "seam-mon", date: "2026-12-07", userId: "cole" }] });
+  assert.deepEqual(every, { ok: true, planned: 2, skipped: 0 }, "without onlyUnplanned a planned day is changed");
+  assert.deepEqual((await list({ userIds: ["cole"], from: "2026-11-23", to: "2026-12-07" })).map((c) => c.date), ["2026-11-23", "2026-12-07"]);
 });

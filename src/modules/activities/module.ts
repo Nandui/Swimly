@@ -6,7 +6,7 @@ import { visibleScreens, type ScreenKey } from "@/lib/staff/screens";
 import { registerAreaRename, registerCommitments, registerHomeCard, registerMemberDirectory, registerSiteSummary, type Commitment, type HomeIcon, type HomeItem, type HomeSession } from "@/modules/contributions";
 import { formatTime, isDateOnly, minutesNow, parseDateOnly, plural, today } from "@/lib/format";
 import { logAudit } from "@/lib/audit";
-import { staffByIds } from "@/lib/directory";
+import { activeStaffIds, staffByIds } from "@/lib/directory";
 import { weekdayOfIso } from "@/modules/activities/shared/attendance/dates";
 import { getCoversForDay } from "@/modules/activities/shared/attendance/data/cover";
 import { getCancellationsForDay } from "@/modules/activities/shared/cancellations/data";
@@ -60,7 +60,7 @@ registerCommitments({
         if (userIds && (!userId || !userIds.includes(userId))) continue;
         out.push({ source: "activities.classes", userId, siteId: c.clubId, date, startMinutes: c.startMinutes, endMinutes: c.startMinutes + c.durationMinutes,
           label: [courseName(c), c.location].filter(Boolean).join(", "), href: `/schedule?date=${date}`, ref: c.id, planned: !coverBy.has(k) && plannedBy.has(k),
-          place: c.location ?? undefined, title: courseName(c) });
+          place: c.location ?? undefined, title: courseName(c), usualUserId: c.instructorId });
       }
     }
     return out;
@@ -88,6 +88,51 @@ registerCommitments({
         summary: `Planned ${label} with ${teacher?.name ?? "nobody yet"}` }, tx);
     });
     return { ok: true };
+  },
+  /** Plan many dates at once (owner, 23 October 2026: instructors are assigned on the rota, a
+   *  class's every week at a time, and the instructors from before carried over). Dates the class
+   *  does not run, is cancelled or has started, and people who have left, are skipped. One audit
+   *  row for each class and teacher. */
+  async planMany({ siteId, items, by, onlyUnplanned }) {
+    const wanted = items.filter((i) => isDateOnly(i.date)).slice(0, 2000);
+    if (!wanted.length) return { ok: true, planned: 0, skipped: items.length };
+    const refs = [...new Set(wanted.map((i) => i.ref))];
+    const dates = wanted.map((i) => i.date).sort();
+    const range = { gte: parseDateOnly(dates[0]), lte: parseDateOnly(dates[dates.length - 1]) };
+    const [courses, cancelled, started, planned, active] = await Promise.all([
+      prisma.course.findMany({ where: { id: { in: refs }, clubId: siteId, archivedAt: null }, select: { id: true, dayOfWeek: true, name: true, level: { select: { name: true } } } }),
+      prisma.classCancellation.findMany({ where: { courseId: { in: refs }, date: range }, select: { courseId: true, date: true } }),
+      prisma.classCover.findMany({ where: { courseId: { in: refs }, date: range }, select: { courseId: true, date: true } }),
+      prisma.classPlannedTeacher.findMany({ where: { courseId: { in: refs }, date: range }, select: { courseId: true, date: true } }),
+      activeStaffIds(wanted.flatMap((i) => (i.userId ? [i.userId] : []))),
+    ]);
+    const key = (courseId: string, date: string) => `${courseId}|${date}`;
+    const keyOf = (r: { courseId: string; date: Date }) => key(r.courseId, r.date.toISOString().slice(0, 10));
+    const byId = new Map(courses.map((c) => [c.id, c]));
+    const blocked = new Set([...cancelled, ...started, ...(onlyUnplanned ? planned : [])].map(keyOf));
+    const seen = new Set<string>();
+    const keep = wanted.filter((i) => {
+      const k = key(i.ref, i.date), c = byId.get(i.ref);
+      if (!c || seen.has(k) || blocked.has(k) || weekdayOfIso(i.date) !== c.dayOfWeek || (i.userId && !active.has(i.userId))) return false;
+      seen.add(k);
+      return true;
+    });
+    if (!keep.length) return { ok: true, planned: 0, skipped: items.length };
+    const names = await staffByIds(keep.map((i) => i.userId));
+    await prisma.$transaction(async (tx) => {
+      await tx.classPlannedTeacher.deleteMany({ where: { OR: keep.map((i) => ({ courseId: i.ref, date: parseDateOnly(i.date) })) } });
+      await tx.classPlannedTeacher.createMany({ data: keep.map((i) => ({ courseId: i.ref, date: parseDateOnly(i.date), teacherId: i.userId,
+        teacherName: i.userId ? names.get(i.userId)?.name ?? null : null, setById: by.id, setByName: by.name })) });
+      const groups = new Map<string, typeof keep>();
+      for (const i of keep) groups.set(`${i.ref}|${i.userId ?? ""}`, [...(groups.get(`${i.ref}|${i.userId ?? ""}`) ?? []), i]);
+      for (const group of groups.values()) {
+        const course = byId.get(group[0].ref)!, who = group[0].userId ? names.get(group[0].userId)?.name ?? "Someone" : "nobody yet";
+        const days = group.map((i) => i.date).sort();
+        await logAudit({ actorId: by.id, actorName: by.name, action: "update", entity: "ClassPlannedTeacher", entityId: course.id, clubId: siteId,
+          summary: `Planned ${courseName(course)} with ${who} on ${plural(days.length, "day", "days")}, ${days[0]}${days.length > 1 ? ` to ${days[days.length - 1]}` : ""}` }, tx);
+      }
+    }, { timeout: 30_000 });
+    return { ok: true, planned: keep.length, skipped: items.length - keep.length };
   },
 });
 

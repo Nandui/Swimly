@@ -14,7 +14,7 @@ import { lanesFrom, lanesLabel, lanesProblem } from "@/modules/rota/shared/lanes
 import { areaProblem } from "@/lib/setup/data";
 import { fitsFor } from "@/modules/rota/shared/data";
 import { notifyShiftChange } from "@/lib/staff-api/notify";
-import { commitmentsFor, planCommitment } from "@/modules/contributions";
+import { commitmentsFor, planCommitment, planCommitments } from "@/modules/contributions";
 import { ANY_DEPARTMENT, areaAssignmentRow, areaNeedName, areaNeedOf, isAreaNeed } from "@/modules/rota/shared/day";
 import { areaNeedsOn, lineLabel } from "@/modules/rota/shared/area-needs";
 import type { Prisma } from "@/generated/prisma/client";
@@ -364,6 +364,58 @@ export async function planTeacher(input: { siteId: string; date: string; classRe
   if (person && (await shared(prisma, at.site.id, input.departmentId ?? departmentId, input.date))) {
     await notifyShiftChange(person.id, `You are teaching ${what} at ${at.site.name} on ${input.date}${lesson ? `, ${clock(lesson.startMinutes)}–${clock(lesson.endMinutes)}` : ""}.`);
   }
+  return ok();
+}
+
+/** How far ahead a class's teacher is planned at once: sixteen weeks, a term and a little more. */
+const PLAN_AHEAD_DAYS = 16 * 7;
+
+/** Plan who teaches a swim class on a date and on the same weekday every week after it, up to
+ *  `until` (owner, 23 October 2026: "we should be only assigning the instructors on this module
+ *  going forward, not in the swim school"). The first date is planned as `planTeacher` does, shift
+ *  and all; the later ones only say who teaches (their day shows it on the Plan), so a later Copy
+ *  still finds those days free. Dates the class does not run or has started are skipped. */
+export async function planTeacherEvery(input: { siteId: string; date: string; classRef: string; userId: string; departmentId: string; until: string }, changeInput: ChangeInput = {}): Promise<ActionResult> {
+  if (!isDateOnly(input.date) || !isDateOnly(input.until)) return fail("Choose a day.");
+  if (input.until <= input.date) return fail("Choose a last day after this one.");
+  if (input.until > addDaysIso(input.date, PLAN_AHEAD_DAYS)) return fail("Plan up to sixteen weeks ahead at a time.");
+  const first = await planTeacher(input, changeInput);
+  if (!first.ok) return first;
+  const dates: string[] = [];
+  for (let d = addDaysIso(input.date, 7); d <= input.until; d = addDaysIso(d, 7)) dates.push(d);
+  if (!dates.length) return ok();
+  const at = await allowedForPerson(input.siteId, dates[0], input.departmentId, input.userId);
+  if (!at.ok) return fail(at.error);
+  const result = await planCommitments(CLASSES, { siteId: at.site.id, items: dates.map((date) => ({ ref: input.classRef, date, userId: input.userId })), by: at.actor });
+  if (!result.ok) return fail(result.error);
+  refresh();
+  return ok();
+}
+
+/** Carry the swim school's instructors over (owner, 23 October 2026: nothing is lost when the
+ *  Plan alone decides who teaches): every class at the site from today, or tomorrow when today is
+ *  the duty manager's, up to `until`, with nobody planned yet, is planned with the instructor it
+ *  had before. Nothing already planned is changed, so it is safe to run twice. */
+export async function carryTeachers(input: { siteId: string; departmentId: string; until: string }): Promise<ActionResult> {
+  if (!isDateOnly(input.until)) return fail("Choose a last day.");
+  const now = today();
+  let from = now;
+  let at = await allowedFor(input.siteId, from, input.departmentId);
+  if (!at.ok) { from = addDaysIso(now, 1); at = await allowedFor(input.siteId, from, input.departmentId); }
+  if (!at.ok) return fail(at.error);
+  if (input.until < from) return fail("Choose a last day from today on.");
+  if (input.until > addDaysIso(now, PLAN_AHEAD_DAYS)) return fail("Carry them up to sixteen weeks ahead at a time.");
+  const items: { ref: string; date: string; userId: string }[] = [];
+  // The swim school lists at most about two months at a time.
+  for (let start = from; start <= input.until; start = addDaysIso(start, 56)) {
+    const end = addDaysIso(start, 55) < input.until ? addDaysIso(start, 55) : input.until;
+    const lessons = (await commitmentsFor({ siteIds: [at.site.id], from: start, to: end })).filter((c) => c.source === CLASSES);
+    for (const c of lessons) if (c.ref && !c.planned && c.usualUserId && (c.userId === null || c.userId === c.usualUserId)) items.push({ ref: c.ref, date: c.date, userId: c.usualUserId });
+  }
+  if (!items.length) return fail("Every class up to that day already has its instructor on the Plan.");
+  const result = await planCommitments(CLASSES, { siteId: at.site.id, items, by: at.actor, onlyUnplanned: true });
+  if (!result.ok) return fail(result.error);
+  refresh();
   return ok();
 }
 

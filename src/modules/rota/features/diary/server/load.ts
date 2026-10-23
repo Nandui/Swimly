@@ -50,6 +50,9 @@ export async function diaryWeek(input: { site?: string; dept?: string; day?: str
   return {
     who, sites, site, now, date, monday, departments, department, every, share,
     week: days.map((d) => ({ date: d, holes: diaries.get(d)!.holes.length, people: diaries.get(d)!.people.length })),
+    /** Swim classes this week from today still on the swim school's old instructor (owner, 23
+     *  October 2026: the Plan alone chooses them), for "Carry them over". */
+    oldClasses: days.filter((d) => d >= now).reduce((n, d) => n + inputs.get(d)!.classes.filter((c) => c.old).length, 0),
     diary, hours,
     /** For "Who could fill it": everyone at the site, what they hold and where else they are. */
     pool: { staff: dayInput.staff, held: dayInput.held, off: [...dayInput.off], elsewhere: Object.fromEntries(dayInput.elsewhere) },
@@ -119,7 +122,8 @@ export async function diaryInputs(siteId: string, orgId: string | null, days: re
         subs: a.subs.map((x) => ({ id: x.id, name: x.name, when: x.when, at: x.atMinutes, times: x.when === "at" || x.when === "during" ? subTimes(x) : [], until: x.endMinutes })) }))),
       // An area's need is `area:<area>:<qualification>:<date>` (areaNeedsOn); kept only while the area is.
       areaAssignments: onAreas.filter((a) => on(a.date) && areaIds.has(a.areaId)).map((a) => ({ id: a.id, needId: `area:${a.areaId}:${a.qualificationTypeId ?? "*"}:${date}`, place: a.place, userId: a.userId, start: a.startMinutes, end: a.endMinutes })),
-      classes: classes.filter((c) => c.date === date).map((c) => ({ ref: c.ref!, title: c.title ?? c.label, place: c.place ?? "", start: c.startMinutes, end: c.endMinutes, userId: c.userId })),
+      classes: classes.filter((c) => c.date === date).map((c) => ({ ref: c.ref!, title: c.title ?? c.label, place: c.place ?? "", start: c.startMinutes, end: c.endMinutes, userId: c.userId,
+        old: !c.planned && !!c.usualUserId && (c.userId === null || c.userId === c.usualUserId) })),
       shifts: shifts.filter((s) => on(s.date)).map((s) => ({ id: s.id, userId: s.userId, departmentId: s.departmentId, start: s.startMinutes, end: s.endMinutes })),
       breaks: breaks.filter((b) => on(b.date)).map((b) => ({ userId: b.userId, start: b.startMinutes, minutes: b.minutes, paid: b.paid })),
       staff: ids.map((id) => ({ userId: id, name: names.get(id) ?? "Former staff", departmentIds: departmentsOf.get(id) ?? [], young: youngBand(dob.get(id) ?? null, date) })),
