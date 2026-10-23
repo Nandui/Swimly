@@ -6,8 +6,10 @@ import { TooltipProvider } from "@/components/shadcn/tooltip";
 import { THEME_COOKIE, parseThemeMode } from "@/lib/theme-mode";
 import { APP_NAME, TITLE_TEMPLATE } from "@/lib/app";
 import { auth } from "@/auth";
-import { SharedDeviceIdle } from "@/components/devices/session-forms";
+import { IdleSignOut } from "@/components/idle-sign-out";
 import { SHARED_IDLE_MINUTES } from "@/lib/devices/constants";
+import { IDLE_SIGNED_OUT_REASON, IDLE_SIGN_OUT_MINUTES, IDLE_WARNING_MINUTES } from "@/lib/idle";
+import { googleSignInAvailable } from "@/lib/google-sign-in";
 import { DevelopmentRolePreview } from "@/components/staff/development-role-preview";
 import { YourModulesProvider } from "@/components/workspace/your-modules";
 import { modulesFor } from "@/modules/context";
@@ -54,10 +56,15 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   // has nothing to disagree about. No cookie means "follow the device".
   const jar = await cookies();
   const mode = parseThemeMode(jar.get(THEME_COOKIE)?.value);
-  // Shared reception computers and poolside tablets return to the switch
-  // screen when left idle, so nobody walks up to someone else's session.
+  // Everyone is signed out after a time without activity (src/lib/idle.ts).
+  // Shared reception computers and poolside tablets go sooner, back to the
+  // switch screen, so nobody walks up to someone else's session. A developer
+  // password sign-in returns to its own page once Google is the way in. The
+  // local development bypass has no sign-in to end, so no timer.
   const session = await auth();
   const shared = session?.user?.sharedDevice === true;
+  const signedIn = !!session?.user?.authMethod;
+  const signInPath = session?.user?.authMethod === "password" && googleSignInAvailable() ? "/sign-in/developer" : "/sign-in";
   // The working site for the account menu's caption. auth() has already asked
   // for it in this request's cache, so this costs no query; it throws when no
   // site exists yet (as in auth.ts). switchClub revalidates this layout.
@@ -77,7 +84,16 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <ThemeProvider initialMode={mode}>
           <TooltipProvider>
             <ToastBridge />
-            {shared ? <SharedDeviceIdle minutes={SHARED_IDLE_MINUTES} /> : null}
+            {!signedIn ? null : shared ? (
+              <IdleSignOut minutes={SHARED_IDLE_MINUTES} redirectTo="/switch" />
+            ) : (
+              <IdleSignOut
+                minutes={IDLE_SIGN_OUT_MINUTES}
+                warnMinutes={IDLE_WARNING_MINUTES}
+                redirectTo={`${signInPath}?reason=${IDLE_SIGNED_OUT_REASON}`}
+                signedOutTo={signInPath}
+              />
+            )}
             {/* Dev builds only: someone who manages roles sees any page as any
                 role would, from "View as" in the frame's tools bar. Gives the
                 toggle nothing on production. */}

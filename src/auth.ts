@@ -14,6 +14,7 @@ import { currentSharedDevice, SHARED_SESSION_MAX_MS } from "@/lib/devices/shared
 import { authorizePin } from "@/lib/devices/pin";
 import { mayWorkAnywhere, workDeviceRequired } from "@/lib/devices/work-device";
 import { googleSignIn, googleSignInAvailable, googleStaffAccount, recordGoogleSignIn } from "@/lib/google-sign-in";
+import { outlivesIdleLimit, SESSION_MAX_AGE_SECONDS } from "@/lib/idle";
 
 /** A correct password on a device this account may not work from. Raised only
  *  after the password matched, so it reveals nothing about other accounts. */
@@ -118,7 +119,10 @@ const {
   handlers,
   auth: nextAuth,
 } = NextAuth({
-  session: { strategy: "jwt" },
+  // Signed out after a time without activity (src/lib/idle.ts): the cookie
+  // lasts a little over the idle limit, and the screen renews it while the
+  // person is active.
+  session: { strategy: "jwt", maxAge: SESSION_MAX_AGE_SECONDS },
   cookies: authCookies(),
   // Errors land on the sign-in page too, which says what went wrong in plain words.
   pages: { signIn: "/sign-in", error: "/sign-in" },
@@ -167,6 +171,7 @@ const {
       session.user.authMethod = token.authMethod ?? "password";
       session.user.authAt = token.authAt ?? null;
       session.user.sharedDevice = token.sharedDevice === true;
+      session.user.expiresAt = typeof token.exp === "number" ? token.exp * 1000 : null;
       return session;
     },
   },
@@ -226,6 +231,8 @@ export const auth = cache(async function auth(): Promise<Session | null> {
     // A shared-device session ends after its maximum age whatever the idle
     // timer did (a tablet left on the deck overnight).
     if (session.user.sharedDevice && (!session.user.authAt || Date.now() - session.user.authAt > SHARED_SESSION_MAX_MS)) return null;
+    // A sign-in from before the idle limit lasted 30 days; it ends once.
+    if (outlivesIdleLimit(session.user.expiresAt)) return null;
 
     const user = sessionUserFor(current, siteId);
     if (!user) return null;

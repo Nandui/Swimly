@@ -11,7 +11,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { Tablet } from "lucide-react";
+import { Clock, Tablet } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 
@@ -26,8 +26,11 @@ import { Input } from "@/components/ui/input";
  *
  *  `devAdminName` arrives already decided by the server: the page only passes
  *  a name when the deployment is allowed a passwordless sign-in, so the client
- *  never carries the rule and cannot be talked into showing the button. */
-export function SignInForm({ devAdminName, sharedDeviceName = null, google = false, developer = false, initialError = null }: { devAdminName: string | null; sharedDeviceName?: string | null; google?: boolean; developer?: boolean; initialError?: string | null }) {
+ *  never carries the rule and cannot be talked into showing the button.
+ *
+ *  `notice` says why they are here, such as being signed out after a time
+ *  without activity. */
+export function SignInForm({ devAdminName, sharedDeviceName = null, google = false, developer = false, initialError = null, notice = null }: { devAdminName: string | null; sharedDeviceName?: string | null; google?: boolean; developer?: boolean; initialError?: string | null; notice?: string | null }) {
   const passwordForm = developer || !google;
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -105,6 +108,8 @@ export function SignInForm({ devAdminName, sharedDeviceName = null, google = fal
         title={developer ? "Developer sign-in" : "Sign in"}
         description={developer ? "For superadmin accounts only. Everyone else signs in with Google." : passwordForm ? "Use your work email and password." : "Use your work Google account."}
       />}>
+
+      {notice ? <Notice title={notice} tone="info" icon={Clock} /> : null}
 
       {sharedDeviceName ? (
         <div className="pc-note flex-wrap">

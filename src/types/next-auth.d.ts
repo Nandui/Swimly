@@ -37,6 +37,8 @@ declare module "next-auth" {
       authAt?: number | null;
       /** Set on a shared device's quick-switch sessions. */
       sharedDevice?: boolean;
+      /** When the sign-in cookie runs out unless activity renews it (src/lib/idle.ts). */
+      expiresAt?: number | null;
       /** Set on a dev build while seeing the app as another role: the role
        *  being worn, and what the real account actually holds. */
       preview?: {

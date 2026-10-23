@@ -5,13 +5,13 @@ import { serverModule } from "@/test/server-module";
 import { UNRESTRICTED_PERMISSIONS, expandPermissions } from "@/lib/staff/permissions";
 import { ADMINISTRATOR_SCREENS, visibleScreens } from "@/lib/staff/screens";
 
-function fixture() {
+function fixture(token: Record<string, unknown> = {}) {
   type Role = { id: string; name: string; permissions: string[]; levels?: Record<string, string> };
   const administrator: Role = { id: "role-1", name: "Renamed management team", permissions: ["staff.manage", "roles.manage"] };
   const account = { id: "staff-1", name: "Synthetic Manager", email: "manager@example.test", isActive: true, staffRole: administrator as Role | null };
   let preview: Role | null = null;
   const { auth } = serverModule<typeof import("./auth")>("src/auth.ts", {
-    "next-auth": Object.assign(() => ({ auth: async () => ({ user: { id: account.id }, expires: "2099-01-01" }), handlers: {}, signIn: async () => {}, signOut: async () => {} }), { CredentialsSignin: class extends Error {} }),
+    "next-auth": Object.assign(() => ({ auth: async () => ({ user: { id: account.id, ...token }, expires: "2099-01-01" }), handlers: {}, signIn: async () => {}, signOut: async () => {} }), { CredentialsSignin: class extends Error {} }),
     "next-auth/providers/credentials": (options: unknown) => options,
     "next-auth/providers/google": (options: unknown) => options,
     "@/lib/google-sign-in": { googleSignInAvailable: () => false, googleStaffAccount: async () => ({ refused: "google_no_account" }), googleSignIn: async () => ({ refused: "google_no_account" }), recordGoogleSignIn: async () => false },
@@ -69,6 +69,11 @@ test("demotion, deactivation and removing a role revoke administrator access on 
   f.account.isActive = true;
   f.account.staffRole = null;
   assert.equal(await f.auth(), null);
+});
+
+test("a sign-in older than the idle limit reads as signed out; a renewed one stays", async () => {
+  assert.equal(await fixture({ authMethod: "google", expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000 }).auth(), null);
+  assert.ok(await fixture({ authMethod: "google", expiresAt: Date.now() + 31 * 60 * 1000 }).auth());
 });
 
 /** The password form, with Google set up or not. */

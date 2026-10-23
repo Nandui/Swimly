@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.70.0 · 23 October 2026 · Signed out after 30 minutes without activity
+
+- Turnfin now signs you out after 30 minutes without activity, on every computer and tablet. Clicking, typing, tapping or scrolling in any Turnfin tab counts as activity.
+- Two minutes before, a **Still there?** box counts down. Choose **Stay signed in** to carry on, or **Sign out now**.
+- After you are signed out, the sign-in page says why. Sign in again to carry on.
+- When this arrives, everyone is asked to sign in once more.
+- Reception computers and poolside tablets set up as work devices still switch back after 5 minutes, as before.
+
 ## 1.69.0 · 23 October 2026 · Google is the way to sign in
 
 - Turnfin now signs you in with your work Google account only. The sign-in page has one button: **Sign in with Google**.
