@@ -10,6 +10,10 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - When you choose an instructor for a class on the Plan, you can pick **Every Tuesday** (or whichever day it runs) up to a date, instead of choosing them one day at a time. You can still change any single day afterwards.
 - Until Sunday 1 November, classes nobody has been chosen for keep the instructor the swim school had. After that they have no instructor. The Plan shows a notice while any class still relies on the old list, with a **Carry the instructors over** button that puts each class's current instructor on the Plan for the weeks you choose. Classes you've already chosen someone for stay as they are.
 - A class's page in the swim school now says whether its next teacher was chosen on the Plan or still comes from the old list, with a **Choose on the Plan** button.
+## 1.69.1 · 23 October 2026 · Your password every time you sign in
+
+- Signing in with Google now always asks for your Google password, even if someone else is still signed in to Google on that computer. Nobody can get into Turnfin as you by tapping your name on a shared desk or pool deck computer.
+- If Google lets you through without asking, Turnfin says so and asks you to try again.
 
 ## 1.69.0 · 23 October 2026 · Google is the way to sign in
 
