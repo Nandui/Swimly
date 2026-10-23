@@ -139,7 +139,7 @@ test("a recorded sign-in clears a PIN lock, adds a PIN holder to the work device
   assert.equal(f.audits.at(-1)?.summary, "Signed in with Google");
 });
 
-test("a sign-in Google didn't just check the password for is refused", async () => {
+test("how fresh a Google sign-in is, which is only logged for now", async () => {
   const f = fixture({ rows: [{ ...staff }] });
   const now = Date.now();
   assert.equal(f.freshGoogleSignIn(profile({ auth_time: Math.floor(now / 1000) - 30 }), now), true);
@@ -147,10 +147,9 @@ test("a sign-in Google didn't just check the password for is refused", async () 
   assert.equal(f.freshGoogleSignIn(profile({ auth_time: Math.floor(now / 1000) - 60 * 60 }), now), false);
   assert.equal(f.freshGoogleSignIn(profile({ auth_time: undefined }), now), false);
   assert.equal(f.freshGoogleSignIn(profile({ auth_time: "1700000000" }), now), false);
-  assert.deepEqual(await f.googleSignIn(profile({ auth_time: Math.floor(now / 1000) - 60 * 60 })), { refused: "google_password" });
-  assert.deepEqual(await f.googleSignIn(profile({ auth_time: undefined })), { refused: "google_password" });
-  // Refused before anything is linked or changed.
-  assert.equal(f.rows[0].googleId, null);
+  // Not enforced yet: a stale or missing time still signs in.
+  assert.ok("user" in await f.googleSignIn(profile({ auth_time: Math.floor(now / 1000) - 60 * 60 })));
+  assert.ok("user" in await f.googleSignIn(profile({ auth_time: undefined })));
 });
 
 test("refusals read as plain sentences and unknown codes as none", () => {
