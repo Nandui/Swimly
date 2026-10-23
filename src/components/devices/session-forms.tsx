@@ -17,7 +17,7 @@ import { SHARED_IDLE_MINUTES } from "@/lib/devices/constants";
 import { removeOwnPin, setOwnPin } from "@/lib/devices/actions";
 import { toast } from "sonner";
 
-/** The sign-in client, loaded when it is used: the idle timer below sits on every page. */
+/** The sign-in client, loaded when it is used. */
 const auth = () => import("next-auth/react");
 
 /** One auth panel: the H1 and its description grouped tight, then the body (AUConfirm, AUSwitch). */
@@ -202,20 +202,4 @@ export function PinSettings({ hasPin, locked, proof = "password" }: { hasPin: bo
       </div>
     </form>
   );
-}
-
-/** On a work device, returns to the switch screen after a few idle minutes. */
-export function SharedDeviceIdle({ minutes }: { minutes: number }) {
-  React.useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>;
-    const reset = () => {
-      clearTimeout(timer);
-      timer = setTimeout(() => { void auth().then(({ signOut }) => signOut({ redirectTo: "/switch" })); }, minutes * 60 * 1000);
-    };
-    const events = ["pointerdown", "keydown", "scroll", "touchstart"] as const;
-    for (const event of events) window.addEventListener(event, reset, { passive: true });
-    reset();
-    return () => { clearTimeout(timer); for (const event of events) window.removeEventListener(event, reset); };
-  }, [minutes]);
-  return null;
 }

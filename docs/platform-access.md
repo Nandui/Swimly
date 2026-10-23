@@ -158,6 +158,23 @@ shown, the provider is not registered, and the sign-in page keeps the email and 
 form for everyone. Previews have a new address every time, which Google cannot list, so
 set the two variables for Production only.
 
+## Signing out after inactivity
+
+Everyone is signed out after 30 minutes without activity (owner decision, 23 October
+2026; `src/lib/idle.ts`). Activity is a click, key, tap, scroll or mouse movement in any
+Turnfin tab of the browser.
+
+- **Screen**: `IdleSignOut` (`src/components/idle-sign-out.tsx`, from the root layout)
+  shows "Still there?" two minutes before, with **Stay signed in** and **Sign out now**,
+  then signs out to `/sign-in?reason=idle`, which says why. A developer password
+  sign-in returns to `/sign-in/developer` instead.
+- **Server**: the sign-in cookie lasts 32 minutes (`SESSION_MAX_AGE_SECONDS`) and the
+  screen renews it at most once a minute while the person is active, so a closed or
+  sleeping tab cannot keep a session open. Cookies from before the limit (30 days) read
+  as signed out once (`outlivesIdleLimit` in `auth()`).
+- The 15-minute step-up for HR records and PIN changes is separate and unchanged: it
+  counts from the sign-in itself (`authAt`), which renewing does not move.
+
 ## Shared devices
 
 Reception computers and poolside tablets are used by whoever is on shift. Someone who
@@ -169,7 +186,7 @@ a signed cookie (`src/lib/devices/shared-device.ts`) and can be revoked centrall
   signed in on that device and have a PIN are listed. Five wrong PINs lock the PIN until
   the person signs in again.
 - **Idle sign-out**: shared-device sessions return to the switch screen after 5 idle
-  minutes, and never last more than 12 hours.
+  minutes (the same timer, without a warning), and never last more than 12 hours.
 - **Step-up**: a PIN session never counts as a fresh password. Restricted records
   (HR, performance) send the person to confirm their password first
   (`requireFreshSession`, `/confirm-password`), valid for 15 minutes.
