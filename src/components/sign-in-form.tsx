@@ -18,10 +18,17 @@ import { Input } from "@/components/ui/input";
 /** The front door, in the shared AuthFrame: the blue brand panel beside one white panel
  *  (AUSignIn).
  *
+ *  With Google set up (`google`), Google is the only way in on the sign-in page
+ *  (owner decision, 23 October 2026): one button, and a first sign-in makes the
+ *  account. The email and password form stays for deployments without Google
+ *  (previews, local) and, as `developer`, on the unlinked /sign-in/developer page
+ *  for superadmin accounts only.
+ *
  *  `devAdminName` arrives already decided by the server: the page only passes
  *  a name when the deployment is allowed a passwordless sign-in, so the client
  *  never carries the rule and cannot be talked into showing the button. */
-export function SignInForm({ devAdminName, sharedDeviceName = null, google = false, initialError = null }: { devAdminName: string | null; sharedDeviceName?: string | null; google?: boolean; initialError?: string | null }) {
+export function SignInForm({ devAdminName, sharedDeviceName = null, google = false, developer = false, initialError = null }: { devAdminName: string | null; sharedDeviceName?: string | null; google?: boolean; developer?: boolean; initialError?: string | null }) {
+  const passwordForm = developer || !google;
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -63,15 +70,15 @@ export function SignInForm({ devAdminName, sharedDeviceName = null, google = fal
     });
   }
 
-  /** Off to Google and back to the home page. Google only says which email it
-   *  is; the server lets them in only if that is an active staff account. */
+  /** Off to Google and back to the home page. The server finds or makes the
+   *  account, and lets them in once it has a role. */
   function handleGoogleSignIn() {
     setError(null);
     startTransition(async () => {
       try {
         await signIn("google", { redirectTo: "/" });
       } catch {
-        setError("Could not sign you in with Google. Try again, or use your email and password.");
+        setError("Could not sign you in with Google. Try again.");
       }
     });
   }
@@ -94,7 +101,10 @@ export function SignInForm({ devAdminName, sharedDeviceName = null, google = fal
 
   return (
     <AuthFrame welcome>
-      <PageShell header={<PageHeader title="Sign in" description={google ? "Use your work email and password, or your Google account." : "Use your work email and password."} />}>
+      <PageShell header={<PageHeader
+        title={developer ? "Developer sign-in" : "Sign in"}
+        description={developer ? "For superadmin accounts only. Everyone else signs in with Google." : passwordForm ? "Use your work email and password." : "Use your work Google account."}
+      />}>
 
       {sharedDeviceName ? (
         <div className="pc-note flex-wrap">
@@ -107,6 +117,7 @@ export function SignInForm({ devAdminName, sharedDeviceName = null, google = fal
         </div>
       ) : null}
 
+      {passwordForm ? (
       <form method="post" onSubmit={handleSubmit}>
         <div className="flex min-w-0 flex-col gap-4">
           <Input
@@ -143,22 +154,20 @@ export function SignInForm({ devAdminName, sharedDeviceName = null, google = fal
           </LoadingButton>
         </div>
       </form>
-
-      {google ? (
-        <>
-          <div className="flex min-w-0 items-center gap-3">
-            <Separator className="flex-1" />
-            <span className="text-xs text-ui-muted-foreground">or</span>
-            <Separator className="flex-1" />
-          </div>
-          <Button type="button" variant="outline" onClick={handleGoogleSignIn} disabled={pending} className="w-full">
+      ) : (
+        <div className="flex min-w-0 flex-col gap-4">
+          {error ? <Notice title={error} tone="error" live="alert" /> : null}
+          <LoadingButton type="button" variant="default" onClick={handleGoogleSignIn} pending={pending} pendingLabel="Opening Google…" className="w-full">
             Sign in with Google
-          </Button>
-          <p className="text-xs text-ui-muted-foreground">Google works when it uses the same email as your Turnfin account.</p>
-        </>
-      ) : null}
+          </LoadingButton>
+        </div>
+      )}
 
-      <p className="text-xs text-ui-muted-foreground">No account yet? Ask a manager to add you in Admin.</p>
+      {developer ? null : passwordForm ? (
+        <p className="text-xs text-ui-muted-foreground">No account yet? Ask a manager to add you in Admin.</p>
+      ) : (
+        <p className="text-xs text-ui-muted-foreground">New here? Sign in with your work Google account and your Turnfin account is made for you. Then ask your manager to give you access.</p>
+      )}
 
       {devAdminName ? (
         <>

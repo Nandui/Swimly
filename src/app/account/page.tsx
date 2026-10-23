@@ -10,15 +10,19 @@ import { PinSettings } from "@/components/devices/session-forms";
 import { pageSession } from "@/lib/page-guards";
 import { PERSON_STATUS_META } from "@/lib/people/constants";
 import { prisma } from "@/lib/prisma";
+import { googleSignInAvailable } from "@/lib/google-sign-in";
+import { recentlyConfirmed } from "@/lib/policy/engine";
+import { currentActor } from "@/lib/policy/session";
 import { roleReach } from "@/lib/staff/constants";
 import { WORK_ANYWHERE, cleanLevels, levelLines, levelsFromAccess } from "@/lib/staff/levels";
 import { allModules } from "@/modules/registry";
 
 export const metadata: Metadata = { title: "Account" };
 
-/** Every signed-in person reaches this, whatever their role. It is the other
- *  half of an admin handing out a password: without it the temporary one is
- *  permanent, and the admin knows it forever. Password and PIN come first.
+/** Every signed-in person reaches this, whatever their role. Where people sign
+ *  in with a password (no Google, or the developer login) it is the other half
+ *  of an admin handing one out: without it the temporary one is permanent, and
+ *  the admin knows it forever. Password and PIN come first.
  *
  *  It also answers "what am I allowed to do?" in the person's own words: one
  *  line per module, the level and what it means, from the same helper as
@@ -26,7 +30,7 @@ export const metadata: Metadata = { title: "Account" };
 export default async function AccountPage() {
   const session = await pageSession();
   const [pin, role] = await Promise.all([
-    prisma.user.findUnique({ where: { id: session.user.id }, select: { pinHash: true, pinLockedAt: true } }),
+    prisma.user.findUnique({ where: { id: session.user.id }, select: { pinHash: true, pinLockedAt: true, passwordHash: true } }),
     // The worn role, so "View as" shows the role being previewed.
     session.user.roleId
       ? prisma.staffRole.findUnique({ where: { id: session.user.roleId }, select: { levels: true, extras: true, permissions: true, screens: true } })
@@ -36,6 +40,10 @@ export default async function AccountPage() {
   const lines = levels ? levelLines(levels) : [];
   const icons = new Map(allModules().map((mod) => [mod.id, mod.icon]));
   const reach = roleReach(session.user.permissions ?? []);
+  // With Google set up, only an account that has a password (the developer login) keeps one to change.
+  const google = googleSignInAvailable() && session.user.authMethod !== "password";
+  const showPassword = !googleSignInAvailable() || !!pin?.passwordHash;
+  const proof = !google ? "password" : session.user.authMethod === "google" && recentlyConfirmed(await currentActor()) ? "google" : "google-again";
 
   return (
     <PageShell header={<PageHeader
@@ -49,12 +57,14 @@ export default async function AccountPage() {
       />}>
 
       <div className="grid gap-4 items-start grid-cols-columns">
-        <section className="pc-panel" aria-labelledby="password-heading">
-          <div className="pc-panel-head">
-            <h2 id="password-heading" className="text-lg font-semibold">Change your password</h2>
-          </div>
-          <ChangePasswordForm />
-        </section>
+        {showPassword ? (
+          <section className="pc-panel" aria-labelledby="password-heading">
+            <div className="pc-panel-head">
+              <h2 id="password-heading" className="text-lg font-semibold">Change your password</h2>
+            </div>
+            <ChangePasswordForm />
+          </section>
+        ) : null}
 
         <section className="pc-panel" aria-labelledby="pin-heading">
           <div className="pc-panel-head">
@@ -62,9 +72,10 @@ export default async function AccountPage() {
           </div>
           <p className="pc-row-hint">
             Use it to switch in quickly on a work device. It only works on work devices, and only after you have
-            signed in there once with your password. HR and other restricted records still ask for your password.
+            signed in there once {google ? "with Google" : "with your password"}. HR and other restricted records still ask you to
+            {google ? " sign in with Google again" : " confirm your password"}.
           </p>
-          <PinSettings hasPin={!!pin?.pinHash} locked={!!pin?.pinLockedAt} />
+          <PinSettings hasPin={!!pin?.pinHash} locked={!!pin?.pinLockedAt} proof={proof} />
         </section>
       </div>
 

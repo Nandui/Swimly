@@ -41,7 +41,7 @@ export function QuickSwitch({ device, people }: { device: string; people: { id: 
     const result = await auth().then(({ signIn }) => signIn("pin", { userId: chosen.id, pin: value, redirect: false })).catch(() => null);
     if (!result || result.error) {
       setPin("");
-      setError("That PIN did not work. After five wrong tries the PIN locks until you sign in with your password.");
+      setError("That PIN did not work. After five wrong tries the PIN locks until you sign in again.");
       return;
     }
     router.push("/");
@@ -57,7 +57,7 @@ export function QuickSwitch({ device, people }: { device: string; people: { id: 
     return (
       <Frame title="Who is using this device?" description={`${device} · work device. It signs out after ${SHARED_IDLE_MINUTES} idle minutes.`}>
         {people.length === 0 ? (
-          <Notice title="Nobody can quick-switch here yet" description="Sign in with your email and password once on this device, after setting a PIN on your Account page." tone="info" />
+          <Notice title="Nobody can quick-switch here yet" description="Sign in once on this device, after setting a PIN on your Account page." tone="info" />
         ) : (
           <ul className="pc-rows" aria-label="People who can switch in">
             {people.map((person) => (
@@ -72,7 +72,7 @@ export function QuickSwitch({ device, people }: { device: string; people: { id: 
             ))}
           </ul>
         )}
-        <Button asChild variant="ghost"><Link href="/sign-in"><UserRound aria-hidden="true" />Sign in with email instead</Link></Button>
+        <Button asChild variant="ghost"><Link href="/sign-in"><UserRound aria-hidden="true" />Sign in another way</Link></Button>
       </Frame>
     );
   }
@@ -109,6 +109,29 @@ export function QuickSwitch({ device, people }: { device: string; people: { id: 
   );
 }
 
+/** Step-up with Google: restricted records need a sign-in in the last 15
+ *  minutes, and a PIN switch never counts. Confirming signs in with Google again
+ *  and comes back to the record. */
+export function ConfirmWithGoogle({ name, next }: { name: string; next: string }) {
+  const router = useRouter();
+  const [error, setError] = React.useState<string | null>(null);
+  const [pending, start] = React.useTransition();
+  return (
+    <Frame fin title="Confirm it’s you" description={`${name}, this area holds restricted records. Sign in with Google again to open it. You will not be asked again for 15 minutes.`}>
+      <div className="flex flex-col gap-4">
+        {error ? <Notice title={error} tone="error" live="alert" /> : null}
+        <div className="flex flex-wrap gap-3">
+          <LoadingButton type="button" pending={pending} pendingLabel="Opening Google…" onClick={() => start(async () => {
+            setError(null);
+            await auth().then(({ signIn }) => signIn("google", { redirectTo: next }, { prompt: "select_account" })).catch(() => setError("Could not open Google. Try again."));
+          })}>Continue with Google</LoadingButton>
+          <Button type="button" variant="ghost" onClick={() => (window.history.length > 1 ? router.back() : router.push("/"))}>Go back</Button>
+        </div>
+      </div>
+    </Frame>
+  );
+}
+
 /** Step-up: restricted records need the password confirmed recently, and a
  *  PIN switch never counts. Confirming signs in again with the password. */
 export function ConfirmPassword({ email, name, next }: { email: string; name: string; next: string }) {
@@ -139,8 +162,10 @@ export function ConfirmPassword({ email, name, next }: { email: string; name: st
   );
 }
 
-/** Account: set, change or remove the quick-switch PIN. */
-export function PinSettings({ hasPin, locked }: { hasPin: boolean; locked: boolean }) {
+/** Account: set, change or remove the quick-switch PIN. `proof` is how they show
+ *  it is them first: their password, or a Google sign-in in the last 15 minutes
+ *  ("google"), or, when that has run out, a fresh one ("google-again"). */
+export function PinSettings({ hasPin, locked, proof = "password" }: { hasPin: boolean; locked: boolean; proof?: "password" | "google" | "google-again" }) {
   const router = useRouter();
   const [password, setPassword] = React.useState("");
   const [pin, setPin] = React.useState("");
@@ -154,15 +179,26 @@ export function PinSettings({ hasPin, locked }: { hasPin: boolean; locked: boole
     setPassword(""); setPin("");
     router.refresh();
   });
+  const locking = locked ? <Notice title="Your PIN is locked" description={proof === "password" ? "Too many wrong PINs. Sign in with your password on that work device to unlock it." : "Too many wrong PINs. Sign in with Google on that work device to unlock it."} tone="warning" /> : null;
+  if (proof === "google-again") {
+    return (
+      <div className="flex flex-col gap-4">
+        {locking}
+        <p className="text-sm">To {hasPin ? "change or remove your PIN" : "set a PIN"}, confirm it’s you with Google first.</p>
+        <Button asChild variant="outline" className="self-start"><Link href="/confirm-password?next=%2Faccount">Confirm it’s you</Link></Button>
+      </div>
+    );
+  }
+  const google = proof === "google";
   return (
     <form method="post" className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); run(() => setOwnPin(password, pin), hasPin ? "PIN changed" : "PIN set"); }}>
-      {locked ? <Notice title="Your PIN is locked" description="Too many wrong PINs. Sign in with your password on that work device to unlock it." tone="warning" /> : null}
-      <Input label="Current password" type="password" value={password} onChange={setPassword} name="currentPassword" required autoComplete="current-password" />
+      {locking}
+      {google ? null : <Input label="Current password" type="password" value={password} onChange={setPassword} name="currentPassword" required autoComplete="current-password" />}
       <Input label={hasPin ? "New PIN" : "PIN"} type="password" value={pin} onChange={(v) => setPin(v.replace(/\D/g, "").slice(0, 8))} name="pin" inputMode="numeric" autoComplete="off" description="4 to 8 digits, not a repeated digit or a simple run like 1234." />
       {error ? <Notice title={error} tone="error" live="alert" /> : null}
       <div className="flex flex-wrap gap-2">
-        <LoadingButton type="submit" pending={pending} pendingLabel="Saving…" disabled={pin.length < 4 || !password}>{hasPin ? "Change PIN" : "Set PIN"}</LoadingButton>
-        {hasPin ? <Button type="button" variant="outline" disabled={pending || !password} onClick={() => run(() => removeOwnPin(password), "PIN removed")}>Remove PIN</Button> : null}
+        <LoadingButton type="submit" pending={pending} pendingLabel="Saving…" disabled={pin.length < 4 || (!google && !password)}>{hasPin ? "Change PIN" : "Set PIN"}</LoadingButton>
+        {hasPin ? <Button type="button" variant="outline" disabled={pending || (!google && !password)} onClick={() => run(() => removeOwnPin(password), "PIN removed")}>Remove PIN</Button> : null}
       </div>
     </form>
   );

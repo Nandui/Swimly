@@ -151,7 +151,7 @@ test("only the author withdraws a note; the subject export is superadmin-only an
   as("admin", { permissions: ["staff.manage", "roles.manage"] });
   await assert.rejects(exporter.subjectExport("ava"), /superadmin/);
   as("alex", { superadmin: true, authMethod: "pin" });
-  await assert.rejects(exporter.subjectExport("ava"), /Confirm your password/);
+  await assert.rejects(exporter.subjectExport("ava"), /Confirm it's you/);
   as("alex", { superadmin: true });
   const data = await exporter.subjectExport("ava");
   assert.equal(data?.hr.notes.length, 3, "withdrawn and private notes included");

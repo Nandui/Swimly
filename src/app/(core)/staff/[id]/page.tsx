@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { cache } from "react";
 import { notFound } from "next/navigation";
 import UiLink from "next/link";
-import { Building2, KeyRound } from "lucide-react";
+import { Building2, KeyRound, LogIn } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
@@ -10,6 +10,8 @@ import { Tag } from "@/components/ui-kit/tag";
 import { SuperadminToggle, SystemActorToggle, WorksAt } from "@/components/people/people-actions";
 import { EditPerson, ResetPersonPassword, SetPersonActive } from "@/components/staff/person-actions";
 import { canSee } from "@/lib/authz";
+import { formatDateTime } from "@/lib/format";
+import { googleSignInAvailable } from "@/lib/google-sign-in";
 import { prisma } from "@/lib/prisma";
 import { screenPage } from "@/lib/page-guards";
 import { PERSON_STATUS_META } from "@/lib/people/constants";
@@ -42,6 +44,7 @@ export default async function PersonPage({ params, searchParams }: PageProps<"/s
     prisma.club.findMany({ where: { orgId: session.user.orgId ?? undefined, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
   ]);
   if (!person) notFound();
+  const google = googleSignInAvailable();
   const role = person.staffRole;
   const levels = role
     ? describeLevels(role.levels !== null ? cleanLevels(role.levels, role.extras) : levelsFromAccess(role.permissions, role.screens).role)
@@ -57,7 +60,7 @@ export default async function PersonPage({ params, searchParams }: PageProps<"/s
             {person.isSuperadmin ? <Tag meta={PERSON_STATUS_META.superadmin} /> : null}
             {person.actsAsSystem ? <Tag meta={PERSON_STATUS_META.system} /> : null}
             {!person.isActive ? <Tag meta={PERSON_STATUS_META.deactivated} /> : null}
-            {!person.hasPassword ? <Tag meta={STAFF_STATUS_META.noPassword} /> : null}
+            {!person.hasPassword && (!google || person.isSuperadmin) ? <Tag meta={STAFF_STATUS_META.noPassword} /> : null}
           </span>
         }
         actions={
@@ -65,7 +68,7 @@ export default async function PersonPage({ params, searchParams }: PageProps<"/s
             {canSee(session, "hr") ? <Button asChild variant="ghost"><UiLink href={`/hr/people/${person.id}`}>HR file</UiLink></Button> : null}
             {session.user.isSuperadmin && person.isActive ? <SuperadminToggle userId={person.id} name={person.name} value={person.isSuperadmin} /> : null}
             {session.user.isSuperadmin ? <SystemActorToggle userId={person.id} name={person.name} value={person.actsAsSystem} /> : null}
-            <ResetPersonPassword person={person} />
+            <ResetPersonPassword person={person} google={google} />
             <SetPersonActive person={person} />
           </>
         }
@@ -88,6 +91,13 @@ export default async function PersonPage({ params, searchParams }: PageProps<"/s
               <span className="pc-row-title">{role?.name ?? "No role"}</span>
               {levels ? <span className="pc-row-hint">{levels}</span> : null}
               {role?.levels === null ? <span className="pc-row-hint">Uses older permission settings · open it on Roles and save to switch to levels</span> : null}
+            </div>
+          </li>
+          <li className="pc-row">
+            <span className="pc-tile-icon" aria-hidden="true"><LogIn /></span>
+            <div className="pc-row-body">
+              <span className="pc-row-title">{person.usesGoogle ? "Signs in with Google" : google && !person.isSuperadmin ? "Has not signed in with Google yet" : "Signs in with a password"}</span>
+              <span className="pc-row-hint">{person.lastSignInAt ? `Last signed in ${formatDateTime(person.lastSignInAt)}` : "No sign-in recorded yet"}</span>
             </div>
           </li>
           <li className="pc-row">

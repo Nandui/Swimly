@@ -13,7 +13,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
   const [devAdmin, device, { error }] = await Promise.all([getDevAdmin(), currentSharedDevice(), searchParams]);
   // A Google sign-in that was refused comes back here with its reason; any
   // other Auth.js error (cancelled at Google, a stale link) gets one sentence.
-  const googleError = googleRefusalText(error) ?? (error ? "Could not sign you in with Google. Try again, or use your email and password." : null);
+  const googleError = googleRefusalText(error) ?? (error ? "Could not sign you in with Google. Try again." : null);
 
   return (
     <SignInForm

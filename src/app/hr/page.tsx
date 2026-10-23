@@ -18,15 +18,15 @@ export default async function HrPeoplePage({ searchParams }: { searchParams: Pro
   const actor = await requireFreshSession("hr.records.read", "/hr");
   const { q = "" } = await searchParams;
   const { people } = await hrPeople(q);
-  // Dev sign-ins pass the step-up without a password time, so they get no time sentence.
-  const confirmedAt = actor.authMethod === "password" && actor.authAt ? formatDateTime(new Date(actor.authAt)) : null;
+  // Dev sign-ins pass the step-up without a sign-in time, so they get no time sentence.
+  const confirmedAt = (actor.authMethod === "password" || actor.authMethod === "google") && actor.authAt ? formatDateTime(new Date(actor.authAt)) : null;
   return (
     <PageShell header={<PageHeader title="HR" description="The people your HR role covers. Opening a record is logged." />}>
       <div className="pc-note">
         <Lock aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-ui-primary" />
         <p className="text-sm">
           Restricted · every read is logged.
-          {confirmedAt ? ` You confirmed your password at ${confirmedAt}; it lasts ${STEP_UP_MS / 60000} minutes.` : null}
+          {confirmedAt ? ` You confirmed it was you at ${confirmedAt}; it lasts ${STEP_UP_MS / 60000} minutes.` : null}
         </p>
       </div>
       <section className="pc-panel" aria-label="People">

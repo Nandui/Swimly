@@ -16,6 +16,8 @@ export type FrameSetup = {
   groups: readonly FrameGroup[];
   role: string;
   site: string;
+  /** Their picture (from Google), shown in the account menu; initials without one. */
+  picture?: string | null;
   /** Signs the person out; rejects when it could not (the provider has told them why). */
   signOut: () => Promise<void>;
   /** Makes another site the person's working site and stays on the page (ClubSwitcher,
