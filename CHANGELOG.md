@@ -4,6 +4,16 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.69.0 · 23 October 2026 · Google is the way to sign in
+
+- Turnfin now signs you in with your work Google account only. The sign-in page has one button: **Sign in with Google**.
+- New staff no longer need to be added first. The first time someone signs in with their work Google account, their Turnfin account is made for them, with their name and picture from Google.
+- A new account can't open anything until a manager gives it a role. They appear at the top of **Admin > Staff** under **Waiting for a role**; give them a role with the pencil, or deactivate them if they shouldn't be there.
+- Your name and picture follow your Google account. Your picture now shows at the top right, and on the Staff list.
+- Each person's page in Admin > Staff shows whether they sign in with Google and when they last signed in.
+- HR records and setting your quick-switch PIN now ask you to sign in with Google again, instead of your password. It lasts 15 minutes, as before.
+- **Add a person** in Admin > Staff no longer asks for a password: they sign in with the Google account for that email.
+
 ## 1.68.0 · 22 October 2026 · Sign in with Google
 
 - The sign-in page has a new **Sign in with Google** button, under the usual email and password.

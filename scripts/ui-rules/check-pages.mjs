@@ -45,7 +45,7 @@ const toPattern = (route) => new RegExp(`^${route
 const routes = (await pages('src/app')).map((page) => ({ ...page, pattern: toPattern(page.route), dynamic: page.route.includes('[') }))
   .sort((a, b) => a.route.split('[').length - b.route.split('[').length);
 // Pages seen signed out: sign-in, and the links staff send outside the app.
-const PUBLIC = new Set(['/sign-in', '/footage/[token]', '/wellbeing/[token]']);
+const PUBLIC = new Set(['/sign-in', '/sign-in/developer', '/footage/[token]', '/wellbeing/[token]']);
 
 const browser = await chromium.launch({ headless: true, ...(process.env.CHROME ? { executablePath: process.env.CHROME } : {}) });
 async function context(signedIn, theme, width) {

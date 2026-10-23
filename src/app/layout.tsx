@@ -86,6 +86,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                 ids={session?.user ? modulesFor(session).map((m) => m.id) : []}
                 role={session?.user?.roleName ?? ""}
                 site={site}
+                picture={session?.user?.image ?? null}
               >
                 {children}
               </YourModulesProvider>

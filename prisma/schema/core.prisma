@@ -128,6 +128,13 @@ model User {
   /// done via development" and analytics leave them out (owner request,
   /// 21 October 2026). Set by a superadmin on the person's Staff page.
   actsAsSystem  Boolean   @default(false)
+  /// Google's own id for the person (the `sub` claim), set at their first Sign in
+  /// with Google. Matched before the email, so a changed address stays one account.
+  googleId      String?   @unique
+  /// Their Google profile picture, refreshed at every Google sign-in. Null shows initials.
+  avatarUrl     String?
+  /// When they last signed in, by any route. Shown on the Staff page.
+  lastSignInAt  DateTime?
 
   // --- Own details, kept by the person in Turnfin Me and changed only after a
   // reviewer applies their request. Seen on Work by staff.manage only. ---

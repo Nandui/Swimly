@@ -14,7 +14,7 @@ function fixture() {
     "next-auth": Object.assign(() => ({ auth: async () => ({ user: { id: account.id }, expires: "2099-01-01" }), handlers: {}, signIn: async () => {}, signOut: async () => {} }), { CredentialsSignin: class extends Error {} }),
     "next-auth/providers/credentials": (options: unknown) => options,
     "next-auth/providers/google": (options: unknown) => options,
-    "@/lib/google-sign-in": { googleSignInAvailable: () => false, googleStaffAccount: async () => ({ refused: "google_no_account" }), auditGoogleSignIn: async () => {} },
+    "@/lib/google-sign-in": { googleSignInAvailable: () => false, googleStaffAccount: async () => ({ refused: "google_no_account" }), googleSignIn: async () => ({ refused: "google_no_account" }), recordGoogleSignIn: async () => false },
     "@/lib/prisma": { prisma: { user: { findUnique: async () => account } } },
     "@/lib/auth-cookies": { authCookies: () => undefined },
     "@/lib/dev-sign-in": { devSignInAllowed: () => false },
@@ -69,4 +69,32 @@ test("demotion, deactivation and removing a role revoke administrator access on 
   f.account.isActive = true;
   f.account.staffRole = null;
   assert.equal(await f.auth(), null);
+});
+
+/** The password form, with Google set up or not. */
+async function passwordSignIn({ google, isSuperadmin }: { google: boolean; isSuperadmin: boolean }) {
+  const bcrypt = (await import("bcryptjs")).default;
+  const row = { id: "staff-1", name: "Synthetic Developer", email: "dev@example.test", isActive: true, isSuperadmin, passwordHash: await bcrypt.hash("correct horse", 4), pinHash: null, orgId: "org" };
+  let config: { providers: { authorize?: (c: Record<string, string>) => Promise<unknown> }[] } = { providers: [] };
+  serverModule<typeof import("./auth")>("src/auth.ts", {
+    "next-auth": Object.assign((c: typeof config) => { config = c; return { auth: async () => null, handlers: {} }; }, { CredentialsSignin: class extends Error {} }),
+    "next-auth/providers/credentials": (options: unknown) => options,
+    "next-auth/providers/google": (options: unknown) => options,
+    "@/lib/google-sign-in": { googleSignInAvailable: () => google, googleStaffAccount: async () => ({ refused: "google_no_account" }), googleSignIn: async () => ({ refused: "google_no_account" }), recordGoogleSignIn: async () => false },
+    "@/lib/prisma": { prisma: { user: { findUnique: async () => row, update: async () => row } } },
+    "@/lib/auth-cookies": { authCookies: () => undefined },
+    "@/lib/dev-sign-in": { devSignInAllowed: () => false },
+    "@/lib/staff/preview": { mayPreview: () => false, previewedRole: async () => null },
+    "@/lib/clubs/current": { getCurrentClub: async () => ({ club: { id: "club-1", name: "Synthetic site" }, clubs: [] }) },
+    "@/lib/devices/shared-device": { currentSharedDevice: async () => null, SHARED_SESSION_MAX_MS: 1 },
+    "@/lib/devices/pin": { authorizePin: async () => null },
+    "@/lib/devices/work-device": { workDeviceRequired: () => false, mayWorkAnywhere: async () => true },
+  });
+  return config.providers[0].authorize!({ email: row.email, password: "correct horse" });
+}
+
+test("with Google set up, only a superadmin may still sign in with a password", async () => {
+  assert.equal(await passwordSignIn({ google: true, isSuperadmin: false }), null);
+  assert.ok(await passwordSignIn({ google: true, isSuperadmin: true }));
+  assert.ok(await passwordSignIn({ google: false, isSuperadmin: false }), "without Google everyone keeps the password form");
 });

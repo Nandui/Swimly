@@ -13,7 +13,7 @@ import { getCurrentClub } from "@/lib/clubs/current";
 import { currentSharedDevice, SHARED_SESSION_MAX_MS } from "@/lib/devices/shared-device";
 import { authorizePin } from "@/lib/devices/pin";
 import { mayWorkAnywhere, workDeviceRequired } from "@/lib/devices/work-device";
-import { auditGoogleSignIn, googleSignInAvailable, googleStaffAccount } from "@/lib/google-sign-in";
+import { googleSignIn, googleSignInAvailable, googleStaffAccount, recordGoogleSignIn } from "@/lib/google-sign-in";
 
 /** A correct password on a device this account may not work from. Raised only
  *  after the password matched, so it reveals nothing about other accounts. */
@@ -44,6 +44,9 @@ function providers(): NextAuthConfig["providers"] {
         // failure shape for every reason, so the form cannot be used to find
         // out which addresses have accounts.
         if (!user?.passwordHash || !user.isActive) return null;
+        // Once Google sign-in is set up it is the way in; a password is kept
+        // only for superadmin (developer) accounts, at /sign-in/developer.
+        if (googleSignInAvailable() && !user.isSuperadmin) return null;
         if (!(await bcrypt.compare(password, user.passwordHash))) return null;
         const device = await currentSharedDevice();
         // Work is done on registered work PCs unless the person may work anywhere.
@@ -52,7 +55,7 @@ function providers(): NextAuthConfig["providers"] {
         // A password sign-in is fresh for step-up, clears any PIN lock, and on
         // a shared device adds the person to its quick-switch list (if they
         // have a PIN).
-        await prisma.user.update({ where: { id: user.id }, data: { passwordAt: new Date(), pinFailures: 0, pinLockedAt: null } });
+        await prisma.user.update({ where: { id: user.id }, data: { passwordAt: new Date(), lastSignInAt: new Date(), pinFailures: 0, pinLockedAt: null } });
         if (device && user.pinHash && user.orgId === device.orgId) {
           await prisma.sharedDeviceUser.upsert({
             where: { deviceId_userId: { deviceId: device.id, userId: user.id } },
@@ -76,9 +79,10 @@ function providers(): NextAuthConfig["providers"] {
     }),
   ];
 
-  // Sign in with Google: only for an existing active account with the same
-  // email (src/lib/google-sign-in.ts). Registered only when the Google client
-  // is configured; it reads AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET itself.
+  // Sign in with Google (src/lib/google-sign-in.ts): makes the account at a
+  // work-domain person's first sign-in, with no role until a manager gives one.
+  // Registered only when the Google client is configured; it reads
+  // AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET itself.
   if (googleSignInAvailable()) {
     list.push(Google({ authorization: { params: { prompt: "select_account" } } }));
   }
@@ -120,11 +124,12 @@ const {
   pages: { signIn: "/sign-in", error: "/sign-in" },
   providers: providers(),
   callbacks: {
-    // Google proves an email address, nothing more: it must belong to an
-    // active account. A refusal returns to the sign-in page with its reason.
+    // Google proves who someone is. The account is found or made and refreshed
+    // from Google here; it opens only with a role. A refusal returns to the
+    // sign-in page with its reason.
     async signIn({ account, profile }) {
       if (account?.provider !== "google") return true;
-      const found = await googleStaffAccount(profile);
+      const found = await googleSignIn(profile);
       return "refused" in found ? `/sign-in?error=${found.refused}` : true;
     },
     // The token carries who, and how and when they proved it: never what they
@@ -140,8 +145,7 @@ const {
         delete token.picture;
         token.authMethod = "google";
         token.authAt = Date.now();
-        token.sharedDevice = !!(await currentSharedDevice());
-        await auditGoogleSignIn(found.user);
+        token.sharedDevice = await recordGoogleSignIn(found.user);
         return token;
       }
       if (user) {
@@ -226,7 +230,8 @@ export const auth = cache(async function auth(): Promise<Session | null> {
     const user = sessionUserFor(current, siteId);
     if (!user) return null;
 
-    return { ...session, user: { ...session.user, ...(await wearPreview(user, current, siteId)) } };
+    // The picture is the one Google last gave (src/lib/google-sign-in.ts); none shows initials.
+    return { ...session, user: { ...session.user, ...(await wearPreview(user, current, siteId)), image: current.avatarUrl ?? null } };
   }
 
   if (process.env.NODE_ENV === "production" || process.env.DEV_AUTH_BYPASS !== "1") {
@@ -245,7 +250,7 @@ export const auth = cache(async function auth(): Promise<Session | null> {
   if (!user) return null;
 
   return {
-    user: await wearPreview(user, admin, siteId),
+    user: { ...(await wearPreview(user, admin, siteId)), image: admin.avatarUrl ?? null },
     expires: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
   };
 });

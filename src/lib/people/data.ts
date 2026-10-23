@@ -44,13 +44,13 @@ export async function getPersonDetail(userId: string) {
   const person = await prisma.user.findFirst({
     where: { id: userId, orgId: session.user.orgId ?? undefined },
     select: {
-      id: true, name: true, email: true, isActive: true, isSuperadmin: true, actsAsSystem: true, createdAt: true, passwordHash: true, siteIds: true,
+      id: true, name: true, email: true, isActive: true, isSuperadmin: true, actsAsSystem: true, createdAt: true, passwordHash: true, siteIds: true, googleId: true, lastSignInAt: true,
       staffRole: { select: { id: true, name: true, levels: true, extras: true, permissions: true, screens: true, homeName: true } },
     },
   });
   if (!person) return null;
   const sites = await prisma.club.findMany({ where: { id: { in: person.siteIds } }, select: { id: true, name: true } });
   const names = new Map(sites.map((row) => [row.id, row.name]));
-  const { passwordHash, ...rest } = person;
-  return { ...rest, hasPassword: Boolean(passwordHash), worksAt: person.siteIds.map((id) => ({ id, name: names.get(id) ?? "Removed site" })) };
+  const { passwordHash, googleId, ...rest } = person;
+  return { ...rest, hasPassword: Boolean(passwordHash), usesGoogle: Boolean(googleId), worksAt: person.siteIds.map((id) => ({ id, name: names.get(id) ?? "Removed site" })) };
 }

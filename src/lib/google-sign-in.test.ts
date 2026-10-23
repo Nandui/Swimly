@@ -2,21 +2,46 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { serverModule } from "@/test/server-module";
 
-type Row = { id: string; name: string; email: string; isActive: boolean };
+type Row = { id: string; name: string; email: string; isActive: boolean; staffRoleId: string | null; googleId: string | null; avatarUrl: string | null; orgId?: string | null; pinHash?: string | null; lastSignInAt?: Date | null; pinFailures?: number; pinLockedAt?: Date | null };
 
-function fixture({ rows = [] as Row[], workDevice = false, anywhere = false, device = null as null | { id: string } } = {}) {
-  const audits: unknown[] = [];
-  const lookups: string[] = [];
+/** An in-memory account table: enough of Prisma for sign-in. */
+function fixture({ rows = [] as Row[], workDevice = false, anywhere = false, device = null as null | { id: string; orgId: string } } = {}) {
+  const audits: { summary: string; action: string }[] = [];
+  const quickSwitch: string[] = [];
+  const pick = (row: Row | undefined) => (row ? { ...row } : null);
+  const user = {
+    findUnique: async ({ where }: { where: { email?: string; googleId?: string } }) =>
+      pick(rows.find((r) => (where.email !== undefined ? r.email === where.email : r.googleId === where.googleId))),
+    create: async ({ data }: { data: Omit<Row, "id" | "isActive" | "staffRoleId"> }) => {
+      if (rows.some((r) => r.email === data.email || r.googleId === data.googleId)) throw new Error("unique");
+      const row: Row = { id: `made-${rows.length + 1}`, isActive: true, staffRoleId: null, ...data };
+      rows.push(row);
+      return { ...row };
+    },
+    update: async ({ where, data }: { where: { id: string }; data: Partial<Row> }) => {
+      const row = rows.find((r) => r.id === where.id)!;
+      Object.assign(row, data);
+      return { ...row };
+    },
+  };
   const mod = serverModule<typeof import("./google-sign-in")>("src/lib/google-sign-in.ts", {
-    "@/lib/prisma": { prisma: { user: { findUnique: async ({ where }: { where: { email: string } }) => { lookups.push(where.email); return rows.find((r) => r.email === where.email) ?? null; } } } },
-    "@/lib/audit": { logAudit: async (input: unknown) => { audits.push(input); } },
+    "@/lib/prisma": { prisma: {
+      user,
+      organisation: { findFirst: async () => ({ id: "org-lw" }) },
+      sharedDeviceUser: { upsert: async ({ create }: { create: { userId: string } }) => { quickSwitch.push(create.userId); } },
+    } },
+    "@/lib/audit": { logAudit: async (input: { summary: string; action: string }) => { audits.push(input); } },
     "@/lib/devices/shared-device": { currentSharedDevice: async () => device },
     "@/lib/devices/work-device": { workDeviceRequired: () => workDevice, mayWorkAnywhere: async () => anywhere },
   });
-  return { ...mod, audits, lookups };
+  return { ...mod, audits, rows, quickSwitch };
 }
 
-const staff: Row = { id: "staff-1", name: "Synthetic Manager", email: "manager@example.test", isActive: true };
+const staff: Row = { id: "staff-1", name: "Synthetic Manager", email: "manager@leisureworldcork.com", isActive: true, staffRoleId: "role-1", googleId: null, avatarUrl: null, orgId: "org-lw" };
+const profile = (over: Record<string, unknown> = {}) => ({
+  sub: "g-100", email: "manager@leisureworldcork.com", email_verified: true, hd: "leisureworldcork.com",
+  name: "Synthetic Manager", picture: "https://lh3.googleusercontent.com/a/synthetic", ...over,
+});
 
 test("Google sign-in is offered only when both Google settings are present", () => {
   const { googleSignInAvailable } = fixture();
@@ -26,41 +51,99 @@ test("Google sign-in is offered only when both Google settings are present", () 
   assert.equal(googleSignInAvailable({ AUTH_GOOGLE_ID: "id", AUTH_GOOGLE_SECRET: "secret" }), true);
 });
 
-test("a verified Google email signs in as the active account with that email", async () => {
-  const f = fixture({ rows: [staff] });
-  assert.deepEqual(await f.googleStaffAccount({ email: " Manager@Example.test ", email_verified: true }), { user: { id: "staff-1", name: "Synthetic Manager", email: "manager@example.test" } });
+test("the work domain gets accounts by default, and the setting can change it", () => {
+  const f = fixture();
+  assert.deepEqual(f.googleAccountDomains({}), ["leisureworldcork.com"]);
+  assert.deepEqual(f.googleAccountDomains({ AUTH_GOOGLE_DOMAINS: " A.ie, b.ie ,a.ie" }), ["a.ie", "b.ie"]);
 });
 
-test("Google never creates an account or opens a deactivated one", async () => {
-  const f = fixture({ rows: [{ ...staff, isActive: false }] });
-  assert.deepEqual(await f.googleStaffAccount({ email: "manager@example.test", email_verified: true }), { refused: "google_no_account" });
-  assert.deepEqual(await f.googleStaffAccount({ email: "stranger@example.test", email_verified: true }), { refused: "google_no_account" });
+test("an existing account signs in, linking its Google id and taking the name and picture", async () => {
+  const f = fixture({ rows: [{ ...staff, name: "Old Name" }] });
+  assert.deepEqual(await f.googleSignIn(profile({ email: " Manager@LeisureWorldCork.com " })), { user: { id: "staff-1", name: "Synthetic Manager", email: "manager@leisureworldcork.com" } });
+  assert.equal(f.rows[0].googleId, "g-100");
+  assert.equal(f.rows[0].avatarUrl, "https://lh3.googleusercontent.com/a/synthetic");
+  assert.match(f.audits[0].summary, /Google changed name from "Old Name" to "Synthetic Manager"/);
 });
 
-test("an email Google has not verified is never matched", async () => {
+test("a first sign-in from the work domain makes an account with no role, which waits", async () => {
+  const f = fixture();
+  assert.deepEqual(await f.googleSignIn(profile({ sub: "g-new", email: "new.starter@leisureworldcork.com", name: "New Starter" })), { refused: "google_waiting" });
+  assert.equal(f.rows.length, 1);
+  assert.deepEqual({ ...f.rows[0] }, { id: "made-1", isActive: true, staffRoleId: null, name: "New Starter", email: "new.starter@leisureworldcork.com", googleId: "g-new", avatarUrl: "https://lh3.googleusercontent.com/a/synthetic", orgId: "org-lw" });
+  assert.equal(f.audits[0].action, "create");
+  // Signing in again finds it, still waiting, and makes no second account.
+  assert.deepEqual(await f.googleSignIn(profile({ sub: "g-new", email: "new.starter@leisureworldcork.com", name: "New Starter" })), { refused: "google_waiting" });
+  assert.equal(f.rows.length, 1);
+  // Once a manager gives a role, they are in.
+  f.rows[0].staffRoleId = "role-1";
+  assert.ok("user" in await f.googleSignIn(profile({ sub: "g-new", email: "new.starter@leisureworldcork.com", name: "New Starter" })));
+});
+
+test("no account is made outside the work domain, or for a personal Google account", async () => {
+  const f = fixture();
+  assert.deepEqual(await f.googleSignIn(profile({ email: "someone@gmail.com", hd: undefined })), { refused: "google_no_account" });
+  assert.deepEqual(await f.googleSignIn(profile({ email: "someone@other.ie", hd: "other.ie" })), { refused: "google_no_account" });
+  // A Workspace domain claim must match the address itself.
+  assert.deepEqual(await f.googleSignIn(profile({ email: "someone@other.ie", hd: "leisureworldcork.com" })), { refused: "google_no_account" });
+  assert.equal(f.rows.length, 0);
+});
+
+test("a deactivated account stays shut and is not changed", async () => {
+  const f = fixture({ rows: [{ ...staff, isActive: false, name: "Old Name" }] });
+  assert.deepEqual(await f.googleSignIn(profile()), { refused: "google_no_account" });
+  assert.equal(f.rows[0].name, "Old Name");
+  assert.equal(f.rows.length, 1);
+});
+
+test("the Google id finds the account after the address changes, and the new address is taken", async () => {
+  const f = fixture({ rows: [{ ...staff, googleId: "g-100" }] });
+  assert.ok("user" in await f.googleSignIn(profile({ email: "m.manager@leisureworldcork.com" })));
+  assert.equal(f.rows[0].email, "m.manager@leisureworldcork.com");
+  assert.equal(f.rows.length, 1);
+});
+
+test("an email Google has not verified is never matched or used", async () => {
   const f = fixture({ rows: [staff] });
-  assert.deepEqual(await f.googleStaffAccount({ email: "manager@example.test", email_verified: false }), { refused: "google_no_account" });
-  assert.deepEqual(await f.googleStaffAccount({ email: "manager@example.test" }), { refused: "google_no_account" });
-  assert.deepEqual(await f.googleStaffAccount(null), { refused: "google_no_account" });
-  assert.deepEqual(f.lookups, []);
+  assert.deepEqual(await f.googleSignIn(profile({ email_verified: false })), { refused: "google_no_account" });
+  assert.deepEqual(await f.googleSignIn(profile({ email_verified: undefined })), { refused: "google_no_account" });
+  assert.deepEqual(await f.googleSignIn(null), { refused: "google_no_account" });
+  assert.equal(f.rows[0].googleId, null);
+});
+
+test("only an https picture is kept, and a missing name falls back", () => {
+  const f = fixture();
+  assert.equal(f.googleIdentity(profile({ picture: "http://example.test/a.png" }))?.avatarUrl, null);
+  assert.equal(f.googleIdentity(profile({ name: "", given_name: "Aoife", family_name: "Ryan" }))?.name, "Aoife Ryan");
+  assert.equal(f.googleIdentity(profile({ name: undefined }))?.name, "manager");
 });
 
 test("the work-computer rule applies to Google as to a password", async () => {
-  assert.deepEqual(await fixture({ rows: [staff], workDevice: true }).googleStaffAccount({ email: staff.email, email_verified: true }), { refused: "work_device" });
-  assert.ok("user" in await fixture({ rows: [staff], workDevice: true, anywhere: true }).googleStaffAccount({ email: staff.email, email_verified: true }));
-  assert.ok("user" in await fixture({ rows: [staff], workDevice: true, device: { id: "pc" } }).googleStaffAccount({ email: staff.email, email_verified: true }));
+  assert.deepEqual(await fixture({ rows: [{ ...staff }], workDevice: true }).googleSignIn(profile()), { refused: "work_device" });
+  assert.ok("user" in await fixture({ rows: [{ ...staff }], workDevice: true, anywhere: true }).googleSignIn(profile()));
+  assert.ok("user" in await fixture({ rows: [{ ...staff }], workDevice: true, device: { id: "pc", orgId: "org-lw" } }).googleSignIn(profile()));
+});
+
+test("the token lookup reads without making or changing anything", async () => {
+  const f = fixture();
+  assert.deepEqual(await f.googleStaffAccount(profile()), { refused: "google_no_account" });
+  assert.equal(f.rows.length, 0);
+});
+
+test("a recorded sign-in clears a PIN lock, adds a PIN holder to the work device, and is logged", async () => {
+  const f = fixture({ rows: [{ ...staff, pinHash: "hash", pinFailures: 5, pinLockedAt: new Date() }], device: { id: "pc", orgId: "org-lw" } });
+  assert.equal(await f.recordGoogleSignIn({ id: "staff-1", name: "Synthetic Manager" }), true);
+  assert.equal(f.rows[0].pinFailures, 0);
+  assert.equal(f.rows[0].pinLockedAt, null);
+  assert.ok(f.rows[0].lastSignInAt instanceof Date);
+  assert.deepEqual(f.quickSwitch, ["staff-1"]);
+  assert.equal(f.audits.at(-1)?.summary, "Signed in with Google");
 });
 
 test("refusals read as plain sentences and unknown codes as none", () => {
   const f = fixture();
-  assert.match(f.googleRefusalText("google_no_account") ?? "", /doesn't match an active Turnfin account/);
+  assert.match(f.googleRefusalText("google_no_account") ?? "", /can't sign in to Turnfin/);
+  assert.match(f.googleRefusalText("google_waiting") ?? "", /ask your manager to give you a role/i);
   assert.match(f.googleRefusalText("work_device") ?? "", /work computer/);
   assert.equal(f.googleRefusalText("toString"), null);
   assert.equal(f.googleRefusalText(undefined), null);
-});
-
-test("a Google sign-in is written to the account's history", async () => {
-  const f = fixture();
-  await f.auditGoogleSignIn({ id: "staff-1", name: "Synthetic Manager" });
-  assert.deepEqual(f.audits, [{ actorId: "staff-1", actorName: "Synthetic Manager", action: "sign_in", entity: "User", entityId: "staff-1", summary: "Signed in with Google" }]);
 });

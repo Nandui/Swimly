@@ -11,7 +11,7 @@ import {
 
 import type { Metadata } from "next";
 
-import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/shadcn/avatar";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
@@ -35,6 +35,7 @@ import { listPeopleForDisplay, type Person } from "@/lib/staff/data/staff";
 import { AppIcon } from "@/components/ui-kit/app-icon";
 import { StaffFilterBar, type StaffFilterPicker } from "@/components/staff/staff-filters";
 import { prisma } from "@/lib/prisma";
+import { googleSignInAvailable } from "@/lib/google-sign-in";
 import {
   STAFF_SHOW,
   countBy,
@@ -62,7 +63,10 @@ export default async function StaffPage(props: PageProps<"/staff">) {
   const filters = readStaffFilters(params);
   const people: FilterRow[] = everyone.map((person) => ({ ...person, departmentIds: person.departments.map((d) => d.departmentId) }));
   const shown = filterPeople(people, filters);
-  const active = shown.filter((p) => p.isActive);
+  // A first Sign in with Google makes an account with no role: they wait at the top until given one.
+  const waiting = shown.filter((p) => p.isActive && !p.staffRoleId);
+  const active = shown.filter((p) => p.isActive && p.staffRoleId);
+  const google = googleSignInAvailable();
   const inactive = shown.filter((p) => !p.isActive);
   const allActive = people.filter((p) => p.isActive);
   const keyholders = allActive.filter((p) =>
@@ -97,13 +101,26 @@ export default async function StaffPage(props: PageProps<"/staff">) {
                 {"Work devices"}
               </UiLink>
             </Button>
-            <AddPerson roles={roles} defaultOpen={params.add === "1"} />
+            <AddPerson roles={roles} defaultOpen={params.add === "1"} google={google} />
           </>
         }
       />}>
 
       {people.length > 0 ? (
         <StaffFilterBar filters={filters} showCounts={showCounts} pickers={pickers} shown={shown.length} total={people.length} />
+      ) : null}
+
+      {waiting.length > 0 ? (
+        <section className="pc-panel" aria-labelledby="staff-waiting">
+          <div className="pc-panel-head">
+            <h2 id="staff-waiting" className="text-lg font-semibold">Waiting for a role</h2>
+          </div>
+          <p className="text-sm text-ui-muted-foreground">
+            They signed in with their work Google account for the first time, so their account was made for them.
+            They can&apos;t open anything until you give them a role with the pencil. If they shouldn&apos;t be here, deactivate them.
+          </p>
+          <PeopleTable people={waiting} roles={roles} currentUserId={session.user.id} personHref={personHref} google={google} />
+        </section>
       ) : null}
 
       {filtering && shown.length === 0 ? (
@@ -118,7 +135,7 @@ export default async function StaffPage(props: PageProps<"/staff">) {
           icon="users"
           title="Nobody can sign in yet"
           hint="Add the people who take attendance and run the desk. Give each of them the role that lets them do their job and no more."
-          action={<AddPerson roles={roles} />}
+          action={<AddPerson roles={roles} google={google} />}
         />
       ) : active.length > 0 ? (
         filtering ? (
@@ -126,15 +143,17 @@ export default async function StaffPage(props: PageProps<"/staff">) {
             <div className="pc-panel-head">
               <h2 id="staff-can-sign-in" className="text-lg font-semibold">Can sign in</h2>
             </div>
-            <PeopleTable people={active} roles={roles} currentUserId={session.user.id} personHref={personHref} />
+            <PeopleTable people={active} roles={roles} currentUserId={session.user.id} personHref={personHref} google={google} />
           </section>
         ) : (
           <section className="pc-panel" aria-label="Staff">
             <p className="text-sm text-ui-muted-foreground">
               {plural(allActive.length, "person", "people")} can sign in, across {plural(roles.length, "role")}.{" "}
-              {keyholders} of them can manage accounts. There is no sign-up and no invitation email.
+              {keyholders} of them can manage accounts. {google
+                ? "People sign in with their work Google account; a first sign-in makes their account, and you give them a role."
+                : "There is no sign-up and no invitation email."}
             </p>
-            <PeopleTable people={active} roles={roles} currentUserId={session.user.id} personHref={personHref} />
+            <PeopleTable people={active} roles={roles} currentUserId={session.user.id} personHref={personHref} google={google} />
           </section>
         )
       ) : null}
@@ -152,6 +171,7 @@ export default async function StaffPage(props: PageProps<"/staff">) {
             roles={roles}
             currentUserId={session.user.id}
             personHref={personHref}
+            google={google}
           />
         </section>
       ) : null}
@@ -160,10 +180,10 @@ export default async function StaffPage(props: PageProps<"/staff">) {
 }
 
 
-function PersonActions({ person, roles }: { person: Person; roles: RoleOption[] }) {
+function PersonActions({ person, roles, google }: { person: Person; roles: RoleOption[]; google: boolean }) {
   return (
     <>
-      <ResetPersonPassword person={person} />
+      <ResetPersonPassword person={person} google={google} />
       <EditPerson person={person} roles={roles} />
       <SetPersonActive person={person} />
     </>
@@ -177,11 +197,13 @@ function PeopleTable({
   roles,
   currentUserId,
   personHref,
+  google,
 }: {
   people: Person[];
   roles: RoleOption[];
   currentUserId?: string;
   personHref: (id: string) => string;
+  google: boolean;
 }) {
   return (
     <Table className="w-full [&_td]:whitespace-normal [&_th]:whitespace-normal">
@@ -205,11 +227,11 @@ function PeopleTable({
               <TableCell>
                 <div className="min-w-0 flex gap-3 items-center">
                   <UiLink href={personHref(person.id)} className="min-w-0 flex gap-3 items-center rounded-card underline-offset-4 hover:[&_.pc-row-title]:underline">
-                    <Avatar size="lg" aria-hidden="true"><AvatarFallback>{nameInitials(person.name)}</AvatarFallback></Avatar>
+                    <Avatar size="lg" aria-hidden="true">{person.avatarUrl ? <AvatarImage src={person.avatarUrl} alt="" referrerPolicy="no-referrer" /> : null}<AvatarFallback>{nameInitials(person.name)}</AvatarFallback></Avatar>
                     <span className="min-w-0 flex flex-col">
                       <span className="pc-row-title inline-flex min-h-6 flex-wrap items-center gap-x-2">
                         {person.name}{person.id === currentUserId ? " (you)" : null}
-                        {!person.hasPassword ? (
+                        {!person.hasPassword && (!google || person.isSuperadmin) ? (
                           <Tag meta={STAFF_STATUS_META.noPassword} />
                         ) : null}
                       </span>
@@ -224,7 +246,7 @@ function PeopleTable({
                 </div>
                 {/* Phones: the actions move under the person, in one line. */}
                 <div className="mt-3 flex flex-wrap gap-2 md:hidden">
-                  <PersonActions person={person} roles={roles} />
+                  <PersonActions person={person} roles={roles} google={google} />
                 </div>
               </TableCell>
               {/* max-md:hidden too, so the phone row card closes on the person cell (poolside.css). */}
@@ -238,7 +260,7 @@ function PeopleTable({
               </TableCell>
               <TableCell className="max-md:hidden">
                 <div className="min-w-0 flex gap-2 items-center justify-end flex-nowrap">
-                  <PersonActions person={person} roles={roles} />
+                  <PersonActions person={person} roles={roles} google={google} />
                 </div>
               </TableCell>
             </TableRow>

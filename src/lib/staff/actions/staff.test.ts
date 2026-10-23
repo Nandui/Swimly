@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { serverModule } from "@/test/server-module";
 
-test("a person added on the Users page joins the organisation of whoever adds them", async () => {
+function addPerson(google: boolean) {
   const created: Record<string, unknown>[] = [];
   const tx = {
     staffRole: { findUnique: async () => ({ id: "role", name: "Synthetic desk", permissions: ["enrolment.manage"], restricted: false }) },
@@ -14,8 +14,22 @@ test("a person added on the Users page joins the organisation of whoever adds th
     "@/lib/staff/keyholders": { withKeyholderLock: (run: (db: typeof tx) => Promise<unknown>) => run(tx), guardKeyholders: async () => null, guardSuperadmins: async () => null },
     "@/lib/audit": { logAudit: async () => {} },
     "next/cache": { revalidatePath: () => {} },
+    "@/lib/google-sign-in": { googleSignInAvailable: () => google },
   });
+  return { actions, created };
+}
+
+test("a person added on the Users page joins the organisation of whoever adds them", async () => {
+  const { actions, created } = addPerson(false);
   const result = await actions.createPerson({ name: "Synthetic Starter", email: "starter@example.test", staffRoleId: "role", password: "Synthetic-pass-2026!" });
   assert.equal(result.ok, true, JSON.stringify(result));
   assert.equal(created[0].orgId, "org_synthetic");
+  assert.equal(typeof created[0].passwordHash, "string");
+});
+
+test("with Google set up, a person is added without a password", async () => {
+  const { actions, created } = addPerson(true);
+  const result = await actions.createPerson({ name: "Synthetic Starter", email: "starter@example.test", staffRoleId: "role" });
+  assert.equal(result.ok, true, JSON.stringify(result));
+  assert.equal(created[0].passwordHash, null);
 });

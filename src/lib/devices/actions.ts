@@ -8,6 +8,8 @@ import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
 import { requirePermission, requireSession } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
+import { STEP_UP_MS } from "@/lib/policy/engine";
+import type { Session } from "next-auth";
 import { BCRYPT_ROUNDS } from "@/lib/staff/passwords";
 import { DEVICE_COOKIE, currentSharedDevice, deviceCookieOptions, pinProblem, signDevice } from "@/lib/devices/shared-device";
 
@@ -68,20 +70,31 @@ async function checkPassword(userId: string, password: string) {
   return user?.passwordHash && (await bcrypt.compare(password, user.passwordHash)) ? user : null;
 }
 
+/** Proof it is really them before a PIN changes: their password, or for a Google
+ *  sign-in, having signed in with Google in the last 15 minutes (as for HR). */
+async function provesItsYou(session: Session, password: string) {
+  if (session.user.authMethod === "google") {
+    if (!session.user.authAt || Date.now() - session.user.authAt > STEP_UP_MS) return null;
+    return prisma.user.findUnique({ where: { id: session.user.id }, select: { name: true } });
+  }
+  return checkPassword(session.user.id, password);
+}
+const NOT_PROVEN = (session: Session) => session.user.authMethod === "google" ? "Sign in with Google again first, then try once more." : "That password is not right.";
+
 /** Sets or changes the person's own quick-switch PIN. */
 export async function setOwnPin(currentPassword: string, pin: string): Promise<ActionResult> {
   const session = await requireSession();
   if (session.user.preview) return fail("Stop previewing a role before changing your PIN.");
   const problem = pinProblem(String(pin ?? ""));
   if (problem) return fail(problem);
-  const user = await checkPassword(session.user.id, String(currentPassword ?? ""));
-  if (!user) return fail("That password is not right.");
+  const user = await provesItsYou(session, String(currentPassword ?? ""));
+  if (!user) return fail(NOT_PROVEN(session));
   const pinHash = await bcrypt.hash(pin, BCRYPT_ROUNDS);
   await prisma.$transaction(async (tx) => {
     await tx.user.update({ where: { id: session.user.id }, data: { pinHash, pinFailures: 0, pinLockedAt: null } });
     await logAudit({ actorId: session.user.id, actorName: user.name, action: "set-pin", entity: "User", entityId: session.user.id, summary: `${user.name} set a quick-switch PIN` }, tx);
   });
-  // Signing in on this device with the password added them if it is shared;
+  // Signing in on this device added them if it is shared;
   // setting a PIN here does the same, so they can switch in next time.
   const device = await currentSharedDevice();
   if (device && device.orgId === session.user.orgId) {
@@ -93,8 +106,8 @@ export async function setOwnPin(currentPassword: string, pin: string): Promise<A
 
 export async function removeOwnPin(currentPassword: string): Promise<ActionResult> {
   const session = await requireSession();
-  const user = await checkPassword(session.user.id, String(currentPassword ?? ""));
-  if (!user) return fail("That password is not right.");
+  const user = await provesItsYou(session, String(currentPassword ?? ""));
+  if (!user) return fail(NOT_PROVEN(session));
   await prisma.$transaction(async (tx) => {
     await tx.user.update({ where: { id: session.user.id }, data: { pinHash: null, pinFailures: 0, pinLockedAt: null } });
     await tx.sharedDeviceUser.deleteMany({ where: { userId: session.user.id } });

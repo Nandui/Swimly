@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { ChevronDown, Loader2, LogOut, Monitor, Moon, Sparkles, Sun, UserRound } from 'lucide-react';
 import { Button } from '@/components/shadcn/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '@/components/shadcn/dropdown-menu';
-import { Avatar, AvatarFallback, initials } from '@/components/shadcn/avatar';
+import { Avatar, AvatarFallback, AvatarImage, initials } from '@/components/shadcn/avatar';
 import { useThemeMode } from '@/components/theme-provider';
 import { useFrame } from '@/components/ui/frame';
 
@@ -28,7 +28,8 @@ const MODES = [
 export function AccountMenu({ name, showManageAccount = true }: { name: string; showManageAccount?: boolean }) {
   const [leaving, setLeaving] = useState(false);
   const { mode, setMode } = useThemeMode();
-  const { role, site, version, signOut } = useFrame();
+  const { role, site, picture, version, signOut } = useFrame();
+  const photo = picture ? <AvatarImage src={picture} alt="" referrerPolicy="no-referrer" /> : null;
   const caption = [role, site].filter(Boolean).join(' · ');
   async function leave() {
     setLeaving(true);
@@ -39,12 +40,12 @@ export function AccountMenu({ name, showManageAccount = true }: { name: string; 
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="tf-bar-item tf-who" aria-label={`Account menu: ${name}`} disabled={leaving}>
-          {leaving ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Avatar self aria-hidden="true"><AvatarFallback>{initials(name)}</AvatarFallback></Avatar>}<ChevronDown aria-hidden="true" />
+          {leaving ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Avatar self aria-hidden="true">{photo}<AvatarFallback>{initials(name)}</AvatarFallback></Avatar>}<ChevronDown aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="bottom" align="end" className="tf-account-menu w-80 max-w-(--pc-overlay-max-width)">
         <DropdownMenuLabel className="flex items-center gap-3 p-0 text-sm font-normal text-ui-foreground">
-          <Avatar size="lg" self aria-hidden="true"><AvatarFallback>{initials(name)}</AvatarFallback></Avatar>
+          <Avatar size="lg" self aria-hidden="true">{photo}<AvatarFallback>{initials(name)}</AvatarFallback></Avatar>
           <span className="min-w-0 break-words">
             <span className="block font-semibold">{name}</span>
             {caption ? <span className="block text-xs text-ui-muted-foreground">{caption}</span> : null}

@@ -14,7 +14,7 @@ import { allModules, MODULE_GROUPS } from '@/modules/registry';
  *  without a shell passing them. It fills the UI kit's frame context
  *  (src/components/ui/frame.tsx) with them, with signing out, changing the
  *  working site and the role preview, so the frame itself never reads the registry or the session. */
-export function YourModulesProvider({ ids, role, site, children }: { ids: readonly string[]; role: string; site: string; children: ReactNode }) {
+export function YourModulesProvider({ ids, role, site, picture = null, children }: { ids: readonly string[]; role: string; site: string; picture?: string | null; children: ReactNode }) {
   const modules = allModules().filter((m) => ids.includes(m.id)).map(({ id, name, href, icon, group }) => ({ id, name, href, icon, group }));
   async function leave() {
     // Loaded when someone signs out rather than on every page.
@@ -22,7 +22,7 @@ export function YourModulesProvider({ ids, role, site, children }: { ids: readon
     catch (error) { toast.error('Could not sign out. Try again.'); throw error; }
   }
   return (
-    <FrameProvider value={{ modules, groups: MODULE_GROUPS, role, site, version: APP_VERSION, signOut: leave, switchSite: (id) => switchClub(id, { stay: true }), tools: <RolePreviewToggle /> }}>
+    <FrameProvider value={{ modules, groups: MODULE_GROUPS, role, site, picture, version: APP_VERSION, signOut: leave, switchSite: (id) => switchClub(id, { stay: true }), tools: <RolePreviewToggle /> }}>
       {children}
     </FrameProvider>
   );

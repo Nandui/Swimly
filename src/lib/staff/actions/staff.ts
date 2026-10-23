@@ -10,6 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { guardKeyholders, guardSuperadmins, withKeyholderLock } from "@/lib/staff/keyholders";
 import { legacyRoleFor } from "@/lib/staff/permissions";
 import { BCRYPT_ROUNDS, passwordSchema } from "@/lib/staff/passwords";
+import { googleSignInAvailable } from "@/lib/google-sign-in";
 import { RESTRICTED_ROLE_REFUSAL } from "@/lib/staff/restricted";
 
 /** Account changes require staff.manage. Password values never enter an audit
@@ -21,15 +22,19 @@ const personSchema = z.object({
 });
 export type PersonInput = z.infer<typeof personSchema>;
 
-export async function createPerson(input: PersonInput & { password: string }): Promise<ActionResult> {
+export async function createPerson(input: PersonInput & { password?: string }): Promise<ActionResult> {
   const session = await requirePermission("staff.manage");
   const parsed = personSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
-  const password = passwordSchema.safeParse(input.password);
-  if (!password.success) return fail(password.error.issues[0].message);
   const { name, email, staffRoleId } = parsed.data;
-  // Hash before holding a pool connection or a lock.
-  const passwordHash = await bcrypt.hash(password.data, BCRYPT_ROUNDS);
+  // With Google set up, people sign in with Google and get no password.
+  let passwordHash: string | null = null;
+  if (!googleSignInAvailable()) {
+    const password = passwordSchema.safeParse(input.password ?? "");
+    if (!password.success) return fail(password.error.issues[0].message);
+    // Hash before holding a pool connection or a lock.
+    passwordHash = await bcrypt.hash(password.data, BCRYPT_ROUNDS);
+  }
   const result = await onUniqueViolation(() => withKeyholderLock(async (tx) => {
     const role = await tx.staffRole.findUnique({ where: { id: staffRoleId }, select: { id: true, name: true, permissions: true, restricted: true } });
     if (!role) return fail("That role no longer exists.");
@@ -118,8 +123,10 @@ export async function resetPassword(id: string, password: string): Promise<Actio
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const passwordHash = await bcrypt.hash(parsed.data, BCRYPT_ROUNDS);
   const result = await prisma.$transaction(async (tx) => {
-    const existing = await tx.user.findUnique({ where: { id }, select: { id: true, name: true, email: true } });
+    const existing = await tx.user.findUnique({ where: { id }, select: { id: true, name: true, email: true, isSuperadmin: true } });
     if (!existing) return fail("That account no longer exists.");
+    // Google is the way in; only the developer (superadmin) login keeps a password.
+    if (googleSignInAvailable() && !existing.isSuperadmin) return fail(`${existing.name} signs in with Google, so they don't need a password.`);
     await tx.user.update({ where: { id }, data: { passwordHash } });
     await logAudit({
       actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: "update",

@@ -124,20 +124,39 @@ See docs/staff-app.md.
 
 ## Sign in with Google
 
-Staff may sign in with Google instead of their password (`src/lib/google-sign-in.ts`).
-Google only proves an email address: it must be Google-verified and belong to an
-**active** staff account already (Admin › Staff). Google never creates or changes an
-account, and the session's subject is always the staff account's id. The work-PC rule
-applies as for a password. Each Google sign-in writes an audit row on the account
-(`User`, `sign_in`). The session's `authMethod` is `google`, which does not count as a
-fresh password: restricted records still ask for the password (step-up), and Google
-does not add anyone to a shared device's quick-switch list.
+Google is the way into Turnfin Work (owner decision, 23 October 2026;
+`src/lib/google-sign-in.ts`). Where Google is set up, the sign-in page shows only the
+**Sign in with Google** button.
+
+- **Matching.** The Google id (`User.googleId`, the `sub` claim) is matched first, then
+  the Google-verified email. An unverified email is never used.
+- **New accounts.** A first sign-in by someone with a Workspace account in a work domain
+  (`hd` claim and address both in `AUTH_GOOGLE_DOMAINS`, default `leisureworldcork.com`)
+  makes an active account in the organisation with **no role** and writes an audit row.
+  With no role it opens nothing: the sign-in page says the account is ready and to ask a
+  manager, and it is listed under **Waiting for a role** on Admin › Staff. Personal Google
+  accounts and other domains get no account.
+- **Kept fresh.** Every Google sign-in takes the name and picture (`User.avatarUrl`,
+  https only) from Google, and a changed address when no other account has it; name and
+  address changes are audited. `User.lastSignInAt` is set on every sign-in, by any route.
+- **Deactivated** accounts stay shut; Google never reopens one. The work-PC rule applies
+  as for a password. Each Google sign-in writes an audit row (`User`, `sign_in`).
+- **Step-up.** A Google sign-in in the last 15 minutes counts as confirmed for
+  restricted records (HR) and for setting a PIN; `/confirm-password` sends a Google
+  session back through Google. A PIN switch never counts.
+- **Shared devices.** A Google sign-in clears a PIN lock and adds a PIN holder to the
+  device's quick-switch list, as a password sign-in does.
+- **Passwords** remain only for superadmin (developer) accounts, at the unlinked
+  `/sign-in/developer` page; the password check refuses every other account once Google
+  is set up. Admin › Staff then adds people without a password and offers "Set a new
+  password" only on superadmin accounts.
 
 It is on only where `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` are set (a Google Cloud
 OAuth web client whose authorised redirect URI is
 `https://<the app's address>/api/auth/callback/google`, for LeisureWorld `https://turnfin.app/api/auth/callback/google`); elsewhere the button is not
-shown and the provider is not registered. Previews have a new address every time,
-which Google cannot list, so set the two variables for Production only.
+shown, the provider is not registered, and the sign-in page keeps the email and password
+form for everyone. Previews have a new address every time, which Google cannot list, so
+set the two variables for Production only.
 
 ## Shared devices
 
@@ -146,9 +165,9 @@ manages staff registers a browser as a shared device (Staff › Shared devices);
 a signed cookie (`src/lib/devices/shared-device.ts`) and can be revoked centrally.
 
 - **Quick switch** (`/switch`): people tap their name and enter a personal PIN (set on
-  Account with their password). Only people who have signed in on that device with
-  their password and have a PIN are listed. Five wrong PINs lock the PIN until the
-  person signs in with their password.
+  Account after a recent Google sign-in, or with their password). Only people who have
+  signed in on that device and have a PIN are listed. Five wrong PINs lock the PIN until
+  the person signs in again.
 - **Idle sign-out**: shared-device sessions return to the switch screen after 5 idle
   minutes, and never last more than 12 hours.
 - **Step-up**: a PIN session never counts as a fresh password. Restricted records

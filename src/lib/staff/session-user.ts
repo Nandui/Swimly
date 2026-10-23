@@ -10,6 +10,7 @@ export const ACCOUNT_SELECT = {
   orgId: true,
   isSuperadmin: true,
   siteIds: true,
+  avatarUrl: true,
   staffRole: {
     select: { id: true, name: true, permissions: true, levels: true, extras: true, homeName: true },
   },
@@ -24,6 +25,8 @@ export type Account = {
   isSuperadmin: boolean;
   /** The sites this person works at; empty means every site. */
   siteIds?: string[];
+  /** Their Google picture, when they have signed in with Google. */
+  avatarUrl?: string | null;
   staffRole: {
     id: string;
     name: string;

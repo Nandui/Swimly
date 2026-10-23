@@ -18,7 +18,7 @@ export class ExportRefused extends Error {}
 export async function subjectExport(userId: string) {
   const actor = actorForSession(await requireSession());
   if (!actor.superadmin) throw new ExportRefused("Only a superadmin can export a person's records.");
-  if (!recentlyConfirmed(actor)) throw new ExportRefused("Confirm your password first.");
+  if (!recentlyConfirmed(actor)) throw new ExportRefused("Confirm it's you first.");
   const core = await staffRecordForExport(userId, actor.orgId ?? null);
   if (!core) return null;
   const { person, qualifications } = core;

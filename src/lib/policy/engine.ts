@@ -15,7 +15,7 @@ import type { Actor, Directory, Grant, Resource, Scope, SiteFilter, SubjectFilte
  *     each module's My surface serves it, so holding no capability never
  *     hides your own training, and holding one never shows you more of yours. */
 
-/** A step-up window: restricted capabilities need a password check this recent. */
+/** A step-up window: restricted capabilities need a sign-in (Google or password) this recent. */
 export const STEP_UP_MS = 15 * 60 * 1000;
 
 function grantsFor(actor: Actor, cap: PermissionKey): Grant[] {
@@ -28,14 +28,15 @@ export function holdsAnywhere(actor: Actor, cap: PermissionKey): boolean {
   return actor.superadmin || grantsFor(actor, cap).length > 0;
 }
 
-/** Whether the session proved itself with a password (not a PIN, not Google)
- *  recently. A Google sign-in still confirms with the password for HR. */
+/** Whether the session proved itself recently with Google or a password, never
+ *  a PIN. Google is the way in (owner decision, 23 October 2026), so HR asks the
+ *  person to sign in with Google again; the developer login uses its password. */
 export function recentlyConfirmed(actor: Actor, now = Date.now()): boolean {
   if (actor.authMethod === "dev") return true;
-  return actor.authMethod === "password" && actor.authAt !== null && now - actor.authAt <= STEP_UP_MS;
+  return (actor.authMethod === "password" || actor.authMethod === "google") && actor.authAt !== null && now - actor.authAt <= STEP_UP_MS;
 }
 
-/** Restricted capabilities also need a fresh password (not a PIN) session. */
+/** Restricted capabilities also need a fresh Google or password (not a PIN) session. */
 export function needsStepUp(actor: Actor, cap: PermissionKey, now = Date.now()): boolean {
   if (!isRestrictedPermission(cap)) return false;
   return !recentlyConfirmed(actor, now);
