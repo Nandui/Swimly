@@ -141,8 +141,8 @@ Google is the way into Turnfin Work (owner decision, 23 October 2026;
   address changes are audited. `User.lastSignInAt` is set on every sign-in, by any route.
 - **Password every time.** Desk and pool deck PCs are shared, so Google is asked to check
   the password at every sign-in (`max_age=0`), even when someone is still signed in to
-  Google in that browser. A sign-in whose `auth_time` is more than two minutes old (or
-  missing) is refused with "Google didn't ask for your password". Turnfin cannot stop
+  Google in that browser. Refusing a sign-in whose `auth_time` is old or missing shut
+  everyone out on 23 October 2026, so for now it is only logged. Turnfin cannot stop
   Chrome saving passwords: that is the Google Admin console's Chrome password manager
   setting.
 - **Deactivated** accounts stay shut; Google never reopens one. The work-PC rule applies

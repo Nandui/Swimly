@@ -159,7 +159,9 @@ async function refreshAccount(account: Found, identity: GoogleIdentity): Promise
 export async function googleSignIn(profile: GoogleProfile): Promise<{ user: { id: string; name: string; email: string } } | { refused: GoogleRefusal }> {
   const identity = googleIdentity(profile);
   if (!identity) return { refused: "google_no_account" };
-  if (!freshGoogleSignIn(profile)) return { refused: "google_password" };
+  // Not enforced (23 October 2026): turning stale sign-ins away shut everyone
+  // out on turnfin.app. Logged until we know what Google sends back.
+  if (!freshGoogleSignIn(profile)) console.warn("google sign-in not fresh", { authTime: typeof profile?.auth_time === "number" ? Math.round(Date.now() / 1000 - profile.auth_time) + "s ago" : String(typeof profile?.auth_time) });
   let account = await findAccount(identity);
   if (!account) {
     if (!mayGetAccount(identity)) return { refused: "google_no_account" };
