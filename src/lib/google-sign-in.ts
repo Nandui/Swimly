@@ -26,12 +26,13 @@ export function googleAccountDomains(env: Record<string, string | undefined> = p
 }
 
 /** Why a Google sign-in was refused, as the `error` the sign-in page reads. */
-export type GoogleRefusal = "google_no_account" | "google_waiting" | "work_device";
+export type GoogleRefusal = "google_no_account" | "google_waiting" | "google_password" | "work_device";
 
 /** The sentence the sign-in page shows for each refusal. */
 export const GOOGLE_REFUSAL_TEXT: Readonly<Record<GoogleRefusal, string>> = {
   google_no_account: "That Google account can't sign in to Turnfin. Use your work Google account, or ask a manager to check your account.",
   google_waiting: "Your Turnfin account is ready, but you don't have access yet. Ask your manager to give you a role, then sign in again.",
+  google_password: "Google didn't ask for your password that time, so Turnfin can't be sure it's you. Try Sign in with Google again.",
   work_device: "This account can only sign in to Turnfin Work on a work computer. For your own records, use Turnfin Me on your phone.",
 };
 
@@ -48,6 +49,7 @@ type GoogleProfile = {
   given_name?: unknown;
   family_name?: unknown;
   picture?: unknown;
+  auth_time?: unknown;
 } | null | undefined;
 
 const text = (value: unknown) => (typeof value === "string" ? value.trim() : "");
@@ -76,6 +78,21 @@ export function googleIdentity(profile: GoogleProfile) {
     name,
     avatarUrl: picture.startsWith("https://") && picture.length <= 2048 ? picture : null,
   };
+}
+
+/** Google is asked to check the password at every sign-in (`max_age=0` in
+ *  src/auth.ts), because desk and pool deck PCs are shared: a Google session
+ *  someone left open in the browser must never let the next person in with
+ *  one tap (owner question, 23 October 2026). Google then says when it last
+ *  checked (`auth_time`, in seconds); a sign-in it didn't just check is refused.
+ *  The allowance covers the redirect back and a little clock difference. */
+export const GOOGLE_FRESH_SECONDS = 120;
+
+export function freshGoogleSignIn(profile: GoogleProfile, now = Date.now()): boolean {
+  const at = profile?.auth_time;
+  if (typeof at !== "number" || !Number.isFinite(at)) return false;
+  const age = now / 1000 - at;
+  return age <= GOOGLE_FRESH_SECONDS && age >= -GOOGLE_FRESH_SECONDS;
 }
 
 export type GoogleIdentity = NonNullable<ReturnType<typeof googleIdentity>>;
@@ -142,6 +159,7 @@ async function refreshAccount(account: Found, identity: GoogleIdentity): Promise
 export async function googleSignIn(profile: GoogleProfile): Promise<{ user: { id: string; name: string; email: string } } | { refused: GoogleRefusal }> {
   const identity = googleIdentity(profile);
   if (!identity) return { refused: "google_no_account" };
+  if (!freshGoogleSignIn(profile)) return { refused: "google_password" };
   let account = await findAccount(identity);
   if (!account) {
     if (!mayGetAccount(identity)) return { refused: "google_no_account" };

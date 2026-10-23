@@ -103,7 +103,7 @@ export function SignInForm({ devAdminName, sharedDeviceName = null, google = fal
     <AuthFrame welcome>
       <PageShell header={<PageHeader
         title={developer ? "Developer sign-in" : "Sign in"}
-        description={developer ? "For superadmin accounts only. Everyone else signs in with Google." : passwordForm ? "Use your work email and password." : "Use your work Google account."}
+        description={developer ? "For superadmin accounts only. Everyone else signs in with Google." : passwordForm ? "Use your work email and password." : "Use your work Google account. Google asks for your password every time."}
       />}>
 
       {sharedDeviceName ? (
