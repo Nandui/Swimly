@@ -60,7 +60,7 @@ export default async function PersonPage({ params, searchParams }: PageProps<"/s
             {person.isSuperadmin ? <Tag meta={PERSON_STATUS_META.superadmin} /> : null}
             {person.actsAsSystem ? <Tag meta={PERSON_STATUS_META.system} /> : null}
             {!person.isActive ? <Tag meta={PERSON_STATUS_META.deactivated} /> : null}
-            {!person.hasPassword && (!google || person.isSuperadmin) ? <Tag meta={STAFF_STATUS_META.noPassword} /> : null}
+            {!person.hasPassword && !person.usesGoogle ? <Tag meta={STAFF_STATUS_META.noPassword} /> : null}
           </span>
         }
         actions={
@@ -96,7 +96,7 @@ export default async function PersonPage({ params, searchParams }: PageProps<"/s
           <li className="pc-row">
             <span className="pc-tile-icon" aria-hidden="true"><LogIn /></span>
             <div className="pc-row-body">
-              <span className="pc-row-title">{person.usesGoogle ? "Signs in with Google" : google && !person.isSuperadmin ? "Has not signed in with Google yet" : "Signs in with a password"}</span>
+              <span className="pc-row-title">{person.usesGoogle ? "Signs in with Google" : "Signs in with a password"}</span>
               <span className="pc-row-hint">{person.lastSignInAt ? `Last signed in ${formatDateTime(person.lastSignInAt)}` : "No sign-in recorded yet"}</span>
             </div>
           </li>

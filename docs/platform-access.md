@@ -124,9 +124,9 @@ See docs/staff-app.md.
 
 ## Sign in with Google
 
-Google is the way into Turnfin Work (owner decision, 23 October 2026;
-`src/lib/google-sign-in.ts`). Where Google is set up, the sign-in page shows only the
-**Sign in with Google** button.
+Google is one way into Turnfin Work (owner decision, 23 October 2026;
+`src/lib/google-sign-in.ts`). Where Google is set up, the sign-in page shows the email
+and password form with a **Sign in with Google** button under it.
 
 - **Matching.** The Google id (`User.googleId`, the `sub` claim) is matched first, then
   the Google-verified email. An unverified email is never used.
@@ -152,10 +152,10 @@ Google is the way into Turnfin Work (owner decision, 23 October 2026;
   session back through Google. A PIN switch never counts.
 - **Shared devices.** A Google sign-in clears a PIN lock and adds a PIN holder to the
   device's quick-switch list, as a password sign-in does.
-- **Passwords** remain only for superadmin (developer) accounts, at the unlinked
-  `/sign-in/developer` page; the password check refuses every other account once Google
-  is set up. Admin › Staff then adds people without a password and offers "Set a new
-  password" only on superadmin accounts.
+- **Passwords** work for every active account with one, beside Google (owner decision,
+  23 October 2026 afternoon, undoing the morning's superadmin-only rule). Admin › Staff
+  adds people without a password when Google is set up; "Set a new password" gives any
+  account one. The unlinked `/sign-in/developer` page still shows the password form alone.
 
 It is on only where `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` are set (a Google Cloud
 OAuth web client whose authorised redirect URI is

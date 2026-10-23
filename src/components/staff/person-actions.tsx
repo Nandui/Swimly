@@ -196,10 +196,9 @@ export function EditPerson({
   );
 }
 
-/** With Google sign-in only superadmin (developer) accounts keep a password, so
- *  only they get this button. */
-export function ResetPersonPassword({ person, google = false }: { person: Person & { isSuperadmin?: boolean }; google?: boolean }) {
-  if (google && !person.isSuperadmin) return null;
+/** Everyone may sign in with a password beside Google (owner decision, 23 October
+ *  2026), so everyone gets this button. */
+export function ResetPersonPassword({ person }: { person: Person; google?: boolean }) {
   return (
     <FormDialog
       trigger={
