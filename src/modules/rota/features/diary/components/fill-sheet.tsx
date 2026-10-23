@@ -6,10 +6,12 @@ import { Button } from "@/components/shadcn/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/shadcn/sheet";
 import { Notice } from "@/components/ui-kit/notice";
+import { SegmentedChoice } from "@/components/ui-kit/segmented-links";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { toast } from "@/components/ui/toast";
-import { clock, parseClock } from "@/modules/rota/shared/constants";
+import { formatDayMonth, formatWeekday } from "@/lib/format";
+import { addDaysIso, clock, parseClock } from "@/modules/rota/shared/constants";
 import { ChangeFields, changeOf } from "@/modules/rota/shared/components/change-fields";
 import { duration } from "@/modules/rota/shared/shifts";
 import { candidates, coverActivities, type Candidate, type Need, type Span } from "@/modules/rota/features/diary/model";
@@ -20,6 +22,8 @@ import { needWords, span as spanWords } from "@/modules/rota/features/diary/comp
 export type FillTarget = { needKey: string; span: Span; why: string | null };
 /** Covering an area itself rather than through one of its activities. */
 const AREA_ITSELF = "area";
+/** A swim class's teacher: for this day alone, or the same weekday every week up to a day. */
+const ONE_DAY = "day", EVERY_WEEK = "every";
 
 /** Choosing who fills a need for a stretch (owner, 20 October 2026: best fits on top, anyone from
  *  another department straight away). Each person says what taking it does to their day. */
@@ -54,6 +58,11 @@ function FillBody({ need, target, onDone }: { need: Need; target: FillTarget; on
   const covering = useMemo(() => coverActivities(need, ctx.activities, ctx.diary.people.flatMap((p) => p.lines)), [need, ctx.activities, ctx.diary]);
   const [onto, setOnto] = useState(covering[0]?.id ?? AREA_ITSELF);
   const activity = covering.find((a) => a.id === onto) ?? null;
+  // Owner, 23 October 2026: a class's instructor is chosen here, usually for the weeks ahead.
+  const weekday = formatWeekday(ctx.date);
+  const [days, setDays] = useState(EVERY_WEEK);
+  const [until, setUntil] = useState(addDaysIso(ctx.date, 77));
+  const every = fixed && days === EVERY_WEEK;
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -64,8 +73,9 @@ function FillBody({ need, target, onDone }: { need: Need; target: FillTarget; on
     setError(null);
     start(async () => {
       const result = await fillNeed({ siteId: ctx.siteId, date: ctx.date, departmentId: ctx.departmentFor!, kind: need.kind, needId: need.needId, classRef: need.classRef,
-        userId: who.userId, start: clock(span.start), end: clock(span.end), activityTypeId: activity?.id ?? null }, change);
+        userId: who.userId, start: clock(span.start), end: clock(span.end), activityTypeId: activity?.id ?? null, until: every ? until : null }, change);
       if (!result.ok) { setError(result.error); return; }
+      if (every) { toast.success(`${who.name} teaches ${need.title} every ${weekday} up to ${formatDayMonth(until)}.`); onDone(); return; }
       toast.success(`${who.name} is on ${activity ? `${activity.name} in ${need.area}` : need.title}, ${spanWords(span)}.`);
       onDone();
     });
@@ -79,7 +89,16 @@ function FillBody({ need, target, onDone }: { need: Need; target: FillTarget; on
       </SheetHeader>
       <form className="diary-sheet-body" onSubmit={submit} aria-busy={pending}>
         {error ? <Notice tone="error" live="alert" title={error} /> : null}
-        {fixed ? <p className="diary-muted">A swim class is taught for its whole time, {spanWords(need)}.</p> : (
+        {fixed ? (
+          <fieldset className="diary-class-days">
+            <legend className="diary-label">Which days</legend>
+            <p className="diary-muted">A swim class is taught for its whole time, {spanWords(need)}. The swim school shows whoever you choose here.</p>
+            <SegmentedChoice aria-label="Which days" value={days} onValueChange={setDays}
+              options={[{ value: EVERY_WEEK, label: `Every ${weekday}` }, { value: ONE_DAY, label: `Only ${ctx.dateLabel}` }]} />
+            {every ? <Input type="date" label="Up to" value={until} onChange={setUntil} min={addDaysIso(ctx.date, 7)} max={addDaysIso(ctx.date, 112)} required
+              description="Up to sixteen weeks ahead. You can still change any one day after." /> : null}
+          </fieldset>
+        ) : (
           <fieldset className="diary-times">
             <legend className="diary-label">For which part</legend>
             <Input type="time" label="From" step={300} value={from} onChange={setFrom} min={clock(need.start)} max={clock(need.end)} required />

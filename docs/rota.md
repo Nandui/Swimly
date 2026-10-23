@@ -59,6 +59,19 @@ page, starting a class, **saving its register**, cancellations, the pool deck's 
 ask for an instructor and the class lists no longer show one; the stored `Course.instructorId`
 is kept, never deleted or changed.
 
+**Every week, and carrying them over** (owner, 23 October 2026: "we should be only assigning the
+instructors on this module going forward, not in the swim school"). Choosing someone for a class
+on the Plan asks **Which days**: **Every <weekday>** up to a day (default eleven weeks on, at
+most sixteen) or only that day. Every week plans the first day as before (shift and all), then
+the later dates in one go through the seam's `planMany` (`planCommitments`, `planTeacherEvery`):
+those days only say who teaches, so Copy still finds them free. While any class in the week
+shown still takes its instructor from the swim school's old list (`Commitment.usualUserId`, not
+planned), the Plan shows a notice with **Carry the instructors over** (`carryTeachers`): every
+class from today (tomorrow when today is the duty manager's) up to a chosen day with nobody
+planned yet is planned with the instructor it had. Nothing planned is changed, so it is safe to
+run twice; each class gets one audit row. The swim school's class page says where its next
+teacher comes from and has **Choose on the Plan** for those who can open the rota.
+
 Everything is laid out by one pure function, `buildDay` (`src/modules/rota/shared/day.ts`), so Plan,
 Today, the home card and Turnfin Me agree. The rules are in `cover.ts`, `shifts.ts` and
 `fit.ts`, each tested on its own.

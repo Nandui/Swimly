@@ -39,7 +39,8 @@ export default async function CoursePage(props: PageProps<"/courses/[id]">) {
   ]);
   if (!course) notFound();
   const next = course.archivedAt ? null : await nextLessonTeacher(course, iso);
-  return <ClassDetailView course={course} roster={roster} targets={targets} levels={levels} sites={sites} nextTeacher={next ? { day: next.iso === iso ? "Today" : formatDay(next.iso), name: next.name } : undefined}
+  return <ClassDetailView course={course} roster={roster} targets={targets} levels={levels} sites={sites} nextTeacher={next ? { day: next.iso === iso ? "Today" : formatDay(next.iso), name: next.name, planned: next.planned } : undefined}
+    planHref={next && canSee(session, "rota") ? `/rota?${new URLSearchParams({ site: course.clubId, day: next.iso })}` : undefined}
     access={access} backHref={fromSchedule ? scheduleHref(params.date) : classReturnHref(params.returnTo)} backLabel={fromSchedule ? "Schedule" : "Classes"}
     coverName={!course.archivedAt && course.dayOfWeek === weekdayOfIso(iso) && cover?.coverById !== cover?.instructorId ? cover?.coverByName : undefined}
     levelImage={<CurriculumImage kind="level" id={course.levelId} name={course.level.name} />} />;

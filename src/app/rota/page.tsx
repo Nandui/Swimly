@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, GraduationCap } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Notice } from "@/components/ui-kit/notice";
@@ -9,7 +9,7 @@ import { PageShell } from "@/components/ui-kit/page-shell";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDateRange, formatDayMonth, formatWeekday } from "@/lib/format";
-import { addDaysIso, CopyWeek, Diary, diaryWeek, EVERY_DEPARTMENT, mondayOf, ROTA_DAY_META, ROTA_WEEK_META, ShareWeekDialog } from "@/modules/rota/features/diary";
+import { addDaysIso, CarryTeachers, CopyWeek, Diary, diaryWeek, EVERY_DEPARTMENT, mondayOf, ROTA_DAY_META, ROTA_WEEK_META, ShareWeekDialog } from "@/modules/rota/features/diary";
 
 export const metadata: Metadata = { title: "Plan" };
 
@@ -78,6 +78,11 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
             <Notice title={data.blocked === "come" ? "This day has come: the duty manager changes it from Today."
               : data.blocked === "member" ? `You plan only the departments you belong to${department ? `, and ${department.name} is not one of yours` : ""}. An administrator ticks yours under Departments on your profile in HR, People.`
               : "You can see this plan. Planning it needs the Plan level for Rota in your role."} />
+          ) : null}
+          {data.oldClasses && data.canChange && data.departmentFor ? (
+            <Notice icon={GraduationCap} title={`${data.oldClasses === 1 ? "1 swim class" : `${data.oldClasses} swim classes`} this week still take${data.oldClasses === 1 ? "s" : ""} their instructor from the swim school`}
+              description="Instructors are chosen here on the Plan now, and the swim school shows whoever you choose. After Sunday 1 November a class nobody is chosen for has no instructor, so carry them over first."
+              actions={<CarryTeachers siteId={site.id} departmentId={data.departmentFor} from={now} until={addDaysIso(now, 77)} />} />
           ) : null}
           <Diary siteId={site.id} date={date} dateLabel={dateLabel} today={today} live={date <= now} canChange={data.canChange}
             departmentId={department?.id ?? null} departmentFor={data.departmentFor} diary={diary} hours={data.hours} pool={data.pool}

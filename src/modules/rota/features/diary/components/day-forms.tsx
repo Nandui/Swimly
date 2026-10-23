@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarPlus, Copy, Send, UserPlus } from "lucide-react";
+import { CalendarPlus, Copy, GraduationCap, Send, UserPlus } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { FormDialog } from "@/components/form-dialog";
 import { SegmentedChoice } from "@/components/ui-kit/segmented-links";
@@ -10,10 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { copyPlan, saveNeed, shareWeek } from "@/modules/rota/shared/actions";
+import { carryTeachers, copyPlan, saveNeed, shareWeek } from "@/modules/rota/shared/actions";
 import { ChangeFields, changeOf } from "@/modules/rota/shared/components/change-fields";
 import { saveShift } from "@/modules/rota/features/diary/server/actions";
 import { useDiary } from "@/modules/rota/features/diary/components/context";
+import { addDaysIso } from "@/modules/rota/shared/constants";
 
 const PORTAL = "turnfin-module";
 const s = (f: FormData, k: string) => String(f.get(k) ?? "");
@@ -88,6 +89,19 @@ export function ShareWeekDialog({ siteId, departmentId, monday, department, hole
       trigger={<Button><Send aria-hidden="true" />Share with staff</Button>}
       submit={() => shareWeek({ siteId, departmentId, monday })}>
       <p className="diary-muted">Changes after sharing tell the people they affect.</p>
+    </FormDialog>
+  );
+}
+
+/** Carry the swim school's instructors over onto the Plan (owner, 23 October 2026: instructors are
+ *  chosen on the rota from now on, and nothing is lost). Only classes nobody is chosen for yet. */
+export function CarryTeachers({ siteId, departmentId, from, until }: { siteId: string; departmentId: string; from: string; until: string }) {
+  return (
+    <FormDialog portalClassName={PORTAL} title="Carry the instructors over" submitLabel="Carry them over" successMessage="The instructors are on the Plan."
+      description="Each swim class keeps the instructor it has now, on every week up to the day you choose. Classes already chosen on the Plan stay as they are, and you can change any day after."
+      trigger={<Button variant="outline"><GraduationCap aria-hidden="true" />Carry the instructors over</Button>}
+      submit={(f) => carryTeachers({ siteId, departmentId, until: s(f, "until") })}>
+      <Input type="date" name="until" label="Up to" defaultValue={until} min={from} max={addDaysIso(from, 112)} required description="Up to sixteen weeks ahead." />
     </FormDialog>
   );
 }

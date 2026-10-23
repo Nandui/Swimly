@@ -137,7 +137,8 @@ export type DiaryInput = {
   assignments: readonly { id: string; needId: string; place: number; userId: string; start: number; end: number; subs?: readonly SubIn[] }[];
   /** People on an area's own need, by the need's id (`area:<area>:<qualification>:<date>`). */
   areaAssignments: readonly { id: string; needId: string; place: number; userId: string; start: number; end: number }[];
-  classes: readonly { ref: string; title: string; place: string; start: number; end: number; userId: string | null }[];
+  /** `old`: still taught by the instructor the swim school had, not chosen on the Plan yet. */
+  classes: readonly { ref: string; title: string; place: string; start: number; end: number; userId: string | null; old?: boolean }[];
   shifts: readonly { id: string; userId: string; departmentId: string; start: number; end: number }[];
   breaks: readonly { userId: string; start: number; minutes: number; paid: boolean }[];
   /** Everyone who may come into the day: name, departments, under-18 band. */

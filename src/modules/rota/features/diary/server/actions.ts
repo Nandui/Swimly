@@ -9,7 +9,7 @@ import { isDateOnly, parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { activityTypeById, subActivitiesFor } from "@/lib/setup/activity-types";
 import { notifyShiftChange } from "@/lib/staff-api/notify";
-import { planTeacher } from "@/modules/rota/shared/actions";
+import { planTeacher, planTeacherEvery } from "@/modules/rota/shared/actions";
 import { areaNeedsOn } from "@/modules/rota/shared/area-needs";
 import { clock, parseClock, slotProblem } from "@/modules/rota/shared/constants";
 import { NEEDS_REASON, type Allowed, allowedFor, allowedForPerson, changeSchema, iso, logLive, refresh, shared } from "@/modules/rota/shared/writes";
@@ -58,6 +58,8 @@ const fillSchema = z.object({
   /** For an area's staff needed: the activity there to put them on (owner, 21 October 2026),
    *  which covers the area for its time. Left out, they cover the area itself. */
   activityTypeId: z.string().nullish(),
+  /** For a swim class: the same weekday every week up to this day, not this day alone. */
+  until: z.string().nullish(),
 });
 export type FillInput = z.input<typeof fillSchema>;
 
@@ -71,6 +73,7 @@ export async function fillNeed(input: FillInput, changeInput: Change = {}): Prom
   if (!t.ok) return fail(t.error);
   if (d.kind === "class") {
     if (!d.classRef) return fail("That class is no longer on the timetable.");
+    if (d.until) return planTeacherEvery({ siteId: d.siteId, date: d.date, classRef: d.classRef, userId: d.userId, departmentId: d.departmentId, until: d.until }, change);
     return planTeacher({ siteId: d.siteId, date: d.date, classRef: d.classRef, userId: d.userId, departmentId: d.departmentId }, change);
   }
   if (!d.needId) return fail("That is no longer on the day.");

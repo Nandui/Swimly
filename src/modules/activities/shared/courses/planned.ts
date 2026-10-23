@@ -28,11 +28,12 @@ export async function getCoursesOnDate(iso: string) {
   return withPlanned(rows, await plannedTeachers(rows.map((r) => r.id), iso), iso);
 }
 
-/** Who teaches a class's next lesson, today or later in the week: the date and that day's teacher
- *  (null when nobody is chosen yet). */
+/** Who teaches a class's next lesson, today or later in the week: the date, that day's teacher
+ *  (null when nobody is chosen yet) and whether the rota Plan chose them (`planned`), not the
+ *  swim school's old list during the grace. */
 export async function nextLessonTeacher<T extends { id: string; dayOfWeek: string; instructorId: string | null; instructor: { id: string; name: string } | null }>(course: T, fromIso: string) {
   let iso = fromIso;
   for (let i = 0; i < 6 && weekdayOfIso(iso) !== course.dayOfWeek; i++) iso = addDaysIso(iso, 1);
   const [row] = withPlanned([course], await plannedTeachers([course.id], iso), iso);
-  return { iso, name: row.instructor?.name ?? null };
+  return { iso, name: row.instructor?.name ?? null, planned: row.planned };
 }
