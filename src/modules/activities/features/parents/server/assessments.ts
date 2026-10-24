@@ -6,6 +6,7 @@ import type { ParentAccount, Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { readSharedCurriculum, type SharedCurriculum } from "@/modules/activities/shared/curriculum/data/shared";
 import { HOLDS_A_PLACE } from "@/modules/activities/shared/assessments/constants";
+import { sendAssessmentConfirmation } from "@/modules/activities/shared/assessments/confirmation-email";
 import { ageRangeError } from "@/modules/activities/shared/assessments/age";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { parentAudit, profileMissing, withParent, type ParentIdentity } from "@/modules/activities/shared/parents/auth";
@@ -168,6 +169,7 @@ export async function bookAssessment(request: Request, identity: ParentIdentity)
     for (const path of ["/assessments", "/schedule", "/students", "/instructor"]) revalidatePath(path);
     revalidatePath("/assessments/[id]", "page");
     revalidatePath("/students/[id]", "page");
+    await sendAssessmentConfirmation(result.booking.id, { parentEmail: identity.account.email });
   }
   return result;
 }
