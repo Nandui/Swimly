@@ -10,9 +10,9 @@ import designTokens from "./scripts/lint/design-tokens.mjs";
 const { uiImports, uiSyntax } = designTokens;
 
 // Turnfin is a modular monolith: Core (people, roles, sites, audit) and modules
-// (the swim school, called Activities here, and the Work modules). A module may
+// (the swim school's module, called Activities here, and every other module). A module may
 // import Core and itself, never another module; Core imports no module. Only a
-// composition root may import every module. See docs/architecture.md.
+// composition root may import every module. See CLAUDE.md, section 3.
 const activitiesFiles = [
   "src/modules/activities/**",
   "src/app/(activities)/**",
@@ -22,24 +22,24 @@ const activitiesFiles = [
   "src/app/api/curriculum-images/**",
   "src/app/api/operations/**",
 ];
-// Each Work module's files: its folder, src/modules/<id>, and its routes.
-const workArea = (id, ...extra) => [`src/modules/${id}/**`, `src/app/${id}/**`, ...extra];
-const workModules = {
-  docs: workArea("docs", "src/app/api/docs/**"),
-  refunds: workArea("refunds", "src/app/api/refunds/**"),
-  coinage: workArea("coinage"),
-  training: workArea("training", "src/app/api/cron/training/**"),
-  hr: workArea("hr"),
-  rota: workArea("rota"),
-  purchasing: workArea("purchasing"),
-  tasks: workArea("tasks", "src/app/api/cron/tasks/**"),
-  "short-courses": workArea("short-courses", "src/app/api/academy/**"),
-  stock: workArea("stock"),
-  cctv: workArea("cctv"),
-  "site-monitoring": workArea("site-monitoring"),
-  incidents: workArea("incidents", "src/app/api/incidents/**", "src/app/api/cron/incidents/**", "src/app/footage/**", "src/app/wellbeing/**"),
+// Each module's files, except the swim school's: its folder, src/modules/<id>, and its routes.
+const moduleArea = (id, ...extra) => [`src/modules/${id}/**`, `src/app/${id}/**`, ...extra];
+const otherModules = {
+  docs: moduleArea("docs", "src/app/api/docs/**"),
+  refunds: moduleArea("refunds", "src/app/api/refunds/**"),
+  coinage: moduleArea("coinage"),
+  training: moduleArea("training", "src/app/api/cron/training/**"),
+  hr: moduleArea("hr"),
+  rota: moduleArea("rota"),
+  purchasing: moduleArea("purchasing"),
+  tasks: moduleArea("tasks", "src/app/api/cron/tasks/**"),
+  "short-courses": moduleArea("short-courses", "src/app/api/academy/**"),
+  stock: moduleArea("stock"),
+  cctv: moduleArea("cctv"),
+  "site-monitoring": moduleArea("site-monitoring"),
+  incidents: moduleArea("incidents", "src/app/api/incidents/**", "src/app/api/cron/incidents/**", "src/app/footage/**", "src/app/wellbeing/**"),
 };
-const moduleFiles = { activities: activitiesFiles, ...workModules };
+const moduleFiles = { activities: activitiesFiles, ...otherModules };
 const allModuleFiles = Object.values(moduleFiles).flat();
 // Composition roots may import every module: the module wiring, and Turnfin
 // Me's records and daily digest, which gather each person's things from every module.
@@ -56,13 +56,13 @@ const lintable = (globs) => globs.map((glob) => glob.endsWith("/**") ? `${glob}/
 // Import boundaries.
 const notActivities = {
   group: ["@/modules/activities", "@/modules/activities/*", "@/app/(activities)/*", "@/app/(instructor)/*", "**/modules/activities/**"],
-  message: "Core and Work modules must not import Activities. Register a contribution (src/modules/contributions.ts) or add to a composition root instead.",
+  message: "Core and other modules must not import Activities. Register a contribution (src/modules/contributions.ts) or add to a composition root instead.",
 };
-const workImports = (ids) => ids.flatMap((id) => [`@/modules/${id}`, `@/modules/${id}/*`, `@/app/${id}/*`]);
-const notWork = (ids, message) => ({ group: workImports(ids), message });
-const notWorkModules = notWork(Object.keys(workModules), "Activities depends on Core only, never on a Work module. Link to the module or add a Core seam.");
-const notCoreToWork = notWork(Object.keys(workModules), "Core never imports a module. Register a contribution (src/modules/contributions.ts) or add to a composition root instead.");
-const notOtherWork = (self) => notWork(Object.keys(workModules).filter((id) => id !== self), "A module never imports another module. Link to its screens, or add a Core seam (src/modules/contributions.ts).");
+const moduleImports = (ids) => ids.flatMap((id) => [`@/modules/${id}`, `@/modules/${id}/*`, `@/app/${id}/*`]);
+const notModules = (ids, message) => ({ group: moduleImports(ids), message });
+const notOtherModules = notModules(Object.keys(otherModules), "Activities depends on Core only, never on another module. Link to its screens or add a Core seam.");
+const notCoreToModules = notModules(Object.keys(otherModules), "Core never imports a module. Register a contribution (src/modules/contributions.ts) or add to a composition root instead.");
+const notAnotherModule = (self) => notModules(Object.keys(otherModules).filter((id) => id !== self), "A module never imports another module. Link to its screens, or add a Core seam (src/modules/contributions.ts).");
 // The same rule by resolved path, so relative imports are caught too.
 const moduleZones = Object.entries(moduleFiles).flatMap(([id, target]) => Object.entries(moduleFiles)
   .filter(([other]) => other !== id)
@@ -89,15 +89,15 @@ const notTables = (owners, message) => {
 };
 const activitiesData = [
   ...notTables(["core"], "Activities never queries Core tables. Use src/lib/directory.ts (people, sites) or another Core function."),
-  ...notTables(Object.keys(workModules), "Activities never queries a Work module's tables."),
+  ...notTables(Object.keys(otherModules), "Activities never queries another module's tables."),
   {
     selector: "Property[key.name=/^(include|select|where|orderBy)$/] Property[key.name=/^(instructor|club|markedBy|by|coverBy|assessedBy|confirmedBy|bookedBy)$/][value.type=/^(ObjectExpression|Literal)$/]",
     message: "Do not join Core tables (User, Club) from an Activities query. Select the id and add names with withSites/withStaff from src/lib/directory.ts.",
   },
 ];
 const coreData = notTables(Object.keys(moduleFiles), "Core never queries a module's tables. Register a contribution in src/modules/contributions.ts instead.");
-// Every Work module reads Core only through its functions, never its tables
-// (Phase 3 of docs/architecture/MIGRATION.md): src/lib/directory.ts,
+// Every module reads Core only through its functions, never its tables
+// (CLAUDE.md, section 5): src/lib/directory.ts,
 // src/lib/qualifications.ts, src/lib/setup/activity-types.ts,
 // src/lib/people/records.ts, src/lib/audit.ts and the policy engine. Each entry
 // names the module's relations to Core tables, so joins are caught too.
@@ -120,7 +120,7 @@ const coreJoins = (relations) => relations.length ? [{
   selector: `Property[key.name=/^(include|select|where|orderBy)$/] Property[key.name=/^(${relations.join("|")})$/][value.type=/^(ObjectExpression|Literal)$/]`,
   message: "Do not join Core tables from a module's query. Keep the id and ask Core's functions (src/lib/directory.ts and its neighbours) for names.",
 }] : [];
-const workData = (self) => [
+const moduleData = (self) => [
   ...notTables(Object.keys(moduleFiles).filter((id) => id !== self), "A module queries only its own tables and Core's. Ask the owning module through a seam (src/modules/contributions.ts)."),
   ...(coreThroughFunctions[self] ? [
     ...notTables(["core"], "This module reads Core through its functions (src/lib/directory.ts, src/lib/qualifications.ts, src/lib/setup/activity-types.ts, src/lib/people/records.ts, src/lib/policy), never Core tables."),
@@ -149,7 +149,7 @@ const restrictedPaths = (skip) => ["error", {
 }];
 
 // The target architecture's dependency table (CLAUDE.md, section 3), as errors
-// since migration phase 4 (docs/architecture/MIGRATION.md), alongside the
+// since 10 October 2026 (CLAUDE.md, section 8), alongside the
 // module and data rules above.
 // Elements are folders (first match wins); single files that sit outside their
 // layer's folder are classified by file category instead.
@@ -259,28 +259,28 @@ const eslintConfig = defineConfig([
     files: ["src/**/*.{ts,tsx}"],
     ignores: [...allModuleFiles, ...compositionRoots, ...tests, "src/components/shadcn/**", "src/generated/**"],
     rules: {
-      "no-restricted-imports": ["error", { ...uiImports, patterns: [...uiImports.patterns, notActivities, notCoreToWork] }],
+      "no-restricted-imports": ["error", { ...uiImports, patterns: [...uiImports.patterns, notActivities, notCoreToModules] }],
       "no-restricted-syntax": ["error", ...uiSyntax, ...coreData],
     },
   },
   {
     files: ["src/components/shadcn/**/*.{ts,tsx}"],
-    rules: { "no-restricted-imports": ["error", { patterns: [notActivities, notCoreToWork] }] },
+    rules: { "no-restricted-imports": ["error", { patterns: [notActivities, notCoreToModules] }] },
   },
   {
     files: lintable(activitiesFiles),
     ignores: tests,
     rules: {
-      "no-restricted-imports": ["error", { ...uiImports, patterns: [...uiImports.patterns, notWorkModules] }],
+      "no-restricted-imports": ["error", { ...uiImports, patterns: [...uiImports.patterns, notOtherModules] }],
       "no-restricted-syntax": ["error", ...uiSyntax, ...activitiesData],
     },
   },
-  ...Object.entries(workModules).map(([id, globs]) => ({
+  ...Object.entries(otherModules).map(([id, globs]) => ({
     files: lintable(globs),
     ignores: tests,
     rules: {
-      "no-restricted-imports": ["error", { ...uiImports, patterns: [...uiImports.patterns, notActivities, notOtherWork(id)] }],
-      "no-restricted-syntax": ["error", ...uiSyntax, ...workData(id)],
+      "no-restricted-imports": ["error", { ...uiImports, patterns: [...uiImports.patterns, notActivities, notAnotherModule(id)] }],
+      "no-restricted-syntax": ["error", ...uiSyntax, ...moduleData(id)],
     },
   })),
   // Module-to-module imports by path, and module plumbing: each owner may use

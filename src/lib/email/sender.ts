@@ -1,8 +1,8 @@
 import { z } from "zod";
 import type { GoogleEmailConfig } from "@/lib/email/google";
 
-/** Turnfin's one outgoing email sender (Core; docs/architecture.md, "Core owns shared
- *  plumbing"). Every module that emails people outside the staff app (Turnfin Me, the
+/** Turnfin's one outgoing email sender (the platform; docs/architecture/README.md, "Shared
+ *  plumbing in the platform"). Every module that emails people outside the staff app (Turnfin Me, the
  *  Academy booking site, Refunds alerts) sends through this mailbox and passes only the
  *  name its email shows.
  *

@@ -1,399 +1,191 @@
 @AGENTS.md
 
-# Architecture rules for this codebase
+# How Turnfin's code is built
 
-## ▶ START HERE — instructions for Claude Code
+Read this whole file before any change. It is the one place for the code rules. What Turnfin is, and its words, are in [docs/how-turnfin-works.md](docs/how-turnfin-works.md); where it is going is in [docs/architecture/platform-and-apps.md](docs/architecture/platform-and-apps.md); the map of what exists today is in [docs/architecture/README.md](docs/architecture/README.md). Every doc is listed in [docs/README.md](docs/README.md).
 
-You are working in a codebase that is being moved to (or already follows) the architecture described in this file. Do the following **every time you start a session**, before acting on the user's request.
+If a request would break a rule here, stop and explain the conflict. Fernando may approve an exception; record it as a decision (ADR) in `docs/architecture/decisions/`.
 
-### Step 1 — Read this whole file
-Every rule below applies to every change you make. Don't skim. Sections 1–9 are the rules, section 10 is the one-time migration plan, sections 11–13 cover all future work.
+## 1. The words
 
-### Step 2 — Check where the migration stands
-Look for `docs/architecture/MIGRATION.md`.
+| Word | In docs and on screen | In code |
+| --- | --- | --- |
+| **Turnfin** | The product staff use: one sign-in, Home and the apps | this repository's main app |
+| **App** | One area of the business inside Turnfin, opened from Home, that a role gives a level in | one `manifest.ts` |
+| **Module** | never shown to staff | the folder `src/modules/<id>` that provides one or more apps (`activities` provides Swim school, Pool deck and Analytics) |
+| **Platform** | what every app stands on | Core: `src/lib`, `src/auth.ts`, `src/platform/events`, `src/modules/{registry,contributions,context,server,session-hooks}.ts` (ADR 0001) |
+| **Connected product** | outside Turnfin, with its own users and sign-in, using only a versioned API | Turnfin Me (`apps/me`), the Academy booking site (`apps/academy`), the parent app (its API lives in `src/app/api/parent`) |
+| **Workspace** | never shown to staff | an app's frame and starter page: `features/workspace`, `src/components/workspace` |
 
-- **It does not exist** → the migration has not started. Create it from the template at the end of this block, then tell the user:
-  > "This repo hasn't been migrated to the modular architecture yet. I'll start with Phase 0: a read-only audit of the codebase, written to docs/architecture/audit.md, then stop for your review. Shall I begin?"
-  
-  Wait for the user to confirm, then do **Phase 0 only** (section 10) and stop.
-- **It exists and a phase is unfinished** → read it, tell the user in one or two lines where things stand and what the next step is, and ask whether to continue with that step or do something else.
-- **It says the migration is complete** → skip to Step 3.
+"Turnfin Work", "surfaces", "the My hub" and "the Reception portal" are retired. Do not bring them back.
 
-If the user's message asks for something specific (a bug fix, a new feature), do that instead of the migration. But do it following these rules, and mention the migration status in one line at the end.
+## 2. The layers
 
-### Step 3 — For every task, follow these rules
-1. Before writing code, decide which layer and folder it belongs in, using section 7. State it in one line ("This goes in `modules/sales/features/quotes/` because…").
-2. Follow the dependency rules (section 3) and data ownership rules (section 4). Never work around them. If a request would break them, stop and explain the conflict.
-3. Use the matching checklist in section 11 for new features, new modules, cross-module needs, or moving things to the platform.
-4. Update documentation in the same change (section 9).
-5. Finish with the definition of done (section 12), and report which layers you touched and why.
+| Layer | Where | What it is | It must never |
+| --- | --- | --- | --- |
+| **Platform** (Core) | `src/lib`, `src/auth.ts`, `src/platform/events`, `src/modules/{registry,contributions,context,server,session-hooks}.ts`, admin screens in `src/app/(core)` and `src/components/{people,staff,clubs,devices,setup,help}` | Sign-in and devices; people, roles, sites, departments, positions, qualifications; the access engine (`src/lib/policy`); the audit log; the event bus; email; the public API toolkit; the app catalogue and Home's data | import an app's code, or name one |
+| **UI kit** | `src/components/{shadcn,ui,ui-kit}`, `form-dialog`, `confirm-action`, `searchable-picker`, the theme in `src/app/theme` (ADR 0003) | Presentational components and tokens | hold business rules, fetch data, or import an app or the platform |
+| **App** (module) | `src/modules/<id>/` | One area of the business, in the contract shape (section 4) | reach into another app's insides or tables |
+| **Feature** | `src/modules/<id>/features/<feature>/` | One thing users can do: its screens, actions, checks, data access and tests | import a sibling feature; shared code moves to the module's `shared/` |
+| **Front** | `src/components/{home,core,workspace}`, `src/lib/home.ts`, `src/lib/staff-api` (Turnfin Me's API) | Screens and APIs that combine apps | own business rules or tables, or read an app's insides |
+| **Routes** | `src/app` | Thin glue: layouts check access and render a feature or front component | contain business logic |
 
-### Step 4 — Things you must always ask before doing
-- Approving or changing the module map or boundaries
-- Renaming or altering database tables, or running migrations
-- Deleting files
-- Any exception to these rules (record it as an ADR once approved)
-
-### Step 5 — Keep MIGRATION.md up to date
-Until the migration is complete, update `docs/architecture/MIGRATION.md` at the end of every working session: tick finished steps, note the current step, and record anything blocked or awaiting the user's decision.
-
-### MIGRATION.md template
-
-```md
-# Migration to modular architecture
-
-**Status:** Phase 0 — not started
-**Next step:** Run the Phase 0 audit
-
-## Phases
-- [ ] Phase 0 — Audit written to docs/architecture/audit.md
-- [ ] Phase 0 — Module map approved by user
-- [ ] Phase 1 — Scaffold folders, registry, event bus, aliases
-- [ ] Phase 1 — Boundary lint added (warning mode)
-- [ ] Phase 2 — Modules moved (list each below as it's done)
-- [ ] Phase 3 — Data ownership documented, cross-module table access removed
-- [ ] Phase 4 — Boundary lint switched to error and proven
-- [ ] Phase 4 — Docs finalised
-
-## Modules moved
-- (none yet)
-
-## Awaiting user decision
-- (none)
-
-## Log
-- YYYY-MM-DD — what was done
-```
-
----
-
-This project is a **modular monolith** organised in layers: a thin **platform**, a shared **UI kit**, **modules** that each contain **features**, and a **front** layer for screens that combine modules.
-
-These rules apply to every change you make in this repository: refactors, new features, new modules and bug fixes. Read this file in full before starting any task. If a request would break a rule here, stop and explain the conflict instead of working around it. The user may approve an exception, and that exception must be recorded as a decision record (see Documentation).
-
-The examples use TypeScript paths with an `@/` alias pointing at `src/`. Adapt the names to this project's language, framework and existing conventions, but keep the structure and the rules.
-
----
-
-## 1. The layers
-
-| Layer | Folder | What it is | What it must never do |
-|---|---|---|---|
-| **Platform** | `src/platform/` | General infrastructure every module needs: auth, users and teams, permission checking, notification sending, file storage, audit log, settings, database client, event bus, module registry. | Know that any module exists. No module names, business terms or module imports. |
-| **UI kit** | `src/ui/` | Presentational components and design tokens: buttons, tables, forms, inputs, layouts. | Contain business rules, fetch data, or import from modules. |
-| **Module** | `src/modules/<module>/` | One area of the business. It has a public API (`index.ts`), a registration file (`module.ts`), a module-level `shared/` folder, and `features/`. | Reach into another module's internals or another module's database tables. |
-| **Feature** | `src/modules/<module>/features/<feature>/` | One capability users can perform. It holds its UI, logic, data access, validation and tests. | Import from a sibling feature. Shared code moves down into the module's `shared/` instead. |
-| **Front** | `src/front/` | Screens that combine several modules: the home dashboard, global search, cross-module reports. | Own business rules or tables, or import module internals. It reads only through module public APIs. |
-| **App / routes** | `src/app/` (or the framework's routing folder) | Thin routing glue. Routes render feature or front components and wire up layouts. | Contain business logic. Keep route files to a few lines. |
-
-**Golden rule:** dependencies point **down** (feature → module shared → platform/ui), or **sideways only through a public API or an event**. Never up. Never into another module's insides.
-
----
-
-## 2. Target folder structure
-
-```
-src/
-  platform/
-    auth/
-    users/
-    permissions/
-    notifications/
-    files/
-    audit/
-    events/              # in-process event bus + typed event map
-    registry/            # loads module.ts plugs (nav, permissions, search, notifications)
-    db/
-    index.ts             # platform public API
-  ui/
-  modules/
-    <module>/
-      index.ts           # PUBLIC API for other modules and front — the only importable entry
-      module.ts          # registration plug (see section 5)
-      events.ts          # events this module emits (names + payload types)
-      README.md          # module documentation (template in section 9)
-      shared/            # code shared by 2+ features of THIS module only
-      features/
-        <feature>/
-          components/
-          server/        # actions, queries, services
-          data/          # repository / table access for this feature
-          schema.ts      # validation
-          index.ts       # feature entry, used only by its own module and by app routes
-          __tests__/
-  front/
-    dashboard/
-    search/
-  app/
-    modules.ts           # the single list of enabled module plugs
-docs/
-  architecture/
-    README.md            # overview + module map (keep current)
-    events.md            # catalogue of every event: emitter, payload, listeners
-    decisions/           # ADRs: NNNN-short-title.md
-```
-
----
+Dependencies point down (feature → module `shared/` → platform or UI kit), or sideways only through a front door or an event. Never up, never into another app's insides.
 
 ## 3. Dependency rules
 
-| From ↓ may import → | platform | ui | own module `shared/` | sibling feature (same module) | other module `index.ts` | other module internals |
-|---|---|---|---|---|---|---|
-| feature | ✅ | ✅ | ✅ | ❌ | ⚠️ sparingly | ❌ |
-| module `shared/` | ✅ | ✅ | — | ❌ | ⚠️ sparingly | ❌ |
-| module `index.ts` / `module.ts` | ✅ | ✅ | ✅ | ✅ (own features only) | ⚠️ sparingly | ❌ |
-| front | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ |
-| app / routes | ✅ | ✅ | ❌ | ✅ (render feature entry) | ✅ | ❌ |
-| ui | ❌ | — | ❌ | ❌ | ❌ | ❌ |
-| platform | — | ❌ | ❌ | ❌ | ❌ | ❌ |
+| From ↓ may import → | platform | UI kit | own module `shared/` | sibling feature | another module's `index.ts` | another module's insides |
+| --- | --- | --- | --- | --- | --- | --- |
+| feature | yes | yes | yes | no | sparingly | no |
+| module `shared/` | yes | yes | — | no | sparingly | no |
+| module `index.ts`, `module.ts`, `manifest.ts` | yes | yes | yes | own features only | sparingly | no |
+| front | yes | yes | no | no | yes | no |
+| routes | yes | yes | no | its own module's feature entries | yes | no |
+| UI kit | no | — | no | no | no | no |
+| platform | — | no | no | no | no | no |
 
-⚠️ **Sparingly** means a direct call is allowed only when the caller needs an answer immediately to continue (e.g. "is this item available?"). Otherwise use an event. If two modules end up calling each other directly in both directions, convert one direction to an event.
+**Sparingly** means only when the caller needs an answer now to carry on. Otherwise use an event. If two apps call each other both ways, turn one direction into an event.
 
-Allowed and forbidden imports, by example:
+Composition roots are the only files that import every module: `src/app/modules.ts`, `src/modules/server.ts`, `src/modules/session-hooks.ts`, and Turnfin Me's `src/lib/staff-api/records.ts` and `reminders.ts`.
 
-```ts
-// ✅ another module via its public API
-import { getOpenQuotes } from "@/modules/sales";
+## 4. The app contract
 
-// ❌ another module's internals
-import { quotesTable } from "@/modules/sales/features/quotes/data/table";
+Every app, small or as big as a product sold on its own, has the same six parts:
 
-// ❌ sibling feature — move the shared bit to modules/hr/shared/
-import { calcEntitlement } from "@/modules/hr/features/leave/server/calc"; // inside hr/features/rota
+| Part | File | Says |
+| --- | --- | --- |
+| Description | `manifest.ts`, listed in `src/app/modules.ts` | name, icon, group, starter page (`href`), levels and extras with the permissions each gives, log name |
+| Plug | `module.ts`, loaded by `src/modules/server.ts` | what it gives the platform: home items (`registerHomeCard`), site summaries, person-file sections, subject records, commitments, listeners |
+| Front door | `index.ts` | the few functions other apps and the front may call; functions and types only, never tables, Prisma models or internal components |
+| Events | `events.ts` | what it announces, `<app>.<thing>.<past-tense-verb>`, listed in [docs/architecture/events.md](docs/architecture/events.md) |
+| Own data | `prisma/schema/<id>.prisma`, or its own database (Docs, HR) | its tables; other apps keep only its ids |
+| Own tests | beside the code | its rules, its front door and its events, with other apps faked |
 
-// ❌ platform importing a module
-import { hrModule } from "@/modules/hr"; // inside src/platform/**
-```
+Each module folder also has `README.md` (section 9), `shared/` and `features/`. Its page list, `features/workspace/pages.ts`, builds both its page bar and its starter page (`ModuleStart`, ADR 0007).
 
----
+Permissions are named `<area>.<action>` or `<area>.<thing>.<action>` (`refunds.review`, `hr.details.write`). Each one is given by exactly one level or extra in exactly one manifest; a test checks it. Pages and actions ask for a permission, never a level or a role name.
 
-## 4. Data ownership
+## 5. Data and writes
 
-- Every table has **exactly one owning module**. Name tables with the module prefix (`hr_leave_requests`, `sales_quotes`), or use one database schema per module if the database supports it. Platform tables use `platform_` or keep their existing core names (`users`, `teams`).
-- Only the owning module reads or writes its tables. Features inside a module may share tables through that module's `shared/` data code.
-- Another module that needs the data either asks through the owner's `index.ts`, or receives what it needs in an event payload.
-- **No cross-module joins.** If a screen needs combined data, `front/` calls each module's API and merges the results. If performance genuinely requires a join, raise it with the user and record an ADR.
-- A module may store foreign IDs (e.g. `employee_id` in a support table) but must not rely on another module's table structure.
+**Writes.**
+- A mutating action runs: authorize (a named permission), validate, guard, write, audit, revalidate, in that order. The write and its audit row share one transaction; capacity and keyholder guards run under their locks after reading the current rows. The worked shape is at the top of `src/lib/action-result.ts`.
+- Errors a person can fix are return values (`{ ok: false, error }`), shown beside the field. Throwing is for "this should not have been possible".
+- Reads and writes live in separate files (`server/data.ts`, `server/actions.ts`), so a read cannot quietly grow a write. A read a client component calls is a `"use server"` action that still authorizes, with a comment saying why.
+- Deactivate, never delete: `User.isActive` is the off switch, reversible and audit-friendly. `AuditLog.actorName` is stored so the log survives a deletion anyway.
+- A list that grows with the organisation goes behind a server search or a page, never into props.
+- Dates, times and counts come only from `src/lib/format.ts`; "what day is it?" is asked in `SCHOOL_TIMEZONE` (`Europe/Dublin`), never on the server's clock.
+- Scripts are part of the product: idempotent, self-disabling, audited, and deliberate when destructive (`prisma/seed.ts` is the reference: it declines once an admin exists and matches on email).
 
----
+**Ownership.**
+- Every table belongs to exactly one owner, named by its schema file: `core.prisma` and `base.prisma` are the platform's; every other `prisma/schema/<id>.prisma` is its module's. Existing tables keep their names (ADR 0002). A new table's model takes the app's prefix (`Stock`, `Incident`) and its table the module's (`@@map("stock_takes")`).
+- Only the owner reads or writes its tables. Other apps ask through its front door, or receive what they need in an event payload.
+- No joins across owners. An app reads the platform through the platform's functions, never its own queries or relation joins: `src/lib/directory.ts` (people, sites, roles, departments, positions), `src/lib/qualifications.ts`, `src/lib/setup/activity-types.ts`, `src/lib/people/records.ts`, `src/lib/audit.ts` and `src/lib/policy`.
+- Database changes only add. Merging to `main` migrates production under live code, so a rename or removal goes in steps: add the new one, move the code, remove the old one in a later release, with Fernando's approval.
 
-## 5. The module plug (`module.ts`)
+## 6. How apps talk
 
-Each module registers itself. The platform's registry loops over `app/modules.ts`. The platform never imports a module by name.
+Three ways, and only these (pictures: the canvas linked from [docs/architecture/platform-and-apps.md](docs/architecture/platform-and-apps.md)):
 
-```ts
-// src/modules/hr/module.ts
-import { defineModule } from "@/platform/registry";
-import { searchEmployees } from "./features/directory";
+1. **Ask now:** call another app's front door (`index.ts`) when you need the answer to carry on.
+2. **Announce:** emit an event when something has happened. This is the default for "and then also…". The bus is `src/platform/events`, typed and in process. Emit after the transaction commits; a failing listener is logged and never breaks the emitter. Payloads carry ids and the minimum data, never rows. Every event is listed in `docs/architecture/events.md` in the same change.
+3. **Plug in:** register with the platform from `module.ts` (`src/modules/contributions.ts`): home items, site summaries, person-file sections, subject records, commitments, desk measures, the member directory and history, area renames. The platform shows what is registered without knowing who registered it.
 
-export const hrModule = defineModule({
-  id: "hr",
-  name: "HR",
-  nav: [
-    { label: "Leave", href: "/hr/leave", permission: "hr.leave.view" },
-    { label: "Rota", href: "/hr/rota", permission: "hr.rota.view" },
-  ],
-  permissions: ["hr.leave.view", "hr.leave.approve", "hr.rota.view"],
-  notifications: ["hr.leave.approved", "hr.leave.rejected"],
-  search: searchEmployees, // optional: contributes to global search
-});
-```
+An app must work when any other app is switched off: a front door or registry that is missing answers "not available", and the caller copes.
 
-```ts
-// src/app/modules.ts — the ONE place listing modules
-export const modules = [hrModule, salesModule, supportModule];
-```
+## 7. Where new code goes
 
-Naming conventions:
-- Permissions: `<module>.<feature>.<action>`, e.g. `sales.quotes.approve`.
-- Events: `<module>.<thing>.<past-tense-verb>`, e.g. `hr.employee.started`.
-- Notification types: same shape as events.
+Decide in this order, and say which in one line of the change summary:
+1. Used by one feature only → that feature.
+2. Used by two or more features of one module → that module's `shared/`.
+3. Used by two or more apps and holds no business terms → the platform (logic) or the UI kit (presentation).
+4. Used by two or more apps and business-specific → it belongs to one app and goes out through its front door, or the boundary is wrong: ask Fernando.
+5. A screen that combines apps → the front.
 
-If modules can be enabled per customer/tenant, the registry filters this list. Modules must work when other modules are disabled. Never assume another module is present.
-
----
-
-## 6. Communication between modules
-
-**Direct call (hatch):** when the caller needs a reply now. Only through the other module's `index.ts`. Keep each module's public API small. Export functions and types, never tables, ORM models or internal components.
-
-**Event (bell):** when announcing that something happened, and for any "and then also…" side effect. This is the default between modules.
-
-```ts
-// src/modules/hr/events.ts
-export type HrEvents = {
-  "hr.employee.started": { employeeId: string; startDate: string };
-};
-
-// emitter (inside an HR feature)
-await events.emit("hr.employee.started", { employeeId, startDate });
-
-// listener (inside the Support module, registered from its module.ts or a listeners file)
-events.on("hr.employee.started", createHelpdeskAccount);
-```
-
-Rules:
-- The event bus lives in `platform/events`. It is typed and in-process.
-- Payloads carry IDs plus the minimum data listeners need. They must not carry table rows or ORM objects.
-- Emit **after** the database transaction commits. A failing listener must not roll back or break the emitter. Log the failure, and retry where appropriate.
-- Every event is listed in `docs/architecture/events.md` with its emitter, payload and listeners. Update this file in the same change that adds or alters an event.
-
----
-
-## 7. Where does new code go? (decide in this order)
-
-1. **Is it only used by one feature?** → in that feature.
-2. **Used by 2+ features of the same module?** → that module's `shared/`.
-3. **Used by 2+ modules AND contains no business-specific terms?** → `platform/` (logic) or `ui/` (presentational).
-4. **Used by 2+ modules but IS business-specific?** → it belongs to one owning module and is exposed through its `index.ts`, or the boundary is wrong. Ask the user.
-5. **A screen combining several modules?** → `front/`.
-
-**Rule of two:** never move code down a layer in anticipation. Move it only when a second consumer actually exists.
-
-**How vs when:** the platform knows *how* (send a notification, check a permission, store a file). The module decides *when and why* ("leave approved" → notify the employee).
-
----
+Move code down a layer only when a second user actually exists. The platform knows *how* (send an email, check a permission, store a file); the app decides *when and why*.
 
 ## 8. Enforcement
 
-Boundaries must be enforced by tooling, not by comments.
+`npm run lint` enforces sections 2, 3 and 5: `eslint-plugin-boundaries` encodes the dependency table, and `no-restricted-imports`, `no-restricted-syntax` and `import/no-restricted-paths` refuse imports across apps and queries of another owner's tables (table ownership is read from the schema file names). Never disable a boundary rule inline without Fernando's approval and an ADR. Tests and `src/test` are exempt because they exercise routes end to end.
 
-- Configure **eslint-plugin-boundaries** (preferred), or **dependency-cruiser**, to encode the table in section 3. Check the installed version's documentation for exact config syntax rather than guessing.
-- Add or update path aliases so `@/platform`, `@/ui`, `@/modules/<name>` and `@/front` resolve.
-- The boundary check runs in `lint` and in CI, and fails the build on violations.
-- After configuring, **prove it works**: add a deliberate violating import (e.g. platform → module), confirm the lint fails, then remove it. Report the result.
-- Never disable a boundary rule inline (`eslint-disable`) without the user's explicit approval and an ADR.
-
----
+Not yet automatic (step 1 of the direction): nothing runs these checks on a pull request, and `main` is not protected. Run them yourself before every push.
 
 ## 9. Documentation
 
-Keep documentation current **in the same change** as the code. Docs are part of "done".
+Docs change in the same change as the code. One fact lives in one place; link to it, never copy it.
 
-**`docs/architecture/README.md`** covers:
-- a short overview of the layers (link back to this file),
-- the module map: each module, its features, one-line purpose, owner tables, events emitted and consumed,
-- a Mermaid diagram of modules and their dependencies (direct calls as solid arrows, events as dashed).
-
-**`docs/architecture/events.md`** is the event catalogue.
-
-**`docs/architecture/decisions/NNNN-title.md`** holds ADRs, short ones: Context, Decision, Consequences. Write one for any rule exception, a new module, splitting or merging modules, or moving something into the platform.
-
-**`src/modules/<module>/README.md`** follows this template:
+- The doc map is [docs/README.md](docs/README.md). Add every new doc to it.
+- `docs/architecture/README.md`: the app map, each app's tables, seams and events, and the diagram.
+- `docs/architecture/events.md`: every event, its emitter, payload and listeners.
+- `docs/architecture/decisions/NNNN-title.md`: an ADR (Context, Decision, Consequences) for an exception to these rules, a new app, splitting or merging apps, or moving something into the platform.
+- `docs/<app>.md`: what an app does and its rules, for people.
+- `src/modules/<id>/README.md`:
 
 ```md
-# <Module name>
+# <App name>
 
 **Purpose:** one sentence, no "and".
 
 ## Features
-- `<feature>` — what a user can do
+- `<feature>`: what a user can do
 
-## Public API (index.ts)
-- `functionName(args)` — what it returns / when to use it
+## Front door (index.ts)
+- `functionName(args)`: what it returns and when to use it
 
 ## Data owned
-- `<module>_<table>` — what it stores
+- `<Table>`: what it stores
 
 ## Events
-- Emits: `<module>.<thing>.<verb>` — when
-- Listens to: `<other>.<thing>.<verb>` — what it does in response
+- Emits: `<app>.<thing>.<verb>`, when
+- Listens to: `<other>.<thing>.<verb>`, what it does
 
 ## Permissions
-- `<module>.<feature>.<action>`
+- `<area>.<action>`
 
 ## Depends on
-- Platform: auth, notifications, …
-- Other modules (direct calls): … (justify each)
+- Platform: …
+- Other apps (front door): … (say why)
 ```
 
----
+## 10. Checklists
 
-## 10. One-time migration of the existing app
+**A feature in an existing app**
+- [ ] It lives in `features/<feature>/`. Anything a sibling feature needs moves to `shared/`.
+- [ ] New tables go in the app's schema file and only add.
+- [ ] New permissions go on a level or extra in `manifest.ts`; pages go in `features/workspace/pages.ts`; route files stay thin.
+- [ ] Side effects in other apps use events, listed in `events.md`.
+- [ ] The front door grows only by what another app or the front actually calls.
+- [ ] Tests cover it through its entry points, with other apps faked.
+- [ ] The app's README and `docs/<app>.md` are updated.
 
-Do this in phases. **Do not attempt a big-bang rewrite.** Behaviour must stay identical throughout. Each phase ends with typecheck, lint, tests and build passing, and with its own commit.
+**A new app**
+- [ ] It is one area of the business (its purpose fits one sentence without "and"). If unsure, ask Fernando; a new app changes the app map, which he approves.
+- [ ] It has the six-part contract, `README.md`, `shared/` and `features/`, and one line in `src/app/modules.ts`. Adding it changes no platform file; if it must, stop and raise it.
+- [ ] It works with every other app switched off.
+- [ ] It is in `docs/architecture/README.md` and `docs/README.md`, with `docs/<app>.md` and an ADR `NNNN-add-<app>-app.md`.
 
-### Phase 0 — Audit (no code changes)
-1. Explore the repository: framework, routing, folder layout, data layer/ORM, auth, tests, existing aliases and lint setup.
-2. Inventory routes/pages, server logic, database tables, shared helpers, and cross-folder imports. Find where business logic currently lives.
-3. Propose a **module map**: modules, the features in each, table ownership, what goes into `platform/`, `ui/` and `front/`, and the main cross-module interactions (marked as call or event).
-4. List risks: circular dependencies, cross-module joins, god-files, shared helpers that hide business logic, tables used by many areas.
-5. Write this to `docs/architecture/audit.md` and **stop. Ask the user to review and approve the module map before changing any code.**
+**Needing something from another app**
+- [ ] Need the answer now? Add a small function to its front door. Otherwise listen for (or ask it to emit) an event.
+- [ ] Check for a two-way dependency; turn one side into an event.
 
-### Phase 1 — Scaffold and guardrails
-1. Create the `platform/`, `ui/`, `modules/`, `front/` folders, the registry, the event bus and `app/modules.ts`.
-2. Add path aliases and the boundary lint in **warning** mode, so violations are visible but non-blocking.
-3. Create `docs/architecture/README.md` and `events.md` skeletons.
+**Moving something into the platform**
+- [ ] Two or more apps use it today, it holds no app's business terms, and a significant one gets an ADR.
 
-### Phase 2 — Move code, one module at a time
-1. Start with the most self-contained module. Move files with `git mv` to preserve history. Update imports. Keep public behaviour unchanged.
-2. Create the module's `index.ts`, `module.ts` and `README.md`. Replace external imports of its internals with calls to its public API.
-3. Move genuinely generic code (auth, notifications, files, db) into `platform/`, and presentational components into `ui/`. Anything carrying business terms stays in a module.
-4. After each module: run typecheck, lint, tests and build, then commit (`refactor(<module>): move into modular structure`). Report progress, then continue to the next module.
-5. Convert cross-module side effects to events where the audit marked them as events.
+## 11. Definition of done
 
-### Phase 3 — Data ownership
-1. Document table ownership in each module README.
-2. Remove cross-module table access by routing it through public APIs or event payloads.
-3. **Do not rename or alter database tables or run migrations without explicit user approval.** If prefixing tables is approved, generate proper migrations, never edit production data by hand, and do it one module at a time.
+- [ ] `npm run typecheck`, `npm run lint` and `npm test` pass, and the build works.
+- [ ] No boundary rule is broken or disabled; the platform names no app; no app touches another's insides or tables.
+- [ ] The docs this change touches are updated, with no copied facts.
+- [ ] Staff-visible changes have a CHANGELOG entry and a version bump (AGENTS.md).
+- [ ] The summary says which layers changed and why the code lives where it does.
 
-### Phase 4 — Lock it in
-1. Fix the remaining boundary warnings, then switch the boundary rules to **error**.
-2. Prove enforcement with the deliberate-violation check (section 8).
-3. Finalise the docs, the Mermaid diagram and the ADRs for any approved exceptions.
+## 12. How to behave
 
----
+- Small, reviewable steps, one commit per step.
+- When a boundary call is unclear, decide with section 7, say so, and carry on. Ask only when it changes table ownership or the app map, or needs an exception.
+- Never delete files, rename tables or run migrations without Fernando's approval.
+- Code that breaks these rules, found while doing something else, is mentioned in the summary and fixed as its own change, not silently.
 
-## 11. Checklists for future work
-
-### Adding a feature to an existing module
-- [ ] Create `features/<feature>/` in the owning module. Keep everything for it inside.
-- [ ] If it needs something from a sibling feature, move that piece to the module's `shared/`. Do not import the sibling.
-- [ ] New tables are prefixed with the module name and owned by this module.
-- [ ] New permissions follow `<module>.<feature>.<action>` and are registered in `module.ts`.
-- [ ] Nav links are registered in `module.ts`. The route file in `app/` stays thin.
-- [ ] Side effects in other modules use events, and `events.md` is updated.
-- [ ] Only add to the module's `index.ts` what another module or `front/` actually needs.
-- [ ] Tests exercise the feature through its entry points. Other modules are faked.
-- [ ] The module README is updated.
-
-### Adding a new module
-- [ ] Confirm it's genuinely a new business area (purpose fits one sentence without "and"). If unsure, ask.
-- [ ] Copy the standard module shape: `index.ts`, `module.ts`, `events.ts`, `README.md`, `shared/`, `features/`.
-- [ ] Register it in `app/modules.ts`. **Adding a module must not require editing `platform/`.** If it does, something has leaked. Stop and raise it.
-- [ ] The module works when other modules are disabled.
-- [ ] Add it to the module map and diagram in `docs/architecture/README.md`.
-- [ ] Write an ADR: `NNNN-add-<module>-module.md`.
-
-### Needing something from another module
-- [ ] Do you need an answer right now? Then add a small function to their `index.ts`. If not, listen to (or ask them to emit) an event.
-- [ ] Check for a two-way dependency. If one appears, convert one side to an event.
-
-### Moving something into the platform
-- [ ] At least two modules use it today (rule of two).
-- [ ] It contains no module or business terms.
-- [ ] Record an ADR if it's a significant capability.
-
----
-
-## 12. Definition of done (every task)
-
-- [ ] No boundary lint errors. No new `eslint-disable` for boundary rules.
-- [ ] Typecheck, lint, tests and build all pass.
-- [ ] No platform code references a module, and no module touches another module's internals or tables.
-- [ ] The docs touched by this change are updated (module README, `events.md`, architecture README, ADR if applicable).
-- [ ] The summary to the user states which layer(s) were changed and why the code lives where it does.
-
-## 13. How to behave
-
-- Prefer small, reviewable steps with a commit per step over large sweeping changes.
-- When a boundary decision is ambiguous, make the best call using section 7, state it in your summary, and continue. Ask only when it affects table ownership, module boundaries, or requires a rule exception.
-- Never delete files, rename database tables, or run migrations without explicit approval.
-- If you find existing code that breaks these rules while working on something else, don't silently refactor it. Mention it in your summary and offer to fix it as a separate change.
-
----
-
-## 14. UI rules (owner rules, 20 October 2026)
+## 13. UI rules (owner rules, 20 October 2026)
 
 Fernando's hard rules for the whole app, existing and new features, in his words:
 
@@ -402,7 +194,7 @@ Fernando's hard rules for the whole app, existing and new features, in his words
 - No inline styles or new colours.
 - Every page uses `PageShell` and `PageHeader`.
 
-No skill, taste or otherwise, overrules them (they replace the 11 and 13 October exceptions). What they mean in practice:
+No skill, taste or otherwise, overrules them. What they mean in practice:
 
 - **Components:** controls come from `src/components/shadcn`; the frame pieces in `src/components/ui-kit` and `src/components/ui` are built from them. Charts use the shadcn Chart (`src/components/shadcn/chart.tsx`, recharts) and bars use `Progress`; never hand-drawn `<svg>`. Icons are lucide-react.
 - **No arbitrary values:** use the Tailwind scale, the named theme utilities in `src/app/shadcn.css` (`rounded-card`, `grid-cols-tiles`, `basis-field`, `max-w-deck`…) or a theme variable as `(--name)`, such as `max-h-(--pc-overlay-max-height)`. Variants such as `data-[state=open]:` are selectors, not values, and stay allowed.
@@ -415,4 +207,4 @@ Why: most "AI ugliness" comes from inconsistency, not bad taste.
 
 `npm run lint` enforces all four: `turnfin/no-literal-styles`, `turnfin/no-inline-styles` and `turnfin/page-header-in-shell` (`scripts/lint/design-tokens.mjs`), the `<svg>` ban in `eslint.config.mjs`, and `scripts/lint/ui-rules.mjs` (every page reaches a PageShell; colour literals only in the two theme files). Tests, email templates and the browser theme colour in `src/app/layout.tsx` are exempt, because they need literal values. `eslint-suppressions.json` is empty and stays empty; never add to it, and never disable a rule inline, without Fernando's approval. `scripts/ui-rules/check-pages.mjs` opens every page in a running app and checks each has one PageShell with its PageHeader and H1.
 
-The same rules cover Turnfin Me (`apps/me`) and the Academy booking site (`apps/academy`). Each has its own shadcn components and copies of the ui-kit pieces, and theme files that are exact copies of Work's (`ui-rules.mjs` checks they match). `npm run lint` in each app runs the same ESLint rules (shared from `scripts/lint/design-tokens.mjs`) and `ui-rules.mjs`.
+The same rules cover the connected products Turnfin Me (`apps/me`) and the Academy booking site (`apps/academy`). Each has its own shadcn components and copies of the ui-kit pieces, and theme files that are exact copies of Turnfin's (`ui-rules.mjs` checks they match). `npm run lint` in each runs the same ESLint rules (shared from `scripts/lint/design-tokens.mjs`) and `ui-rules.mjs`.

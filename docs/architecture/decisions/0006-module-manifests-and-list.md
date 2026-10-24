@@ -3,7 +3,7 @@
 **Status:** Proposed (10 October 2026, lean refactor; accepted when Fernando merges the PR).
 
 ## Context
-CLAUDE.md section 5 has each module register itself through `module.ts`, listed once in `src/app/modules.ts`. Until now every module's description (name, menu entry, levels, permissions) sat in Core's `src/modules/registry.ts` as `registerModule` calls, and each module's `module.ts` registered only its server contributions (home cards, commitments, person-file sections). Those `module.ts` files are `server-only`, because they import the module's data code, but the descriptions are read in the browser too: the role editor and the module bar build from them.
+CLAUDE.md section 4 has each module register itself through `module.ts`, listed once in `src/app/modules.ts`. Until now every module's description (name, menu entry, levels, permissions) sat in Core's `src/modules/registry.ts` as `registerModule` calls, and each module's `module.ts` registered only its server contributions (home cards, commitments, person-file sections). Those `module.ts` files are `server-only`, because they import the module's data code, but the descriptions are read in the browser too: the role editor and the module bar build from them.
 
 ## Decision
 Split the plug in two, by where it runs:

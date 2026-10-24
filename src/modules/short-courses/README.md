@@ -15,7 +15,7 @@ Two kinds of course: six and eight week courses, and the Academy's lifeguard and
 
 `shared/` holds what two or more features use: the pure rules (`rules.ts`, `academy-rules.ts`, each tested beside it), the access checks (`access.ts`, `academy-access.ts`), access at a course's site and page refreshes for writes (`server.ts`, `academy-server.ts`), site scoping for reads (`reads.ts`), the dialogs' common fields (`components/form-kit.tsx`), the booking site's shape (`public-booking.ts`), and booking from the swimmer records (`swimmers.ts`, the search action `swimmer-search.ts`, `components/swimmer-picker.tsx` and `components/swimmer-card.tsx`; ADR 0014).
 
-## Public API (index.ts)
+## Front door (index.ts)
 - The status maps (`SHORT_COURSE_META`, `SHORT_COURSE_AREA_META`, `SHORT_COURSE_PAYMENT_META`, `SHORT_COURSE_PLACE_META`, `SHORT_COURSE_ONLINE_META`, `SHORT_COURSE_CALL_DUE_META`, `HEALTH_FORM_META`, `SWIMMER_RECORD_META`), for Core's tone check. The Rota sees sessions through commitments, registered in `module.ts`.
 
 ## Data owned

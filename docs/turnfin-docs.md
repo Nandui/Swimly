@@ -1,22 +1,19 @@
 # Turnfin Docs integration
 
-Docs opens at `/docs` from the staff portal at `/modules`, using the existing
-Turnfin staff login. It is a separate workspace from Aquatics and Instructor.
-The parents application is unchanged.
+Docs is the app for documents and required reading, at `/docs`, in the shared frame
+with Turnfin's sign-in.
 
 The implementation is adapted from `Nandui/turnfin-docs`, branch
 `codex/initial-release`, commit `e11a1eb020477fb27b660ce373715ac4bf6b7624`.
-Docs keeps that repository's sidebar, reading layouts, authoring flow and
-administration screens. Since September 2026 its colours and type follow the
-**Poolside Clear** design shared with Refunds: Plus Jakarta Sans, the fin's teal
-and aqua, a cool canvas with white panels and a pool-night dark mode, defined in
+Docs keeps that repository's reading layouts, authoring flow and administration
+screens. Since September 2026 its colours and type follow the
+**Poolside Clear** design shared with Refunds: Plus Jakarta Sans, the fin's blue, a cool canvas with white panels and a pool-night dark mode, defined in
 `src/app/theme/poolside.css`, whose tokens and control rules sit on `body.turnfin-app`. Only
 the Docs and Refunds layout CSS (`docs.css`, `integration.css`, `editor.css`) and their portal
 wrappers are scoped to `.turnfin-docs`, which `src/app/docs/layout.tsx` and
 `src/app/refunds/layout.tsx` put around the frame; it never restyles shared controls, which
 come from `src/components/shadcn`.
-Every page gets Poolside Clear from the root layout; the earlier Docs theme (`brand.css`)
-is retired.
+Every page gets Poolside Clear from the root layout.
 
 ## Staff access
 
@@ -47,7 +44,7 @@ Docs uses the platform organisation chart: Turnfin sites appear as facilities an
 teams, with the platform's ids, and membership follows each person's Staff profile (Staff ›
 Organisation). They are marked as managed in Staff and cannot be renamed here. Older Docs-only groups
 remain editable (a same-named one is shown as "… (Docs group)") because published versions refer to
-them. Docs migrations are numbered files in `docs-database/migrations`, applied in order once each. The browser never receives colleagues' permissions or screens: the workspace
+them. Docs migrations are numbered files in `docs-database/migrations`, applied in order once each. The browser never receives colleagues' permissions or screens: Docs
 sends each colleague as a `WorkspaceMember` (name, groups and resolved read/write/approve flags),
 with email and role added only for Docs administrators (`toWorkspaceMember` in
 `src/modules/docs/shared/types.ts`, tested in `workspace-dto.test.ts`).
@@ -90,9 +87,9 @@ fails closed rather than using cached grants.
 
 Docs uses a **separate PostgreSQL database**, configured with server-only
 `DOCS_DATABASE_URL` (pooled runtime connection) and `DOCS_DIRECT_URL` (unpooled
-migration connection). Turnfin/Aquatics retains `DATABASE_URL` and `DIRECT_URL`.
-Missing Docs configuration fails closed; there is no fallback to Aquatics storage.
-The build rejects connections pointing both modules at the same database.
+migration connection). The main database keeps `DATABASE_URL` and `DIRECT_URL`.
+Missing Docs configuration fails closed; there is no fallback to the main database.
+The build refuses Docs and the main database pointing at the same database.
 
 `docs-database/migrations/001_documents.sql` owns the dedicated `turnfin_docs`
 schema. Documents reference shared staff IDs as text, validated through the live
@@ -126,7 +123,7 @@ The separate-database rollout preserves all Docs content from the original share
    tables, then transfers only Docs data and verifies every table's row count and
    content digest, including attachment bytes.
    Documents, versions, drafts, membership, reading records, audit history and
-   attachment bytes retain their IDs and timestamps. Credentials and other module
+   attachment bytes retain their IDs and timestamps. Credentials and other app
    data are never copied. During the short cutover, old Docs clients may need to
    refresh after the deployment becomes ready.
 3. An administrator opens Docs and configures document facilities/teams, templates
@@ -146,7 +143,7 @@ The original Prisma migration remains unchanged in its applied history. All
 future Docs schema migrations belong in `docs-database`, never in the Aquatics
 Prisma schema. Verification uses two isolated PGlite databases and no live writes.
 
-## Verification
+## Tests
 
 Run `npm run typecheck`, `npm run lint`, and the production build with a dummy
 database URL and `VERCEL_ENV=preview` to skip production migrations.

@@ -1,252 +1,126 @@
-# Platform access: one Turnfin, many areas
+# Access: who can do what, where
 
-Turnfin is the staff platform for every area of the leisure centre: the swim
-school (Aquatics), Docs, Refunds, Training, HR and the Rota.
-Legend remains the booking and billing system, so Bookings is not a module.
+How Turnfin decides what a person can open and do, as it works today. The levels each app offers, and where each applies, are listed once in [how-turnfin-works.md](how-turnfin-works.md#levels); the code rules are in [CLAUDE.md](../CLAUDE.md). Planned next: a person can hold more than one job, each a role at some sites ([architecture/jobs-and-work-layer.md](architecture/jobs-and-work-layer.md)).
 
-Some information must never reach certain staff (HR above all),
-and some information from a module must reach people who cannot use the module
-itself: a lifeguard completes a training and sees their own certificates
-without ever seeing how trainings are managed or anyone else's records. This
-document is the model that makes both true. Owner decisions, September 2026.
+Two things must both hold. Some information must never reach certain staff (HR above all). And some information must reach people who cannot use the app it lives in: a lifeguard completes a course and sees their own certificates without seeing how training is managed or anyone else's records. That is what Turnfin Me is for.
 
 ## The model
 
-*Simplified 28 September 2026: see [how-turnfin-works.md](how-turnfin-works.md).*
+1. **Roles with levels.** A role holds one level for each app (None, then for example Use and Manage) plus at most two extras (`StaffRole.levels`, `StaffRole.extras`). Each person holds **one role** and the **sites they work at** (`User.siteIds`; none means every site).
+2. **Levels become permissions.** `src/lib/staff/levels.ts` turns levels into the named permissions that pages, menus and actions check. Code never asks for a level or a role name.
+3. **Where a level applies.** Each app's description says whether its levels apply at the person's sites, over the people they manage (HR "Their team", through `User.managerId`), or everywhere ([how-turnfin-works.md](how-turnfin-works.md#levels)).
+4. **The working site.** The person works at one of their sites at a time (`getCurrentClub`, `src/lib/clubs/current.ts`): their chosen site if valid, else their main site, else their first. The site picker and `switchClub` offer only their sites.
+5. **Restricted permissions** (HR) are never given to administrators; only a superadmin gives a role that holds them (`StaffRole.restricted`).
 
-1. **Modules.** Swim school, Pool deck, Refunds, Docs, Training, Rota, HR and Admin, each
-   described once in its `manifest.ts`, listed in `src/app/modules.ts`.
-2. **Roles with levels.** A role holds one level for each module (None, then for
-   example Use and Manage) plus at most a couple of extras. Each person holds
-   **one role** and the **sites they work at** (`User.siteIds`; none means every
-   site). The working site (`getCurrentClub`, `src/lib/clubs/current.ts`) is one of
-   those sites: without a valid choice it defaults to their primary site, then their
-   first site, and the site picker and `switchClub` offer only their sites.
-3. **Levels become permissions.** `src/lib/staff/levels.ts` translates levels
-   into the named permissions (capabilities) that pages, menus and actions
-   check, so code never asks for a level or a role name. Some permissions are
-   **restricted** (HR): administrators never get them, and only a superadmin
-   gives HR.
-4. **Where a level applies.** Swim school, Pool deck, Tasks, Training and Rota apply at the
-   person's sites; HR "Their team" reaches only the people they manage (through
-   `User.managerId`); everything else applies everywhere. The policy engine
-   receives these as grants.
-5. **Data classification.** Sensitive fields are tagged (`medical`, `contact`,
-   `emergency`, `staff-note`, `hr-restricted`) and each surface declares which
-   classes it may see.
-
-**Home pages are presentation, not security.** A role's home page shows its
-modules; every page and action checks its permission again.
+**Home, menus, cards and hiding are presentation, never security.** Every page and action checks its permission again.
 
 ### Tiers
 
 | Tier | How | Holds |
 | --- | --- | --- |
-| Staff | Roles they are given | Exactly what their roles grant, where they apply |
-| Administrator | `staff.manage` + `roles.manage` | Every current and future capability except restricted ones |
-| Superadmin | `User.isSuperadmin` (a flag) | Everything in the organisation, restricted included |
+| Staff | their role | what the role's levels give, where they apply |
+| Administrator | Admin: Manage (`staff.manage` + `roles.manage`) | Manage in every app except HR, now and for future apps |
+| Superadmin | `User.isSuperadmin`, a flag, never a permission | everything in the organisation, HR included |
 
-Admin: Manage is the administrator: Manage in every module except HR. Only a
-superadmin makes another superadmin, and the last active superadmin cannot be
-removed or deactivated. Only a superadmin creates, edits or gives a role holding
-HR (`StaffRole.restricted`). Role previews (development only; "View as", the
-eye button in every frame's tools bar, for anyone holding `roles.manage` or a
-superadmin) rebuild the session from the previewed role's levels at the
-viewer's own sites, as `sessionUserFor` does for a real holder, and drop the
-superadmin flag, so they can only remove access. The first superadmin is designated by an operator:
+Only a superadmin makes another, and the last active superadmin cannot be removed or deactivated. The first is designated by an operator (`npx tsx scripts/grant-superadmin.ts --email owner@example.com --confirm`); LeisureWorld's owner was designated by the migration `20261010120000_first_superadmin`.
 
-    npx tsx scripts/grant-superadmin.ts --email owner@example.com --confirm
+**Role previews** ("View as", the eye button in every frame's tools bar, development only, for anyone holding `roles.manage` or a superadmin) rebuild the session from the previewed role's levels at the viewer's own sites and drop the superadmin flag, so they can only remove access.
 
-LeisureWorld's first superadmin, the owner, was designated by the migration
-`20261010120000_first_superadmin` (1 October 2026), which does nothing once any
-active superadmin exists.
+## People and places
 
-## The People core
+One person record and one organisation chart, which every app reads through `src/lib/directory.ts`:
 
-One person record and one organisation chart that every module reads
-(migration `20260928120000_people_core`, additive):
-
-- `Organisation`: the operator (LeisureWorld). Every new table carries `orgId`,
-  so Turnfin can later be sold to other operators without a rewrite.
-- Sites are the existing `Club` rows, now with `orgId`.
+- `Organisation`: the operator (LeisureWorld). Every new table carries `orgId`, so Turnfin can be sold to other operators without a rewrite.
+- Sites are `Club` rows, each with `orgId`.
 - `Department` (optionally tied to a site) and `UserDepartment` (with a main one).
-- `User.managerId` (the reporting line; loops are refused), job title, start
-  date and main site.
-- `QualificationType` and `Qualification` (issued, expires, verified by,
-  withdrawn). Training writes them, the Rota reads them, Turnfin Me shows each person theirs.
+- `User.managerId` (the reporting line; loops are refused), job title, start date and main site.
+- `QualificationType` and `Qualification` (issued, expires, verified by, withdrawn): Training writes them, Rota reads them, Turnfin Me shows each person theirs.
 
-Staff › a person shows their profile, their role and the sites they work at,
-and their qualifications. Staff › Organisation holds departments and
-qualification types. Docs uses the same sites and departments: its facility and
-team groups for them are mirrored from the platform (`source='platform'`) and
-membership follows the Staff profile; older Docs-only groups remain.
+Admin › Staff › a person shows their profile, role, sites and qualifications. Docs mirrors the platform's sites and departments as its facility and team groups (`source='platform'`), and every role is a Docs team.
 
 ## How code asks
 
-**Flat checks** (`can`, `canSee`, `requirePermission`, `screenPage` in
-`src/lib/authz.ts` and `src/lib/page-guards.ts`) answer "may this person do
-this here?" for screens and actions. The session's flat permissions are
-what the person's role gives **at the site they are working in**. Their other
-sites and their team (HR "Their team") never widen them; only the policy engine
-reads those.
+**Flat checks** (`can`, `canSee`, `requirePermission`, `screenPage` in `src/lib/authz.ts` and `src/lib/page-guards.ts`) answer "may this person do this here?" for screens and actions. The session's flat permissions are what the role gives **at the site they are working in**. Their other sites and their team never widen them; only the policy engine reads those.
 
-**The policy engine** (`src/lib/policy`) answers "may this person do this to
-*these* records?". Any code that reads or changes other people's records
-(training records, qualifications, HR notes, reading reports) must use it:
+**The policy engine** (`src/lib/policy`) answers "may this person do this to *these* records?". Any code that reads or changes other people's records (training, qualifications, HR notes, reading reports) must use it:
 
-- `requireCapFor(cap, resource)` / `mayFor(cap, resource)`: one person or
-  record, where a resource is `{ subjectUserId?, siteId?, departmentId?, orgId? }`.
-- `subjectsFor(cap)`: whose records a capability reaches, as user ids to filter
-  a query by, in this database or another (Docs, HR).
+- `requireCapFor(cap, resource)` and `mayFor(cap, resource)`: one person or record, where a resource is `{ subjectUserId?, siteId?, orgId? }`.
+- `subjectsFor(cap)`: whose records a permission reaches, as user ids to filter by, in this database or another (Docs, HR).
 - `sitesFor(cap)`: which sites it reaches, for site-bound data.
-- `logAccess(...)`: read-audit for restricted data.
+- `logAccess(...)`: the read log for restricted data.
 
-Restricted capabilities also need a fresh password check: a session that
-switched in with a PIN on a shared device, or whose password was confirmed more
-than 15 minutes ago, must confirm the password again (step-up).
+Each grant reaches everywhere, one site, or the person's reports. Another organisation's data is never reachable. The engine is pure and matrix-tested (`src/lib/policy/policy.test.ts`).
 
-The engine is pure and matrix-tested (`src/lib/policy/policy.test.ts`): staff,
-line manager, department lead, site manager, multi-site manager, administrator
-and superadmin, against self, a report, a report's report, another department,
-another site and another organisation.
+**Step-up.** Restricted permissions need a sign-in with Google or a password in the last 15 minutes; a PIN switch never counts (`requireFreshSession`, `/confirm-password`, which sends a Google session back through Google).
 
-## Turnfin Work and Turnfin Me
+## Why it is built this way
 
-*Replaces the My hub (owner decision, 27 September 2026).*
+- **Roles are data; the permission catalogue is code.** `src/lib/staff/permissions.ts` lists every permission, because a permission exists only when a screen or action asks for one. There is no Permission table, which would be a second copy kept in step by hand. A stored key no longer in the catalogue is ignored rather than fatal, so removing a permission is safe.
+- **Administrators always have full access.** Holding both `staff.manage` and `roles.manage` makes an administrator; `expandPermissions` and `visibleScreens` resolve the whole current catalogue, so administrators get new permissions without a data change (restricted ones excepted).
+- **Someone can always get back in.** `staff.manage` and `roles.manage` are load-bearing: lose either across every active account and the way back is a database console, because `prisma/seed.ts` declines once an admin exists. `src/lib/staff/keyholders.ts` refuses any change that would leave nobody holding one, working out what the world would look like afterwards under row locks, not by counting role names. It is not in a `"use server"` file, because every export of one is an endpoint the browser can call.
+- **Nothing refers to a role by name**: not the code, the menus or the seed. That is what lets an organisation rename or delete every role Turnfin shipped with.
+- **A screen is a menu entry opened by one permission** (`src/lib/staff/screens.ts`). Every page opens with `screenPage(screen, permission?)` and is "not found" for anyone without it; a link into another screen asks `canSee` first. Account is always there.
+- **The same rule is guarded in three places**, because they answer different questions: the menu hides what you cannot reach, the page hides the button (`src/lib/page-guards.ts`), and the action refuses the call. Only the action is security.
+- **The session is re-read from the database on every request**, so deactivating someone, changing their role or removing a permission from a shared role takes effect at once rather than at token expiry. Only the person's id is in the token.
+- **Sign-in failure is one sentence for every reason** (wrong password, unknown address, deactivated account), so the form cannot be used to find out who has an account.
+- **`DEV_AUTH_BYPASS=1`** signs in as the first active admin in the database, only when `NODE_ENV` is not production. It uses a real account, so audit rows point at someone who exists and checks behave as in production.
 
-Work is for the job on registered work PCs; a person's own records (training,
-required reading, qualifications, shifts, what HR shared, their details) live in
-**Turnfin Me**, a separate phone app (`apps/me`) that only talks to the staff API.
-Work has no personal pages: `/` opens the role's home. Signing in to Work away from a
-registered device needs `work.anywhere` once `WORK_DEVICE_REQUIRED` is on. The
-self-service reads (`*/mine.ts`) and writes (`*/self.ts`) serve the staff API only.
-See docs/staff-app.md.
+## Turnfin and Turnfin Me
 
-## Sign in with Google
+Turnfin is the job, on registered work computers, and has no personal pages: `/` opens the person's Home. A person's own records (training, required reading, qualifications, shifts, what HR shared, their details) are in **Turnfin Me** (`apps/me`), a connected product that only talks to the staff API. The self-service reads (`*/mine.ts`) and writes (`*/self.ts`) in each module serve that API only. Signing in to Turnfin away from a registered device needs `work.anywhere` when `WORK_DEVICE_REQUIRED` is on. See [staff-app.md](staff-app.md).
 
-Google is one way into Turnfin Work (owner decision, 23 October 2026;
-`src/lib/google-sign-in.ts`). Where Google is set up, the sign-in page shows the email
-and password form with a **Sign in with Google** button under it.
+## Signing in
 
-- **Matching.** The Google id (`User.googleId`, the `sub` claim) is matched first, then
-  the Google-verified email. An unverified email is never used.
-- **New accounts.** A first sign-in by someone with a Workspace account in a work domain
-  (`hd` claim and address both in `AUTH_GOOGLE_DOMAINS`, default `leisureworldcork.com`)
-  makes an active account in the organisation with **no role** and writes an audit row.
-  With no role it opens nothing: the sign-in page says the account is ready and to ask a
-  manager, and it is listed under **Waiting for a role** on Admin › Staff. Personal Google
-  accounts and other domains get no account.
-- **Kept fresh.** Every Google sign-in takes the name and picture (`User.avatarUrl`,
-  https only) from Google, and a changed address when no other account has it; name and
-  address changes are audited. `User.lastSignInAt` is set on every sign-in, by any route.
-- **Password every time.** Desk and pool deck PCs are shared, so Google is asked to check
-  the password at every sign-in (`max_age=0`), even when someone is still signed in to
-  Google in that browser. Refusing a sign-in whose `auth_time` is old or missing shut
-  everyone out on 23 October 2026, so for now it is only logged. Turnfin cannot stop
-  Chrome saving passwords: that is the Google Admin console's Chrome password manager
-  setting.
-- **Deactivated** accounts stay shut; Google never reopens one. The work-PC rule applies
-  as for a password. Each Google sign-in writes an audit row (`User`, `sign_in`).
-- **Step-up.** A Google sign-in in the last 15 minutes counts as confirmed for
-  restricted records (HR) and for setting a PIN; `/confirm-password` sends a Google
-  session back through Google. A PIN switch never counts.
-- **Shared devices.** A Google sign-in clears a PIN lock and adds a PIN holder to the
-  device's quick-switch list, as a password sign-in does.
-- **Passwords** work for every active account with one, beside Google (owner decision,
-  23 October 2026 afternoon, undoing the morning's superadmin-only rule). Admin › Staff
-  adds people without a password when Google is set up; "Set a new password" gives any
-  account one. The unlinked `/sign-in/developer` page still shows the password form alone.
+Email and password, and **Sign in with Google** where it is set up (`src/lib/google-sign-in.ts`).
 
-It is on only where `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` are set (a Google Cloud
-OAuth web client whose authorised redirect URI is
-`https://<the app's address>/api/auth/callback/google`, for LeisureWorld `https://turnfin.app/api/auth/callback/google`); elsewhere the button is not
-shown, the provider is not registered, and the sign-in page keeps the email and password
-form for everyone. Previews have a new address every time, which Google cannot list, so
-set the two variables for Production only.
+- **Passwords** work for every active account that has one. Admin › Staff can add people without a password when Google is set up; "Set a new password" gives any account one. The unlinked `/sign-in/developer` page shows the password form alone.
+- **Google matching.** The Google id (`User.googleId`) is matched first, then the Google-verified email. An unverified email is never used.
+- **New accounts from Google.** A first sign-in with a Workspace account in a work domain (`hd` and address both in `AUTH_GOOGLE_DOMAINS`, default `leisureworldcork.com`) makes an active account with **no role** and an audit row. With no role it opens nothing: the sign-in page says to ask a manager, and Admin › Staff lists it under **Waiting for a role**. Personal Google accounts and other domains get no account.
+- **Kept fresh.** Each Google sign-in takes the name and picture (`User.avatarUrl`, https only) from Google, and a changed address when no other account has it, with audit rows. `User.lastSignInAt` is set on every sign-in, by any route.
+- **Password at every Google sign-in.** Work computers are shared, so Google is asked to check the password every time (`max_age=0`). A missing or old `auth_time` is logged, not refused. Turnfin cannot stop Chrome saving passwords: that is a Google Admin console setting.
+- **Deactivated** accounts stay shut; Google never reopens one. The work-computer rule applies as for a password.
+- **Setting it up.** Google is on only where `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` are set: a Google Cloud OAuth web client with the redirect URI `https://<the app's address>/api/auth/callback/google` (for LeisureWorld, `https://turnfin.app/api/auth/callback/google`). Elsewhere the button is hidden. Previews have a new address every time, which Google cannot list, so set the two variables for Production only.
 
 ## Shared devices
 
-Reception computers and poolside tablets are used by whoever is on shift. Someone who
-manages staff registers a browser as a shared device (Staff › Shared devices); it gets
-a signed cookie (`src/lib/devices/shared-device.ts`) and can be revoked centrally.
+Reception computers and poolside tablets are used by whoever is on shift. Someone who manages staff registers a browser as a shared device (Staff › Work devices); it gets a signed cookie (`src/lib/devices/shared-device.ts`) and can be revoked centrally.
 
-- **Quick switch** (`/switch`): people tap their name and enter a personal PIN (set on
-  Account after a recent Google sign-in, or with their password). Only people who have
-  signed in on that device and have a PIN are listed. Five wrong PINs lock the PIN until
-  the person signs in again.
-- **Idle sign-out**: shared-device sessions return to the switch screen after 5 idle
-  minutes, and never last more than 12 hours.
-- **Step-up**: a PIN session never counts as a fresh password. Restricted records
-  (HR, performance) send the person to confirm their password first
-  (`requireFreshSession`, `/confirm-password`), valid for 15 minutes.
-- The session records how and when the person proved who they are
-  (`authMethod`, `authAt`, `sharedDevice`); it never carries permissions.
+- **Quick switch** (`/switch`): people tap their name and enter a personal PIN (set on Account after a recent sign-in). Only people who have signed in on that device and have a PIN are listed. Five wrong PINs lock the PIN until the person signs in again; a sign-in clears the lock and adds them to the device's list.
+- **Idle sign-out**: shared-device sessions return to the switch screen after 5 idle minutes and never last more than 12 hours.
+- The session records how and when the person proved who they are (`authMethod`, `authAt`, `sharedDevice`); it never carries permissions.
 
-## Aquatics surfaces
+## Who sees which swimmer fields
 
-Aquatics is the reference for a module with several audiences over one set of
-records. `src/modules/activities/shared/classification.ts` tags swimmer fields by class
-(`medical`, `contact`, `emergency`, `staff-note`) and decides who receives each:
+The swim school serves several audiences over one set of records. `src/modules/activities/shared/classification.ts` tags swimmer fields (`medical`, `contact`, `emergency`, `staff-note`) and decides who receives each:
 
-| Surface | Who | Medical notes |
+| Screens | Who | Medical notes |
 | --- | --- | --- |
-| Office (courses, programmes, curriculum) | Swim school managers | Yes |
-| Desk (swimmers, enrolment, follow-up) | Reception | Yes |
-| Deck (`/instructor`) | Instructors | Only for swimmers in a class they teach or cover that day |
-| Parents (parent API) | Linked guardians | Never; they propose corrections instead |
-| Anyone else | Docs-only, Refunds-only, read-only roles | Never; roles with no Aquatics screen read no swimmer data |
+| Office (courses, programmes, curriculum) | swim school managers | yes |
+| Desk (swimmers, enrolment, follow-up) | reception | yes |
+| Pool deck (`/instructor`) | instructors | only for swimmers in a class they teach or cover that day |
+| Parent app (parent API) | linked guardians | never; they propose corrections instead |
+| Anyone else | roles with no swim school level | never: they read no swimmer data |
 
-Withheld notes become a `hasMedicalNotes` flag, shown as a "Medical" tag, so the
-deck still knows to ask. Loaders pass their surface (`getRegister(…, "deck")`);
-the class roster only carries the flag. Instructors can look up any swimmer with
-a current place at their working site at `/instructor/swimmers` — name, age and
-class only, never contacts or staff notes.
+A withheld note becomes a `hasMedicalNotes` flag, shown as a "Medical" tag, so the deck still knows to ask. Loaders pass where they are used (`getRegister(…, "deck")`). On the pool deck, `/instructor/swimmers` finds any swimmer with a current place at the working site: name, age and class only. Parents' corrections are applied or declined at `/students/parent-changes` ([parent-app.md](parent-app.md)).
 
-Parents propose contact, emergency and medical corrections through the parent API;
-reception applies or declines them at `/students/parent-changes`. See
-docs/parent-app.md.
+## Apps with their own access rules
 
-## Training
-
-Training (docs/training.md) is people-scoped. Its levels (Trainer, Manage)
-apply at the sites a person works at, so a trainer signs off for the people at
-their sites; each page scopes records with the policy engine. A course can be
-given to everyone on a role at once.
-Completing your own training needs no capability and happens in Turnfin Me.
-
-## Rota
-
-The Rota (docs/rota.md) is site-bound: `rota.view`, `rota.plan` and `rota.manage` (Run)
-resolve with `sitesFor` and `requireCapFor` with a `siteId`, so a duty manager who works at
-one site runs that site only. Plan also needs the department: a supervisor plans the days
-ahead for the departments they belong to. It warns about expired qualifications and
-double-bookings but never blocks. Everyone sees their own shared days in Turnfin Me.
-
-## HR
-
-HR (docs/hr.md) is the restricted module: its own database (`HR_DATABASE_URL`),
-restricted capabilities that administrators never inherit, a recent password for
-every read and write (`requireFreshSession`, `requireRecentPassword`), a read log
-(`access_events`) and a superadmin-only subject export. The HR database holds ids
-only; access is decided in the main database by the policy engine.
+- **Training** applies at a person's sites; each page scopes records with the policy engine. Completing your own training happens in Turnfin Me ([training.md](training.md)).
+- **Rota** is site-bound: its permissions resolve with `sitesFor` and `requireCapFor` with a `siteId` ([rota.md](rota.md)).
+- **HR** is restricted: its own database (`HR_DATABASE_URL`), permissions administrators never inherit, step-up for every read and write, a read log (`access_events`) and a superadmin-only subject export. The HR database holds ids only; access is decided in the main database by the policy engine ([hr.md](hr.md)).
 
 ## Rules
 
-- Never check a role name. Ask for a capability, and for records, a resource.
-- Never treat navigation, home pages or cards as security.
-- Never copy permissions into a module's own database; read identity through
-  the directory and decide with the engine.
-- Administrators never inherit restricted capabilities.
-- A module's My surface serves only the signed-in person's own records and
-  never queries another module's tables.
-- No raw rows reach the browser: each surface maps records through an allowlist,
-  with tests.
-- Schema changes stay additive: development and production share a database.
+- Never check a role name. Ask for a permission, and for records, a resource.
+- Never treat navigation, Home or cards as security.
+- Never copy permissions into an app's own database; read identity through the directory and decide with the engine.
+- Administrators never inherit restricted permissions.
+- Self-service code serves only the signed-in person's own records, through the staff API.
+- No raw rows reach the browser: each screen and API maps records through an allowlist, with tests.
 
-## Local sandbox
+## The sandbox
 
-`npm run sandbox` runs the whole app on throwaway in-memory databases with a
-fictional LeisureWorld and the six roles from How Turnfin works, one each:
+`npm run sandbox` runs Turnfin on throwaway in-memory databases with a fictional LeisureWorld and six roles, one person each:
 
 | Person | Role | Home page |
 | --- | --- | --- |
@@ -257,9 +131,4 @@ fictional LeisureWorld and the six roles from How Turnfin works, one each:
 | Noah | Receptionist | Front of House |
 | Riley | Lifeguard | Poolside |
 
-It also seeds synthetic swimmers, classes on today's weekday at two sites, a
-parent's pending correction, training (Riley waits for sign-off, Ava has overdue
-and open courses), HR notes and a shared review for Ava, and a rota whose shifts
-show an expired qualification, an open shift and a double-booking
-(`scripts/sandbox-seed.ts`). It never reads real database settings. The sandbox
-password and PIN are in `scripts/sandbox.mts`.
+It also seeds synthetic swimmers, today's classes at two sites, a parent's pending correction, training waiting for sign-off and overdue, HR notes and a shared review, and a rota with an expired qualification, an open shift and a double-booking (`scripts/sandbox-seed.ts`). It never reads real database settings. The sandbox password and PIN are in `scripts/sandbox.mts`.

@@ -12,7 +12,7 @@ import type { Actor, Directory, Grant, Resource, Scope, SiteFilter, SubjectFilte
  *  2. A superadmin reaches everything in their organisation.
  *  3. Otherwise a grant must hold the capability *and* its scope must cover
  *     the resource. Self-service (a person's own records) is not a grant:
- *     each module's My surface serves it, so holding no capability never
+ *     each module's self-service code (Turnfin Me) serves it, so holding no capability never
  *     hides your own training, and holding one never shows you more of yours. */
 
 /** A step-up window: restricted capabilities need a sign-in (Google or password) this recent. */

@@ -174,7 +174,7 @@ export function visibleScreens(permissions: ReadonlySet<PermissionKey>): Set<Scr
  *  - Core: the organisation itself (people, roles, sites, the activity log),
  *    shared by every module and opened in the Core workspace.
  *  - Activities: the swim school (desk and office) and the pool deck.
- *  - Work modules: Docs, Refunds, Coinage, Training, HR, Rota, Purchasing, Stock, Academy, Short courses, Tasks, Incidents, the CCTV log and Site Monitoring, each its own workspace.
+ *  - Every other app: Docs, Refunds, Coinage, Training, HR, Rota, Purchasing, Stock, Academy, Short courses, Tasks, Incidents, the CCTV log and Site Monitoring.
  *
  *  A new screen must be added to exactly one of these; a test checks it.
  *  Separate modules never imply access to the swim-school workspace. */
@@ -183,17 +183,17 @@ export const ACTIVITIES_SCREENS = [
   "analytics", "duty", "cancellations", "calendar", "instructor", "students", "courses",
   "together", "assessments", "awaiting-enrolment", "legend-agreements", "programmes",
 ] as const satisfies readonly ScreenKey[];
-export const WORK_MODULE_SCREENS = ["docs", "refunds", "coinage", "training", "hr", "rota", "purchasing", "stock", "short-courses", "tasks", "incidents", "cctv", "site-monitoring"] as const satisfies readonly ScreenKey[];
+export const OTHER_APP_SCREENS = ["docs", "refunds", "coinage", "training", "hr", "rota", "purchasing", "stock", "short-courses", "tasks", "incidents", "cctv", "site-monitoring"] as const satisfies readonly ScreenKey[];
 
 const CORE = new Set<string>(CORE_SCREENS);
-const AQUATICS = new Set<string>(ACTIVITIES_SCREENS);
+const SWIM_SCHOOL = new Set<string>(ACTIVITIES_SCREENS);
 
 export function isCoreScreen(key: ScreenKey) {
   return CORE.has(key);
 }
 
 export function isActivitiesScreen(key: ScreenKey) {
-  return AQUATICS.has(key);
+  return SWIM_SCHOOL.has(key);
 }
 
 /** The screens an administrator sees: every screen except those that need a

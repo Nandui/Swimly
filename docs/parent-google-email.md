@@ -1,6 +1,6 @@
 # Parent sign-in email through Google Workspace
 
-Bookly uses the existing Google Workspace mailbox **info@leisureworldcork.com**
+The parent app uses the existing Google Workspace mailbox **info@leisureworldcork.com**
 to send parent sign-in codes. This mailbox has its own sign-in, as confirmed by
 the owner. Delivery goes through the Gmail HTTPS API from the staff application.
 The parent frontend never receives Google credentials. No separate transactional
@@ -45,7 +45,7 @@ Manage the existing client in the
 1. In a company-owned Google Cloud project, enable the **Gmail API**. Configure
    the Google Auth platform with an **Internal** audience under the LeisureWorld
    Workspace organization. Only the sending mailbox authorizes this integration;
-   parents continue signing in to Bookly with email codes.
+   parents continue signing in to the parent app with email codes.
 2. Create an OAuth client of type **Web application**. For the setup flow below,
    register `https://developers.google.com/oauthplayground` as an authorized
    redirect URI. Keep its client ID and secret private.
@@ -131,7 +131,7 @@ deployment, new credentials, permission grants or database migrations are needed
 - If Google revokes the refresh token, repeat the mailbox authorization and
   replace it in Vercel. Never weaken Workspace security policies to bypass a block.
 
-## Isolated verification
+## Tests and previews
 
 `npx tsx --test src/modules/activities/shared/parents/email.test.ts src/modules/activities/features/parents/server/api.test.ts`
 checks the real email adapter and parent router with synthetic Google responses

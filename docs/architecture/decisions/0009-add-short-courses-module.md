@@ -8,7 +8,7 @@ Fernando asked (13 October 2026) for "another feature for short classes, like 6 
 ## Decision
 - A new module `short-courses` in the Front of house group, beside the Academy: `src/modules/short-courses` with features `courses`, `course-types` and `workspace`, routes in `src/app/short-courses`, starter page `/short-courses/overview`. It copies the Academy's shape rather than extending it, because access is given per module (gym instructors should not see lifeguard candidates' checks) and the Academy stays about qualifications.
 - Levels View, Instructor and Manage at the sites a person works at (`short-courses.read`, `.run`, `.manage`). View books people on and takes payment.
-- Tables in the main database, prefixed `short_courses_` (CLAUDE.md section 4), models prefixed `ShortCourse` (ADR 0002), with no relations to Core tables.
+- Tables in the main database, prefixed `short_courses_` (CLAUDE.md section 5), models prefixed `ShortCourse` (ADR 0002), with no relations to Core tables.
 - Sessions reach the Rota through the commitments seam. `Commitment` gains an optional `module` name, so the Rota says which module a session is planned in instead of always "the Academy".
 - Built in three phases; this one runs courses from the desk. Online booking (phase 2) reuses the Academy's booking site; its email-code and hold-a-place code moves into shared code then (rule of two).
 

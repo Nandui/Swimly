@@ -1,6 +1,6 @@
 import type { HelpArticle } from "./types";
 
-/** The everyday guides for Home and the Work modules beyond the swim school. Each topic shows
+/** The everyday guides for Home and every app beyond the swim school. Each topic shows
  *  only to people who can open its module (HELP_CATEGORY_SCREENS). Check labels against the
  *  module's components: src/components/{refunds,docs,training,rota,hr}. */
 export const MODULE_GUIDES: HelpArticle[] = [
@@ -12,11 +12,11 @@ export const MODULE_GUIDES: HelpArticle[] = [
     steps: [
       { title: "Check what is waiting for you", text: "Waiting for you lists the things that need someone with your access, such as parent updates, practical sign-offs, refunds to decide or qualifications expiring. The number is how many; choose a row to open that list." },
       { title: "Read the day at your site", text: "Classes today and Today at your site summarise the classes, assessments, people on shift and people off at the site in the tools bar. Choose Open schedule for the full day." },
-      { title: "Start a common task", text: "Quick actions start the tasks your role does most, such as adding a swimmer, logging a refund request or reporting an absence. Each one opens the module that does it." },
+      { title: "Start a common task", text: "Quick actions start the tasks your role does most, such as adding a swimmer, logging a refund request or reporting an absence. Each one opens the app that does it." },
       { title: "Use Turnfin Me for your own things", text: "Your own training, required reading, qualifications, shifts and the HR notes shared with you are in Turnfin Me on your phone, not here. Sign in to it with your work email; it sends you a code." },
     ],
     result: "You can see what needs doing today and go straight to it, while your own records stay on your phone.",
-    troubleshooting: [{ question: "Why is my home page different from a colleague’s?", answer: "It follows your role and your sites. Someone with no Refunds level sees no refunds to decide. Ask your manager if a module you need is missing." }],
+    troubleshooting: [{ question: "Why is my home page different from a colleague’s?", answer: "It follows your role and your sites. Someone with no Refunds level sees no refunds to decide. Ask your manager if an app you need is missing." }],
     related: ["get-started", "switch-sites", "missing-access"],
   },
   {

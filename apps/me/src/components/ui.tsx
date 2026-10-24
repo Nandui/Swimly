@@ -10,13 +10,13 @@ import { Notice as KitNotice } from "@/components/ui-kit/notice";
 import { ApiError, api, session } from "@/lib/api";
 import type { Meta } from "@/lib/meta";
 
-/** A status: the meta supplies the words, tone and icon (Work's Tag). */
+/** A status: the meta supplies the words, tone and icon (Turnfin's Tag). */
 export function Tag({ meta }: { meta: Meta }) {
   const Icon = meta.icon;
   return <Badge data-tone={meta.tone}><Icon aria-hidden="true" />{meta.label}</Badge>;
 }
 
-/** A callout with an icon per tone (Work's Notice), so colour is never the only signal. `live`
+/** A callout with an icon per tone (Turnfin's Notice), so colour is never the only signal. `live`
  *  announces it (alert for an error, status otherwise): only for the result of something the
  *  person just did, never for what a page says on load. */
 export function Notice({ title, children, tone, live, className }: { title: string; children?: ReactNode; tone?: "error" | "warning" | "success"; live?: boolean; className?: string }) {
@@ -64,7 +64,7 @@ export function useLoad<T>(path: string | null) {
   return { data, setData, error, reload };
 }
 
-/** Placeholder rows the shape of the list that is coming (Work's PageLoading). */
+/** Placeholder rows the shape of the list that is coming (Turnfin's PageLoading). */
 export function Loading({ rows = 3 }: { rows?: number }) {
   return (
     <div className="pc-panel" role="status">

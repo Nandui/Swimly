@@ -6,15 +6,14 @@ are about to expire. It lives in the main database and uses the platform access
 model (see docs/platform-access.md): a role says what someone may do, an
 assignment says over whom.
 
-## Two surfaces
+## Two sides
 
 - **My training** in Turnfin Me (the staff app, docs/staff-app.md).
   Everyone's own courses. No permission is needed, and nothing there can reach
   another person's records. The learner reads the material and marks it done.
-- **Training workspace** (`/training`, Poolside Clear, on the shared `ModuleShell`). The Manage
-  surface for people with a Training capability. It opens for anyone with the
-  Training screen and a Training capability **at any scope**, so a department
-  lead's additional role opens it too. Every page then limits records to the
+- **Training** (`/training`, in the shared frame): the managing side, for people with a
+  Training permission. It opens for anyone with the
+  Training screen and a Training permission at any of their sites. Every page then limits records to the
   people that capability covers.
 
 ## Capabilities
@@ -78,7 +77,7 @@ keep everything.
   needs every lesson done, then follows the steps above.
 - **Old courses.** A course with no published version shows its plain text as before. **Use the
   current text as lesson 1** in the builder turns it into a Reading lesson in the draft.
-- **Preview** (`/training/courses/{id}/preview`) plays the draft in Work and records nothing.
+- **Preview** (`/training/courses/{id}/preview`) plays the draft in Turnfin and records nothing.
 
 ## Quizzes and the final exam (e-learning, phase 2)
 
@@ -208,7 +207,7 @@ and **Check a certificate** (`/training/check`).
 
 Four pieces for the training that happens on the pool deck and in the
 classroom rather than on a phone. All of them are Training's own tables;
-nothing here reads another module.
+nothing here reads another app.
 
 - **Practical checklists**: a course that a trainer signs off in person can have
   up to 40 steps to watch for (`TrainingCourse.observation`), each optionally
@@ -263,7 +262,7 @@ full session, and recurring sessions.
 ## The learner's own space (e-learning, phase 6)
 
 Everything here is in Turnfin Me, for the signed-in person's own training only.
-Work never shows anyone's notes, refreshers or streaks.
+Turnfin never shows anyone's notes, refreshers or streaks.
 
 - **Search** (`training/search?q=`): every course and lesson the person has
   (not cancelled), on the version they take: titles, the course summary,
@@ -284,7 +283,7 @@ Work never shows anyone's notes, refreshers or streaks.
   exam or a sign-off, the qualification and the average rating once three people
   have rated it. **Enrol** makes the same assignment a trainer would, with no due
   date, audited as "Enrolled themselves"; one already open is opened instead.
-  The course list in Work marks them "in the catalogue".
+  The course list in Turnfin marks them "in the catalogue".
 - **Ratings**: once a course is finished or waiting for sign-off, the person
   rates it 1 to 5 stars and can say what was unclear (`training_feedback`, one
   per assignment, changeable, audited). The builder shows **What learners said**:
@@ -310,7 +309,7 @@ Work never shows anyone's notes, refreshers or streaks.
 
 ## Insight: analytics, reports and audit packs (e-learning, phase 7)
 
-All of it is in Work, worked out from the records each time (no tables of its
+All of it is in Turnfin, worked out from the records each time (no tables of its
 own), and limited to the people the reader's `training.records.read` covers
 through the policy engine (`subjectsFor`, `requireCapFor`). Anyone with Training
 access may open it. Cancelled training is never counted.
@@ -463,8 +462,8 @@ button explains it isn't switched on and nothing is sent).
 - **Privacy**: the document goes to Anthropic's API only (which doesn't train
   on API data); Turnfin keeps the course, not the document. The dialog asks
   people to leave out anything personal.
-- **Setup**: add `ANTHROPIC_API_KEY` (from console.anthropic.com) to the Work
-  project's environment variables for Production and Preview.
+- **Setup**: add `ANTHROPIC_API_KEY` (from console.anthropic.com) to the Vercel
+  project's (`swimly-crm`) environment variables for Production and Preview.
 
 ## Expiring qualifications
 
@@ -481,5 +480,5 @@ does not block.
 - Shape: `src/modules/training/` has `shared/` (`access.ts`, `constants.ts`, `data.ts`, `grant.ts`, `writes.ts`) and the features `courses`, `builder`, `assignments`, `sign-off`, `certificates`, `expiring`, `me`, `person-file` and `workspace`; see its README.md
 - Actions: each feature's `server/actions.ts` (every change audited in its transaction)
 - Self-service: `features/me` (`mine.ts`, `self.ts`, `reminders.ts`), reached by the staff API through `index.ts`; description in `manifest.ts`
-- Pages: `src/app/training/` (workspace; the builder is `courses/[id]`, files `files/`); the learner side is Turnfin Me (`apps/me`, `training/[id]` and `training/[id]/[lesson]`)
+- Pages: `src/app/training/` (the app; the builder is `courses/[id]`, files `files/`); the learner side is Turnfin Me (`apps/me`, `training/[id]` and `training/[id]/[lesson]`)
 - Tests: `src/modules/training/__tests__/training.test.ts`, `elearning.test.ts`

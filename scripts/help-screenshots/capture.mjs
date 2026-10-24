@@ -40,7 +40,7 @@ const plans = [
   { id: 'instructor-home', ...deck, steps: [{ go: '/instructor' }] },
   { id: 'instructor-menu', ...deck, steps: [{ go: '/instructor' }, { click: /^Account menu:/ }], shot: 'menu' },
   { id: 'instructor-site', ...deck, steps: [{ go: '/instructor' }, { click: /change site$/ }], shot: 'menu' },
-  // Home and the Work modules
+  // Home and every app beyond the swim school
   { id: 'home', as: 'maya', steps: [{ go: '/' }] },
   { id: 'refund-new', as: 'noah', steps: [{ go: '/refunds/new' }] },
   { id: 'refund-decision', as: 'maya', steps: [{ go: '/refunds' }, { link: /Sam Example/ }] },

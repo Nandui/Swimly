@@ -50,7 +50,7 @@ function prepare(input: RoleInput) {
   const parsed = roleSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Check the role and try again." } as const;
   const role = cleanLevels(parsed.data.levels, parsed.data.extras);
-  if (Object.keys(role.levels).length === 0) return { ok: false, error: "Give the role a level in at least one module, or nobody on it has anywhere to go." } as const;
+  if (Object.keys(role.levels).length === 0) return { ok: false, error: "Give the role a level in at least one app, or nobody on it has anywhere to go." } as const;
   return { ok: true, data: parsed.data, role, columns: roleColumns(role) } as const;
 }
 

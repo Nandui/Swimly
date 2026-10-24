@@ -118,13 +118,13 @@ export default async function AccountPage() {
               <span className="pc-tile-icon" aria-hidden="true"><CircleCheck /></span>
               <div className="pc-row-body">
                 <span className="pc-row-title">Can work away from the centre&apos;s computers</span>
-                <span className="pc-row-hint">You can sign in to Turnfin Work from any device, for example a phone.</span>
+                <span className="pc-row-hint">You can sign in to Turnfin from any device, for example a phone.</span>
               </div>
             </li>
           ) : null}
           {lines.length === 0 && !session.user.isSuperadmin ? (
             <li className="pc-row" data-muted="">
-              <div className="pc-row-body"><span className="pc-row-title">No modules</span></div>
+              <div className="pc-row-body"><span className="pc-row-title">No apps</span></div>
             </li>
           ) : null}
         </ul>

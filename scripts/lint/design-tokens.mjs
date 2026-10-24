@@ -124,7 +124,7 @@ const pageHeaderInShell = {
   },
 };
 
-// Shared UI rules: primitives come from the local shadcn components, in Work, Turnfin Me and
+// Shared UI rules: primitives come from the local shadcn components, in Turnfin, Turnfin Me and
 // the Academy site alike.
 export const uiImports = {
   paths: [{ name: "radix-ui", message: "Use the local shadcn component so theme, touch sizes and accessibility stay consistent." }],

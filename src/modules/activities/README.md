@@ -27,9 +27,9 @@ It covers both menu entries Swim school (the desk, `src/app/(activities)`) and P
 - the parent API's plumbing;
 - `classification.ts` (what the deck may show) and `types.ts`.
 
-The swim school is one tightly linked domain, so about 90 of its 280 files are shared. Splitting the larger shared files by declaration, as was done for the Work modules, could move more code into features later.
+The swim school is one tightly linked domain, so about 90 of its 280 files are shared. Splitting the larger shared files by declaration, as was done for the other modules, could move more code into features later.
 
-## Public API (index.ts)
+## Front door (index.ts)
 - `processScheduledUnenrolments()` — runs due unenrolments (session hooks).
 
 ## Data owned

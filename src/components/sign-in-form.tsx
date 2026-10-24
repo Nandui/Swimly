@@ -54,7 +54,7 @@ export function SignInForm({ devAdminName, sharedDeviceName = null, google = fal
           redirect: false,
         });
         if (result?.code === "work_device") {
-          setError("This account can only sign in to Turnfin Work on a work computer. For your own records, use Turnfin Me on your phone.");
+          setError("This account can only sign in to Turnfin on a work computer. For your own records, use Turnfin Me on your phone.");
           return;
         }
         if (!result || result.error) {

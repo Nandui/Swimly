@@ -1,12 +1,12 @@
 # Turnfin Academy
 
-Owner decision, 8 October 2026: a module for the lifeguard and swim teacher courses we deliver
+Owner decision, 8 October 2026: an app for the lifeguard and swim teacher courses we deliver
 from time to time, "similar to the swim school". Courses are for the public and for our own
 staff. Staff enter candidates and record payment taken elsewhere. Each course tracks its sessions
 and registers, the pre-course checks and the certificates. Tutors are our staff, and their
 sessions show on the Rota.
 
-Since 15 October 2026 the Academy is part of the **Short courses** module (owner decision; ADR
+Since 15 October 2026 the Academy is part of the **Short courses** app (owner decision; ADR
 0011): one menu entry, one level per role, its pages under `/short-courses/academy`. Its tables,
 permissions and rules are unchanged; old `/academy` links redirect.
 
@@ -99,7 +99,7 @@ booked at the desk under their email.
 - **What it makes.** A candidate with `source` online, a reference ("AC-4821"), payment owed and
   `callBy` 72 hours after holding the place (`ONLINE_HOLD_HOURS`). They get an email saying
   their place is held, when we will phone, and the reference. The place counts as taken.
-- **My bookings.** Every place under the signed-in email at every module, whoever entered it, for
+- **My bookings.** Every place under the signed-in email on every course, whoever entered it, for
   courses that ended within the last year: waiting for payment, booked, waiting lists, then
   finished, withdrawn or cancelled, with the next session, what is left to pay and the result.
 - **To call** (`/short-courses/academy/calls`). Everyone who held a place online and still owes, at the sites
@@ -124,7 +124,7 @@ the Academy source is on sale (`ON_SALE` in `api.ts`); both report a customer's 
 
 ### The booking API (`/api/academy/v1`)
 
-The site never touches the database: it calls Work's API, the same contract as the parent and
+The site never touches the database: it calls Turnfin's API, the same contract as the parent and
 staff APIs (JSON only, 16 KiB bodies, allowlisted origins, no cookies, never cached).
 
 | Method | Path | What |
@@ -139,7 +139,7 @@ staff APIs (JSON only, 16 KiB bodies, allowlisted origins, no cookies, never cac
 
 ### Configuration
 
-Work (the Swimly app):
+Turnfin:
 - `ACADEMY_API_ENABLED=true`
 - `ACADEMY_AUTH_SECRET` (32+ characters; its own, not the parent or staff secret)
 - `ACADEMY_API_ALLOWED_ORIGINS=https://academy.leisureworldcork.com`
@@ -153,7 +153,7 @@ The booking site (`apps/academy`):
 - `NEXT_PUBLIC_ACADEMY_API_URL=https://<work-host>/api/academy/v1`;
 - `NEXT_PUBLIC_ACADEMY_NAME` (optional; "LeisureWorld Academy").
 
-Locally, `npm run sandbox` (Work on :3100) turns the API on for `http://localhost:3102` and
+Locally, `npm run sandbox` (Turnfin on :3100) turns the API on for `http://localhost:3102` and
 prints codes to its console (`ACADEMY_EMAIL_DEV_LOG`). The `academy-site` launch configuration
 starts the booking site on :3102 against it. The sandbox has an NPLQ course next month open
 online with three invented people waiting for a call (one overdue), and a swim teacher course.
@@ -170,7 +170,7 @@ next two weeks at their sites.
 - UI: `src/app/short-courses/academy/` (courses, a course, the course list, to call), each feature's `components/`
 - Online booking: `src/modules/short-courses/features/booking/server/` (`http.ts`, `api.ts`, `email.ts`, `router.ts`, `academy.ts`, `courses.ts`), the shape in `shared/public-booking.ts`,
   `src/app/api/academy/v1/[[...path]]/route.ts`, and the site in `apps/academy`. The site follows
-  Work's UI rules (CLAUDE.md, section 14) with its own shadcn components and exact copies of Work's
+  Turnfin's UI rules (CLAUDE.md, section 13) with its own shadcn components and exact copies of Turnfin's
   theme files; `npm run lint` in `apps/academy` checks them. It looks like the parents app
   (LeisureWorld Aquatics; owner request, 21 October 2026): `theme/leisureworld.css` holds the
   parents app's LeisureWorld colours, copied from it, and re-points Poolside's tokens; Manrope, the

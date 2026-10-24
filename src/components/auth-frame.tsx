@@ -32,7 +32,7 @@ export function AuthFrame({ welcome = false, fin, children }: { welcome?: boolea
               <p className="text-2xl font-semibold">People. Places. Progress.</p>
               <p className="max-w-md">The swim school, the rota, training, documents and refunds for your pools, in one place.</p>
             </div>
-            <p className="text-xs">Turnfin Work · for work computers</p>
+            <p className="text-xs">Turnfin · for work computers</p>
           </div>
         ) : null}
         <div className="flex min-w-0 max-w-md grow basis-sm flex-col justify-center">

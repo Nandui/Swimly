@@ -2,13 +2,13 @@
 
 `/help` is the signed-in staff manual, in its own v2 frame (the fin, "Help
 centre" and the way back; DESIGN.md "Forms, search and confirmation"). Every
-module frame has a Help link: at the bottom of the module bar on a desktop, and
+app's frame has a Help link: at the bottom of the app rail on a desktop, and
 under More in the bottom bar on phones and touch screens (not in the account
 menu). The pool deck has a Help icon to `/help/instructor` in its top bar. Both
 open a new tab so an in-progress form stays open.
 
 The manual has 53 authored guides: 51 in the desk library and 10 on the pool
-deck, including shared guides with workspace-specific steps. Topics cover every
+deck, including shared guides with separate desk and deck steps. Topics cover every
 part of Turnfin: navigation and sites; Home and Turnfin Me; swimmers and
 contacts; enrolments, moves, waitlists and sibling times; classes and the
 schedule; teaching and progression; assessments; cancellations, billing
@@ -18,7 +18,7 @@ Guidance describes the current app rather than promising email, offline saves
 or automatic moves that it does not provide.
 
 The Refunds, Docs, Training, Rota and HR topics (`HELP_CATEGORY_SCREENS` in
-`src/lib/help/types.ts`) show only to people whose role can open that module;
+`src/lib/help/types.ts`) show only to people whose role can open that app;
 their guides, and links to them, are left out for everyone else. Home, Turnfin
 Me and the swim school guides show to every desk reader.
 
@@ -64,7 +64,7 @@ prerequisites, numbered steps, expected result, troubleshooting and related slug
 An optional action identifies an existing screen; never store an arbitrary
 external destination or assume that a role has access. Scope individual steps
 when desk and Instructor instructions differ. `catalogue.ts` filters the body and
-related links before building an index or article for that workspace.
+related links before building an index or article for the desk or the deck.
 
 When changing a workflow, update its guide in the same change. Verify labels
 against the component and behaviour against the server action. Use only synthetic
@@ -73,7 +73,7 @@ of prose so a rename does not require rewriting guides.
 
 | Content source | Check against |
 | --- | --- |
-| `guides-start.ts` | Workspace shells, site switcher, Account, permissions and save/draft handling |
+| `guides-start.ts` | App frames, site switcher, Account, permissions and save/draft handling |
 | `guides-swimmers.ts` | Swimmer profile and edit form, enrolment dialogs/actions, Together |
 | `guides-classes.ts` | Classes and Schedule, desk/Instructor teaching forms, progression, assessments |
 | `guides-management.ts` | Duty manager, cancellation queue, Analytics, curriculum, Staff, Roles (levels), Sites and Activity |
@@ -85,9 +85,9 @@ of prose so a rename does not require rewriting guides.
 | `guides-modules.ts` (Rota) | `src/modules/rota/features/plan/components/day-plan.tsx`, `src/modules/rota/shared/components` (fill-sheet, plan-dialogs), `src/modules/rota/features/absences/components/absences.tsx` and `src/modules/rota/shared/actions.ts` |
 | `guides-modules.ts` (HR) | `src/modules/hr/features/person/components/actions.tsx`, `src/modules/hr/shared/constants.ts` |
 
-Each module guide's "Before you start" names the level it needs, from
+Each app guide's "Before you start" names the level it needs, from
 its `manifest.ts`. Desk steps describe ModuleShell (page bar, tools bar
-with the site picker and swimmer search, account menu, module bar or bottom
+with the site picker and swimmer search, account menu, app rail or bottom
 bar); pool-deck steps describe the deck's own top bar and menu.
 
 ## Updating screenshots
@@ -106,7 +106,7 @@ localhost. Desk pages are captured at 1280 × 800 with the frame's top bar, so
 they show the fin, the page bar and the tools bar; pool-deck images at 1024 and
 the phone overview at 375.
 
-If Playwright is supplied by the workspace runtime rather than the project, set
+If Playwright is supplied by the development environment rather than the project, set
 `HELP_PLAYWRIGHT_MODULE` to its absolute `index.mjs` path, and `CHROME` to a
 Chromium binary if Playwright's own is not installed. `HELP_BASE` points at
 another local sandbox port. Optional `HELP_CAPTURE_ONLY` accepts comma-separated
@@ -117,11 +117,11 @@ screenshot IDs for a targeted refresh. Failures leave a screenshot in ignored
 Review regenerated images for legibility and relevant open controls. Keep all
 example names, contacts and records synthetic, and never point the script at a
 real deployment. `src/lib/help/screenshots.ts`
-attaches images by guide slug, exact step title and optional workspace scope;
+attaches images by guide slug, exact step title and optional desk or deck scope;
 update these anchors when renaming a step. Write captions around the user's task
 and alt text around the visible controls. Never capture a live customer session.
 
-## Verification
+## Tests
 
 `npx tsx --test src/lib/help/help.test.ts` checks catalogue integrity, scope,
 search vocabulary, URL state, authentication boundaries and permitted task links.

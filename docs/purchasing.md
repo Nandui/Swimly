@@ -6,7 +6,7 @@ supplier and per amount by role, then given a purchase order number for the supp
 `BT-OCT-0042`: the site's short code (BT, CF, DO, ...), the month it was approved and a
 running number (owner request, 15 October 2026; orders approved before then keep `PO-BT-00001`).
 
-## Surfaces (`/purchasing`, a Work module on the shared `ModuleShell`)
+## Screens (`/purchasing`, in the shared frame)
 
 - **Orders** (`/purchasing`): what waits for your approval, your own orders, and the
   latest at your sites. The Hub shows orders to approve and rejected ones to change.
@@ -57,7 +57,7 @@ order can be approved by anyone whose role has a rule for its supplier with a li
 above its total, who sees its site (`purchasing.read` there), and who did not raise it
 (`mayApprove`, `approverRoles` in `src/modules/purchasing/shared/rules.ts`). A superadmin may approve
 any amount. Administrators (Admin: Manage, and superadmins) may also approve their own
-orders (owner decision, 15 October 2026); everyone else needs someone else to approve. Approvers need at least Purchasing: View to open the module.
+orders (owner decision, 15 October 2026); everyone else needs someone else to approve. Approvers need at least Purchasing: View to open the app.
 
 ## Numbers
 

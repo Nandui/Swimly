@@ -1,20 +1,22 @@
-# Swimly — design and implementation
+# Turnfin's design: Poolside Clear v2
 
-The staff app uses **shadcn/ui** and a cookie-backed light/dark/system appearance
-preference. **The whole app uses Poolside Clear v2** (owner decisions, 27 September and
-3 October 2026): Plus Jakarta Sans, the fin logo's blue for actions, selection and focus, a
-cool canvas inside a rounded frame, white borderless panels of separate rounded rows, pill
-controls, and a deep pool-night dark mode. Its tokens and system rules live in
-`src/app/theme/poolside.css`, scoped to `.turnfin-app`, which the root layout puts on `<body>`;
-the root layout also loads the typeface. The earlier Docs theme (`brand.css`) is retired:
-no other stylesheet defines theme tokens. The swim school, the home page, Docs, Refunds,
-Training, HR, Rota, Tasks and Admin share one frame, `ModuleShell`; the pool deck and Help use the
-same top bar parts (`tf-*` classes) without the module bar. Sign-in, switch user, confirm it's
-you, the root 404 and error use `AuthFrame`: one 460px white panel on `--pc-outer`, plus a blue
-brand panel beside it on sign-in only (hidden on phones; AUSignIn, AUSwitch, AUConfirm). The
-quick-switch people are `.pc-row` buttons and its PIN pad keys are 56px (`.pc-keypad`). Earlier
-mentions below of Figtree, "Neutral surfaces", sidebars or the Reception Portal's Inter
-theme describe the retired look. Components live in `src/components/shadcn`.
+Every screen in Turnfin, and in the connected products Turnfin Me and the Academy booking
+site, uses **Poolside Clear v2** (owner decisions, 27 September and 3 October 2026): Plus
+Jakarta Sans, the fin logo's blue for actions, selection and focus, a cool canvas inside a
+rounded frame, white borderless panels of separate rounded rows, pill controls, and a deep
+pool-night dark mode, with a cookie-backed light, dark or system appearance. Its tokens and
+system rules live in `src/app/theme/poolside.css`, scoped to `.turnfin-app`, which the root
+layout puts on `<body>`; the root layout also loads the typeface. No other stylesheet
+defines theme tokens. Components live in `src/components/shadcn`.
+
+Every app shares one frame, `ModuleShell`; the pool deck and Help use the same top bar parts
+(`tf-*` classes) without the app rail. Sign-in, switch user, confirm it's you, the root 404
+and error use `AuthFrame`: one 460px white panel on `--pc-outer`, plus a blue brand panel
+beside it on sign-in only (hidden on phones; AUSignIn, AUSwitch, AUConfirm). The quick-switch
+people are `.pc-row` buttons and its PIN pad keys are 56px (`.pc-keypad`).
+
+What each screen is for is in [PRODUCT.md](PRODUCT.md); the code rules, including the owner's
+UI rules, are in [CLAUDE.md](CLAUDE.md).
 
 ## Design rules
 
@@ -23,8 +25,8 @@ theme describe the retired look. Components live in `src/components/shadcn`.
   no inline styles or new colours; every page uses `PageShell` and `PageHeader`. Charts
   use the shadcn Chart and bars `Progress`; sizes from data use the classes from
   `src/components/ui-kit/scale.ts`. Ask the owner before adding a token or component.
-  `npm run lint` enforces them, in Work, Turnfin Me (`apps/me`) and the Academy site
-  (`apps/academy`); see CLAUDE.md, section 14.
+  `npm run lint` enforces them, in Turnfin, Turnfin Me (`apps/me`) and the Academy site
+  (`apps/academy`); see CLAUDE.md, section 13.
 - Compose actual shadcn controls; inspect their installed source before use.
   Buttons, dialogs, alerts, tables, items, inputs, selects, checkboxes, switches,
   radio groups, popovers and command lists already have accessible primitives.
@@ -55,8 +57,6 @@ theme describe the retired look. Components live in `src/components/shadcn`.
   add another page frame.
 - Preserve labelled controls, visible focus, 44px touch targets, readable
   contrast, keyboard operation, reduced motion and wrapping at narrow widths.
-- Every mutation authorizes by a named permission, validates and guards before
-  writing, audits the change atomically, then revalidates. Never check role names.
 
 ## Shared foundation
 
@@ -69,7 +69,7 @@ The logo's blue is the accent for primary actions, selected navigation/tabs,
 checked controls, progress and keyboard focus. Use the shared primary and
 brand tokens, not blue values at call sites. Light mode uses a deeper blue
 with white labels; dark mode uses a lighter blue with dark ink. Selection uses
-a soft blue surface and readable blue text. Workspace surfaces, ordinary hover
+a soft blue surface and readable blue text. Panels, ordinary hover
 states and status colours keep their existing meanings.
 
 Fields (inputs, textareas, select triggers and comboboxes) mark focus with their
@@ -84,8 +84,8 @@ offers System, Light and Dark. Appearance lives in the account menu and on Accou
 page has a separate appearance button.
 Sonner notifications share these tokens; errors remain until dismissed.
 
-The [interaction system](docs/interaction-system.md) records the screen audit
-and shared feedback contract. `motion.css` defines 120ms feedback, 180ms
+The [interaction system](docs/interaction-system.md) is the motion
+and feedback contract. `motion.css` defines 120ms feedback, 180ms
 component and 240ms surface timings with explicit transition properties.
 `LoadingButton` reserves both labels to prevent layout shifts; `IconButton`
 adds keyboard-accessible guidance. Form feedback associates server errors with
@@ -108,19 +108,19 @@ use the record's name (never a child's), and any layout that sets a title also s
 `--pc-outer`, and `--pc-canvas` below 768px; the viewport theme-color repeats that pair.
 
 **The frame** (`ModuleShell`, DESIGN v2, 3 October 2026): on the outer canvas, one rounded
-frame holds a top row (the fin; the module's pages as a pill bar, the current page filled
+frame holds a top row (the fin; the app's pages as a pill bar, the current page filled
 blue; and a tools bar on the right: search, then the working site, "View as" in dev builds,
 and the account menu), then the
-person's modules as an icon rail down the left (each names itself on hover and keyboard focus)
+person's apps as an icon rail down the left (the app rail) (each names itself on hover and keyboard focus)
 beside the page. The bar shows as many page links as fit (measured, `useBarFit`) and puts the
 rest under "More", grouped under their group names; More keeps its short name and is filled
 when it holds the open page. The bar never scrolls: until measured, links that do not fit wrap
-out of sight. A module with one page has no page bar (its scope note is still read out). From
+out of sight. An app with one page has no page bar (its scope note is still read out). From
 768px to 1099px the page bar takes its own row, lined up with the page (past the rail with a
 mouse, at the page's edge on touch). On phones and touch screens the rail becomes a labelled
-bottom bar, at most 480px wide: Home, three modules with the current one always shown, and
-More, or Help itself when no module is left over. Its items share the width equally and a long
-name wraps to two centred lines, never clipped or overlapping; only the current module is blue.
+bottom bar, at most 480px wide: Home, three apps with the current one always shown, and
+More, or Help itself when no app is left over. Its items share the width equally and a long
+name wraps to two centred lines, never clipped or overlapping; only the current app is blue.
 - The working site picker (`ClubSwitcher`, the same on Home, Swim school and the pool deck) shows
   the building, the site's name in full (truncating only past 28 characters) and a chevron; on
   phones it is a 44px building button named "<site>, change site". Its menu is "Working site";
@@ -135,7 +135,7 @@ name wraps to two centred lines, never clipped or overlapping; only the current 
   a sunken fill when highlighted. Help is not in it: it sits in the rail, the bottom bar's More
   and the deck bar. The pool deck uses the same menu without Manage account.
 - `aria-current`: "page" only on the page bar link for the exact page; "true" on a page link
-  that is a parent of it, on a filled More and on the current module in the rail and bottom bar.
+  that is a parent of it, on a filled More and on the current app in the rail and bottom bar.
 - Focus on a filled (current) item is a ring with a surface gap (`::before`, or the bottom
   bar's icon pill) over a transparent outline, so it shows on the blue and in forced colours.
 - One skip link, `.skip-link` in poolside.css: "Skip to content", a 44px blue pill at the top
@@ -145,11 +145,18 @@ name wraps to two centred lines, never clipped or overlapping; only the current 
 
 The pool deck keeps its own top bar (fin, Classes and Swimmers, site, help and the shared
 account menu without Manage account)
-and no module bar; see docs/instructor.md.
+and no app rail; see docs/instructor.md.
+
+**Navigation.** Home (`/`) is the only front door; the old `/start` and `/reception` links
+redirect there. Two kinds of navigation, never mixed: the app rail (the bottom bar on phones
+and touch) lists Home and the person's apps (`useYourModules`); the page bar lists only the
+open app's pages. Both hold navigation only: no action buttons such as "New document"; an
+app's main action sits in its page heading. A page list entry is added in the same change as
+its page, never ahead of it.
 
 ## Screens
 
-Docs at `/docs` is in the shared frame: Overview (titled Docs, like every module),
+Docs at `/docs` is in the shared frame: Overview (titled Docs, like every app),
 Document library, My work, and Reading reports and Administration for those who may open
 them, with a search shortcut in the tools. Every Docs page is built from the shared parts
 (DCOverview, V2Docs, DCWork, DCReports, V2Document, DCEdit, DCNew, DCHistory, DCAdmin):
@@ -163,43 +170,39 @@ writing beside the document details from 1100px; its toolbar is one sunken bar t
 wide screens and becomes two rows on phones, the other tools moving into More. See
 [Docs integration](docs/turnfin-docs.md).
 
-**Home is the hub** (`/`, owner decision 11 October 2026, replacing the 28 September workspace
-home): the page where a person opens the modules their role has. The role's home name as the
+**Home is the hub** (`/`, owner decision 11 October 2026): the page where a person opens the apps their role has. The role's home name as the
 H1, with the date and "<role> at <site>" beneath and a "things need you" tag (or a gray "All
-clear") counting every module. Then one white panel per module group (`MODULE_GROUPS`), titled
+clear") counting every app. Then one white panel per group (`MODULE_GROUPS`), titled
 with the group's name, the panels in two columns from 1024px split so each holds about the same
-number of modules (left column first, in the module bar's order); a role with one group gets
-one full-width panel whose rows go two or three across. Each module is a row with its icon,
+number of apps (left column first, in the app rail's order); a role with one group gets
+one full-width panel whose rows go two or three across. Each app is a row with its icon,
 name, registry description and, when its items need the person, a "N need you" tag beside the
 name and the names and counts of up to two of those queues ("and N more" for the rest), so the
 row says what is waiting before it is opened (redesigned with the `design-taste-frontend` skill,
 11 October 2026). Then the Turnfin Me note (a link when Turnfin Me's address is set). The frame
 has no page bar on Home; the tools are the site picker. The counts and queue names come from each
-module's items (`registerHomeCard`); the items themselves open from the module's starter page. A
-role with no modules sees the "Nothing here yet" empty state. The frame is Home's layout
+app's items (`registerHomeCard`); the items themselves open from the app's starter page. A
+role with no apps sees the "Nothing here yet" empty state. The frame is Home's layout
 (`src/app/(home)/layout.tsx`), so while the figures load `HomeLoading` shows Home's shape: the
-title and date line, then group panels of module rows in the same two columns.
+title and date line, then group panels of app rows in the same two columns.
 
-**Every module opens on its starter page** (`ModuleOverview` through `ModuleStart`,
-`src/components/workspace/module-start.tsx`; 29 September 2026, for every module since 11
-October 2026): the manifest's `href`, where Home and the module rail go. Swim school
-(`/swim-school`), Admin (`/core`) and `/<module>/overview` for Rota, Refunds, Tasks, Incidents, Training,
-Academy, Short courses, HR, Purchasing and Stock. The module's name and its registry description as the H1 and line,
-its quick actions with their icons (the module's first action last, in blue), the day at a
-glance when the module has a timeline (**Classes today**, the shared `TimelineGrid` of the
+**Every app opens on its starter page** (`ModuleOverview` through `ModuleStart`,
+`src/components/workspace/module-start.tsx`): the manifest's `href`, where Home and the app rail go. Swim school
+(`/swim-school`), Admin (`/core`) and `/<app>/overview` for Rota, Refunds, Tasks, Incidents, Training,
+Academy, Short courses, HR, Purchasing and Stock. The app's name and its description as the H1 and line,
+its quick actions with their icons (the app's first action last, in blue), the day at a
+glance when the app has a timeline (**Classes today**, the shared `TimelineGrid` of the
 day's sessions by pool area, every block with its `HOME_SESSION_META` tag; below 1280px the
 "On now and next" list with a "Schedule" link), Today (figure tiles) and Waiting for you
 (counted queues, needing-you rows first, the first one highlighted; its "things need you"
-counts only those rows) side by side in `.pc-grid`, and **Everything in <module>**: one panel
+counts only those rows) side by side in `.pc-grid`, and **Everything in <app>**: one panel
 of its pages as grouped rows (icon, name, one line on what it is for), two columns when wide,
-or an empty state when there is nothing to open at the site. Each module keeps one page list
+or an empty state when there is nothing to open at the site. Each app keeps one page list
 (`features/workspace/pages.ts`, Rota's in `shared/components/pages.ts`, the swim school's
 `NAV_ITEMS`, Admin's `components/core/pages.ts`) that builds both its page bar and this panel,
 and "Overview" is the first link in the bar. The shared pieces live in
 `src/components/home/home-parts.tsx`. Docs keeps its own overview at `/docs` (search, the
-emergency plans and the collections), and Pool deck opens on the deck. The module
-launcher (`/modules`) and the Reception Portal are retired and redirect to `/`; every shell's
-"All modules" link is now "Home". The supplied transparent Turnfin fin logo lives at
+emergency plans and the collections), and Pool deck opens on the deck. The supplied transparent Turnfin fin logo lives at
 `public/brand/turnfin.png`.
 
 Refunds at `/refunds` is in the shared frame with three request views in the page bar
@@ -214,16 +217,16 @@ each status in `src/modules/refunds/shared/types.ts` has its own icon. Finance d
 focus restoration and preserved values after errors. `src/app/refunds/refunds.css` only
 arranges the Refunds screens. See [docs/refunds.md](docs/refunds.md).
 
-Training (`/training`), HR (`/hr`), Rota (`/rota`) and Tasks (`/tasks`, docs/tasks.md) are people- and site-scoped workspaces
+Training (`/training`), HR (`/hr`), Rota (`/rota`) and Tasks (`/tasks`, docs/tasks.md) are people- and site-scoped apps
 built on the shared frame, `ModuleShell` (`src/components/ui/module-shell.tsx`), each
 with its own page bar. `src/app/workspace/module-workspace.css`
 (scoped by `.turnfin-module`, with `module-*` classes) only arranges their screens; a new
-module reuses it rather than copying a stylesheet. The theme comes from `body.turnfin-app`, so
+app reuses it rather than copying a stylesheet. The theme comes from `body.turnfin-app`, so
 every portalled dialog already has it; their form dialogs pass `portalClassName="turnfin-module"`
-to `FormDialog` only so the module layout CSS reaches them, and selects inside them are shadcn `NativeSelect`. Statuses use
+to `FormDialog` only so the shared app layout CSS reaches them, and selects inside them are shadcn `NativeSelect`. Statuses use
 `<Tag meta={…} />` with metas whose icons live in the map itself (`TRAINING_STATUS_META`,
-`QUALIFICATION_STATE_META`, `NOTE_VISIBILITY_META`, `REVIEW_STATUS_META`, `ROTA_FIT_META`). Each person's own side is not on Work at
-all: it is Turnfin Me (`apps/me`), a phone-first app in Poolside Clear v2 with the floating
+`QUALIFICATION_STATE_META`, `NOTE_VISIBILITY_META`, `REVIEW_STATUS_META`, `ROTA_FIT_META`). Each person's own side is not in Turnfin at
+all: it is Turnfin Me (`apps/me`), a phone-first connected product in Poolside Clear v2 with the floating
 bottom bar at every width, 44px controls, and the same tokens and v2 parts (the fin tile, bar,
 bottom bar, panels, rows and tile icons) copied verbatim from `src/app/theme/poolside.css` into
 `apps/me/src/app/globals.css` under `body.turnfin-app`, with one block marked "Me only" (the
@@ -231,6 +234,25 @@ bottom bar at every width, capped to the 720px column, and the safe areas). It i
 plain semantic elements; status tones come from `apps/me/src/lib/meta.ts`, each with an icon. See
 [docs/staff-app.md](docs/staff-app.md),
 [docs/training.md](docs/training.md), [docs/hr.md](docs/hr.md) and [docs/rota.md](docs/rota.md).
+
+Analytics (`/analytics`) is a set of reports (Overview, Classes, Swimmers, Progression,
+Teachers) styled in `src/app/(activities)/analytics/analytics.css`: a period and sites
+choice under the page tabs, figure tiles with a change against the period before, then
+white panels of charts (one axis, thin marks, labelled values), bars and row tables, with
+gold for figures worse than the school. Class and teacher pages drill down from them.
+A shared SegmentedLinks bar, without icons,
+links the reports, Registers, Reception activity and Multiple enrolments. Each older report shows its
+totals as figure tiles, then one panel per section: title, a labelled SearchField
+live filter ("Find an instructor", "Find a staff member") and the table, whose row
+headers sit inside the row. Reception offers daily breakdowns per person. Instructor
+rows filter the dated class detail table; a Tabs pill bar with counts isolates
+outstanding, saved or upcoming classes. Attendance tags use the report metadata map,
+with icons; "Saved by" sits in the attendance cell at every width. Footnotes are one
+caption block at prose width.
+The working site is in the tools bar; the page offers refresh. Loading, empty
+and error states use shared primitives.
+See [metric definitions
+and access](docs/analytics.md).
 
 ### Poolside Clear v2 system rules
 
@@ -331,7 +353,7 @@ line. Multi-line boxes (textareas, notices) use 16px, never a pill.
     at body size with an `AlertCircle` icon. Required fields carry no marker (native
     `required` stays); optional ones pass `optional`, never "(optional)" in the label or
     "Optional —" in the hint. The caption is in the control's `aria-describedby`.
-  - Field labels are blocks in module and Refunds scopes (one rule in poolside.css), so
+  - Field labels are blocks in the `.turnfin-module` and Refunds scopes (one rule in poolside.css), so
     the text sits left above the control.
   - Options with a hint are `ChoiceRow` (`ui/choice-row.tsx`, HRPerson): the radio or
     checkbox inside its label as a 56px `.pc-row`, the name at body/600 and the hint as a
@@ -492,24 +514,25 @@ line. Multi-line boxes (textareas, notices) use 16px, never a pill.
 - Loading: every `loading.tsx` re-exports `PageLoading` (`tiles` for report pages): two
   header bars, then a `.pc-panel` of six `.pc-row` skeletons. Skeleton bars are `--pc-line`
   so they show on the white panel in both modes, and stop pulsing under reduced motion.
-  Nested `loading.tsx` files stay, so a move within a module shows the placeholder again.
+  Nested `loading.tsx` files stay, so a move within an app shows the placeholder again.
   There is no root `loading.tsx`: it would stream every auth redirect and 404 as a 200.
 - Not found: a refused page declines to exist (`src/lib/page-guards.ts`), so "missing" and
   "not in your role" are one state with neutral copy ("This page isn’t available", ask your
-  manager). Each module's `not-found.tsx` renders `PageNotFound` inside its frame (H1 "Page
+  manager). Each app's `not-found.tsx` renders `PageNotFound` inside its frame (H1 "Page
   not found", the empty state in a panel, a primary "Go to Home" or back action);
   Instructor goes "Back to classes", a refund request "Back to requests", a document "Back
-  to the document library". A `notFound()` thrown by a layout (a module the role lacks)
+  to the document library". A `notFound()` thrown by a layout (an app the role lacks)
   lands on the root `src/app/not-found.tsx`: the same content in the sign-in `AuthFrame`.
-- Error: each module's `error.tsx` is `PageError` (H1, an error `Notice`, "Try again"
+- Error: each app's `error.tsx` is `PageError` (H1, an error `Notice`, "Try again"
   calling `retry`, which re-fetches; never `reset`). Refunds adds the "check its history"
-  hint. `src/app/error.tsx` catches Home and module layouts on the `AuthFrame` canvas, and
+  hint. `src/app/error.tsx` catches Home and app layouts on the `AuthFrame` canvas, and
   `src/app/global-error.tsx` brings its own document, typeface and tokens.
 
 **Copy.** For words people read; code and data names (`Club`, `clubId`, `/clubs`,
 permission keys) stay as they are.
-- One name per concept: **site** (never club or working area), **Pool deck**, **HR**,
-  **waitlist**, **No limit** (never uncapped).
+- One name per concept: **Turnfin** (never Turnfin Work), **app** (never module),
+  **site** (never club or working area), **Pool deck**, **HR**, **waitlist**, **No limit**
+  (never uncapped).
 - Create buttons read "Add a <noun>" ("Add a swimmer", "Add a site"). Domain verbs stay as
   they are: Find a swimmer, Book an assessment, Log a refund request, Report an absence.
 - "and", not "&". Commas or colons, not em dashes.
@@ -524,7 +547,7 @@ permission keys) stay as they are.
   "… Try again later." or "Wait a few minutes and try again." Never "Please try again" or
   "Unable to".
 - Empty states: "No <things> yet" or "No <things> match", with no full stop in the title.
-  Subtitles and module descriptions (each module's `manifest.ts`, shown on each overview)
+  Subtitles and app descriptions (each app's `manifest.ts`, shown on each overview)
   end without a full stop.
 - No ellipsis in placeholders. Examples are neutral (Riverside, Sam Murphy); no customer or
   site names, and no site counts, in code.
@@ -533,21 +556,21 @@ permission keys) stay as they are.
 the risk assessment views, comparison, a few editor and print rules); its radii and colours
 are tokens, with literal colours only in print rules. The remaining original rules sit in
 `@layer components.legacy`, below the Docs v2 rules in `@layer components`. `editor.css`
-(document prose and the editor) and `poolside.css` and module CSS stay unlayered on top. A rule that must beat a utility class on a shadcn
+(document prose and the editor) and `poolside.css` and app CSS stay unlayered on top. A rule that must beat a utility class on a shadcn
 primitive belongs in `poolside.css`.
 
 Schedule keeps its booking sheet with sticky level labels and horizontal time scrolling.
-The sheet expands vertically within the workspace's single page scroll. Phones
+The sheet expands vertically within the page's single scroll. Phones
 use Agenda. Circled check means spaces available; circled X means full.
 Attendance completion never determines these icons. Agenda mixes classes and
-dated, non-cancelled assessment sessions chronologically for the sidebar's selected
+dated, non-cancelled assessment sessions chronologically for the working
 site, including every pool area and instructor. Assessment links require the Assessments screen.
 
 Swimmers is a shared directory across sites, with surname sorting, stable
 pagination, member number and age for disambiguation. Search matches names,
 member numbers and contacts. All/Active/Inactive filters and profile return
-links retain validated URL state. Sidebar swimmer search stays available here
-as on every desk page for users with access to Swimmers.
+links retain validated URL state. The tools bar's swimmer search stays available here,
+as on every desk page, for people with access to Swimmers.
 Under its page header, one panel holds the search field, the status filter (counts
 follow the search), the rows and the pager at its foot (V2Swimmers); Classes uses the
 same 16px between its major page sections.
@@ -571,13 +594,13 @@ filters are prominent; advanced filters include Programme, Time, Instructor and
 Pool area. Availability describes capacity. Full class details, enrolment,
 waitlist actions and the desk teaching flow use the same shadcn components.
 
-Assessments uses two pages under its sidebar entry: Upcoming assessments and
+Assessments uses two pages in its page bar entry: Upcoming assessments and
 permission-gated Assessment setup, reached by an outline "Assessment setup" header
 action and returning through its back link (V2Assessments). The only segmented
 bar is the date lenses inside the list panel (Today and upcoming, Past sessions,
 and Cancelled on setup). Session
 details focus on bookings and outcomes; dates, capacity and parent publishing
-live on the session's setup page. Awaiting enrolment has its own sidebar entry. The searchable, paginated list combines pending placements
+live on the session's setup page. Awaiting enrolment has its own page bar entry. The searchable, paginated list combines pending placements
 and class waitlists, grouping by swimmer and programme with each requested class
 visible. It offers family contacts, matching classes for placements and confirmed
 waitlist promotion when a space is available. Both lists re-home secondary
@@ -594,7 +617,7 @@ expanded competency list, only when every competency at that level is achieved
 and saved for that swimmer. Unsaved marks show a save reminder instead. Awaiting
 move status and Undo readiness stay within that swimmer's list, with
 confirmations and inline save errors.
-See [assessment workspace](docs/assessments.md) for queue rules and verification.
+See [assessments](docs/assessments.md) for queue rules and verification.
 
 Both awaiting views show each swimmer's latest contact outcome, recorder and
 next follow-up date, including overdue wording. Follow-up history opens a
@@ -622,14 +645,14 @@ accounts, an exact email search followed by account details and a reasoned
 suspend/reactivate dialog. Assessment session setup includes Parent booking with
 publication status, Ireland-time deadline editing and unpublish. The controls
 use shared form feedback and shadcn status tones; each write records a reason.
-These controls remain in the desk workspace. See [staff parent controls](docs/parent-staff-controls.md).
+These controls stay on the desk. See [staff parent controls](docs/parent-staff-controls.md).
 
 ## Forms, search and confirmation
 
 The authenticated help centre owns its own v2 frame at `/help` (HPIndex, HPArticle): the
 rounded frame with no rail, a top bar with the fin, "Help centre" and the way back ("Back to
 app", or "Back to classes" for Instructor; icon-only on phones). Appearance follows the
-setting from the account menu. The module rail, the bottom bar's More and the deck bar open
+setting from the account menu. The app rail, the bottom bar's More and the deck bar open
 Help in a new tab; the account menu has no Help. Instructor opens `/help/instructor`, with
 teaching-only guides. The index is a search panel with a visible label, topics as compact
 rows with counts (the current one soft blue), common tasks as a grid of rows with tile
@@ -654,7 +677,7 @@ like the bare shadcn controls.
 SearchablePicker uses Command/Popover for locally available option sets.
 StudentSearch asks the server after a 200ms debounce, excludes already chosen
 swimmers, respects the active/inactive scope and drops stale results. It sends
-only the selected ID in the parent form. Workspace search uses CommandDialog.
+only the selected ID in the parent form. The tools bar's search uses CommandDialog.
 
 FormDialog keeps fields mounted after failure, scrolls the fields with actions
 visible, blocks duplicate submits and retains server-requested confirmation
@@ -663,469 +686,6 @@ refuses something passes `destructive` (red submit); when "Cancel" would echo th
 ("Cancel training"), `cancelLabel` renames the dismiss ("Keep it"). ConfirmAction uses
 AlertDialog with rich descriptions and closes only after a successful action.
 Image fields preview locally and upload only with the parent form's Save.
-
-### Roles are data, permissions are code
-
-This started as three fixed tiers — admin, manage, view — mapped from a `Role`
-enum, and that held for exactly as long as the club had three kinds of person.
-It stopped holding when a role was wanted that could edit the timetable but not
-accounts, which is neither "changes the rules" nor "changes the data". The
-honest options were a fourth tier and then a fifth, or roles as data. Roles won.
-
-**The catalogue is code.** `src/lib/staff/permissions.ts` lists every
-permission the app has to give, because a permission exists only when a screen
-or an action asks for one. There is no Permission table: it would be a second
-copy of that list, kept in step by hand, with nothing to catch it drifting.
-`StaffRole.permissions` is a plain string array of keys from it, and a key that
-is no longer in the catalogue is ignored rather than fatal — which is what
-makes deleting a permission a safe edit.
-
-**Reads respect permissions.** Each page requires the permission that opens it;
-setup pages and the activity log also require their named permissions. Mutations enforce
-their own permissions regardless of which controls are visible. Instructor
-records additionally require a confirmed start for that dated class.
-
-**Administrators always have full access** (owner confirmed 13 September 2026).
-Holding both `staff.manage` and `roles.manage` defines administrator access;
-neither permission alone does. `expandPermissions` and `visibleScreens` resolve
-the full current catalogues, so existing administrators receive newly added
-capabilities without a data update. Names and the legacy `User.role` enum never
-decide this. Role previews use the previewed grants, and demotion or deactivation
-takes effect on the next request. The role editor shows inherited access and
-keeps the two management grants editable. Their removal returns to the role's
-stored selections. Instructor's separate navigation and dated start checks
-still apply. Desk landing links filter workspace destinations after expansion.
-
-**Nothing may leave the app without a keyholder.** `staff.manage` and
-`roles.manage` are load-bearing — lose either across every active account and
-the way back in is a database console, because `prisma/seed.ts` declines once
-an admin exists. `src/lib/staff/keyholders.ts` refuses any edit that would do
-it, by computing what the world would look like afterwards rather than by
-counting role names: keyholders can hold administrator access or separate grants.
-It deliberately sits outside a `"use server"` file, because every export from
-one of those is an endpoint the browser can call.
-
-**Nothing refers to a role by name.** Not the code, not the nav, not the seed.
-That is what lets a club rename or delete every role the app shipped with.
-
-**Screens are menu entries, opened by a permission.** Each top-level page in
-`src/lib/staff/screens.ts` names the one permission that opens it, and a role's
-levels give permissions (docs/how-turnfin-works.md). Nothing stores screens.
-Every page under the shell opens with `screenPage(screen, permission?)` and
-404s for anyone without that permission; a link into another screen asks
-`canSee` first. That is how a swim teacher (Pool deck: Teach) sees the
-instructor view and nothing else. Account is never on the list because it is
-always there. The keyholder guard keeps at least one active account holding
-`staff.manage` and one holding `roles.manage`.
-
-**Home is the only front door.** `/` is Home, the hub; old
-`/start`, `/reception`, `/reception-portal` and `/modules` links redirect to it.
-**Two kinds of navigation, never mixed.** The module rail (bottom bar on phones and touch)
-lists Home and the person's modules (`useYourModules`); the page bar lists only the open
-module's pages. Both hold navigation only: no action buttons such as "New document"; a
-module's main action sits in its page heading. The pool deck keeps its own top bar (in the
-shared frame, without the rail or bottom bar).
-
-Analytics (Swim school) is a set of reports (Overview, Classes, Swimmers, Progression,
-Teachers) styled in `src/app/(activities)/analytics/analytics.css`: a period and sites
-choice under the page tabs, figure tiles with a change against the period before, then
-white panels of charts (one axis, thin marks, labelled values), bars and row tables, with
-gold for figures worse than the school. Class and teacher pages drill down from them.
-A shared SegmentedLinks bar, without icons,
-links the reports, Registers, Reception activity and Multiple enrolments. Each older report shows its
-totals as figure tiles, then one panel per section: title, a labelled SearchField
-live filter ("Find an instructor", "Find a staff member") and the table, whose row
-headers sit inside the row. Reception offers daily breakdowns per person. Instructor
-rows filter the dated class detail table; a Tabs pill bar with counts isolates
-outstanding, saved or upcoming classes. Attendance tags use the report metadata map,
-with icons; "Saved by" sits in the attendance cell at every width. Footnotes are one
-caption block at prose width.
-Site selection stays in the sidebar; the page offers refresh. Loading, empty
-and error states use shared primitives.
-It inherits the workspace spacing and blue accent. See [metric definitions
-and access](docs/analytics.md).
-
-**The deck's permissions are cut fine on purpose** — taking your own
-attendance, taking over a colleague's class, marking competencies, completing
-a level, running an assessment session — because the club wanted to build an
-instructor role that does exactly some of those and not the rest. Each is a
-different act with a different record, so each is its own key, and the
-implication map keeps the broader ones (`attendance.markAny`,
-`progression.override`) granting the narrower.
-
-Two things stay **scoping rules inside actions** rather than permissions:
-
-- **Whose register.** `attendance.mark` marks the classes you teach;
-  `attendance.markAny` marks anybody's. Which classes are *yours* is a fact
-  about the row, not about you, so it lives in `canMarkRegister` in
-  `src/modules/activities/shared/attendance/access.ts`.
-- **Completing a level with gaps** is `progression.override`, and needs a
-  reason. Placing a swimmer at a level they have not earned is *not* — see
-  below.
-
-Some permissions contain smaller ones (`attendance.markAny` grants
-`attendance.mark`). That closure lives in one map in the catalogue, not at each
-call site, because the call site that forgets is the one that quietly locks
-somebody out.
-
-Guard the same rule in three places, because they answer different questions:
-the **nav** hides what you can't reach (`visibleNavItems`), the **page** hides
-the button (`src/lib/page-guards.ts`, which 404s rather than erroring), and the
-**action** refuses the call. Only the last one is security.
-
-The session is re-read from the database on every `auth()` rather than trusted
-from the token, so deactivating an account, moving somebody to another role, or
-un-ticking a permission on a role twelve people share all take effect
-immediately instead of at token expiry. It costs one indexed query. Nothing but
-the subject is minted into the JWT, for the same reason.
-
-### Anything the size of the club is searched, not sent
-
-The swimmer picker asks the server for the twenty that match what has been
-typed (`src/modules/activities/shared/students/actions/search.ts`), debounced, and never receives the
-roll. Two pages once shipped all 1,156 swimmers so that one could be chosen;
-`/students` once shipped 500 so that they could be scrolled. The rule that
-falls out: **a list that grows with the club goes behind a server search or a
-page, never into props.** Classes are 134 and grow by a handful a term, so they
-still travel as options — the moment that stops being true, they get the same
-treatment.
-
-A read that a client component calls lives in `actions/` with `"use server"`,
-because that is the only door a client component has to the database. It still
-authorizes, and its comment says why it is where it is.
-
-### The timetable opens on today
-
-`/courses` with no `day` in the URL shows today's classes. The whole week is
-`day=any`, and the filter bar writes that value rather than deleting the key
-when the chip is cleared — an absent key means today, so deleting it would snap
-back. Every page has a `loading.tsx` above it (`PageLoading`, at each module
-segment) so the shell paints before the data does.
-
-### The nav holds only pages that exist
-
-A sidebar advertising routes nobody has built reads as a broken app, so add the
-item in `src/modules/activities/features/workspace/server/nav.ts` in the same change as the page.
-
-### Auth is credentials-first, and swappable
-
-Sign-in verifies an email and a bcrypt hash against the `User` table. Nothing
-downstream knows that: every screen and action asks for a permission, so
-moving to an email link or SSO is an edit to the `providers` array in
-`src/auth.ts` and nothing else.
-
-Failure is one sentence for every reason — wrong password, unknown address,
-deactivated account. Saying which half was wrong turns the form into a way of
-discovering who has an account.
-
-`DEV_AUTH_BYPASS=1` signs you in as the first active admin **in the database**,
-and is gated on `NODE_ENV !== "production"` as well as on the flag. It hands
-out a real account rather than a fabricated one, so audit rows point at someone
-who exists and permission checks behave exactly as they will in production.
-
-### Deactivate, don't delete
-
-`User.isActive` is the off switch. It is reversible, it keeps the audit trail
-readable, and a deactivated account cannot sign in. Deleting a person is a
-different and rarer decision; `AuditLog.actorId` is nullable and `actorName` is
-denormalised so the log survives it either way.
-
----
-
-### One app, several clubs
-
-LeisureWorld shares swimmer identity, contacts, curriculum and earned progress
-across its sites. A Club owns classes and dated assessment sessions. The
-cookie-backed working site filters the timetable; it does not restrict swimmer
-search or profile access. Switching sites keeps the current page and selected
-swimmer. Staff permissions continue to apply by name.
-
-Enrol, transfer and move-up pickers offer a site filter, list both sites and
-name the destination. A transfer locks both classes and the swimmer, rechecks
-capacity, ends the old enrolment and creates a new history row. Cross-site
-transfers write activity at both the source and destination. Attendance stays
-with the class and date where it happened.
-
-Reception is retired. Its former screen key is ignored and its former home
-uses the normal accessible-screen fallback. The old route redirects to the
-selected swimmer or Swimmers list only with existing Swimmers access;
-otherwise it uses that same home fallback. No role gains another screen.
-
-Original Student.clubId and Programme.clubId values remain as registration
-provenance. Additive sharedWithId links on Programme, Level, Competency and
-AssessmentType retain historical IDs while providing one shared catalogue.
-The migration links only exact normalized names within the same shared parent;
-unique definitions remain available. Names do not determine equivalence at
-runtime, so renames preserve progress. Catalogue writes resolve old IDs and
-check shared name uniqueness under one transaction lock.
-
-Marks recorded against original copies resolve to the latest updated judgement,
-retaining the assessor, assessment date and note. Completion snapshots remain
-unchanged and count across equivalent levels. All progress mutations lock the
-swimmer; clearing a mark or revoking completion handles every original copy
-and is audited. No swimmer records are merged by name. Programme copying is
-retired because every site uses the shared catalogue.
-
-[docs/shared-sites.md](docs/shared-sites.md) records the upgrade and verification procedure.
-
-## The domain, and the four decisions holding it up
-
-Programmes hold ordered levels; a level is defined by the competencies a
-swimmer has to pass; a course teaches one level at a fixed weekly slot; a
-student is enrolled into a course; a register is taken on the pool deck; and a
-level is completed when everything is signed off and somebody confirms it.
-
-**1. "Current level" belongs to a (student, programme) pair, never to a
-student.** A swimmer can be in Learn to Swim and in Squad at once, so a screen
-saying "Ava — Level 4" without saying which ladder is guessing. `Enrolment`
-therefore **pins** `levelId` and `programmeId` at enrolment time. They are not a
-cache of the course's level: they are the level the swimmer was *placed* at,
-which must not move when a course is re-badged. Everything else — eligibility,
-graduation, the current rung — is derived in `src/modules/activities/shared/progression/rules.ts` and
-stored nowhere.
-
-**2. Curriculum rows are archived, never deleted** (`archivedAt`, deliberately
-diverging from `User.isActive`). For a competency, *when* it was retired
-answers "was this required when Ava was assessed?". And one rule keeps a
-curriculum edit from rewriting the past: **`LevelCompletion` is the truth for
-"done"**, so eligibility is only ever computed for swimmers who have not
-completed. Otherwise adding a competency would retroactively un-complete a
-whole cohort. Each completion also freezes `competenciesAchieved` /
-`competencyCount`, so months later you can still tell whether it was earned.
-
-**3. Capacity is held by a row lock, not a re-count.** An interactive
-transaction that merely counts again does not fix the race — at READ COMMITTED
-two transactions both read 11 and both insert. `withCourseSeat` in
-`src/modules/activities/shared/enrolment/seat.ts` takes `SELECT … FOR UPDATE` on the
-course row first, which also makes the "already enrolled here?" check
-race-free. That is why there is no unique constraint on
-`(studentId, courseId)` — and why repeating a level, the most ordinary thing a
-swim school does, is possible at all. **Nothing else may create an ACTIVE
-enrolment.** A second write path that forgets the lock silently restores the
-race.
-
-**4. Classes are rolling and weekly.** Attendance is keyed on
-`(course, date, student)`: the weekday must match, the date cannot be in the
-future and the swimmer must belong on the register. Dated cancellations now
-live deliberately in `ClassCancellation`, not in a note or on the recurring
-class. The record freezes the class details and affected roster for billing.
-Cancellation, class starts and teaching saves share the course lock; a
-cancelled occurrence cannot accept later teaching saves. `ClassNote` remains
-free text. See [Duty manager](docs/duty-manager.md).
-
-### Legend agreement confirmation belongs to the class place
-
-New enrolments have an unselected, explicit Legend agreement question. Pending
-agreements do not block enrolment. Existing active places read **Needs checking**;
-never imply that missing information means done. The site-scoped Legend agreements
-page shows one row per place, with a named confirmation and timestamp. Moves carry
-the prior state and attribution. The page follows Swimmers and Classes: full-width
-search, a Neutral segmented status filter, bordered directory with a muted header,
-compact aligned rows and blue confirmation buttons with check icons. On phones,
-the class details and agreement action stack within the swimmer's row. Confirming
-uses `enrolment.manage` and the course lock, and writes the audit row atomically.
-See [the workflow](docs/legend-agreements.md).
-
-### Placement needs `enrolment.manage`, with a reason on the row
-
-Placing a transfer-in or an adult beginner out of sequence is routine and
-weekly. Putting it behind a rarer permission would produce one of two things —
-the front desk gets given that permission and it stops meaning anything, or
-somebody fakes a completion to get past the guard and the progression data
-starts lying. So `enrolStudent` takes a `placementReason` and stores it **on
-the enrolment**, not only in the audit log, because reading the log needs
-`activity.view` and the instructor on the deck is exactly who needs to know why
-this child is in Level 5.
-
-### Moving up is gated on the completion, not on the last tick
-
-All competencies passed makes a swimmer **eligible**; a person still confirms
-they are done. "Move up to <next level>" only appears once that confirmation
-exists, and it appears in both places completion happens — the student profile
-and the class assessment screen.
-
-Offering it a step earlier would walk straight into the placement guard and
-demand a reason for something the swimmer had in fact earned. The move itself
-reuses `transferEnrolment`, so the old place closes and a new one opens rather
-than the enrolment being re-pointed: attendance hangs off
-`(course, student, date)`, and rewriting the enrolment would orphan every
-register they were already on.
-
-### Teaching is confirmed, shared and recorded
-
-Every instructor confirms Start class before opening a class on the deck,
-including their own scheduled classes. Confirmation creates a ClassCover row
-for that class and date and an audit entry in the same course-locked
-transaction. The unique course/date key preserves the original start. Repeated
-and simultaneous confirmations do not overwrite it or duplicate its audit.
-All authorised instructors can open a started class, including an existing
-session whose original instructor's account has been deleted.
-
-The deck shows Start class or Open class. Attendance saved or to take is a status
-Tag (`ATTENDANCE_RECORD_META.taken` / `notTaken`, the same words on the desk); shared
-sessions identify who started them. Each
-save records its actual actor. Attendance, competencies and completion recheck
-the dated start and permissions under the course lock; the class page checks
-the start before loading swimmers. Register revision checks still prevent stale
-overwrites. Desk transcription retains attendance.markAny without granting
-Instructor screen access.
-
-### Batched writes, on purpose
-
-The register and the assessment checklist each save as **one action carrying
-the whole class**. Next dispatches Server Actions one at a time per client, so
-a save per tap would queue on poolside wifi. Batching also means a dropped
-connection leaves the marks in the tab and retryable, and the register mirrors
-itself, including its class note, into `localStorage` so drafts survive a closed
-tab when browser storage is available. A warning explains when it is not.
-Register drafts are scoped to class and date; deck checklists remount when the
-class, date or level changes, while refreshes of the same record preserve edits.
-Hung saves restore a retry path after 15 seconds; a timeout does not cancel a
-server action, so the UI says the save is unconfirmed. Neither writes an
-audit row when nothing changed — the existing rows have to be read to build the
-diff anyway, so a "did that save?" re-submit costs nothing.
-
-Attendance saves also carry the revision the instructor opened. That revision
-is derived from the class/date, saved marks and class note; it needs no schema
-column. The action reads and checks it under the same course lock used for
-enrolment and cover, then writes the register and audit together. If another
-person saved a different version, the action returns the saved values without
-writing. A focused region with a warning `Notice` compares the saved register with the draft;
-the instructor can use the saved register or explicitly save their version.
-A second intervening save is checked again. An identical retry succeeds without
-rewriting records or adding audit rows.
-
-Version 2 browser drafts keep that original revision through refreshes and
-reloads. Older drafts remain readable, but need the comparison step before they
-can replace a saved register. Discarding a draft explicitly loads the saved
-version and refreshes the roster.
-
----
-
-## Placeholders to replace
-
-- **The metadata description** in `src/app/layout.tsx` is a placeholder
-  sentence. Replace it when the product has its own.
-- **`SCHOOL_TIMEZONE`** in `src/lib/format.ts` is `Europe/Dublin`. Everything
-  that asks "what day is it?" asks it there, not the server.
-- **The seeded curriculum** in `scripts/seed-curriculum.ts` is a plausible
-  starting point, not a recommendation. Rename it to what the club teaches.
-
----
-
-## Where things live
-
-Turnfin is split into Core, Work modules and Activities; see
-[docs/architecture.md](docs/architecture.md) for the rules and the lint that
-enforces them.
-
-```
-src/app/(core)/                Core (Admin): Staff, Roles, Sites (/clubs), Activity
-src/app/account/               the person's own Account, in the Home frame (Home current)
-src/app/(activities)/          the Swim school desk shell and its pages
-src/app/(instructor)/          the Swim school pool-deck workspace
-src/app/sign-in/               the front door, outside the shell
-src/modules/activities/       the swim school: features/ (students, courses, enrolment, ...)
-                               and shared/ (what two or more features use)
-src/modules/<id>/              each Work module (Docs, Refunds, Training, HR, Rota,
-                               Purchasing, Academy, Tasks): features/ and shared/
-src/app/modules.ts             the one list of modules (each module's manifest.ts)
-src/modules/registry.ts        Core's registry: groups, menus, Admin's description
-src/modules/contributions.ts   what modules add to Core pages, without imports
-src/components/ui-kit/         shared shadcn compositions — tag, page-header,
-                               empty-state, page-loading, page-state, segmented-links
-src/components/ui/             shadcn compositions for native form submission
-src/components/                Core feature components
-src/lib/<domain>/data/         reads  — plain async functions, no "use server"
-src/lib/<domain>/actions/      writes — "use server", one exported action per verb
-src/lib/<domain>/constants.ts  one metadata map per enum, plus domain vocabulary
-src/lib/authz.ts               can(), and the require* guards
-src/lib/staff/permissions.ts   the permission catalogue, and what each means
-src/lib/staff/keyholders.ts    the guard that keeps somebody able to get in
-src/lib/page-guards.ts         the page-level versions, which 404 rather than throw
-src/lib/audit.ts               logAudit — pass the tx client when it must be atomic
-src/lib/action-result.ts       the result type and the six-step action shape
-src/lib/format.ts              the pinned formatters; the only place a date is built
-scripts/                       one-off work, run with tsx, held to the app's rules
-```
-
-The domains, and who may write to each:
-
-```
-curriculum/    Programme, Level, Competency          curriculum.manage
-courses/       Course                                courses.manage
-students/      Student                               students.manage
-enrolment/     Enrolment, waitlist, the seat lock    enrolment.manage
-attendance/    AttendanceRecord, ClassNote           attendance.mark / .markAny
-progression/   CompetencyResult, LevelCompletion     progression.assess / .override
-               rules.ts — pure, neither read nor write
-activity/      the audit log                         activity.view
-staff/         User, StaffRole                        staff.manage, roles.manage
-```
-
-Reads and writes stay in separate files so a read cannot quietly grow a write.
-`rules.ts` is neither: every screen that asks "can she move up?" asks it there,
-so the app has one answer rather than one per page.
-
-### The shape of a mutating action
-
-Authorize, validate, guard, write, audit, revalidate — in that order. A guard
-that runs after the write has already lost, and an audit entry written before
-the write can describe something that never happened. The full worked shape is
-in the comment at the top of `src/lib/action-result.ts`. Persist the mutation
-and its audit entry through the same transaction. Capacity and keyholder guards
-must also run under their shared locks, after reading the current rows.
-
-Errors a person can fix are return values (`{ ok: false, error }`), rendered
-next to the field. Throwing is for "this should not have been possible".
-
-### Scripts are part of the product
-
-Idempotent, self-disabling, audited, and deliberate when destructive.
-`prisma/seed.ts` is the reference implementation: it declines once an admin
-exists, matches on the email so a second run updates rather than duplicates,
-and writes an audit row for the account it creates.
-
----
-
-### Instructor workspace boundary (11 September 2026)
-
-The owner specified Instructor as a dedicated tablet experience on the pool
-deck, isolated in both directions from desk work. Its route group is
-`src/app/(instructor)/instructor/`, outside the desk layout. Its shadcn
-frame contains classes, site switching, appearance and sign-out. The entire
-Instructor surface now uses shadcn Button, Item, Dialog, RadioGroup, Select,
-Collapsible, Alert, Label and Textarea. The shared teaching forms retain drafts,
-retry handling, audit and concurrent-save comparisons. Scoped CSS makes every
-pool-deck control at least 44px, including browsers reporting a mouse. The
-independent Neutral ui-* tokens follow the shared theme provider.
-
-The competency step defaults to expandable swimmer rows. A 44px By swimmer /
-By competency control switches the layout while retaining marks, the expanded
-swimmer and the selected competency. By competency uses previous/next controls
-and swimmer mark rows. Both layouts share the attendance
-filter, draft recovery and one Save marks bar. Selected view uses the blue
-selection tokens; the desk's competency layout remains unchanged.
-
-Class overview sits alongside the attendance and competency steps. The owner
-specified a simple bento grid of totals: one shadcn Card for each competency,
-showing its full name and “Y out of Z achieved”. Use two columns from 360px and
-three from 1024px, with one column on narrower screens. Neutral bordered cards
-have no shadow, icon, disclosure or swimmer list; numbers use tabular figures.
-Cards grow to fit long names and require no horizontal scrolling. A brief note
-explains that the totals use saved marks and include absent swimmers.
-
-The Instructor class page has its own server loader. It checks site, active
-class and the confirmed class/date claim before reading attendance or swimmer
-competencies. It never offers desk class or swimmer profiles, even to accounts
-granted both screen sets. Start confirmation is required for scheduled and
-cover instructors alike. Only the confirmed teacher can open or save the class
-in this workspace. Legacy desk actions also reject deck-only callers without
-the teaching context. Desk transcription remains available in its own
-workspace. Old deck bookmarks redirect to the isolated route, preserving date
-and step. Development-only role preview remains a testing tool.
-
-See [docs/instructor.md](docs/instructor.md) for the flow and verification.
 
 ## Checking your work
 
@@ -1142,5 +702,5 @@ See [docs/instructor.md](docs/instructor.md) for the flow and verification.
   touch targets. Secondary columns wrap or collapse.
 - Dialogs trap/restore focus, preserve values on failure and prevent duplicate
   submissions. Native FormData, required fields and reset still work.
-- Instructor stays isolated; permissions, audit, claims and capacity guards hold.
+- The pool deck stays isolated; permissions, audit, claims and capacity guards hold.
 - Typecheck, lint, relevant tests, browser checks and an optimized build pass.

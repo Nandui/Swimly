@@ -3,7 +3,7 @@
 Staff files for the people a role covers: their details (position, manager,
 departments, employment, contact), HR notes and performance reviews. Staff
 details are HR's, not Admin's (owner decision, 8 October 2026): Admin keeps only
-access (sign-in, role, sites). On screen the module,
+access (sign-in, role, sites). On screen the app,
 its H1, its bar label and its permission group are all called "HR" (owner-approved
 mockups said "HR and performance", which does not fit a phone bar slot). It is the most
 sensitive part of Turnfin, so it is built with every protection the platform
@@ -21,7 +21,7 @@ HR records live in their own Postgres database, like Docs:
 - Schema `turnfin_hr`, migrations in `hr-database/migrations/NNN_name.sql`,
   applied in order with checksums by `scripts/migrate-hr.ts` at the end of a
   **production** build, and only when `HR_DATABASE_URL` is set.
-- **Unset means HR is switched off**: the workspace says HR isn’t switched on yet and to ask a Turnfin administrator,
+- **Unset means HR is switched off**: the HR app says it isn’t switched on yet and to ask a Turnfin administrator,
   Turnfin Me says it is not set up, and nothing else is affected.
 - The HR database stores ids and the names needed to read a record later. It
   never stores permissions: who may see what is decided in the main database by
@@ -34,13 +34,13 @@ subject's user id.
 ## The personal file
 
 The HR record is the person's personal file. Besides notes and reviews it shows
-what other modules keep about them, through the personal-file seam
+what other apps keep about them, through the personal-file seam
 (`registerPersonFileSection` / `personFile` in `src/modules/contributions.ts`):
 today Rota's planned activities, **Absences and returns to work** and changes to
 their activities (docs/rota.md), Training's open assignments, and Incidents'
 **Incidents and injuries at work** (docs/incidents.md). Those records stay
-in their module's database; HR reads them inside the same logged read as the
-record, and the subject export includes them as `personalFile`. A new module
+in their app's database; HR reads them inside the same logged read as the
+record, and the subject export includes them as `personalFile`. A new app
 adds its part by registering a section; HR does not change.
 
 ## Capabilities (all restricted)
@@ -89,7 +89,7 @@ switch on a shared device, or a password older than 15 minutes, goes to
 ## Turning it on
 
 1. Provision a separate Postgres database for HR.
-2. Attach it to the Work project (`swimly-crm`) through Vercel's Neon
+2. Attach it to the Vercel project (`swimly-crm`) through Vercel's Neon
    integration with the prefix `HR_DB`, for **Production only** (a preview
    must never reach production HR records), or set `HR_DATABASE_URL` (and
    `HR_DIRECT_URL` if the runtime URL is pooled) in the production environment.

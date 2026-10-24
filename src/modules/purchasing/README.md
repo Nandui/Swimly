@@ -11,7 +11,7 @@ The rules for the screens and approvals are in [docs/purchasing.md](../../../doc
 
 `shared/` holds what both features use: approval and money rules (`rules.ts`, pure, tested in `rules.test.ts`), the access check (`access.ts`), form helpers with page revalidation (`forms.ts`), whether emails to suppliers are on (`settings.ts`) and a supplier's picture or initials (`supplier-picture.tsx`, used by the supplier pages and the order form).
 
-## Public API (index.ts)
+## Front door (index.ts)
 - None. Nothing outside Purchasing calls into it; routes use the feature entries.
 
 ## Data owned
@@ -24,7 +24,6 @@ Declared in `prisma/schema/purchasing.prisma` (table names kept, ADR 0002):
 - `PurchaseOrderEmail` — every email of an approved order: to the supplier or a test to the sender, sent or failed.
 - `PurchasingSettings` — per organisation, whether approved orders may be emailed to suppliers (off until Manage turns it on), and who is copied on them.
 
-Purchasing also reads Core's `User`, `Club` and `StaffRole` directly (sites, the approver's role, role names). Moving those reads onto Core functions is phase 3 of [MIGRATION.md](../../../docs/architecture/MIGRATION.md).
 
 ## Events
 - Emits: none.

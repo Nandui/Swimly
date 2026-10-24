@@ -56,7 +56,7 @@ no em-dashes in UI copy) apply to any screen. The others:
 - `full-output-enforcement`: complete, untruncated code output.
 - `design-taste-frontend-v1`: the old version, for reference only.
 
-**They never overrule** the UI rules in [CLAUDE.md](CLAUDE.md) section 14 (Fernando's
+**They never overrule** the UI rules in [CLAUDE.md](CLAUDE.md) section 13 (Fernando's
 hard rules, 20 October 2026: shadcn components only, no arbitrary Tailwind values, no
 inline styles or new colours, every page in `PageShell` and `PageHeader`). They may
 still shape the house style in [DESIGN.md](DESIGN.md) within those rules; say which

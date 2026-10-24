@@ -162,7 +162,7 @@ function ModuleRail({ current }: { current: string }) {
     </Link>
   );
   return (
-    <nav className="tf-rail" aria-label="Modules">
+    <nav className="tf-rail" aria-label="Apps">
       <div className="tf-rail-group">{item('home', '/', 'Home', House)}</div>
       {groupFrameModules(modules, groups).map((group) => (
         <div key={group.key} role="group" aria-label={group.label} className="tf-rail-group">{group.modules.map((m) => item(m.id, m.href, m.name, m.icon))}</div>
@@ -189,7 +189,7 @@ function ModuleBottomBar({ current }: { current: string }) {
     </Link>
   );
   return (
-    <nav className="tf-bottom" aria-label="Modules">
+    <nav className="tf-bottom" aria-label="Apps">
       {item('home', '/', 'Home', House)}
       {chosen.map((m) => item(m.id, m.href, m.name, m.icon))}
       {rest.length === 0 ? (

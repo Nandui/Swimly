@@ -1,4 +1,4 @@
-# Managing the parent app from the staff workspace
+# Managing the parent app from Turnfin
 
 The staff interface uses the existing `/api/parent-admin/v1` endpoints with
 staff cookies. It never copies parent credentials into the browser. The in-app
@@ -43,7 +43,7 @@ The signed-in help centre includes illustrated guides for these tasks.
 No real family approvals, account suspensions or assessment publications were
 performed during development. A family pilot remains a separate rollout task.
 
-## Isolated verification
+## Tests and previews
 
 `src/modules/activities/features/parents/server/admin.test.ts` uses the generated Prisma client against PGlite,
 with synthetic staff authentication and records. It exercises permission and
@@ -62,4 +62,4 @@ Help's guide screenshots of these controls come from the sandbox through
 Check the full parent-to-staff request flow in a branch preview with a synthetic parent account.
 
 Roll out the staff backend and migration before deploying the parent frontend.
-Development and production share a database: do not use a migration reset or seed.
+Never reset or seed a real database.

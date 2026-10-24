@@ -11,7 +11,7 @@ The rules for the screens, statuses and emails are in [docs/coinage.md](../../..
 
 `shared/` holds what two or more features use: the statuses, denominations and next steps (`types.ts`), validation and transitions (`rules.ts`), the access check (`auth.ts`), the locked, audited mutation and who is emailed (`service.ts`) and the visibility rule (`data.ts`).
 
-## Public API (index.ts)
+## Front door (index.ts)
 - `coinageStatuses` — each status's label, tone and icon. Used by Core's status-metadata test.
 
 ## Data owned
