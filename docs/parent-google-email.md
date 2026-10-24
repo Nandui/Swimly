@@ -10,6 +10,17 @@ Google Workspace sending and parent sign-in are live in Vercel Production.
 One owner-approved code was sent through the live parent app and its arrival in
 the `info@leisureworldcork.com` inbox was verified on 14 September 2026.
 
+## Assessment booking confirmations (24 October 2026)
+
+The same mailbox and settings also send "Assessment booked" to the family after
+every assessment booking: the parent who booked in the parents app, or, for a
+desk booking, the swimmer's contact email (the linked parent accounts when it
+has none). It names the child (first name only), the assessment, the day and
+time, the site and location, and the site's reception phone from Admin > Sites.
+It is best effort after the booking commits, only the Production deployment
+sends it (previews run on real records), and bookings by an account marked as
+system send nothing. Code: `src/modules/activities/shared/assessments/confirmation-email.ts`.
+
 ## Setup status — 14 September 2026
 
 - Company Google Cloud project: **Bookly Parent Email** (`bookly-parent-email`),

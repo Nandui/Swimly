@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (a module, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 1.70.0 · 24 October 2026 · Families get an email when an assessment is booked
+
+- When a swimming assessment is booked, the family now gets a confirmation email straight away. It doesn't matter whether they booked it themselves in the parents app or reception booked it for them.
+- The email gives the child's first name, which assessment it is, the day and time, the centre (and the pool or room, if one is set), and asks them to arrive 10 minutes early, ready to swim.
+- It tells them to phone reception to change or cancel, using the centre's reception phone number from **Admin > Sites**. If a centre has no number set, the email asks them to contact reception instead.
+- For a booking made at the desk, the email goes to the swimmer's contact email. If there isn't one, it goes to the parents linked to the swimmer in the parents app.
+- Bookings made by the developer account don't send an email.
+
 ## 1.69.3 · 23 October 2026 · Sign in with your email and password again
 
 - The sign-in page has your email and password back, with **Sign in with Google** underneath. Use whichever you prefer.
