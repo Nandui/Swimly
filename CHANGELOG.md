@@ -7,7 +7,8 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 ## 1.69.4 · 24 October 2026 · It's just Turnfin now
 
 - The sign-in page, the sign-in messages and your account page now say **Turnfin**, not "Turnfin Work". Nothing else changes: you sign in the same way and see the same things.
-- Rota, Refunds, Training and the rest are now called **apps**. You open them from Home, as before.
+- Rota, Refunds, Training and the rest are now called **apps**. You open them from Home, as before. The role editor, Home, the activity log, Admin and the help guides all say "app" now.
+- Very old links to the module launcher or the Reception Portal now show "Page not found" with a button back to Home.
 - **Turnfin Me** on your phone keeps its name. It is still where your own training, reading, shifts and HR records live.
 
 ## 1.69.3 · 23 October 2026 · Sign in with your email and password again

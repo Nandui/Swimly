@@ -64,7 +64,7 @@ export function HomeView({ homeName, roleName, siteName, today, modules, items, 
     <PageShell header={<PageHeader title={homeName} description={`${today} · ${where}`} actions={modules.length ? <NeedsSummary count={needing} /> : undefined} />}>
 
       {modules.length === 0 ? (
-        <EmptyState icon="keyRound" title="Nothing here yet" hint="Your role has no modules yet. Ask an admin to give it a level in the modules you need." />
+        <EmptyState icon="keyRound" title="Nothing here yet" hint="Your role has no apps yet. Ask an admin to give it a level in the apps you need." />
       ) : (
         <>
           {missing.length > 0 ? <FiguresFailed modules={missing} /> : null}

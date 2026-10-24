@@ -141,7 +141,7 @@ function RoleFields({ role, canGiveRestricted }: { role?: Role; canGiveRestricte
       ) : null}
 
       <fieldset className="min-w-0">
-        <legend className="text-sm font-semibold">What this role can do in each module</legend>
+        <legend className="text-sm font-semibold">What this role can do in each app</legend>
         <p className="mt-1 text-sm text-ui-muted-foreground">Each level includes the ones before it.</p>
         {groupModules(allModules()).map((group) => (
           <div key={group.key} role="group" aria-labelledby={`${id}-${group.key}`} className="mt-3">
@@ -149,7 +149,7 @@ function RoleFields({ role, canGiveRestricted }: { role?: Role; canGiveRestricte
             <div className="divide-y divide-ui-border">
               {group.modules.map((mod) => {
                 const locked = admin && mod.id !== "admin" && !mod.access.restricted
-                  ? "Admins can use every module except HR."
+                  ? "Admins can use every app except HR."
                   : mod.access.restricted && !canGiveRestricted
                     ? "Only a superadmin can give HR."
                     : null;
@@ -199,7 +199,7 @@ export function AddRole({ canGiveRestricted = false }: { canGiveRestricted?: boo
         </Button>
       }
       title="Add a role"
-      description="A role is a job. Give it the lowest level in each module that lets the job get done."
+      description="A role is a job. Give it the lowest level in each app that lets the job get done."
       submitLabel="Add a role"
       successMessage="Role added"
       width="sm:max-w-2xl"

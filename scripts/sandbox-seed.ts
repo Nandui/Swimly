@@ -26,7 +26,7 @@ export async function seed(ctx: Ctx) {
   await seedDeskHistory(ctx.prisma, ctx.roles.Receptionist);
 }
 
-/** Two sites' worth of classes so the deck and desk surfaces can be checked:
+/** Two sites' worth of classes so the deck and the desk can be checked:
  *  Ava teaches Otters at Hillview (club_churchfield) today, Riley teaches Seals there too, and
  *  one Riverside (club_bishopstown) class shows that the site lookup stays on its own site. A
  *  parent has a pending change request waiting for reception. */

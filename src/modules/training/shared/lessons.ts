@@ -88,7 +88,7 @@ export const CALLOUT_META = {
 } as const satisfies Record<CalloutTone, { label: string }>;
 const MARKS = new Set(["bold", "italic", "underline", "strike", "link", "code"]);
 
-/** Where a lesson image is served in Work. Turnfin Me reads the file id from it. */
+/** Where a lesson image is served in Turnfin. Turnfin Me reads the file id from it. */
 export const fileSrc = (id: string) => `/training/files/${id}`;
 export const fileIdFromSrc = (src: unknown) => {
   const match = typeof src === "string" ? /^\/training\/files\/([A-Za-z0-9_-]{1,64})$/.exec(src) : null;

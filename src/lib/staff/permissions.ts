@@ -364,7 +364,7 @@ export const PERMISSIONS = [
     key: "setup.view",
     group: "Administration",
     label: "See the shared setup",
-    description: "Open the setup lists every module uses: departments, qualifications, activities and each site's areas. Changing one needs its own permission below.",
+    description: "Open the setup lists every app uses: departments, qualifications, activities and each site's areas. Changing one needs its own permission below.",
   },
   {
     key: "setup.departments",

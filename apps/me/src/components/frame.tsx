@@ -19,7 +19,7 @@ const TABS = [
 ];
 const MORE = ["/more", "/qualifications", "/hr", "/details", "/reminders", "/display"];
 
-/** The fin on its tile (Work's `.tf-brand`) and the name beside it. Signed-in pages link the
+/** The fin on its tile (Turnfin's `.tf-brand`) and the name beside it. Signed-in pages link the
  *  fin home; sign-in shows it without a link. */
 export function Brand({ href }: { href?: string }) {
   // eslint-disable-next-line @next/next/no-img-element

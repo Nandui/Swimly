@@ -124,7 +124,7 @@ export default async function AccountPage() {
           ) : null}
           {lines.length === 0 && !session.user.isSuperadmin ? (
             <li className="pc-row" data-muted="">
-              <div className="pc-row-body"><span className="pc-row-title">No modules</span></div>
+              <div className="pc-row-body"><span className="pc-row-title">No apps</span></div>
             </li>
           ) : null}
         </ul>
