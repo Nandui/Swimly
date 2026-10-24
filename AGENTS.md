@@ -45,15 +45,18 @@ unresolved concern. Say which checks actually ran.
 
 ## Project constraints
 
-Turnfin is one app: **modules** (Swim school, Pool deck, Tasks, Incidents, Refunds, Coinage, Docs, Training, Rota, Purchasing, Stock, Short courses (with the Academy), HR, the CCTV log, Site Monitoring and Admin) on
-a shared **Core** (people, roles, sites, audit, the module catalogue), plus Turnfin Me
-(`apps/me`) and the public Academy booking site (`apps/academy`, docs/academy.md). See [docs/how-turnfin-works.md](docs/how-turnfin-works.md) and the owner's
+Turnfin is one product made of **apps** (Swim school, Pool deck, Tasks, Incidents, Refunds, Coinage, Docs, Training, Rota, Purchasing, Stock, Short courses (with the Academy), HR, the CCTV log, Site Monitoring, Analytics and Admin) on
+a shared **Core** (people, roles, sites, audit, the app catalogue). Outside it are the **connected products**: Turnfin Me
+(`apps/me`), the parent app and the public Academy booking site (`apps/academy`, docs/academy.md), which only use Turnfin's APIs.
+**Words** (owner decision, 24 October 2026): say *app* to staff and in docs; *module* is a code word only, for the
+`src/modules/<id>` folder that provides one or more apps (each app is one `manifest.ts`); "Turnfin Work" is retired, it is just Turnfin.
+See [docs/how-turnfin-works.md](docs/how-turnfin-works.md) and the owner's
 pillars in it (28 September 2026): simplicity, ease of use, modern, scalable, clean code,
-easy to manage, audit and train, and change without breaking. Each module describes
+easy to manage, audit and train, and change without breaking. Each app describes
 itself in its `manifest.ts` (listed in `src/app/modules.ts`), including its levels; a role holds one level for each
-module. The swim school (Activities) lives in `src/modules/activities`,
+app. The swim school (Activities) lives in `src/modules/activities`,
 `src/app/(activities)` and `src/app/(instructor)`. Core never imports a module, and
-Activities never imports a Work module or queries Core tables (use `src/lib/directory.ts`).
+Activities never imports another module or queries Core tables (use `src/lib/directory.ts`).
 Cross-module needs go through `src/modules/contributions.ts`, the session hooks or a
 composition root. Every screen is listed in exactly one of
 `CORE_SCREENS`, `ACTIVITIES_SCREENS` or `WORK_MODULE_SCREENS`. `npm run lint` enforces the imports and data rules; see
@@ -100,12 +103,12 @@ the rounded frame, none on phones where the frame is the page. The pool deck use
 `tf-shell`/`tf-frame` (capped at 1180px, no rail or bottom bar) with the same insets. Do
 not nest a page frame.
 
-A role holds **one level for each module** (`StaffRole.levels`), translated into named
+A role holds **one level for each app** (`StaffRole.levels`), translated into named
 permissions by `src/lib/staff/levels.ts`; a screen is a menu entry opened by one permission. Pages and actions ask for a named
 permission, never a level or a role name. Each person holds **one role** plus the sites they
 work at (`User.siteIds`; none means every site). Swim school, Pool deck, Tasks, Incidents, Short courses, Stock, CCTV log, Training and Rota apply at
 those sites, HR "Their team" only to the people they manage, the rest everywhere. **Admin:
-Manage** is the administrator: Manage in every module except HR (restricted); resolve it
+Manage** is the administrator: Manage in every app except HR (restricted); resolve it
 through expandPermissions and visibleScreens. A **superadmin** (the `User.isSuperadmin` flag,
 never a permission) holds everything; only a superadmin makes another, and only a superadmin
 gives HR. Role previews only remove access. `RoleAssignment` (extra scoped roles) is retired
@@ -114,10 +117,10 @@ policy engine in `src/lib/policy` (`requireCapFor`, `subjectsFor`, `sitesFor`) w
 resource, never the flat check. Home pages, cards and nav hiding are presentation, not
 security. See docs/how-turnfin-works.md and docs/platform-access.md.
 
-Work and Me are separate (owner decision, 27 September 2026): Turnfin Work (this app) is the
+Turnfin and Turnfin Me are separate (owner decision, 27 September 2026): Turnfin (this product) is the
 job on registered work PCs and must never gain personal pages or endpoints; a person's own
 training, required reading, qualifications, shifts, HR and details belong to Turnfin Me
-(`apps/me`), which only calls `/api/staff/v1` with allowlisted responses. Signing in to Work away
+(`apps/me`), a connected product that only calls `/api/staff/v1` with allowlisted responses. Signing in to Turnfin away
 from a registered device needs `work.anywhere` when `WORK_DEVICE_REQUIRED` is on. See
 docs/staff-app.md.
 
