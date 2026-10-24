@@ -1,0 +1,41 @@
+# The safety net (docs/roadmap.md, step 1): every pull request to main must pass
+# typecheck, lint, tests and a build before it merges. Nothing here has a secret or
+# reaches a database: the tests use isolated database and sign-in doubles, and the
+# build runs `next build` alone, never `npm run build`, which migrates.
+name: Check
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# A new push to the same pull request replaces the run still going.
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Typecheck, lint, test and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      # Also generates the Prisma client (postinstall).
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      # The Prisma client needs a connection string to load, and connects only when
+      # queried. Every page is dynamic, so the build queries nothing: these values are
+      # placeholders for a database and secret that do not exist.
+      - run: npx next build
+        env:
+          DATABASE_URL: postgresql://check:check@127.0.0.1:5432/check
+          AUTH_SECRET: placeholder-for-the-build-only-not-a-real-secret
