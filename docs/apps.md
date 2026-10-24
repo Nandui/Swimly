@@ -204,7 +204,7 @@ Count what is on the shelf at each site, keep the product list and compare two c
 ### Admin
 *The platform (`src/modules/registry.ts`) · `/core` · reach: everywhere · data: `core.prisma`, `base.prisma`*
 
-People, roles, sites, the shared setup lists and the activity log.
+People, roles, sites, the shared setup lists and the activity log. Superadmins also switch apps on, off or on at some sites, at Admin › Apps ([architecture.md](architecture.md#app-switches)); that is the superadmin flag, not a level.
 
 | Level | Gives |
 | --- | --- |
@@ -235,4 +235,4 @@ A withheld note becomes a `hasMedicalNotes` flag, so the deck still knows to ask
 
 ## Adding an app
 
-A new app is one area of the business whose purpose fits one sentence without "and". It is one new module folder with the six-part contract and one line in `src/app/modules.ts`, changes no platform file, works with every other app switched off, and goes live at one site first. The owner approves every new app; record it in [decisions.md](decisions.md) and add it to this page. The checklist is in [../AGENTS.md](../AGENTS.md).
+A new app is one area of the business whose purpose fits one sentence without "and". It is one new module folder with the six-part contract and one line in `src/app/modules.ts`, changes no platform file, works with every other app switched off, and goes live at one site first (Admin › Apps). The owner approves every new app; record it in [decisions.md](decisions.md) and add it to this page. The checklist is in [../AGENTS.md](../AGENTS.md).

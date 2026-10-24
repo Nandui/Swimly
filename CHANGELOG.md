@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.0.0 · 24 October 2026 · Switch an app on or off, site by site
+
+- Superadmins have a new page in Admin: **Apps**, under Places. It lists every app and shows whether it is on everywhere, off, or on only at some sites.
+- Choose **Change** beside an app to switch it off, or to have it on only at the sites you tick. A new app can start at one site before it reaches the others.
+- Where an app is off, it leaves the menus and Home for everyone at that site, and its pages no longer open. Nothing in it is deleted: switch it back on and everything is there as before.
+- Every change is in the activity log, with who made it.
+- Nothing changes for anyone else until a superadmin switches an app.
+
 ## 1.69.4 · 24 October 2026 · It's just Turnfin now
 
 - The sign-in page, the sign-in messages and your account page now say **Turnfin**, not "Turnfin Work". Nothing else changes: you sign in the same way and see the same things.

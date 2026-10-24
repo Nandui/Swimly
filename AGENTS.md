@@ -75,6 +75,7 @@ Every app has the six parts described in [docs/architecture.md](docs/architectur
 - Front doors, events and public APIs **only grow**: add a field or function, never rename or remove it in the same change. A change goes expand-then-contract: add the new one, move the callers, remove the old one in a later release.
 - Permissions are named `<area>.<action>` or `<area>.<thing>.<action>`. Each is given by exactly one level or extra in one manifest (a test checks it). An app has at most two extras.
 - An app must work when any other app is switched off: a missing front door or plug answers "not available", and the caller copes.
+- Every plug registration and event listener names its app (`app`), so a switched-off app goes quiet. Whether an app is on is asked only through `appOn` or `sitesWhereOn` (`src/lib/apps/switches.ts`); an app's API route files wrap their handlers in `appRoute` ([docs/architecture.md](docs/architecture.md#app-switches)).
 - The module README follows this shape:
 
 ```md
