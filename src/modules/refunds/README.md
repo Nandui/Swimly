@@ -23,7 +23,6 @@ Declared in `prisma/schema/refunds.prisma` (table names kept, ADR 0002):
 - `RefundAttachment` — receipts, stored in the database.
 - `RefundNotification` — status emails waiting to be sent, sent or failed.
 
-Refunds also reads Core's `User` and `Club` directly (sites to choose, a person's work sites, email recipients). Moving those reads onto Core functions is phase 3 of [MIGRATION.md](../../../docs/architecture/MIGRATION.md).
 
 ## Events
 - Emits: none.

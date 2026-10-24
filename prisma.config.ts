@@ -10,7 +10,7 @@ import { defineConfig } from "prisma/config";
 const cliUrl = process.env["DIRECT_URL"] ?? process.env["DATABASE_URL_UNPOOLED"] ?? process.env["DATABASE_URL"];
 
 export default defineConfig({
-  // One schema split by area: base, core, work, activities (see docs/architecture.md).
+  // One schema split by owner: base and core (the platform), then one file per module (CLAUDE.md, section 5).
   schema: "prisma/schema",
   migrations: {
     path: "prisma/migrations",

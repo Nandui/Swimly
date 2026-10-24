@@ -14,7 +14,7 @@ to approve; his request is that approval. The rules are in [docs/stock.md](../..
   `/stock/overview`.
 - Levels View, Count and Manage at the sites a person works at (`stock.read`, `.count`,
   `.manage`), mapped from Stockly's Viewer, Stock manager and Admin.
-- Tables in the main database, prefixed `stock_` (CLAUDE.md section 4), models prefixed `Stock`
+- Tables in the main database, prefixed `stock_` (CLAUDE.md section 5), models prefixed `Stock`
   (ADR 0002), with no relations to Core tables. Stockly's centres become Turnfin's sites; its
   users, sign-in and audit log become Turnfin's.
 - It keeps its own product list rather than sharing Purchasing's: a module never imports another,

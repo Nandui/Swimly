@@ -1,6 +1,6 @@
 # 0015: A person holds one or more jobs, each a role at some sites
 
-**Status:** Proposed (24 October 2026). Fernando chose this direction (Option B of the architecture review) and confirmed that some staff hold two different jobs. It becomes Accepted when phase 2 of [docs/jobs-and-work-layer.md](../../jobs-and-work-layer.md) merges.
+**Status:** Proposed (24 October 2026). Fernando chose this direction (Option B of the architecture review) and confirmed that some staff hold two different jobs. It becomes Accepted when phase 2 of [docs/architecture/jobs-and-work-layer.md](../jobs-and-work-layer.md) merges.
 
 ## Context
 Each person holds one role (`User.staffRoleId`) and one list of sites (`User.siteIds`), so every level applies at every site they work at. A receptionist at one site who is a duty manager at another needs a combined role, which also gives duty-manager access at both sites. Roles multiply with every combination, which goes against the "easy to manage" and "scalable" pillars.

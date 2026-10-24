@@ -24,7 +24,7 @@ theme describe the retired look. Components live in `src/components/shadcn`.
   use the shadcn Chart and bars `Progress`; sizes from data use the classes from
   `src/components/ui-kit/scale.ts`. Ask the owner before adding a token or component.
   `npm run lint` enforces them, in Work, Turnfin Me (`apps/me`) and the Academy site
-  (`apps/academy`); see CLAUDE.md, section 14.
+  (`apps/academy`); see CLAUDE.md, section 13.
 - Compose actual shadcn controls; inspect their installed source before use.
   Buttons, dialogs, alerts, tables, items, inputs, selects, checkboxes, switches,
   radio groups, popovers and command lists already have accessible primitives.
@@ -84,8 +84,8 @@ offers System, Light and Dark. Appearance lives in the account menu and on Accou
 page has a separate appearance button.
 Sonner notifications share these tokens; errors remain until dismissed.
 
-The [interaction system](docs/interaction-system.md) records the screen audit
-and shared feedback contract. `motion.css` defines 120ms feedback, 180ms
+The [interaction system](docs/interaction-system.md) is the motion
+and feedback contract. `motion.css` defines 120ms feedback, 180ms
 component and 240ms surface timings with explicit transition properties.
 `LoadingButton` reserves both labels to prevent layout shifts; `IconButton`
 adds keyboard-accessible guidance. Form feedback associates server errors with
@@ -1016,7 +1016,7 @@ version and refreshes the roster.
 ## Where things live
 
 Turnfin is split into Core, Work modules and Activities; see
-[docs/architecture.md](docs/architecture.md) for the rules and the lint that
+[CLAUDE.md](CLAUDE.md) for the code rules and the lint that
 enforces them.
 
 ```

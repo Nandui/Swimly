@@ -5,7 +5,7 @@
  *  Today every programme is Swim school. When a second type arrives, give
  *  `Programme` an additive `activityType` column (default "swim-school") and
  *  register the type here; screens then ask `hasFeature` instead of assuming
- *  levels and competencies exist. See docs/architecture.md. */
+ *  levels and competencies exist. See docs/architecture/README.md, "Activity types". */
 
 export type ActivityFeature =
   /** Levels and competencies, marked on the deck, with level completion and moves. */

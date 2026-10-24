@@ -15,7 +15,7 @@ in [docs/cctv.md](../../cctv.md).
   `workspace`, routes in `src/app/cctv`, starter page `/cctv/overview`.
 - Levels Record and Review at the sites a person works at (`cctv.record`, `cctv.review`). Not
   restricted, so administrators hold it, as with Incidents.
-- Tables in the main database, prefixed `cctv_` (CLAUDE.md section 4), models prefixed `Cctv`
+- Tables in the main database, prefixed `cctv_` (CLAUDE.md section 5), models prefixed `Cctv`
   (ADR 0002), with no relations to Core tables.
 - Entries are locked once saved and never deleted; later facts are notes. The activity log names
   the entry and its reason, never what was seen.

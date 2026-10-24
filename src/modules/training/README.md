@@ -56,7 +56,6 @@ Declared in `prisma/schema/training.prisma` (table names kept, ADR 0002):
 - `training_submissions` — work handed in on Hand in work lessons, and the trainer's review.
 - `training_refresher_cards`, `training_refresher_days` — questions a learner missed, spaced out for daily refreshers, and how many they answered each day.
 
-Training also reads and writes Core's qualification records (`Qualification`, `QualificationEvidence`, `QualificationType`) and reads `User`, `Club` and `Position`. Qualifications are Core's (ADR 0001); moving these reads onto Core functions is phase 3 of [MIGRATION.md](../../../docs/architecture/MIGRATION.md).
 
 ## Events
 - Emits: none.

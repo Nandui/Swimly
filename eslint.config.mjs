@@ -12,7 +12,7 @@ const { uiImports, uiSyntax } = designTokens;
 // Turnfin is a modular monolith: Core (people, roles, sites, audit) and modules
 // (the swim school, called Activities here, and the Work modules). A module may
 // import Core and itself, never another module; Core imports no module. Only a
-// composition root may import every module. See docs/architecture.md.
+// composition root may import every module. See CLAUDE.md, section 3.
 const activitiesFiles = [
   "src/modules/activities/**",
   "src/app/(activities)/**",
@@ -97,7 +97,7 @@ const activitiesData = [
 ];
 const coreData = notTables(Object.keys(moduleFiles), "Core never queries a module's tables. Register a contribution in src/modules/contributions.ts instead.");
 // Every Work module reads Core only through its functions, never its tables
-// (Phase 3 of docs/architecture/MIGRATION.md): src/lib/directory.ts,
+// (CLAUDE.md, section 5): src/lib/directory.ts,
 // src/lib/qualifications.ts, src/lib/setup/activity-types.ts,
 // src/lib/people/records.ts, src/lib/audit.ts and the policy engine. Each entry
 // names the module's relations to Core tables, so joins are caught too.
@@ -149,7 +149,7 @@ const restrictedPaths = (skip) => ["error", {
 }];
 
 // The target architecture's dependency table (CLAUDE.md, section 3), as errors
-// since migration phase 4 (docs/architecture/MIGRATION.md), alongside the
+// since 10 October 2026 (CLAUDE.md, section 8), alongside the
 // module and data rules above.
 // Elements are folders (first match wins); single files that sit outside their
 // layer's folder are classified by file category instead.

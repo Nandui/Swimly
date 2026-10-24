@@ -170,7 +170,7 @@ next two weeks at their sites.
 - UI: `src/app/short-courses/academy/` (courses, a course, the course list, to call), each feature's `components/`
 - Online booking: `src/modules/short-courses/features/booking/server/` (`http.ts`, `api.ts`, `email.ts`, `router.ts`, `academy.ts`, `courses.ts`), the shape in `shared/public-booking.ts`,
   `src/app/api/academy/v1/[[...path]]/route.ts`, and the site in `apps/academy`. The site follows
-  Work's UI rules (CLAUDE.md, section 14) with its own shadcn components and exact copies of Work's
+  Turnfin's UI rules (CLAUDE.md, section 13) with its own shadcn components and exact copies of Work's
   theme files; `npm run lint` in `apps/academy` checks them. It looks like the parents app
   (LeisureWorld Aquatics; owner request, 21 October 2026): `theme/leisureworld.css` holds the
   parents app's LeisureWorld colours, copied from it, and re-points Poolside's tokens; Manrope, the

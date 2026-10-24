@@ -1,6 +1,6 @@
 # 0016: One shared way to send work: "Waiting for you", one email outbox, one file check
 
-**Status:** Proposed (24 October 2026), with [0015](0015-jobs-at-places.md). Phases 3 to 5 of [docs/jobs-and-work-layer.md](../../jobs-and-work-layer.md).
+**Status:** Proposed (24 October 2026), with [0015](0015-jobs-at-places.md). Phases 3 to 5 of [docs/architecture/jobs-and-work-layer.md](../jobs-and-work-layer.md).
 
 ## Context
 - **Email queues:** Refunds and Coinage keep copy-for-copy email queues, and Incidents keeps a third, weaker one with no retry. Purchasing never tells approvers that an order is waiting.

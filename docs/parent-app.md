@@ -330,13 +330,14 @@ requested through the live parent app arrived in that mailbox's Inbox; the code
 was not used to create a parent account. Automated flow tests remain isolated.
 See [Google email setup status](parent-google-email.md) for deployment evidence.
 
-The custom domain, `swimschool.leisureworldcork.com`, is assigned in Vercel but
-still needs a Blacknight CNAME: name `swimschool`, value
-`576ddd2673884d9d.vercel-dns-016.com`. Until DNS and HTTPS work, Production's
-`PARENT_APP_ORIGIN` is `https://swimly-public-app.vercel.app`. When switching the
-canonical domain, update that value and redeploy the parent app; the backend
-origin allowlist already includes both addresses. Leave the main website and
-mail DNS records intact.
+The custom domain, `swimschool.leisureworldcork.com`, resolves to Vercel (checked
+24 October 2026). The backend origin allowlist includes both it and
+`https://swimly-public-app.vercel.app`. When the custom domain becomes the canonical
+address, set Production's `PARENT_APP_ORIGIN` to it and redeploy the parent app. Leave
+the main website and mail DNS records intact.
+
+Email sends sign-in codes only. Assessment bookings are confirmed in the app's
+**My bookings**; there is no confirmation email.
 
 No guardian links or assessment publications were created during verification.
 Existing families still need staff-approved links, and the live assessment list

@@ -1,6 +1,6 @@
 # Jobs at places, and one shared way to send work
 
-*Plan, 24 October 2026. Fernando chose Option B of the architecture review (canvas: https://claude.ai/artifact/YSSCX8tshunSXhQbwx7EcQ) and confirmed that some staff hold two different jobs, such as reception at one site and duty manager at another. Decision records: [0015](architecture/decisions/0015-jobs-at-places.md) and [0016](architecture/decisions/0016-shared-work-layer.md). Nothing here is built yet. This plan is steps 3 and 4 of the wider direction in [architecture/platform-and-apps.md](architecture/platform-and-apps.md), which puts a safety net and app switches first.*
+*Plan, 24 October 2026. Fernando chose Option B of the architecture review (canvas: https://claude.ai/artifact/YSSCX8tshunSXhQbwx7EcQ) and confirmed that some staff hold two different jobs, such as reception at one site and duty manager at another. Decision records: [0015](decisions/0015-jobs-at-places.md) and [0016](decisions/0016-shared-work-layer.md). Nothing here is built yet. This plan is steps 3 and 4 of the wider direction in [architecture/platform-and-apps.md](platform-and-apps.md), which puts a safety net and app switches first.*
 
 ## Why
 
@@ -86,7 +86,7 @@ Each phase is its own PR: preview first, then main. Each passes `npm run typeche
 - CHANGELOG entry and version bump.
 
 **2d. Documents.**
-- Update sentence 2 in [how-turnfin-works.md](how-turnfin-works.md), the model in [platform-access.md](platform-access.md), and the "one role" lines in AGENTS.md.
+- Update sentence 2 in [how-turnfin-works.md](../how-turnfin-works.md), the model in [platform-access.md](../platform-access.md), and the "one role" lines in AGENTS.md.
 - ADR 0015 becomes Accepted.
 
 ### 3. "Waiting for you" complete (staff will notice)

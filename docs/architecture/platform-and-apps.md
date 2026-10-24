@@ -1,6 +1,6 @@
 # Direction: Turnfin is a platform of apps
 
-*Owner question, 24 October 2026: "I still have so many features to add, and some of them are full apps that other organisations sell on their own. I need a direction that fits now and later, so we can add things without breaking other things." This is the answer. [jobs-and-work-layer.md](../jobs-and-work-layer.md) is one part of it.*
+*Owner question, 24 October 2026: "I still have so many features to add, and some of them are full apps that other organisations sell on their own. I need a direction that fits now and later, so we can add things without breaking other things." This is the answer. [jobs-and-work-layer.md](jobs-and-work-layer.md) is one part of it.*
 
 ## The direction in one paragraph
 
@@ -70,7 +70,7 @@ Today a merge to `main` deploys straight to the live app and migrates the live d
 
 1. **Safety net.** Add the pull request check, protect `main` (Fernando's yes is needed, since it changes how everyone merges), and bring each app up to the test floor.
 2. **App switches** and the switched-off test run.
-3. **Jobs at places**: phases 1 and 2 of [jobs-and-work-layer.md](../jobs-and-work-layer.md).
+3. **Jobs at places**: phases 1 and 2 of [jobs-and-work-layer.md](jobs-and-work-layer.md).
 4. **Platform services**: complete Waiting for you, the email outbox and the file check (phases 3 to 5 of the same plan).
 5. **Events between apps**: each cross-app side effect becomes an event when that code is next touched. `rota.shift.changed` is already listed as a candidate in [events.md](events.md). The seams that are really plugs (Waiting for you items, site summaries, person-file sections) stay plugs.
 6. **New apps** follow the "Adding a new module" checklist in CLAUDE.md, plus the six-part contract above. Each one ships switched on at one site first.
