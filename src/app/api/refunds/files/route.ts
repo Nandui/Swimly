@@ -1,7 +1,8 @@
+import { appRoute } from "@/lib/apps/switches";
 import { revalidatePath } from "next/cache";
 import { changeReceipt, MAX_RECEIPT_BYTES, requireRefundActor, RefundError } from "@/modules/refunds/features/request";
 
-export async function POST(request: Request) {
+async function servePost(request: Request) {
   try {
     const who = await requireRefundActor();
     const origin = request.headers.get('origin'), host = request.headers.get('x-forwarded-host') || request.headers.get('host');
@@ -18,3 +19,5 @@ export async function POST(request: Request) {
     return Response.json({ ok: true, id: row.id, version: row.version });
   } catch (error) { return Response.json({ ok: false, error: error instanceof RefundError ? error.message : 'Could not confirm the receipt update. Try again.' }, { status: 400 }); }
 }
+
+export const POST = appRoute("refunds", servePost);

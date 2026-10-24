@@ -137,4 +137,4 @@ async function bookingsFor(swimmerIds: readonly string[]): Promise<AppCourseBook
   });
 }
 
-export const parentsAppCourses: AppCourses = { list, one, hold, bookingsFor };
+export const parentsAppCourses: AppCourses = { app: "short-courses", list, one, hold, bookingsFor };

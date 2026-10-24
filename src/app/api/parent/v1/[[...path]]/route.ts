@@ -1,3 +1,4 @@
+import { appRoute } from "@/lib/apps/switches";
 import { handleParentRequest } from "@/modules/activities/features/parents";
 
 export const runtime = "nodejs";
@@ -6,4 +7,5 @@ type Context = { params: Promise<{ path?: string[] }> };
 async function handle(request: Request, context: Context) {
   return handleParentRequest(request, (await context.params).path ?? []);
 }
-export { handle as GET, handle as POST, handle as PATCH, handle as PUT, handle as DELETE, handle as OPTIONS, handle as HEAD };
+const served = appRoute("swim-school", handle);
+export { served as GET, served as POST, served as PATCH, served as PUT, served as DELETE, served as OPTIONS, served as HEAD };

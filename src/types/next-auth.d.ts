@@ -30,6 +30,10 @@ declare module "next-auth" {
       grants?: { roleName: string; permissions: string[]; scopeKind: string; scopeId: string }[];
       /** What their role gives everywhere. */
       primaryPermissions?: string[];
+      /** Apps switched off at the site they are working in (src/lib/apps/switches.ts): their
+       *  permissions are already gone from the lists above, and `permissionsOf` and the policy
+       *  engine take them out of what an administrator or superadmin expands to. */
+      appsOff?: string[];
       /** How this session proved who it is: a password sign-in, a PIN quick
        *  switch on a shared device, Sign in with Google, or the development
        *  bypass; and when. Only a password counts for restricted data. */

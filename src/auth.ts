@@ -10,6 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { mayPreview, previewedRole } from "@/lib/staff/preview";
 import { ADMINISTRATOR_PERMISSIONS } from "@/lib/staff/permissions";
 import { getCurrentClub } from "@/lib/clubs/current";
+import { appSwitchesOf, withAppSwitches } from "@/lib/apps/switches";
 import { currentSharedDevice, SHARED_SESSION_MAX_MS } from "@/lib/devices/shared-device";
 import { authorizePin } from "@/lib/devices/pin";
 import { mayWorkAnywhere, workDeviceRequired } from "@/lib/devices/work-device";
@@ -231,7 +232,7 @@ export const auth = cache(async function auth(): Promise<Session | null> {
     if (!user) return null;
 
     // The picture is the one Google last gave (src/lib/google-sign-in.ts); none shows initials.
-    return { ...session, user: { ...session.user, ...(await wearPreview(user, current, siteId)), image: current.avatarUrl ?? null } };
+    return { ...session, user: { ...session.user, ...(await switched(await wearPreview(user, current, siteId), current.orgId, siteId)), image: current.avatarUrl ?? null } };
   }
 
   if (process.env.NODE_ENV === "production" || process.env.DEV_AUTH_BYPASS !== "1") {
@@ -250,12 +251,19 @@ export const auth = cache(async function auth(): Promise<Session | null> {
   if (!user) return null;
 
   return {
-    user: { ...(await wearPreview(user, admin, siteId)), image: admin.avatarUrl ?? null },
+    user: { ...(await switched(await wearPreview(user, admin, siteId), admin.orgId, siteId)), image: admin.avatarUrl ?? null },
     expires: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
   };
 });
 
 type SessionUser = Omit<Session["user"], "image">;
+
+/** The session with the app switches applied at the working site (src/lib/apps/switches.ts):
+ *  an app that is off here is gone from its permissions, so its pages, actions and menus are
+ *  too. Applied last, so a role preview loses the same apps. */
+async function switched(user: SessionUser, orgId: string | null, siteId: string | null): Promise<SessionUser> {
+  return withAppSwitches(user, await appSwitchesOf(orgId), siteId);
+}
 
 /** On a dev build, an account that may manage roles can ask to see the app
  *  as another role. The person stays the same — id, name, email, sites — and

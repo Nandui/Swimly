@@ -40,6 +40,7 @@ export async function handleStaffRequest(request: Request, path: string[]) {
     if (route === "auth/logout") { await logout(identity); return new Response(null, { status: 204 }); }
     if (route === "auth/confirm") return json(await requestConfirm(request, identity), 202);
     if (route === "auth/confirm/verify") return json(await verifyConfirm(request, identity));
+    await records.requireAppOn(identity, route);
     if (route === "home") return json(await records.home(identity));
     if (route === "me") return method === "PATCH" ? json(await records.requestDetailsChange(request, identity), 201) : json(await records.profile(identity));
     if (route === "qualifications") return json(await records.qualifications(identity));

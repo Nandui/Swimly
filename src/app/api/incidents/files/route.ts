@@ -1,9 +1,10 @@
+import { appRoute } from "@/lib/apps/switches";
 import { revalidatePath } from "next/cache";
 import { addFile, IncidentError, MAX_FILE_BYTES, requireIncidentsActor } from "@/modules/incidents/features/files";
 
 /** Adds a photo or document to a report. Same-origin only;
  *  the body is read as a stream and refused past the size cap. */
-export async function POST(request: Request) {
+async function servePost(request: Request) {
   try {
     const who = await requireIncidentsActor();
     const origin = request.headers.get("origin"), host = request.headers.get("x-forwarded-host") || request.headers.get("host");
@@ -28,3 +29,5 @@ export async function POST(request: Request) {
     return Response.json({ ok: false, error: error instanceof IncidentError ? error.message : "Could not add the file. Try again." }, { status: 400 });
   }
 }
+
+export const POST = appRoute("incidents", servePost);

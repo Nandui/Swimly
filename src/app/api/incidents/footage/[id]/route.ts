@@ -1,3 +1,4 @@
+import { appRoute } from "@/lib/apps/switches";
 import { footageToWatch, logWatch, PLAYABLE, readFootage, requireIncidentsActor } from "@/modules/incidents/features/footage";
 
 /** Plays or downloads a report's CCTV video for someone who triages at its
@@ -5,7 +6,7 @@ import { footageToWatch, logWatch, PLAYABLE, readFootage, requireIncidentsActor 
  *  one is logged once per viewing, not for every range a player asks for. */
 export const maxDuration = 300;
 
-export async function GET(request: Request, { params }: RouteContext<"/api/incidents/footage/[id]">) {
+async function serveGet(request: Request, { params }: RouteContext<"/api/incidents/footage/[id]">) {
   try {
     const who = await requireIncidentsActor(), { id } = await params;
     const footage = await footageToWatch(who, id);
@@ -27,3 +28,5 @@ export async function GET(request: Request, { params }: RouteContext<"/api/incid
     return new Response("Video not available.", { status: 404, headers: { "Cache-Control": "no-store" } });
   }
 }
+
+export const GET = appRoute("incidents", serveGet);

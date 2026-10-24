@@ -1,17 +1,22 @@
 import "server-only";
 import { liveSitesByOrganisation } from "@/lib/directory";
+import { sitesWhereOn } from "@/lib/apps/switches";
 import { parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { dayIn, score } from "@/modules/tasks/shared/rules";
 import { TASK_ROW, ensureTasks, siteSettings, stateOf } from "@/modules/tasks/shared/data";
 
-/** Every site of every organisation: what the nightly cron makes tasks for. */
+/** Every site of every organisation where Tasks is switched on: what the nightly cron makes tasks for. */
 export async function ensureTasksEverywhere(days: readonly string[]) {
   let made = 0;
   for (const [orgId, ids] of await sitesByOrg()) made += await ensureTasks(orgId, ids, days);
   return made;
 }
-const sitesByOrg = () => liveSitesByOrganisation();
+async function sitesByOrg() {
+  const byOrg = await liveSitesByOrganisation();
+  for (const [orgId, ids] of byOrg) byOrg.set(orgId, await sitesWhereOn("tasks", ids, orgId));
+  return byOrg;
+}
 
 /** Freeze each site's score for a finished business day (the nightly cron, for yesterday), so
  *  history does not move when a task is reopened later. A day already frozen stays. */

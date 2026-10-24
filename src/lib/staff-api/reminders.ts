@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { sendStaffReminder } from "@/lib/staff-api/email";
 import { meSettings } from "@/lib/staff-api/notify";
 import { trainingReminderItems } from "@/modules/training";
+import { appOn } from "@/lib/apps/switches";
 
 /** Reminder emails for Turnfin Me. The daily job sends each person one short
  *  digest of things that are new since the last one: training due within 3
@@ -52,7 +53,12 @@ export async function runReminders(now = new Date()) {
   const config = meSettings();
   if (!config?.meUrl) return { sent: 0, skipped: "Turnfin Me is not enabled" };
   const on = today(now);
-  const items = [...await trainingReminderItems(on), ...await qualificationItems(on), ...await readingReminderItems(on)];
+  // A switched-off app sends no reminders (docs/architecture.md, App switches).
+  const items = [
+    ...(await appOn("training") ? await trainingReminderItems(on) : []),
+    ...await qualificationItems(on),
+    ...(await appOn("docs") ? await readingReminderItems(on) : []),
+  ];
   const userIds = [...new Set(items.map((i) => i.userId))];
   const [prefs, users, logged] = await Promise.all([
     preferences(userIds),

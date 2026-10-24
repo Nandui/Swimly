@@ -25,6 +25,7 @@ import { memberDirectory } from "@/modules/activities/features/students/server/m
  *  sessions left out. Times and labels only. The rota plans a date's teacher through `plan`. */
 registerCommitments({
   id: "activities.classes",
+  app: "swim-school",
   async list({ siteIds, userIds, from, to }) {
     const dates: string[] = [];
     for (let d = from; d <= to && dates.length < 62; d = new Date(Date.parse(`${d}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10)) dates.push(d);
@@ -94,6 +95,7 @@ registerCommitments({
 /** What each site runs in Aquatics: live programmes, active swimmers and live classes. */
 registerSiteSummary({
   id: "activities.site",
+  app: "swim-school",
   async lines(clubIds) {
     if (clubIds.length === 0) return new Map();
     const [programmes, students, courses] = await Promise.all([

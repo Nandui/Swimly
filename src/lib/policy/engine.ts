@@ -106,16 +106,24 @@ export function actorFrom(input: {
   assignments: { roleName: string; permissions: readonly string[]; scope: Scope }[];
   authMethod?: Actor["authMethod"];
   authAt?: number | null;
+  /** Permissions of apps switched off at the working site (src/lib/apps/switches.ts): no grant
+   *  gives them, and a superadmin keeps everything else as a grant rather than the bypass. */
+  withheld?: ReadonlySet<string>;
 }): Actor {
+  const withheld = input.withheld ?? new Set<string>();
+  const held = (keys: Set<PermissionKey>) => {
+    for (const key of withheld) keys.delete(key as PermissionKey);
+    return keys;
+  };
   const grants: Grant[] = [];
   if (input.primary) {
-    grants.push({ roleName: input.primary.name, permissions: expandPermissions(input.primary.permissions, { superadmin: input.superadmin }), scope: { kind: "all" } });
+    grants.push({ roleName: input.primary.name, permissions: held(expandPermissions(input.primary.permissions, { superadmin: input.superadmin })), scope: { kind: "all" } });
   }
   for (const assignment of input.assignments) {
-    grants.push({ roleName: assignment.roleName, permissions: expandPermissions(assignment.permissions), scope: assignment.scope });
+    grants.push({ roleName: assignment.roleName, permissions: held(expandPermissions(assignment.permissions)), scope: assignment.scope });
   }
   return {
-    id: input.id, name: input.name, orgId: input.orgId, superadmin: input.superadmin, grants,
+    id: input.id, name: input.name, orgId: input.orgId, superadmin: input.superadmin && withheld.size === 0, grants,
     authMethod: input.authMethod ?? "password", authAt: input.authAt ?? null,
   };
 }

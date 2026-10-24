@@ -15,9 +15,9 @@ import { registerAreaRename, registerHomeCard, registerPersonFileSection, type H
  *  src/modules/server.ts: its home card, its parts of a person's file and the
  *  area rename it follows. Its menu entry, levels and permissions are in manifest.ts. */
 
-registerPersonFileSection({ id: "rota.planned", heading: "Rota", load: plannedFile });
-registerPersonFileSection({ id: "rota.absences", heading: "Absences and returns to work", load: absenceFile });
-registerPersonFileSection({ id: "rota.changes", heading: "Changes to their activities", load: dutyChangeFile });
+registerPersonFileSection({ id: "rota.planned", app: "rota", heading: "Rota", load: plannedFile });
+registerPersonFileSection({ id: "rota.absences", app: "rota", heading: "Absences and returns to work", load: absenceFile });
+registerPersonFileSection({ id: "rota.changes", app: "rota", heading: "Changes to their activities", load: dutyChangeFile });
 registerAreaRename({ id: "rota.places", rename: renameRotaPlaces });
 
 /** The rota on the home page, for the working site: who is on today and how many gaps are left,

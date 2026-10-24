@@ -10,4 +10,4 @@ import { raiseFromTaskReadings } from "@/modules/site-monitoring/features/action
 const plug = globalThis as { siteMonitoringStop?: () => void };
 registerHomeCard({ moduleId: "site-monitoring", items: monitoringHomeItems });
 plug.siteMonitoringStop?.();
-plug.siteMonitoringStop = on("tasks.reading.out_of_range", async (event) => { await raiseFromTaskReadings(event); });
+plug.siteMonitoringStop = on("tasks.reading.out_of_range", async (event) => { await raiseFromTaskReadings(event); }, { app: "site-monitoring" });

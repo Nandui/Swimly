@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import type { Session } from "next-auth";
 import { requireSession, AuthorizationError } from "@/lib/authz";
+import { appPermissions } from "@/modules/registry";
 import { logAudit } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 import type { PermissionKey } from "@/lib/staff/permissions";
@@ -25,6 +26,7 @@ export function actorForSession(session: Session): Actor {
     }),
     authMethod: user.authMethod ?? "password",
     authAt: user.authAt ?? null,
+    withheld: appPermissions(user.appsOff ?? []),
   });
 }
 

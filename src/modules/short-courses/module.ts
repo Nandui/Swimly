@@ -9,11 +9,11 @@ import { renameShortCoursePlaces, SHORT_COURSE_SESSIONS, shortCourseCommitments,
  *  both kinds of course's sessions as commitments (the Rota shows them), area renames, the
  *  home card, the Academy's call backs for the swim school's reception analytics,, the courses
  *  each swimmer has been booked on for their profile, and the Pool courses shown in the parents app. Its menu entry, levels and permissions are in manifest.ts. */
-registerCommitments({ id: SHORT_COURSE_SESSIONS, list: shortCourseCommitments });
-registerCommitments({ id: ACADEMY_SESSIONS, list: academySessionCommitments });
+registerCommitments({ id: SHORT_COURSE_SESSIONS, app: "short-courses", list: shortCourseCommitments });
+registerCommitments({ id: ACADEMY_SESSIONS, app: "short-courses", list: academySessionCommitments });
 registerAreaRename({ id: "short-courses.places", rename: renameShortCoursePlaces });
 registerHomeCard({ moduleId: "short-courses", items: async (viewer) => [...await shortCourseHomeItems(viewer), ...await academyHomeItems(viewer)] });
-registerDeskMeasures({ id: "short-courses.academy-calls", list: academyCallBacks });
-registerMemberHistory({ id: "short-courses.bookings", list: shortCourseMemberHistory });
-registerMemberHistory({ id: "short-courses.academy-candidates", list: academyMemberHistory });
+registerDeskMeasures({ id: "short-courses.academy-calls", app: "short-courses", list: academyCallBacks });
+registerMemberHistory({ id: "short-courses.bookings", app: "short-courses", list: shortCourseMemberHistory });
+registerMemberHistory({ id: "short-courses.academy-candidates", app: "short-courses", list: academyMemberHistory });
 registerAppCourses(parentsAppCourses);

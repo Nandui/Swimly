@@ -126,4 +126,4 @@ async function create(raw: NewMember, { siteId, by, via }: { siteId: string; by:
   return result.ok ? result : { ok: false as const, error: result.error };
 }
 
-export const memberDirectory: MemberDirectory = { search, byIds, create };
+export const memberDirectory: MemberDirectory = { app: "swim-school", search, byIds, create };

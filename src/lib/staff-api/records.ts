@@ -16,6 +16,7 @@ import { StaffApiError, notFound } from "@/lib/staff-api/errors";
 import { idSchema, parseInput, readBody } from "@/lib/staff-api/http";
 import { rateLimit } from "@/lib/staff-api/security";
 import { requireConfirmed, type StaffIdentity } from "@/lib/staff-api/auth";
+import { appOn } from "@/lib/apps/switches";
 
 /** Everything Turnfin Me can read or do, for the signed-in person only. Every
  *  response is built field by field from an allowlist: no swimmers, refunds,
@@ -587,16 +588,30 @@ export async function saveNotifications(request: Request, identity: StaffIdentit
 // Home: what needs the person, without any HR content
 // ---------------------------------------------------------------------------
 
+/** The app each part of this API reads (docs/architecture.md, App switches): a part whose app is
+ *  switched off in the person's organisation answers "not available", as an unset one does. */
+function appOfRoute(route: string): string | null {
+  const [first] = route.split("/");
+  return ({ training: "training", reading: "docs", shifts: "rota", hr: "hr" } as Record<string, string>)[first] ?? null;
+}
+
+export async function requireAppOn(identity: StaffIdentity, route: string) {
+  const app = appOfRoute(route);
+  if (app && !(await appOn(app, { orgId: identity.user.orgId }))) throw new StaffApiError(404, "NOT_AVAILABLE", "That is not available.");
+}
+
 export async function home(identity: StaffIdentity) {
+  const on = (app: string) => appOn(app, { orgId: identity.user.orgId });
+  const [trainingOn, docsOn, rotaOn, hrOn] = await Promise.all([on("training"), on("docs"), on("rota"), on("hr")]);
   const [train, read, quals, upcoming, reviewsWaiting, refresher] = await Promise.all([
-    training(identity),
-    reading(identity),
+    trainingOn ? training(identity) : { items: [] },
+    docsOn ? reading(identity) : { items: [] },
     myQualifications(identity.user.id),
-    myDays(identity.user.id, 7),
-    hrConfigured()
+    rotaOn ? myDays(identity.user.id, 7) : [],
+    hrOn && hrConfigured()
       ? mySharedHr(identity.user.id, identity.user.orgId).then((r) => r.reviews.filter((x) => x.status === "shared").length).catch(() => 0)
       : Promise.resolve(0),
-    refresherWaiting(identity.user.id).catch(() => 0),
+    trainingOn ? refresherWaiting(identity.user.id).catch(() => 0) : 0,
   ]);
   return {
     name: identity.user.name,

@@ -27,6 +27,7 @@ import { auth } from "@/auth";
 import { operationContext } from "@/lib/operations/context";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import { visibleScreens, type ScreenKey } from "@/lib/staff/screens";
+import { appPermissions } from "@/modules/registry";
 
 export type { PermissionKey };
 
@@ -60,7 +61,11 @@ export async function requireSession() {
  *  (`src/lib/policy/session.ts`), which also applies department and
  *  line-manager scopes against the specific person. */
 export function permissionsOf(session: Session): Set<PermissionKey> {
-  return expandPermissions(session.user.permissions ?? [], { superadmin: session.user.isSuperadmin === true });
+  const held = expandPermissions(session.user.permissions ?? [], { superadmin: session.user.isSuperadmin === true });
+  // An app switched off at this site gives nobody anything here, administrators and
+  // superadmins included (src/lib/apps/switches.ts).
+  if (session.user.appsOff?.length) for (const key of appPermissions(session.user.appsOff)) held.delete(key);
+  return held;
 }
 
 export function can(session: Session, permission: PermissionKey): boolean {
