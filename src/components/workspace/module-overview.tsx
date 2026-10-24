@@ -11,7 +11,7 @@ import type { HomeItem } from "@/modules/contributions";
 
 export type OverviewGroup = { label: string; links: { href: string; label: string; description?: string; icon: LucideIcon }[] };
 
-/** A module's starter page, the same shape in every module (DESIGN.md, "Poolside Clear v2"): its
+/** A module's starter page, the same shape in every module: its
  *  quick actions in the header (the main one last, in blue), the day at a glance on a timeline
  *  when the module has one (the swim school's classes), today's figures and what waits for this
  *  person side by side, and every page it has with a line on what each is for. The items are

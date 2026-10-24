@@ -1,7 +1,7 @@
 import { BookOpen, Columns3, FileText, GitBranch, Headphones, Layers, ListChecks, ListTodo, MonitorPlay, PlayCircle, ScanSearch, Upload } from "lucide-react";
 import { normaliseQuestion, questionProblem, readExam, type ExamSettings, type Question } from "@/modules/training/shared/questions";
 
-/** E-learning courses (docs/training.md, phase 1): a course is sections of
+/** E-learning courses (phase 1): a course is sections of
  *  lessons. The draft lives in TrainingSection/TrainingLesson rows; publishing
  *  freezes it into a TrainingCourseVersion outline, which is what learners get.
  *  Pure and client-safe: the builder, the preview, the staff API and tests use

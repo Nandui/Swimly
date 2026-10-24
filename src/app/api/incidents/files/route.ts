@@ -1,7 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { addFile, IncidentError, MAX_FILE_BYTES, requireIncidentsActor } from "@/modules/incidents/features/files";
 
-/** Adds a photo or document to a report (docs/incidents.md). Same-origin only;
+/** Adds a photo or document to a report. Same-origin only;
  *  the body is read as a stream and refused past the size cap. */
 export async function POST(request: Request) {
   try {

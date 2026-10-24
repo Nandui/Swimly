@@ -5,7 +5,7 @@ import { serverModule } from "@/test/server-module";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import { cleanAnswer, isCorrect, learnerQuestion, markPaper, matchPartners, normaliseQuestion, questionProblem, rightAnswer, seeded, type Question } from "../shared/questions";
 
-/** Quizzes and final exams (docs/training.md, e-learning phase 2) against a
+/** Quizzes and final exams (e-learning phase 2) against a
  *  real in-memory Postgres: authors write questions per section, learners
  *  practise on Quiz lessons and sit a marked exam that never sends the key,
  *  attempts run out, trainers give another, and a pass finishes the course. */

@@ -7,7 +7,7 @@ import { expandPermissions } from "@/lib/staff/permissions";
 import type { Commitment, CommitmentQuery, HomeItem, HomeViewer, MemberHistoryEntry } from "@/modules/contributions";
 import { ACADEMY_RESULT_META } from "@/modules/short-courses/shared/academy-rules";
 
-/** What the Academy tells other modules (docs/academy.md).
+/** What the Academy tells other modules.
  *
  *  Commitments: each session of a course that is not cancelled, once for its tutor and once for
  *  its assessor when that is someone else, so the Rota shows the session in its area, counts the

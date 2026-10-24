@@ -54,7 +54,7 @@ const hrUrl = existsSync("hr-database/migrations")
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: mainUrl }) });
 const ORG = "org_leisureworld";
 // The migrations create the first customer's organisation and two sites. Rename them to
-// invented names, so nothing captured here (Help's screenshots, docs/help-centre.md) shows them.
+// invented names, so nothing captured here (Help's screenshots) shows them.
 await prisma.organisation.update({ where: { id: ORG }, data: { name: "Example Leisure" } });
 await prisma.club.update({ where: { id: "club_bishopstown" }, data: { name: "Riverside" } });
 await prisma.club.update({ where: { id: "club_churchfield" }, data: { name: "Hillview" } });
@@ -63,7 +63,7 @@ const hash = await bcrypt.hash(SANDBOX_PASSWORD, 10);
 export const SANDBOX_PIN = "2580";
 const pinHash = await bcrypt.hash(SANDBOX_PIN, 10);
 const roles: Record<string, string> = {};
-// The roles from "How Turnfin works" (docs/how-turnfin-works.md), as levels.
+// The roles from "How Turnfin works" (docs/apps.md), as levels.
 const levelRoles: { name: string; homeName: string; levels: Record<string, string>; extras?: string[]; system?: boolean }[] = [
   { name: "Admin", homeName: "Management", levels: { admin: "manage" }, system: true },
   { name: "Instructor", homeName: "Pool deck", levels: { "pool-deck": "teach" }, system: true },
@@ -114,7 +114,7 @@ for (const p of people) {
   if (p.manager) await prisma.user.update({ where: { id: p.id }, data: { managerId: p.manager } });
   for (const [i, departmentId] of p.departments.entries()) await prisma.userDepartment.create({ data: { userId: p.id, departmentId, isPrimary: i === 0 } });
 }
-// One role each (docs/how-turnfin-works.md): no extra roles.
+// One role each (docs/apps.md): no extra roles.
 const soon = new Date(); soon.setUTCDate(soon.getUTCDate() + 30);
 const past = new Date(); past.setUTCDate(past.getUTCDate() - 10);
 await prisma.qualification.createMany({ data: [
@@ -138,7 +138,7 @@ for (const [i, [id, name, requires, holders]] of positions.entries()) {
   await prisma.user.updateMany({ where: { id: { in: holders } }, data: { positionId: id, jobTitle: name, contractType: "full-time", contractMinutes: 39 * 60 } });
 }
 
-// Tasks (docs/tasks.md): templates and two weeks of history at both sites.
+// Tasks: templates and two weeks of history at both sites.
 await seedTasks(prisma, ORG, roles);
 
 const seedModule = "./sandbox-seed.ts";

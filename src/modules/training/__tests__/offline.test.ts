@@ -5,7 +5,7 @@ import { serverModule } from "@/test/server-module";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import { offlineLabel, offlineTime } from "../features/me/server/offline";
 
-/** Training taken with no signal in Turnfin Me (docs/training.md, e-learning
+/** Training taken with no signal in Turnfin Me (e-learning
  *  phase 9): the phone's time for a finished lesson or handed-in work is kept
  *  only when it is believable, and the audit says it was done offline. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;

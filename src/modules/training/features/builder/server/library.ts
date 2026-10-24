@@ -14,7 +14,7 @@ import { templateByKey } from "@/modules/training/shared/templates";
 import { refresh } from "@/modules/training/shared/writes";
 import { copyFiles, remapData, remapDoc, remapOptions } from "@/modules/training/features/builder/server/copy";
 
-/** The builder's library (docs/training.md, e-learning phase 3): starting a
+/** The builder's library (e-learning phase 3): starting a
  *  course from a template or a copy, copying lessons and questions between
  *  courses, pasting questions from a spreadsheet, the cover picture, and
  *  review comments. Building needs `training.manage`; commenting needs the

@@ -6,7 +6,7 @@ import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import { newCertificateCode, readCertificateCode } from "../shared/certificates";
 import { addDays, addMonths, audienceInWords, cellInWords, csvRows, isCompliant, matrixCell, ruleCovers, ruleState, timingInWords, type RuleHistory } from "../shared/rules";
 
-/** The compliance autopilot (docs/training.md, e-learning phase 4): training
+/** The compliance autopilot (e-learning phase 4): training
  *  rules, the daily run that assigns and renews, the matrix and certificates.
  *  Pure rules first, then against a real in-memory Postgres. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;

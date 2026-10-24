@@ -8,7 +8,7 @@ import { cleanLessonData, docChecks, frozenOutline, learnerScenario, publishProb
 import { blankedPrompt, cleanAnswer, isCorrect, learnerQuestion, normaliseQuestion, questionProblem, readBlanks, rightAnswer, sameAnswer, seeded, spotAnswer, type Question } from "../shared/questions";
 import { COURSE_TEMPLATES, templateByKey } from "../shared/templates";
 
-/** The richer builder and lessons (docs/training.md, e-learning phase 3):
+/** The richer builder and lessons (e-learning phase 3):
  *  fill-in-the-blanks and pick-the-spot questions, scenarios, flashcards and
  *  checklists, templates, copies, pasted questions, review comments, and
  *  asking people to take a changed course again. Against a real in-memory

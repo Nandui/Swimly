@@ -2,7 +2,7 @@ import "server-only";
 import { expandPermissions } from "@/lib/staff/permissions";
 import { registerHomeCard, type HomeItem } from "@/modules/contributions";
 
-/** Docs' registration plug (CLAUDE.md section 5), loaded by
+/** Docs' registration plug (AGENTS.md, The app contract), loaded by
  *  src/modules/server.ts. Its menu entry, levels and permissions are in manifest.ts.
  *
  *  Docs on the home page: the writer's quick action. Its pages are in its own

@@ -1,4 +1,4 @@
-/* The full run of the app for the UI rules (CLAUDE.md, "UI rules"): every page in src/app,
+/* The full run of the app for the UI rules (AGENTS.md, Screens): every page in src/app,
  * opened in the local sandbox (`npm run sandbox`, invented people and records only), checked for
  * one PageShell holding one PageHeader with the page's one H1. Optionally photographs each page.
  *

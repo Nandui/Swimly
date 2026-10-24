@@ -1,4 +1,4 @@
-/* Turnfin Me's service worker (e-learning phase 9, docs/training.md).
+/* Turnfin Me's service worker (e-learning phase 9).
  *
  * It keeps the app's own pages and scripts so a course saved for offline
  * still opens with no signal. It never touches the staff API (another

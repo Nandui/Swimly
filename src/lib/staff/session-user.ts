@@ -31,7 +31,7 @@ export type Account = {
     id: string;
     name: string;
     permissions: string[];
-    /** Set once the role uses levels (docs/how-turnfin-works.md). */
+    /** Set once the role uses levels (docs/architecture.md). */
     levels?: unknown;
     extras?: string[];
     homeName?: string | null;
@@ -50,7 +50,7 @@ type Grant = { roleName: string; permissions: string[]; scopeKind: string; scope
  *  may do **at the site they are working in**. `grants` carry what applies
  *  only at their other sites or over their team (HR "Their team"), which only
  *  the policy engine (`src/lib/policy`) reads, against a specific person or
- *  record. One role each (docs/how-turnfin-works.md). */
+ *  record. One role each (docs/architecture.md). */
 export function sessionUserFor(account: Account, currentSiteId: string | null) {
   const role = account.staffRole;
   if (!role) return null;

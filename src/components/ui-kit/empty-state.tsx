@@ -8,7 +8,7 @@ import {
 } from "@/components/shadcn/empty";
 import { AppIcon, type AppIconName } from "./app-icon";
 
-/** The only empty state in Turnfin (DESIGN.md, "States"): the round icon tile,
+/** The only empty state in Turnfin: the round icon tile,
  *  a 600 title, one plain hint and at most one action. On the canvas it is a
  *  white panel (poolside.css); inside a panel or card it sits flat. `as` makes
  *  the title a heading when the empty state stands in for a section or page. */

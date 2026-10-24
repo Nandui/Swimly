@@ -11,7 +11,7 @@ import { defaultDetails, footageRequestSchema, linkExpiry, type FootageRequestIn
 import { newLinkToken } from "@/modules/incidents/shared/link";
 import { storageReady } from "@/modules/incidents/features/footage/server/storage";
 
-/** CCTV footage requests, the staff side (docs/incidents.md, "CCTV footage").
+/** CCTV footage requests, the staff side ("CCTV footage").
  *  Whoever triages reports at the site asks for footage while the report is
  *  open, before triage too, because recorders overwrite within days. Not on
  *  your own report, unless you hold Manage, as with triage. Only those who

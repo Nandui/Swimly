@@ -7,7 +7,7 @@ import { requirePurchasingActor, type PurchasingActor } from "@/modules/purchasi
 import { orderEmailContext } from "@/modules/purchasing/features/orders/server/supplier-email";
 import { EDITABLE, approverRoles, mayApprove, type PoStatus } from "@/modules/purchasing/shared/rules";
 
-/** Purchasing's reads (docs/purchasing.md). Orders are limited to the sites
+/** Purchasing's reads. Orders are limited to the sites
  *  `purchasing.read` covers; suppliers and products belong to the organisation. */
 
 type Sites = Awaited<ReturnType<typeof sitesFor>>;

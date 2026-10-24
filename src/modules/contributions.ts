@@ -15,7 +15,7 @@ import type { Prisma } from "@/generated/prisma/client";
  *  these return counts and short labels, never records. */
 
 /** Loads every module's registrations (the composition root) before a module reads another's,
- *  as the platform registry loads the app's module list (CLAUDE.md, section 5). Modules call
+ *  as the platform registry loads the app's module list (AGENTS.md, The app contract). Modules call
  *  `personFile`, `subjectRecords`, `commitmentsFor` and `planCommitment` from here, so none of
  *  them imports the composition root; Core and front pages already load it through it. */
 let modulesLoading: Promise<unknown> | undefined;
@@ -269,7 +269,7 @@ export async function planCommitment(sourceId: string, input: CommitmentPlan) {
   return source.plan(input);
 }
 
-/** A site's area renamed in Admin (docs/admin-setup.md): each module that stores
+/** A site's area renamed in Admin: each module that stores
  *  area names (the rota's activities and bookings, the swim school's classes and
  *  assessments) updates its own records, so they keep reading the same way. Core
  *  calls these; it never touches a module's tables itself. Runs inside Core's
@@ -424,7 +424,7 @@ export async function memberHistoryFor(memberId: string): Promise<MemberHistoryE
 // Events
 // ---------------------------------------------------------------------------
 
-/** Announce an event once every module has registered its listeners (CLAUDE.md section 6), so a
+/** Announce an event once every module has registered its listeners (AGENTS.md, How apps talk), so a
  *  listener in a module the emitting page never loaded still hears it. Call it after the change
  *  is saved; a listener's failure is logged and never reaches the caller. */
 export async function announce<K extends EventName>(name: K, payload: PlatformEvents[K]): Promise<void> {

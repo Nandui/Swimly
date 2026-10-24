@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { expandPermissions } from "@/lib/staff/permissions";
 
 /** Work is done on work PCs. A registered device (Staff → Work devices) is a
- *  work PC; anywhere else, signing in to Work needs the `work.anywhere`
+ *  work PC; anywhere else, signing in to Turnfin needs the `work.anywhere`
  *  permission, which roles such as duty managers are given (administrators
  *  inherit it) — or the superadmin flag. Personal records are never in Turnfin:
  *  staff use Turnfin Me on their own phone for those.

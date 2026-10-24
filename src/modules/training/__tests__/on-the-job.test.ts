@@ -7,7 +7,7 @@ import {
   cleanObservation, hoursInWords, hoursProgress, observationPasses, observeSteps, pathProgress, practiseList, readClock, readObservationRecord, wallClockInstant, windowStart,
 } from "../shared/on-the-job";
 
-/** Skills on the job (docs/training.md, e-learning phase 5): practical
+/** Skills on the job (e-learning phase 5): practical
  *  checklists, learning paths, sessions with a register, and in-service
  *  hours. Pure rules first, then against a real in-memory Postgres. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;

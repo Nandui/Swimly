@@ -235,7 +235,7 @@ model RotaChange {
   @@index([orgId, date])
 }
 
-/// Someone off work (Rota, docs/rota.md): sickness, a family emergency, a
+/// Someone off work (Rota): sickness, a family emergency, a
 /// bereavement or another reason, from `firstDay` to `lastDay` (null while
 /// they are still off). Their shifts in that time warn "Absent" on the rota;
 /// the reason is shown only to rota managers. `withdrawnAt` marks one
@@ -378,7 +378,7 @@ model RotaActivity {
 }
 
 // ---------------------------------------------------------------------------
-// Rota, rebuilt (owner decisions, 6 October 2026; docs/rota.md). The rota is
+// Rota, rebuilt (owner decisions, 6 October 2026). The rota is
 // built from activities: each day's needs ("Lifeguarding, Main pool, 07:00 to
 // 21:30, 3 places") and the people put on each place. Shifts, breaks and gaps
 // are worked out from these, never stored. The rota tables above are retired,

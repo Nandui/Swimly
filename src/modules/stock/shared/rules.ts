@@ -1,7 +1,7 @@
 import { ArrowDown, ArrowUp, CheckCircle2, CircleDashed, ClipboardList, Equal, Tag as TagIcon } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 
-/** Stock's rules (docs/stock.md), pure and client-safe: the status maps, the category tones and
+/** Stock's rules, pure and client-safe: the status maps, the category tones and
  *  how two counts compare.
  *
  *  Counted none is not uncounted. No line for a product means nobody counted it; a line with

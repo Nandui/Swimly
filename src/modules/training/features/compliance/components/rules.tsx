@@ -16,7 +16,7 @@ import { THEME } from "@/modules/training/shared/components/dialog-kit";
 import { audienceInWords, DEFAULT_TIMING, type RuleAudience } from "@/modules/training/shared/rules";
 import { removeTrainingRule, runTrainingRulesNow, saveTrainingRule, setTrainingRulePaused, type RuleInput } from "@/modules/training/features/compliance/server/actions";
 
-/** Training rules (docs/training.md, e-learning phase 4): who must take a
+/** Training rules (e-learning phase 4): who must take a
  *  course and how often, the buttons that change a rule, and running them now. */
 
 type Option = { id: string; name: string };

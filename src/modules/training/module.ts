@@ -7,7 +7,7 @@ import { trainingFile, trainingLearnerRecords, trainingOnTheJobRecords, training
 import { registersToClose } from "@/modules/training/features/sessions/server/data";
 import { signoffCount } from "@/modules/training/features/sign-off/server/data";
 
-/** Training's registration plug (CLAUDE.md section 5), loaded by
+/** Training's registration plug (AGENTS.md, The app contract), loaded by
  *  src/modules/server.ts: its home card, its part of a person's file and its
  *  records for HR's subject export. Its menu entry, levels and permissions are in manifest.ts. */
 

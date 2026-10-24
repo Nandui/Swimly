@@ -2,7 +2,7 @@
 
 **Purpose:** keeps the centre's controlled documents written, approved, current and read by the right people.
 
-Docs keeps its content in its own database (`DOCS_DATABASE_URL`, migrations in `docs-database/`); staff sign-in and grants come from Turnfin. See [docs/turnfin-docs.md](../../../docs/turnfin-docs.md).
+Docs keeps its content in its own database (`DOCS_DATABASE_URL`, migrations in `docs-database/`); staff sign-in and grants come from Turnfin. Its levels are in [docs/apps.md](../../../docs/apps.md).
 
 ## Features
 - `home` — the Docs overview: what needs this person's attention (`/docs`).

@@ -1,4 +1,4 @@
-/** Compliance autopilot (docs/training.md, e-learning phase 4): training rules that assign
+/** Compliance autopilot (e-learning phase 4): training rules that assign
  *  courses by role, department, site and position and again when they are due, the training
  *  matrix, and checking a certificate. Entry for the module and its routes. */
 export { trainingRules, trainingMatrix } from "@/modules/training/features/compliance/server/data";

@@ -4,7 +4,7 @@ import { AuthorizationError, requireSession } from "@/lib/authz";
 import { holdsAnywhere } from "@/lib/policy/engine";
 import { actorForSession } from "@/lib/policy/session";
 
-/** Who may open the CCTV log (docs/cctv.md). Viewings belong to a site: Record reads only the
+/** Who may open the CCTV log. Viewings belong to a site: Record reads only the
  *  person's own entries, Review every entry at the sites it covers (`sitesFor`), and every write
  *  checks the site (`mayFor`). */
 export type CctvActor = { id: string; name: string; orgId: string | null; superadmin: boolean; review: boolean };

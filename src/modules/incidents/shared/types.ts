@@ -1,7 +1,7 @@
 import { Ban, CheckCheck, CircleAlert, CircleCheck, CircleDot, Clock, Inbox, OctagonAlert, ScanSearch, TriangleAlert } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 
-/** Where a report is (docs/incidents.md). Each status has its own icon shape,
+/** Where a report is. Each status has its own icon shape,
  *  so colour is never the only signal. */
 export const incidentStatuses = {
   reported: { label: "To triage", color: "blue", icon: Inbox },

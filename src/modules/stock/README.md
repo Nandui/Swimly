@@ -2,8 +2,7 @@
 
 **Purpose:** counts the stock on the shelf at each site.
 
-The rules for counting, comparing and the product list are in [docs/stock.md](../../../docs/stock.md).
-Ported from Stockly (ADR 0010).
+Its levels are in [docs/apps.md](../../../docs/apps.md).
 
 ## Features
 - `counts` — start a count at a site, count on the sheet, submit, discard or delete it (`/stock`, `/stock/[id]`); the home card.

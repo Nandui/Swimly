@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/shadcn/skeleton";
 
-/** Home's shape while its modules' figures load (DESIGN.md, "States"): the title and date
+/** Home's shape while its modules' figures load: the title and date
  *  line, then group panels of module rows in two columns from 1024px, as HomeView lays them
  *  out. Like `PageLoading` it costs no query and shows no spinner; the pulse stops under
  *  reduced motion. */

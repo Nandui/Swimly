@@ -1,7 +1,7 @@
 import { Ban, BriefcaseMedical, UserRoundX, CalendarClock, CircleCheck, CircleDashed, Clock, Coins, Dumbbell, FileWarning, Globe, HandCoins, Hourglass, PersonStanding, PlayCircle, Shapes, Ticket, TriangleAlert, Wallet, Waves } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 
-/** The rules for short courses (owner decision, 13 October 2026; docs/short-courses.md). Pure,
+/** The rules for short courses (owner decision, 13 October 2026). Pure,
  *  so they are tested on their own and every screen reads them the same way. */
 
 /** Where in the centre a course happens. Presentation only: the session's own area is the

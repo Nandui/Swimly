@@ -5,7 +5,7 @@ import { FootageLinkClosed, footageLink, UploadFootage } from "@/modules/inciden
 
 export const metadata: Metadata = { title: "Send CCTV footage", robots: { index: false, follow: false }, referrer: "no-referrer" };
 
-/** The page a CCTV footage request's email links to (docs/incidents.md):
+/** The page a CCTV footage request's email links to:
  *  no sign-in, one request, nothing else of the report. */
 export default async function FootageLinkPage({ params }: PageProps<"/footage/[token]">) {
   const { token } = await params;

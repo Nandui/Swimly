@@ -3,7 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import mammoth from "mammoth";
 import { draftSchema, DRAFT_JSON_SCHEMA, type Draft } from "@/modules/training/features/ai-draft/server/schema";
 
-/** Asks Claude to turn a document into a course (docs/training.md, AI drafting).
+/** Asks Claude to turn a document into a course (AI drafting).
  *  The document goes to Anthropic's API and nowhere else; Turnfin keeps only
  *  the draft course. Switched on by ANTHROPIC_API_KEY. */
 

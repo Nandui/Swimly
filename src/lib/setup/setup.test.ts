@@ -5,7 +5,7 @@ import { serverModule } from "@/test/server-module";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import { joinLocation, splitLocation } from "./meta";
 
-/** Admin's shared setup (docs/admin-setup.md): the activity list and each site's areas need
+/** Admin's shared setup: the activity list and each site's areas need
  *  their own permission, and renaming an area reaches the records that use it. Invented data. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let actions: typeof import("./actions");

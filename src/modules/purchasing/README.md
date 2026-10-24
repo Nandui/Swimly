@@ -2,7 +2,7 @@
 
 **Purpose:** gets purchase orders from approved suppliers raised, approved by the right people and numbered.
 
-The rules for the screens and approvals are in [docs/purchasing.md](../../../docs/purchasing.md).
+Its levels are in [docs/apps.md](../../../docs/apps.md).
 
 ## Features
 - `orders` — raise, change, send, approve or reject, cancel and print purchase orders, and email approved ones to the supplier after a test to yourself (`/purchasing`, `/purchasing/new`, `/purchasing/[id]`, `/purchasing/[id]/edit`, `/purchasing/[id]/email`), and the home-page counts.
@@ -15,7 +15,7 @@ The rules for the screens and approvals are in [docs/purchasing.md](../../../doc
 - None. Nothing outside Purchasing calls into it; routes use the feature entries.
 
 ## Data owned
-Declared in `prisma/schema/purchasing.prisma` (table names kept, ADR 0002):
+Declared in `prisma/schema/purchasing.prisma` (table names kept):
 - `Supplier` — an approved supplier, and its picture (a small WebP kept on the row).
 - `PurchaseProduct` — a supplier's approved product and agreed price, and for retail products its brand and the sizes and colours it comes in.
 - `PurchaseApprovalRule` — a role that may approve up to an amount, for one supplier or all.

@@ -1,4 +1,4 @@
-// Tasks (owner request, 8 October 2026; docs/tasks.md): the checks and logs a
+// Tasks (owner request, 8 October 2026): the checks and logs a
 // site does each day, from templates with schedules. A task keeps what it asked
 // for when it was made, so changing a template never rewrites what someone did.
 // Sites are Core's; who may do what is the policy engine's (`tasks.*`).

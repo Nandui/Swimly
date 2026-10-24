@@ -2,7 +2,7 @@
 
 **Purpose:** makes sure staff get the training and qualifications their jobs need.
 
-The rules for courses, assignments, sign-offs and certificates are in [docs/training.md](../../../docs/training.md).
+Its levels are in [docs/apps.md](../../../docs/apps.md).
 
 ## Features
 - `courses` — training courses: create, change settings, archive, and the qualification each grants (`/training/courses`).
@@ -36,7 +36,7 @@ The rules for courses, assignments, sign-offs and certificates are in [docs/trai
 - `handInWork(person, id, lessonId, work)`, `mySubmissionFile(userId, id, lessonId)` — handing in work on a Hand in work lesson from Turnfin Me (phase 8).
 
 ## Data owned
-Declared in `prisma/schema/training.prisma` (table names kept, ADR 0002):
+Declared in `prisma/schema/training.prisma` (table names kept):
 - `TrainingCourse` — a course and what it grants.
 - `TrainingAssignment` — one person's assignment, from assigned to completed or cancelled, and the course version they take.
 - `training_sections`, `training_lessons` — a course's draft outline.

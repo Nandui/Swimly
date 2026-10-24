@@ -1,6 +1,6 @@
 import { draftCourse, MAX_DOCUMENT_BYTES } from "@/modules/training/features/ai-draft";
 
-/** Drafts a course from a document with AI (docs/training.md, AI drafting).
+/** Drafts a course from a document with AI (AI drafting).
  *  Same-origin only; the body is read as a stream and refused past the size
  *  cap. Writing a course can take a minute or two. */
 export const maxDuration = 300;

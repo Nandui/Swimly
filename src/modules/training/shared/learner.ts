@@ -1,6 +1,6 @@
 import { addDaysIso } from "@/lib/format";
 
-/** The learner's own space (docs/training.md, e-learning phase 6): pure rules
+/** The learner's own space (e-learning phase 6): pure rules
  *  for daily refreshers, streaks, badges and search, kept apart from the
  *  database so they are tested on their own. */
 

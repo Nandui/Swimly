@@ -1,3 +1,3 @@
-/** Events Short courses emits (CLAUDE.md section 6, docs/architecture/events.md).
+/** Events Short courses emits (AGENTS.md, How apps talk, docs/architecture.md).
  *  None yet: the Rota learns about sessions through commitments. */
 export {};

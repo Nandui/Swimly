@@ -9,7 +9,7 @@ import { BISHOPSTOWN_SHEET } from "@/modules/stock/features/products/server/shee
 import { STOCK_CATEGORY_TONES } from "@/modules/stock/shared/rules";
 import { refresh } from "@/modules/stock/shared/server";
 
-/** Writes for the product list and its categories (docs/stock.md): Manage keeps them. Products and
+/** Writes for the product list and its categories: Manage keeps them. Products and
  *  categories are archived, never deleted, so every old count stays readable. Every write is audited. */
 
 const optional = (max: number, message: string) => z.string().trim().max(max, message).default("").transform((v) => v || null);

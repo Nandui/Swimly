@@ -16,7 +16,7 @@ type Waiting = { label: string; count: number };
 /** One group's panel: the group's name and its modules as rows. */
 type Group = { label: string; modules: readonly ModuleManifest[] };
 
-/** Home, the hub (DESIGN.md, "Poolside Clear v2"): the modules this person's role opens, one
+/** Home, the hub: the modules this person's role opens, one
  *  white panel per module group, the panels in two balanced columns from 1024px. Each module
  *  row has its icon, name and registry description, and, when something in it needs the
  *  person, a "N need you" tag and the names of up to two of those queues, so the row says

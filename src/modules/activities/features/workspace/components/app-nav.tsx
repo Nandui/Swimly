@@ -14,7 +14,7 @@ const SWIM_SCHOOL_OVERVIEW = "/swim-school";
 
 type Club = { id: string; name: string };
 
-/** The swim school in the shared module frame (docs/how-turnfin-works.md):
+/** The swim school in the shared module frame (docs/architecture.md):
  *  its desk pages along the top, then swimmer search and the working site in
  *  the tools bar. The layout passes plain values; the icons come from
  *  `@/modules/activities/features/workspace/server/nav`, because a component is not serialisable. */

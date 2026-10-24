@@ -1,7 +1,7 @@
 import { TEMPLATE_MARK, type DocNode, type LessonData, type LessonKind } from "@/modules/training/shared/lessons";
 import type { ExamSettings } from "@/modules/training/shared/questions";
 
-/** Course templates (docs/training.md, e-learning phase 3): ready-made outlines
+/** Course templates (e-learning phase 3): ready-made outlines
  *  an author starts from instead of a blank course. Text an author must replace
  *  starts with ✎, and a course can't be published while any is left. Pure and
  *  client-safe. Generic on purpose: no real people, sites or procedures. */

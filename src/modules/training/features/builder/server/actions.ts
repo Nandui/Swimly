@@ -16,7 +16,7 @@ import { MAX_QUESTIONS, QUESTION_KINDS, normaliseQuestion, questionFiles, questi
 import { loadDraft } from "@/modules/training/features/builder/server/draft";
 import { cleanObservation, MAX_OBSERVATION_STEPS } from "@/modules/training/shared/on-the-job";
 
-/** The course builder (docs/training.md, e-learning phase 1). Building needs
+/** The course builder (e-learning phase 1). Building needs
  *  `training.manage` (the Author level and above). The draft is only ever seen
  *  in the builder and its preview; Publish freezes it into a numbered version,
  *  which is what learners get. Every change is audited in its transaction. */

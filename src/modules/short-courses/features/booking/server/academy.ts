@@ -11,8 +11,8 @@ import {
   type AcademyCheck, type AcademyKind, type AcademyPayment, type AcademyResult,
 } from "@/modules/short-courses/shared/academy-rules";
 
-/** The Academy's courses on the public booking site (owner decision, 8 October 2026;
- *  docs/academy.md), one of the two sources api.ts lists.
+/** The Academy's courses on the public booking site (owner decision, 8 October
+ *  2026), one of the two sources api.ts lists.
  *
  *  - Anyone can read the courses put online that have not started.
  *  - A place held online is a candidate with payment owed, `source` online and a deadline to be

@@ -6,7 +6,7 @@ import { requireStockActor } from "@/modules/stock/shared/access";
 import { inSites, iso } from "@/modules/stock/shared/reads";
 import { compareCounts, compareTotals } from "@/modules/stock/shared/rules";
 
-/** Two submitted counts at one site, side by side (docs/stock.md). Without a choice it compares
+/** Two submitted counts at one site, side by side. Without a choice it compares
  *  the latest two at the first site that has two. */
 export async function stockComparison(choice: { from?: string; to?: string }) {
   const who = await requireStockActor();

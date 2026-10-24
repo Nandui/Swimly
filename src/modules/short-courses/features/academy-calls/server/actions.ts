@@ -9,7 +9,7 @@ import { courseFor, refresh } from "@/modules/short-courses/shared/academy-serve
 import { chose, copiedFrom, keepBooked, resolveSwimmer, swimmerChoiceSchema } from "@/modules/short-courses/shared/swimmers";
 import { members } from "@/modules/contributions";
 
-/** Academy writes for phoning people who held a place online (docs/academy.md). Every write is audited. */
+/** Academy writes for phoning people who held a place online. Every write is audited. */
 
 /* ---------- Phoning people who held a place online ---------- */
 

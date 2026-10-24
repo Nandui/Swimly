@@ -1,7 +1,7 @@
 /* Pool-deck controls stay thumb-sized at tablet widths too, including when
    the browser reports a mouse. Shared desktop components keep their density.
    Poolside covers buttons, inputs and select triggers; this adds plain links, radios, tabs,
-   dialog buttons and comboboxes, and select items (DESIGN.md, 44px deck targets). */
+   dialog buttons and comboboxes, and select items (44px deck targets). */
 .workspace :where(button, a[href]:not(.sr-only), [role="radio"], [role="tab"]),
 :global(body):has(.workspace) :global([data-slot="dialog-content"]) :where(button, [role="combobox"]),
 :global(body):has(.workspace) :global([data-slot="alert-dialog-content"]) button,

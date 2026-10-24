@@ -4,8 +4,8 @@ import { z } from "zod";
  *  (/api/parent/v1), Turnfin Me (/api/staff/v1) and the Academy booking site
  *  (/api/academy/v1). One contract: JSON only, small bodies, allowlisted
  *  origins, no cookies, never cached, and one error envelope. Each API keeps its
- *  own config, secret, routes and wording (docs/architecture/README.md, "Shared
- *  plumbing in the platform"). */
+ *  own config, secret, routes and wording (docs/architecture.md, "Platform
+ *  services"). */
 
 /** An error the API means to show. Messages are written for the API's own
  *  users and never contain record values, credentials or provider details. */

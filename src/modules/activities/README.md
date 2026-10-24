@@ -2,7 +2,7 @@
 
 **Purpose:** runs the swim school's classes for its swimmers.
 
-It covers both menu entries Swim school (the desk, `src/app/(activities)`) and Pool deck (`src/app/(instructor)`), and the parent app's APIs. See [docs/how-turnfin-works.md](../../../docs/how-turnfin-works.md) and [docs/instructor.md](../../../docs/instructor.md).
+It covers both menu entries Swim school (the desk, `src/app/(activities)`) and Pool deck (`src/app/(instructor)`), and the parent app's APIs. Its levels and the rules that protect swimmers' data are in [docs/apps.md](../../../docs/apps.md).
 
 ## Features
 - `students` — the swimmer directory, a swimmer's profile and history, adding swimmers and parent changes (`/students`).
@@ -54,7 +54,7 @@ It never queries Core tables. It reads people and sites through `src/lib/directo
 - Site summary: programmes, swimmers and classes on Sites.
 - Starter page items (`registerHomeCard`; Home counts the ones that need the person): Swim school (today's classes and assessments, swimmers awaiting enrolment, parent updates) and Pool deck (the viewer's classes today).
 - Area rename: classes and assessment sessions follow an area renamed in Admin.
-- Member directory (`registerMemberDirectory`, `features/students/server/members.ts`): the swimmer records other modules book people from (owner request, 21 October 2026, ADR 0014). Short courses and the Academy search, read (medical notes only when they say their viewer may) and add swimmers; the swim school writes and audits every add. The swimmer profile's **Other courses** reads `memberHistoryFor`.
+- Member directory (`registerMemberDirectory`, `features/students/server/members.ts`): the swimmer records other modules book people from (owner request, 21 October 2026). Short courses and the Academy search, read (medical notes only when they say their viewer may) and add swimmers; the swim school writes and audits every add. The swimmer profile's **Other courses** reads `memberHistoryFor`.
 - Menu entries, levels and permissions: `manifest.ts` (Swim school and Pool deck), listed in `src/app/modules.ts`.
 
 ## Permissions

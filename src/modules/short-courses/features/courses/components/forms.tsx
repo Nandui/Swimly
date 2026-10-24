@@ -17,7 +17,7 @@ import { amount, PersonSelect, text, THEME, useRefresh, type Option, type Person
 import { BirthDateField, SwimmerCard, SwimmerLinkDialog, type SwimmerCardData } from "@/modules/short-courses/shared/components/swimmer-card";
 import { readSwimmerChoice, SwimmerPicker, type PickedSwimmer } from "@/modules/short-courses/shared/components/swimmer-picker";
 
-/** The course dialogs (docs/short-courses.md): putting a course on, its sessions, booking people
+/** The course dialogs: putting a course on, its sessions, booking people
  *  and the waiting list, and registers. */
 
 /* ---------- Courses ---------- */

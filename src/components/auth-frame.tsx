@@ -13,7 +13,7 @@ function Fin({ className }: { className?: string }) {
 }
 
 /** The frame for every page outside the app: sign in, switch user, confirm it's you and
- *  the 404 (DESIGN.md, Poolside Clear v2; AUSignIn, AUConfirm, AUSwitch). One white panel
+ *  the 404. One white panel
  *  on the outer canvas. `welcome` adds the blue brand panel beside it (sign-in only; hidden
  *  on phones, stacked above the form at 768); `fin` puts the fin at the top of the panel,
  *  at the start (confirm it's you) or centred over a centred state (404 and errors).

@@ -5,7 +5,7 @@ import { parseDateOnly, today, toDateOnlyString } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { ruleCovers, ruleState } from "@/modules/training/shared/rules";
 
-/** The compliance autopilot's run (docs/training.md, e-learning phase 4).
+/** The compliance autopilot's run (e-learning phase 4).
  *  For every live rule, everyone it covers who has nothing open on the course
  *  and either never finished it or is due again is assigned it, by the rule.
  *  Runs daily from the cron and straight after a rule is saved. Each

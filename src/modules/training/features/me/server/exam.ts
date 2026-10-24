@@ -10,7 +10,7 @@ import { docChecks, outlineLessons, readOutline } from "@/modules/training/share
 import { finishAssignment, mine, type Db } from "@/modules/training/features/me/server/course";
 import { rememberExamMisses, rememberMiss } from "@/modules/training/features/me/server/refresher";
 
-/** Quizzes and the final exam in Turnfin Me (docs/training.md, e-learning
+/** Quizzes and the final exam in Turnfin Me (e-learning
  *  phase 2). Only ever the signed-in person's own assignment. The key never
  *  leaves this file: learners get `learnerQuestion`, and a review with the
  *  right answers only after a passed exam. Every sitting is audited. */

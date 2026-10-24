@@ -2,7 +2,7 @@
 
 **Purpose:** keeps each person's HR record (notes and performance reviews) private to the people allowed to see it.
 
-HR keeps its records in its own database (`HR_DATABASE_URL`, migrations in `hr-database/migrations`); unset, HR stays switched off. See [docs/hr.md](../../../docs/hr.md).
+HR keeps its records in its own database (`HR_DATABASE_URL`, migrations in `hr-database/migrations`); unset, HR stays switched off. Its levels and restrictions are in [docs/apps.md](../../../docs/apps.md).
 
 ## Features
 - `team` — the people this person may see in HR, with their latest review (`/hr`).

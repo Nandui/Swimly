@@ -1,7 +1,7 @@
 import type { Role } from "@/generated/prisma/client";
 
 /** Every permission the app has to give, and nothing else: the one access
- *  language (docs/how-turnfin-works.md). A role's levels give permissions;
+ *  language (docs/architecture.md). A role's levels give permissions;
  *  pages, menus and actions ask for a permission, never a level or a role.
  *
  *  This catalogue is **code, not data**. A permission exists because a page

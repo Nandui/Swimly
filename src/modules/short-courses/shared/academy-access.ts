@@ -4,7 +4,7 @@ import { AuthorizationError, requireSession } from "@/lib/authz";
 import { holdsAnywhere } from "@/lib/policy/engine";
 import { actorForSession } from "@/lib/policy/session";
 
-/** Who may open the Academy (docs/academy.md). Courses belong to a site, so every page limits
+/** Who may open the Academy. Courses belong to a site, so every page limits
  *  them to the sites the capability covers (`sitesFor`) and every write checks the course's
  *  site (`mayFor`). The course list is the organisation's, kept with Manage. */
 export type AcademyActor = { id: string; name: string; orgId: string | null; superadmin: boolean; run: boolean; manage: boolean };

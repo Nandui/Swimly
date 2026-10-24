@@ -3,7 +3,7 @@ import { expandPermissions, hasAdministratorAccess, type PermissionKey } from "@
 import { SCREENS, isScreenKey } from "@/lib/staff/screens";
 
 /** A role as the owner thinks of it: one level for each module, plus a few
- *  ticks (docs/how-turnfin-works.md).
+ *  ticks (docs/architecture.md).
  *
  *  Levels are translated here into the named permissions the app checks, so
  *  no page or action ever asks for a level. The role row keeps the

@@ -14,8 +14,8 @@ import { groupFrameModules, useFrame } from '@/components/ui/frame';
 export type ModuleLink = { href: string; label: string; icon?: LucideIcon; active: boolean };
 export type ModuleLinkGroup = { label: string; links: ModuleLink[] };
 
-/** The one frame every module opens in (docs/how-turnfin-works.md, DESIGN.md "Poolside Clear
- *  v2"): the fin and the module's pages along the top, search, site and account on the right;
+/** The one frame every module opens in (docs/architecture.md):
+ *  the fin and the module's pages along the top, search, site and account on the right;
  *  the person's modules in an icon bar down the left (a labelled bar along the bottom on phones
  *  and touch screens). Links are presentation; every page checks its permission again. The pool
  *  deck uses the same tf-shell/tf-frame with its own top bar and no rail or bottom bar. The

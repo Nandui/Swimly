@@ -3,7 +3,7 @@ import type { Member } from '@/modules/docs/shared/types';
 /** A person from the Turnfin staff directory. `siteIds`/`departmentIds` are
  *  their place in the one platform organisation chart (main site, departments
  *  and the sites those departments belong to); `roleIds` is their role, so
- *  documents and reading can be aimed at a role (docs/how-turnfin-works.md). */
+ *  documents and reading can be aimed at a role (docs/apps.md). */
 export type StaffIdentity = Omit<Member, 'facilityIds' | 'teamIds'> & { siteIds?: string[]; departmentIds?: string[]; roleIds?: string[] };
 type PlatformGroups = { sites: { id: string; name: string }[]; departments: { id: string; name: string }[]; roles?: { id: string; name: string }[] };
 export interface StaffDirectory {

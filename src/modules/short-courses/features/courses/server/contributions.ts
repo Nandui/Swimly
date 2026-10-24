@@ -8,7 +8,7 @@ import { expandPermissions } from "@/lib/staff/permissions";
 import type { AreaRename, Commitment, CommitmentQuery, HomeItem, HomeViewer, MemberHistoryEntry } from "@/modules/contributions";
 import { SHORT_COURSE_PLACE_META } from "@/modules/short-courses/shared/rules";
 
-/** What Short courses tells other modules (docs/short-courses.md), registered in module.ts.
+/** What Short courses tells other modules, registered in module.ts.
  *
  *  Commitments: each session of a course that is not cancelled, for its instructor, so the Rota
  *  shows it in its area, counts the time in their shift and warns about double bookings. The

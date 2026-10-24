@@ -2,7 +2,7 @@ import type { PrismaClient } from "../src/generated/prisma/client";
 import { exceptions, outOfRange, score, taskState, tasksOn, type TaskDefinition, type TaskSchedule, type TaskState, type TemplateKind } from "../src/modules/tasks/shared/rules";
 import { addDaysIso as addDays } from "../src/lib/format";
 
-/** The sandbox's Tasks (docs/tasks.md): both sites' settings, five templates (scheduled, ad hoc
+/** The sandbox's Tasks: both sites' settings, five templates (scheduled, ad hoc
  *  and a follow-up action) and two weeks of history at both sites with frozen scores, so Today,
  *  Actions, Reports, Sites and Activity have something to show. Outcomes are fixed, so screenshots
  *  repeat. Invented people only. */

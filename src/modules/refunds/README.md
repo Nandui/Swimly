@@ -2,7 +2,7 @@
 
 **Purpose:** moves a customer's refund request from the front desk to a finance decision and payment.
 
-The rules for the screens, statuses and emails are in [docs/refunds.md](../../../docs/refunds.md).
+Its levels are in [docs/apps.md](../../../docs/apps.md).
 
 ## Features
 - `queue` — find, filter and count refund requests (`/refunds`), and the home-page counts of what waits for someone.
@@ -17,7 +17,7 @@ The rules for the screens, statuses and emails are in [docs/refunds.md](../../..
 Nothing else in Turnfin calls into Refunds. Routes use the feature entries (`features/<feature>/index.ts`).
 
 ## Data owned
-Declared in `prisma/schema/refunds.prisma` (table names kept, ADR 0002):
+Declared in `prisma/schema/refunds.prisma` (table names kept):
 - `RefundRequest` — one customer refund request, its status and version.
 - `RefundEvent` — the history of every change to a request.
 - `RefundAttachment` — receipts, stored in the database.

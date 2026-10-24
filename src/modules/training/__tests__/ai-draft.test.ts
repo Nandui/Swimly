@@ -6,7 +6,7 @@ import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import { DRAFT_JSON_SCHEMA, draftSchema, type Draft } from "../features/ai-draft/server/schema";
 import { toCourse } from "../features/ai-draft/server/to-course";
 
-/** Drafting a course from a document with AI (docs/training.md): the schema the
+/** Drafting a course from a document with AI: the schema the
  *  API is held to, turning the draft into the builder's lessons and questions,
  *  and the unpublished course it lands as. The AI itself is a double here. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;

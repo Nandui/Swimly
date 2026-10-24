@@ -12,7 +12,7 @@ import { swimmersFor, swimmerView } from "@/modules/short-courses/shared/swimmer
 import { canSee, requireSession } from "@/lib/authz";
 import { courseState, SHORT_COURSE_CALL_TIMES, stillOwed, takesPlace, toPhone, waitingOrder } from "@/modules/short-courses/shared/rules";
 
-/** The reads (docs/short-courses.md). Courses are limited to the sites `short-courses.read`
+/** The reads. Courses are limited to the sites `short-courses.read`
  *  covers; a course outside them is a 404. The course list belongs to the organisation. */
 
 const COURSE_ROW = {

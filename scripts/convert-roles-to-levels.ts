@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { convertRolesToLevels } from "@/lib/staff/convert-roles";
 
 /** Converts every role that still holds screens and permissions into one level
- *  for each module (docs/how-turnfin-works.md). Prints each role's proposed
+ *  for each module (docs/apps.md). Prints each role's proposed
  *  levels, anything it would gain, and refuses any role that would lose access.
  *  A Viewer-style read-only role gains the desk's editing, because there is no
  *  read-only level: review those before passing --allow-gains.

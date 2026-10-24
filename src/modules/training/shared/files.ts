@@ -1,7 +1,7 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 
-/** Files used in lessons (docs/training.md): images in the text and the PDF or
+/** Files used in lessons: images in the text and the PDF or
  *  image of a File lesson. Kept in the database like incident photos, under
  *  Vercel's 4.5 MB request limit. Checked by their first bytes, not the name. */
 

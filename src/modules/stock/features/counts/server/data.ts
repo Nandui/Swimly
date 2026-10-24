@@ -8,7 +8,7 @@ import { requireStockActor } from "@/modules/stock/shared/access";
 import { inSites, iso } from "@/modules/stock/shared/reads";
 import { stockTakeState } from "@/modules/stock/shared/rules";
 
-/** The reads for counts (docs/stock.md). Counts are limited to the sites `stock.read` covers; a
+/** The reads for counts. Counts are limited to the sites `stock.read` covers; a
  *  count outside them is a 404. */
 
 const PRODUCT = { id: true, name: true, unitLabel: true, archivedAt: true, category: { select: { id: true, name: true, tone: true, sortOrder: true } } } as const;

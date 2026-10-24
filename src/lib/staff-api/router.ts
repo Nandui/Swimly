@@ -4,7 +4,7 @@ import { rateLimit, requestIp } from "@/lib/staff-api/security";
 import { authenticate, logout, requestCode, requestConfirm, verifyCode, verifyConfirm } from "@/lib/staff-api/auth";
 import * as records from "@/lib/staff-api/records";
 
-/** /api/staff/v1: the only way Turnfin Me reaches Turnfin. See docs/staff-app.md. */
+/** /api/staff/v1: the only way Turnfin Me reaches Turnfin. See docs/architecture.md, Connected products. */
 /** Fixed training/* pages, never an assignment id. */
 const TRAINING_PAGES = new Set(["plan", "search", "saved", "record", "catalogue", "refresher"]);
 

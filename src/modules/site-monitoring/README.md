@@ -2,7 +2,7 @@
 
 **Purpose:** shows managers what they must act on at their sites, raised automatically.
 
-The rules are in [docs/site-monitoring.md](../../../docs/site-monitoring.md).
+Its levels are in [docs/apps.md](../../../docs/apps.md).
 
 ## Features
 - `actions` — the actions list (`/site-monitoring`): open ones oldest first, the latest closed; closing with what was done and opening again; raising them from Tasks' event; the home count.

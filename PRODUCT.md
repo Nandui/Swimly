@@ -1,232 +1,85 @@
-# Product
+# Turnfin 2.0: the product
 
-<!-- impeccable:product-schema 1 -->
+*Turnfin 2.0 began on 24 October 2026. This file says what Turnfin is, who it is for, and the rules every product decision is judged against. How it is built is in [docs/architecture.md](docs/architecture.md); what is being built next is in [docs/roadmap.md](docs/roadmap.md).*
 
-## Platform
+## What Turnfin is
 
-web
+Turnfin is the staff product for LeisureWorld's leisure centres in Cork. Reception, poolside, swim school, duty managers, trainers, HR, finance and the back office all work in it, across several sites, on shared computers, poolside tablets and their own phones.
 
-## Users
+Turnfin 2.0 is a **platform of apps**: one product, one sign-in and one set of records, with each area of the business (Swim school, Rota, HR, Incidents, Purchasing and whatever comes next) built as an app on a shared platform. An app can grow as big as a product another company sells on its own and still never break the others.
 
-**Turnfin is for LeisureWorld's own staff, and only LeisureWorld** (owner confirmed 5 October
-2026: one organisation, its sites in Cork; not offered to other centres). Everyone who works
-in the centre signs in to their role's home page. The jobs, by app:
+2.0 also brings a **new look and feel**. It is being designed now; [DESIGN.md](DESIGN.md) says how it is decided and what holds until then.
 
-- **Reception and desk staff** (Swim school, Short courses, Refunds, Coinage). Find a family in
-  seconds, enrol a child, move them, book an assessment, answer the parent standing at the
-  counter, log a refund request. On a desktop at the desk, or on a phone anywhere in the building.
-- **Swim instructors on the pool deck** (Pool deck). Open today's classes, take attendance,
-  tick competencies, take over a class that is not theirs when they are the one standing at
-  the pool. On a phone or tablet, poolside.
-- **Department supervisors** (Rota). Plan their department's days ahead: the activities each
-  day needs and who is on each place, then share the week with their staff.
-- **Duty managers** (Rota, Swim school, Tasks, Incidents). Run the day: see everything on, when
-  and who; give cover when someone is off; record changes, cancellations, checks, incidents and
-  returns to work.
-- **Lifeguards and other shift staff** (Tasks, Incidents, Docs). Their own shifts, training and
-  required reading reach them in Turnfin Me.
-- **Finance and the back office** (Refunds, Coinage, Purchasing, Stock) review requests, record
-  payments made elsewhere, approve orders and count stock.
-- **Trainers and managers** (Training, Docs, HR, the CCTV log, Site Monitoring, Analytics) sign
-  off training, keep qualifications and documents current, look after their team's HR records
-  (HR is restricted) and follow the site's records and reports.
-- **Administrators** set the centre up rather than use it all day: staff, roles with a level
-  for each app, sites, the setup lists, the curriculum.
+The repository is named Swimly. That is a working name only; never show it to staff.
 
-**Outside Turnfin, the connected products.** Each staff member's own things (training, required
-reading, qualifications, shifts, what HR shared) are in **Turnfin Me** (`apps/me`) on their
-own phone. **Parents and guardians** (owner confirmed 14 September 2026) use the parent app
-through a dedicated API: their linked children's progress and booking assessment sessions,
-including for children not yet in Turnfin ([parent-app.md](docs/parent-app.md)). The public
-books Academy courses on the **Academy booking site** ([academy.md](docs/academy.md)).
+## Who uses it
 
-**Conditions the users work in (confirmed):**
+| Who | Where | What they need from Turnfin |
+| --- | --- | --- |
+| Front-of-house staff (reception) | shared desk computers | find a member fast, book and move people, take requests, hand problems on |
+| Poolside staff (instructors, lifeguards) | poolside tablets | today's classes and checks, big targets, one task per screen, nothing they do not need |
+| Duty and centre managers | desk computers, phones | what needs them at their site today, and the day running |
+| Department leads (swim school, training, HR, health and safety, finance) | desk computers | their area's work, decisions and records, for the sites and people they cover |
+| Administrators | desk computers | people, jobs, sites, setup lists and the activity log, readable at a glance |
+| Every member of staff, for themselves | their own phone, in **Turnfin Me** | their own training, reading, qualifications, shifts and what HR shares |
+| Parents | the **parent app** | their children's classes, progress and details |
+| The public | the **Academy booking site** | lifeguard and swim teacher courses to book |
 
-- Wet hands and glare on the deck. Bright at noon, dim at seven in the evening.
-- Mixed comfort with technology. Some staff are not confident with apps.
-- Some staff whose first language is not English.
-- Poolside wifi drops. A save has to survive that.
-- Turnfin runs on the centre's registered computers and tablets; personal phones use Turnfin Me.
+Turnfin Me, the parent app and the Academy booking site are **connected products**: outside Turnfin, with their own users and sign-in, reaching Turnfin only through versioned APIs.
 
-## Product Purpose
+## The model in five sentences
 
-Turnfin is the app LeisureWorld's centre runs on: one place where each person's role shows
-their job across every part of the centre. It is a set of **apps** (Swim school, Rota, HR,
-Refunds and the rest) on a shared platform of people, roles, sites and the audit trail. A
-role is a job with one level for each app, and its home page shows what needs the person.
-See [how Turnfin works](docs/how-turnfin-works.md); where it is going is in
-[the direction](docs/architecture/platform-and-apps.md).
+1. **Apps.** Turnfin is a set of apps on one platform. Each app is one area of the business and keeps its own information to itself.
+2. **Jobs.** A person holds one or more jobs; a job is a role at the sites it covers. For each app a role has a level, such as None, Use or Manage, and each level includes the ones before it.
+3. **Home.** When you sign in you see Home for the job you are doing at your site: your apps, and everything waiting for you across them.
+4. **Aimed at roles.** Inside an app, things can be aimed at roles: this document is for receptionists, that course is for instructors.
+5. **Connected products.** Your own records are in Turnfin Me on your phone; parents and the public use their own products; all of them reach Turnfin only through its APIs.
 
-It sits beside the systems the centre keeps: **Legend** stays the booking and billing system,
-**Timepoint** keeps the roster's hours, clocking and payroll. Turnfin does not send money,
-change bills or replace either. The swim school's legacy booking system, whose data reached
-us only as printed timetables, is replaced for lessons.
+If a new feature needs a sixth sentence to explain it, question the feature first.
 
-**Scope, confirmed:** the centre's staff work in these apps. Other kinds of booking (camps,
-pool hire, fitness classes) stay out of scope; Legend handles bookings.
+Where the code is today: each person holds one role (sentence 2 arrives with "jobs at places", roadmap step 3), and Home's "Waiting for you" is not yet complete (step 4).
 
-**Success (to confirm with the owner):** every role starts its day on its Turnfin home page
-and finds what needs it there; both sites run a full term of swim lessons on it with every
-class marked on the deck the day it runs; and the rota, cover and absences are run from it.
+## The words
 
-## Positioning
+Each word means one thing. Use them in docs, on screen and in conversation.
 
-**Each role's job in one place** is the thing the centre's other systems cannot do (owner
-confirmed 5 October 2026 as the one edge that matters). Legend knows bookings, Timepoint
-knows hours, paper knows the rest. In Turnfin a receptionist, a duty manager, an instructor
-and a supervisor each sign in to a home page built for their role, with what needs them today
-across every app, and every app checks its own permissions behind it.
+| Word | Means | Never say |
+| --- | --- | --- |
+| **Turnfin** | the product staff use: one sign-in, Home and the apps | "Turnfin Work", "Swimly" |
+| **App** | one area of the business inside Turnfin, opened from Home, that a role gives a level in | "module", "workspace", "surface" (to staff) |
+| **Platform** | what every app stands on: sign-in, people, jobs, sites, access, audit, the shared services | "Core" (to staff) |
+| **Connected product** | outside Turnfin, with its own users and sign-in, using only a versioned API: Turnfin Me, the parent app, the Academy booking site | "portal", "hub" |
+| **Role** | a kind of job, such as Receptionist, holding one level per app | |
+| **Job** | a role at some sites, held by one person | |
+| **Level** | how much of one app a role opens, such as Use or Manage | |
+| **Site** | one leisure centre | "club" (to staff; it is the code name) |
 
-Mechanisms a neighbouring product cannot truthfully copy:
+"Module" and "workspace" are code words only (see [AGENTS.md](AGENTS.md)).
 
-- **Roles are jobs with a level per app**, translated into named permissions; the home page,
-  the navigation and the cards follow from it, so training a new starter is "this is your role".
-  Today each person holds one role; holding more than one job, each at its own sites, is planned
-  ([jobs at places](docs/architecture/jobs-and-work-layer.md)).
-- **One record, said who did what.** Every mark, register, cover, shift change, refund and
-  decision carries a name, a time and, where it matters, a reason, in one audit trail across
-  apps.
-- **Turnfin and Turnfin Me are separate.** Turnfin on the centre's computers never holds
-  personal pages; each person's own things are in Turnfin Me.
+## The pillars
 
-The swim school keeps its own edge inside this: **attendance and cover on the deck**. A class
-is marked on a phone, two taps from the Pool deck, and the record says who actually taught
-it; cover is declared by the person at the pool, not inferred.
+The owner's nine pillars. Every proposal, plan and change is judged against them; say plainly when something goes against one, including your own work.
 
-## Operating Context
+| Pillar | The rule that delivers it | How we check |
+| --- | --- | --- |
+| **Simple** | The five sentences explain Turnfin. Remove a concept before adding one. | This file still explains everything. |
+| **Easy to use** | Everyone lands on Home for their job. Plain words, one task per screen, and it works on desk, tablet and phone. | A new starter finds their first task without help. |
+| **Easy to manage** | A role is one row per app and fits on one screen; a person's jobs fit on one screen. | An admin can say what a person can do, where and why, by reading one page. |
+| **Easy to audit** | Every change writes one entry to one shared log: who, what, which app, which record, when. | Any change can be traced with one search. |
+| **Easy to train** | Home shows the job. Every level has one plain sentence, shown where it is set. | This file is enough to train a new manager. |
+| **Modern** | One current technology and one design, the 2.0 design. When something is replaced, the old version is removed in the same release. | No second design, no dead screens, no retired words. |
+| **Scalable** | A new site, role, job or organisation is data, not code. A new app is one new folder. | Adding a site needs no release. |
+| **Clean** | Every app has the same six-part contract and never reaches into another app; lint refuses it. | Lint and the contract tests pass. |
+| **Change without breaking** | Apps connect only through their contract. Contracts and databases only grow. Every app has its own tests, and nothing reaches `main` without passing the checks. | Tests pass with any one app switched off. |
 
-- **Two sites**, each with its own timetable and assessment sessions. Swimmers,
-  curriculum, progress, staff and roles are shared. The site being worked at is
-  chosen per device and shown on every screen.
-- **Weekly classes** of 30 minutes, Monday to Saturday, in the Learner Pool
-  and numbered lanes of the main pool. Bishopstown runs afternoons; Churchfield
-  runs afternoons Monday to Friday and Saturday mornings. There are no term
-  rows; attendance is keyed on class, date and child. Dated cancellation records
-  preserve the affected session and roster without changing the weekly class.
-- **Assessment sessions** are dated one-offs (the club calls them "Swim School
-  Assessments", level "Pre-Assessments"), free, with a fixed number of places.
-  A child booked on one is placed at a level afterwards, which earns that level
-  and every level below it. A session can set the ages it is for (whole years on
-  its date, both ends optional and included); a child outside it, or with no
-  date of birth to check, cannot be booked or placed (owner request, 9 October 2026).
-- **The curriculum today:** Water Safety & Fun (Starfish, Penguins, Turtles,
-  Dolphins), Swimming Skills (Sharks 1, Sharks 2, LeisureWorld Sharks), RLSS
-  Lifesaving (Rookies Bronze, Silver, Gold). Credit earned in one programme
-  says nothing about another.
-- **The club's vocabulary is kept:** member numbers prefixed LWB, LWC or LWD
-  for the home facility (Bishopstown, Churchfield, Douglas); "home facility";
-  swimmer, class, level, competency, programme, register, cover, placement,
-  kind of assessment. Names are transcribed exactly as the club's records
-  have them, oddities included, and corrected by a person.
-- **The desk sometimes copies a paper sheet in** after the fact, recording a
-  register for the instructor rather than taking the class over.
-- **Saves survive the poolside wifi:** the register and the checklist save as one action for
-  the whole class and keep a local draft ([swim-school.md](docs/swim-school.md)).
+## What every screen must get right
 
-## Capabilities and Constraints
+These hold whatever the 2.0 design looks like.
 
-**Built and in use.** Each app's doc says what it does in detail ([docs/README.md](docs/README.md)):
-
-| App | In one line |
-| --- | --- |
-| Swim school | swimmers and profiles, the weekly class browser, the day's Schedule, enrolment with a capacity lock and placement reasons, waitlists and transfers across sites, assessment sessions and placements, Awaiting enrolment and moves with a follow-up history, Together (a time that suits every child in one family), Duty manager and cancelled classes, Legend agreement checks, the curriculum, and the parent app's staff controls |
-| Pool deck | today's classes on a tablet, confirmed starts shared with colleagues, attendance, competencies, level completion, Ready to move, today's assessments, and a swimmer lookup |
-| Analytics | the swim school's reports for managers: business, classes, swimmers, progression, teachers, Reception activity and instructor attendance |
-| Short courses and the Academy | courses the public book, registers, waiting lists, call-backs and the Academy booking site |
-| Refunds, Coinage | requests from the desk to finance or accounts, decided and recorded; Turnfin never moves money |
-| Tasks, Incidents, the CCTV log, Site Monitoring | each site's daily checks, accident and incident reports, CCTV checks, and the actions they raise |
-| Rota, Training, Docs, HR | who works when, courses and qualifications, documents and required reading, staff records and reviews |
-| Purchasing, Stock | purchase orders with approval, and stock counts |
-| Admin | people, roles, sites and the setup lists |
-
-Staff also have a signed-in [help centre](docs/help-centre.md); it is not a public support
-portal and sends no support requests.
-
-**Constraints that hold:**
-
-- Schema changes only add: merging to `main` migrates production under live code, and
-  previews use their own development database.
-- A role is a job with one level for each app, translated into named permissions; pages and
-  actions ask for a permission, never a level or a role name, and nothing refers to a role by
-  name ([platform-access.md](docs/platform-access.md)).
-- Every change to data writes an audit row, scripts included.
-- Swimmers can enrol, waitlist and move between classes at either site; their identity,
-  contacts and progress stay on one shared record. The working site filters the timetable;
-  it is not a swimmer ownership boundary.
-- Prices, payments and blocks are not modelled.
-- Imported swimmers have no date of birth, only an age as at the import date, and no
-  contacts; both arrive as the desk fills them in.
-- The interface is English only today.
-
-**Explicitly undecided:**
-
-- Whether LeisureWorld's name or logo must appear inside the app.
-- The definition of a finished term (see Success above).
-- Other kinds of booking: out of scope now, shape unknown.
-- Translation of the interface: not decided; plain English is the confirmed requirement.
-
-## Brand Commitments
-
-- **The product is Turnfin** (owner confirmed 5 October 2026, final), made of **apps**; each
-  person's own product is **Turnfin Me** (owner decision, 24 October 2026: never "Turnfin
-  Work", never "module" on screen). "Swimly" is retired as a name: nothing people read says
-  Swimly; code identifiers, package names and the repository may keep it.
-- The Turnfin fin logo is the brand mark (see DESIGN.md). Whether LeisureWorld branding
-  appears inside the app is not decided.
-- Voice, derived from confirmed user needs rather than a style guide: plain,
-  short, concrete sentences; the club's own words; British and Irish spellings
-  (enrol, programme); no idioms; an error is one sentence saying what to do.
-- **One word per thing, in every screen.** In what people read: *swimmer* (never student),
-  *class* (never course), *attendance* (never register), *competencies* and *marks* for what
-  an instructor ticks, *Assessments* only for the club's Swim School Assessment sessions,
-  *level*, *programme*, *cover*, *placement*, *site*, *app*. Code identifiers and URLs keep
-  their old names (`Student`, `Course`, `Club`, `src/modules`); the words on screen do not.
-
-## Evidence on Hand
-
-- **Real data, in the live database** (counted 5 October 2026): 2,023 swimmers, 242 weekly
-  classes, 2,263 enrolments, assessment sessions and bookings for both sites, imported from the club's
-  legacy system by one-off import scripts (removed after use; they remain in git
-  history). These are real children's names
-  and contacts and must never appear outside the app, in screenshots, or in
-  marketing.
-- 35 real staff accounts. The development database may hold a copy of this real data, so the
-  same care applies there.
-- The legacy system's printed timetables (the import sources) are held by the
-  owner, not in the repository.
-- **Absent, and not to be invented:** testimonials, case studies, press,
-  usage figures, pricing, a launch date, a public website.
-
-## Product Principles
-
-1. **Each role's job in one place.** A person signs in to their role's home page and finds
-   what needs them today across every app. A new feature belongs to an app and a level,
-   and shows up for the roles that hold it; it never asks people to go looking.
-2. **The deck comes first.** Anything an instructor does poolside works
-   one-handed on a phone, two taps from the Pool deck, with wet hands, in glare and
-   in the dark, and survives a dropped connection.
-3. **Say who did what.** Every mark, register, cover, shift change, refund and decision
-   carries a name and a time, and a reason where it matters. Nothing is inferred.
-4. **The club's words and the club's ladder.** Programmes, levels, kinds of
-   assessment, member numbers and names are the club's, kept exactly; the
-   app never renames the club's facts, and a person corrects them.
-5. **Plain words, few steps.** Written for staff with mixed comfort with
-   technology and mixed first languages: common words, one idea per sentence,
-   errors that say what to do, and nothing that can be broken by a wrong tap.
-
-## Accessibility & Inclusion
-
-Confirmed needs, 2 Sep 2026:
-
-- **Wet hands and glare.** Touch targets at least a thumb's height on phones,
-  contrast well above the minimum, no hover-only affordances, no drag or
-  long-press as the only way to do something, both light and dark usable at
-  the pool.
-- **Mixed comfort with technology.** Forgiving flows: confirm before anything
-  destructive, make the next step obvious, keep the number of steps small.
-- **Staff whose first language is not English.** Short common words,
-  consistent terms, no idioms or jokes in the interface.
-
-Standing bar in the code, not a client requirement: text contrast 4.5:1 and
-control edges 3:1 in both modes, a visible focus ring on everything focusable,
-a skip link, and `prefers-reduced-motion` honoured.
+- **The job first.** Each screen serves one job for one kind of person. Say who it is for before changing what it does.
+- **Plain words.** Staff words, not system words. No codes, ids or technical terms on screen.
+- **Safe with people's data.** Show the least that does the job. Medical notes, HR records and contact details reach only the people whose job needs them (rules in [docs/apps.md](docs/apps.md)).
+- **Honest states.** Every screen says what is loading, empty, failed or saved, and how to recover.
+- **Shared devices.** Desk computers and tablets are shared: a person can switch in with a PIN and is signed out when idle.
+- **Accessible.** WCAG 2.2 AA: keyboard reachable, visible focus, readable contrast in light and dark, targets big enough for wet hands at the pool.
+- **What's new.** Anything staff will notice is explained in plain words on the What's new page in the same release ([AGENTS.md](AGENTS.md)).

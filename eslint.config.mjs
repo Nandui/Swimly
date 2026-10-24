@@ -12,7 +12,7 @@ const { uiImports, uiSyntax } = designTokens;
 // Turnfin is a modular monolith: Core (people, roles, sites, audit) and modules
 // (the swim school's module, called Activities here, and every other module). A module may
 // import Core and itself, never another module; Core imports no module. Only a
-// composition root may import every module. See CLAUDE.md, section 3.
+// composition root may import every module. See AGENTS.md, Layers and dependencies.
 const activitiesFiles = [
   "src/modules/activities/**",
   "src/app/(activities)/**",
@@ -97,7 +97,7 @@ const activitiesData = [
 ];
 const coreData = notTables(Object.keys(moduleFiles), "Core never queries a module's tables. Register a contribution in src/modules/contributions.ts instead.");
 // Every module reads Core only through its functions, never its tables
-// (CLAUDE.md, section 5): src/lib/directory.ts,
+// (AGENTS.md, Data and writes): src/lib/directory.ts,
 // src/lib/qualifications.ts, src/lib/setup/activity-types.ts,
 // src/lib/people/records.ts, src/lib/audit.ts and the policy engine. Each entry
 // names the module's relations to Core tables, so joins are caught too.
@@ -148,8 +148,8 @@ const restrictedPaths = (skip) => ["error", {
   ],
 }];
 
-// The target architecture's dependency table (CLAUDE.md, section 3), as errors
-// since 10 October 2026 (CLAUDE.md, section 8), alongside the
+// The target architecture's dependency table (AGENTS.md, Layers and dependencies), as errors
+// since 10 October 2026 (AGENTS.md, None), alongside the
 // module and data rules above.
 // Elements are folders (first match wins); single files that sit outside their
 // layer's folder are classified by file category instead.
@@ -220,7 +220,7 @@ const layerPolicies = [
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  // The UI rules (CLAUDE.md, "UI rules"): shadcn components and the theme only. No literal
+  // The UI rules (AGENTS.md, Screens): shadcn components and the theme only. No literal
   // colours, one-off lengths or Tailwind arbitrary values, no inline styles, and every
   // PageHeader in its page's PageShell. eslint-suppressions.json stays empty: never suppress
   // these rules or disable them inline.
@@ -303,7 +303,7 @@ const eslintConfig = defineConfig([
     rules: {
       "boundaries/dependencies": ["error", {
         default: "disallow",
-        message: "{{ from.element.types.[0] }} may not import {{ dependency.source }} (CLAUDE.md, section 3).",
+        message: "{{ from.element.types.[0] }} may not import {{ dependency.source }} (AGENTS.md, Layers and dependencies).",
         policies: layerPolicies,
       }],
     },

@@ -1,7 +1,7 @@
 import { Ban, CalendarClock, CircleCheck, CircleDashed, CircleX, Clock, Coins, HandCoins, LifeBuoy, PhoneCall, PhoneMissed, PlayCircle, RotateCcw, School, Shapes, TriangleAlert, Wallet } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 
-/** The Academy's rules (owner decision, 8 October 2026; docs/academy.md). Pure, so they are
+/** The Academy's rules (owner decision, 8 October 2026). Pure, so they are
  *  tested on their own and every screen reads them the same way. */
 
 export const ACADEMY_KIND_META = {

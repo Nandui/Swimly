@@ -10,7 +10,7 @@ import { formatDateTime } from "@/lib/format";
 export const metadata: Metadata = { title: "Actions" };
 
 /** What managers act on at their sites: every reading recorded out of range on a task, the
- *  oldest first, then the latest closed with what was done (docs/site-monitoring.md). */
+ *  oldest first, then the latest closed with what was done. */
 export default async function SiteMonitoringPage() {
   const { open, closed } = await monitoringActions();
   return (

@@ -6,7 +6,7 @@ import { PublicApiError, allowedOrigins, publicApi } from "@/lib/public-api/http
  *
  *  It is off unless ACADEMY_API_ENABLED=true with ACADEMY_AUTH_SECRET of at least 32 characters.
  *  Browsers may call it only from the booking site's origins in ACADEMY_API_ALLOWED_ORIGINS
- *  (https, or http on localhost outside production). See docs/academy.md. */
+ *  (https, or http on localhost outside production). */
 
 export class AcademyApiError extends PublicApiError {}
 

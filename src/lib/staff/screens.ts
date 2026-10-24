@@ -2,7 +2,7 @@ import { isRestrictedPermission, type PermissionKey } from "@/lib/staff/permissi
 
 /** Every page area the app has, as menu entries.
  *
- *  Access has one language: permissions (docs/how-turnfin-works.md). A screen
+ *  Access has one language: permissions (docs/architecture.md). A screen
  *  is simply a place in the menus that appears when the person holds its
  *  `requires` permission, which their role's levels give. Nothing stores
  *  screens; they are worked out from permissions every time.

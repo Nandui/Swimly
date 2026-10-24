@@ -1,4 +1,4 @@
-/* Help's screenshots (docs/help-centre.md, "Updating screenshots"): the real app in the local
+/* Help's screenshots ("Updating screenshots"): the real app in the local
  * sandbox (`npm run sandbox`), whose people and records are all invented, signed in as the
  * sandbox accounts, in light appearance. It opens dialogs and menus but never submits one.
  *

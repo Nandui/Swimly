@@ -11,7 +11,7 @@ import { needsParent, needsRootCause, needsSignoff } from "@/modules/incidents/s
 import { reportRights } from "@/modules/incidents/shared/service";
 import type { IncidentStatus } from "@/modules/incidents/shared/types";
 
-/** Incidents' reads (docs/incidents.md). Your own reports are always yours to
+/** Incidents' reads. Your own reports are always yours to
  *  see; everyone else's need triage access at the report's site. */
 
 const ROW = {

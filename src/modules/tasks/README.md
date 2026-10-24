@@ -2,7 +2,7 @@
 
 **Purpose:** makes sure each site's daily, weekly and one-off checks are done, on time, with evidence.
 
-The rules for templates, schedules, scores and follow-ups are in [docs/tasks.md](../../../docs/tasks.md).
+Its levels are in [docs/apps.md](../../../docs/apps.md).
 
 ## Features
 - `day` — a site's day: its tasks, doing one (checklist, readings, files), can't-complete and not-applicable, approving and reopening, comments, adding one by hand (`/tasks`, `/tasks/[id]`), and the home-page counts.
@@ -19,7 +19,7 @@ The rules for templates, schedules, scores and follow-ups are in [docs/tasks.md]
 - None. Nothing outside Tasks calls into it; routes use the feature entries.
 
 ## Data owned
-Declared in `prisma/schema/tasks.prisma` (table names kept, ADR 0002):
+Declared in `prisma/schema/tasks.prisma` (table names kept):
 - `TaskTemplate` — what a task asks for and its schedules.
 - `Task` — one task on one day at one site, with its answers.
 - `TaskComment`, `TaskFile` — comments and evidence on a task.

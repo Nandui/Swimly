@@ -29,7 +29,7 @@ import { RESTRICTED_ROLE_REFUSAL } from "@/lib/staff/restricted";
  *  that hold only one management permission. */
 
 /** A role is a name, a home page name and one level for each module
- *  (docs/how-turnfin-works.md). Levels are translated into the permissions
+ *  (docs/architecture.md). Levels are translated into the permissions
  *  and screens the app checks by `roleColumns`, so every save writes the
  *  same translation. Unknown modules, levels and extras are dropped. */
 const roleSchema = z.object({

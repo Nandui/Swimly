@@ -1,8 +1,8 @@
-// Site Monitoring (owner request, 20 October 2026; docs/site-monitoring.md): what managers must
+// Site Monitoring (owner request, 20 October 2026): what managers must
 // act on at their sites, raised automatically. Today one thing raises an action: a task completed
 // with a reading outside its range (Tasks announces it with `tasks.reading.out_of_range`). Sites
 // and staff are Core's and read only through its functions, so the table keeps plain ids and
-// carries the module prefix (CLAUDE.md section 4). Actions are closed, never deleted.
+// carries the module prefix (AGENTS.md, Data and writes). Actions are closed, never deleted.
 
 /// One reading a manager must act on: what was recorded, against what range, by whom and when,
 /// and, once closed, what was done.

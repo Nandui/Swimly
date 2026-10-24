@@ -18,7 +18,7 @@ import { orderEmail, PO_EMAIL_LOGO_CID } from "@/modules/purchasing/features/ord
 import { orderEmailContext } from "@/modules/purchasing/features/orders/server/supplier-email";
 import { EDITABLE, MONTHS, approverRoles, euro, mayApprove, orderTotal, poNumber, variantProblem, type PoStatus } from "@/modules/purchasing/shared/rules";
 
-/** Purchasing's order writes (docs/purchasing.md). Raising an order needs
+/** Purchasing's order writes. Raising an order needs
  *  `purchasing.request` at its site; approving needs a role the rules name for
  *  that supplier and amount, and never your own order unless you are an administrator.
  *  Every write is audited. */

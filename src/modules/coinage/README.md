@@ -2,7 +2,7 @@
 
 **Purpose:** moves a till's request for coins from the desk to accounts.
 
-The rules for the screens, statuses and emails are in [docs/coinage.md](../../../docs/coinage.md) (ADR 0014). It mirrors Refunds' shape without importing it.
+Its levels are in [docs/apps.md](../../../docs/apps.md). It mirrors Refunds' shape without importing it.
 
 ## Features
 - `queue` — find, filter and count coinage requests (`/coinage`), and the home card's counts.

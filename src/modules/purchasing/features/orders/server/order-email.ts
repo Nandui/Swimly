@@ -1,4 +1,4 @@
-/** The approved purchase order as the supplier receives it by email (docs/purchasing.md):
+/** The approved purchase order as the supplier receives it by email:
  *  plain text and HTML with the same words. No prices: the supplier invoices at the agreed
  *  prices, and the invoice goes to accounts (owner decision, 15 October 2026). A test is the same email with one line on
  *  top saying who it would have gone to, and "Test" in the subject. Pure, so the preview

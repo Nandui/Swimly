@@ -9,7 +9,7 @@ import { AddSheetProducts, ArchiveProduct, CategoryTag, ProductDialog, stockProd
 
 export const metadata: Metadata = { title: "Stock products" };
 
-/** The product list (docs/stock.md): one list for every site. Anyone with Stock reads it; Manage keeps it. */
+/** The product list: one list for every site. Anyone with Stock reads it; Manage keeps it. */
 export default async function StockProductsPage() {
   const { who, products, categories, sheetMissing } = await stockProducts();
   const live = products.filter((p) => !p.archivedAt).length;
