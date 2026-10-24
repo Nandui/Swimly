@@ -6,7 +6,7 @@ supplier and per amount by role, then given a purchase order number for the supp
 `BT-OCT-0042`: the site's short code (BT, CF, DO, ...), the month it was approved and a
 running number (owner request, 15 October 2026; orders approved before then keep `PO-BT-00001`).
 
-## Surfaces (`/purchasing`, a Work module on the shared `ModuleShell`)
+## Screens (`/purchasing`, in the shared frame)
 
 - **Orders** (`/purchasing`): what waits for your approval, your own orders, and the
   latest at your sites. The Hub shows orders to approve and rejected ones to change.

@@ -7,7 +7,7 @@ decision, 9 October 2026: "all features should be ported"). A template says what
 for, how it is made, where, for whom and when; staff complete the tasks, readings outside their
 range are flagged and followed up, reviewers approve, and each site gets a score.
 
-## Surfaces (`/tasks`, a Work module on the shared `ModuleShell`)
+## Screens (`/tasks`, in the shared frame)
 
 The page bar follows the prototype: Today, Manage tasks, Reports, Actions (with the open count),
 Sites and Activity.
