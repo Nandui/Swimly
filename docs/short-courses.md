@@ -1,6 +1,6 @@
 # Short courses
 
-Owner decision, 13 October 2026: a module for fixed-length courses the public book a place on,
+Owner decision, 13 October 2026: an app for fixed-length courses the public book a place on,
 "like 6 weeks, 8 weeks", at the pool, the gym or anywhere else. Since 15 October 2026 it also
 holds the Academy's qualification courses, with their checks, results and certificates
 (docs/academy.md, ADR 0011); the swim school (weekly classes with no end date) stays separate. The plan Fernando approved is the Artifact "Turnfin Short Courses
@@ -20,7 +20,7 @@ booking site; phase 3 adds "run it again" and reports.
 | Attendance | `ShortCourseAttendance` (`short_courses_attendance`) | Whether they were at a session. |
 
 The tables keep plain ids for the site, the instructor and the organisation and read Core only
-through its functions (`src/lib/directory.ts`, `src/lib/setup/data.ts`), so the module has no
+through its functions (`src/lib/directory.ts`, `src/lib/setup/data.ts`), so the app has no
 relation to any Core table. The migration `20261103120000_short_courses` only adds tables.
 
 The rules are in `src/modules/short-courses/shared/rules.ts` and are pure (tested in

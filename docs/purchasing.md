@@ -57,7 +57,7 @@ order can be approved by anyone whose role has a rule for its supplier with a li
 above its total, who sees its site (`purchasing.read` there), and who did not raise it
 (`mayApprove`, `approverRoles` in `src/modules/purchasing/shared/rules.ts`). A superadmin may approve
 any amount. Administrators (Admin: Manage, and superadmins) may also approve their own
-orders (owner decision, 15 October 2026); everyone else needs someone else to approve. Approvers need at least Purchasing: View to open the module.
+orders (owner decision, 15 October 2026); everyone else needs someone else to approve. Approvers need at least Purchasing: View to open the app.
 
 ## Numbers
 

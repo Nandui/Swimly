@@ -19,7 +19,7 @@ The flow, rules and decisions are in [docs/incidents.md](../../../docs/incidents
 
 `shared/` holds what two or more features use: statuses, kinds, categories and the severity scale (`types.ts`), the pure rules (`rules.ts`, tested in `rules.test.ts`), the access check (`access.ts`), the locked, audited write (`service.ts`) and the emailed links' secrets for footage and wellbeing checks (`link.ts`).
 
-## Public API (index.ts)
+## Front door (index.ts)
 - `incidentStatuses`, `seriousMeta`, `SEVERITY_META` — each status's and severity's label, tone and icon. Used by Core's status-metadata test.
 
 Nothing else in Turnfin calls into Incidents. Routes use the feature entries (`features/<feature>/index.ts`).

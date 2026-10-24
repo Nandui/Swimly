@@ -188,7 +188,7 @@ it.
   - A day that has come asks why for every change (`ChangeFields`). **Export week**
     (`/rota/export`, `diaryExport`): one row per stretch someone works, with paid hours and unpaid
     break minutes. **Copy** and **Share with staff** as before (`copyPlan`, `shareWeek`).
-  - Not yet in the diary: other modules' sessions (Academy) as needs.
+  - Not yet in the diary: other apps' sessions (Academy) as needs.
 - **Today** (`/rota/today`, duty managers): the whole site, every department. Five figures
   (gaps left, on now, starting in three hours, off today, to update in Timepoint), then **Gaps to
   fill** first, soonest first, each with its best three fits and a plus that puts them on

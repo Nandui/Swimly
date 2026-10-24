@@ -1,7 +1,7 @@
 # Analytics
 
 `/analytics` is the swim school's reports, for managers only (owner decision, 21 October
-2026): the **Analytics** module in the Managers group, one level, **View** (the `analytics`
+2026): the **Analytics** app in the Managers group, one level, **View** (the `analytics`
 screen, `analytics.view`, at the person's sites). Swim school Manage no longer opens it. Code: `src/modules/activities/features/analytics`
 (`server/insight-queries.ts` reads, `server/swimmers.ts`, `server/teaching.ts` and
 `server/insights.ts` compute, `components/insights/` draws). Styles are in
@@ -149,13 +149,13 @@ access as the other reports. Phone calls, emails and the till are not recorded, 
 they are not counted.
 
 - **Work done** comes from the audit log through Core (`auditWorkload` in
-  `src/lib/audit.ts`), for the Swim school, Short courses and Refunds modules,
+  `src/lib/audit.ts`), for the Swim school, Short courses and Refunds apps,
   mapped to kinds of desk work by `workKind` (`server/desk.ts`). Teaching and set-up
   are left out. Busy hours use Irish local time.
 - **Timed jobs** have a start, an end and a target (`JOB_KINDS`): parent detail
   changes and app links (24 h), billing agreement checks (7 days), cancelled classes
   to billing (2 days), ready to move (14 days, from the teacher's mark to the next
-  place), waiting list to a place (no target, from the log), and from other modules
+  place), waiting list to a place (no target, from the log), and from other apps
   through `registerDeskMeasures` in `src/modules/contributions.ts`: Academy call backs
   (Short courses, 72 h, `callBy`) and refund requests sent (Refunds, no target).
   Still waiting is late once past its target.
@@ -191,7 +191,7 @@ Pure functions in `server/extras.ts`, tested in `extras.test.ts`:
 ## Instructor attendance
 
 `/analytics/instructors` shows each weekly class occurrence in the current week
-at the selected site. It is read-only and does not enter the Instructor workspace.
+at the selected site. It is read-only and does not enter the pool deck.
 Class overview links are offered only with the Classes screen grant.
 
 - The instructor who started a class is responsible for that occurrence; otherwise

@@ -11,8 +11,8 @@ default. Exactly one day's classes and assessments are rendered. A selected
 date travels in `?date=YYYY-MM-DD`; invalid dates fall back to today.
 
 The shadcn booking sheet, availability icons and Agenda remain. All pool areas
-and instructors at the sidebar's selected site appear without additional filters.
-Small screens use Agenda. The workspace owns vertical scrolling; the booking sheet
+and instructors at the working site appear without additional filters.
+Small screens use Agenda. The page owns vertical scrolling; the booking sheet
 expands to its contents and scrolls horizontally across time columns, retaining
 sticky level labels. Display preference survives day switches. The selected day stays visible until
 its replacement loads, with a loading announcement and disabled old content.
@@ -26,7 +26,7 @@ end and scheduled-end dates, and excluding waitlists and waitlist-only withdrawa
 Ended enrolments can still count before their end date. Capacity, locations and
 weekly times use the current class configuration; this is not an audit reconstruction
 of old timetable edits. Assessment sessions, covers, attendance states and
-cancellations all use the selected date and sidebar site.
+cancellations all use the selected date and working site.
 
 Class cards in both the booking sheet and Agenda open the class overview used
 by Classes, for every selected date. Links require the Classes screen grant;

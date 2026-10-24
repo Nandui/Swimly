@@ -1,7 +1,7 @@
 # Admin: the shared setup
 
-Owner decision, 7 October 2026: what more than one module uses is set up once, in Admin, and
-every module picks from it. Setup that only one module uses stays in that module (its
+Owner decision, 7 October 2026: what more than one app uses is set up once, in Admin, and
+every app picks from it. Setup that only one app uses stays in that app (its
 programmes, courses, suppliers, document templates), and Admin's overview links to each.
 
 ## Admin, by topic (`src/components/core/pages.ts`)
@@ -60,7 +60,7 @@ The lists are organisation-wide, so their actions use the flat permission check.
 - **Renaming an area** reaches every record that uses it through the area-rename contribution
   (`registerAreaRename` in `src/modules/contributions.ts`): Rota (`src/modules/rota/shared/areas.ts`) and
   the swim school (`src/modules/activities/module.ts`) each update their own records,
-  inside Admin's transaction. Core never touches a module's tables. Archiving an area stops it
+  inside Admin's transaction. The platform never touches an app's tables. Archiving an area stops it
   being offered; records keep the name.
 
 ## Positions and the staff profile (owner decision, 8 October 2026)

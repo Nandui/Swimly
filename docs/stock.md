@@ -16,7 +16,7 @@ the role's Stock level.
 | Line | `StockTakeLine` (`stock_take_lines`) | A counted product on a count, the quantity, and who counted it when. |
 
 The tables keep plain ids for the site and the organisation and read Core only through its
-functions (`src/lib/directory.ts`), so the module has no relation to any Core table. The
+functions (`src/lib/directory.ts`), so the app has no relation to any Core table. The
 migration `20261104120000_stock` only adds tables and the categories.
 
 ## Counted none is not uncounted
@@ -59,7 +59,7 @@ Stockly yet, so there are no money figures.
 
 Levels apply at the sites the person works at. The product list and categories are the
 organisation's, kept by anyone with Manage. Stockly's roles map across as Viewer to View, Stock
-manager to Count and Admin to Manage. The module is in the Back office group, beside Purchasing.
+manager to Count and Admin to Manage. The app is in the Back office group, beside Purchasing.
 
 ## Home
 

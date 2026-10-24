@@ -35,7 +35,7 @@ Every doc, once, by topic. Each fact lives in one place; the others link to it. 
 
 | App | Docs |
 | --- | --- |
-| Swim school | [swimmers.md](swimmers.md), [classes.md](classes.md), [schedule.md](schedule.md), [today.md](today.md), [assessments.md](assessments.md), [duty-manager.md](duty-manager.md), [scheduled-unenrolment.md](scheduled-unenrolment.md), [legend-agreements.md](legend-agreements.md), [curriculum-images.md](curriculum-images.md), [shared-sites.md](shared-sites.md) |
+| Swim school | [swim-school.md](swim-school.md) (the domain rules), [swimmers.md](swimmers.md), [classes.md](classes.md), [schedule.md](schedule.md), [today.md](today.md), [assessments.md](assessments.md), [duty-manager.md](duty-manager.md), [scheduled-unenrolment.md](scheduled-unenrolment.md), [legend-agreements.md](legend-agreements.md), [curriculum-images.md](curriculum-images.md), [shared-sites.md](shared-sites.md) |
 | Pool deck | [instructor.md](instructor.md) |
 | Analytics | [analytics.md](analytics.md) |
 | Short courses and the Academy | [short-courses.md](short-courses.md), [academy.md](academy.md) |

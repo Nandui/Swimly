@@ -1,8 +1,7 @@
 # Swimmers directory
 
 The directory at `/students` is the entry point for finding every swimmer in
-the system and opening their profile. It uses the owner-approved shadcn Neutral
-components and shares the existing workspace and colour-mode preference.
+the system and opening their profile. It uses shadcn components in Poolside Clear and the shared colour-mode preference.
 
 - Search words can match first and last name, member number, contact name,
   email or phone. All statuses and all sites are included by default.
@@ -44,9 +43,8 @@ Live-page verification reads structure only; no real swimmer data is exported.
 
 The owner selected option 3, “Journey through the school”. The profile at
 `/students/[id]` now uses actual shadcn Avatar, Progress, Tabs, Collapsible,
-Dialog, Command/Popover, Select and form controls with independent Neutral
-tokens. The header avatar is the shared 64px `size="xl"` avatar and each chapter's
-meter is the shared blue `Progress`, with no profile-specific styling. It remains a desk page; the isolated Instructor workspace has no links
+Dialog, Command/Popover, Select and form controls. The header avatar is the shared 64px `size="xl"` avatar and each chapter's
+meter is the shared blue `Progress`, with no profile-specific styling. It remains a desk page; the pool deck has no links
 or access paths into it.
 
 - Journey opens with enrolment chapters: active places first, then older ones.

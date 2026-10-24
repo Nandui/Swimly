@@ -1,9 +1,9 @@
 # Incidents
 
-Owner request, 11 October 2026: a module to report accidents, incidents and near misses,
+Owner request, 11 October 2026: an app to report accidents, incidents and near misses,
 with the flows and best practices planned before the features. The plan, its flow graphs
 and the decisions behind it are in the Artifact "Turnfin Incidents Plan"
-(https://claude.ai/artifact/GgK3T64QnuKfpvH3rd4V3E). Fernando approved the module and its
+(https://claude.ai/artifact/GgK3T64QnuKfpvH3rd4V3E). Fernando approved the app and its
 defaults on 11 October 2026 ([ADR 0008](architecture/decisions/0008-add-incidents-module.md)).
 
 - **Accident:** someone was hurt or became ill.
@@ -283,7 +283,7 @@ link's page is `/footage/[token]`, which uploads through `/api/incidents/footage
 
 ## Decided (11 October 2026)
 
-- Its own module, **Incidents**, in the Poolside group.
+- Its own app, **Incidents**, in the Poolside group.
 - **Safeguarding concerns are not incident reports.** The form sends the reporter to the
   Designated Liaison Person (Children First); nothing about the concern is stored here.
 - **The main database**, with injury details in their own table and every read logged.

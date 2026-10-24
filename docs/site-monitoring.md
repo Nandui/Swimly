@@ -2,7 +2,7 @@
 
 Owner request, 20 October 2026: "on a task creation if a value is outside of range this should
 trigger an action automatically for the managers, on a page called Site Monitoring". It is the
-first module in the **Managers** group.
+first app in the **Managers** group.
 
 ## What it does
 
@@ -32,7 +32,7 @@ first module in the **Managers** group.
 | View | `site-monitoring.read` | See the actions at your sites and what was done |
 | Act | `site-monitoring.act` | Also close actions with what was done, and open them again |
 
-Reach is the person's sites (`sitesFor`). New modules are hidden until a role is given a level in
+Reach is the person's sites (`sitesFor`). New apps are hidden until a role is given a level in
 Admin › Roles. **Admin: Manage** holds Act everywhere.
 
 ## Files

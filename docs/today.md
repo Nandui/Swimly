@@ -78,83 +78,16 @@ calendar-only access, combined filters, and keyboard focus after the agenda
 shortcut and Jump to now. Live `/today` renders successfully. No test records
 were written to the shared database.
 
-## Instructor and existing roles
+## The pool deck and existing roles
 
-Instructor is an isolated tablet workspace at `/instructor`, requiring a
+The pool deck (`/instructor`) is the swim school's tablet app, requiring a
 confirmed class start before teaching records can be opened or changed. It
 does not appear in desk navigation, and desk links do not appear there.
-The screen keys are `calendar` (Today) and `instructor` (Instructor). Legacy
-deck-only roles keep Instructor without gaining Today. See [Instructor](instructor.md)
-for workspace boundaries and claim enforcement.
+The screen keys are `calendar` (Today) and `instructor` (the pool deck). Deck-only
+roles keep the pool deck without gaining Today. See [instructor.md](instructor.md)
+for its boundaries and start rules.
 
 Class links carry a validated `from=today` or `from=instructor` value. Back,
 week navigation, attendance-to-competencies and the final Done action preserve
 that origin. An inaccessible or unrecognised origin falls back to an accessible
 screen. Attendance and enrolment actions revalidate both destinations.
-
-## Direction contract
-
-THESIS: compare one complete day by level and class start time.
-
-OWN-WORLD: shadcn Table and Item booking blocks, filters, actions, view tabs,
-labels and empty/loading states within a shadcn workspace. Figtree remains;
-independent Neutral tokens and namespaced utilities support light and dark.
-The CSS Module scopes the approved calendar geometry. DESIGN.md records
-the migration of Today and shared chrome, including scrolling and capacity icons.
-
-STORY: find a level and time, check its classes and availability, then open the class
-when attendance or further detail is needed.
-
-FIRST VIEWPORT: date and club above the filter toolbar, then the booking sheet.
-Running and next starts are labelled. Refresh and Jump to now sit in the header.
-
-FORM: the selected level-led design implemented in the existing Today page,
-using the current shell, type scale and Neutral theme.
-
-FINISH: verify filtering, timing, access and the responsive calendar using
-synthetic examples, then record the checks against DESIGN.md's approved exception.
-
-## Booking-sheet verification (before the full shadcn migration)
-
-- Typecheck and lint pass. All 127 tests pass, including the seven calendar checks.
-- The booking-sheet checks cover curriculum ordering, same-name levels in
-  different programmes, simultaneous classes, exact times, mixed durations,
-  filtering, declared cover and permission-sensitive destinations.
-- The real calendar and AppShell were rendered with synthetic data. Browser
-  checks cover filtering, refresh, no-match recovery, keyboard focus, class
-  destinations, missing details and Dublin midnight. No database writes ran.
-- Instructor, attendance actions and database queries were not changed.
-- Checked at 375, 768, 1024 and 1280 in both light and dark: one H1 and main,
-  no overflow outside the sheet or nested controls, and 44px touch targets. Long
-  class, location and instructor names were also checked.
-- Review captures and the runnable fixture are in the ignored directory
-  `.impeccable/review/today-refined/`. These show synthetic examples,
-  not live records.
-- Review was performed without delegation. Component APIs, typography, spacing
-  and status tokens follow the shared Neutral theme. DESIGN.md records the
-  approved shadcn exception; the global stylesheet did not change.
-- `npx next build` passes. Live database rendering and register writes were
-  not exercised. The application's migration-running build script was not used.
-
-## Full shadcn migration verification — 11 September 2026
-
-- `npm run typecheck`, `npm run lint`, all 136 tests, and `npx next build`
-  passed. No migration or live record writes were run.
-- Browser checks on Today at 375, 768, 1024 and 1280, light and dark: all
-  classes retained, one H1, no document overflow, and no legacy UI DOM elements.
-  Narrow surfaces use Agenda. Controls and navigation meet 44px touch sizing.
-- Pool/instructor filtering, searchable instructor options, no-match recovery,
-  clearing filters and refresh preserving the selected pool passed.
-- shadcn Tabs switch between Booking sheet and Agenda. Availability icons,
-  counts, cover labels and permission-derived destinations remain intact.
-- Workspace search opens its labelled dialog, focuses its input, handles a
-  nonmatching test query, and closes with Escape. No real swimmer results
-  were included in screenshots or exported artifacts.
-- Mobile navigation opens and dismisses with Escape. The collapsed sidebar
-  survives reload; its Setup menu and site/account/role menus open correctly.
-  Menu inspection did not invoke sign-out, role changes or site changes.
-- Classes renders within the migrated shell in both themes. Its body remains
-  legacy UI. The Today/shared UI migration does not remove legacy app dependencies.
-- The optimized Turbopack build passed. The local dev server uses Next's
-  `--webpack` mode after Turbopack repeatedly reported an HMR graph error.
-  The project's default build and dev scripts are unchanged.

@@ -62,7 +62,7 @@ accepts `/courses` and known browser parameters, including the site filter.
   The class browser does not load swimmers; the roster loads on inspection.
   No schema changes or data imports are required.
 
-## Verification
+## Tests
 
 Focused tests cover week/archive results, combined filters and facet counts,
 uncapped/full availability, stable pagination, safe return URLs, authorization
@@ -77,10 +77,3 @@ results, archive/read-only states, inactive swimmers, dialog cancel/focus return
 and save failure recovery. Check the directory at 375, 768, 1024 and 1280 in light
 and dark mode, including touch targets, overflow, landmarks and keyboard focus.
 These checks do not modify shared database records.
-
-The shadcn redesign passed `npm run typecheck`, `npm run lint`, all 145 tests
-and `npx next build`. Synthetic browser checks covered combined site/search/
-availability filters, return links, pagination, archived and empty results,
-required fields, simulated save failure/retry, and all four widths in both
-modes. Live checks confirmed the directory contains no legacy UI elements, class
-links resolve and filtered return links survive.

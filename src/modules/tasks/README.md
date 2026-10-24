@@ -15,7 +15,7 @@ The rules for templates, schedules, scores and follow-ups are in [docs/tasks.md]
 
 `shared/` holds what two or more features use: the pure rules (`rules.ts`, tested in `rules.test.ts`), the access check (`access.ts`), reads that make and shape a day's tasks (`data.ts`), what the writes share (`writes.ts`), the status tag and the dialogs' kit.
 
-## Public API (index.ts)
+## Front door (index.ts)
 - None. Nothing outside Tasks calls into it; routes use the feature entries.
 
 ## Data owned

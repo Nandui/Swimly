@@ -53,6 +53,18 @@ Each grant reaches everywhere, one site, or the person's reports. Another organi
 
 **Step-up.** Restricted permissions need a sign-in with Google or a password in the last 15 minutes; a PIN switch never counts (`requireFreshSession`, `/confirm-password`, which sends a Google session back through Google).
 
+## Why it is built this way
+
+- **Roles are data; the permission catalogue is code.** `src/lib/staff/permissions.ts` lists every permission, because a permission exists only when a screen or action asks for one. There is no Permission table, which would be a second copy kept in step by hand. A stored key no longer in the catalogue is ignored rather than fatal, so removing a permission is safe.
+- **Administrators always have full access.** Holding both `staff.manage` and `roles.manage` makes an administrator; `expandPermissions` and `visibleScreens` resolve the whole current catalogue, so administrators get new permissions without a data change (restricted ones excepted).
+- **Someone can always get back in.** `staff.manage` and `roles.manage` are load-bearing: lose either across every active account and the way back is a database console, because `prisma/seed.ts` declines once an admin exists. `src/lib/staff/keyholders.ts` refuses any change that would leave nobody holding one, working out what the world would look like afterwards under row locks, not by counting role names. It is not in a `"use server"` file, because every export of one is an endpoint the browser can call.
+- **Nothing refers to a role by name**: not the code, the menus or the seed. That is what lets an organisation rename or delete every role Turnfin shipped with.
+- **A screen is a menu entry opened by one permission** (`src/lib/staff/screens.ts`). Every page opens with `screenPage(screen, permission?)` and is "not found" for anyone without it; a link into another screen asks `canSee` first. Account is always there.
+- **The same rule is guarded in three places**, because they answer different questions: the menu hides what you cannot reach, the page hides the button (`src/lib/page-guards.ts`), and the action refuses the call. Only the action is security.
+- **The session is re-read from the database on every request**, so deactivating someone, changing their role or removing a permission from a shared role takes effect at once rather than at token expiry. Only the person's id is in the token.
+- **Sign-in failure is one sentence for every reason** (wrong password, unknown address, deactivated account), so the form cannot be used to find out who has an account.
+- **`DEV_AUTH_BYPASS=1`** signs in as the first active admin in the database, only when `NODE_ENV` is not production. It uses a real account, so audit rows point at someone who exists and checks behave as in production.
+
 ## Turnfin and Turnfin Me
 
 Turnfin is the job, on registered work computers, and has no personal pages: `/` opens the person's Home. A person's own records (training, required reading, qualifications, shifts, what HR shared, their details) are in **Turnfin Me** (`apps/me`), a connected product that only talks to the staff API. The self-service reads (`*/mine.ts`) and writes (`*/self.ts`) in each module serve that API only. Signing in to Turnfin away from a registered device needs `work.anywhere` when `WORK_DEVICE_REQUIRED` is on. See [staff-app.md](staff-app.md).
@@ -71,7 +83,7 @@ Email and password, and **Sign in with Google** where it is set up (`src/lib/goo
 
 ## Shared devices
 
-Reception computers and poolside tablets are used by whoever is on shift. Someone who manages staff registers a browser as a shared device (Staff › Shared devices); it gets a signed cookie (`src/lib/devices/shared-device.ts`) and can be revoked centrally.
+Reception computers and poolside tablets are used by whoever is on shift. Someone who manages staff registers a browser as a shared device (Staff › Work devices); it gets a signed cookie (`src/lib/devices/shared-device.ts`) and can be revoked centrally.
 
 - **Quick switch** (`/switch`): people tap their name and enter a personal PIN (set on Account after a recent sign-in). Only people who have signed in on that device and have a PIN are listed. Five wrong PINs lock the PIN until the person signs in again; a sign-in clears the lock and adds them to the device's list.
 - **Idle sign-out**: shared-device sessions return to the switch screen after 5 idle minutes and never last more than 12 hours.

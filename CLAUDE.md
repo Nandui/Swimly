@@ -65,8 +65,18 @@ Each module folder also has `README.md` (section 9), `shared/` and `features/`. 
 
 Permissions are named `<area>.<action>` or `<area>.<thing>.<action>` (`refunds.review`, `hr.details.write`). Each one is given by exactly one level or extra in exactly one manifest; a test checks it. Pages and actions ask for a permission, never a level or a role name.
 
-## 5. Data ownership
+## 5. Data and writes
 
+**Writes.**
+- A mutating action runs: authorize (a named permission), validate, guard, write, audit, revalidate, in that order. The write and its audit row share one transaction; capacity and keyholder guards run under their locks after reading the current rows. The worked shape is at the top of `src/lib/action-result.ts`.
+- Errors a person can fix are return values (`{ ok: false, error }`), shown beside the field. Throwing is for "this should not have been possible".
+- Reads and writes live in separate files (`server/data.ts`, `server/actions.ts`), so a read cannot quietly grow a write. A read a client component calls is a `"use server"` action that still authorizes, with a comment saying why.
+- Deactivate, never delete: `User.isActive` is the off switch, reversible and audit-friendly. `AuditLog.actorName` is stored so the log survives a deletion anyway.
+- A list that grows with the organisation goes behind a server search or a page, never into props.
+- Dates, times and counts come only from `src/lib/format.ts`; "what day is it?" is asked in `SCHOOL_TIMEZONE` (`Europe/Dublin`), never on the server's clock.
+- Scripts are part of the product: idempotent, self-disabling, audited, and deliberate when destructive (`prisma/seed.ts` is the reference: it declines once an admin exists and matches on email).
+
+**Ownership.**
 - Every table belongs to exactly one owner, named by its schema file: `core.prisma` and `base.prisma` are the platform's; every other `prisma/schema/<id>.prisma` is its module's. Existing tables keep their names (ADR 0002). A new table's model takes the app's prefix (`Stock`, `Incident`) and its table the module's (`@@map("stock_takes")`).
 - Only the owner reads or writes its tables. Other apps ask through its front door, or receive what they need in an event payload.
 - No joins across owners. An app reads the platform through the platform's functions, never its own queries or relation joins: `src/lib/directory.ts` (people, sites, roles, departments, positions), `src/lib/qualifications.ts`, `src/lib/setup/activity-types.ts`, `src/lib/people/records.ts`, `src/lib/audit.ts` and `src/lib/policy`.

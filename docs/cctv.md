@@ -2,7 +2,7 @@
 
 Owner request, 20 October 2026: "a new group of modules for managers, the first is a record of
 CCTV view, it needs to allow a record of who checked, why was it checked, what was the purpose and
-what was seen during the investigation". ADR 0012 records the decision. It is the first module in
+what was seen during the investigation". ADR 0012 records the decision. It is the first app in
 the **Managers** group.
 
 Why it exists: under data protection law footage may only be looked at for the reason it is kept
@@ -36,7 +36,7 @@ zones. The tables keep plain ids and read Core only through its functions. The m
 - **Review** (`cctv.review`, at the person's sites): also read every entry at those sites and add
   notes to them.
 - Nobody else, so an entry outside both is "not found". Administrators hold both, as with every
-  module that is not restricted.
+  app that is not restricted.
 
 ## Screens
 - `/cctv/overview`: the starter page; Home shows **Record a CCTV viewing** as a quick action.

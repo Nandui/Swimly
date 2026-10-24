@@ -1,7 +1,7 @@
 # Assessments and awaiting enrolment
 
 Assessments has two linked desk pages. Awaiting enrolment is an independent
-sidebar destination, covering assessment follow-up and all class waitlists.
+page bar destination, covering assessment follow-up and all class waitlists.
 
 | Page | Purpose | Access |
 | --- | --- | --- |
@@ -68,6 +68,16 @@ derived from these records; only a hand-added entry can be taken off by hand.
 
 Enrolment, assessment, student and class changes invalidate the new page.
 
+## Awaiting moves
+
+An instructor confirms **Ready to move** on the pool deck once every saved competency at the
+class's level is achieved. That records the level completion and queues the swimmer's active
+place for the current class's site, with the instructor, date and an optional note for
+reception. Reception moves the swimmer to either site through the normal move flow; the
+current place stays active until it is moved or ended, which closes the handoff. Undoing
+readiness keeps the progress; later progress or curriculum changes flag the handoff for
+review. Existing completions are never queued automatically.
+
 ## Reception follow-up history
 
 Enrolments and waitlists and Awaiting moves each show the latest outcome, recorder,
@@ -99,7 +109,7 @@ audit entry commit in one transaction. Retrying an identical save does not creat
 a second entry. Reloading after a conflict preserves unsaved form values for
 review. Unsaved text is held on the current page only, not across a page reload.
 
-## Verification
+## Tests
 
 - `src/modules/activities/features/enrolment/server/data/awaiting-enrolment.test.ts` uses real Prisma reads in
   isolated PGlite: assessment eligibility, site/programme aliases, historical

@@ -1,10 +1,10 @@
 # Turnfin Refunds
 
-Refunds is a separate staff workspace for all LeisureWorld services, reached from
+Refunds is the app for refund requests from every LeisureWorld service, reached from
 the home page. It shares staff identity and the
 main Turnfin database. It never sends money, changes Legend, emails customers or
 requires a swimmer record. Docs retains its separate database. Refunds opens in the
-shared module frame and uses the whole app's Poolside Clear v2 design.
+shared app frame and uses the whole app's Poolside Clear v2 design.
 
 ## Reception and finance workflow
 
@@ -54,7 +54,7 @@ names are matched and no staff records are automatically changed.
 The three mutation permissions imply reading. Review and processing remain
 independent. Review or process permits retrying staff alerts. Administrators
 inherit current and future grants via `expandPermissions` and `visibleScreens`.
-Refunds-only staff gain neither Aquatics nor Instructor access. All reads,
+Refunds-only staff gain neither swim school nor pool deck access. All reads,
 actions and receipt downloads recheck shared staff authentication/grants; queued
 email delivery rechecks the recipient's current active status and access.
 
@@ -63,7 +63,7 @@ email delivery rechecks the recipient's current active status and access.
 The additive migration `20260923120000_refunds` introduces `RefundRequest`,
 `RefundEvent`, `RefundAttachment` and `RefundNotification`. Identity/site names
 are snapshotted to preserve historical attribution. It does not migrate or alter
-existing Aquatics records or Docs content.
+existing swim school records or Docs content.
 
 Every workflow/receipt mutation locks its request inside a transaction, checks
 the submitted version, and writes the change, event snapshot, audit row and any
@@ -112,8 +112,7 @@ version.
 ## Deployment
 
 1. Publish the staff application with its normal additive Prisma migration step.
-   Confirm `20260923120000_refunds` is applied before using the module. Development
-   and production share this database; do not reset, seed or use `db push`.
+   Confirm `20260923120000_refunds` is applied before using the app. Never reset, seed or use `db push` on a real database.
 2. Configure `REFUNDS_APP_URL` and confirm the existing authorised Google sender
    is available to the staff deployment. Do not change parent-app URLs or Docs
    database variables.
@@ -124,10 +123,7 @@ version.
    downloads in the published environment. Use an authorised test request;
    do not create fictional customer records in production without agreement.
 
-This implementation has not applied a live migration, changed role grants,
-configured production email settings or sent real messages.
-
-## Verification
+## Tests
 
 Focused tests use PGlite with generated Prisma and the actual SQL migrations;
 email delivery and authentication are mocked. No production connection is used.
@@ -139,30 +135,11 @@ same-origin upload routes, active recipients, revoked access and email failures.
 Parent sign-in/API, role/screen and navigation regressions run
 alongside Refunds checks.
 
-
-Verified on 23 September 2026:
-
-- `npm run typecheck` and `npm run lint` passed.
-- All 61 tests passed across Refunds, parent email/API, role/screen access,
-  navigation and Reception Portal.
-- The optimized Next production build passed with a dummy connection URL,
-  without invoking the deployment migration command or a live database.
-- Browser journey: save draft, submit, request information, amend/resubmit,
-  reject an unexplained reduction, approve with a reason, record external
-  payment and inspect the immutable history. Read-only staff have no actions.
-- Queue search/empty/reset, form error recovery and dialog keyboard focus
-  trap/return passed. Queue, detail and new-request layouts passed at 375, 768,
-  1024 and 1280px in both themes: one H1, no overflow, 44px controls.
-- Captured phone/desktop views received an inline visual review because the
-  project prohibits delegation. The design detector returned no findings.
-- The Chrome extension blocked automated file-picker upload. Actual production
-  upload/download handlers passed isolated HTTP tests with stored receipt bytes.
-
 Live authentication, delivery from the company mailbox and deployed database
 connectivity remain deployment checks; mocked delivery is not evidence that
 production sender configuration is present.
 
-## Workspace appearance
+## How it looks
 
 Refunds has no theme of its own. The root layout puts Poolside Clear v2 on
 `body.turnfin-app` (`src/app/theme/poolside.css`), so the frame, shadcn controls, dialogs
@@ -171,7 +148,7 @@ which scopes only the Docs/Refunds shell rules. `src/app/refunds/refunds.css` on
 arranges the Refunds screens: the request page's two columns, the field and fact grids
 and the sticky save bar on a new request.
 
-`RefundShell` opens in the shared module frame (`ModuleShell`) with three views in the
+`RefundShell` opens in the shared app frame (`ModuleShell`) with three views in the
 page bar: Refund requests, My requests and My drafts (`refundListView`). Refund requests
 is current on every other Refunds page, including a request and the new-request form.
 No Docs data or permissions are imported.
@@ -196,9 +173,6 @@ Status tags are `<Tag meta={refundStatuses[status]} />`; each entry in `refundSt
 (`src/modules/refunds/shared/types.ts`) carries its label, tone and a distinct icon, shared with the
 tiles. Decline, withdraw and cancel confirm in the danger colour. Only finance sees
 the email alert notice and its "Send again".
-
-The screens were checked live against V2Refunds, RFDetail and RFNew at 375px dark
-and 1280px light: one H1, no horizontal overflow and 44px controls.
 
 The request page was redesigned with the high-end-visual-design taste skill (15 October 2026,
 like the rota Plan in 1.12.2): the claim card (amount, customer, the four-stage progress line and

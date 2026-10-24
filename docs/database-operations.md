@@ -71,87 +71,55 @@ Do not write test swimmers or classes to production.
 
 ## Previews and the development database
 
-Work ships through a branch or pull request. Vercel builds a preview of it,
-the owner checks the preview, and merging to `main` deploys production. There
-is no long-lived development branch or deployment.
+Changes ship through a branch or pull request. Vercel builds a preview of it, the owner
+checks the preview, and merging to `main` deploys production. There is no long-lived
+development branch or deployment.
 
-On the Vercel project `swimly-crm`, Preview and Development use their own Neon
-database (`DATABASE_URL` and `DATABASE_URL_UNPOOLED`) and are marked
-`DATABASE_ENVIRONMENT=development`. So every branch or PR preview applies the
-main database's migrations to the development database, never to production.
-Docs and HR migrations run only in production (`scripts/migrate-docs.ts` and
-`scripts/migrate-hr.ts`). Test schema changes in the local sandbox
-(`npm run sandbox`) first, and keep them additive.
+**Which database is which** (Neon, Frankfurt, attached through Vercel's Neon integration to
+the Vercel project `swimly-crm`):
 
-On every build, `scripts/check-env.ts` and `scripts/migrate-production.ts` read
-`src/lib/database-environment.ts`:
+| Database | Holds | Used by |
+| --- | --- | --- |
+| `swimly-db` | production's main database: the platform and every app except Docs and HR | Production |
+| `swimly-db`'s branch `preview` | an instant copy of production, real contact details included, made on 20 October 2026 and set never to expire | Preview and Development |
+| Docs (`DOCS_DATABASE_URL`) and HR (`HR_DATABASE_URL`) | their own databases | Production (previews have no HR database, so HR is off there) |
+
+`turnfin-dev-db`, `turnfin-activities-db` and `turnfin-activities-dev-db` are no longer used
+by anything; removing them from Neon is the owner's call.
+
+**Treat every preview as holding real personal data**, and remember it can email real people.
+
+**Migrations.** Preview and Development are marked `DATABASE_ENVIRONMENT=development`, so every
+preview applies the main database's migrations to the `preview` branch, never to production.
+Docs and HR migrations run only in production (`scripts/migrate-docs.ts`,
+`scripts/migrate-hr.ts`). Test schema changes in the local sandbox (`npm run sandbox`) first,
+and keep them additive. On every build, `scripts/check-env.ts` and
+`scripts/migrate-production.ts` read `src/lib/database-environment.ts`:
 - **Production** applies committed migrations to its own database.
 - **A preview marked `development`** applies them to the development database.
-- **A preview without the mark** never migrates and warns. Setting
-  `REQUIRE_DEV_DATABASE=true` makes it fail its build instead, and setting
-  `PRODUCTION_DATABASE_HOST` to production's host name refuses a preview
+- **A preview without the mark** never migrates and warns. `REQUIRE_DEV_DATABASE=true` makes
+  it fail instead, and `PRODUCTION_DATABASE_HOST` (production's host name) refuses a preview
   marked `development` that points at production.
 
-Environment variables on `swimly-crm` (8 October 2026):
-
-| Environment | Variables |
-| --- | --- |
-| Production | `AUTH_SECRET`, `DATABASE_URL`, `DIRECT_URL`, `DOCS_DATABASE_URL`, `DOCS_DIRECT_URL`, `HR_DB_DATABASE_URL`, `HR_DB_DATABASE_URL_UNPOOLED`, the `PARENT_*` settings and the `SWIMLY_OPERATIONS_*` settings |
-| Preview | `AUTH_SECRET`, `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `DATABASE_ENVIRONMENT`, `DOCS_DATABASE_URL`, `DOCS_DIRECT_URL` |
-
-Previews have no HR database, so HR is switched off there. On 8 October 2026
-the `swimly-dev.vercel.app` branch domain was removed, `ACTIVITIES_URL` and
-`SWIMLY_DEPLOYMENT` were deleted, and so were the Neon integration's extra
-`PG*`, `POSTGRES_*`, `NEON_*` and `VITE_*` variables, including their `HR_DB_`
-copies. Do not add them back.
-
-Never rename or edit a migration once its branch has been pushed: the previews
-have already applied it to the development database under its first name, so the
-renamed copy runs again and fails, and Prisma then refuses every later preview's
-migrations (P3009). If it happens, mark the failed one rolled back on the
-development database (`prisma migrate resolve --rolled-back <name>`, or set
+**Never rename or edit a migration once its branch has been pushed.** The previews have
+already applied it under its first name, so the renamed copy runs again and fails, and Prisma
+then refuses every later preview's migrations (P3009). If it happens, mark the failed one
+rolled back on the development database (`prisma migrate resolve --rolled-back <name>`, or set
 `rolled_back_at` on its `_prisma_migrations` row) and push again.
 
-The development database starts with fictional data. Two scripts fill it from
-production instead:
-- `scripts/copy-staff-to-dev.ts` copies staff accounts, roles and sites only
-  (owner decision, 28 September 2026).
-- `scripts/copy-prod-to-dev.ts` replaces the development database's data with
-  **all** of production's main database, as it is, including swimmers, parents
-  and medical notes (owner decision, 29 September 2026, made knowing previews
-  are less protected). It leaves out live parent sign-in tokens, keeps tables
-  only the development database has, and (only if production's roles have no
-  levels yet) is followed by `scripts/convert-roles-to-levels.ts` against the
-  development database. Run again on 20 October 2026, contacts left as they
-  are (owner's choice), so previews can email real people while it holds them. Treat
-  that database, and every preview, as holding real personal data while it
-  does.
+**If previews cannot reach their database** (P1001), the build still finishes but its pages
+fail: check the `preview` branch in Neon (state and expiry), and that Preview's
+`DATABASE_URL` and `DATABASE_URL_UNPOOLED` point at its endpoint.
 
-On 20 October 2026 the owner instead made a Neon branch of swimly-db called
-`preview` (an instant copy of production, real contact details included) and
-pointed the Preview and Development `DATABASE_URL` / `DATABASE_URL_UNPOOLED` at
-it. Previews now migrate that branch, never swimly-db's main. Branches expire
-unless the expiry is removed in Neon. Treat previews as holding real personal
-data, and remember they can email real people.
+**Refreshing it from production.** Both scripts read production in a read-only transaction,
+write only to a database that already has every migration production has, and dry-run unless
+given `--confirm`:
+- `scripts/copy-staff-to-dev.ts` copies staff accounts, roles and sites only.
+- `scripts/copy-prod-to-dev.ts` replaces the development database's data with all of
+  production's main database, swimmers, parents and medical notes included (owner decision,
+  29 September 2026, knowing previews are less protected). It leaves out live parent sign-in
+  tokens and keeps tables only the development database has.
 
-On 21 October 2026 that branch expired and every preview failed (P1001). It now
-has no expiry. If a preview build ever warns that the development database
-cannot be reached, the build still finishes, but its pages fail until the branch
-is back: check the `preview` branch in Neon (state, expiry), and that the
-Preview `DATABASE_URL` / `DATABASE_URL_UNPOOLED` point at its endpoint.
-
-Both read production in a read-only transaction, write only to a database that
-already has every migration production has, and dry-run unless given `--confirm`.
-
-The databases (Neon, Frankfurt, attached through Vercel's Neon integration):
-
-| Database | Holds | Attached to |
-| --- | --- | --- |
-| `swimly-db` | Production Core and Work (and Activities until it moves) | Work, Production |
-| `turnfin-dev-db` | Development Core and Work: fictional data, plus staff, roles and sites copied from production | Work and Activities, Preview and Development |
-| `turnfin-activities-db` | Production Activities, as `ACTIVITIES_*` | Activities, Production |
-| `turnfin-activities-dev-db` | Development Activities, as `ACTIVITIES_*` | Activities, Preview and Development |
-
-A new development database starts empty. The first preview build creates the
+**A brand-new development database** starts empty. The first preview build creates the
 tables; then give it a way in by running `npm run db:seed` against it with
 `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD` set.

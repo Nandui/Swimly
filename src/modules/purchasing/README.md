@@ -11,7 +11,7 @@ The rules for the screens and approvals are in [docs/purchasing.md](../../../doc
 
 `shared/` holds what both features use: approval and money rules (`rules.ts`, pure, tested in `rules.test.ts`), the access check (`access.ts`), form helpers with page revalidation (`forms.ts`), whether emails to suppliers are on (`settings.ts`) and a supplier's picture or initials (`supplier-picture.tsx`, used by the supplier pages and the order form).
 
-## Public API (index.ts)
+## Front door (index.ts)
 - None. Nothing outside Purchasing calls into it; routes use the feature entries.
 
 ## Data owned

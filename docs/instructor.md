@@ -1,7 +1,7 @@
 # Instructor
 
-Instructor is the isolated shadcn workspace for instructors using tablets at
-the pool. Its route group and layout stay separate from the desk workspace.
+The pool deck (`/instructor`) is the swim school's tablet app for instructors at
+the pool. Its route group and layout stay separate from the desk.
 
 - /instructor shows My classes or All classes at the working site today,
   grouped by time or level. The list refreshes every minute while visible and
@@ -37,7 +37,7 @@ the pool. Its route group and layout stay separate from the desk workspace.
   Switching views or swimmers keeps unsaved changes. Absent swimmers remain
   under **Not in today**; level completion is still a separate confirmation.
 - The deck sits in the shared frame (`tf-shell`, `tf-frame` capped at 1180px: 24px ground
-  and inset from 768px, a flat 16px frame on phones) with no module rail or bottom bar,
+  and inset from 768px, a flat 16px frame on phones) with no app rail or bottom bar,
   and scrolls the window. Its skip link is the shared "Skip to content" pill. The home
   page is titled **Pool deck**: an Assessments today panel, then one panel holding
   My/All classes, Group by and every section, each class row with a time block in its
@@ -45,7 +45,7 @@ the pool. Its route group and layout stay separate from the desk workspace.
 - The frame offers classes, a swimmer lookup for the working site, site, help
   (`/help/instructor`, a new tab) and the shared account menu (`AccountMenu`
   with `showManageAccount={false}`: who you are, appearance and sign-out; no
-  Manage account). It has no desk sidebar, cross-site search, class
+  Manage account). It has no desk navigation, cross-site search, class
   administration or swimmer-profile links. The lookup (`/instructor/swimmers`)
   shows name, age, level and class; medical notes appear only for swimmers in a
   class the instructor teaches or is covering today, never contacts or staff notes.
@@ -63,7 +63,7 @@ teaching drafts survive navigation but only saved marks appear in the overview.
 Attendance and competency saves invalidate it so returning shows the new records.
 
 The class list, confirmation, teaching forms, notices and completion dialog use
-actual shadcn components from src/components/shadcn, with Neutral ui-* tokens,
+actual shadcn components from src/components/shadcn, with the Poolside Clear tokens,
 keyboard-operable radio groups and touch targets of at least 44px. Notifications
 sit above the teaching area so they cannot cover Save or Done.
 
@@ -82,7 +82,7 @@ and a current active enrolment. Readiness never allows a completion with gaps.
 Instructors can undo readiness without removing competency marks or the level
 completion. Corrections or a changed class level flag the handoff for review.
 Existing screen grants are unchanged. Accounts explicitly granted both
-workspaces can access both; their normal navigation remains separate.
+the desk and the deck can open both; their normal navigation stays separate.
 
 The existing ClassCover table records confirmed starts for scheduled teachers
 as well as substitutes; no database migration is required. A course row lock,
@@ -96,7 +96,7 @@ competency and completion actions recheck it under the course lock.
 Competency writes also verify current enrolment for the date and the class's
 shared curriculum level. Desk-only actions cannot bypass these checks for an
 instructor-only account. Explicit desk transcription permissions still permit
-corrections through the separate desk workspace.
+corrections on the desk.
 
 Class/date draft keys, save retries, saved-register comparisons, original
 recorder attribution and audit transactions are preserved. Old deck bookmarks

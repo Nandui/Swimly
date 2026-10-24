@@ -1,13 +1,13 @@
-# Turnfin Work and Turnfin Me
+# Turnfin and Turnfin Me
 
 *Owner decision, 27 September 2026.*
 
-Staff use Turnfin in two ways, and each has its own app.
+Staff use two products. Turnfin Me is a connected product: outside Turnfin, with its own sign-in, using only the staff API.
 
-- **Turnfin Work** (this app) is the job, done on the centre's registered PCs:
-  Aquatics, Reception, Refunds, Docs, and the manager screens for Training, HR
-  and Rota. It has **no personal pages or data**: no My hub, no "my training",
-  no shared HR records. `/` opens the person's role home.
+- **Turnfin** is the job, done on the centre's registered computers: every app,
+  from the swim school to the managing side of Training, HR and Rota. It has **no
+  personal pages or data**: no "my training", no shared HR records. `/` opens the
+  person's Home.
 - **Turnfin Me** (`apps/me`) is the person's own records, on their own phone:
   - training to complete;
   - required reading (Docs acknowledgements happen only here);
@@ -17,19 +17,19 @@ Staff use Turnfin in two ways, and each has its own app.
   - their own contact details;
   - reminder preferences.
 
-  It is a separate app with its own deployment and address. It never connects
-  to a database: it only calls the **staff API** (`/api/staff/v1` on Work).
+  It has its own deployment and address. It never connects to a database: it
+  only calls the **staff API** (`/api/staff/v1` on Turnfin).
 
 The split is enforced by what each side can reach, not by devices:
 
-- Work serves no personal endpoints.
+- Turnfin serves no personal endpoints.
 - The staff API returns only the caller's own records, through allowlists. It
   never returns swimmers, refunds, other staff or permissions.
 
 ## Working on work PCs
 
-Work PCs are the devices registered under **Staff → Work devices**. When
-`WORK_DEVICE_REQUIRED=true`, a password sign-in to Work on any other browser
+Work computers are the devices registered under **Staff → Work devices**. When
+`WORK_DEVICE_REQUIRED=true`, a sign-in to Turnfin on any other browser
 needs a role with **Can work away from the centre's computers** ticked (it
 gives `work.anywhere`):
 
@@ -37,7 +37,7 @@ gives `work.anywhere`):
 - administrators inherit it;
 - superadmins always pass.
 
-Anyone else sees: "This account can only sign in to Turnfin Work on a work
+Anyone else sees: "This account can only sign in to Turnfin on a work
 computer." The rule is off by default. Register the centre's PCs before
 turning it on.
 
@@ -84,7 +84,7 @@ turning it on.
 | POST | `auth/confirm/verify` | `{ challengeId, code }`. HR opens for 15 minutes |
 | POST | `auth/logout` | Ends the session |
 | GET | `home` | Open training, outstanding reading, expiring qualifications, the next shifts, a count of reviews to acknowledge (no HR content), and how many refresher questions wait today (`refresher`) |
-| GET, PATCH | `me` | Profile and own details. PATCH proposes phone, address or emergency contact changes; the record changes only after review on Work. One request is waiting at a time |
+| GET, PATCH | `me` | Profile and own details. PATCH proposes phone, address or emergency contact changes; the record changes only after review in Turnfin. One request is waiting at a time |
 | GET | `qualifications` | The newest certificate of each type, uploads and their status, and the qualification types |
 | POST | `qualifications/evidence` | Upload a PDF, PNG or JPEG (up to 5 MB, checked by file signature) for someone to check |
 | GET | `training`, `training/{id}` | Own training: progress through a course built from lessons, and its outline (`sections`); a course without lessons sends its text (`content`). A practical with a checklist sends `practical`: the steps a trainer watches for and how the last observation went (no photos). `waitingOn` names courses to finish first and `inOrder` says the lessons open one at a time |
@@ -119,7 +119,7 @@ turning it on.
 | POST | `hr/reviews/{id}/acknowledge` | `{ comment }`. Needs confirmation |
 | GET, PUT | `notifications` | Reminder preferences |
 
-## Review queues on Work
+## Review queues in Turnfin
 
 - **HR → Details changes** (`hr.details.write` for that person, restricted). Apply or
   decline a person's own details change. Nobody reviews their own. The audit names the fields, never
@@ -145,7 +145,7 @@ content.
 
 ## Configuration
 
-Work (the Swimly app):
+Turnfin:
 - `STAFF_API_ENABLED=true`
 - `STAFF_AUTH_SECRET` (32+ characters)
 - `STAFF_API_ALLOWED_ORIGINS` (the Me app's origin)
@@ -163,27 +163,27 @@ Turnfin Me (`apps/me`):
 
 ## Local
 
-`npm run sandbox` (Work on :3100) enables the staff API for `http://localhost:3101`
+`npm run sandbox` (Turnfin on :3100) enables the staff API for `http://localhost:3101`
 and prints codes to its console (`STAFF_EMAIL_DEV_LOG`). The `me` launch
 configuration starts Turnfin Me on :3101 against it.
 
 ## Files
 
-- **Work, staff API:** `src/lib/staff-api/*` and `src/app/api/staff/v1/[[...path]]/route.ts`.
+- **Turnfin's staff API:** `src/lib/staff-api/*` and `src/app/api/staff/v1/[[...path]]/route.ts`.
 - **Personal reads and writes:** `src/lib/*/mine.ts` and `*/self.ts`.
 - **Review queues:** `src/lib/people/details-*.ts`, `src/modules/training/features/certificates/server/`.
 - **Reminders:** `src/lib/staff-api/reminders.ts` and `src/app/api/cron/reminders/route.ts`.
-- **Work-device rule:** `src/lib/devices/work-device.ts`.
-- **Turnfin Me:** `apps/me/**`. It follows Work's UI rules (CLAUDE.md, section 14): shadcn
-  components only (`apps/me/src/components/shadcn`, with copies of Work's `ui-kit` and `ui`
+- **Work-computer rule:** `src/lib/devices/work-device.ts`.
+- **Turnfin Me:** `apps/me/**`. It follows Turnfin's UI rules (CLAUDE.md, section 13): shadcn
+  components only (`apps/me/src/components/shadcn`, with copies of Turnfin's `ui-kit` and `ui`
   pieces), no arbitrary Tailwind values, no inline styles or new colours, and every page in
   `PageShell` with its `PageHeader`. Its theme files (`globals.css`, `shadcn.css`, `motion.css`,
-  `theme/poolside.css`) are exact copies of Work's, checked by `scripts/lint/ui-rules.mjs`; copy
-  them across when Work's change. `me.css` holds only Me's own layout, on those tokens. The one
-  difference from Work is marked "Me only": Me has no module rail, so its bottom bar shows at
+  `theme/poolside.css`) are exact copies of Turnfin's, checked by `scripts/lint/ui-rules.mjs`; copy
+  them across when Turnfin's change. `me.css` holds only Me's own layout, on those tokens. The one
+  difference from Turnfin is marked "Me only": Me has no app rail, so its bottom bar shows at
   every width, capped to the 720px column, and clears the safe areas. `npm run lint` in
-  `apps/me` runs the same rules as Work.
-  Dates follow Work's format rules (en-GB, "Mon 12 Oct", "20 Sep 2026", never "Sept").
+  `apps/me` runs the same rules as Turnfin.
+  Dates follow Turnfin's format rules (en-GB, "Mon 12 Oct", "20 Sep 2026", never "Sept").
 - **Turnfin Me emails:** the code and reminder templates in `src/lib/staff-api/email.ts`
   (`staffCodeEmail`, `staffReminderEmail`) copy the Poolside Clear v2 light and dark hex values
   from `poolside.css`, because mail clients cannot read CSS variables; keep them in step.

@@ -131,7 +131,7 @@ deployment, new credentials, permission grants or database migrations are needed
 - If Google revokes the refresh token, repeat the mailbox authorization and
   replace it in Vercel. Never weaken Workspace security policies to bypass a block.
 
-## Isolated verification
+## Tests and previews
 
 `npx tsx --test src/modules/activities/shared/parents/email.test.ts src/modules/activities/features/parents/server/api.test.ts`
 checks the real email adapter and parent router with synthetic Google responses

@@ -13,7 +13,7 @@ Ported from Stockly (ADR 0010).
 
 `shared/` holds what two or more features use: the pure rules (`rules.ts`: status maps, category tones, comparing counts), the access check (`access.ts`), access at a count's site and page refreshes for writes (`server.ts`), site scoping for reads (`reads.ts`) and the dialogs' common bits (`components/form-kit.tsx`).
 
-## Public API (index.ts)
+## Front door (index.ts)
 - The status maps (`STOCK_TAKE_META`, `STOCK_CHANGE_META`, `STOCK_CATEGORY_TONE_META`), for Core's tone check.
 
 ## Data owned

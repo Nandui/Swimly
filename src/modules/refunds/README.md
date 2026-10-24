@@ -11,7 +11,7 @@ The rules for the screens, statuses and emails are in [docs/refunds.md](../../..
 
 `shared/` holds what two or more features use: the status and service metadata (`types.ts`), validation and transitions (`rules.ts`), the access check (`auth.ts`), the locked, audited mutation (`service.ts`) and the visibility rule (`data.ts`).
 
-## Public API (index.ts)
+## Front door (index.ts)
 - `refundStatuses`, `RefundStatus` — each status's label, tone and icon. Used by Core's status-metadata test.
 
 Nothing else in Turnfin calls into Refunds. Routes use the feature entries (`features/<feature>/index.ts`).

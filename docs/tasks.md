@@ -62,7 +62,7 @@ Sites and Activity.
 - **Kinds** (`TEMPLATE_KINDS`): repeat (on its schedules), one-off (its schedule, once), ad hoc
   (added from Today when needed, open from the site's opening to its closing), follow-up action
   (offered when raising an action; adds its task for today) and automated (made by another
-  module; no module sends these yet, so it makes no tasks).
+  app; no app sends these yet, so it makes no tasks).
 - **Schedules** repeat once, daily, weekly on chosen days or monthly on the first day's date
   (skipping shorter months), every 1 to 52 days, weeks or months. Times are the site's clock, at
   a set time or at its opening or closing; a due time at or before the start is the next

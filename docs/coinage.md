@@ -37,7 +37,7 @@ never orders anything itself; the order is placed with the bank or cash carrier 
 | `coinage.process` | Taking on and recording the order of approved requests, cancelling an approval |
 
 Levels: **Use** (`read`, `request`) for the desks, **Manage** (adds `review`, `process`) for accounts.
-The module stays hidden until a role is given a level under **Admin > Roles**.
+The app stays hidden until a role is given a level under **Admin > Roles**.
 
 ## Staff emails
 
@@ -56,7 +56,7 @@ The additive migration `20261129120000_coinage` creates `CoinageRequest`, `Coina
 its history row, its audit row and its email jobs together. Database checks keep the statuses,
 a positive total and a complete order record.
 
-## Checks
+## Tests
 
 `src/modules/coinage/__tests__/coinage.test.ts` runs the real migration in PGlite with email and
 sign-in faked: amounts and validation, permissions and screens, draft privacy, retries and clashing

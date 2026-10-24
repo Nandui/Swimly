@@ -4,7 +4,7 @@ Backend implemented on `dev`, 14 September 2026. The parent frontend belongs in
 its own repository and deployment. Swimly owns identity links, bookings and
 progress data; the parent app calls this API and never connects to the database.
 The API is disabled by default until the migration and configuration below are
-deployed. No parent screens have been added to the staff or Instructor workspace.
+deployed. No parent-facing screens are part of Turnfin itself.
 
 ## Integration contract
 
