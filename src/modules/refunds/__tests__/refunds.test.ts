@@ -10,6 +10,8 @@ import { expandPermissions } from "@/lib/staff/permissions";
 
 let db: Awaited<ReturnType<typeof isolatedPrisma>>;
 let service: typeof import('../shared/service'), files: typeof import('../features/request/server/files'), notifications: typeof import('../features/request/server/notifications'), list: typeof import('../features/queue/server/list'), detail: typeof import('../features/request/server/data'), actions: typeof import('../features/request/server/actions');
+let home: typeof import('../features/queue/server/home');
+let desk: typeof import('../features/queue/server/desk-measures');
 let uploadRoute: typeof import('@/app/api/refunds/files/route'), downloadRoute: typeof import('@/app/api/refunds/files/[id]/route');
 const reception: RefundActor = { id: 'refund-reception', name: 'Alex Example', request: true, review: false, process: false };
 const finance: RefundActor = { id: 'refund-finance', name: 'Riley Example', request: false, review: true, process: true };
@@ -32,6 +34,7 @@ before(async () => {
     '@/lib/email/sender': { emailSender: () => ({ sender: 'sender@example.test', fromHeader: 'Example <sender@example.test>' }) },
     '@/lib/email/google': { sendGoogleTextEmail: async (email: string, subject: string, text: string) => { if (mailFails) throw new Error('Synthetic rejection'); sent.push({ email, subject, text }); } },
     'next/cache': { revalidatePath() {} },
+    'server-only': {},
   };
   service = serverModule('src/modules/refunds/shared/service.ts', doubles);
   files = serverModule('src/modules/refunds/features/request/server/files.ts', doubles);
@@ -39,6 +42,8 @@ before(async () => {
   list = serverModule('src/modules/refunds/features/queue/server/list.ts', doubles);
   detail = serverModule('src/modules/refunds/features/request/server/data.ts', doubles);
   actions = serverModule('src/modules/refunds/features/request/server/actions.ts', doubles);
+  home = serverModule('src/modules/refunds/features/queue/server/home.ts', doubles);
+  desk = serverModule('src/modules/refunds/features/queue/server/desk-measures.ts', doubles);
   uploadRoute = serverModule('src/app/api/refunds/files/route.ts', doubles);
   downloadRoute = serverModule('src/app/api/refunds/files/[id]/route.ts', doubles);
   process.env.REFUNDS_APP_URL = 'https://staff.example.test';
@@ -216,4 +221,45 @@ test('receipt HTTP routes require same-origin writes, preserve bytes and deny pr
   current = finance; currentGrants = ['refunds.review','refunds.process'];
   assert.equal((await downloadRoute.GET(new Request('https://staff.example.test'), params)).status, 404);
   current = reception; currentGrants = ['refunds.request'];
+});
+
+test('Home counts what waits for each person, within what they may see, and moves as requests move', async () => {
+  const viewer = (who: RefundActor, permissions: string[]) => ({ id: who.id, name: who.name, permissions, anywhere: permissions, isSuperadmin: false });
+  const counts = async (who: RefundActor, permissions: string[]) => Object.fromEntries((await home.refundHomeItems(viewer(who, permissions))).map(item => [item.label, item.kind === 'action' ? 'action' : item.count]));
+  assert.deepEqual(await home.refundHomeItems(viewer(reception, [])), [], 'no Refunds level, nothing on Home');
+  const financeBefore = await counts(finance, ['refunds.review', 'refunds.process']);
+  const receptionBefore = await counts(reception, ['refunds.request']);
+  assert.equal(receptionBefore['Log a refund request'], 'action');
+  assert.equal(receptionBefore['Refund requests to decide'], undefined, 'requesters decide nothing');
+  const toApprove = await create();
+  const toAsk = await create();
+  await service.mutateRefund(finance, command(toAsk, 'information', { note: 'Please attach the receipt' }));
+  const financeAfter = await counts(finance, ['refunds.review', 'refunds.process']);
+  assert.equal(financeAfter['Refund requests to decide'], (financeBefore['Refund requests to decide'] as number) + 1, 'one submitted, one sent back');
+  const receptionAfter = await counts(reception, ['refunds.request']);
+  assert.equal(receptionAfter['Your requests need more information'], ((receptionBefore['Your requests need more information'] as number | undefined) ?? 0) + 1);
+  assert.equal((await counts(colleague, ['refunds.request']))['Your requests need more information'], undefined, "another requester's sent-back request is not theirs");
+  await service.mutateRefund(finance, command(toApprove, 'approve', { amount: '80' }));
+  const financeLast = await counts(finance, ['refunds.review', 'refunds.process']);
+  assert.equal(financeLast['Refund requests to decide'], financeBefore['Refund requests to decide']);
+  assert.equal(financeLast['Approved refunds to pay'], (financeBefore['Approved refunds to pay'] as number) + 1);
+});
+
+test("the desk measure times each request from draft to sent, keeps unsent drafts open, and stays within the sites asked for", async () => {
+  await db.prisma.club.create({ data: { id: 'refund-site-c', name: 'Example site C' } });
+  const day = new Date().toISOString().slice(0, 10);
+  const query = (siteIds: string[] | null, from = day, to = day) => desk.refundsSent({ siteIds, from, to, now: new Date() });
+  assert.deepEqual(await query([]), [], 'no sites, nothing');
+  await create({ clubId: 'refund-site-c' }, 'save');
+  const draftOnly = await query(['refund-site-c']);
+  assert.equal(draftOnly.length, 1);
+  assert.deepEqual([draftOnly[0].open, draftOnly[0].userId, draftOnly[0].onTime, draftOnly[0].module], [true, reception.id, null, 'Refunds'], 'an unsent draft is still waiting');
+  await create({ clubId: 'refund-site-c' });
+  const both = await query(['refund-site-c']);
+  assert.equal(both.length, 2);
+  const sent = both.find((m) => !m.open)!;
+  assert.equal(sent.userName, reception.name);
+  assert.ok(sent.minutes >= 0);
+  assert.ok(both.every((m) => m.siteId === 'refund-site-c'), "another site's requests are left out");
+  assert.deepEqual((await query(['refund-site-c'], '2000-01-01', '2000-01-02')).map((m) => m.open), [true], 'sent outside the dates is left out; a waiting draft never is');
 });

@@ -17,6 +17,7 @@ let records: typeof import("../shared/records") & typeof import("../features/tea
 let mine: typeof import("@/modules/hr/features/me/server/mine");
 let self: typeof import("@/modules/hr/features/me/server/self");
 let exporter: typeof import("@/modules/hr/features/export/server/export");
+let home: typeof import("@/modules/hr/features/details-requests/server/home");
 const ORG = "org_leisureworld";
 type GrantRow = { roleName: string; permissions: string[]; scopeKind: string; scopeId: string };
 const state = { id: "liam", permissions: [] as string[], screens: [] as string[], grants: [] as GrantRow[], superadmin: false, authMethod: "password", authAt: Date.now() as number | null };
@@ -66,6 +67,7 @@ before(async () => {
   mine = serverModule("src/modules/hr/features/me/server/mine.ts", d);
   self = serverModule("src/modules/hr/features/me/server/self.ts", d);
   exporter = serverModule("src/modules/hr/features/export/server/export.ts", d);
+  home = serverModule("src/modules/hr/features/details-requests/server/home.ts", d);
 });
 after(async () => { await hr?.close(); await fixture?.close(); });
 
@@ -160,4 +162,34 @@ test("only the author withdraws a note; the subject export is superadmin-only an
   assert.ok((data?.hr.whoReadThisRecord.length ?? 0) >= 2);
   assert.equal(data?.personalFile[0].id, "rota.absences", "and in the export");
   assert.deepEqual((data as { training?: unknown } | null)?.training, [], "other modules' records under their own key");
+});
+
+test("Home counts details changes from Turnfin Me only for people whose details the viewer keeps", async () => {
+  const viewer = (anywhere: string[], isSuperadmin = false) => ({ id: state.id, name: state.id, permissions: anywhere, anywhere, isSuperadmin });
+  await fixture.prisma.staffDetailChangeRequest.createMany({ data: [
+    { orgId: ORG, userId: "ava", proposed: { phone: "000 0000" }, message: "Synthetic new number" },
+    { orgId: ORG, userId: "noah", proposed: { phone: "000 0001" }, message: "Synthetic new number" },
+  ] });
+  as("admin", { permissions: ["staff.manage", "roles.manage"], screens: ["staff"] });
+  assert.deepEqual(await home.hrHomeItems(viewer(["staff.manage", "roles.manage"])), [], "administrators never inherit HR");
+  as("liam", { grants: [{ roleName: "HR lead", permissions: ["hr.details.write"], scopeKind: "site", scopeId: "club_churchfield" }] });
+  const [lead] = await home.hrHomeItems(viewer(["hr.details.write"]));
+  assert.equal(lead.count, 1, "Ava at Churchfield, not Noah at Bishopstown");
+  assert.equal(lead.href, "/hr/details-requests");
+  assert.equal(lead.attention, true);
+  as("alex", { superadmin: true });
+  assert.equal((await home.hrHomeItems(viewer([], true)))[0].count, 2, "a superadmin keeps everyone's details");
+  await fixture.prisma.staffDetailChangeRequest.updateMany({ where: { userId: "ava" }, data: { status: "APPLIED" } });
+  as("liam", { grants: [{ roleName: "HR lead", permissions: ["hr.details.write"], scopeKind: "site", scopeId: "club_churchfield" }] });
+  const [none] = await home.hrHomeItems(viewer(["hr.details.write"]));
+  assert.equal(none.count, 0);
+  assert.equal(none.attention, false, "shown, but not asking for attention, when nothing waits");
+});
+
+test("reading your own HR record in Turnfin Me is logged like every HR read, against you alone", async () => {
+  const before = (await hr.db.query("SELECT 1 FROM access_events")).length;
+  await mine.logOwnHrRead({ id: "ava", name: "ava", orgId: ORG });
+  const rows = await hr.db.query<{ actor_id: string; subject_user_ids: string[]; entity: string; purpose: string }>("SELECT actor_id, subject_user_ids, entity, purpose FROM access_events ORDER BY id DESC LIMIT 1");
+  assert.equal((await hr.db.query("SELECT 1 FROM access_events")).length, before + 1);
+  assert.deepEqual(rows[0], { actor_id: "ava", subject_user_ids: ["ava"], entity: "HrRecord", purpose: "own HR record (Turnfin Me)" });
 });

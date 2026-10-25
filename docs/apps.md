@@ -19,6 +19,8 @@ Swimmers, classes and assessments at the desk, and the swim school's set-up.
 
 Connects: class commitments for Rota; the member directory and history for Short courses; site summaries; home items; the parent app's API.
 
+After every assessment booking, the family gets an "Assessment booked" email: the parent who booked in the parent app or, for a desk booking, the swimmer's contact email (else the linked parent accounts). It gives the child's first name, the assessment, day, time, site and the site's reception phone. It is sent after the booking commits, from Production only (previews run on real records), and never for bookings by a system account.
+
 ### Short courses
 *Module `short-courses` · `/short-courses/overview` · reach: sites · data: `short-courses.prisma`, `short-courses.academy.prisma`*
 

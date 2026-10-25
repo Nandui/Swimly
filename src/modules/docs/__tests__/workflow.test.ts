@@ -13,6 +13,7 @@ import { paragraph, matrixSchema, validateBody } from '@/modules/docs/shared/con
 import { csvCell } from '@/modules/docs/features/reports/server/reporting';
 import type { DocumentContent, Snapshot, Draft } from '@/modules/docs/shared/types';
 import { richDocumentExample } from '@/test/docs-rich-content';
+import { serverModule } from '@/test/server-module';
 let db: Database;
 let service: DocumentService;
 before(async () => {
@@ -447,4 +448,28 @@ test('a voluntary acknowledgement satisfies a subsequently assigned same-version
     (await requirements(db, 'riley')).find((r) => r.documentId === f.id)?.status,
     'completed',
   );
+});
+
+test("Turnfin Me's digest lists reading past its deadline, once it is past, until it is acknowledged", async () => {
+  const reminders = serverModule<typeof import('@/modules/docs/features/me/server/reminders')>(
+    'src/modules/docs/features/me/server/reminders.ts',
+    { 'server-only': {}, '@/modules/docs/shared/runtime-database': { directoryDatabase: () => db } },
+  );
+  const prior = process.env.DOCS_DATABASE_URL;
+  try {
+    delete process.env.DOCS_DATABASE_URL;
+    assert.deepEqual(await reminders.readingReminderItems('2027-10-01'), [], 'nothing while Docs is switched off');
+    process.env.DOCS_DATABASE_URL = 'postgres://unused/docs';
+    const f = await publish(content());
+    await service.assign('jamie', f.id, ['riley'], [], '2027-09-20');
+    const overdue = (on: string) => reminders.readingReminderItems(on).then((items) => items.filter((i) => i.userId === 'riley' && i.line.startsWith('Pool handover verification')));
+    assert.equal((await overdue('2027-09-20')).length, 0, 'due today is not yet overdue');
+    const [item] = await overdue('2027-09-21');
+    assert.equal(item.kind, 'reading-overdue');
+    assert.equal(item.line, 'Pool handover verification is overdue to read and acknowledge.');
+    await service.acknowledge('riley', f.id, f.version);
+    assert.equal((await overdue('2027-09-21')).length, 0, 'acknowledged reading is no longer listed');
+  } finally {
+    if (prior === undefined) delete process.env.DOCS_DATABASE_URL; else process.env.DOCS_DATABASE_URL = prior;
+  }
 });

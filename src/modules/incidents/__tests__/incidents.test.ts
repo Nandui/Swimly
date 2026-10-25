@@ -19,6 +19,7 @@ let files: typeof import("../features/files/server/files");
 let insights: typeof import("../features/insights/server/data");
 let exporter: typeof import("../features/export/server/data");
 let staff: typeof import("../features/staff/server/file");
+let home: typeof import("../features/reports/server/home");
 const ORG = "org_leisureworld";
 type GrantRow = { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string };
 const state = { id: "mia", permissions: [] as string[], grants: [] as GrantRow[] };
@@ -71,6 +72,7 @@ before(async () => {
   insights = serverModule("src/modules/incidents/features/insights/server/data.ts", d);
   exporter = serverModule("src/modules/incidents/features/export/server/data.ts", d);
   staff = serverModule("src/modules/incidents/features/staff/server/file.ts", d);
+  home = serverModule("src/modules/incidents/features/reports/server/home.ts", d);
 });
 after(async () => { await fixture?.close(); });
 
@@ -262,4 +264,27 @@ test("a staff injury reaches their HR file, the insights count it, and only a ma
   assert.equal(full.report.people.length, 2);
   assert.equal(await fixture.prisma.incidentEvent.count({ where: { reportId: id, action: "export" } }), 1, "every opening is in the history");
   assert.deepEqual((await insights.incidentInsights({})).toReview, [], "nothing is past its keeping period yet");
+});
+
+test("Home offers reporting to everyone who reports, and the triage and investigation counts only to investigators", async () => {
+  const viewer = (anywhere: string[]) => ({ id: state.id, name: state.id, permissions: anywhere, anywhere, isSuperadmin: false });
+  const labels = async (anywhere: string[]) => Object.fromEntries((await home.incidentHomeItems(viewer(anywhere))).map((i) => [i.label, i.kind === "action" ? "action" : i.count]));
+  as("mia", []);
+  assert.deepEqual(await home.incidentHomeItems(viewer([])), [], "no Incidents level, nothing on Home");
+  reporter();
+  const mias = await labels(["incidents.reports.create"]);
+  assert.equal(mias["Report an incident"], "action");
+  for (const label of ["Incident reports to triage", "Serious incidents to sign off", "Incidents under investigation", "Incident actions overdue"]) assert.equal(mias[label], undefined, `${label} is for investigators`);
+  duty();
+  const before = await labels(["incidents.reports.review"]);
+  const counts = await data.incidentCounts();
+  assert.equal(before["Incident reports to triage"], counts.toTriage || undefined);
+  assert.equal(before["Incident actions overdue"], counts.overdueActions || undefined);
+  assert.equal(before["Incidents under investigation"], counts.investigating - counts.toSignOff || undefined);
+  reporter();
+  assert.ok((await report.submitReport(nearMiss())).ok);
+  duty();
+  assert.equal((await labels(["incidents.reports.review"]))["Incident reports to triage"], ((before["Incident reports to triage"] as number | undefined) ?? 0) + 1, "the new near miss waits for triage");
+  as("dan", [], [at(churchfield, ["incidents.reports.review"])]);
+  assert.equal((await labels(["incidents.reports.review"]))["Incident reports to triage"], (await fixture.prisma.incidentReport.count({ where: { siteId: churchfield, status: "reported", reporterId: { not: "dan" } } })) || undefined, "Churchfield's own count, not Bishopstown's");
 });

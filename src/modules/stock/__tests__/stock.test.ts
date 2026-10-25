@@ -13,6 +13,7 @@ let products: typeof import("../features/products/server/actions");
 let counts: typeof import("../features/counts/server/actions");
 let compare: typeof import("../features/compare/server/data");
 let sheet: typeof import("../features/counts/server/data");
+let home: typeof import("../features/counts/server/contributions");
 const ORG = "org_leisureworld";
 type GrantRow = { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string };
 const state = { id: "nora", permissions: [] as string[], grants: [] as GrantRow[] };
@@ -54,6 +55,7 @@ before(async () => {
   counts = serverModule("src/modules/stock/features/counts/server/actions.ts", d);
   compare = serverModule("src/modules/stock/features/compare/server/data.ts", d);
   sheet = serverModule("src/modules/stock/features/counts/server/data.ts", d);
+  home = serverModule("src/modules/stock/features/counts/server/contributions.ts", d);
 });
 after(async () => { await fixture?.close(); });
 
@@ -136,4 +138,24 @@ test("Manage adds the Bishopstown stock sheet's names once, under Other", async 
   const other = await fixture.prisma.stockCategory.findFirstOrThrow({ where: { orgId: ORG, name: "Other" } });
   assert.equal(await fixture.prisma.stockProduct.count({ where: { orgId: ORG, categoryId: other.id } }), 74);
   assert.equal((await products.addSheetProducts()).ok, false, "nothing left to add");
+});
+
+test("Home counts the counts still open at the sites where the person counts, and only for counters", async () => {
+  const viewer = (anywhere: string[]) => ({ id: state.id, name: state.id, permissions: anywhere, anywhere, isSuperadmin: false });
+  as("desk", [], [at(churchfield, ["stock.count"])]);
+  await counts.startCount({ siteId: churchfield, stockDate: today() });
+  const open = (siteId?: string) => fixture.prisma.stockTake.count({ where: { submittedAt: null, ...(siteId ? { siteId } : {}) } });
+  assert.ok(await open(churchfield) > 0, "a count is open at Churchfield");
+  as("nora", [], [at(bishopstown, ["stock.read"])]);
+  assert.deepEqual(await home.stockHomeItems(viewer(["stock.read"])), [], "View does not count");
+  as("nora", [], [at(bishopstown, ["stock.count"])]);
+  const atBishopstown = await open(bishopstown);
+  const mine = await home.stockHomeItems(viewer(["stock.count"]));
+  assert.equal(mine[0]?.count ?? 0, atBishopstown, "Bishopstown's open counts only; none means nothing on Home");
+  assert.ok(atBishopstown < await open(), "Churchfield's count is left out");
+  as("nora", ["stock.count"]);
+  const [all] = await home.stockHomeItems(viewer(["stock.count"]));
+  assert.equal(all.count, await open(), "every site");
+  assert.equal(all.href, "/stock");
+  assert.equal(all.attention, true);
 });

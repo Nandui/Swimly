@@ -14,6 +14,7 @@ const firstNumber = () => poNumber("BT", new Date(), 1);
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let actions: typeof import("../features/orders/server/actions") & typeof import("../features/suppliers/server/actions");
 let data: typeof import("../features/orders/server/data");
+let homeItems: typeof import("../features/orders/server/home");
 const ORG = "org_leisureworld";
 type GrantRow = { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string };
 const state = { id: "mia", permissions: [] as string[], grants: [] as GrantRow[] };
@@ -64,6 +65,7 @@ before(async () => {
   };
   actions = { ...serverModule<object>("src/modules/purchasing/features/suppliers/server/actions.ts", d), ...serverModule<object>("src/modules/purchasing/features/orders/server/actions.ts", d) } as typeof actions;
   data = serverModule("src/modules/purchasing/features/orders/server/data.ts", d);
+  homeItems = serverModule("src/modules/purchasing/features/orders/server/home.ts", d);
 });
 after(async () => { await fixture?.close(); });
 
@@ -228,4 +230,30 @@ test("an administrator may approve their own order; nobody else may", async () =
   assert.equal((await actions.decideOrder(own.id!, "approve", "")).ok, true, "an administrator, within their role's limit");
   const log = await fixture.prisma.auditLog.findFirstOrThrow({ where: { entity: "PurchaseOrder", entityId: own.id!, action: "approve" } });
   assert.match(log.summary, /their own order/);
+});
+
+test("Home shows each person the orders waiting for their approval, their own rejected ones and raising one", async () => {
+  const viewer = (anywhere: string[]) => ({ id: state.id, name: state.id, permissions: anywhere, anywhere, isSuperadmin: false });
+  const labels = async (anywhere: string[]) => Object.fromEntries((await homeItems.purchasingHomeItems(viewer(anywhere))).map((i) => [i.label, i.kind === "action" ? "action" : i.count]));
+  as("mia", []);
+  assert.deepEqual(await homeItems.purchasingHomeItems(viewer([])), [], "no Purchasing level, nothing on Home");
+  const supplier = await fixture.prisma.supplier.findFirstOrThrow({ where: { name: "Sample Chemicals" }, include: { products: true } });
+  const tablets = supplier.products.find((p) => p.name === "Chlorine tablets")!;
+  const order = () => ({ siteId: bishopstown, supplierId: supplier.id, neededBy: "", note: "", lines: [{ productId: tablets.id, quantity: 1 }] });
+  as("mia", [], [at(bishopstown, ["purchasing.request"])]);
+  const sent = await actions.saveOrder(null, order(), true);
+  const turnedDown = await actions.saveOrder(null, order(), true);
+  assert.ok(sent.ok && turnedDown.ok);
+  const mine = await labels(["purchasing.request"]);
+  assert.equal(mine["Raise a purchase order"], "action");
+  assert.equal(mine["Purchase orders to approve"], undefined, "never your own to approve");
+  as("dan", [], [at(bishopstown, ["purchasing.read"])]);
+  const dans = await labels(["purchasing.read"]);
+  assert.equal(dans["Purchase orders to approve"], (await data.purchasingHome()).waiting.length);
+  assert.ok((dans["Purchase orders to approve"] as number) >= 2, "both are within Dan's limit");
+  assert.equal(dans["Raise a purchase order"], undefined, "View does not raise orders");
+  as("gina", ["purchasing.read"]);
+  assert.equal((await actions.decideOrder(turnedDown.id!, "reject", "Use the larger drum")).ok, true);
+  as("mia", [], [at(bishopstown, ["purchasing.request"])]);
+  assert.equal((await labels(["purchasing.request"]))["Your rejected orders to change"], 1);
 });
