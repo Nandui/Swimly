@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// UI rules that ESLint cannot see file by file (CLAUDE.md, "UI rules", owner rule 20 October 2026):
+// UI rules that ESLint cannot see file by file (AGENTS.md, Screens, owner rule 20 October 2026):
 //   1. Every page uses PageShell (and so PageHeader, which turnfin/page-header-in-shell keeps
 //      inside it): each src/app page.tsx must reach a <PageShell> through its own imports.
 //      A page that only redirects or 404s renders nothing and is skipped.
@@ -7,7 +7,7 @@
 //      live only in the theme files, src/app/theme/poolside.css and src/app/shadcn.css; every
 //      other stylesheet uses their tokens.
 //   3. Turnfin Me (apps/me) and the Academy site (apps/academy) follow the same rules, with exact
-//      copies of Work's theme (poolside.css, shadcn.css, globals.css, motion.css), so the three apps
+//      copies of Turnfin's theme (poolside.css, shadcn.css, globals.css, motion.css), so the three apps
 //      share one set of colours. The Academy site adds one brand file, theme/leisureworld.css: the
 //      parents app's LeisureWorld colours, copied from it, so the two public sites look alike
 //      (owner request, 21 October 2026).
@@ -65,7 +65,7 @@ const rendersNothing = (page) => !/return\s*\(?\s*</.test(read(page)) && !/=>\s*
 
 for (const page of walk(join(src, "app"), (path) => /[\\/]page\.tsx$/.test(path))) {
   if (rendersNothing(page)) continue;
-  if (!reachesShell(page)) problems.push(`${relative(root, page)}: the page never renders <PageShell header={<PageHeader … />}> (CLAUDE.md, UI rules)`);
+  if (!reachesShell(page)) problems.push(`${relative(root, page)}: the page never renders <PageShell header={<PageHeader … />}> (AGENTS.md, Screens)`);
 }
 
 // ── 2. Colour literals only in the theme files.
@@ -78,7 +78,7 @@ for (const sheet of walk(src, (path) => path.endsWith(".css"))) {
     for (const match of line.matchAll(COLOUR)) {
       // Hex inside a selector or URL fragment (`#po-waiting`, `url(#id)`) is not a colour.
       if (match[0].startsWith("#") && !/:[^;{]*$/.test(line.slice(0, match.index))) continue;
-      problems.push(`${name}:${i + 1}: colour literal ${match[0]}: use a theme token from poolside.css or shadcn.css (CLAUDE.md, UI rules)`);
+      problems.push(`${name}:${i + 1}: colour literal ${match[0]}: use a theme token from poolside.css or shadcn.css (AGENTS.md, Screens)`);
     }
   });
 }
@@ -89,11 +89,11 @@ const sources = new Map();
 const read = (file) => { if (!sources.has(file)) sources.set(file, readFileSync(file, "utf8")); return sources.get(file); };
 for (const app of APPS) checkApp(app);
 
-// ── 3. The other apps' theme is Work's, byte for byte.
+// ── 3. The connected products' theme is Turnfin's, byte for byte.
 for (const app of APPS.slice(1)) {
   for (const file of ["src/app/theme/poolside.css", "src/app/shadcn.css", "src/app/globals.css", "src/app/motion.css"]) {
     const copy = join(root, app, file);
-    if (!existsSync(copy) || read(copy) !== read(join(root, file))) problems.push(`${app}/${file}: must be an exact copy of Work's ${file} (copy it across when Work's changes)`);
+    if (!existsSync(copy) || read(copy) !== read(join(root, file))) problems.push(`${app}/${file}: must be an exact copy of Turnfin's ${file} (copy it across when Turnfin's changes)`);
   }
 }
 

@@ -21,7 +21,7 @@ export default async function HrLayout({ children }: { children: ReactNode }) {
     <HrShell who={who}>
       {hrConfigured() ? children : (
         <PageShell header={<PageHeader title="HR" />}>
-          {/* Setup steps live in docs/hr.md; staff only need to know who to ask. */}
+          {/* Setup is in docs/operations.md; staff only need to know who to ask. */}
           <Notice tone="info" title="HR isn’t switched on yet" description="Ask your Turnfin administrator to turn it on." />
         </PageShell>
       )}

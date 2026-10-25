@@ -34,7 +34,7 @@ const CHECK_STATES = {
 type Check = WellbeingOnReport["checks"][number];
 const day = (iso: string) => formatDate(new Date(`${iso}T12:00:00Z`));
 
-/** Asking HR on a report (docs/incidents.md, "Asking HR"): by email, to check on
+/** Asking HR on a report ("Asking HR"): by email, to check on
  *  someone's wellbeing, or to let HR know a staff member was in the incident; HR
  *  records what they did through the link. For those who triage at the site;
  *  what HR wrote only for Manage and whoever asked. */

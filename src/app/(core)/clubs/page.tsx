@@ -93,7 +93,7 @@ function ClubList({
             {club.phone ? <span className="pc-row-hint">Reception {club.phone}</span> : null}
             {summaries.get(club.id) ? <span className="pc-row-hint">{summaries.get(club.id)}</span> : null}
             {/* Added before 1.12.4 without an organisation: saving it once fixes it. */}
-            {!club.orgId && !archived ? <span className="pc-row-hint">Not yet in Incidents, Rota and the other modules. Open it with the pencil and choose Save changes to add it.</span> : null}
+            {!club.orgId && !archived ? <span className="pc-row-hint">Not yet in Incidents, Rota and the other apps. Open it with the pencil and choose Save changes to add it.</span> : null}
           </div>
           <div className="pc-row-trail">
             {club.code ? <Tag meta={CLUB_STATUS_META.code} label={club.code} /> : <span className="pc-row-hint">No short code</span>}

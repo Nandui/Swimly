@@ -24,7 +24,7 @@ import { uploadCourseFile, type UploadedFile } from "@/modules/training/features
 import { SpotPicker, type SpotDraft } from "@/modules/training/features/builder/components/spot-picker";
 import { ImportQuestions } from "@/modules/training/features/builder/components/library";
 
-/** Questions and the final exam in the builder (docs/training.md, e-learning
+/** Questions and the final exam in the builder (e-learning
  *  phase 2). A section's questions feed its Quiz lessons and the course's
  *  final exam; the exam's rules and how it has gone sit on their own page. */
 

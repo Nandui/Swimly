@@ -11,7 +11,7 @@ import {
   DEFAULT_SITE, SCHEDULED_KINDS, dayIn, taskState, tasksOn, type LogMode, type SiteStatus, type TaskDefinition, type TaskField, type TaskRecord, type TaskSchedule,
 } from "@/modules/tasks/shared/rules";
 
-/** Tasks' reads (docs/tasks.md). Everything is limited to the sites the
+/** Tasks' reads. Everything is limited to the sites the
  *  capability covers; a task outside them is a 404. A day's tasks are made from
  *  the published templates the first time anyone needs them (opening the day,
  *  the home page, a report, or the nightly cron), so making them twice is harmless. */

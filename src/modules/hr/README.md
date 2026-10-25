@@ -2,7 +2,7 @@
 
 **Purpose:** keeps each person's HR record (notes and performance reviews) private to the people allowed to see it.
 
-HR keeps its records in its own database (`HR_DATABASE_URL`, migrations in `hr-database/migrations`); unset, HR stays switched off. See [docs/hr.md](../../../docs/hr.md).
+HR keeps its records in its own database (`HR_DATABASE_URL`, migrations in `hr-database/migrations`); unset, HR stays switched off. Its levels and restrictions are in [docs/apps.md](../../../docs/apps.md).
 
 ## Features
 - `team` — the people this person may see in HR, with their latest review (`/hr`).
@@ -16,7 +16,7 @@ HR keeps its records in its own database (`HR_DATABASE_URL`, migrations in `hr-d
 
 `shared/` holds what two or more features use: the HR database and its configuration, the access check, statuses, the column lists, the access log and the subject check (`records.ts`), write helpers (`writes.ts`) and the dialogs' kit.
 
-## Public API (index.ts)
+## Front door (index.ts)
 - `hrConfigured()` — whether the HR database is set up.
 - `mySharedHr(userId, orgId)` — notes and reviews shared with a person.
 - `logOwnHrRead(me)` — logs a person reading their own record (moved here from the staff API, which used to write HR's `access_events` itself).

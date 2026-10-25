@@ -8,7 +8,7 @@ import { cctvViewings, ViewingPanel } from "@/modules/cctv/features/viewings";
 
 export const metadata: Metadata = { title: "CCTV viewings" };
 
-/** The log (docs/cctv.md): your own viewings and, for those who review, everyone's at their sites. */
+/** The log: your own viewings and, for those who review, everyone's at their sites. */
 export default async function CctvViewingsPage() {
   const { who, rows } = await cctvViewings();
   const mine = rows.filter((r) => r.mine);

@@ -1,7 +1,7 @@
 import { CircleCheck, TriangleAlert } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 
-/** Site Monitoring's rules (docs/site-monitoring.md), pure. */
+/** Site Monitoring's rules, pure. */
 
 export const MONITORING_STATUSES = ["open", "closed"] as const;
 export type MonitoringStatus = (typeof MONITORING_STATUSES)[number];

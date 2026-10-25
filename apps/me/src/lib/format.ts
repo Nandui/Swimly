@@ -1,4 +1,4 @@
-/** Dates in Work's form (src/lib/format.ts): en-GB, no comma, three-letter months. The string
+/** Dates in Turnfin's form (src/lib/format.ts): en-GB, no comma, three-letter months. The string
  *  is assembled from the parts, as Work does, because ICU versions differ on the comma after the
  *  weekday, and en-GB abbreviates September as "Sept" (cut to "Sep" here). */
 const PARTS = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });

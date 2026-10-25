@@ -6,7 +6,7 @@ import { incidentActions, incidentNumber, type IncidentActionKey, type Incidents
 
 /** The writes every Incidents feature shares: one report at a time, every
  *  change in the report's history and in the activity log, in the same
- *  transaction (docs/incidents.md). */
+ *  transaction. */
 
 export async function lockReport(tx: Prisma.TransactionClient, id: string) {
   await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`incident:${id}`}, 0))`;

@@ -4,7 +4,7 @@ import { requireSession, AuthorizationError } from "@/lib/authz";
 import { holdsAnywhere } from "@/lib/policy/engine";
 import { actorForSession } from "@/lib/policy/session";
 
-/** Who may open the Training workspace (the Manage surface), and which of its
+/** Who may open Training's managing side, and which of its
  *  jobs they have. Holding a capability anywhere opens the matching page;
  *  every page and action then limits records to the people that capability
  *  covers (`subjectsFor`, `requireCapFor`). Completing your own training needs

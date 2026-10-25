@@ -4,8 +4,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/shadcn/radio-group";
 
 export type SegmentedLink = { href: string; label: React.ReactNode; count?: React.ReactNode; current: boolean };
 
-/** Views of one list, as a soft bar of links (DESIGN.md, "Poolside Clear v2": every menu is one
- *  bar, 44px tall, the current view white with an edge). For page-to-page navigation inside a
+/** Views of one list, as a soft bar of links (every menu is one bar, 44px tall, the current
+ *  view white with an edge). For page-to-page navigation inside a
  *  page (All / Active / Inactive, Upcoming / Past). Counts sit beside each label. The bar wraps
  *  onto more rows instead of scrolling. The current view is aria-current="true": the frame's
  *  page bar is the one place that marks the page itself. */

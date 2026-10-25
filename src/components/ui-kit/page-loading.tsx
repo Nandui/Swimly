@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/shadcn/skeleton";
  *  boundary: the frame and this placeholder arrive at once and the real page
  *  streams in behind them. It costs no query.
  *
- *  Shaped like every v2 page (DESIGN.md, "States"): a title and a description
+ *  Shaped like every v2 page: a title and a description
  *  line on the canvas, then a white panel of row cards. `tiles` adds the
  *  figure tiles a report page opens with. Bars use the line colour so they
  *  show on the white panel in both themes. No spinner: a spinner says "wait",

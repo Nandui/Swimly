@@ -11,7 +11,7 @@ import { StartCountDialog, STOCK_TAKE_META, stockCounts, type StockCountRow } fr
 
 export const metadata: Metadata = { title: "Stock counts" };
 
-/** The counts page (docs/stock.md): counts at the sites this person covers, open ones first. */
+/** The counts page: counts at the sites this person covers, open ones first. */
 export default async function StockCountsPage() {
   const { who, live, takes, startSites, today } = await stockCounts();
   const open = takes.filter((t) => t.state === "open");

@@ -11,7 +11,7 @@ import { requirePurchasingActor } from "@/modules/purchasing/shared/access";
 import { revalidatePurchasing as revalidate, text } from "@/modules/purchasing/shared/forms";
 import { centsOf, copyList, euro, MAX_COPY_TO, optionsOf } from "@/modules/purchasing/shared/rules";
 
-/** Purchasing's supplier writes (docs/purchasing.md). Suppliers, products and
+/** Purchasing's supplier writes. Suppliers, products and
  *  approval rules need `purchasing.manage`. Every write is audited. */
 
 async function manager() {

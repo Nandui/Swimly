@@ -5,7 +5,7 @@ import Image from "next/image";
 import { helpHref } from "@/lib/help/search";
 import type { HelpScope } from "@/lib/help/types";
 
-/** Help in the v2 frame (DESIGN.md, Poolside Clear v2): the fin, "Help centre" and the way back
+/** Help in the v2 frame: the fin, "Help centre" and the way back
  *  (no rail: Help opens in its own tab), then the guides on the canvas in white panels.
  *  Appearance follows the setting from the account menu. */
 export function HelpFrame({ scope, home, children }: { scope: HelpScope; home: string; children: ReactNode }) {

@@ -1,6 +1,6 @@
 import { IncidentError, startUpload } from "@/modules/incidents/features/footage";
 
-/** Starts one video from a footage link (docs/incidents.md, "CCTV footage").
+/** Starts one video from a footage link ("CCTV footage").
  *  No sign-in: the link's secret in the body is the only key, and it opens one
  *  request. Answers with a token that uploads to one path in the store. */
 export async function POST(request: Request) {

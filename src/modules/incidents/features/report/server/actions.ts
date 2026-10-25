@@ -12,7 +12,7 @@ import { addendumSchema, isSerious, reportProblem, reportSchema, type ReportInpu
 import { lockReport, recordEvent, reportRights } from "@/modules/incidents/shared/service";
 import { deliverAlerts, queueAlerts } from "@/modules/incidents/features/report/server/alerts";
 
-/** Reporting (docs/incidents.md). Anyone with `incidents.reports.create` at
+/** Reporting. Anyone with `incidents.reports.create` at
  *  the site reports; submitting locks their words, and a serious report alerts
  *  the managers straight after it is saved. Every write is audited. */
 

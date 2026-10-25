@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 
-/** What the dialogs share, for short courses and Academy courses alike (docs/short-courses.md). Every dialog is a FormDialog, so a refusal
+/** What the dialogs share, for short courses and Academy courses alike. Every dialog is a FormDialog, so a refusal
  *  keeps the typing and shows the sentence beside the fields. */
 
 export const THEME = "turnfin-module";

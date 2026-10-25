@@ -8,7 +8,7 @@ import { shortCoursePublicCourses } from "@/modules/short-courses/features/booki
 import { sendCode, sendHeld } from "@/modules/short-courses/features/booking/server/email";
 import { AcademyApiError, academyApiConfig, emailSchema, idSchema, notFound, readBody } from "@/modules/short-courses/features/booking/server/http";
 
-/** The booking site's API (owner decision, 8 October 2026; docs/academy.md): the public see
+/** The booking site's API (owner decision, 8 October 2026): the public see
  *  the Academy courses offered online, check their email with a code, hold places and see their
  *  own bookings. Since 21 October 2026 (owner choice) short courses are not sold online.
  *

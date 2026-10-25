@@ -58,7 +58,7 @@ const HSA_QUESTIONS: { key: HsaKey; title: string; hint?: string; injury: boolea
   { key: "fatal", title: "Someone died", hint: "Phone the HSA or the Gardaí now if nobody has. The written report is due within 5 working days.", injury: true },
 ];
 
-/** Triage (docs/incidents.md): rate what happened and what could have on the
+/** Triage: rate what happened and what could have on the
  *  scale for this kind of report, answer its questions and the HSA questions
  *  that fit, say who told a child's parent, then investigate or close.
  *  Closing here is only for minimal or minor reports the HSA does not need. */

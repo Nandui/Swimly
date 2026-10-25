@@ -4,7 +4,7 @@ import { AuthorizationError, requireSession } from "@/lib/authz";
 import { holdsAnywhere } from "@/lib/policy/engine";
 import { actorForSession } from "@/lib/policy/session";
 
-/** Who may open Stock (docs/stock.md). Counts belong to a site, so every page limits them to the
+/** Who may open Stock. Counts belong to a site, so every page limits them to the
  *  sites the capability covers (`sitesFor`) and every write checks the count's site (`mayFor`).
  *  The product list and its categories are the organisation's, kept with Manage. */
 export type StockActor = { id: string; name: string; orgId: string | null; superadmin: boolean; count: boolean; manage: boolean };

@@ -2,7 +2,7 @@
 
 **Purpose:** records accidents, incidents and near misses from the first report to a closed, locked record.
 
-The flow, rules and decisions are in [docs/incidents.md](../../../docs/incidents.md).
+Its levels are in [docs/apps.md](../../../docs/apps.md); the rules live in `shared/` and its tests.
 
 ## Features
 - `report` — the two-minute report form, sending it (and the serious alerts), and adding to a report later (`/incidents/new`).
@@ -19,7 +19,7 @@ The flow, rules and decisions are in [docs/incidents.md](../../../docs/incidents
 
 `shared/` holds what two or more features use: statuses, kinds, categories and the severity scale (`types.ts`), the pure rules (`rules.ts`, tested in `rules.test.ts`), the access check (`access.ts`), the locked, audited write (`service.ts`) and the emailed links' secrets for footage and wellbeing checks (`link.ts`).
 
-## Public API (index.ts)
+## Front door (index.ts)
 - `incidentStatuses`, `seriousMeta`, `SEVERITY_META` — each status's and severity's label, tone and icon. Used by Core's status-metadata test.
 
 Nothing else in Turnfin calls into Incidents. Routes use the feature entries (`features/<feature>/index.ts`).
@@ -42,7 +42,7 @@ Declared in `prisma/schema/incidents.prisma`, migrations `20261031120000_inciden
 - `incidents_wellbeing_updates` (`IncidentWellbeingUpdate`) — what HR recorded through the link: who, the day, what they did and what happens next. Never changed or deleted.
 
 ## Events
-- Emits: none. Actions stay in Incidents rather than being copied into Tasks (docs/incidents.md).
+- Emits: none. Actions stay in Incidents rather than being copied into Tasks.
 - Listens to: none.
 
 ## Registration (module.ts)

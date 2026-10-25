@@ -2,7 +2,7 @@
 
 **Purpose:** plans who works where at each site, day by day.
 
-See [docs/rota.md](../../../docs/rota.md).
+Its levels are in [docs/apps.md](../../../docs/apps.md).
 
 ## Features
 - `diary` — the Plan (`/rota`, `/rota/export`): the day's diary, rebuilt 20 October 2026. A pure model of the day (`model.ts`: needs that add up, holes with reasons, each person's day, who's where, the next change, who could fill a hole), its loader, its actions (`fillNeed`, `changeLine`, `removeLine`, `saveShift`, `removeShift`, `placeBreaks`), the screens and the week export.
@@ -16,7 +16,7 @@ See [docs/rota.md](../../../docs/rota.md).
 
 `shared/` holds what two or more features use: the access check, constants and status metadata, shift and cover rules, the day model, site and activity reads (`data.ts`), the plan and fill actions used by Plan and Today (`actions.ts`), write helpers (`writes.ts`), the area rename, lanes (`lanes.ts`), how short an area's own need is, for spreading breaks (`staffing.ts`), the zone rows (`zones.ts`), the Plan's needs rows, free time, who's where, the next change and a person's day as a list (`plan-rows.ts`), the area-and-lanes field and the plan dialogs, fill sheet and change fields.
 
-## Public API (index.ts)
+## Front door (index.ts)
 - `myDays(userId, days?)` — a person's own days ahead, with their shifts, activities and classes.
 - `MyDay` — one of those days.
 
@@ -29,9 +29,9 @@ See [docs/rota.md](../../../docs/rota.md).
 - `RotaRepeat` — repeating bookings of areas.
 - `RotaAbsence`, `RotaAbsenceUpdate` — absences and returns to work.
 - `RotaDayNote`, `RotaWeekShare`, `RotaLog` — the day's note, shared weeks and the change log.
-- The retired rota's tables (`RotaShift`, `RotaShiftSegment`, `RotaShiftChange`, `RotaActivity`, `RotaBooking`, `RotaBookingNeed`, `RotaPerson`, `RotaDepartment`, `RotaImport`, `RotaChange`) are no longer read; they stay until one migration removes them (docs/rota.md).
+- The retired rota's tables (`RotaShift`, `RotaShiftSegment`, `RotaShiftChange`, `RotaActivity`, `RotaBooking`, `RotaBookingNeed`, `RotaPerson`, `RotaDepartment`, `RotaImport`, `RotaChange`) are no longer read; they stay until one migration removes them.
 
-Rota still reads Core's people, sites, departments, activity types and qualifications with Prisma (ADR 0001 puts them in the platform).
+Rota still reads the platform's people, sites, departments, activity types and qualifications with Prisma; it should read them through `src/lib/directory.ts` and the other platform functions (a known gap, [docs/architecture.md](../../../docs/architecture.md#known-gaps)).
 
 ## Events
 - Emits: none.

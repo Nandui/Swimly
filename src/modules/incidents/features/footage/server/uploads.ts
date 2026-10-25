@@ -13,7 +13,7 @@ import {
 import { hashToken } from "@/modules/incidents/shared/link";
 import { stored, uploadToken } from "@/modules/incidents/features/footage/server/storage";
 
-/** The emailed link's side (docs/incidents.md, "CCTV footage"): no sign-in,
+/** The emailed link's side ("CCTV footage"): no sign-in,
  *  only the link's secret, which opens this one request and nothing else. The
  *  page shows what was asked for and by whom, never who was involved or what
  *  happened. Videos go from the browser straight to the private store; the

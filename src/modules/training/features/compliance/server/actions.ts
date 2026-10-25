@@ -11,7 +11,7 @@ import { MAX_RULE_LIST, timingInWords } from "@/modules/training/shared/rules";
 import { refresh } from "@/modules/training/shared/writes";
 import { applyTrainingRules } from "@/modules/training/features/compliance/server/engine";
 
-/** Training rules (docs/training.md, e-learning phase 4): who must take a
+/** Training rules (e-learning phase 4): who must take a
  *  course and how often. A rule assigns the course to everyone it covers, so
  *  managing rules needs Assign training for everyone (the Manage level). Every
  *  change is audited; saving a rule runs it straight away. */

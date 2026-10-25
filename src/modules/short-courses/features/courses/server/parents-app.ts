@@ -8,7 +8,7 @@ import { AppCourseError, type AppCourse, type AppCourseBooking, type AppCourseHe
 import { holdDeadline, newReference } from "@/modules/short-courses/shared/public-booking";
 import { ageOn, euro, inParentsApp, stillOwed, takesPlace } from "@/modules/short-courses/shared/rules";
 
-/** Swimming courses in the parents app (owner decisions, 21 October 2026; docs/short-courses.md),
+/** Swimming courses in the parents app (owner decisions, 21 October 2026),
  *  registered through `registerAppCourses` for the swim school's parent API:
  *
  *  - A Pool course shows once Manage ticks "Show in the parents app", until its first session.

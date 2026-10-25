@@ -107,7 +107,7 @@ export async function updateProfile(userId: string, input: ProfileInput): Promis
 // ---------------------------------------------------------------------------
 
 /** The sites a person works at, where their role's Swim school, Training and
- *  Rota levels apply (docs/how-turnfin-works.md). No sites means every site,
+ *  Rota levels apply (docs/apps.md). No sites means every site,
  *  which is how everyone worked before. */
 const employmentSchema = z.object({
   contractType: z.union([z.enum(CONTRACT_TYPES), z.literal("")]).transform((v) => v || null),

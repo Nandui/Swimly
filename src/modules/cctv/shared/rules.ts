@@ -3,7 +3,7 @@ import { BadgeAlert, Briefcase, Eye, FileQuestion, HandHelping, MessageSquareWar
 import type { StatusMeta } from "@/lib/status";
 import { isDateOnly } from "@/lib/format";
 
-/** The CCTV log's rules (docs/cctv.md), pure and client-safe: why footage is checked, what an
+/** The CCTV log's rules, pure and client-safe: why footage is checked, what an
  *  entry must say and how numbers show. An entry is locked once saved; later facts are notes. */
 
 /** Why footage was checked. The order is the form's. */

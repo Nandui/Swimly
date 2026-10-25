@@ -1,7 +1,7 @@
-// Stock (owner decision, 13 October 2026; docs/stock.md): stock taking, ported from Stockly.
+// Stock (owner decision, 13 October 2026): stock taking, ported from Stockly.
 // One product list for the organisation, grouped in categories, counted at a site on a phone
 // or tablet. Sites and staff are Core's and read only through its functions, so these tables
-// keep plain ids and carry the module prefix (CLAUDE.md section 4).
+// keep plain ids and carry the module prefix (AGENTS.md, Data and writes).
 //
 // Counted none is not uncounted: a line is only written when someone counts a product. No line
 // means nobody counted it; quantity 0 means counted, none on the shelf. Lines are never

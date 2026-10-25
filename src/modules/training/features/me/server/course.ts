@@ -10,7 +10,7 @@ import { learnerQuestion, questionFiles, seeded } from "@/modules/training/share
 import { offlineLabel, offlineTime } from "@/modules/training/features/me/server/offline";
 import { submissionFor } from "@/modules/training/features/me/server/hand-in";
 
-/** A learner's course in Turnfin Me (docs/training.md, e-learning phase 1): the
+/** A learner's course in Turnfin Me (e-learning phase 1): the
  *  published version they take, their progress through it, and each lesson.
  *  Only ever the signed-in person's own assignment. */
 

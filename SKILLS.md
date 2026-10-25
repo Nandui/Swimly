@@ -24,9 +24,10 @@ defined in [AGENTS.md](AGENTS.md).
 - Use concise, outcome-first prose. Explain decisions with observable evidence;
   label hypotheses and estimates. Do not invent research, metrics or user quotes.
   Do not print invocation banners or narrate a reasoning protocol.
-- For Swimly screens, shadcn and DESIGN.md remain the visual authority. Wireframe
-  CSS and viewer assets apply only to separately requested exploratory artifacts;
-  never import them into the app. Use synthetic data in those artifacts.
+- For Turnfin screens, the screen rules in [AGENTS.md](AGENTS.md) and the design
+  contract in [DESIGN.md](DESIGN.md) are the visual authority. Wireframe CSS and
+  viewer assets apply only to separately requested exploratory artifacts; never
+  import them into the app. Use synthetic data in those artifacts.
 - Use the user's requested artifact format. Otherwise select a suitable local
   format and proceed; HTML is the default for requested interactive wireframes.
   Discover available tools before relying on a skill's example MCP names. If a
@@ -56,25 +57,19 @@ no em-dashes in UI copy) apply to any screen. The others:
 - `full-output-enforcement`: complete, untruncated code output.
 - `design-taste-frontend-v1`: the old version, for reference only.
 
-**They never overrule** the UI rules in [CLAUDE.md](CLAUDE.md) section 14 (Fernando's
-hard rules, 20 October 2026: shadcn components only, no arbitrary Tailwind values, no
-inline styles or new colours, every page in `PageShell` and `PageHeader`). They may
-still shape the house style in [DESIGN.md](DESIGN.md) within those rules; say which
-DESIGN.md rule one changed and why in the change summary. Where they agree, or a
-skill's advice is only a generic default, keep the house style:
+**While the 2.0 design is open** ([DESIGN.md](DESIGN.md)), these skills are free to
+propose any direction in mockups and on the design canvas; that is where new looks
+are explored. In the app itself they never overrule the screen rules in
+[AGENTS.md](AGENTS.md) ("Screens": kit components only, no arbitrary values, no
+inline styles or new colours, one page frame), and they add no new visual ideas to
+the live app before the owner approves the 2.0 contract. Once it is written, it is
+the house style, and a skill's generic defaults (fonts, palettes, icon sets, other
+design systems) are not reasons to depart from it.
 
-- shadcn/ui from `src/components/shadcn` with Poolside Clear tokens, Plus Jakarta
-  Sans, the fin's blue accent and the existing radii. Their font picks (Geist,
-  Satoshi), palette families, icon libraries (they discourage `lucide-react`, which
-  the app uses) and other design systems (Fluent, Carbon, Material) are generic
-  defaults, not reasons to switch.
-- The token lint still runs. Their sample classes (`max-w-[1400px]`, `text-[11px]`,
-  `leading-[1.1]`, `min-h-[100dvh]`, `shadow-[inset…]`, `tracking-tighter`) fail it
-  or DESIGN.md's type check. Where a skill's value is worth keeping, add it as a
-  `--pc-*` token in `src/app/theme/poolside.css` and name the new token in the
-  summary rather than writing a literal.
-- New packages (Motion, GSAP) and external image hosts (Picsum, the Simple Icons
-  CDN) still need Fernando's go-ahead; never ship real swimmer data or photos.
+- Their sample classes (`max-w-[1400px]`, `text-[11px]`, `min-h-[100dvh]`) fail the
+  lint. A value worth keeping becomes a theme token, with the owner's yes.
+- New packages (Motion, GSAP) and external image hosts still need the owner's
+  go-ahead; never ship real swimmer data or photos.
 
 ## Maintenance
 

@@ -1,7 +1,7 @@
 import { BookOpen, Columns3, FileText, GitBranch, Headphones, Layers, ListChecks, ListTodo, MonitorPlay, PlayCircle, ScanSearch, Upload } from "lucide-react";
 import { normaliseQuestion, questionProblem, readExam, type ExamSettings, type Question } from "@/modules/training/shared/questions";
 
-/** E-learning courses (docs/training.md, phase 1): a course is sections of
+/** E-learning courses (phase 1): a course is sections of
  *  lessons. The draft lives in TrainingSection/TrainingLesson rows; publishing
  *  freezes it into a TrainingCourseVersion outline, which is what learners get.
  *  Pure and client-safe: the builder, the preview, the staff API and tests use
@@ -88,7 +88,7 @@ export const CALLOUT_META = {
 } as const satisfies Record<CalloutTone, { label: string }>;
 const MARKS = new Set(["bold", "italic", "underline", "strike", "link", "code"]);
 
-/** Where a lesson image is served in Work. Turnfin Me reads the file id from it. */
+/** Where a lesson image is served in Turnfin. Turnfin Me reads the file id from it. */
 export const fileSrc = (id: string) => `/training/files/${id}`;
 export const fileIdFromSrc = (src: unknown) => {
   const match = typeof src === "string" ? /^\/training\/files\/([A-Za-z0-9_-]{1,64})$/.exec(src) : null;

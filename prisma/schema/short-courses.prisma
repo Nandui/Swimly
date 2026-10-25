@@ -1,9 +1,9 @@
-// Short courses (owner decision, 13 October 2026; docs/short-courses.md): fixed-length
+// Short courses (owner decision, 13 October 2026): fixed-length
 // courses the public book a place on, such as six or eight weekly sessions at the pool, the
 // gym or the studio. Staff enter people and record payment taken at the till; each course has
 // weekly sessions with a register and a waiting list. Sessions reach the Rota through the
 // commitments seam. Core is read only through its functions (sites, staff, areas), so these
-// tables keep plain ids, and carry the module prefix (CLAUDE.md section 4).
+// tables keep plain ids, and carry the module prefix (AGENTS.md, Data and writes).
 
 /// A course we offer: "Couch to 5k", "Adult swim lessons". Archived, never deleted.
 model ShortCourseType {

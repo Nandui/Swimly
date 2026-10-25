@@ -15,7 +15,7 @@ import { creditHours } from "@/modules/training/shared/hours";
 import { MAX_SESSION_PLACES, readClock, sessionWhen, wallClockInstant } from "@/modules/training/shared/on-the-job";
 import { refresh, text } from "@/modules/training/shared/writes";
 
-/** Classroom and poolside sessions (docs/training.md, e-learning phase 5).
+/** Classroom and poolside sessions (e-learning phase 5).
  *  Planning one and booking people on needs Assign training; taking the
  *  register and closing it needs Sign off training for the people on it.
  *  Closing credits the hours and completes the session's course for everyone

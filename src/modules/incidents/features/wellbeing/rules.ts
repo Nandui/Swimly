@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-/** The pure rules for asking HR from a report (docs/incidents.md, "Asking HR"):
+/** The pure rules for asking HR from a report ("Asking HR"):
  *  a wellbeing check, or letting HR know a staff member was in the incident.
  *  Kept apart from the database so they are tested on their own. */
 

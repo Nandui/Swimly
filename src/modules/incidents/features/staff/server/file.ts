@@ -4,8 +4,7 @@ import { formatDate } from "@/lib/format";
 import type { PersonFileEntry } from "@/modules/contributions";
 import { incidentCategories, incidentKinds, incidentNumber, type IncidentCategory, type IncidentKind } from "@/modules/incidents/shared/types";
 
-/** What Incidents holds about one staff member, for HR (docs/incidents.md,
- *  "HR"). Only reports where the reporter picked them from the site's team are
+/** What Incidents holds about one staff member, for HR. Only reports where the reporter picked them from the site's team are
  *  linked. HR has already checked `hr.records.read` over the person and logged
  *  the read; these return records, never permissions. */
 

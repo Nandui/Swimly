@@ -23,7 +23,7 @@ export default async function RolesPage() {
   return (
     <PageShell header={<PageHeader
         title="Roles"
-        description="A role is a job, with one level for each module."
+        description="A role is a job, with one level for each app."
         actions={<AddRole canGiveRestricted={canGiveRestricted} />}
       />}>
 

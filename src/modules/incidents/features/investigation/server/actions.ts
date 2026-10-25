@@ -13,7 +13,7 @@ import {
 import { lockReport, recordEvent, reportRights, touchReport } from "@/modules/incidents/shared/service";
 import { sendActionEmail } from "@/modules/incidents/features/investigation/server/emails";
 
-/** The investigation (docs/incidents.md, phase 2): statements, the five whys
+/** The investigation (phase 2): statements, the five whys
  *  and root cause, corrective actions, and reopening a closed report. Working
  *  on a report needs `incidents.reports.review` at its site and is never done
  *  on your own report; reopening needs `incidents.reports.signoff` there. An

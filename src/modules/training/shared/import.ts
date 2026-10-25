@@ -1,6 +1,6 @@
 import { normaliseQuestion, questionProblem, type Question, type QuestionKind } from "@/modules/training/shared/questions";
 
-/** Questions pasted from a spreadsheet (docs/training.md, e-learning phase 3).
+/** Questions pasted from a spreadsheet (e-learning phase 3).
  *  One question a row, copied straight out of Excel (tab-separated) or as CSV:
  *
  *    Type | Question | Option A | Option B | … | Option F | Right answer | Why

@@ -2,7 +2,7 @@
 
 **Purpose:** makes sure staff get the training and qualifications their jobs need.
 
-The rules for courses, assignments, sign-offs and certificates are in [docs/training.md](../../../docs/training.md).
+Its levels are in [docs/apps.md](../../../docs/apps.md).
 
 ## Features
 - `courses` — training courses: create, change settings, archive, and the qualification each grants (`/training/courses`).
@@ -24,7 +24,7 @@ The rules for courses, assignments, sign-offs and certificates are in [docs/trai
 
 `shared/` holds what two or more features use: lessons, outlines, cleaning lesson text, lesson settings and video links (`lessons.ts`), questions, marking and exam papers (`questions.ts`), refreshers, streaks, badges and search (`learner.ts`), course templates (`templates.ts`), reading pasted questions (`import.ts`), lesson files (`files.ts`), the lesson renderer, statuses and states (`constants.ts`), the access check (`access.ts`), courses and the people a trainer may see (`data.ts`), granting a qualification on completion (`grant.ts`), write helpers (`writes.ts`) and the dialogs' kit.
 
-## Public API (index.ts)
+## Front door (index.ts)
 - `myTraining(userId)` — a person's own training, for Turnfin Me's staff API.
 - `completeTrainingFor(person, id, note)` — a person completes their own training from Turnfin Me (every lesson first).
 - `myCourse(userId, id)`, `myLesson(userId, id, lessonId)`, `completeLessonFor(person, id, lessonId)`, `myCourseFile(userId, id, fileId)` — taking a course lesson by lesson in Turnfin Me; `trainingFileResponse(file)` sends a lesson file.
@@ -36,7 +36,7 @@ The rules for courses, assignments, sign-offs and certificates are in [docs/trai
 - `handInWork(person, id, lessonId, work)`, `mySubmissionFile(userId, id, lessonId)` — handing in work on a Hand in work lesson from Turnfin Me (phase 8).
 
 ## Data owned
-Declared in `prisma/schema/training.prisma` (table names kept, ADR 0002):
+Declared in `prisma/schema/training.prisma` (table names kept):
 - `TrainingCourse` — a course and what it grants.
 - `TrainingAssignment` — one person's assignment, from assigned to completed or cancelled, and the course version they take.
 - `training_sections`, `training_lessons` — a course's draft outline.
@@ -56,7 +56,6 @@ Declared in `prisma/schema/training.prisma` (table names kept, ADR 0002):
 - `training_submissions` — work handed in on Hand in work lessons, and the trainer's review.
 - `training_refresher_cards`, `training_refresher_days` — questions a learner missed, spaced out for daily refreshers, and how many they answered each day.
 
-Training also reads and writes Core's qualification records (`Qualification`, `QualificationEvidence`, `QualificationType`) and reads `User`, `Club` and `Position`. Qualifications are Core's (ADR 0001); moving these reads onto Core functions is phase 3 of [MIGRATION.md](../../../docs/architecture/MIGRATION.md).
 
 ## Events
 - Emits: none.

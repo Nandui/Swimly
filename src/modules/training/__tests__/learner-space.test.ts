@@ -4,7 +4,7 @@ import { isolatedPrisma } from "@/test/pglite-prisma";
 import { serverModule } from "@/test/server-module";
 import { badgesFor, matchScore, nextCard, searchWords, snippetOf, streakOf } from "../shared/learner";
 
-/** The learner's own space (docs/training.md, e-learning phase 6): search,
+/** The learner's own space (e-learning phase 6): search,
  *  bookmarks and notes, daily refreshers, streaks and badges, the catalogue,
  *  ratings and the record. Pure rules first, then against a real in-memory
  *  Postgres. */

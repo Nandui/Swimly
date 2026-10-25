@@ -9,7 +9,7 @@ import type { FootageRequestInput } from "@/modules/incidents/features/footage/r
 import { sendFootageRequest } from "@/modules/incidents/features/footage/server/emails";
 import { cancelFootageRequest, createFootageRequest, removeFootage, renewFootageRequest } from "@/modules/incidents/features/footage/server/requests";
 
-/** Asking for CCTV footage from the report page (docs/incidents.md). The email
+/** Asking for CCTV footage from the report page. The email
  *  goes after the request is saved; a failed one shows on the request, with
  *  Send again to retry. */
 

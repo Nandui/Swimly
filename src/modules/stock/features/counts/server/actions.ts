@@ -7,7 +7,7 @@ import { formatDate, isDateOnly, parseDateOnly, plural } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { atSite, refresh } from "@/modules/stock/shared/server";
 
-/** Count writes (docs/stock.md), each checked against the count's site: Count starts, counts,
+/** Count writes, each checked against the count's site: Count starts, counts,
  *  submits and discards an empty count; Manage also deletes one. Every write is audited. */
 
 const day = (d: Date) => formatDate(d);

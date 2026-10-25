@@ -6,7 +6,7 @@ import { emailSender } from "@/lib/email/sender";
 import { prisma } from "@/lib/prisma";
 import { incidentNumber } from "@/modules/incidents/shared/types";
 
-/** Emails to an action's owner (docs/incidents.md): when it is given to them,
+/** Emails to an action's owner: when it is given to them,
  *  the day before it is due and the day after it was due, once each. They
  *  carry the action's words and the report number, never who was hurt. A
  *  failure is kept on the action for the investigators to see. */

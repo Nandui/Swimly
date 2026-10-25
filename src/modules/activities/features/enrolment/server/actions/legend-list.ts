@@ -14,7 +14,7 @@ import { LegendListError, parseLegendList, placesToConfirm } from "@/modules/act
 import { fullName } from "@/modules/activities/shared/students/constants";
 
 /** Confirming Legend agreements from a list exported from Legend
- *  (docs/legend-agreements.md): every outstanding place whose swimmer's
+ *: every outstanding place whose swimmer's
  *  member number is on the list, at every site where this person may
  *  confirm (`enrolment.manage`). A count first, which writes nothing; then
  *  the confirmation, which reads the file again. Each place is recorded as

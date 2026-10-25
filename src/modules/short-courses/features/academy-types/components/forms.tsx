@@ -13,7 +13,7 @@ import { ACADEMY_CHECKS, ACADEMY_CHECK_KEYS, ACADEMY_KIND_META, ACADEMY_KINDS } 
 
 import { text, THEME, useRefresh, type Option } from "@/modules/short-courses/shared/components/form-kit";
 
-/** The course list's dialogs (docs/academy.md). */
+/** The course list's dialogs. */
 
 /* ---------- The course list ---------- */
 

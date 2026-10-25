@@ -13,7 +13,7 @@ import { cancelWellbeingCheck, createWellbeingCheck, renewWellbeingCheck } from 
 import { saveWellbeingRecipients } from "@/modules/incidents/features/wellbeing/server/settings";
 
 /** Asking HR (wellbeing checks, or a staff member in an incident) from the report page, HR's link and Settings
- *  (docs/incidents.md). The email to HR goes after the request is saved; a
+ *. The email to HR goes after the request is saved; a
  *  failed one shows on the request, with Send again to retry. */
 
 async function guarded(run: () => Promise<ActionResult>, path = "/incidents"): Promise<ActionResult> {

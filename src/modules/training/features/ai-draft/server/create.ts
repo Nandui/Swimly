@@ -8,7 +8,7 @@ import { refresh } from "@/modules/training/shared/writes";
 import { DraftError, draftFromDocument, type Source } from "@/modules/training/features/ai-draft/server/claude";
 import { toCourse } from "@/modules/training/features/ai-draft/server/to-course";
 
-/** Drafting a course from a document (docs/training.md, AI drafting). Needs the
+/** Drafting a course from a document (AI drafting). Needs the
  *  Author level. The course lands unpublished, with a review comment listing
  *  what to check, so an author reads every lesson in the builder before anyone
  *  is assigned it. Audited; ten drafts an hour per person. */

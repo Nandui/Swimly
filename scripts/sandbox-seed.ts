@@ -26,7 +26,7 @@ export async function seed(ctx: Ctx) {
   await seedDeskHistory(ctx.prisma, ctx.roles.Receptionist);
 }
 
-/** Two sites' worth of classes so the deck and desk surfaces can be checked:
+/** Two sites' worth of classes so the deck and the desk can be checked:
  *  Ava teaches Otters at Hillview (club_churchfield) today, Riley teaches Seals there too, and
  *  one Riverside (club_bishopstown) class shows that the site lookup stays on its own site. A
  *  parent has a pending change request waiting for reception. */
@@ -190,7 +190,7 @@ async function seedHr(db: PrismaClient, hrUrl: string) {
   } finally { await hr.end(); }
 }
 
-/** The rota at Hillview (docs/rota.md): Lifeguarding, Teaching (the swim classes) and Reception on
+/** The rota at Hillview: Lifeguarding, Teaching (the swim classes) and Reception on
  *  the activity list; this week planned with gaps to fill; Riley off sick today, so his place on the
  *  main pool needs cover and his class needs a teacher; a repeating school booking; the pool's week
  *  shared and reception's still a draft; one change waiting for Timepoint. Sam plans the pool
@@ -261,7 +261,7 @@ async function seedRota(db: PrismaClient) {
   await db.rotaAbsence.create({ data: { orgId: ORG, userId: "sbx_ava", reason: "sickness", firstDay: day(-9), lastDay: day(-1), note: "Synthetic: called in before her shift.", reportedById: "sbx_maya", reportedByName: "Maya Example" } });
 }
 
-/** The Academy at Hillview (docs/academy.md): NPLQ and a swim teacher course on the list; an
+/** The Academy at Hillview: NPLQ and a swim teacher course on the list; an
  *  NPLQ course that started yesterday, Sam tutoring and Liam assessing, with Ciara (staff) and
  *  two invented members of the public on it, one with a deposit and checks still to do. And an
  *  NPLQ course next month open for online booking, with three invented people who held a place
@@ -310,7 +310,7 @@ async function seedAcademy(db: PrismaClient) {
   ] });
 }
 
-/** Short courses (docs/short-courses.md): Couch to 5k at Hillview, two weeks in with its
+/** Short courses: Couch to 5k at Hillview, two weeks in with its
  *  registers taken, five booked (one still owing, one without a health form) and two invented
  *  people waiting for the free place; and Adult swim lessons at Riverside starting in ten days,
  *  open for online booking, with one place held online and overdue for a call. */
@@ -352,7 +352,7 @@ async function seedShortCourses(db: PrismaClient) {
     reference: "SC-SBX42", callTimes: ["evening"], callBy: new Date(heldAt.getTime() + 72 * 3_600_000), createdAt: heldAt, createdByName: "Online booking" } });
 }
 
-/** The CCTV log (docs/cctv.md): three invented viewings at Hillview, one with a note added later. */
+/** The CCTV log: three invented viewings at Hillview, one with a note added later. */
 async function seedCctv(db: PrismaClient) {
   const ORG = "org_leisureworld";
   const iso = (offset: number) => { const d = new Date(); d.setUTCDate(d.getUTCDate() + offset); return d.toISOString().slice(0, 10); };
@@ -372,7 +372,7 @@ async function seedCctv(db: PrismaClient) {
     footageOn: iso(-2), footageFrom: "10:00", footageTo: "10:45", findings: "Nothing relevant seen: the poolside is clear and nobody drops anything before the swimmer is hurt." } });
 }
 
-/** Stock (docs/stock.md): a dozen invented products in the migration's categories, a submitted
+/** Stock: a dozen invented products in the migration's categories, a submitted
  *  count at Riverside a month ago, another last week, and today's still open with a few counted. */
 async function seedStock(db: PrismaClient) {
   const ORG = "org_leisureworld";

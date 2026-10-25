@@ -7,7 +7,7 @@ import { lanesInPlace } from "@/lib/setup/lanes";
 import type { PermissionKey } from "@/lib/staff/permissions";
 
 /** The shared setup every module uses, read for Admin's pages and for the
- *  modules that pick from it (docs/admin-setup.md). Organisation-wide, so the
+ *  modules that pick from it. Organisation-wide, so the
  *  flat permission check is the right one: none of it belongs to a site's people. */
 
 async function viewer() {

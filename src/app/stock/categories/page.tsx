@@ -9,7 +9,7 @@ import { ArchiveCategory, CategoryDialog, CategoryTag, stockCategories } from "@
 
 export const metadata: Metadata = { title: "Stock categories" };
 
-/** The categories (docs/stock.md): how products are grouped on the count sheet, in this order. */
+/** The categories: how products are grouped on the count sheet, in this order. */
 export default async function StockCategoriesPage() {
   const { who, categories } = await stockCategories();
   return (

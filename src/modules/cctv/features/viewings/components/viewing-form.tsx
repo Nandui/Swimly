@@ -17,7 +17,7 @@ import { CCTV_REASON_META, CCTV_REASONS, viewingProblem, viewingSchema, type Vie
 type Site = { id: string; name: string };
 const clock = () => { const m = minutesNow(); return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`; };
 
-/** Record a viewing (docs/cctv.md), in the order people think about it: where and when, why,
+/** Record a viewing, in the order people think about it: where and when, why,
  *  what they looked at, what they saw. Saving locks it; later facts are added as notes. */
 export function ViewingForm({ sites, today, me }: { sites: Site[]; today: string; me: string }) {
   const router = useRouter();

@@ -7,7 +7,7 @@ import { formatTime, formatTimeRange } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { leftOf, stretchOf } from "@/components/ui-kit/scale";
 
-/** The one day-at-a-glance timeline (DESIGN.md, "Poolside Clear v2"): the home page's classes
+/** The one day-at-a-glance timeline: the home page's classes
  *  and Rota's Day plan and Today. Each lane is one rounded row like any list row: its name (an
  *  optional icon, a label, a caption and a 44px action) and its time track, with faint hour
  *  lines and the past shaded. Hours read along the top, blocks sit to the minute on 5-minute

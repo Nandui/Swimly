@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /** What Claude sends back when it drafts a course from a document
- *  (docs/training.md, AI drafting): the JSON schema the API holds it to, and
+ *  (AI drafting): the JSON schema the API holds it to, and
  *  the same shape in zod, checked again here before anything is saved. Kept to
  *  the lesson and question kinds a document can honestly fill: readings,
  *  flashcards, checklists, and single, multiple and true-or-false questions. */

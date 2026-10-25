@@ -2,7 +2,7 @@
 
 **Purpose:** moves a till's request for coins from the desk to accounts.
 
-The rules for the screens, statuses and emails are in [docs/coinage.md](../../../docs/coinage.md) (ADR 0014). It mirrors Refunds' shape without importing it.
+Its levels are in [docs/apps.md](../../../docs/apps.md). It mirrors Refunds' shape without importing it.
 
 ## Features
 - `queue` — find, filter and count coinage requests (`/coinage`), and the home card's counts.
@@ -11,7 +11,7 @@ The rules for the screens, statuses and emails are in [docs/coinage.md](../../..
 
 `shared/` holds what two or more features use: the statuses, denominations and next steps (`types.ts`), validation and transitions (`rules.ts`), the access check (`auth.ts`), the locked, audited mutation and who is emailed (`service.ts`) and the visibility rule (`data.ts`).
 
-## Public API (index.ts)
+## Front door (index.ts)
 - `coinageStatuses` — each status's label, tone and icon. Used by Core's status-metadata test.
 
 ## Data owned
