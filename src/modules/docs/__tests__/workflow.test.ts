@@ -473,3 +473,39 @@ test("Turnfin Me's digest lists reading past its deadline, once it is past, unti
     if (prior === undefined) delete process.env.DOCS_DATABASE_URL; else process.env.DOCS_DATABASE_URL = prior;
   }
 });
+
+test("Docs' front door gives Turnfin Me a person's required reading, the version they must read, and acknowledging it; nothing while Docs is not set up", async () => {
+  const front = serverModule<typeof import('@/modules/docs')>('src/modules/docs/index.ts', {
+    'server-only': {},
+    '@/modules/docs/shared/runtime-database': { directoryDatabase: () => db },
+  });
+  const prior = process.env.DOCS_DATABASE_URL;
+  try {
+    delete process.env.DOCS_DATABASE_URL;
+    assert.equal(await front.docsReading(), null, 'not set up: Turnfin Me shows no reading');
+    assert.deepEqual(await front.readingReminderItems('2027-10-01'), []);
+    process.env.DOCS_DATABASE_URL = 'postgres://unused/docs';
+    const reading = (await front.docsReading())!;
+    const f = await publish(content());
+    await service.assign('jamie', f.id, ['riley'], [], '2027-09-20');
+    const mine = async () => (await reading.requirements('riley')).find((r) => r.documentId === f.id);
+    assert.deepEqual([(await mine())?.status, (await mine())?.versionId], ['outstanding', f.version]);
+    assert.equal((await reading.requirements('sam')).some((r) => r.documentId === f.id), false, "never another person's reading");
+    await assert.rejects(reading.requirements('outsider'), /Docs/, 'someone without Docs access is refused, and Turnfin Me shows them none');
+    const view = await reading.documentView('riley', f.id, f.version);
+    assert.equal(view.selected?.content.title, 'Pool handover verification');
+
+    // A newer version replaces the one assigned: acknowledging the old one is refused.
+    await service.startDraft('jamie', f.id);
+    const next = (await service.lock('jamie', f.id, 'front-door'))!;
+    const sent = await service.submit('jamie', f.id, 'front-door', next.revision, 'sam', 'Second release');
+    await service.review('sam', f.id, sent, 'approved', '');
+    await assert.rejects(reading.acknowledge('riley', f.id, f.version), /newer version/);
+    const current = (await documentView(db, 'riley', f.id)).document.currentVersionId!;
+    await reading.acknowledge('riley', f.id, current);
+    await reading.acknowledge('riley', f.id, current);
+    assert.equal((await rows(db, 'SELECT 1 FROM acknowledgements WHERE version_id=$1 AND member_id=$2', [current, 'riley'])).length, 1, 'acknowledged once, however often it is pressed');
+  } finally {
+    if (prior === undefined) delete process.env.DOCS_DATABASE_URL; else process.env.DOCS_DATABASE_URL = prior;
+  }
+});
