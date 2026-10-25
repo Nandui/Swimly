@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { ageOn, bookableOnline, callByFrom, callDue, centsOf, courseState, expiryFrom, paymentFor, readiness } from "./academy-rules";
+import { ageOn, bookableOnline, hoursLabel, callByFrom, callDue, centsOf, courseState, expiryFrom, paymentFor, readiness } from "./academy-rules";
 
 /** The Academy's rules, on invented candidates. */
 const lifeguard = { checks: ["age", "swim", "medical"], minAge: 16, minHours: 36 };
@@ -55,4 +55,11 @@ test("a course takes online bookings only when put online and before it starts",
   assert.equal(bookableOnline(c, "2026-10-08", "2026-10-08"), false, "started today");
   assert.equal(bookableOnline(c, null, "2026-10-08"), false, "no sessions yet");
   assert.equal(bookableOnline({ ...c, cancelledAt: new Date() }, "2026-11-07", "2026-10-08"), false);
+});
+
+test("a course's hours read in hours and minutes", () => {
+  assert.equal(hoursLabel(750), "12h 30m");
+  assert.equal(hoursLabel(2160), "36h");
+  assert.equal(hoursLabel(45), "45m");
+  assert.equal(hoursLabel(0), "0m");
 });
