@@ -26,7 +26,7 @@ Today a merge to `main` deploys and migrates production, and nothing checks it a
 
 - A GitHub check on every pull request: typecheck, lint (boundary and UI rules), tests and a build against the development database.
 - `main` protected: it accepts only pull requests that pass the check.
-- A test floor for every app: its rules, every front-door function and every event it emits or handles. Start with the thinnest: Refunds, Coinage, Stock, the CCTV log, Site Monitoring, Tasks, HR.
+- A test floor for every app: its rules, every front-door function and every event it emits or handles. Every app meets it.
 - `npm run lint` runs on Windows as well as Linux.
 
 **Done when** no change can reach `main` without passing the checks, and every app meets the test floor.
