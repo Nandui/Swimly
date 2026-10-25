@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.6.0 · 25 October 2026 · Incidents in the new look
+
+- The reports page is now called **Incidents**. If you triage reports, one list shows at a time: choose **To triage**, **Investigating**, **Yours** or **Closed** above it. Each says how many it holds, and the page opens on To triage.
+- Each report in a list has a coloured square for its kind: red when it alerted the managers, orange for an accident or incident, blue for a near miss. Its status and how serious it is sit underneath.
+- A report now opens with its status and number above what it was about, and who reported it, when and where below.
+- What happens next sits beside the report, tinted blue when the next move is yours, with the four steps (reported, triage, investigation, close) under it.
+- What happened, the people involved and triage read as simple rows of label and answer. How serious it was shows as the same coloured tags as the list.
+
 ## 2.5.0 · 25 October 2026 · The rota's Plan in the new look
 
 - The Plan's title is now just **Plan**. The department sits in blue in the line underneath: choose it to switch to another department, or every department. The day follows it.
