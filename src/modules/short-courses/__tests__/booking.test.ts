@@ -14,6 +14,8 @@ let router: typeof import("../features/booking/server/router");
 let swimmerRecords = false;
 let actions: typeof import("../features/academy-calls/server/actions");
 let data: typeof import("../features/academy-calls/server/data");
+let deskCalls: typeof import("../features/academy-calls/server/desk-measures");
+let academyHistory: typeof import("../features/academy-courses/server/contributions");
 const ORG = "org_leisureworld";
 const origin = "https://academy.example.test";
 const originalEnv = { ...process.env };
@@ -102,6 +104,8 @@ before(async () => {
   const seam = { "@/modules/contributions": { members: async () => (swimmerRecords ? directory : null) } };
   actions = serverModule("src/modules/short-courses/features/academy-calls/server/actions.ts", { ...staff, ...seam });
   data = serverModule("src/modules/short-courses/features/academy-calls/server/data.ts", { ...staff, ...seam });
+  deskCalls = serverModule("src/modules/short-courses/features/academy-calls/server/desk-measures.ts", staff);
+  academyHistory = serverModule("src/modules/short-courses/features/academy-courses/server/contributions.ts", staff);
 });
 after(async () => { process.env = originalEnv; await fixture?.close(); });
 
@@ -222,4 +226,21 @@ test("a customer sees only their own bookings, from every module, and signing ou
   assert.doesNotMatch(text, /Tutor Secret Name|Candidate B|Runner/, "no staff or other customers");
   assert.equal((await call("auth/logout", "POST", {}, token)).status, 200);
   assert.equal((await call("me/bookings", "GET", undefined, token)).status, 401);
+});
+
+test("the desk measure times each place held online to its first call, and the swimmer's profile lists their Academy course", async () => {
+  const on = today();
+  const query = (siteIds: string[] | null, from = on, to = on) => deskCalls.academyCallBacks({ siteIds, from, to, now: new Date() });
+  assert.deepEqual(await query([]), [], "no sites, nothing");
+  const done = await query([site]);
+  assert.equal(done.length, 2, "Candidate A and Candidate B were each phoned; the second call to A is not counted again");
+  assert.ok(done.every((m) => !m.open && m.userId === "desk" && m.onTime === true && m.module === "Short courses"), "called within the 72 hours, by the desk");
+  assert.deepEqual(await query([site], "2000-01-01", "2000-01-02"), [], "calls on other days are left out, and nobody booked is still waiting");
+  const record = await fixture.prisma.student.findFirstOrThrow({ where: { memberNumber: "SYN-2001" } });
+  const history = await academyHistory.academyMemberHistory(record.id);
+  assert.equal(history.length, 1);
+  assert.equal(history[0].module, "Academy");
+  assert.match(history[0].title, / at /);
+  assert.match(history[0].detail, / · booked$/);
+  assert.deepEqual(await academyHistory.academyMemberHistory("nobody"), []);
 });

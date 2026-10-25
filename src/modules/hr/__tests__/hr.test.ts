@@ -185,3 +185,11 @@ test("Home counts details changes from Turnfin Me only for people whose details 
   assert.equal(none.count, 0);
   assert.equal(none.attention, false, "shown, but not asking for attention, when nothing waits");
 });
+
+test("reading your own HR record in Turnfin Me is logged like every HR read, against you alone", async () => {
+  const before = (await hr.db.query("SELECT 1 FROM access_events")).length;
+  await mine.logOwnHrRead({ id: "ava", name: "ava", orgId: ORG });
+  const rows = await hr.db.query<{ actor_id: string; subject_user_ids: string[]; entity: string; purpose: string }>("SELECT actor_id, subject_user_ids, entity, purpose FROM access_events ORDER BY id DESC LIMIT 1");
+  assert.equal((await hr.db.query("SELECT 1 FROM access_events")).length, before + 1);
+  assert.deepEqual(rows[0], { actor_id: "ava", subject_user_ids: ["ava"], entity: "HrRecord", purpose: "own HR record (Turnfin Me)" });
+});

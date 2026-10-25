@@ -173,3 +173,16 @@ test("a cancelled course leaves the Rota and takes no bookings", async () => {
   assert.equal((await contributions.commitmentsFor({ siteIds: [bishopstown], from: first, to: addDaysIso(first, 60) })).length, 0);
   assert.equal((await actions.saveParticipant(courseId, null, { name: "Late Example" })).ok, false);
 });
+
+test("renaming a site's area in Admin moves the sessions there, lanes included, and nothing at another site", async () => {
+  const sessions = await fixture.prisma.shortCourseSession.findMany({ where: { courseId }, orderBy: { date: "asc" } });
+  await fixture.prisma.shortCourseSession.update({ where: { id: sessions[0].id }, data: { place: "gym floor, lane 2" } });
+  await fixture.prisma.shortCourseSession.update({ where: { id: sessions[1].id }, data: { place: "Gym floorboards" } });
+  assert.equal(await contributions.renameAreaEverywhere({ siteId: churchfield, from: "Gym floor", to: "Studio" }), 0, "Churchfield has no sessions there");
+  const changed = await contributions.renameAreaEverywhere({ siteId: bishopstown, from: "Gym floor", to: "Studio" });
+  const after = await fixture.prisma.shortCourseSession.findMany({ where: { courseId }, orderBy: { date: "asc" } });
+  assert.equal(after[0].place, "Studio, lane 2", "the lane it names follows");
+  assert.equal(after[1].place, "Gym floorboards", "another area that only starts the same is left alone");
+  assert.ok(after.slice(2).every((s) => s.place === "Studio"));
+  assert.ok(changed >= after.length - 1, "every session moved is counted");
+});

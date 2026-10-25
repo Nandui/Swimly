@@ -62,7 +62,9 @@ function doubles() {
 }
 const as = (id: string, grants: GrantRow[] = [], permissions: string[] = []) => Object.assign(state, { id, grants, permissions, screens: permissions.length || grants.length ? ["rota"] : [] });
 const tomorrow = () => addDaysIso(today(), 1);
-const nextMonday = () => addDaysIso(mondayOf(today()), 7);
+/** A Monday at least a week away, never tomorrow: on a Sunday, the Monday after this week's is
+ *  tomorrow, where earlier tests have already put people on. */
+const nextMonday = () => addDaysIso(mondayOf(addDaysIso(today(), 2)), 7);
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 
 /* ---------- Rules that stayed ---------- */
@@ -433,4 +435,34 @@ test("every department on one Plan (owner, 16 October 2026): all their work and 
   assert.ok(all.types.every((t) => t.departmentId === "d-pool"), "new activities only where Maya may plan");
   assert.equal(all.canShare, false, "sharing, copying and exporting stay a department's");
   assert.equal(all.canChange, true);
+});
+
+test("the personal file lists what they are planned on for two weeks, and their absences without the withdrawn ones", async () => {
+  const file = serverModule<typeof import("@/modules/rota/features/person-file/server/file")>("src/modules/rota/features/person-file/server/file.ts", doubles());
+  const before = (await file.plannedFile("lee")).entries.length;
+  as("maya", [at("rota.manage")]);
+  for (const day of [tomorrow(), addDaysIso(today(), 20)]) {
+    const known = new Set((await fixture.prisma.rotaNeed.findMany({ select: { id: true } })).map((n) => n.id));
+    const saved = await actions.saveNeed(null, need(day, { place: "Learner pool", start: "05:00", end: "06:00", places: 1 }));
+    assert.equal(saved.ok, true, JSON.stringify(saved));
+    const added = (await fixture.prisma.rotaNeed.findMany({ select: { id: true } })).find((n) => !known.has(n.id))!;
+    await fixture.prisma.rotaAssignment.create({ data: { needId: added.id, place: 1, userId: "lee", startMinutes: 300, endMinutes: 360, createdByName: "maya" } });
+  }
+  const planned = await file.plannedFile("lee");
+  assert.equal(planned.entries.length, before + 1, "tomorrow is in; three weeks away is not");
+  const added = planned.entries.find((e) => e.on === tomorrow() && e.detail.includes("Learner pool") && /05:00/.test(e.title))!;
+  assert.match(added.title, /05:00.06:00/);
+  assert.match(planned.summary, /in the next two weeks\./);
+
+  as("sam", [at("rota.manage")]);
+  assert.equal((await absenceActions.reportAbsence({ userId: "lee", reason: "sickness", firstDay: addDaysIso(today(), -10), lastDay: addDaysIso(today(), -8), note: "Synthetic note." })).ok, true);
+  assert.equal((await absenceActions.reportAbsence({ userId: "lee", reason: "sickness", firstDay: addDaysIso(today(), -30), lastDay: addDaysIso(today(), -30), note: "" })).ok, true);
+  const mistaken = await fixture.prisma.rotaAbsence.findFirstOrThrow({ where: { userId: "lee", firstDay: new Date(`${addDaysIso(today(), -30)}T00:00:00Z`) } });
+  assert.equal((await absenceActions.withdrawAbsence(mistaken.id)).ok, true);
+  const absences = await file.absenceFile("lee", ORG);
+  assert.equal(absences.entries.length, 1, "a withdrawn absence was recorded in error and is left out");
+  assert.match(absences.entries[0].title, /^Sickness, .+ \(3 days\)$/);
+  assert.match(absences.entries[0].detail, /Reported by sam · Synthetic note · Return to work not recorded yet/);
+  assert.equal(absences.summary, "1 absence in the last 12 months, 3 calendar days off.");
+  assert.equal((await file.absenceFile("lee", "org_other")).entries.length, 0, "another organisation's file is empty");
 });

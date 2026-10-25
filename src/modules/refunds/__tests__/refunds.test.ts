@@ -11,6 +11,7 @@ import { expandPermissions } from "@/lib/staff/permissions";
 let db: Awaited<ReturnType<typeof isolatedPrisma>>;
 let service: typeof import('../shared/service'), files: typeof import('../features/request/server/files'), notifications: typeof import('../features/request/server/notifications'), list: typeof import('../features/queue/server/list'), detail: typeof import('../features/request/server/data'), actions: typeof import('../features/request/server/actions');
 let home: typeof import('../features/queue/server/home');
+let desk: typeof import('../features/queue/server/desk-measures');
 let uploadRoute: typeof import('@/app/api/refunds/files/route'), downloadRoute: typeof import('@/app/api/refunds/files/[id]/route');
 const reception: RefundActor = { id: 'refund-reception', name: 'Alex Example', request: true, review: false, process: false };
 const finance: RefundActor = { id: 'refund-finance', name: 'Riley Example', request: false, review: true, process: true };
@@ -42,6 +43,7 @@ before(async () => {
   detail = serverModule('src/modules/refunds/features/request/server/data.ts', doubles);
   actions = serverModule('src/modules/refunds/features/request/server/actions.ts', doubles);
   home = serverModule('src/modules/refunds/features/queue/server/home.ts', doubles);
+  desk = serverModule('src/modules/refunds/features/queue/server/desk-measures.ts', doubles);
   uploadRoute = serverModule('src/app/api/refunds/files/route.ts', doubles);
   downloadRoute = serverModule('src/app/api/refunds/files/[id]/route.ts', doubles);
   process.env.REFUNDS_APP_URL = 'https://staff.example.test';
@@ -241,4 +243,23 @@ test('Home counts what waits for each person, within what they may see, and move
   const financeLast = await counts(finance, ['refunds.review', 'refunds.process']);
   assert.equal(financeLast['Refund requests to decide'], financeBefore['Refund requests to decide']);
   assert.equal(financeLast['Approved refunds to pay'], (financeBefore['Approved refunds to pay'] as number) + 1);
+});
+
+test("the desk measure times each request from draft to sent, keeps unsent drafts open, and stays within the sites asked for", async () => {
+  await db.prisma.club.create({ data: { id: 'refund-site-c', name: 'Example site C' } });
+  const day = new Date().toISOString().slice(0, 10);
+  const query = (siteIds: string[] | null, from = day, to = day) => desk.refundsSent({ siteIds, from, to, now: new Date() });
+  assert.deepEqual(await query([]), [], 'no sites, nothing');
+  await create({ clubId: 'refund-site-c' }, 'save');
+  const draftOnly = await query(['refund-site-c']);
+  assert.equal(draftOnly.length, 1);
+  assert.deepEqual([draftOnly[0].open, draftOnly[0].userId, draftOnly[0].onTime, draftOnly[0].module], [true, reception.id, null, 'Refunds'], 'an unsent draft is still waiting');
+  await create({ clubId: 'refund-site-c' });
+  const both = await query(['refund-site-c']);
+  assert.equal(both.length, 2);
+  const sent = both.find((m) => !m.open)!;
+  assert.equal(sent.userName, reception.name);
+  assert.ok(sent.minutes >= 0);
+  assert.ok(both.every((m) => m.siteId === 'refund-site-c'), "another site's requests are left out");
+  assert.deepEqual((await query(['refund-site-c'], '2000-01-01', '2000-01-02')).map((m) => m.open), [true], 'sent outside the dates is left out; a waiting draft never is');
 });
