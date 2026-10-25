@@ -13,9 +13,12 @@ import { YourModulesProvider } from "@/components/workspace/your-modules";
 import { modulesFor } from "@/modules/context";
 import { getCurrentClub } from "@/lib/clubs/current";
 // Turnfin Glass (DESIGN.md): its tokens come in through globals.css (theme/glass.css); the
-// pre-2.0 rules, pointed at those tokens, stay in poolside.css until the 2.0 kit replaces them.
+// pre-2.0 rules, pointed at those tokens, stay in poolside.css until the 2.0 kit (theme/kit.css,
+// loaded after it) replaces them part by part.
 import "./globals.css";
 import "./theme/poolside.css";
+import "./theme/kit.css";
+import { GlassRoot } from "@/components/ui-kit/glass";
 import { inter } from "./fonts";
 
 /** One template all the way down: a layout that sets a title must also set
@@ -69,6 +72,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       data-theme={mode === "system" ? undefined : mode}
     >
       <body className="turnfin-app">
+        <GlassRoot />
         <ThemeProvider initialMode={mode}>
           <TooltipProvider>
             <ToastBridge />

@@ -308,6 +308,13 @@ const eslintConfig = defineConfig([
       }],
     },
   },
+  // The glass material's lens filters are SVG filter primitives, neither a chart nor an icon:
+  // the one place outside the library that draws <svg>. Every other UI rule still applies.
+  // DESIGN.md (How it is built, 2): the lint rules follow the new kit.
+  {
+    files: ["src/components/ui-kit/glass.tsx"],
+    rules: { "no-restricted-syntax": ["error", ...uiSyntax.filter((rule) => !rule.selector.includes("'svg'")), ...coreData] },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

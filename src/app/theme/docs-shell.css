@@ -1329,7 +1329,7 @@
 /* Printing a document: only the document itself, without the frame, the page actions, the rail
    or the notices. */
 @media print {
-  :where(.turnfin-docs) :is(.tf-top, .tf-rail, .tf-bottom, .reader-rail, .reader-workspace [data-slot='alert']) {
+  :where(.turnfin-docs) :is(.tf-top, .tf-side, .tf-bottom, .reader-rail, .reader-workspace [data-slot='alert']) {
     display: none !important;
   }
   :where(.turnfin-docs) .reader-workspace > :first-child :is(.pc-phead-actions, a) {
