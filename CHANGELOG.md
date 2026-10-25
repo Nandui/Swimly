@@ -4,6 +4,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.4.0 · 25 October 2026 · A new Home
+
+- Home greets you by name, with the date, your job and your site underneath.
+- Your site's day is at the top: today's classes, the places still to cover and the bookings, with a red line at the time now that moves with the clock. Choose a block to open it, or **Timetable** for the whole day.
+- **Needs you** lists everything waiting for you across your apps in one place, with how many of each. A class that still needs cover comes first, with how soon it starts and a **Find cover** button.
+- **Right now** shows today's figures, such as classes on and who is on the rota. **Up next** shows what starts soon.
+- **New** at the top right starts the things you do from anywhere, such as adding a swimmer or reporting an absence.
+- Your apps are no longer listed on Home: they are in the panel on the left (or **Apps** at the bottom on a phone).
+
 ## 2.3.0 · 25 October 2026 · New buttons, lists and forms
 
 - Buttons are rounder and calmer. The main button on a page is the only blue one; the others are light grey with blue words.

@@ -221,6 +221,69 @@
 /* An empty state on the page itself sits on a bg-2 card. */
 .turnfin-app .tf-main [data-slot='empty']:not(:is([data-slot='card'], [data-slot='table-container'], [data-slot='item-group'], [role='dialog'], .pc-panel) [data-slot='empty']) { border: 0; border-radius: var(--radius-card); background: var(--bg-2); }
 
+/* A card of grouped rows (DESIGN.md, List): rows inside it part with an inset hairline, and a
+   section title sits above the card, not in it. */
+.turnfin-app .pc-list { display: flex; flex-direction: column; margin: 0; padding: 6px var(--space-3); border-radius: var(--radius-card); background: var(--bg-2); box-shadow: var(--shadow-card); list-style: none; }
+.turnfin-app .pc-list > li > .pc-row { width: auto; margin-inline: calc(-1 * var(--space-3)); padding-inline: var(--space-5); background: transparent; }
+.turnfin-app .pc-list > li > :is(a, button).pc-row:hover { background: var(--bg-3); }
+.turnfin-app .pc-list > li + li { border-top: 0.5px solid var(--sep); }
+/* A section title above grouped content, with a count or a quiet link at its end. */
+.turnfin-app .pc-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); margin: 0 var(--space-1) var(--space-2); }
+.turnfin-app .pc-section-head > p { margin: 0; color: var(--label-2); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* A row's symbol tile: 32px with radius-sm, the fin blue on the quiet fill; a tile that needs
+   action, is done or is serious takes that tone. */
+.turnfin-app .pc-tile-icon { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--fill-2); color: var(--accent); }
+.turnfin-app .pc-tile-icon > svg { width: 18px; height: 18px; }
+.turnfin-app .pc-tile-icon[data-tone='orange'] { background: var(--orange-soft); color: var(--orange-ink); }
+.turnfin-app .pc-tile-icon[data-tone='green'] { background: var(--green-soft); color: var(--green-ink); }
+.turnfin-app .pc-tile-icon[data-tone='red'] { background: var(--red-soft); color: var(--red-ink); }
+.turnfin-app .pc-row-hint[data-tone='orange'] { color: var(--orange-ink); font-weight: 550; }
+.turnfin-app .pc-row-value { margin-left: auto; color: var(--label-2); font-variant-numeric: tabular-nums; }
+
+/* The live dot (DESIGN.md, Live): the now dot breathes; Reduce motion stills it. */
+.turnfin-app .live-dot { position: relative; display: inline-block; flex: none; width: 7px; height: 7px; border-radius: var(--radius-capsule); background: var(--red); }
+.turnfin-app .live-dot::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--red); animation: live-breathe 2.4s var(--ease) infinite; }
+@keyframes live-breathe { 0% { transform: scale(1); opacity: 0.55; } 100% { transform: scale(3); opacity: 0; } }
+
+/* DayTimeline (ui-kit/day-timeline.tsx): lanes of Calendar-style blocks with a 3px leading bar,
+   the hours along the top in caption-2, and the red now line and pill, as in Calendar. */
+.turnfin-app .day-tl { display: grid; grid-template-columns: 90px minmax(0, 1fr); column-gap: var(--space-3); min-width: 0; }
+.turnfin-app .day-tl-axis { position: relative; height: 20px; color: var(--label-2); font-size: 11px; line-height: 13px; font-weight: 550; font-variant-numeric: tabular-nums; }
+.turnfin-app .day-tl-hour { position: absolute; top: 2px; translate: -50% 0; white-space: nowrap; }
+.turnfin-app .day-tl-hour[data-edge='start'] { translate: 0 0; }
+.turnfin-app .day-tl-hour[data-edge='end'] { translate: -100% 0; }
+.turnfin-app .day-tl-pill { position: absolute; top: 0; z-index: 3; padding: 1px 6px; border-radius: var(--radius-xs); background: var(--red-badge); color: #ffffff; font-size: 11px; line-height: 15px; font-weight: 650; white-space: nowrap; translate: -50% 0; }
+.turnfin-app .day-tl-labels { display: flex; flex-direction: column; }
+.turnfin-app .day-tl-label { display: flex; align-items: center; height: 40px; color: var(--label-2); font-size: 13px; line-height: 18px; font-weight: 550; }
+.turnfin-app .day-tl-lanes { position: relative; display: flex; flex-direction: column; min-width: 0; }
+.turnfin-app .day-tl-lane { position: relative; height: 40px; }
+.turnfin-app .day-tl-line { position: absolute; top: 0; bottom: 0; width: 0.5px; background: var(--sep); }
+.turnfin-app .day-tl-block { position: absolute; top: 3px; bottom: 3px; z-index: 2; display: flex; flex-direction: column; justify-content: center; min-width: 0; margin-right: 3px; padding: 0 8px 0 11px; overflow: hidden; border-radius: var(--radius-sm); font-size: 12px; line-height: 15px; font-weight: 600; white-space: nowrap; text-decoration: none; transition: background-color 450ms var(--ease), color 450ms var(--ease); }
+.turnfin-app .day-tl-block > span { overflow: hidden; text-overflow: ellipsis; font-weight: 450; opacity: 0.85; }
+.turnfin-app .day-tl-block::before { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 3px; background: var(--day-tl-bar, transparent); }
+.turnfin-app a.day-tl-block:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.turnfin-app .day-tl-block[data-kind='done'] { background: var(--fill-2); color: var(--label-2); }
+.turnfin-app .day-tl-block[data-kind='now'] { --day-tl-bar: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
+.turnfin-app .day-tl-block[data-kind='next'] { --day-tl-bar: var(--label-3); background: var(--fill); color: var(--label); }
+.turnfin-app .day-tl-block[data-kind='gap'] { --day-tl-bar: var(--orange); background: var(--orange-soft); color: var(--orange-ink); }
+.turnfin-app .day-tl-block[data-kind='ok'] { --day-tl-bar: var(--green); background: var(--green-soft); color: var(--green-ink); }
+.turnfin-app .day-tl-block[data-kind='book'] { --day-tl-bar: var(--label-3); background: repeating-linear-gradient(135deg, var(--fill) 0 6px, var(--fill-2) 6px 12px); color: var(--label); }
+.turnfin-app .day-tl-block[data-kind='off'] { background: var(--fill-2); color: var(--label-2); text-decoration: line-through; }
+.turnfin-app .day-tl-now { position: absolute; top: 0; bottom: 0; z-index: 1; width: 1.5px; margin-left: -0.75px; background: var(--red); }
+/* Phones: the blocks alone, their names left to the words a screen reader reads and the rows
+   below the card. */
+@media (max-width: 767px) {
+  .turnfin-app .day-tl { grid-template-columns: minmax(0, 1fr); }
+  .turnfin-app :is(.day-tl-corner, .day-tl-labels) { display: none; }
+  .turnfin-app .day-tl-lane { height: 30px; }
+  .turnfin-app .day-tl-block { padding: 0; font-size: 0; }
+  .turnfin-app .day-tl-block > span { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .turnfin-app .live-dot::after { animation: none; }
+}
+
 /* Figure tiles (Figure): big tabular numbers. On the ground, bg-2 tiles with radius-panel; inside a
    card, the quiet fill with radius-lg. A tile that filters shows the soft fin blue when open. */
 .turnfin-app .pc-stat { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); min-width: 0; padding: 16px 18px; border: 0; border-radius: var(--radius-lg); background: var(--fill-2); color: var(--label); text-decoration: none; }

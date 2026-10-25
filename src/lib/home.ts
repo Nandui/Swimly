@@ -2,7 +2,7 @@ import "server-only";
 import { pageSession } from "@/lib/page-guards";
 import { staffApiConfig } from "@/lib/staff-api/config";
 import { prisma } from "@/lib/prisma";
-import { formatDay, today } from "@/lib/format";
+import { formatDay, minutesNow, today } from "@/lib/format";
 import { getCurrentClub } from "@/lib/clubs/current";
 import { modulesFor } from "@/modules/context";
 import { homeCardItems } from "@/modules/server";
@@ -34,6 +34,8 @@ export async function loadHome() {
     /** Modules whose figures failed to load, so the page says so rather than leaving them out silently. */
     failed: items.failed ?? [],
     today: formatDay(today()),
+    /** Minutes after midnight at the centre, for the greeting, the day timeline and "Up next". */
+    now: minutesNow(),
     meUrl: turnfinMeUrl(),
   };
 }
