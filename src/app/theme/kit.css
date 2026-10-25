@@ -63,6 +63,187 @@
   .glass { border: 1px solid CanvasText; }
 }
 
+/* ── Controls (DESIGN.md, Components). The shadcn primitives keep their Radix behaviour; the look
+   is here. Menu and popover triggers (Radix swaps their data-slot) are caught through
+   .ui-motion-press, which only the shared Button sets. */
+
+/* Button: capsules. Filled for the main action (the fin blue), tinted for the others, plain for a
+   quiet text action, destructive in red ink. 44px (control-height) on touch screens; 34px with a
+   mouse, as the design's content buttons. A press dips to 0.94 and springs back. */
+.turnfin-app :is([data-slot='button'], .ui-motion-press) { min-height: var(--control-height); border-radius: var(--radius-capsule); font-size: 15px; line-height: 20px; font-weight: 600; translate: none; transition: background-color var(--duration-fade) var(--ease), color var(--duration-fade) var(--ease), scale var(--duration-spring) var(--bounce); }
+.turnfin-app .ui-motion-press:not([data-size^='icon'], .toolbar-button) { padding-inline: var(--space-4); }
+.turnfin-app .ui-motion-press[data-size^='icon'] { width: var(--control-height); min-width: var(--control-height); padding: 0; }
+.turnfin-app .ui-motion-press > svg { width: 16px; height: 16px; stroke-width: 2.2; }
+.turnfin-app .ui-motion-press:active:not(:disabled, [aria-disabled='true']) { scale: 0.94; transition-duration: var(--duration-press); }
+@media (hover: hover) and (pointer: fine) {
+  .turnfin-app :is([data-slot='button'], .ui-motion-press) { min-height: 34px; }
+  .turnfin-app .ui-motion-press[data-size^='icon'] { width: 34px; min-width: 34px; }
+}
+.turnfin-app .ui-motion-press[data-variant='default'] { background: var(--accent-btn); color: #ffffff; }
+.turnfin-app .ui-motion-press[data-variant='default']:hover:not(:disabled, [aria-disabled='true']) { background: var(--accent-hi); }
+.turnfin-app .ui-motion-press[data-variant='outline'] { border: 0; background: var(--fill); box-shadow: none; color: var(--accent); }
+.turnfin-app .ui-motion-press[data-variant='outline']:hover:not(:disabled, [aria-disabled='true']) { background: var(--glass-sel); color: var(--accent); }
+.turnfin-app .ui-motion-press[data-variant='ghost'] { background: transparent; color: var(--accent); }
+.turnfin-app .ui-motion-press[data-variant='ghost']:hover:not(:disabled, [aria-disabled='true']) { background: var(--fill-2); color: var(--accent); }
+.turnfin-app .ui-motion-press[data-variant='link'] { padding-inline: 0; color: var(--accent); }
+.turnfin-app .ui-motion-press[data-variant='destructive'] { background: var(--fill); color: var(--red-ink); }
+.turnfin-app .ui-motion-press[data-variant='destructive']:hover:not(:disabled, [aria-disabled='true']) { background: var(--red-soft); }
+/* A combobox is a Button that behaves as a field, so it wears the field. */
+.turnfin-app .ui-motion-press[role='combobox'] { border: 0; background: var(--fill); color: var(--label); }
+/* Disabled (native, or aria-disabled while a LoadingButton is pending, so focus stays): the quiet
+   fill with the disabled ink, never half opacity. */
+.turnfin-app .ui-motion-press:is([data-variant='default'], [data-variant='destructive'], [data-variant='outline']):is(:disabled, [aria-disabled='true']) { background: var(--fill-2); box-shadow: none; color: var(--label-3); opacity: 1; }
+.turnfin-app .ui-motion-press:is([data-variant='ghost'], [data-variant='link']):is(:disabled, [aria-disabled='true']) { background: transparent; color: var(--label-3); opacity: 1; }
+.turnfin-app .ui-motion-press[aria-disabled='true'] { cursor: not-allowed; }
+
+/* Tag (ui-kit/Tag through shadcn's Badge): a 22px capsule, its words in the tone's ink on the
+   tone's soft ground (shadcn.css), always with a word, never colour alone. Grey for neutral. */
+.turnfin-app [data-slot='badge'] { gap: 4px; min-height: 22px; padding: 0 9px; border: 0; border-radius: var(--radius-capsule); box-shadow: none; font-size: 12px; line-height: 16px; font-weight: 600; }
+.turnfin-app [data-slot='badge']:has(> svg) { padding-left: 7px; }
+.turnfin-app [data-slot='badge'] > svg { width: 12px; height: 12px; stroke-width: 2.5; }
+.turnfin-app [data-slot='badge']:is(:not([data-tone]), [data-tone='gray']) { background: var(--fill-2); color: var(--label-2); }
+
+/* Switch: green when on, and the knob turns to glass while it is held. */
+.turnfin-app [data-slot='switch'] { position: relative; width: 51px; height: 31px; padding: 0; border: 0; border-radius: var(--radius-capsule); background: var(--fill); box-shadow: none; transition: background-color 300ms var(--ease); }
+.turnfin-app [data-slot='switch'][data-state='checked'] { background: var(--green); }
+.turnfin-app [data-slot='switch-thumb'] { width: 27px; height: 27px; border-radius: var(--radius-capsule); background: #ffffff; box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 1px 1px rgba(0, 0, 0, 0.16); translate: 2px 0; transition: translate var(--duration-spring) var(--bounce), width 300ms var(--spring), background-color 200ms var(--ease); }
+.turnfin-app [data-slot='switch-thumb'][data-state='checked'] { translate: 22px 0; }
+.turnfin-app [data-slot='switch']:active:not(:disabled) [data-slot='switch-thumb'] { width: 34px; background: rgba(255, 255, 255, 0.62); box-shadow: inset 0 1px 1px #ffffff, inset 0 0 8px rgba(255, 255, 255, 0.8), 0 4px 12px rgba(0, 0, 0, 0.18); }
+.turnfin-app [data-slot='switch']:active:not(:disabled) [data-slot='switch-thumb'][data-state='checked'] { translate: 15px 0; }
+
+/* SegmentedControl, solid (SegmentedLinks, SegmentedChoice, the account menu's Appearance, and
+   shadcn Tabs): the fill track, the chosen item on a white droplet. It wraps onto more rows rather
+   than scrolling; 8px between rows keeps each item's 44px hit area (margin -4px 0) whole. */
+.turnfin-app .pc-seg,
+.turnfin-app [data-slot='tabs-list'][data-variant='default'] { display: inline-flex; flex: none; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: 8px 0; width: max-content; max-width: 100%; height: auto; min-height: var(--control-height); padding: var(--space-1); border-radius: var(--radius-panel); background: var(--pc-seg-track, var(--fill)); overflow: visible; }
+.turnfin-app :is([data-slot='dialog-content'], [data-slot='alert-dialog-content'], [data-slot='sheet-content'], [data-slot='popover-content']) { --pc-seg-track: var(--fill); --pc-seg-thumb: var(--bg-2); }
+.turnfin-app :is(.pc-seg-item, [data-slot='tabs-list'][data-variant='default'] [data-slot='tabs-trigger']) { position: relative; isolation: isolate; display: inline-flex; flex: none; align-items: center; justify-content: center; gap: 6px; min-width: var(--control-height); min-height: var(--control-height); margin: -4px 0; padding: 0 15px; border: 0; border-radius: var(--radius-capsule); background: none; box-shadow: none; color: var(--label); font-size: 15px; font-weight: 550; white-space: nowrap; text-decoration: none; cursor: pointer; }
+.turnfin-app :is(.pc-seg-item, [data-slot='tabs-list'][data-variant='default'] [data-slot='tabs-trigger'])::before { content: ''; position: absolute; inset: 4px 0; z-index: -1; border-radius: var(--radius-capsule); transition: background-color var(--duration-fade) var(--ease); }
+.turnfin-app :is(.pc-seg-item, [data-slot='tabs-list'][data-variant='default'] [data-slot='tabs-trigger']):is(:hover, [data-highlighted])::before { background: var(--fill-2); }
+.turnfin-app .pc-seg-item:is(:focus, [data-highlighted]) { background: none; }
+.turnfin-app :is(.pc-seg-item:is([aria-current], [data-state='checked'], [aria-pressed='true']), [data-slot='tabs-list'][data-variant='default'] [data-slot='tabs-trigger'][data-state='active']) { background: none; color: var(--label); font-weight: 650; }
+.turnfin-app :is(.pc-seg-item:is([aria-current], [data-state='checked'], [aria-pressed='true']), [data-slot='tabs-list'][data-variant='default'] [data-slot='tabs-trigger'][data-state='active'])::before { background: var(--pc-seg-thumb, var(--bg-2)); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12); }
+.turnfin-app :is(.pc-seg-item, [data-slot='tabs-trigger']):focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* Fields: the fill, 44px, no edge; 16px text on touch so phones do not zoom, 15px with a mouse.
+   Focus is the 2px fin-blue ring; a field that needs fixing is the red soft ground with a red-ink
+   edge. */
+.turnfin-app :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input) { min-height: var(--control-height); border: 0; border-radius: var(--radius-capsule); background: var(--fill); box-shadow: none; font-size: 16px; font-weight: 400; color: var(--label); transition: box-shadow var(--duration-fade) var(--ease), background-color var(--duration-fade) var(--ease); }
+.turnfin-app [data-slot='textarea']:not(.title-input) { min-height: 96px; padding-top: 10px; padding-bottom: 10px; border-radius: var(--radius-lg); line-height: var(--pc-leading-title); }
+.turnfin-app :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select'], .ui-motion-press[role='combobox']):not(.title-input):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; box-shadow: none; }
+.turnfin-app :is([data-slot='input'], [data-slot='textarea'], [data-slot='select-trigger'], [data-slot='native-select']):not(.title-input):disabled { background: var(--fill-2); color: var(--label-3); opacity: 1; }
+.turnfin-app [data-slot='native-select-wrapper'] { opacity: 1; }
+.turnfin-app :is([data-slot='input'], [data-slot='textarea'])[aria-invalid='true'] { background: var(--red-soft); box-shadow: inset 0 0 0 1px var(--red-ink); }
+.turnfin-app :is([data-slot='input'], [data-slot='textarea'])::placeholder { color: var(--label-2); }
+/* Field labels sit above the field in footnote, secondary ink (DESIGN.md, Forms). Choice labels
+   (checkbox, radio, template cards) read at body size. */
+.turnfin-app :is(label, legend:not(.sr-only), [data-slot='label']):not(:has([type='checkbox'], [type='radio'], [data-slot='checkbox'], [data-slot='radio-group-item'])) { font-size: 13px; line-height: 18px; font-weight: 500; color: var(--label-2); letter-spacing: 0; text-transform: none; }
+
+/* A switch row's label is the row's words, not a field label: body size, primary ink. */
+.turnfin-app div:has(+ [data-slot='switch']) > :is(label, [data-slot='label']) { font-size: var(--pc-text-body); line-height: var(--pc-leading-body); font-weight: 400; color: var(--label); }
+
+/* Menus, selects and popovers are glass (the functional layer), with radius-card corners; their
+   items are 44px with radius-lg, the glass droplet when highlighted. */
+.turnfin-app :is([data-slot='select-content'], [data-slot='popover-content'], [data-slot='dropdown-menu-content'], [data-slot='dropdown-menu-sub-content']) {
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate)) brightness(var(--glass-brightness));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate)) brightness(var(--glass-brightness));
+  box-shadow: inset 0 1px 1px var(--glass-spec), inset 0 -1px 1px var(--glass-spec-2), inset 0 0 18px var(--glass-glow), inset 0 0 0 0.5px var(--glass-edge), var(--shadow-glass);
+  font-family: var(--font-text);
+}
+.turnfin-app :is([data-slot='select-item'], [data-slot='command-item'], [data-slot='dropdown-menu-item'], [data-slot='dropdown-menu-checkbox-item'], [data-slot='dropdown-menu-radio-item'], [data-slot='dropdown-menu-sub-trigger']) { min-height: var(--control-height); padding: 6px 14px; border-radius: var(--radius-lg); font-family: var(--font-text); font-size: 15px; line-height: 20px; font-weight: 500; color: var(--label); }
+.turnfin-app :is([data-slot='select-item'], [data-slot='command-item'], [data-slot='dropdown-menu-item'], [data-slot='dropdown-menu-checkbox-item'], [data-slot='dropdown-menu-radio-item'], [data-slot='dropdown-menu-sub-trigger']):is(:focus, [data-highlighted]) { background: var(--glass-sel); color: var(--label); }
+.turnfin-app [data-slot='select-item'] { padding-right: 36px; }
+.turnfin-app :is([data-slot='dropdown-menu-checkbox-item'], [data-slot='dropdown-menu-radio-item'], [data-slot='dropdown-menu-item'][data-inset], [data-slot='dropdown-menu-sub-trigger'][data-inset]) { padding-left: 36px; }
+.turnfin-app [data-slot='select-item-indicator'] { right: 12px; }
+.turnfin-app :is([data-slot='dropdown-menu-checkbox-item'], [data-slot='dropdown-menu-radio-item']) > span:first-child { left: 12px; }
+.turnfin-app :is([data-slot='select-item'], [data-slot='command-item'], [data-slot='dropdown-menu-item'], [data-slot='dropdown-menu-checkbox-item'], [data-slot='dropdown-menu-radio-item']) .text-xs { font-weight: 400; }
+/* The account menu: a 320px glass panel, 16px inside and between its parts. */
+.turnfin-app .tf-account-menu[data-slot='dropdown-menu-content'] { display: flex; flex-direction: column; gap: 16px; padding: 16px; }
+.turnfin-app .tf-account-menu .tf-menu-item { gap: 12px; min-height: var(--control-height); margin: 0 -4px; padding: 0 12px; border-radius: var(--radius-lg); color: var(--label); font-weight: 500; }
+.turnfin-app .tf-account-menu .tf-menu-item svg { color: var(--label-2); }
+.turnfin-app .tf-account-menu .tf-menu-item:is(:focus, [data-highlighted]) { background: var(--glass-sel); color: var(--label); }
+.turnfin-app .tf-account-menu .tf-menu-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* Dialogs are opaque bg-2 with radius-card corners over the scrim; sheets are bg-2 too (a long
+   form is a full-height sheet with an opaque ground). Titles are title-2. */
+.turnfin-app :is([data-slot='dialog-overlay'], [data-slot='alert-dialog-overlay'], [data-slot='sheet-overlay']) { background: var(--scrim); }
+.turnfin-app :is([data-slot='dialog-content'], [data-slot='alert-dialog-content'], [data-slot='sheet-content']) { border: 0; background: var(--bg-2); box-shadow: var(--shadow-glass); font-family: var(--font-text); }
+.turnfin-app :is([data-slot='dialog-content'], [data-slot='alert-dialog-content']) { border-radius: var(--radius-card); }
+.turnfin-app .ui-motion-press:is([data-slot='dialog-close'], [data-slot='sheet-close']) { background: var(--fill); color: var(--label-2); }
+.turnfin-app .ui-motion-press:is([data-slot='dialog-close'], [data-slot='sheet-close']):hover { background: var(--glass-sel); color: var(--label); }
+.turnfin-app :is([data-slot='dialog-title'], [data-slot='alert-dialog-title'], [data-slot='sheet-title']) { font-family: var(--font-display); font-size: 22px; line-height: 28px; font-weight: 700; letter-spacing: -0.018em; }
+
+/* ── Content (DESIGN.md, The page shell): opaque bg-2 cards with radius-card corners on the
+   ground; inside them, rows separated by inset hairlines, never boxes inside boxes. Section
+   titles are title-3. */
+.turnfin-app h2 { font-family: var(--font-display); font-weight: 650; letter-spacing: -0.015em; }
+.turnfin-app .pc-panel { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; padding: 20px; border-radius: var(--radius-card); background: var(--bg-2); box-shadow: var(--shadow-card); }
+.turnfin-app [data-slot='card'] { border: 0; border-radius: var(--radius-card); background: var(--bg-2); box-shadow: var(--shadow-card); }
+/* A card inside a card loses its own ground and corners: it is a group of rows, not a box. */
+.turnfin-app :is([data-slot='card'], [data-slot='dialog-content'], [data-slot='sheet-content'], .pc-panel, [data-slot='table-container']) [data-slot='card'] { border-radius: var(--radius-lg); background: var(--fill-2); box-shadow: none; }
+
+/* Rows: a list of .pc-row or shadcn items. On the ground each row is a bg-2 card; inside a card,
+   panel or dialog the rows lose their box and part with an inset hairline. */
+.turnfin-app .pc-rows { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.turnfin-app .pc-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); min-width: 0; min-height: var(--row-height); padding: 9px var(--space-5); border: 0; border-radius: var(--radius-lg); background: var(--bg-2); color: var(--label); text-decoration: none; transition: background-color var(--duration-fade) var(--ease); }
+.turnfin-app button.pc-row.ui-motion-press { padding: 9px var(--space-5); }
+.turnfin-app :is(a, button).pc-row:hover { background: var(--bg-3); }
+.turnfin-app :is(a, button).pc-row:active { background: var(--fill-2); }
+.turnfin-app :is(a, button).pc-row:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.turnfin-app :is([data-slot='card'], [data-slot='dialog-content'], [data-slot='alert-dialog-content'], [data-slot='sheet-content'], [data-slot='popover-content'], .pc-panel) .pc-rows { gap: 0; }
+.turnfin-app :is([data-slot='card'], [data-slot='dialog-content'], [data-slot='alert-dialog-content'], [data-slot='sheet-content'], [data-slot='popover-content'], .pc-panel) .pc-row { width: auto; margin-inline: calc(-1 * var(--space-3)); padding-inline: var(--space-3); background: transparent; }
+.turnfin-app :is([data-slot='card'], [data-slot='dialog-content'], [data-slot='alert-dialog-content'], [data-slot='sheet-content'], [data-slot='popover-content'], .pc-panel) :is(a, button, label).pc-row:hover { background: var(--fill-2); }
+.turnfin-app :is([data-slot='card'], [data-slot='dialog-content'], [data-slot='alert-dialog-content'], [data-slot='sheet-content'], [data-slot='popover-content'], .pc-panel) .pc-rows > :is(li, .pc-row) + :is(li, .pc-row) { border-top: 0.5px solid var(--sep); }
+/* The single do-first row is the needs-action tone; the current row of a filtering list the soft
+   fin blue. A row that opens in place keeps its look while open. */
+.turnfin-app .pc-row[data-first] { background: var(--orange-soft); color: var(--orange-ink); }
+.turnfin-app .pc-row[data-first] :is(.pc-row-hint, .pc-row-chevron) { color: inherit; }
+.turnfin-app :is(a, button).pc-row[data-first]:hover { background: var(--orange-soft); }
+.turnfin-app a.pc-row[aria-current] { background: var(--accent-soft); color: var(--accent-ink); }
+.turnfin-app a.pc-row[aria-current]:hover { background: var(--accent-soft); }
+.turnfin-app .pc-row-chevron { width: 14px; height: 14px; color: var(--label-3); stroke-width: 2.4; }
+.turnfin-app label.pc-row:hover { background: var(--fill-2); }
+.turnfin-app label.pc-row:has([data-state='checked']) { background: var(--accent-soft); }
+
+/* shadcn items (Item, ItemGroup), the same way: a group on the page is one bg-2 card of rows. */
+.turnfin-app [data-slot='item'][data-variant='outline'] { min-height: var(--row-height); padding: 9px var(--space-5); border: 0; border-radius: var(--radius-lg); background: var(--bg-2); }
+.turnfin-app a[data-slot='item'][data-variant='outline']:hover { background: var(--bg-3); }
+.turnfin-app .tf-main [data-slot='item-group'] { display: flex; flex-direction: column; gap: 0; }
+.turnfin-app .tf-main [data-slot='item-group']:not(:is([data-slot='card'], [role='dialog'], .pc-panel, [data-slot='popover-content']) [data-slot='item-group']) { padding: 6px var(--space-3); border: 0; border-radius: var(--radius-card); background: var(--bg-2); box-shadow: var(--shadow-card); }
+.turnfin-app .tf-main [data-slot='item-group'] > [data-slot='item'], .turnfin-app .tf-main [data-slot='item-group'] > [role='listitem'] > [data-slot='item'] { min-height: var(--row-height); padding: 9px var(--space-3); border: 0; border-radius: var(--radius-lg); background: transparent; }
+.turnfin-app .tf-main [data-slot='item-group'] > :is([data-slot='item'], [role='listitem']) + :is([data-slot='item'], [role='listitem']) { border-top: 0.5px solid var(--sep); border-top-left-radius: 0; border-top-right-radius: 0; }
+.turnfin-app .tf-main [data-slot='item-group'] > a[data-slot='item']:hover, .turnfin-app .tf-main [data-slot='item-group'] > [role='listitem'] > a[data-slot='item']:hover { background: var(--fill-2); }
+.turnfin-app .tf-main [data-slot='item']:has(> [data-slot='collapsible'][data-state='open']) { background: var(--fill-2); }
+.turnfin-app .tf-main [data-slot='item-group'] > [data-slot='item-separator'] { display: none; }
+/* An empty state on the page itself sits on a bg-2 card. */
+.turnfin-app .tf-main [data-slot='empty']:not(:is([data-slot='card'], [data-slot='table-container'], [data-slot='item-group'], [role='dialog'], .pc-panel) [data-slot='empty']) { border: 0; border-radius: var(--radius-card); background: var(--bg-2); }
+
+/* Figure tiles (Figure): big tabular numbers. On the ground, bg-2 tiles with radius-panel; inside a
+   card, the quiet fill with radius-lg. A tile that filters shows the soft fin blue when open. */
+.turnfin-app .pc-stat { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); min-width: 0; padding: 16px 18px; border: 0; border-radius: var(--radius-lg); background: var(--fill-2); color: var(--label); text-decoration: none; }
+.turnfin-app .pc-stats:not(:is([data-slot='card'], [role='dialog'], .pc-panel) .pc-stats) { grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); gap: var(--space-3); }
+.turnfin-app .pc-stats:not(:is([data-slot='card'], [role='dialog'], .pc-panel) .pc-stats) > .pc-stat, .turnfin-app .pc-stats:not(:is([data-slot='card'], [role='dialog'], .pc-panel) .pc-stats) > * > .pc-stat { border-radius: var(--radius-panel); background: var(--bg-2); box-shadow: var(--shadow-card); }
+.turnfin-app a.pc-stat:hover { background: var(--bg-3); }
+.turnfin-app a.pc-stat[aria-current] { background: var(--accent-soft); color: var(--accent-ink); box-shadow: none; }
+.turnfin-app .pc-stat-figure { font-family: var(--font-display); letter-spacing: -0.03em; }
+
+/* Tables: one card, rows parted by hairlines; the header in caption, secondary ink. */
+.turnfin-app [data-slot='table-container'] { padding: 6px var(--space-5); border: 0; border-radius: var(--radius-card); background: var(--bg-2); box-shadow: var(--shadow-card); }
+.turnfin-app [data-slot='table-container']:has(> [data-layout='grid']) { padding: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.turnfin-app :is([data-slot='card'], [data-slot='dialog-content'], .pc-panel) [data-slot='table-container'] { padding: 0; background: transparent; box-shadow: none; }
+.turnfin-app [data-slot='table']:not([data-layout='grid']) { border-collapse: collapse; }
+.turnfin-app [data-slot='table-header'] [data-slot='table-row'], .turnfin-app [data-slot='table-body'] [data-slot='table-row'] { border: 0; background: none; }
+.turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-header'] { background: none; }
+.turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-head'] { height: auto; padding: 8px 12px 6px; border: 0; background: none; color: var(--label-2); font-size: 12px; line-height: 16px; font-weight: 600; }
+/* Body cells, row headers (th scope=row) included. Size, colour and weight stay off td: kit.css is
+   unlayered and would beat a cell's own utilities. */
+.turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] :is([data-slot='table-cell'], [data-slot='table-head']) { padding: 12px; border: 0; border-top: 0.5px solid var(--sep); border-radius: 0; background: transparent; vertical-align: middle; }
+.turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-row']:hover :is([data-slot='table-cell'], [data-slot='table-head']) { background: var(--bg-3); }
+.turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-head'] { height: auto; text-align: left; color: var(--label); font-size: var(--pc-text-body); line-height: var(--pc-leading-body); font-weight: 400; }
+
 /* ── The frame (DESIGN.md, The frame and navigation): ModuleShell, and the pool deck's and Help's
    own top bars. One ground, no rounded canvas: content sits on --bg and the functional layer
    floats above it. Desktop (1100px and wider) has the floating glass sidebar of apps; tablet

@@ -4,9 +4,9 @@
 //      inside it): each src/app page.tsx must reach a <PageShell> through its own imports.
 //      A page that only redirects or 404s renders nothing and is skipped.
 //   2. No new colours in stylesheets: colour literals (hex, rgb(), hsl(), oklch(), color-mix())
-//      live only in the theme files, src/app/theme/glass.css (the 2.0 tokens), and
-//      src/app/theme/poolside.css and src/app/shadcn.css (which point at them); every other
-//      stylesheet uses their tokens.
+//      live only in the theme files: src/app/theme/glass.css (the 2.0 tokens), kit.css (the 2.0
+//      kit's exact values from the design system), and poolside.css and src/app/shadcn.css
+//      (which point at the tokens); every other stylesheet uses their tokens.
 //   3. Turnfin Me (apps/me) and the Academy site (apps/academy) follow the same rules, with exact
 //      copies of Turnfin's theme (glass.css, poolside.css, shadcn.css, globals.css, motion.css), so the three apps
 //      share one set of colours. The Academy site adds one brand file, theme/leisureworld.css: the
@@ -70,7 +70,7 @@ for (const page of walk(join(src, "app"), (path) => /[\\/]page\.tsx$/.test(path)
 }
 
 // ── 2. Colour literals only in the theme files.
-const THEME = new Set(["src/app/theme/glass.css", "src/app/theme/poolside.css", "src/app/shadcn.css", ...(app === "apps/academy" ? ["src/app/theme/leisureworld.css"] : [])].map((file) => join(app, file).split("\\").join("/")));
+const THEME = new Set(["src/app/theme/glass.css", "src/app/theme/kit.css", "src/app/theme/poolside.css", "src/app/shadcn.css", ...(app === "apps/academy" ? ["src/app/theme/leisureworld.css"] : [])].map((file) => join(app, file).split("\\").join("/")));
 const COLOUR = /#[\da-f]{3,8}\b|\b(?:rgba?|hsla?|oklch|oklab|lab|lch|hwb|color-mix)\(/gi;
 for (const sheet of walk(src, (path) => path.endsWith(".css"))) {
   const name = relative(root, sheet).split("\\").join("/");
