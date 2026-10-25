@@ -17,6 +17,7 @@ const ORG = "org_leisureworld";
 type GrantRow = { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string };
 const state = { id: "gina", permissions: [] as string[], grants: [] as GrantRow[] };
 let bishopstown = "", churchfield = "";
+let home: typeof import("../features/day/server/home");
 const day = today();
 /** What Tasks announced to other modules (Site Monitoring listens for readings out of range). */
 const announced: { name: string; payload: Record<string, unknown> }[] = [];
@@ -62,6 +63,7 @@ before(async () => {
     react: { cache: <T,>(fn: T) => fn },
     "@/modules/contributions": { announce: async (name: string, payload: Record<string, unknown>) => { announced.push({ name, payload }); } },
   };
+  home = serverModule("src/modules/tasks/features/day/server/home.ts", d);
   actions = Object.assign({}, ...["day", "follow-ups", "templates", "sites"].map((f) => serverModule<object>(`src/modules/tasks/features/${f}/server/actions.ts`, d)));
   data = Object.assign(serverModule<object>("src/modules/tasks/shared/data.ts", d), ...["day", "follow-ups", "workspace", "templates", "sites", "reports", "schedule"].map((f) => serverModule<object>(`src/modules/tasks/features/${f}/server/data.ts`, d)));
 });
@@ -237,4 +239,23 @@ test("follow-up templates, unrestricted roles, frozen scores, the open count and
   const dump = await data.tasksExport();
   assert.ok(dump.templates.length >= 3 && dump.tasks.length > 0 && dump.siteSettings.length === 1);
   assert.ok(dump.tasks.every((t) => t.files.every((f) => !("bytes" in f))), "files are listed, not copied");
+});
+
+test("Home shows the day's tasks and open follow-ups at the person's sites, and review counts only to reviewers", async () => {
+  const viewer = (anywhere: string[]) => ({ id: state.id, name: state.id, permissions: anywhere, anywhere, isSuperadmin: false });
+  const labels = async (anywhere: string[]) => Object.fromEntries((await home.tasksHomeItems(viewer(anywhere))).map((i) => [i.label, i.count]));
+  as("carl", []);
+  assert.deepEqual(await home.tasksHomeItems(viewer([])), [], "no Tasks level, nothing on Home");
+  as("rob", [], [at(churchfield, ["tasks.complete"])]);
+  const robs = await labels(["tasks.complete"]);
+  const robsDay = await data.tasksHome();
+  assert.equal(robs["Tasks to do today"], robsDay.todo, "always shown, even at zero");
+  assert.equal(robs["Open follow-up actions"], 1, "the follow-up raised at Churchfield");
+  for (const label of ["Tasks to approve", "Completed with readings out of range", "Tasks completed today"]) assert.equal(robs[label], undefined, `${label} is for reviewers`);
+  as("dan", [], [at(bishopstown, ["tasks.review"])]);
+  const dans = await labels(["tasks.review"]);
+  const dansDay = await data.tasksHome();
+  assert.equal(dans["Tasks to approve"], dansDay.approval || undefined);
+  assert.equal(dans["Open follow-up actions"], dansDay.openActions || undefined, "Bishopstown's actions only");
+  assert.equal(dansDay.openActions, await fixture.prisma.taskAction.count({ where: { siteId: bishopstown, status: "open" } }), "Churchfield's follow-up is not Dan's");
 });
