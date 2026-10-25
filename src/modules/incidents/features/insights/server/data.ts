@@ -10,7 +10,7 @@ import { KEEP_YEARS, keepUntil, monthsEnding, summarise } from "@/modules/incide
 export const PERIODS = [3, 6, 12] as const;
 type Period = (typeof PERIODS)[number];
 
-/** Insights for those who triage (docs/incidents.md): what happened over the
+/** Insights for those who triage: what happened over the
  *  last few months at the sites they cover, or one of them. Counts only, never
  *  names or injuries. Manage holders also see reports past their keeping period. */
 export async function incidentInsights(query: { months?: string; site?: string }) {

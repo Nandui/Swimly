@@ -12,7 +12,7 @@ import { WEEKDAYS, hoursWords, minimumWords, type WeekHour } from "@/lib/setup/a
 import { Prisma } from "@/generated/prisma/client";
 import { renameAreaEverywhere } from "@/modules/server";
 
-/** Writes to the shared setup (docs/admin-setup.md): the activity list and
+/** Writes to the shared setup: the activity list and
  *  each site's areas. Each list needs its own permission (Admin: Manage, or
  *  Admin: Setup with that list's tick). Every change is audited under Admin. */
 

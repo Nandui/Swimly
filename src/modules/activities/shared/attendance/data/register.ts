@@ -1,6 +1,6 @@
 import type { AttendanceStatus, DayOfWeek } from "@/generated/prisma/client";
 import { requireSession } from "@/lib/authz";
-import { classifyMedical, medicalAllowed, requireActivitiesAccess, type ActivitiesSurface } from "@/modules/activities/shared/classification";
+import { classifyMedical, medicalAllowed, requireActivitiesAccess, type SwimmerAudience } from "@/modules/activities/shared/classification";
 import { currentClubId } from "@/lib/clubs/current";
 import { parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -12,7 +12,7 @@ export type RegisterLine = {
   firstName: string;
   lastName: string;
   dateOfBirth: Date | null;
-  /** Null unless this surface may see medical notes (see classification). */
+  /** Null unless this audience may see medical notes (see classification). */
   medicalNotes: string | null;
   hasMedicalNotes: boolean;
   levelName: string;
@@ -29,9 +29,9 @@ export type RegisterLine = {
  *  The roster is *active enrolments covering that date* ∪ *students who already
  *  have a row for it*. The second half is what keeps a transferred swimmer's
  *  past register saveable instead of silently dropping them off it. */
-export async function getRegister(courseId: string, iso: string, surface: ActivitiesSurface = "desk") {
+export async function getRegister(courseId: string, iso: string, audience: SwimmerAudience = "desk") {
   const session = await requireActivitiesAccess();
-  const medical = medicalAllowed(session, surface);
+  const medical = medicalAllowed(session, audience);
   const date = parseDateOnly(iso);
 
   const [enrolments, existing, note, curriculum] = await Promise.all([

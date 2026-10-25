@@ -5,7 +5,7 @@ import { holdsAnywhere } from "@/lib/policy/engine";
 import { ADMINISTRATOR_PERMISSIONS } from "@/lib/staff/permissions";
 import { actorForSession } from "@/lib/policy/session";
 
-/** Who may open Purchasing (docs/purchasing.md). Orders belong to a site, so
+/** Who may open Purchasing. Orders belong to a site, so
  *  every page limits them to the sites the capability covers (`sitesFor`).
  *  Approving needs no permission of its own: the approval rules name the
  *  roles, and each approver must see the order's site. Administrators (and superadmins)

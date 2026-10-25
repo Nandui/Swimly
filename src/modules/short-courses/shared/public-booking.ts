@@ -2,7 +2,7 @@ import { randomInt } from "node:crypto";
 import { z } from "zod";
 import { isDateOnly } from "@/lib/format";
 
-/** The shape of the public booking site (academy.leisureworldcork.com, docs/academy.md): what
+/** The shape of the public booking site (academy.leisureworldcork.com): what
  *  each kind of course (Academy courses, short courses) shows, takes and reports back. Each is a
  *  source (features/booking/server/academy.ts and courses.ts); the site's API lists every
  *  source's courses, holds places and shows a customer their own bookings.

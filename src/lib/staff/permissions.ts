@@ -1,7 +1,7 @@
 import type { Role } from "@/generated/prisma/client";
 
 /** Every permission the app has to give, and nothing else: the one access
- *  language (docs/how-turnfin-works.md). A role's levels give permissions;
+ *  language (docs/architecture.md). A role's levels give permissions;
  *  pages, menus and actions ask for a permission, never a level or a role.
  *
  *  This catalogue is **code, not data**. A permission exists because a page
@@ -364,7 +364,7 @@ export const PERMISSIONS = [
     key: "setup.view",
     group: "Administration",
     label: "See the shared setup",
-    description: "Open the setup lists every module uses: departments, qualifications, activities and each site's areas. Changing one needs its own permission below.",
+    description: "Open the setup lists every app uses: departments, qualifications, activities and each site's areas. Changing one needs its own permission below.",
   },
   {
     key: "setup.departments",

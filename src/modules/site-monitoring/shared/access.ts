@@ -4,7 +4,7 @@ import { AuthorizationError, requireSession } from "@/lib/authz";
 import { holdsAnywhere } from "@/lib/policy/engine";
 import { actorForSession } from "@/lib/policy/session";
 
-/** Who may open Site Monitoring (docs/site-monitoring.md). Actions belong to a site, so every page
+/** Who may open Site Monitoring. Actions belong to a site, so every page
  *  limits them to the sites `site-monitoring.read` covers (`sitesFor`) and closing one checks
  *  `site-monitoring.act` at its site (`mayFor`). */
 export type MonitoringActor = { id: string; name: string; orgId: string | null; superadmin: boolean; act: boolean };

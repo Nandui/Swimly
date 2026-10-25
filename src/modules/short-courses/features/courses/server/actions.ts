@@ -12,7 +12,7 @@ import { atSite, courseFor, iso, optionalDate, refresh } from "@/modules/short-c
 import { chose, copiedFrom, keepBooked, resolveSwimmer, swimmerChoiceSchema, type SwimmerChoiceInput } from "@/modules/short-courses/shared/swimmers";
 import { members } from "@/modules/contributions";
 
-/** Short course writes (docs/short-courses.md). A course and everything on it is checked
+/** Short course writes. A course and everything on it is checked
  *  against its site: Manage puts courses and sessions on, Instructor (Run) takes registers, View
  *  (Read) books people on, records payment and keeps the waiting list. Every write is audited. */
 

@@ -6,7 +6,7 @@ import { NodeViewWrapper, ReactNodeViewRenderer, type Editor, type JSONContent }
 import { CircleHelp, FileDown, PlayCircle } from "lucide-react";
 import { CALLOUT_META, videoFor, type CalloutTone } from "@/modules/training/shared/lessons";
 
-/** Interactive blocks for lesson text (docs/training.md, e-learning phases 3
+/** Interactive blocks for lesson text (e-learning phases 3
  *  and 8): a coloured callout, a tap-to-reveal, flip cards, a step-by-step, a
  *  knowledge check, tabs, a video and a file to download. The editor shows each one open, labelled, so authors can
  *  write in it; learners get the interactive version in Turnfin Me. The

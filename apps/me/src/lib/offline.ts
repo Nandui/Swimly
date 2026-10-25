@@ -1,4 +1,4 @@
-/** Taking training with no signal (e-learning phase 9, docs/training.md).
+/** Taking training with no signal (e-learning phase 9).
  *
  *  A course the person saves keeps a copy of its lessons and files on this
  *  phone (IndexedDB), so it opens in a plant room or a basement. What they do

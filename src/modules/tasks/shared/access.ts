@@ -4,7 +4,7 @@ import { AuthorizationError, requireSession } from "@/lib/authz";
 import { holdsAnywhere } from "@/lib/policy/engine";
 import { actorForSession } from "@/lib/policy/session";
 
-/** Who may open Tasks (docs/tasks.md). Tasks belong to a site, so every page
+/** Who may open Tasks. Tasks belong to a site, so every page
  *  limits them to the sites the capability covers (`sitesFor`); these flags
  *  only decide which pages and buttons show. */
 export type TasksActor = { id: string; name: string; orgId: string | null; superadmin: boolean; review: boolean; manage: boolean };

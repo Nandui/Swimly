@@ -3,7 +3,7 @@ import { liveSiteById } from "@/lib/directory";
 import { currentActor, mayFor } from "@/lib/policy/session";
 import type { PermissionKey } from "@/lib/staff/permissions";
 
-/** What the writes share (docs/stock.md): access at a count's site and the pages to refresh. */
+/** What the writes share: access at a count's site and the pages to refresh. */
 
 export function refresh(takeId?: string) {
   revalidatePath("/stock");

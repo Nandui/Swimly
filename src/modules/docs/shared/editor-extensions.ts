@@ -27,7 +27,7 @@ const DocumentColor = Color.extend({
 });
 
 // Sizes, highlights and alignment render as data attributes styled by editor.css, never as
-// inline styles (CLAUDE.md, UI rules); the stored value is kept for copy and paste.
+// inline styles (AGENTS.md, Screens); the stored value is kept for copy and paste.
 const DocumentFontSize = FontSize.extend({
   addGlobalAttributes() {
     return [{ types: this.options.types, attributes: { fontSize: {

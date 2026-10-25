@@ -5,7 +5,7 @@
 
 .turnfin-module .module-content { min-width: 0; }
 
-/* Rota (owner decisions, 6 October 2026; DESIGN.md "Rota's day timeline"). Only layout lives here:
+/* Rota (owner decisions, 6 October 2026). Only layout lives here:
    the blocks are the shared `.pc-block` fills (`data-block="next"` someone on it, `"cover"` a gap).
    The week strip: one tile per day with its gap count, the open day outlined in blue. */
 /* The day: a zoom bar, the hours, then one group per activity and place, its label beside its

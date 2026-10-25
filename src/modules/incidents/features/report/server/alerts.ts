@@ -6,7 +6,7 @@ import { emailSender } from "@/lib/email/sender";
 import { prisma } from "@/lib/prisma";
 import { incidentCategories, incidentKinds, incidentNumber, type IncidentCategory, type IncidentKind } from "@/modules/incidents/shared/types";
 
-/** Serious-report alerts (docs/incidents.md). Who gets one: everyone whose role
+/** Serious-report alerts. Who gets one: everyone whose role
  *  triages or signs off Incidents at the report's site (no sites ticked means
  *  every site): the centre manager and the operations manager (owner decision,
  *  12 October 2026).

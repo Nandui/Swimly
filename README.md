@@ -1,115 +1,28 @@
-# Swimly
+# Turnfin
 
-The staff workspace for LeisureWorld's swim school at Bishopstown and
-Churchfield: weekly classes, enrolment, attendance, progression and assessment
-sessions. Staff and roles are shared; each club has its own records.
+Turnfin is the staff product for LeisureWorld's leisure centres: a platform of apps (Swim school, Pool deck, Rota, Training, HR, Incidents, Purchasing and more) with one sign-in, where each person's job opens the apps they need and Home shows what is waiting for them. This is **Turnfin 2.0**: the platform of apps, with a new design on the way. The repository's name, Swimly, is a working name only.
 
-Next.js App Router · React · shadcn/ui Neutral · Tailwind CSS for layout ·
-Prisma 7 with the PostgreSQL driver adapter · Auth.js · Zod.
+## Start here
 
-Read [PRODUCT.md](PRODUCT.md) for product scope, [DESIGN.md](DESIGN.md) for
-the UI and architecture, and [AGENTS.md](AGENTS.md) for working instructions.
-What changed for staff, version by version, is in [CHANGELOG.md](CHANGELOG.md);
-how the code is organised is in [docs/architecture/README.md](docs/architecture/README.md).
+1. [PRODUCT.md](PRODUCT.md): what Turnfin is and the rules every decision is judged against.
+2. [AGENTS.md](AGENTS.md): how to work in this repository, for people and coding agents.
+3. [docs/README.md](docs/README.md): every other doc.
 
-Resuming the parent app rollout on another computer? Start with the
-[parent app handover](docs/parent-app-handover.md), dated 14 September 2026.
+## What is in this repository
 
-## Local development
+| Folder | What |
+| --- | --- |
+| `src` | Turnfin: the platform (`src/lib`, `src/platform`), the apps (`src/modules`) and their routes (`src/app`) |
+| `apps/me` | Turnfin Me, each person's own records on their phone (a connected product) |
+| `apps/academy` | the public Academy booking site (a connected product) |
+| `prisma/schema` | the main database's schema, one file per owner |
+| `docs-database`, `hr-database` | the Docs and HR databases' migrations |
+| `scripts` | the sandbox, lint rules, database operations, help screenshots |
 
-Use a supported Node.js version compatible with the installed Next.js and
-Prisma releases; this workspace is verified with Node.js 24.
+The parent app is a separate repository ([swimly-public-app](https://github.com/Nandui/swimly-public-app)) that uses Turnfin's parent API.
 
-1. Run `npm ci`. The postinstall hook generates the Prisma client.
-2. For a new checkout, copy `.env.example` to `.env` and configure
-   `DATABASE_URL` and `AUTH_SECRET`. Preserve existing local environment files.
-3. Run `npm run dev` and open `http://localhost:3000`.
+## Running it
 
-The existing development environment shares its database with production.
-Do not run migrations, seeds, imports or test writes merely to inspect the app.
-Use isolated fixtures for regression tests and synthetic people for screenshots.
+Node.js 24. Run `npm ci`, then `npm run sandbox` and open `http://localhost:3100`: Turnfin on throwaway databases with a fictional leisure group, never touching a real database. Everything else (your own database, previews, production, every command and setting) is in [docs/operations.md](docs/operations.md).
 
-For a deliberately provisioned **empty, isolated database**, apply the committed
-migrations with `npm run db:deploy`, then set the `SEED_ADMIN_*` variables and
-run `npm run db:seed` to create its first account. Clear those variables afterwards.
-Schema development belongs on an isolated database; shared-schema changes must
-be additive and reviewed before deployment.
-
-Sign in at `/sign-in`. `DEV_AUTH_BYPASS=1` optionally uses an existing active
-admin during local development and is ignored in production.
-
-Development uses a Swimly-specific session cookie so other localhost apps do not
-interfere with sign-in. Existing production cookies retain Auth.js's defaults.
-For remote PostgreSQL connections, prefer explicit `sslmode=verify-full`; the
-app normalizes the driver's legacy SSL aliases to preserve its existing
-certificate and hostname verification unless libpq compatibility is requested.
-
-## Commands
-
-| Command | Purpose |
-|---|---|
-| `npm run dev` | Development server |
-| `npm run build` | Check environment, generate Prisma client, build Next.js |
-| `npm start` | Serve the production build |
-| `npm run typecheck` | TypeScript checks |
-| `npm run lint` | Application lint checks |
-| `npm test` | Regression tests with isolated database/authentication doubles |
-| `npm run db:migrate` | Create and apply schema migrations on an isolated development database |
-| `npm run db:deploy` | Apply committed migrations to the configured database |
-| `npm run db:seed` | Create the first administrator in a new database |
-| `npm run db:seed-curriculum` | Optional starter curriculum for a new database |
-| `npm run db:studio` | Open Prisma Studio against the configured database |
-
-On Vercel production, `npm run build` applies committed migrations before
-compiling the application. A failed migration stops deployment. Local and
-preview builds do not apply migrations. Builds never seed records.
-
-## Reception
-
-`/reception` uses a single swimmer sheet: search, identity and placement levels,
-current places, then an inline weekly class finder. Contacts and today's classes
-open on demand. Filter by level, day and start time, select a class and review
-the move or enrolment before confirming. Quick add and booking shortcuts stay
-close to the swimmer's details.
-Each role can offer Reception and choose it as its landing page.
-Adding a swimmer requires `students.manage`; enrolment actions require
-`enrolment.manage`. A newly added swimmer is selected for the next desk action.
-
-See [Reception implementation and verification](docs/reception.md).
-
-## Find and inspect classes
-
-`/courses` opens across the week with search, combined filters, active/archived
-results and pagination. Each result opens a full class page showing enrolled
-swimmers, their placement levels, the waitlist and class details. The Classes
-breadcrumb restores the search and filters. Existing enrolment, attendance and
-class management actions remain permission-gated.
-
-See [Class browser implementation and verification](docs/classes.md).
-
-## Today’s classes
-
-`/today` shows the whole day in time-slot columns. Each class carries its time,
-pool area, instructor or cover, places and attendance status. Filter by pool or
-instructor, or jump to the running classes. Columns wrap into a phone schedule.
-Viewing the calendar needs the Today screen; attendance remains separately
-permission-gated. See [Today’s calendar](docs/today.md).
-
-`/instructor` retains the original deck page: My classes, All classes,
-time/level grouping, attendance and cover. Instructor is isolated from desk navigation. Existing instructor landing pages stay
-on the deck. Attendance and competencies return to the page that opened them.
-
-## UI components
-
-The entire app uses shadcn/ui components from src/components/shadcn, Neutral
-light/dark tokens, Figtree and the existing cookie-backed appearance preference.
-See [DESIGN.md](DESIGN.md) for the layout and interaction contract.
-
-Read each installed component before changing a control. Use the shadcn CLI to
-add primitives, preserving ui- token utilities and the @/lib/utils cn import.
-Shared form compositions in src/components/ui keep native FormData semantics.
-The shared shell, page headers, notices and metadata-fed badges live in ui-kit.
-
-UI changes must work at 375, 768, 1024 and 1280 in both modes, with 44px touch
-targets, keyboard access and no page overflow. Instructor is an isolated pool-deck
-workspace with no desk navigation or global swimmer profile links.
+Before pushing: `npm run typecheck`, `npm run lint` and `npm test`.

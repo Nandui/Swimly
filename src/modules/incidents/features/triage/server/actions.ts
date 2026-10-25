@@ -7,7 +7,7 @@ import { requireIncidentsActor } from "@/modules/incidents/shared/access";
 import { closeDecision, closeSchema, IncidentError, triageDecision, triageSchema, type CloseInput, type TriageInput } from "@/modules/incidents/shared/rules";
 import { lockReport, recordEvent, reportRights } from "@/modules/incidents/shared/service";
 
-/** Triage and closing (docs/incidents.md). Triage needs
+/** Triage and closing. Triage needs
  *  `incidents.reports.review` at the report's site; closing a serious or
  *  moderate report needs `incidents.reports.signoff` there. Nobody does either
  *  to their own report. Every write is audited. */

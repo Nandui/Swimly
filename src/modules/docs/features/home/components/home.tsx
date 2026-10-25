@@ -86,7 +86,7 @@ export function HomeView({ workspace: w, description }: { workspace: Workspace; 
       <div className="pc-grid">
         <section className="pc-panel" aria-labelledby="required-reading-title">
           <h2 id="required-reading-title">Your required reading</h2>
-          {/* Personal records live in Turnfin Me, the staff app, never on Work. */}
+          {/* Personal records live in Turnfin Me, the staff app, never in Turnfin. */}
           <EmptyState
             as="h3"
             icon="book"

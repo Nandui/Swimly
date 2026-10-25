@@ -10,7 +10,7 @@ import {
   ageOn, euro, SHORT_COURSE_AREA_META, SHORT_COURSE_PAYMENT_META, stillOwed, takesPlace, type ShortCourseArea, type ShortCoursePayment,
 } from "@/modules/short-courses/shared/rules";
 
-/** Short courses on the public booking site (phase 2, 15 October 2026; docs/short-courses.md),
+/** Short courses on the public booking site (phase 2, 15 October 2026),
  *  one of the two sources api.ts lists. The same as Academy courses (academy.ts):
  *
  *  - A course shows online when Manage ticks "Open for online booking", until its first session.

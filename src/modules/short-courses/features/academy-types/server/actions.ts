@@ -10,7 +10,7 @@ import { qualificationTypeById } from "@/lib/qualifications";
 import { ACADEMY_CHECK_KEYS, ACADEMY_KINDS } from "@/modules/short-courses/shared/academy-rules";
 import { refresh } from "@/modules/short-courses/shared/academy-server";
 
-/** Academy writes for the course list (docs/academy.md): Manage keeps it. Every write is audited. */
+/** Academy writes for the course list: Manage keeps it. Every write is audited. */
 
 /* ---------- The course list ---------- */
 

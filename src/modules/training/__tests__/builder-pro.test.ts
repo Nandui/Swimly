@@ -8,7 +8,7 @@ import { cleanDoc, cleanLessonData, docFiles, docVideos, embedFor, publishProble
 import { cleanAnswer, isCorrect, learnerQuestion, normaliseQuestion, questionProblem, readNumber, rightAnswer, seeded, type Question } from "../shared/questions";
 import { qualityTips } from "../shared/quality";
 
-/** The deeper builder (docs/training.md, e-learning phase 8): sorting,
+/** The deeper builder (e-learning phase 8): sorting,
  *  explore-a-picture, hand-in and slides lessons, number and short-answer
  *  questions, tabs, video and file blocks, lessons in order, courses to
  *  finish first, and the quality check. Against a real in-memory Postgres

@@ -1,7 +1,7 @@
 import { Activity, ConciergeBell, Dumbbell, GraduationCap, LifeBuoy, SprayCan, Waves, Wrench, type LucideIcon } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 
-/** The shared setup's words and icons (docs/admin-setup.md). A plain module, so
+/** The shared setup's words and icons. A plain module, so
  *  server and client both read it, and every module shows an activity the same way. */
 
 /** The icons an activity on the organisation's list may take. The key is stored. */

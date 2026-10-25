@@ -19,7 +19,7 @@ import {
   bestScore, daysBetween, dropOff, examStats, funnel, groupBy, isOverdue, lastActivity, percentOf, stageOf, summaryOf, timing, type LearnerFacts,
 } from "@/modules/training/features/insight/compute";
 
-/** Reads for Training insight (docs/training.md, e-learning phase 7): course analytics, the
+/** Reads for Training insight (e-learning phase 7): course analytics, the
  *  reports page and audit packs. Everything is limited to the people the reader's
  *  `training.records.read` covers, through the policy engine; ratings stay without names. */
 

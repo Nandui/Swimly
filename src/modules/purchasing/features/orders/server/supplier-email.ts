@@ -9,7 +9,7 @@ import { supplierEmailCopy, supplierEmailsOn } from "@/modules/purchasing/shared
 import { orderEmail, type OrderEmailInput } from "@/modules/purchasing/features/orders/server/order-email";
 
 /** What emailing an approved order needs, read once for the preview page and the send
- *  (docs/purchasing.md). Who may send it: whoever raised it, anyone who may raise
+ *. Who may send it: whoever raised it, anyone who may raise
  *  orders at its site, and whoever manages Purchasing. Null when the order is not
  *  theirs to see. */
 export async function orderEmailContext(id: string, who: PurchasingActor) {

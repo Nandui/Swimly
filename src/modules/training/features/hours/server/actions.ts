@@ -14,7 +14,7 @@ import { creditHours } from "@/modules/training/shared/hours";
 import { hoursInWords } from "@/modules/training/shared/on-the-job";
 import { refresh, text } from "@/modules/training/shared/writes";
 
-/** In-service hours (docs/training.md, e-learning phase 5). Logging and
+/** In-service hours (e-learning phase 5). Logging and
  *  removing hours needs Sign off training for those people, never yourself;
  *  setting what a qualification needs is the Author level. Audited. */
 

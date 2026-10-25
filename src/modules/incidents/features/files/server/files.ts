@@ -4,7 +4,7 @@ import { fileProblem, IncidentError, MAX_FILE_BYTES, MAX_FILES, safeFileName } f
 import { lockReport, recordEvent, reportRights } from "@/modules/incidents/shared/service";
 import type { IncidentsActor } from "@/modules/incidents/shared/types";
 
-/** Photos and documents on a report (docs/incidents.md, phase 2). Kept in the
+/** Photos and documents on a report (phase 2). Kept in the
  *  database like refund receipts. The reporter adds them to their own report
  *  and whoever triages at the site to any; both only until it is closed. Anyone
  *  who may read the report may open them, and opening one someone else's

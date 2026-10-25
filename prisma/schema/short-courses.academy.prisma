@@ -2,7 +2,7 @@
 // from time to time, to the public and to our own staff. Staff enter candidates and record
 // payment taken elsewhere; each course has dated sessions with a register, pre-course checks,
 // and results with the awarding body's certificate. Staff who pass get the qualification on
-// their record. Sessions reach the Rota through the commitments seam. See docs/academy.md.
+// their record. Sessions reach the Rota through the commitments seam.
 
 /// A kind of course we deliver: "NPLQ", "Swim Teacher Level 1". Archived, never deleted.
 model AcademyCourseType {

@@ -13,7 +13,7 @@ import { archiveCourseType, saveCourseType } from "@/modules/short-courses/featu
 import { MAX_SESSION_MINUTES, MAX_WEEKS, SHORT_COURSE_AREA_META, SHORT_COURSE_AREAS } from "@/modules/short-courses/shared/rules";
 import { text, THEME, useRefresh } from "@/modules/short-courses/shared/components/form-kit";
 
-/** The course list's dialogs (docs/short-courses.md). */
+/** The course list's dialogs. */
 
 export type CourseTypeRow = { id: string; name: string; area: string; description: string; weeks: number; sessionMinutes: number; minAge: number | null; healthForm: boolean; archivedAt: Date | null };
 

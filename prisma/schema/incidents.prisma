@@ -1,8 +1,8 @@
-// Incidents (owner request, 11 October 2026; docs/incidents.md): accidents,
+// Incidents (owner request, 11 October 2026): accidents,
 // incidents and near misses at a site, reported by a duty manager or supervisor
 // (owner decision, 12 October 2026), triaged by the centre
 // or operations manager and, when serious, signed off by the operations manager.
-// Tables carry the module prefix (CLAUDE.md section 4).
+// Tables carry the module prefix (AGENTS.md, Data and writes).
 
 /// One report. The reporter's words are locked when it is submitted; later
 /// corrections are addenda in `IncidentEvent`.

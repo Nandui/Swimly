@@ -7,8 +7,8 @@ import { sitesFor, subjectsFor } from "@/lib/policy/session";
 import { requireTrainingActor } from "@/modules/training/shared/access";
 import { audienceInWords, isCompliant, matrixCell, ruleCovers, timingInWords, type MatrixCell } from "@/modules/training/shared/rules";
 
-/** Reads for the training rules and the training matrix (docs/training.md,
- *  e-learning phase 4). The matrix shows only the people the reader's
+/** Reads for the training rules and the training matrix (e-learning
+ *  phase 4). The matrix shows only the people the reader's
  *  `training.records.read` covers. */
 
 const RULE_SELECT = {

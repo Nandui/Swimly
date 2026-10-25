@@ -86,7 +86,7 @@ export async function getCoursesOnDay(dayOfWeek: DayOfWeek, instructorId?: strin
 
 /** The roster: who is in this class, and on what footing. It flags medical
  *  notes without carrying them; the register and profile show the text to the
- *  surfaces allowed to see it. */
+ *  screens allowed to see it. */
 export async function getRoster(courseId: string) {
   await requireActivitiesAccess();
   const [curriculum, rows] = await Promise.all([getSharedCurriculum(), prisma.enrolment.findMany({

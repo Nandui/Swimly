@@ -3,7 +3,7 @@ import { expandPermissions, hasAdministratorAccess, type PermissionKey } from "@
 import { SCREENS, isScreenKey } from "@/lib/staff/screens";
 
 /** A role as the owner thinks of it: one level for each module, plus a few
- *  ticks (docs/how-turnfin-works.md).
+ *  ticks (docs/architecture.md).
  *
  *  Levels are translated here into the named permissions the app checks, so
  *  no page or action ever asks for a level. The role row keeps the
@@ -26,7 +26,7 @@ const ADMIN_MODULE = "admin";
 /** The roles every new database starts with. The seed creates any that are
  *  missing; an admin may rename them and change their levels. */
 export const SYSTEM_ROLES: { name: string; description: string; homeName: string; levels: Levels }[] = [
-  { name: "Admin", description: "Every module except HR, including people, roles and sites.", homeName: "Management", levels: { admin: "manage" } },
+  { name: "Admin", description: "Every app except HR, including people, roles and sites.", homeName: "Management", levels: { admin: "manage" } },
   { name: "Instructor", description: "The class instructor view and nothing else.", homeName: "Pool deck", levels: { "pool-deck": "teach" } },
 ];
 
@@ -203,5 +203,5 @@ export function describeLevels(role: RoleLevels): string {
     return `${line.module}: ${line.level}${ticks.length ? ` (${ticks.join(", ")})` : ""}`;
   });
   if (role.extras.includes(WORK_ANYWHERE)) parts.push("can work away from the centre's PCs");
-  return parts.length ? parts.join(" · ") : "No modules";
+  return parts.length ? parts.join(" · ") : "No apps";
 }

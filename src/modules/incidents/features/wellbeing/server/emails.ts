@@ -8,7 +8,7 @@ import { incidentNumber } from "@/modules/incidents/shared/types";
 import { hrRequestKind, recipientList } from "@/modules/incidents/features/wellbeing/rules";
 import { wellbeingCopies } from "@/modules/incidents/features/wellbeing/server/settings";
 
-/** The emails for asking HR (docs/incidents.md, "Asking HR"). The request goes
+/** The emails for asking HR ("Asking HR"). The request goes
  *  to each address in Incidents > Settings and says what kind it is, who asked,
  *  the site and the report number, and the link; who it is about and why are
  *  only behind the link. Replies go to whoever asked, who is copied in, as with

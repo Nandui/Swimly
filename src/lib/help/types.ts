@@ -21,7 +21,7 @@ export const HELP_CATEGORIES = [
   { id: "support", title: "Account and troubleshooting", description: "Change appearance, recover from errors and get help." },
 ] as const;
 /** The module a topic belongs to, as the screen that opens it: Help shows these topics only to
- *  people who can open that screen (Task links respect screen access, DESIGN.md). */
+ *  people who can open that screen (task links respect screen access). */
 export const HELP_CATEGORY_SCREENS: Partial<Record<(typeof HELP_CATEGORIES)[number]["id"], ScreenKey>> = {
   refunds: "refunds", docs: "docs", training: "training", rota: "rota", hr: "hr", tasks: "tasks",
 };

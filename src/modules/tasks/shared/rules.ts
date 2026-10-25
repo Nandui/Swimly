@@ -2,7 +2,7 @@ import { Ban, CircleCheck, CircleDashed, Clock3, Hourglass, MinusCircle, ShieldC
 import { SCHOOL_TIMEZONE, addDaysIso, formatTime, minutesNow } from "@/lib/format";
 import type { StatusMeta } from "@/lib/status";
 
-/** Tasks' rules, pure so they are tested on their own (docs/tasks.md): what a
+/** Tasks' rules, pure so they are tested on their own: what a
  *  task asks for, when it is due, whether it can be completed, what is out of
  *  range, and the site's score. No database, no session. */
 

@@ -32,13 +32,13 @@ export default async function ActivityPage(props: PageProps<"/activity">) {
     <PageShell header={<PageHeader title="Activity" description="Who changed what, and when." />}>
 
       <section className="pc-panel" aria-label="Activity">
-        <SegmentedLinks label="Filter by module" items={[undefined, ...modules].map((name) => ({ href: name ? `/activity?module=${encodeURIComponent(name)}` : "/activity", label: name ?? "Every module", current: name === moduleName }))} />
+        <SegmentedLinks label="Filter by app" items={[undefined, ...modules].map((name) => ({ href: name ? `/activity?module=${encodeURIComponent(name)}` : "/activity", label: name ?? "Every app", current: name === moduleName }))} />
 
         {total === 0 ? (
           <EmptyState
             icon="scrollText"
             title="The trail is empty"
-            hint={moduleName ? `Nothing in ${moduleName} yet. Entries from before 28 September 2026 have no module.` : "Nothing has been created, updated or deleted yet."}
+            hint={moduleName ? `Nothing in ${moduleName} yet. Entries from before 28 September 2026 have no app.` : "Nothing has been created, updated or deleted yet."}
           />
         ) : (
           <>

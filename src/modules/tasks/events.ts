@@ -1,4 +1,4 @@
-/** Events Tasks emits (CLAUDE.md section 6, docs/architecture/events.md). */
+/** Events Tasks emits (AGENTS.md, How apps talk, docs/architecture.md). */
 
 declare module "@/platform/events" {
   interface PlatformEvents {

@@ -2,7 +2,7 @@
 
 **Purpose:** makes sure each site's daily, weekly and one-off checks are done, on time, with evidence.
 
-The rules for templates, schedules, scores and follow-ups are in [docs/tasks.md](../../../docs/tasks.md).
+Its levels are in [docs/apps.md](../../../docs/apps.md).
 
 ## Features
 - `day` — a site's day: its tasks, doing one (checklist, readings, files), can't-complete and not-applicable, approving and reopening, comments, adding one by hand (`/tasks`, `/tasks/[id]`), and the home-page counts.
@@ -15,11 +15,11 @@ The rules for templates, schedules, scores and follow-ups are in [docs/tasks.md]
 
 `shared/` holds what two or more features use: the pure rules (`rules.ts`, tested in `rules.test.ts`), the access check (`access.ts`), reads that make and shape a day's tasks (`data.ts`), what the writes share (`writes.ts`), the status tag and the dialogs' kit.
 
-## Public API (index.ts)
+## Front door (index.ts)
 - None. Nothing outside Tasks calls into it; routes use the feature entries.
 
 ## Data owned
-Declared in `prisma/schema/tasks.prisma` (table names kept, ADR 0002):
+Declared in `prisma/schema/tasks.prisma` (table names kept):
 - `TaskTemplate` — what a task asks for and its schedules.
 - `Task` — one task on one day at one site, with its answers.
 - `TaskComment`, `TaskFile` — comments and evidence on a task.
@@ -27,7 +27,6 @@ Declared in `prisma/schema/tasks.prisma` (table names kept, ADR 0002):
 - `TaskSite` — each site's task settings.
 - `TaskScoreSnapshot` — frozen daily scores.
 
-Tasks also reads Core's `Club`, `StaffRole` and `User` directly (sites, roles a task is aimed at, the person's role). Moving those reads onto Core functions is phase 3 of [MIGRATION.md](../../../docs/architecture/MIGRATION.md).
 
 ## Events
 - Emits: `tasks.reading.out_of_range` — after a task is completed with readings outside their range (Site Monitoring raises an action for managers from each).

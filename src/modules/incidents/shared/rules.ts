@@ -4,7 +4,7 @@ import { cleanTriageAnswers } from "@/modules/incidents/shared/triage-guides";
 import { ageGroups, incidentCategories, incidentKinds, levelOf, MAX_WHYS, personTypes, type IncidentsActor } from "@/modules/incidents/shared/types";
 
 /** Incidents' rules, pure so they can be tested without a database
- *  (docs/incidents.md). Actions call these before they write anything. */
+ *. Actions call these before they write anything. */
 
 export class IncidentError extends Error {}
 
@@ -142,7 +142,7 @@ export const addendumSchema = z.object({ note: text(2000).min(3, "Write the adde
 /** A root cause is required to close a report rated moderate or worse, or a serious one. */
 export const needsRootCause = needsSignoff;
 
-/** The investigation's steps (docs/incidents.md, phase 2). Only someone who
+/** The investigation's steps (phase 2). Only someone who
  *  triages at the site works on a report under investigation, never their own. */
 export function investigable(row: { status: string; reporterId: string }, who: { id: string }) {
   if (row.status !== "investigating") throw new IncidentError("Only a report under investigation can be worked on. Refresh the page.");
@@ -217,7 +217,7 @@ export function fileProblem(file: { name: string; type: string; size: number }, 
 }
 export const safeFileName = (name: string) => name.replace(/[\x00-\x1f\/\\]/g, "_").slice(0, 200);
 
-/** How long a report is kept (docs/incidents.md, Irish law): at least 10
+/** How long a report is kept (Irish law): at least 10
  *  years from the day it happened (S.I. 370/2016 reg. 226), and 21 when a
  *  child was involved, since a child's claim can come after they turn 18.
  *  Nothing is deleted: past this day a report is listed for a Manage holder
@@ -232,7 +232,7 @@ export function keepUntil(occurredOn: string, hasChild: boolean): string {
   return until.toISOString().slice(0, 10);
 }
 
-/** Insights (docs/incidents.md): counts by month, kind, category, area, hour,
+/** Insights: counts by month, kind, category, area, hour,
  *  site and level, from reports already filtered to the viewer's sites. */
 export type InsightRow = { siteId: string; area: string; kind: string; category: string; occurredOn: string; occurredAt: string; serious: boolean; hsaReportable: boolean | null; severityActual: number | null; severityPotential: number | null };
 export type Count = { key: string; count: number };

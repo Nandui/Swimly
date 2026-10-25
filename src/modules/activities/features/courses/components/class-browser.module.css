@@ -1,4 +1,4 @@
-/* Column headings over separate rows, inside the list panel (DESIGN.md, Poolside Clear v2). */
+/* Column headings over separate rows, inside the list panel. */
 .directory {
   display: flex;
   flex-direction: column;

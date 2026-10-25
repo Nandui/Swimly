@@ -11,7 +11,7 @@ import { addSheetProducts, archiveCategory, archiveProduct, saveCategory, savePr
 import { text, THEME, useRefresh } from "@/modules/stock/shared/components/form-kit";
 import { COMMON_UNITS, STOCK_CATEGORY_TONE_META, STOCK_CATEGORY_TONES, type StockCategoryTone } from "@/modules/stock/shared/rules";
 
-/** The product list's dialogs (docs/stock.md). */
+/** The product list's dialogs. */
 
 // The edit button is made here rather than passed from the page, so the dialog always receives a ready
 // element it can attach to (an element streamed from the page can arrive late and get wrapped in a second button).

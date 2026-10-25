@@ -1,7 +1,7 @@
 /* The Academy booking site's own layout, in the parents app's look (LeisureWorld Aquatics; owner
    request, 21 October 2026): the navy header, Manrope, large headings in the brand blue, bordered
    white cards, orange ticket dates and soft blue and cyan blocks. Controls, tags and notices are
-   the shadcn ones styled by theme/poolside.css (Work's copy), re-pointed at the brand by
+   the shadcn ones styled by theme/poolside.css (Turnfin's copy), re-pointed at the brand by
    theme/leisureworld.css. Colours here are only those tokens (owner rules, 20 October 2026: no new
    colours); status colour comes from src/lib/format.ts, always with an icon. */
 

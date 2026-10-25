@@ -12,6 +12,7 @@ let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let raise: typeof import("../features/actions/server/raise");
 let data: typeof import("../features/actions/server/data");
 let actions: typeof import("../features/actions/server/actions");
+let home: typeof import("../features/actions/server/home");
 const ORG = "org_leisureworld";
 type GrantRow = { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string };
 const state = { id: "mia", permissions: [] as string[], grants: [] as GrantRow[] };
@@ -56,6 +57,7 @@ before(async () => {
   raise = serverModule("src/modules/site-monitoring/features/actions/server/raise.ts", d);
   data = serverModule("src/modules/site-monitoring/features/actions/server/data.ts", d);
   actions = serverModule("src/modules/site-monitoring/features/actions/server/actions.ts", d);
+  home = serverModule("src/modules/site-monitoring/features/actions/server/home.ts", d);
 });
 after(async () => { await fixture?.close(); });
 
@@ -103,4 +105,23 @@ test("closing needs Act at the site and says what was done; opening again clears
   assert.equal(reopened.status, "open");
   assert.equal(reopened.resolution, "");
   assert.deepEqual((await fixture.prisma.auditLog.findMany({ where: { entityId: one.id }, orderBy: { createdAt: "asc" } })).map((a) => a.action), ["create", "resolve", "reopen"]);
+});
+
+const viewer = (id: string, anywhere: string[]) => ({ id, name: id, permissions: anywhere, anywhere, isSuperadmin: false });
+
+test("Home counts the open actions at the person's sites, and shows nothing without Site Monitoring", async () => {
+  as("lena", []);
+  assert.deepEqual(await home.monitoringHomeItems(viewer("lena", [])), []);
+  as("mia", [], [at(bishopstown, ["site-monitoring.read"])]);
+  const [mine] = await home.monitoringHomeItems(viewer("mia", ["site-monitoring.read"]));
+  assert.equal(mine.count, 2, "Bishopstown's two open actions, not Churchfield's");
+  assert.equal(mine.attention, true);
+  assert.equal(mine.href, "/site-monitoring");
+  as("tom", ["site-monitoring.act"]);
+  assert.equal((await home.monitoringHomeItems(viewer("tom", ["site-monitoring.act"])))[0].count, 4, "every site");
+  const open = await fixture.prisma.monitoringAction.findMany({ where: { siteId: bishopstown, status: "open" } });
+  as("mia", [], [at(bishopstown, ["site-monitoring.act"])]);
+  for (const a of open) assert.equal((await actions.setMonitoringActionClosed(a.id, true, "Retested in range")).ok, true);
+  as("mia", [], [at(bishopstown, ["site-monitoring.read"])]);
+  assert.deepEqual(await home.monitoringHomeItems(viewer("mia", ["site-monitoring.read"])), [], "nothing left to act on, nothing on Home");
 });

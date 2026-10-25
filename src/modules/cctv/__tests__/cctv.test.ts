@@ -12,6 +12,7 @@ import { parseIncidentNumber, viewingProblem, viewingSchema, type ViewingInput }
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let actions: typeof import("../features/viewings/server/actions");
 let data: typeof import("../features/viewings/server/data");
+let home: typeof import("../features/viewings/server/contributions");
 const ORG = "org_leisureworld";
 type GrantRow = { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string };
 const state = { id: "nora", permissions: [] as string[], grants: [] as GrantRow[] };
@@ -51,6 +52,7 @@ before(async () => {
   };
   actions = serverModule("src/modules/cctv/features/viewings/server/actions.ts", d);
   data = serverModule("src/modules/cctv/features/viewings/server/data.ts", d);
+  home = serverModule("src/modules/cctv/features/viewings/server/contributions.ts", d);
 });
 after(async () => { await fixture?.close(); });
 
@@ -117,4 +119,13 @@ test("an entry is only added to: notes by its recorder or Review at its site", a
   assert.deepEqual(notes.map((n) => n.byName), ["duty", "ops"]);
   assert.equal(typeof (actions as Record<string, unknown>).deleteViewing, "undefined");
   assert.equal(typeof (actions as Record<string, unknown>).updateViewing, "undefined");
+});
+
+test("Home offers recording a viewing to whoever may record one, anywhere, and nothing to anyone else", async () => {
+  const viewer = (anywhere: string[], isSuperadmin = false) => ({ id: "v", name: "v", permissions: anywhere, anywhere, isSuperadmin });
+  assert.deepEqual(await home.cctvHomeItems(viewer([])), []);
+  assert.equal((await home.cctvHomeItems(viewer(["cctv.review"]))).length, 1, "Review includes Record");
+  const [item] = await home.cctvHomeItems(viewer(["cctv.record"]));
+  assert.deepEqual(item, { kind: "action", label: "Record a CCTV viewing", href: "/cctv/new", icon: "filePlus" });
+  assert.equal((await home.cctvHomeItems(viewer([], true))).length, 1, "a superadmin holds everything");
 });

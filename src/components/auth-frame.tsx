@@ -13,7 +13,7 @@ function Fin({ className }: { className?: string }) {
 }
 
 /** The frame for every page outside the app: sign in, switch user, confirm it's you and
- *  the 404 (DESIGN.md, Poolside Clear v2; AUSignIn, AUConfirm, AUSwitch). One white panel
+ *  the 404. One white panel
  *  on the outer canvas. `welcome` adds the blue brand panel beside it (sign-in only; hidden
  *  on phones, stacked above the form at 768); `fin` puts the fin at the top of the panel,
  *  at the start (confirm it's you) or centred over a centred state (404 and errors).
@@ -32,7 +32,7 @@ export function AuthFrame({ welcome = false, fin, children }: { welcome?: boolea
               <p className="text-2xl font-semibold">People. Places. Progress.</p>
               <p className="max-w-md">The swim school, the rota, training, documents and refunds for your pools, in one place.</p>
             </div>
-            <p className="text-xs">Turnfin Work · for work computers</p>
+            <p className="text-xs">Turnfin · for work computers</p>
           </div>
         ) : null}
         <div className="flex min-w-0 max-w-md grow basis-sm flex-col justify-center">

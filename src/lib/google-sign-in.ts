@@ -3,7 +3,7 @@ import { currentSharedDevice } from "@/lib/devices/shared-device";
 import { mayWorkAnywhere, workDeviceRequired } from "@/lib/devices/work-device";
 import { prisma } from "@/lib/prisma";
 
-/** Sign in with Google: the way into Turnfin Work (owner decision, 23 October 2026).
+/** Sign in with Google: the way into Turnfin (owner decision, 23 October 2026).
  *
  *  Google proves who someone is. The first time a person from the work Google
  *  domain signs in, an account is made for them with no role: they are told it
@@ -33,7 +33,7 @@ export const GOOGLE_REFUSAL_TEXT: Readonly<Record<GoogleRefusal, string>> = {
   google_no_account: "That Google account can't sign in to Turnfin. Use your work Google account, or ask a manager to check your account.",
   google_waiting: "Your Turnfin account is ready, but you don't have access yet. Ask your manager to give you a role, then sign in again.",
   google_password: "Google didn't ask for your password that time, so Turnfin can't be sure it's you. Try Sign in with Google again.",
-  work_device: "This account can only sign in to Turnfin Work on a work computer. For your own records, use Turnfin Me on your phone.",
+  work_device: "This account can only sign in to Turnfin on a work computer. For your own records, use Turnfin Me on your phone.",
 };
 
 export function googleRefusalText(code: string | undefined | null): string | null {

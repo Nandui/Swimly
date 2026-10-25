@@ -10,7 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { requireCctvActor } from "@/modules/cctv/shared/access";
 import { noteSchema, parseIncidentNumber, reasonMeta, viewingNumber, viewingProblem, viewingSchema, type ViewingInput } from "@/modules/cctv/shared/rules";
 
-/** The CCTV log's writes (docs/cctv.md): record a viewing at a site, and add a note to one. An
+/** The CCTV log's writes: record a viewing at a site, and add a note to one. An
  *  entry is never changed or deleted once saved. Every write is audited; the activity log names
  *  the entry and why it was checked, never what was seen. */
 

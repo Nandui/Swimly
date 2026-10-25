@@ -1,4 +1,4 @@
-// Purchasing (owner request, 2 October 2026; docs/purchasing.md): approved
+// Purchasing (owner request, 2 October 2026): approved
 // suppliers, each with its approved products; purchase orders raised by
 // managers, approved by someone whose role may approve that much from that
 // supplier, then numbered per site in sequence: PO-BT-00001.
@@ -86,7 +86,7 @@ model PurchaseOrder {
   siteId          String
   supplierId      String
   /// "BT-OCT-0042", given on approval: site code, month approved, the organisation's
-  /// running number (one count per organisation, see docs/purchasing.md). Older orders keep "PO-BT-00001".
+  /// running number (one count per organisation). Older orders keep "PO-BT-00001".
   number          String?   @unique
   /// draft | pending | approved | rejected | cancelled (`PO_STATUS_META`)
   status          String    @default("draft")

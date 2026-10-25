@@ -13,7 +13,7 @@ import { ACADEMY_CALL_META, ACADEMY_CALL_OUTCOMES, ACADEMY_CALL_TIMES, euro } fr
 import { amount, text, THEME, useRefresh } from "@/modules/short-courses/shared/components/form-kit";
 import { readSwimmerChoice, splitName, SwimmerPicker } from "@/modules/short-courses/shared/components/swimmer-picker";
 
-/** Phoning people who held a place online (docs/academy.md). */
+/** Phoning people who held a place online. */
 
 /* ---------- Phoning people who held a place online ---------- */
 

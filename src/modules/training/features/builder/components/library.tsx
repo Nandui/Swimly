@@ -26,7 +26,7 @@ import {
 } from "@/modules/training/features/builder/server/library";
 import { uploadCourseFile, type UploadedFile } from "@/modules/training/features/builder/components/upload";
 
-/** The builder's library tools (docs/training.md, e-learning phase 3): start
+/** The builder's library tools (e-learning phase 3): start
  *  from a template or a copy, copy lessons and questions in, paste questions
  *  from a spreadsheet, a cover picture, review comments, and publishing with a
  *  note of what changed. */

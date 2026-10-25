@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireTrainingActor } from "@/modules/training/shared/access";
 import { FILE_SELECT, fileProblem, MAX_FILE_BYTES, safeFileName, storedMime } from "@/modules/training/shared/files";
 
-/** Adding a file to a course, and opening one in Work. Files are never deleted:
+/** Adding a file to a course, and opening one in Turnfin. Files are never deleted:
  *  a published version may still show them. */
 
 export class TrainingFileError extends Error {}

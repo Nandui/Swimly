@@ -2,7 +2,7 @@ import { after } from "next/server";
 import { finishUpload, IncidentError, requestOrigin, sendFootageReceived } from "@/modules/incidents/features/footage";
 
 /** Records a video from a footage link once the store holds all of it, and
- *  tells the person who asked (docs/incidents.md, "CCTV footage"). */
+ *  tells the person who asked ("CCTV footage"). */
 export async function POST(request: Request) {
   try {
     const origin = request.headers.get("origin"), host = request.headers.get("x-forwarded-host") || request.headers.get("host");

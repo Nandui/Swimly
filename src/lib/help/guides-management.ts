@@ -87,7 +87,7 @@ export const MANAGEMENT_GUIDES: HelpArticle[] = [
       { title: "Reset a forgotten password", text: "Use Set a new password for that person. Enter a password that meets the shown requirements, save it, and give it to the staff member through your organisation’s approved process." },
       { title: "Deactivate an account that is no longer needed", text: "Choose Deactivate for the person and read the confirmation. Deactivated staff cannot sign in. Their history stays recorded, and the account can be reactivated later." },
     ],
-    result: "Staff use individual accounts, and their role’s levels decide which modules, pages and actions they have. Saved access changes apply on subsequent requests.",
+    result: "Staff use individual accounts, and their role’s levels decide which apps, pages and actions they have. Saved access changes apply on subsequent requests.",
     troubleshooting: [
       { question: "Why is the account change blocked?", answer: "The app keeps at least one active person able to manage Staff and at least one able to manage Roles. Give another active account the necessary access before removing the last usable grant." },
       { question: "Why can the new instructor see no classes?", answer: "Check the sites they work at, their scheduled classes and their role. The pool deck needs a Pool deck level on the role; Lead lets them open colleagues’ classes too." },
@@ -95,13 +95,13 @@ export const MANAGEMENT_GUIDES: HelpArticle[] = [
   },
   {
     slug: "manage-roles", title: "Choose what staff can see and do", category: "setup", scopes: ["desk"],
-    summary: "Give a role one level in each module and name the home page its people see first.",
-    keywords: ["permissions", "access", "roles", "levels", "administrator", "home page", "landing", "teacher", "module"],
+    summary: "Give a role one level in each app and name the home page its people see first.",
+    keywords: ["permissions", "access", "roles", "levels", "administrator", "home page", "landing", "teacher", "app"],
     before: ["You need Admin: Manage. Editing a role affects every staff account assigned to it. Only a superadmin can give HR."],
     steps: [
       { title: "Open or add a role", text: "In Admin, open Roles. Choose Add a role, or the edit button beside an existing role. Give it a clear name, a home page name such as Front of House, and an optional description." },
-      { title: "Choose a level in each module", text: "Under What this role can do in each module, pick None or a level for Swim school, Pool deck, Refunds, Docs, Training, Rota, HR and Admin. Each level includes the ones before it; the line under the row says what it allows. Give the lowest level that lets the job get done." },
-      { title: "Add any extra permissions", text: "Some levels offer a tick for one extra permission, such as cancelling classes or approving documents. Tick it only when the job needs it. Admin: Manage gives Manage in every module except HR." },
+      { title: "Choose a level in each app", text: "Under What this role can do in each app, pick None or a level for Swim school, Pool deck, Refunds, Docs, Training, Rota, HR and Admin. Each level includes the ones before it; the line under the row says what it allows. Give the lowest level that lets the job get done." },
+      { title: "Add any extra permissions", text: "Some levels offer a tick for one extra permission, such as cancelling classes or approving documents. Tick it only when the job needs it. Admin: Manage gives Manage in every app except HR." },
       { title: "Decide where they can sign in", text: "Tick Can work away from the centre’s computers only when the role needs to use Turnfin on a phone or another device that is not registered." },
       { title: "Save and assign", text: "Save the role, then give it to people in Staff. Each person holds one role. A role can only be deleted when nobody uses it; move those people to another role first." },
     ],

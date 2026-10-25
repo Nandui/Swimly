@@ -12,7 +12,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     member: m,
     localMode: false,
     canReport: (await readingReportScope(m)) !== null,
-    // Required reading is read and acknowledged in Turnfin Me, not on Work.
+    // Required reading is read and acknowledged in Turnfin Me, never in Turnfin.
     outstandingReading: 0,
   };
   return (

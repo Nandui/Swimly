@@ -1,4 +1,4 @@
-/** Quizzes and exams (docs/training.md, e-learning phase 2). Each section of a
+/** Quizzes and exams (e-learning phase 2). Each section of a
  *  course holds questions. A Quiz lesson practises its section's questions; the
  *  course's final exam draws from every section's. Answers are marked on the
  *  server only: what a learner's phone gets is `learnerQuestion`, never the key.

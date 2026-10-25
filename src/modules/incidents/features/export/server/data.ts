@@ -5,8 +5,8 @@ import { withSite } from "@/lib/directory";
 import { requireIncidentsActor } from "@/modules/incidents/shared/access";
 import { recordEvent, reportRights } from "@/modules/incidents/shared/service";
 
-/** One report in full, for the insurer or a solicitor (docs/incidents.md,
- *  "Export"): everything on it, investigation included, with the file names
+/** One report in full, for the insurer or a solicitor (the
+ *  export): everything on it, investigation included, with the file names
  *  and CCTV video names but not the files. Manage at the report's site only, never your own, and
  *  every opening goes in the report's history and the audit log. */
 export async function incidentExport(id: string) {

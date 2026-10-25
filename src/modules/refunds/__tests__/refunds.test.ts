@@ -10,6 +10,7 @@ import { expandPermissions } from "@/lib/staff/permissions";
 
 let db: Awaited<ReturnType<typeof isolatedPrisma>>;
 let service: typeof import('../shared/service'), files: typeof import('../features/request/server/files'), notifications: typeof import('../features/request/server/notifications'), list: typeof import('../features/queue/server/list'), detail: typeof import('../features/request/server/data'), actions: typeof import('../features/request/server/actions');
+let home: typeof import('../features/queue/server/home');
 let uploadRoute: typeof import('@/app/api/refunds/files/route'), downloadRoute: typeof import('@/app/api/refunds/files/[id]/route');
 const reception: RefundActor = { id: 'refund-reception', name: 'Alex Example', request: true, review: false, process: false };
 const finance: RefundActor = { id: 'refund-finance', name: 'Riley Example', request: false, review: true, process: true };
@@ -32,6 +33,7 @@ before(async () => {
     '@/lib/email/sender': { emailSender: () => ({ sender: 'sender@example.test', fromHeader: 'Example <sender@example.test>' }) },
     '@/lib/email/google': { sendGoogleTextEmail: async (email: string, subject: string, text: string) => { if (mailFails) throw new Error('Synthetic rejection'); sent.push({ email, subject, text }); } },
     'next/cache': { revalidatePath() {} },
+    'server-only': {},
   };
   service = serverModule('src/modules/refunds/shared/service.ts', doubles);
   files = serverModule('src/modules/refunds/features/request/server/files.ts', doubles);
@@ -39,6 +41,7 @@ before(async () => {
   list = serverModule('src/modules/refunds/features/queue/server/list.ts', doubles);
   detail = serverModule('src/modules/refunds/features/request/server/data.ts', doubles);
   actions = serverModule('src/modules/refunds/features/request/server/actions.ts', doubles);
+  home = serverModule('src/modules/refunds/features/queue/server/home.ts', doubles);
   uploadRoute = serverModule('src/app/api/refunds/files/route.ts', doubles);
   downloadRoute = serverModule('src/app/api/refunds/files/[id]/route.ts', doubles);
   process.env.REFUNDS_APP_URL = 'https://staff.example.test';
@@ -216,4 +219,26 @@ test('receipt HTTP routes require same-origin writes, preserve bytes and deny pr
   current = finance; currentGrants = ['refunds.review','refunds.process'];
   assert.equal((await downloadRoute.GET(new Request('https://staff.example.test'), params)).status, 404);
   current = reception; currentGrants = ['refunds.request'];
+});
+
+test('Home counts what waits for each person, within what they may see, and moves as requests move', async () => {
+  const viewer = (who: RefundActor, permissions: string[]) => ({ id: who.id, name: who.name, permissions, anywhere: permissions, isSuperadmin: false });
+  const counts = async (who: RefundActor, permissions: string[]) => Object.fromEntries((await home.refundHomeItems(viewer(who, permissions))).map(item => [item.label, item.kind === 'action' ? 'action' : item.count]));
+  assert.deepEqual(await home.refundHomeItems(viewer(reception, [])), [], 'no Refunds level, nothing on Home');
+  const financeBefore = await counts(finance, ['refunds.review', 'refunds.process']);
+  const receptionBefore = await counts(reception, ['refunds.request']);
+  assert.equal(receptionBefore['Log a refund request'], 'action');
+  assert.equal(receptionBefore['Refund requests to decide'], undefined, 'requesters decide nothing');
+  const toApprove = await create();
+  const toAsk = await create();
+  await service.mutateRefund(finance, command(toAsk, 'information', { note: 'Please attach the receipt' }));
+  const financeAfter = await counts(finance, ['refunds.review', 'refunds.process']);
+  assert.equal(financeAfter['Refund requests to decide'], (financeBefore['Refund requests to decide'] as number) + 1, 'one submitted, one sent back');
+  const receptionAfter = await counts(reception, ['refunds.request']);
+  assert.equal(receptionAfter['Your requests need more information'], ((receptionBefore['Your requests need more information'] as number | undefined) ?? 0) + 1);
+  assert.equal((await counts(colleague, ['refunds.request']))['Your requests need more information'], undefined, "another requester's sent-back request is not theirs");
+  await service.mutateRefund(finance, command(toApprove, 'approve', { amount: '80' }));
+  const financeLast = await counts(finance, ['refunds.review', 'refunds.process']);
+  assert.equal(financeLast['Refund requests to decide'], financeBefore['Refund requests to decide']);
+  assert.equal(financeLast['Approved refunds to pay'], (financeBefore['Approved refunds to pay'] as number) + 1);
 });

@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "Email purchase order" };
 
 /** An approved order's email, exactly as the supplier will get it. Send yourself a test
  *  first; it goes to the supplier only once whoever manages Purchasing has turned emails
- *  to suppliers on (docs/purchasing.md). */
+ *  to suppliers on. */
 export default async function EmailOrderPage({ params }: { params: Promise<{ id: string }> }) {
   const { who, order: o, emailsOn, supplierCopies, sender, replyTo, preview, input, mayEmail } = await orderEmailPage((await params).id);
   if (!preview || !input) notFound();

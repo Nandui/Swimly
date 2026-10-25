@@ -9,7 +9,7 @@ import { ParentApiError, notFound } from "@/modules/activities/shared/parents/er
 import { dateSchema, idSchema, readBody } from "@/modules/activities/shared/parents/http";
 import { rateLimit } from "@/modules/activities/shared/parents/security";
 
-/** Swimming courses in the parents app (owner decisions, 21 October 2026; docs/parent-app.md).
+/** Swimming courses in the parents app (owner decisions, 21 October 2026).
  *  Short courses owns the courses and registers them (`registerAppCourses`); this API lists them
  *  and holds places through that seam, never reading short-course tables.
  *

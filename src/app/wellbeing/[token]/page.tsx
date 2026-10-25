@@ -5,7 +5,7 @@ import { RecordWellbeing, WellbeingLinkClosed, wellbeingLink } from "@/modules/i
 
 export const metadata: Metadata = { title: "Request to HR", robots: { index: false, follow: false }, referrer: "no-referrer" };
 
-/** The page a request's email to HR links to (a wellbeing check, or a staff member in an incident) (docs/incidents.md):
+/** The page a request's email to HR links to (a wellbeing check, or a staff member in an incident):
  *  no sign-in, one request, nothing else of the report. */
 export default async function WellbeingLinkPage({ params }: PageProps<"/wellbeing/[token]">) {
   const { token } = await params;

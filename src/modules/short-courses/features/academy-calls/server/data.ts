@@ -6,7 +6,7 @@ import { requireAcademyActor } from "@/modules/short-courses/shared/academy-acce
 import { callDue } from "@/modules/short-courses/shared/academy-rules";
 import { members } from "@/modules/contributions";
 
-/** The Academy's reads (docs/academy.md). Courses are limited to the sites `academy.read`
+/** The Academy's reads. Courses are limited to the sites `academy.read`
  *  covers; a course outside them is a 404. The course list belongs to the organisation. */
 
 import { inSites, iso } from "@/modules/short-courses/shared/reads";

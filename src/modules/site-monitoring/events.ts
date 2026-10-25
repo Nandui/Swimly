@@ -1,3 +1,3 @@
-/** Events Site Monitoring emits (CLAUDE.md section 6, docs/architecture/events.md).
+/** Events Site Monitoring emits (AGENTS.md, How apps talk, docs/architecture.md).
  *  None: it listens to `tasks.reading.out_of_range` (module.ts) and announces nothing. */
 export {};

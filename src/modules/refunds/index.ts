@@ -1,3 +1,3 @@
-/** Refunds' public API (CLAUDE.md section 6): the only file other modules,
+/** Refunds' public API (AGENTS.md, How apps talk): the only file other modules,
  *  Core and front may import. Keep it small. */
 export { refundStatuses } from "@/modules/refunds/shared/types";

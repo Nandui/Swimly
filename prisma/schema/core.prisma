@@ -62,7 +62,7 @@ model StaffRole {
   /// superadmin may edit it or assign it; administrators never inherit it.
   restricted  Boolean  @default(false)
   /// The role as the owner sets it: one level for each module (module id →
-  /// level key, see `src/modules/registry.ts` and docs/how-turnfin-works.md).
+  /// level key, see `src/modules/registry.ts` and docs/apps.md).
   /// Null for a role not yet converted. When set, `permissions` and `screens`
   /// are its translation, written on save by `src/lib/staff/levels.ts`.
   levels      Json?

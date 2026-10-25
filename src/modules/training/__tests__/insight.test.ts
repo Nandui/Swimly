@@ -4,7 +4,7 @@ import { isolatedPrisma } from "@/test/pglite-prisma";
 import { serverModule } from "@/test/server-module";
 import { dropOff, examStats, funnel, median, stageOf, summaryOf, timing, type LearnerFacts } from "../features/insight/compute";
 
-/** Training insight (docs/training.md, e-learning phase 7): course analytics, reports and audit
+/** Training insight (e-learning phase 7): course analytics, reports and audit
  *  packs. Pure sums first, then against a real in-memory Postgres, with the reader covering two
  *  of three people. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;

@@ -11,7 +11,7 @@ import { dayGaps } from "@/modules/rota/shared/day";
 import { expandPermissions } from "@/lib/staff/permissions";
 import { registerAreaRename, registerHomeCard, registerPersonFileSection, type HomeItem } from "@/modules/contributions";
 
-/** Rota's registration plug (CLAUDE.md section 5), loaded by
+/** Rota's registration plug (AGENTS.md, The app contract), loaded by
  *  src/modules/server.ts: its home card, its parts of a person's file and the
  *  area rename it follows. Its menu entry, levels and permissions are in manifest.ts. */
 

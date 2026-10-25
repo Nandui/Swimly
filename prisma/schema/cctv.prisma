@@ -1,10 +1,10 @@
-// CCTV log (owner request, 20 October 2026; docs/cctv.md): a record of every
+// CCTV log (owner request, 20 October 2026): a record of every
 // time someone checks CCTV footage, the first module in the Managers group.
 // Who checked, why, what they were looking for and what they saw, so each
 // viewing can be accounted for under data protection law. Entries are never
 // edited or deleted once saved; later facts are added as dated notes. Sites
 // and staff are Core's and read only through its functions, so these tables
-// keep plain ids and carry the module prefix (CLAUDE.md section 4).
+// keep plain ids and carry the module prefix (AGENTS.md, Data and writes).
 
 /// One time footage was checked. Locked once saved.
 model CctvViewing {

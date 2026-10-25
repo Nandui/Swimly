@@ -14,7 +14,7 @@ import { parseNotionPage, type NotionPage } from "@/modules/docs/features/import
 import { staffDirectory } from "@/modules/docs/shared/staff-directory-data";
 import { docsStorageConfig } from "@/modules/docs/shared/storage-config";
 
-/** Brings a Notion document register into Turnfin Docs (docs/turnfin-docs.md).
+/** Brings a Notion document register into Turnfin Docs.
  *
  *  Reads a Notion Markdown export (unzipped: one .md file per page; pages
  *  whose title starts with a reference such as "[OPS-BT-PO-SOP-01]"). Each

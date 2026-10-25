@@ -1,5 +1,5 @@
 import type { Prisma } from "@/generated/prisma/client";
-import { classifyMedical, medicalAllowed, requireActivitiesAccess, type ActivitiesSurface } from "@/modules/activities/shared/classification";
+import { classifyMedical, medicalAllowed, requireActivitiesAccess, type SwimmerAudience } from "@/modules/activities/shared/classification";
 import { HOLDS_A_PLACE } from "@/modules/activities/shared/assessments/constants";
 import { requireSession } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
@@ -76,15 +76,15 @@ const BOOKING_SELECT = {
 } as const satisfies Prisma.AssessmentBookingSelect;
 
 type BookingPayload = Prisma.AssessmentBookingGetPayload<{ select: typeof BOOKING_SELECT }>;
-/** A booking as screens receive it: medical notes classified for the surface
+/** A booking as screens receive it: medical notes classified for the audience
  *  (text only where allowed, with a flag either way). */
 export type BookingRow = Omit<BookingPayload, "student"> & { student: BookingPayload["student"] & { hasMedicalNotes: boolean } };
 
 /** One session with everyone on it, and the levels an outcome may name —
  *  the live levels of the session's own programme, and nothing else. */
-export async function getAssessmentSession(id: string, scope?: { clubId: string; date: Date; cancelledAt: null }, surface: ActivitiesSurface = "desk") {
+export async function getAssessmentSession(id: string, scope?: { clubId: string; date: Date; cancelledAt: null }, audience: SwimmerAudience = "desk") {
   const session = await requireActivitiesAccess();
-  const medical = medicalAllowed(session, surface);
+  const medical = medicalAllowed(session, audience);
 
   const found = await prisma.assessmentSession.findUnique({
     where: { id, ...scope },

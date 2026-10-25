@@ -1,4 +1,4 @@
-/** Compliance autopilot (docs/training.md, e-learning phase 4): who must take a
+/** Compliance autopilot (e-learning phase 4): who must take a
  *  course, and when it is due again. Pure, so the rules page can say what a
  *  rule will do before it is saved, and the daily run and the matrix agree. */
 import { toDateOnlyString } from "@/lib/format";

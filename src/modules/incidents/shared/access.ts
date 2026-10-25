@@ -5,7 +5,7 @@ import { holdsAnywhere } from "@/lib/policy/engine";
 import { actorForSession, sitesFor } from "@/lib/policy/session";
 import type { IncidentsActor } from "@/modules/incidents/shared/types";
 
-/** Who may open Incidents (docs/incidents.md): anyone who may report at some
+/** Who may open Incidents: anyone who may report at some
  *  site. Reports belong to a site, so reading anyone else's needs
  *  `incidents.reports.review` at that site (`sitesFor`); your own you always see. */
 export function incidentsAccess(session: Session): IncidentsActor | null {

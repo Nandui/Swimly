@@ -7,7 +7,7 @@ import { currentActor, mayFor, sitesFor } from "@/lib/policy/session";
 import { prisma } from "@/lib/prisma";
 import { requireCctvActor } from "@/modules/cctv/shared/access";
 
-/** The reads (docs/cctv.md). Record shows a person their own entries; Review adds every entry at
+/** The reads. Record shows a person their own entries; Review adds every entry at
  *  the sites it covers. An entry outside both is a 404. */
 
 const ROW = { id: true, number: true, siteId: true, viewedOn: true, viewedAt: true, checkedBy: true, reason: true, purpose: true, incidentNumber: true, recordedById: true, recordedByName: true, _count: { select: { notes: true } } } as const;

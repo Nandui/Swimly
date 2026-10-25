@@ -14,7 +14,7 @@ import { atSite, clockOf, courseFor, iso, optionalDate, refresh } from "@/module
 import { chose, copiedFrom, keepBooked, resolveSwimmer, swimmerChoiceSchema, type SwimmerChoiceInput } from "@/modules/short-courses/shared/swimmers";
 import { members } from "@/modules/contributions";
 
-/** Academy writes (docs/academy.md). The course list is the organisation's (Manage); a course
+/** Academy writes. The course list is the organisation's (Manage); a course
  *  and everything on it is checked against its site: Manage puts courses and sessions on,
  *  Tutor (Run) adds candidates, checks, registers and results. Every write is audited. */
 

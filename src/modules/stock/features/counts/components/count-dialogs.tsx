@@ -10,7 +10,7 @@ import { Field, FormDialog } from "@/components/form-dialog";
 import { deleteCount, discardCount, startCount, submitCount } from "@/modules/stock/features/counts/server/actions";
 import { text, THEME, useRefresh } from "@/modules/stock/shared/components/form-kit";
 
-/** The count dialogs (docs/stock.md): start, submit, discard and delete. */
+/** The count dialogs: start, submit, discard and delete. */
 
 export function StartCountDialog({ sites, today, trigger }: { sites: { id: string; name: string; open: boolean }[]; today: string; trigger?: React.ReactNode }) {
   const router = useRouter();

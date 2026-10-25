@@ -9,7 +9,7 @@ export const ADMIN_GROUPS: { label: string; links: AdminPage[] }[] = [
   { label: "", links: [{ key: "overview", href: "/core", label: "Overview", icon: LayoutDashboard, description: "What waits to be checked, and every Admin page" }] },
   { label: "People", links: [
     { key: "staff", href: "/staff", label: "Staff", icon: Users, description: "Who can sign in, their roles, sites and work devices" },
-    { key: "roles", href: "/roles", label: "Roles", icon: KeyRound, description: "What each role can open and do, module by module" },
+    { key: "roles", href: "/roles", label: "Roles", icon: KeyRound, description: "What each role can open and do, app by app" },
     { key: "departments", href: "/departments", label: "Departments", icon: UsersRound, description: "The teams people work in; every activity belongs to one" },
     { key: "positions", href: "/positions", label: "Positions", icon: BadgeCheck, description: "The jobs people hold, and the qualifications each needs" },
   ] },
