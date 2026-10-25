@@ -62,7 +62,9 @@ function doubles() {
 }
 const as = (id: string, grants: GrantRow[] = [], permissions: string[] = []) => Object.assign(state, { id, grants, permissions, screens: permissions.length || grants.length ? ["rota"] : [] });
 const tomorrow = () => addDaysIso(today(), 1);
-const nextMonday = () => addDaysIso(mondayOf(today()), 7);
+/** A Monday at least a week away, never tomorrow: on a Sunday, the Monday after this week's is
+ *  tomorrow, where earlier tests have already put people on. */
+const nextMonday = () => addDaysIso(mondayOf(addDaysIso(today(), 2)), 7);
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 
 /* ---------- Rules that stayed ---------- */
