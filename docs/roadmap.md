@@ -33,6 +33,8 @@ Today a merge to `main` deploys and migrates production, and nothing checks it a
 
 ## 2. App switches
 
+**Built** ([architecture.md](architecture.md#app-switches)): the `AppSwitch` setting, Admin › Apps for superadmins, one `appOn` that the session, menus, Home, plugs, events, front doors and API routes ask, and the switched-off test.
+
 - The platform stores, per organisation, whether each app is on, off or on at some sites; only a superadmin changes it, with an audit row.
 - An app that is off loses its pages, menu, home items, listeners and API routes; its front door answers "not available".
 - A test run switches each app off in turn.

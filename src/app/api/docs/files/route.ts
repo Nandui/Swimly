@@ -1,7 +1,8 @@
+import { appRoute } from "@/lib/apps/switches";
 import { NextRequest, NextResponse } from 'next/server';
 import { assertSameOrigin, DomainError, reportError, requireActionMember, uploadFile } from "@/modules/docs/features/files";
 export const runtime = 'nodejs';
-export async function POST(request: NextRequest) {
+async function servePost(request: NextRequest) {
   try {
     await assertSameOrigin();
     const m = await requireActionMember();
@@ -25,3 +26,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const POST = appRoute("docs", servePost);

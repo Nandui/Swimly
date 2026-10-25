@@ -1,8 +1,8 @@
-import { BadgeCheck, Building2, GraduationCap, History, KeyRound, LayoutDashboard, ListChecks, MapPin, Users, UsersRound, type LucideIcon } from "lucide-react";
+import { BadgeCheck, Building2, GraduationCap, History, KeyRound, LayoutDashboard, LayoutGrid, ListChecks, MapPin, Users, UsersRound, type LucideIcon } from "lucide-react";
 
 /** Admin's pages, once, grouped by topic (owner decision, 7 October 2026): the page bar
  *  (CoreShell) and the overview are built from this list. A plain module, so server pages read it. */
-export type CoreLinkKey = "staff" | "roles" | "departments" | "positions" | "clubs" | "areas" | "activity-list" | "qualifications" | "activity";
+export type CoreLinkKey = "staff" | "roles" | "departments" | "positions" | "clubs" | "areas" | "apps" | "activity-list" | "qualifications" | "activity";
 export type AdminPage = { key: CoreLinkKey | "overview"; href: string; label: string; icon: LucideIcon; description: string };
 
 export const ADMIN_GROUPS: { label: string; links: AdminPage[] }[] = [
@@ -16,6 +16,8 @@ export const ADMIN_GROUPS: { label: string; links: AdminPage[] }[] = [
   { label: "Places", links: [
     { key: "clubs", href: "/clubs", label: "Sites", icon: Building2, description: "The sites, their short codes, and which one this device works at" },
     { key: "areas", href: "/areas", label: "Areas", icon: MapPin, description: "Each site's pools, gym and reception, for the rota and swim classes" },
+    // Superadmins only: a flag, not a screen, so no role can give it (docs/architecture.md, App switches).
+    { key: "apps", href: "/apps", label: "Apps", icon: LayoutGrid, description: "Which apps are on, and at which sites" },
   ] },
   { label: "Work", links: [
     { key: "activity-list", href: "/activity-list", label: "Activities", icon: ListChecks, description: "What the rota plans and covers, and the qualification each needs" },

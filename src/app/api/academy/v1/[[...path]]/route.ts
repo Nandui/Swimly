@@ -1,3 +1,4 @@
+import { appRoute } from "@/lib/apps/switches";
 import { handleAcademyRequest } from "@/modules/short-courses/features/booking";
 
 export const runtime = "nodejs";
@@ -6,4 +7,5 @@ type Context = { params: Promise<{ path?: string[] }> };
 async function handle(request: Request, context: Context) {
   return handleAcademyRequest(request, (await context.params).path ?? []);
 }
-export { handle as GET, handle as POST, handle as OPTIONS, handle as HEAD };
+const served = appRoute("short-courses", handle);
+export { served as GET, served as POST, served as OPTIONS, served as HEAD };

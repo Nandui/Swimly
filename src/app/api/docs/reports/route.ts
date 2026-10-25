@@ -1,8 +1,9 @@
+import { appRoute } from '@/lib/apps/switches';
 import { NextRequest } from 'next/server';
 import {
   database, DomainError, filterReading, library, listMembers, readingCsv, readingReportScope, requireActionMember, requirements,
 } from "@/modules/docs/features/reports";
-export async function GET(request: NextRequest) {
+async function serveGet(request: NextRequest) {
   try {
     const m = await requireActionMember();
     const scope = await readingReportScope(m);
@@ -36,3 +37,5 @@ export async function GET(request: NextRequest) {
     });
   }
 }
+
+export const GET = appRoute("docs", serveGet);

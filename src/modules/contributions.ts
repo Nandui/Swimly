@@ -1,5 +1,6 @@
 import "server-only";
 import { emit, type EventName, type PlatformEvents } from "@/platform/events";
+import { appOn, sitesWhereOn } from "@/lib/apps/switches";
 import type { Prisma } from "@/generated/prisma/client";
 
 /** What a module adds to Core's own screens, without Core importing the module.
@@ -12,7 +13,14 @@ import type { Prisma } from "@/generated/prisma/client";
  *
  *  Register from the module's own `contributions.ts`, wired up in
  *  `src/modules/server.ts`. Callers must already hold the page's permission:
- *  these return counts and short labels, never records. */
+ *  these return counts and short labels, never records.
+ *
+ *  Every registration names its `app` (the manifest id), and a reader skips a plug whose app is
+ *  switched off where the question is about (src/lib/apps/switches.ts): that site, or anywhere
+ *  for a question about a person or the organisation. A switched-off app's plug answers "not
+ *  available" as if it had never registered, and the caller copes. Two plugs keep reaching
+ *  every app because they keep stored records whole: renaming a site's area, and HR's subject
+ *  access export (everything held about a person, whatever is switched on). */
 
 /** Loads every module's registrations (the composition root) before a module reads another's,
  *  as the platform registry loads the app's module list (AGENTS.md, The app contract). Modules call
@@ -23,8 +31,16 @@ function modulesLoaded() {
   return (modulesLoading ??= import("@/modules/server"));
 }
 
+/** The items of a list whose site has the app on; an item without a site needs it on anywhere. */
+async function onlyWhereOn<T>(app: string, items: readonly T[], siteOf: (item: T) => string | null): Promise<T[]> {
+  const on = await Promise.all(items.map((item) => appOn(app, { siteId: siteOf(item) })));
+  return items.filter((_, at) => on[at]);
+}
+
 export type SiteSummary = {
   id: string;
+  /** The app it belongs to (its manifest id). */
+  app: string;
   /** One short line per site, e.g. "3 programmes · 1,156 active swimmers". */
   lines(clubIds: string[]): Promise<Map<string, string>>;
 };
@@ -37,7 +53,10 @@ export function registerSiteSummary(summary: SiteSummary) {
 
 /** One combined line per site from every registered module. */
 export async function siteSummaryLines(clubIds: string[]): Promise<Map<string, string>> {
-  const parts = await Promise.all(siteSummaries.map((summary) => summary.lines(clubIds)));
+  const parts = await Promise.all(siteSummaries.map(async (summary) => {
+    const sites = await sitesWhereOn(summary.app, clubIds);
+    return sites.length ? summary.lines(sites) : new Map<string, string>();
+  }));
   const out = new Map<string, string>();
   for (const id of clubIds) {
     const line = parts.map((part) => part.get(id)).filter(Boolean).join(" · ");
@@ -155,6 +174,8 @@ export type PersonFileEntry = { id: string; title: string; detail: string; /** I
 export type PersonFileSection = {
   /** Stable key, e.g. "rota.absences". */
   id: string;
+  /** The app it belongs to (its manifest id). */
+  app: string;
   heading: string;
   load(userId: string, orgId: string): Promise<{ summary: string; entries: PersonFileEntry[] }>;
 };
@@ -167,10 +188,12 @@ export function registerPersonFileSection(section: PersonFileSection) {
   else personFileSections.push(section);
 }
 
-/** Every registered section of this person's file, in registration order. */
+/** Every registered section of this person's file, in registration order, from the apps that
+ *  are on somewhere in their organisation. */
 export async function personFile(userId: string, orgId: string) {
   await modulesLoaded();
-  return Promise.all(personFileSections.map(async (section) => ({ id: section.id, heading: section.heading, ...(await section.load(userId, orgId)) })));
+  const on = await Promise.all(personFileSections.map((section) => appOn(section.app, { orgId })));
+  return Promise.all(personFileSections.filter((_, at) => on[at]).map(async (section) => ({ id: section.id, heading: section.heading, ...(await section.load(userId, orgId)) })));
 }
 
 /** Everything a module holds about one person, for a subject access request
@@ -190,7 +213,8 @@ export function registerSubjectRecords(source: SubjectRecords) {
   else subjectRecordSources.push(source);
 }
 
-/** Every registered module's records about this person, by key. */
+/** Every registered module's records about this person, by key: from every app, switched on
+ *  or not, because a subject access request covers everything held about them. */
 export async function subjectRecords(userId: string, orgId: string): Promise<Record<string, unknown>> {
   await modulesLoaded();
   const loaded = await Promise.all(subjectRecordSources.map(async (s) => [s.key, await s.load(userId, orgId)] as const));
@@ -237,6 +261,8 @@ export type CommitmentQuery = { siteIds?: readonly string[]; userIds?: readonly 
 export type CommitmentPlan = { ref: string; siteId: string; date: string; userId: string | null; by: { id: string; name: string } };
 export type CommitmentSource = {
   id: string;
+  /** The app it belongs to (its manifest id). */
+  app: string;
   list(query: CommitmentQuery): Promise<Commitment[]>;
   /** Lets another module plan who does one occurrence (the rota planning a class's teacher). */
   plan?(input: CommitmentPlan): Promise<{ ok: true } | { ok: false; error: string }>;
@@ -256,7 +282,8 @@ export function registerCommitments(source: CommitmentSource) {
 export async function commitmentsFor(query: CommitmentQuery, except?: string) {
   if (query.userIds && query.userIds.length === 0 && !query.siteIds) return [];
   await modulesLoaded();
-  const lists = await Promise.all(commitmentSources.filter((s) => s.id !== except).map((s) => s.list(query)));
+  const lists = await Promise.all(commitmentSources.filter((s) => s.id !== except).map(async (s) =>
+    (await appOn(s.app)) ? onlyWhereOn(s.app, await s.list(query), (c) => c.siteId) : []));
   return lists.flat();
 }
 
@@ -265,7 +292,7 @@ export async function commitmentsFor(query: CommitmentQuery, except?: string) {
 export async function planCommitment(sourceId: string, input: CommitmentPlan) {
   await modulesLoaded();
   const source = commitmentSources.find((s) => s.id === sourceId);
-  if (!source?.plan) return { ok: false as const, error: "That can no longer be planned from here." };
+  if (!source?.plan || !(await appOn(source.app, { siteId: input.siteId }))) return { ok: false as const, error: "That can no longer be planned from here." };
   return source.plan(input);
 }
 
@@ -284,7 +311,8 @@ export function registerAreaRename(handler: AreaRenameHandler) {
   else areaRenameHandlers.push(handler);
 }
 
-/** Every module's records renamed; how many changed in all. */
+/** Every module's records renamed; how many changed in all. Switched-off apps too, so their
+ *  records still read the same way when they are switched back on. */
 export async function renameAreaEverywhere(change: AreaRename, tx?: unknown) {
   let changed = 0;
   for (const handler of areaRenameHandlers) changed += await handler.rename(change, tx);
@@ -318,7 +346,7 @@ export type DeskMeasure = {
   open: boolean;
 };
 export type DeskMeasureQuery = { siteIds: readonly string[] | null; from: string; to: string; now: Date };
-export type DeskMeasureSource = { id: string; list(query: DeskMeasureQuery): Promise<DeskMeasure[]> };
+export type DeskMeasureSource = { id: string; /** The app it belongs to (its manifest id). */ app: string; list(query: DeskMeasureQuery): Promise<DeskMeasure[]> };
 const deskMeasureSources: DeskMeasureSource[] = [];
 
 export function registerDeskMeasures(source: DeskMeasureSource) {
@@ -333,11 +361,15 @@ export function registerDeskMeasures(source: DeskMeasureSource) {
 export async function deskMeasuresFor(query: DeskMeasureQuery, except?: string) {
   await modulesLoaded();
   const failed: string[] = [];
-  const lists = await Promise.all(deskMeasureSources.filter((s) => s.id !== except).map((s) => s.list(query).catch((error) => {
-    console.error(`Desk measures from ${s.id} failed`, error);
-    failed.push(s.id);
-    return [] as DeskMeasure[];
-  })));
+  const lists = await Promise.all(deskMeasureSources.filter((s) => s.id !== except).map(async (s) => {
+    if (!(await appOn(s.app))) return [] as DeskMeasure[];
+    const items = await s.list(query).catch((error) => {
+      console.error(`Desk measures from ${s.id} failed`, error);
+      failed.push(s.id);
+      return [] as DeskMeasure[];
+    });
+    return onlyWhereOn(s.app, items, (item) => item.siteId);
+  }));
   return { items: lists.flat(), failed };
 }
 
@@ -376,6 +408,8 @@ export type NewMember = {
   emergencyName: string; emergencyPhone: string; emergencyRelationship: string; medicalNotes: string;
 };
 export type MemberDirectory = {
+  /** The app that keeps the records (its manifest id). */
+  app: string;
   /** Every word must match a name, the member number, a contact's name, email or phone, or the
    *  date of birth (2015-03-04 or 4/3/2015). At most 20, best first. */
   search(q: string): Promise<MemberHit[]>;
@@ -391,17 +425,18 @@ export function registerMemberDirectory(directory: MemberDirectory) {
   memberDirectory = directory;
 }
 
-/** The swimmer records, or null when the swim school is switched off: callers then keep their own
- *  name-only entry. The caller has already checked its own permission for the person it serves. */
+/** The swimmer records, or null when the swim school is switched off (or not there): callers then
+ *  keep their own name-only entry. The caller has already checked its own permission for the
+ *  person it serves. */
 export async function members(): Promise<MemberDirectory | null> {
   await modulesLoaded();
-  return memberDirectory;
+  return memberDirectory && (await appOn(memberDirectory.app)) ? memberDirectory : null;
 }
 
 /** What other modules hold about one member, for their swimmer profile: "Couch to 5k at
  *  Riverside", "6 Oct to 10 Nov · booked". Titles and dates only, never payment or notes. */
 export type MemberHistoryEntry = { id: string; title: string; detail: string; /** ISO date it starts. */ on: string; module: string };
-export type MemberHistorySource = { id: string; list(memberId: string): Promise<MemberHistoryEntry[]> };
+export type MemberHistorySource = { id: string; /** The app it belongs to (its manifest id). */ app: string; list(memberId: string): Promise<MemberHistoryEntry[]> };
 const memberHistorySources: MemberHistorySource[] = [];
 
 export function registerMemberHistory(source: MemberHistorySource) {
@@ -413,7 +448,7 @@ export function registerMemberHistory(source: MemberHistorySource) {
 /** Every module's entries for this member, newest first. A failing source is left out. */
 export async function memberHistoryFor(memberId: string): Promise<MemberHistoryEntry[]> {
   await modulesLoaded();
-  const lists = await Promise.all(memberHistorySources.map((s) => s.list(memberId).catch((error) => {
+  const lists = await Promise.all(memberHistorySources.map(async (s) => !(await appOn(s.app)) ? [] : s.list(memberId).catch((error) => {
     console.error(`Member history from ${s.id} failed`, error);
     return [] as MemberHistoryEntry[];
   })));
@@ -426,10 +461,14 @@ export async function memberHistoryFor(memberId: string): Promise<MemberHistoryE
 
 /** Announce an event once every module has registered its listeners (AGENTS.md, How apps talk), so a
  *  listener in a module the emitting page never loaded still hears it. Call it after the change
- *  is saved; a listener's failure is logged and never reaches the caller. */
+ *  is saved; a listener's failure is logged and never reaches the caller. A listener whose app is
+ *  switched off at the event's site (its payload's `siteId`; anywhere, without one) does not run. */
 export async function announce<K extends EventName>(name: K, payload: PlatformEvents[K]): Promise<void> {
   await modulesLoaded();
-  await emit(name, payload);
+  const where = payload as { orgId?: unknown; siteId?: unknown };
+  const orgId = typeof where.orgId === "string" ? where.orgId : null;
+  const siteId = typeof where.siteId === "string" ? where.siteId : null;
+  await emit(name, payload, (app) => appOn(app, { orgId, siteId }));
 }
 
 // ---------------------------------------------------------------------------
@@ -498,6 +537,8 @@ export class AppCourseError extends Error {
   constructor(readonly status: number, readonly code: string, message: string) { super(message); }
 }
 export type AppCourses = {
+  /** The app that keeps the courses (its manifest id). */
+  app: string;
   list(): Promise<AppCourse[]>;
   one(id: string): Promise<AppCourse | null>;
   /** Runs inside the caller's transaction, so a swimmer made for the booking goes with it. */
@@ -512,8 +553,20 @@ export function registerAppCourses(source: AppCourses) {
   appCourseSource = source;
 }
 
-/** The parents app's courses, or null when Short courses is switched off. */
+/** The parents app's courses, or null when Short courses is switched off. A course at a site
+ *  where it is off is not listed and cannot be opened, so it is never held: a hold opens the
+ *  course with `one` first, outside its transaction. */
 export async function appCourses(): Promise<AppCourses | null> {
   await modulesLoaded();
-  return appCourseSource;
+  const source = appCourseSource;
+  if (!source || !(await appOn(source.app))) return null;
+  const one = async (id: string) => {
+    const course = await source.one(id);
+    return course && (await appOn(source.app, { siteId: course.site.id })) ? course : null;
+  };
+  return {
+    ...source,
+    list: async () => onlyWhereOn(source.app, await source.list(), (course) => course.site.id),
+    one,
+  };
 }

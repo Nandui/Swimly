@@ -230,6 +230,7 @@ model Organisation {
   rotaImports         RotaImport[]
   rotaChanges         RotaChange[]
   activityTypes       ActivityType[]
+  appSwitches         AppSwitch[]
 }
 
 /// A team such as Aquatics, Reception or Maintenance. Optionally tied to one
@@ -325,6 +326,33 @@ model SharedDeviceUser {
 
   @@id([deviceId, userId])
   @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// App switches: which apps are on, and where (docs/architecture.md)
+// ---------------------------------------------------------------------------
+
+/// Whether one app is on for an organisation: on everywhere, off, or on only
+/// at `siteIds`. No row means on everywhere, so an app nobody has switched
+/// stays as it was. Only a superadmin changes it, from Admin › Apps, with an
+/// audit row; switching back on keeps the row (`state` "on"). Read only
+/// through `src/lib/apps/switches.ts`.
+model AppSwitch {
+  id          String   @id @default(cuid())
+  orgId       String
+  /// The app's manifest id (`src/app/modules.ts`), e.g. "rota". Never renamed.
+  appId       String
+  /// "on" | "off" | "sites" (on only at `siteIds`).
+  state       String   @default("on")
+  siteIds     String[] @default([])
+  updatedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  organisation Organisation @relation(fields: [orgId], references: [id], onDelete: Restrict)
+
+  @@unique([orgId, appId])
+  @@map("app_switches")
 }
 
 /// A kind of certificate: NPLQ, First Aid, Swim Teacher licence. `validityMonths`

@@ -11,7 +11,7 @@ import { signoffCount } from "@/modules/training/features/sign-off/server/data";
  *  src/modules/server.ts: its home card, its part of a person's file and its
  *  records for HR's subject export. Its menu entry, levels and permissions are in manifest.ts. */
 
-registerPersonFileSection({ id: "training.open", heading: "Training", load: trainingFile });
+registerPersonFileSection({ id: "training.open", app: "training", heading: "Training", load: trainingFile });
 registerSubjectRecords({ key: "training", load: trainingRecords });
 registerSubjectRecords({ key: "trainingOnTheJob", load: trainingOnTheJobRecords });
 registerSubjectRecords({ key: "trainingLearner", load: trainingLearnerRecords });

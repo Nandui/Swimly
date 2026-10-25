@@ -17,7 +17,7 @@ export default async function CoreHome() {
   const session = await pageSession();
   const groups = ADMIN_GROUPS.slice(1).map((g) => ({
     label: g.label,
-    links: g.links.filter((l) => canSee(session, l.key as CoreLinkKey)).map(({ href, label, icon, description }) => ({ href, label, icon, description })),
+    links: g.links.filter((l) => l.key === "apps" ? session.user.isSuperadmin === true : canSee(session, l.key as Exclude<CoreLinkKey, "apps">)).map(({ href, label, icon, description }) => ({ href, label, icon, description })),
   })).filter((g) => g.links.length);
   // Setup that belongs to one module stays in it; Admin lists where each is (owner decision, 7 October 2026).
   const modules = [

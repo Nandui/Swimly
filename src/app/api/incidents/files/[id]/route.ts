@@ -1,9 +1,10 @@
+import { appRoute } from "@/lib/apps/switches";
 import { readFile, requireIncidentsActor } from "@/modules/incidents/features/files";
 
 /** Opens a report's photo or document for someone who may read the report.
  *  Photos open in the browser; PDFs download. Opening one on someone else's
  *  report is logged. */
-export async function GET(_request: Request, { params }: RouteContext<"/api/incidents/files/[id]">) {
+async function serveGet(_request: Request, { params }: RouteContext<"/api/incidents/files/[id]">) {
   try {
     const who = await requireIncidentsActor(), { id } = await params;
     const file = await readFile(who, id);
@@ -19,3 +20,5 @@ export async function GET(_request: Request, { params }: RouteContext<"/api/inci
     return new Response("File not available.", { status: 404, headers: { "Cache-Control": "no-store" } });
   }
 }
+
+export const GET = appRoute("incidents", serveGet);

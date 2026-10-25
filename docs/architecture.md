@@ -74,7 +74,7 @@ Three ways, and only these:
 2. **Announce:** emit an event after something has happened; any app may listen. This is the default for "and then also…".
 3. **Plug in:** register with the platform from `module.ts`; the platform shows what is registered without knowing who registered it.
 
-An app must keep working when any other app is switched off: a missing front door or plug answers "not available", and the caller copes.
+An app must keep working when any other app is switched off: a missing front door or plug answers "not available", and the caller copes ([App switches](#app-switches)).
 
 ### Plugs (`src/modules/contributions.ts`)
 
@@ -90,13 +90,13 @@ An app must keep working when any other app is switched off: a missing front doo
 | `registerAreaRename` | renaming a site's area updates every app that stores area names |
 | `registerAppCourses` | the short courses the parent app offers |
 
-A plug that fails is named on the page, never fatal. Other seams: **session hooks** (`src/modules/session-hooks.ts`, per-request work such as applying due scheduled unenrolments) and **links** by URL.
+Every registration names its `app` (the manifest id), so a switched-off app's plugs answer "not available". A plug that fails is named on the page, never fatal. Other seams: **session hooks** (`src/modules/session-hooks.ts`, per-request work such as applying due scheduled unenrolments) and **links** by URL.
 
 **Composition roots** are the only files allowed to import every app: `src/app/modules.ts`, `src/modules/server.ts`, `src/modules/session-hooks.ts`, `src/lib/staff-api/records.ts` and `src/lib/staff-api/reminders.ts`.
 
 ### Events
 
-The bus is `src/platform/events`: typed and in-process. An event is emitted after the transaction commits (through `announce` in `src/modules/contributions.ts`, which loads every app's listeners first). A failing listener is logged and never breaks the emitter. Names are `<app>.<thing>.<past-tense-verb>`; payloads carry ids and the minimum data, never rows.
+The bus is `src/platform/events`: typed and in-process. An event is emitted after the transaction commits (through `announce` in `src/modules/contributions.ts`, which loads every app's listeners first). A listener names its app (`on(name, listener, { app })`) and does not run where that app is switched off. A failing listener is logged and never breaks the emitter. Names are `<app>.<thing>.<past-tense-verb>`; payloads carry ids and the minimum data, never rows.
 
 **The catalogue.** Every event is listed here, in the same change that adds or alters it.
 
@@ -106,12 +106,29 @@ The bus is `src/platform/events`: typed and in-process. An event is emitted afte
 
 **Planned (roadmap step 6):** `rota.shift.changed`, replacing Rota's direct call to `notifyShiftChange` (`src/lib/staff-api/notify.ts`), listened to by Turnfin Me's email. Each other cross-app side effect becomes an event when its code is next touched.
 
-## App switches (planned, roadmap step 2)
+## App switches
 
-- An app is **on**, **off** or **on at these sites** for each organisation. The setting lives in the platform; only a superadmin changes it, with an audit row.
-- When an app is off, its pages, menu, home items, listeners and API routes are gone and its front door answers "not available".
-- A big new app goes live at one site first, then everywhere. Later, Turnfin can be offered app by app to other operators.
-- A test switches each app off in turn and runs the whole suite.
+**Built (roadmap step 2).** For each organisation, every app is **on everywhere**, **off**, or **on only at some sites**. A big new app goes live at one site first, then everywhere; later, Turnfin can be offered app by app to other operators.
+
+- **The setting** is the platform's table `AppSwitch` (`app_switches`, in `core.prisma`): `orgId`, `appId` (the manifest id), `state` (`on`, `off`, `sites`), `siteIds`. No row means on everywhere. Admin is the platform's own and has no switch.
+- **Who changes it:** only a superadmin (`User.isSuperadmin`, never a permission), at **Admin › Apps** (`/apps`, `src/lib/apps/actions.ts`). Each change writes the switch and one audit row in the same transaction.
+- **The one question:** `appOn(appId, { orgId?, siteId? })` in `src/lib/apps/switches.ts`. With a site, it asks whether the app is on there; without one (a person's records, the whole organisation), whether it is on anywhere. Everything asks this one function; no app checks its own switch any other way.
+
+Where an app is off, here is what happens and where:
+
+| What goes | Where it is decided |
+| --- | --- |
+| pages ("not found"), actions, session API routes | `auth()` applies the switches at the working site: the session lists `appsOff`, and their permissions leave the flat permissions, each site's grant and what an administrator or superadmin expands to (`permissionsOf`, the policy engine). Each permission belongs to exactly one app |
+| menu entry and Home items | `modulesFor` leaves out `appsOff`; Home asks only the apps it shows |
+| plugs | `src/modules/contributions.ts` skips a plug whose app is off where the question is about: site summaries per site, commitments and desk measures by their site, planning refused, member directory and parents app's courses `null`, member history and person-file sections left out |
+| event listeners | `announce` skips a listener whose app is off at the payload's `siteId` |
+| front doors | the composition roots that call them (Turnfin Me's API, `session-hooks.ts`) ask first and answer "not available" |
+| API routes | each app's route file wraps its handlers in `appRoute(appId, …)`: `404 NOT_AVAILABLE` while the app is off everywhere |
+| scheduled jobs | an app's nightly job skips the sites where it is off (`sitesWhereOn`; Tasks today) |
+
+Two plugs still reach every app, because they keep stored records whole: **renaming a site's area**, and **HR's subject access export**, which covers everything held about a person. Switching an app off hides it; nothing in it is deleted, and switching it back on brings it all back.
+
+The switched-off test (`src/lib/apps/switched-off.test.ts`) switches each app off in turn. It checks that Home, the menus, the screens and every other app's plugs and listeners still work, then puts one app live at one site only.
 
 ## Access: who can do what, where
 
@@ -222,7 +239,7 @@ Prisma 7: the client is generated into `src/generated/prisma`, uses the `@prisma
 
 What the code does not yet match in this document, each owned by a roadmap step:
 - No check runs on pull requests and `main` is unprotected (step 1).
-- Several apps have thin tests; the switched-off run does not exist (steps 1 and 2).
+- Several apps have thin tests (step 1).
 - One role per person; combined roles exist (step 3).
 - Three email queues and six file checks (step 4).
 - One event in the whole app (step 6).

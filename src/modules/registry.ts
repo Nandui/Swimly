@@ -17,6 +17,8 @@ export type ModuleContext = {
   /** Every permission they hold anywhere: at the site they are working in,
    *  at their other sites, or over their team. */
   permissions: ReadonlySet<PermissionKey>;
+  /** Apps switched off at their working site: never shown, whatever they hold. */
+  appsOff?: readonly string[];
 };
 
 /** Where a level applies. Swim school, Training and Rota work at the sites
@@ -119,9 +121,24 @@ function modulePermissions(mod: ModuleManifest): PermissionKey[] {
   return [...mod.access.levels, ...(mod.access.extras ?? [])].flatMap((step) => [...step.permissions]);
 }
 
-/** The modules this person has: those where they hold any permission. */
+/** The modules this person has: those where they hold any permission, leaving out any app that
+ *  is switched off at their working site (`appsOff`, src/lib/apps/switches.ts). */
 export function visibleModules(ctx: ModuleContext): ModuleManifest[] {
-  return allModules().filter((m) => modulePermissions(m).some((key) => ctx.permissions.has(key)));
+  const off = new Set(ctx.appsOff ?? []);
+  return allModules().filter((m) => !off.has(m.id) && modulePermissions(m).some((key) => ctx.permissions.has(key)));
+}
+
+/** The apps a superadmin can switch on, off or on at some sites: every app in
+ *  src/app/modules.ts. Admin is the platform's own and is always on. */
+export function switchableApps(): readonly ModuleManifest[] {
+  return allModules().filter((m) => m !== adminModule);
+}
+
+/** Every permission these apps give, for taking a switched-off app's permissions out of a
+ *  session. Each permission belongs to exactly one app, so no other app loses any. */
+export function appPermissions(appIds: Iterable<string>): Set<PermissionKey> {
+  const ids = new Set(appIds);
+  return new Set(switchableApps().filter((m) => ids.has(m.id)).flatMap(modulePermissions));
 }
 
 // ---------------------------------------------------------------------------

@@ -1,3 +1,4 @@
+import { appRoute } from "@/lib/apps/switches";
 import { operatorAccounts } from "@/lib/operations/operator";
 import { liveSites } from "@/lib/directory";
 import { z } from "zod";
@@ -21,7 +22,7 @@ const envelope = z.object({
 const json = (value: unknown, status = 200) => Response.json(value, { status, headers: { "Cache-Control": "no-store" } });
 const scope = ["courses.manage", "students.manage", "enrolment.manage"] as const;
 
-export async function POST(request: Request) {
+async function servePost(request: Request) {
   if (!validOperationToken(request.headers.get("authorization"), process.env.SWIMLY_OPERATIONS_TOKEN_SHA256)) return json({ error: "Unauthorized" }, 401);
   if (request.headers.has("origin")) return json({ error: "Use the command-line client." }, 403);
   const expires = Date.parse(process.env.SWIMLY_OPERATIONS_EXPIRES ?? "");
@@ -87,3 +88,5 @@ export async function POST(request: Request) {
     return json({ error: "Operation could not be confirmed. Read the record before retrying." }, 500);
   }
 }
+
+export const POST = appRoute("swim-school", servePost);
