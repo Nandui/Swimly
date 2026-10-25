@@ -30,7 +30,7 @@ export default async function CoreHome() {
     { show: canSee(session, "docs") && can(session, "docs.manage"), href: "/docs/admin", label: "Docs settings", icon: Files, description: "Document teams, templates and the risk matrix" },
     { show: canSee(session, "incidents") && can(session, "incidents.reports.signoff"), href: "/incidents/settings", label: "Incidents settings", icon: ShieldAlert, description: "Who gets requests to HR" },
   ].flatMap(({ show, ...m }) => (show ? [m] : []));
-  if (modules.length) groups.push({ label: "Modules", links: modules });
+  if (modules.length) groups.push({ label: "Apps", links: modules });
   if (groups.length === 0) redirect("/");
   return <ModuleStart id="admin" groups={groups} />;
 }

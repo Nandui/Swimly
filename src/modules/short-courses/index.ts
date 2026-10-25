@@ -1,4 +1,4 @@
-/** Short courses' public API (CLAUDE.md section 6): the only file other modules, Core and
+/** Short courses' public API (AGENTS.md, How apps talk): the only file other modules, Core and
  *  front may import. The status maps are here for Core's tone check; the Rota sees sessions
  *  through commitments (module.ts). */
 export {

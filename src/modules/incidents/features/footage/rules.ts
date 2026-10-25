@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-/** The pure rules for CCTV footage requests (docs/incidents.md, "CCTV
+/** The pure rules for CCTV footage requests ("CCTV
  *  footage"), kept apart from the database so they are tested on their own. */
 
 /** How long an emailed link works. Sending it again gives a new link for as long. */

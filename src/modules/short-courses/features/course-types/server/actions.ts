@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { MAX_SESSION_MINUTES, MAX_WEEKS, SHORT_COURSE_AREAS } from "@/modules/short-courses/shared/rules";
 import { refresh } from "@/modules/short-courses/shared/server";
 
-/** Writes for the course list (docs/short-courses.md): Manage keeps it. Every write is audited. */
+/** Writes for the course list: Manage keeps it. Every write is audited. */
 
 const typeSchema = z.object({
   name: z.string().trim().min(2, "Name the course.").max(80),

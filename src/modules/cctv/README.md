@@ -2,7 +2,7 @@
 
 **Purpose:** records every time CCTV footage is checked.
 
-The rules are in [docs/cctv.md](../../../docs/cctv.md). First module of the Managers group (ADR 0012).
+Its levels are in [docs/apps.md](../../../docs/apps.md).
 
 ## Features
 - `viewings` — record a viewing, the log, one entry and its notes (`/cctv`, `/cctv/new`, `/cctv/[id]`); the home card.
@@ -10,7 +10,7 @@ The rules are in [docs/cctv.md](../../../docs/cctv.md). First module of the Mana
 
 `shared/` holds the pure rules (`rules.ts`: reasons, the entry's checks, numbers) and the access check (`access.ts`).
 
-## Public API (index.ts)
+## Front door (index.ts)
 - `CCTV_REASON_META`, for Core's tone check.
 
 ## Data owned

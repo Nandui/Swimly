@@ -6,7 +6,7 @@ import { formatDate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { incidentNumber } from "@/modules/incidents/shared/types";
 
-/** The footage emails (docs/incidents.md, "CCTV footage"). The request goes
+/** The footage emails ("CCTV footage"). The request goes
  *  to whoever holds the footage, often outside the team, so it says what is
  *  needed and where to send it, and nothing about who was involved or what
  *  happened. Replies go to the person who asked, who is also copied in, so

@@ -7,7 +7,7 @@ import { lessonPlace } from "@/modules/training/shared/lessons";
 import { offlineLabel, offlineTime } from "@/modules/training/features/me/server/offline";
 import { lockedBecause, mine, type Db } from "@/modules/training/features/me/server/course";
 
-/** Hand in work (docs/training.md, e-learning phase 8): the learner's answer to
+/** Hand in work (e-learning phase 8): the learner's answer to
  *  a Hand in work lesson, sent from Turnfin Me. One a lesson; handing in again
  *  replaces it until a trainer accepts it. Only ever the signed-in person's own. */
 

@@ -7,7 +7,7 @@ import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
 
-/** The page states every module shares (DESIGN.md, "States"). A module's
+/** The page states every module shares. A module's
  *  `not-found.tsx` and `error.tsx` render these inside its frame; the root
  *  ones put the same content on the sign-in canvas (AuthFrame). */
 

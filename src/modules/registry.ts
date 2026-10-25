@@ -2,7 +2,7 @@ import { Settings, type LucideIcon } from "lucide-react";
 import { modules } from "@/app/modules";
 import type { PermissionKey } from "@/lib/staff/permissions";
 
-/** Every module Turnfin offers, each described once (docs/how-turnfin-works.md).
+/** Every module Turnfin offers, each described once (docs/apps.md).
  *
  *  A module's description says everything the rest of Turnfin needs: its name,
  *  where it opens, its levels and the permissions each level gives. Menus, the
@@ -21,7 +21,7 @@ export type ModuleContext = {
 
 /** Where a level applies. Swim school, Training and Rota work at the sites
  *  a person works at; HR "Their team" reaches the people they manage;
- *  everything else applies everywhere. See docs/how-turnfin-works.md. */
+ *  everything else applies everywhere. See docs/apps.md. */
 export type Reach = "sites" | "team" | "everywhere";
 
 /** One step on a module's ladder. Levels are cumulative: a level gives its

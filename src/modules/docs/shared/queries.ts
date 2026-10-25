@@ -27,7 +27,7 @@ export async function workspace(id: string): Promise<Workspace> {
     templates,
     matrix: matrix?.value || { configured: false, likelihood: [], severity: [], bands: [] },
     documents,
-    // A person's own required reading lives in Turnfin Me (the staff app), never on Work.
+    // A person's own required reading lives in Turnfin Me (the staff app), never in Turnfin.
     requirements: [],
     localMode: false,
     canReport: reportScope !== null,

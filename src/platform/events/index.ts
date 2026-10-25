@@ -1,4 +1,4 @@
-/** The in-process event bus (CLAUDE.md, section 6): a module announces that
+/** The in-process event bus (AGENTS.md, How apps talk): a module announces that
  *  something happened, and other modules react without importing it.
  *
  *  Each module declares its events in its own `events.ts` by adding to
@@ -11,7 +11,7 @@
  *  Rules: emit only after the database transaction commits; payloads carry ids
  *  and the little listeners need, never table rows; a failing listener is
  *  logged and never breaks the emitter or the other listeners. List every
- *  event in docs/architecture/events.md. The bus knows no module. */
+ *  event in docs/architecture.md. The bus knows no module. */
 
 // Modules add their events here by declaration merging.
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type

@@ -1,4 +1,4 @@
-/** Turnfin Me offline (docs/training.md, e-learning phase 9): lessons finished
+/** Turnfin Me offline (e-learning phase 9): lessons finished
  *  and work handed in with no signal reach Turnfin later, with the time they
  *  were done on the phone. Pure and client-safe. */
 

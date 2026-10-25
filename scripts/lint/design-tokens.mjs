@@ -1,4 +1,4 @@
-// The UI rules (CLAUDE.md, "UI rules", owner rules of 10 and 20 October 2026): screens
+// The UI rules (AGENTS.md, Screens, owner rules of 10 and 20 October 2026): screens
 // compose shadcn/ui and the app's theme. No literal colours (hex, rgb(), hsl(), oklch()…), no
 // one-off lengths, no Tailwind arbitrary values such as p-[13px], text-[#333] or
 // rounded-[var(--pc-radius-card)] (use the scale, a named theme utility, or a theme variable as
@@ -54,9 +54,9 @@ const noLiteralStyles = {
     docs: { description: "Use design tokens and shadcn components, never literal colours or one-off lengths." },
     schema: [],
     messages: {
-      colour: "Literal colour {{ value }}: use a colour token (ui- utilities or --pc-* variables). Ask Fernando before adding a token (CLAUDE.md, UI rule).",
-      arbitrary: "Arbitrary Tailwind value {{ value }}: use a Tailwind scale step, a named theme utility (src/app/shadcn.css) or a theme variable as (--name). Ask Fernando before adding a token (CLAUDE.md, UI rules).",
-      length: "One-off length {{ value }}: use a spacing or size token. Ask Fernando before adding a token (CLAUDE.md, UI rule).",
+      colour: "Literal colour {{ value }}: use a colour token (ui- utilities or --pc-* variables). Ask Fernando before adding a token (AGENTS.md, Screens).",
+      arbitrary: "Arbitrary Tailwind value {{ value }}: use a Tailwind scale step, a named theme utility (src/app/shadcn.css) or a theme variable as (--name). Ask Fernando before adding a token (AGENTS.md, Screens).",
+      length: "One-off length {{ value }}: use a spacing or size token. Ask Fernando before adding a token (AGENTS.md, Screens).",
     },
   },
   create(context) {
@@ -92,7 +92,7 @@ const noInlineStyles = {
     docs: { description: "No style props: use Tailwind classes, theme utilities or a shadcn component." },
     schema: [],
     messages: {
-      style: "No inline styles (CLAUDE.md, UI rules): use Tailwind classes and theme utilities. Sizes from data use the scale utilities in src/app/shadcn.css (w-37/100, col-start-12) or a shadcn component (Progress, Chart).",
+      style: "No inline styles (AGENTS.md, Screens): use Tailwind classes and theme utilities. Sizes from data use the scale utilities in src/app/shadcn.css (w-37/100, col-start-12) or a shadcn component (Progress, Chart).",
     },
   },
   create(context) {
@@ -109,7 +109,7 @@ const pageHeaderInShell = {
     docs: { description: "PageHeader is only ever the header of a PageShell." },
     schema: [],
     messages: {
-      outside: "PageHeader goes in its page's PageShell: <PageShell header={<PageHeader … />}> (CLAUDE.md, UI rules).",
+      outside: "PageHeader goes in its page's PageShell: <PageShell header={<PageHeader … />}> (AGENTS.md, Screens).",
     },
   },
   create(context) {
@@ -124,7 +124,7 @@ const pageHeaderInShell = {
   },
 };
 
-// Shared UI rules: primitives come from the local shadcn components, in Work, Turnfin Me and
+// Shared UI rules: primitives come from the local shadcn components, in Turnfin, Turnfin Me and
 // the Academy site alike.
 export const uiImports = {
   paths: [{ name: "radix-ui", message: "Use the local shadcn component so theme, touch sizes and accessibility stay consistent." }],

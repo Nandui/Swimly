@@ -12,7 +12,7 @@ import { requireTrainingActor } from "@/modules/training/shared/access";
 import { MAX_PATH_STEPS } from "@/modules/training/shared/on-the-job";
 import { refresh, text } from "@/modules/training/shared/writes";
 
-/** Learning paths (docs/training.md, e-learning phase 5): courses in order,
+/** Learning paths (e-learning phase 5): courses in order,
  *  each due some days after the person starts. Building one needs the Author
  *  level; putting people on one needs Assign training for them. Enrolling
  *  assigns every course they haven't finished; everything is audited. */

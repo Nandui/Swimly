@@ -2,7 +2,7 @@
 
 **Purpose:** gets purchase orders from approved suppliers raised, approved by the right people and numbered.
 
-The rules for the screens and approvals are in [docs/purchasing.md](../../../docs/purchasing.md).
+Its levels are in [docs/apps.md](../../../docs/apps.md).
 
 ## Features
 - `orders` — raise, change, send, approve or reject, cancel and print purchase orders, and email approved ones to the supplier after a test to yourself (`/purchasing`, `/purchasing/new`, `/purchasing/[id]`, `/purchasing/[id]/edit`, `/purchasing/[id]/email`), and the home-page counts.
@@ -11,11 +11,11 @@ The rules for the screens and approvals are in [docs/purchasing.md](../../../doc
 
 `shared/` holds what both features use: approval and money rules (`rules.ts`, pure, tested in `rules.test.ts`), the access check (`access.ts`), form helpers with page revalidation (`forms.ts`), whether emails to suppliers are on (`settings.ts`) and a supplier's picture or initials (`supplier-picture.tsx`, used by the supplier pages and the order form).
 
-## Public API (index.ts)
+## Front door (index.ts)
 - None. Nothing outside Purchasing calls into it; routes use the feature entries.
 
 ## Data owned
-Declared in `prisma/schema/purchasing.prisma` (table names kept, ADR 0002):
+Declared in `prisma/schema/purchasing.prisma` (table names kept):
 - `Supplier` — an approved supplier, and its picture (a small WebP kept on the row).
 - `PurchaseProduct` — a supplier's approved product and agreed price, and for retail products its brand and the sizes and colours it comes in.
 - `PurchaseApprovalRule` — a role that may approve up to an amount, for one supplier or all.
@@ -24,7 +24,6 @@ Declared in `prisma/schema/purchasing.prisma` (table names kept, ADR 0002):
 - `PurchaseOrderEmail` — every email of an approved order: to the supplier or a test to the sender, sent or failed.
 - `PurchasingSettings` — per organisation, whether approved orders may be emailed to suppliers (off until Manage turns it on), and who is copied on them.
 
-Purchasing also reads Core's `User`, `Club` and `StaffRole` directly (sites, the approver's role, role names). Moving those reads onto Core functions is phase 3 of [MIGRATION.md](../../../docs/architecture/MIGRATION.md).
 
 ## Events
 - Emits: none.

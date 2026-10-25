@@ -2,7 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 
 /** Whether approved orders may be emailed to suppliers in this organisation. Off until
- *  someone with Purchasing: Manage turns it on (docs/purchasing.md); tests to yourself
+ *  someone with Purchasing: Manage turns it on; tests to yourself
  *  are always allowed. */
 export async function supplierEmailsOn(orgId: string | null): Promise<boolean> {
   if (!orgId) return false;

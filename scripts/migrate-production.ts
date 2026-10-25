@@ -35,7 +35,7 @@ if (plan.migrate) {
     result = deploy();
   }
   if (!result.ok && !production && result.unreachable) {
-    console.warn("warn  The development database cannot be reached, so this preview builds without migrating it. Its pages will fail until the database is back: check the Neon branch the Preview DATABASE_URL points at (docs/database-operations.md).");
+    console.warn("warn  The development database cannot be reached, so this preview builds without migrating it. Its pages will fail until the database is back: check the Neon branch the Preview DATABASE_URL points at (docs/operations.md).");
   } else if (!result.ok) {
     process.exit(1);
   }

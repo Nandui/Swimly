@@ -26,7 +26,7 @@ export function CoreShell({ who, screens, children }: {
     })).filter((g) => g.links.length),
   ];
   return (
-    <ModuleShell module="Admin" id="core" current="admin" who={who} groups={groups} scopeNote="Shared by every module">
+    <ModuleShell module="Admin" id="core" current="admin" who={who} groups={groups} scopeNote="Shared by every app">
       {children}
     </ModuleShell>
   );

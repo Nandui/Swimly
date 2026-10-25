@@ -1,4 +1,4 @@
-/** Skills on the job (docs/training.md, e-learning phase 5): what a trainer
+/** Skills on the job (e-learning phase 5): what a trainer
  *  watches for at a practical sign-off, in-service hours against a target, and
  *  where someone is on a learning path. Pure, so pages, actions and tests agree. */
 

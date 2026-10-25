@@ -1,4 +1,4 @@
-/* Training's course builder and lesson text (docs/training.md, e-learning). Tokens come
+/* Training's course builder and lesson text (e-learning). Tokens come
    from src/app/theme/poolside.css; this file only arranges them. Turnfin Me draws the same
    lesson text with its own copy of .tf-lesson (apps/me/src/app/globals.css). */
 

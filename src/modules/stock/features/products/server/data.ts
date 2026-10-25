@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { BISHOPSTOWN_SHEET } from "@/modules/stock/features/products/server/sheet";
 import { requireStockActor } from "@/modules/stock/shared/access";
 
-/** The product list and its categories (docs/stock.md): one list for the organisation. Anyone with
+/** The product list and its categories: one list for the organisation. Anyone with
  *  Stock reads it; Manage keeps it. */
 
 export async function stockProducts() {

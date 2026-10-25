@@ -6,7 +6,7 @@ import { canManage, type Workspace } from '@/modules/docs/shared/types';
 import { Button } from '@/components/shadcn/button';
 import { ModuleShell } from '@/components/ui/module-shell';
 
-/** Docs in the shared module frame (DESIGN.md, "Poolside Clear v2"): its pages along the top,
+/** Docs in the shared module frame: its pages along the top,
  *  a search shortcut to the library in the tools, and the person's modules down the side. */
 export function Shell({
   workspace: w,

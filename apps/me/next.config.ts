@@ -5,7 +5,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Its own project root, not the Swimly repository around it: separate
-  // builds, and Work's dev server never triggers reloads here.
+  // builds, and Turnfin's dev server never triggers reloads here.
   turbopack: { root: process.cwd() },
   outputFileTracingRoot: process.cwd(),
   async headers() {

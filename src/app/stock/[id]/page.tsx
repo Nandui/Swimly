@@ -7,7 +7,7 @@ import { CountSheet, DeleteCount, STOCK_TAKE_META, stockTake } from "@/modules/s
 
 export const metadata: Metadata = { title: "Stock count" };
 
-/** One count and its sheet (docs/stock.md). Count counts and submits it while it is open; View
+/** One count and its sheet. Count counts and submits it while it is open; View
  *  reads it; Manage may delete it. */
 export default async function StockCountPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

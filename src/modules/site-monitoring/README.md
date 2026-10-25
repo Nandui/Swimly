@@ -2,13 +2,13 @@
 
 **Purpose:** shows managers what they must act on at their sites, raised automatically.
 
-The rules are in [docs/site-monitoring.md](../../../docs/site-monitoring.md).
+Its levels are in [docs/apps.md](../../../docs/apps.md).
 
 ## Features
 - `actions` — the actions list (`/site-monitoring`): open ones oldest first, the latest closed; closing with what was done and opening again; raising them from Tasks' event; the home count.
 - `workspace` — the frame, its one page list (`pages.ts`) and the starter page `/site-monitoring/overview`.
 
-## Public API (index.ts)
+## Front door (index.ts)
 - `MONITORING_STATUS_META` — the status tones, for Core's tone check.
 
 ## Data owned

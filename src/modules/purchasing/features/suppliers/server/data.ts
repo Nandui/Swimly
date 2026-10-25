@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { purchasingAccess, requirePurchasingActor } from "@/modules/purchasing/shared/access";
 import { supplierEmailSetting } from "@/modules/purchasing/shared/settings";
 
-/** Purchasing's supplier reads (docs/purchasing.md): suppliers and products belong to the organisation. */
+/** Purchasing's supplier reads: suppliers and products belong to the organisation. */
 
 /** Every approved supplier (archived last) with its products and approvers, and the rules for every supplier. */
 export async function suppliersPage() {

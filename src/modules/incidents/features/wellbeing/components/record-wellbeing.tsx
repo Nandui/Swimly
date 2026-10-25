@@ -16,7 +16,7 @@ import type { WellbeingLink } from "@/modules/incidents/features/wellbeing/serve
 
 const day = (iso: string) => formatDate(new Date(`${iso}T12:00:00Z`));
 
-/** The page HR's emailed link opens (docs/incidents.md, "Asking HR"): who it is
+/** The page HR's emailed link opens ("Asking HR"): who it is
  *  about and why, what happened when whoever asked chose to show it, what HR has
  *  recorded so far, and a form for what they did, when, and what happens next. */
 export function RecordWellbeing({ token, link }: { token: string; link: WellbeingLink }) {

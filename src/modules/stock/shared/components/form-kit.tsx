@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Tag } from "@/components/ui-kit/tag";
 import { categoryTone } from "@/modules/stock/shared/rules";
 
-/** What Stock's screens share (docs/stock.md). Every dialog is a FormDialog, so a refusal keeps
+/** What Stock's screens share. Every dialog is a FormDialog, so a refusal keeps
  *  the typing and shows the sentence beside the fields. */
 
 export const THEME = "turnfin-module";

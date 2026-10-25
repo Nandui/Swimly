@@ -5,7 +5,7 @@ import { expandPermissions } from "@/lib/staff/permissions";
 import type { HomeItem, HomeViewer } from "@/modules/contributions";
 import { inSites } from "@/modules/stock/shared/reads";
 
-/** Stock on the home page and its starter page (docs/stock.md): counts still open at the sites
+/** Stock on the home page and its starter page: counts still open at the sites
  *  where the person counts, so a count started yesterday is not forgotten. */
 export async function stockHomeItems(viewer: HomeViewer): Promise<HomeItem[]> {
   const held = expandPermissions(viewer.anywhere, { superadmin: viewer.isSuperadmin });

@@ -9,7 +9,7 @@ import './lesson.css';
 
 export const metadata: Metadata = { title: { default: "Training", template: TITLE_TEMPLATE } };
 
-/** The Training Manage surface. Opens for anyone with the Training screen and
+/** Training's managing side. Opens for anyone with the Training screen and
  *  a Training capability at any scope (a department or team role counts);
  *  every page limits records to the people that capability covers. */
 export default async function TrainingLayout({ children }: { children: ReactNode }) {

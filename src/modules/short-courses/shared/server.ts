@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { currentActor, mayFor } from "@/lib/policy/session";
 import type { PermissionKey } from "@/lib/staff/permissions";
 
-/** What the writes share (docs/short-courses.md): access at a course's site, the course itself,
+/** What the writes share: access at a course's site, the course itself,
  *  form parsing and the pages to refresh after a change. */
 
 export const optionalDate = z.string().trim().refine((v) => !v || isDateOnly(v), "Use a date like 2026-10-23.").default("");

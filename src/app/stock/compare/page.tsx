@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "Compare stock counts" };
 
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 
-/** Two submitted counts at a site, side by side (docs/stock.md). Going down is selling, so it stays
+/** Two submitted counts at a site, side by side. Going down is selling, so it stays
  *  quiet; more than before and not counted are what get flagged. Products not counted on either
  *  count are listed apart and left out of the totals. */
 export default async function StockComparePage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {

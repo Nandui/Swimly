@@ -557,7 +557,7 @@ model LevelCompletion {
 /// Deliberately **not** a `Course`. A course is weekly and has no date; an
 /// assessment happens once. Modelling it as a course would put a repeating
 /// class in the timetable forever, and bolting dates onto `Course` would
-/// rebuild class sessions by accident — the seam DESIGN.md defers. This is
+/// rebuild class sessions by accident. This is
 /// the one place the app holds a dated event, and it is scoped to exactly
 /// this purpose.
 model AssessmentSession {

@@ -13,7 +13,7 @@ import { saveCountLine } from "@/modules/stock/features/counts/server/actions";
 import { CategoryTag } from "@/modules/stock/shared/components/form-kit";
 import { groupByCategory, parseCount, STOCK_CHANGE_META, type CompareProduct } from "@/modules/stock/shared/rules";
 
-/** The count sheet (docs/stock.md), used walking the stockroom with a phone or tablet. It saves as
+/** The count sheet, used walking the stockroom with a phone or tablet. It saves as
  *  the person types, a moment after they stop or when they leave the box, and keeps its search and
  *  filter in the page rather than the address, so a weak signal never costs a round trip.
  *

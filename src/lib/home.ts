@@ -9,7 +9,7 @@ import { homeCardItems } from "@/modules/server";
 import type { Session } from "next-auth";
 import type { HomeViewer } from "@/modules/contributions";
 
-/** Everything Home shows (docs/how-turnfin-works.md): the role's name, the modules it has,
+/** Everything Home shows (docs/architecture.md): the role's name, the modules it has,
  *  and each module's items for this person, which Home counts. */
 export async function loadHome() {
   const session = await pageSession();

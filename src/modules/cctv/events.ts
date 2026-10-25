@@ -1,2 +1,2 @@
-/** Events the CCTV log emits (CLAUDE.md section 6, docs/architecture/events.md). None yet. */
+/** Events the CCTV log emits (AGENTS.md, How apps talk, docs/architecture.md). None yet. */
 export {};

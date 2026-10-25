@@ -6,7 +6,7 @@ import { requireTrainingActor } from "@/modules/training/shared/access";
 import { scopedUserIds } from "@/modules/training/shared/data";
 import { lessonPlace, readOutline } from "@/modules/training/shared/lessons";
 
-/** Work handed in on Hand in work lessons (docs/training.md, e-learning phase 8)
+/** Work handed in on Hand in work lessons (e-learning phase 8)
  *  that waits for a trainer: for people in the trainer's sign-off reach, never
  *  their own. Shown on the Sign-off page. */
 

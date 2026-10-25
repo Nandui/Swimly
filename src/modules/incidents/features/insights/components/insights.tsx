@@ -48,7 +48,7 @@ function Figure({ value, label, hint }: { value: string | number; label: string;
   );
 }
 
-/** Trends at the sites this person covers (docs/incidents.md, "Insights"). */
+/** Trends at the sites this person covers ("Insights"). */
 export function Insights({ data }: { data: IncidentInsights }) {
   const { insights: i, months, site, sites } = data;
   const query = (change: { months?: number; site?: string | null }) => {

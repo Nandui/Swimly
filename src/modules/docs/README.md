@@ -2,7 +2,7 @@
 
 **Purpose:** keeps the centre's controlled documents written, approved, current and read by the right people.
 
-Docs keeps its content in its own database (`DOCS_DATABASE_URL`, migrations in `docs-database/`); staff sign-in and grants come from Turnfin. See [docs/turnfin-docs.md](../../../docs/turnfin-docs.md).
+Docs keeps its content in its own database (`DOCS_DATABASE_URL`, migrations in `docs-database/`); staff sign-in and grants come from Turnfin. Its levels are in [docs/apps.md](../../../docs/apps.md).
 
 ## Features
 - `home` — the Docs overview: what needs this person's attention (`/docs`).
@@ -20,7 +20,7 @@ Docs keeps its content in its own database (`DOCS_DATABASE_URL`, migrations in `
 
 `shared/` holds what two or more features use: the document service and its rules (`domain.ts`), the database and its runtime connection, types and content checks, the access check (`auth.ts`), workspace reads (`queries.ts`), report scope, the server actions every screen uses (`actions.ts`, moved from `src/app/docs/actions.ts`), and the shared components (rich editor, document body, document list, Docs UI pieces).
 
-## Public API (index.ts)
+## Front door (index.ts)
 - `docsReading()` — a person's required reading, one version of it, and acknowledging it; null while the Docs database is not configured. For Turnfin Me's staff API.
 - `readingReminderItems(on)` — overdue required reading, for Turnfin Me's reminder digest.
 

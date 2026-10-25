@@ -3,13 +3,13 @@ import type { HelpArticle } from "./types";
 export const START_GUIDES: HelpArticle[] = [
   {
     slug: "get-started", title: "Find your way around the app", category: "start", scopes: ["desk"],
-    summary: "Know where to find each module, its pages, the site picker and your account.",
-    keywords: ["manual", "training", "beginner", "reception", "dashboard", "overview", "navigation", "menu", "page bar", "module", "site", "pool"],
-    before: ["Sign in with your staff account. Your role decides which modules, pages and actions you can use."],
+    summary: "Know where to find each app, its pages, the site picker and your account.",
+    keywords: ["manual", "training", "beginner", "reception", "dashboard", "overview", "navigation", "menu", "page bar", "app", "site", "pool"],
+    before: ["Sign in with your staff account. Your role decides which apps, pages and actions you can use."],
     steps: [
       { title: "Check the working site", text: "The site picker is in the tools bar at the top right, beside the swimmer search and your name. On a phone it is the building button. Check it before using Schedule, Duty manager or Analytics." },
-      { title: "Move between modules", text: "Your modules are in the bar down the left: Home, Swim school, Refunds, Docs, Training, Rota, HR or Admin, depending on your role. On phones and touch screens they are in the bar along the bottom, with any others under More." },
-      { title: "Plan today’s work", text: "Each module’s pages are in the page bar at the top; pages that do not fit are under More. In Swim school, Schedule shows classes and assessments for one day, and Duty manager is today’s operational list." },
+      { title: "Move between apps", text: "Your apps are in the bar down the left: Home, Swim school, Refunds, Docs, Training, Rota, HR or Admin, depending on your role. On phones and touch screens they are in the bar along the bottom, with any others under More." },
+      { title: "Plan today’s work", text: "Each app’s pages are in the page bar at the top; pages that do not fit are under More. In Swim school, Schedule shows classes and assessments for one day, and Duty manager is today’s operational list." },
       { title: "Find your account", text: "Select your name at the top right to open the account menu. It holds Appearance, Manage account and Sign out." },
       { title: "Keep this guide beside your work", text: "Help opens in a new tab from the bottom of the left bar (under More on phones), so you can read a guide while the form you are working on stays open." },
     ],
@@ -63,11 +63,11 @@ export const START_GUIDES: HelpArticle[] = [
   {
     slug: "missing-access", title: "A screen or button is missing", category: "support", scopes: ["desk", "instructor"],
     summary: "Understand access restrictions, read-only records and unavailable actions.", keywords: ["permission", "role", "missing", "button", "access", "404", "not found", "locked", "disabled"],
-    before: ["Your role holds one level in each module. A lower level can let you see a page without changing its records."],
+    before: ["Your role holds one level in each app. A lower level can let you see a page without changing its records."],
     steps: [
       { title: "Check the record’s state", text: "Archived classes, inactive swimmers, cancelled sessions and completed levels can limit the actions available. Read any message beside the record." },
       { title: "Check the workspace", text: "The pool deck is a separate teaching workspace. It does not include desk administration or swimmer profiles. Another instructor can start a class you also teach; you can both open and help with it." },
-      { title: "Ask for the access needed for your task", text: "Tell your manager or an administrator which page you need and what you are trying to do. They can check the level your role has in that module." },
+      { title: "Ask for the access needed for your task", text: "Tell your manager or an administrator which page you need and what you are trying to do. They can check the level your role has in that app." },
       { title: "Reload after access is updated", text: "Refresh the page and try the task again. If you are signed out, sign back in with your own account." },
     ], result: "You can distinguish a record restriction from missing access and give the administrator a specific request.",
     troubleshooting: [{ question: "A bookmark says the page was not found.", answer: "The record may no longer be available, or your current account may not have access. Start from the app’s menu and ask your manager if the expected screen is absent." }],

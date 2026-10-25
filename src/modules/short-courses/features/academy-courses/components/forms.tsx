@@ -20,7 +20,7 @@ import { PersonSelect, amount, text, THEME, useRefresh, type Option, type Person
 import { SwimmerCard, SwimmerLinkDialog, type SwimmerCardData } from "@/modules/short-courses/shared/components/swimmer-card";
 import { readSwimmerChoice, SwimmerPicker } from "@/modules/short-courses/shared/components/swimmer-picker";
 
-/** The Academy's course dialogs (docs/academy.md): putting a course on, its sessions,
+/** The Academy's course dialogs: putting a course on, its sessions,
  *  candidates, pre-course checks, registers and results. */
 
 /* ---------- Courses ---------- */

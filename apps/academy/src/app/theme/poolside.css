@@ -1,12 +1,12 @@
-/* Poolside Clear v2, the Turnfin design for the whole staff app (owner decisions, September and
-   October 2026): Plus Jakarta Sans, one calm blue for action and selection, navy-tinted
+/* Poolside Clear v2, Turnfin's pre-2.0 theme, kept until the 2.0 design replaces it (DESIGN.md):
+   Plus Jakarta Sans, one calm blue for action and selection, navy-tinted
    neutrals, five status colours of matched strength, soft single-hue gradients only on time
    blocks, white 24px panels on a cool canvas inside a rounded frame, and a deep navy dark mode.
    Tokens and the system rules (type, controls, fields, badges, alerts, dialogs, focus) are
    scoped to .turnfin-app, which the root layout puts on <body>, so every page and every
    portalled dialog gets them. Rules for the Docs/Refunds shell and their pages stay scoped to
    .turnfin-docs. It re-points the shared --ui-* tokens, so shadcn primitives follow without
-   per-page work. The approved mockups and component sheet: DESIGN.md, "Poolside Clear v2". */
+   per-page work. */
 /* Printed pages use the light values of every token. */
 @media print { :root { color-scheme: light !important; } }
 

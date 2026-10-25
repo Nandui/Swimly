@@ -1,7 +1,7 @@
 import { Ban, CircleCheck, CircleDashed, CircleX, Clock3, FlaskConical, MailCheck, MailX, Power, PowerOff } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 
-/** Purchasing's rules, pure so they are tested on their own (docs/purchasing.md). */
+/** Purchasing's rules, pure so they are tested on their own. */
 
 /** Where an order is. Tones come from here, never a call site. */
 export const PO_STATUS_META = {

@@ -9,7 +9,7 @@ import { incidentCategories, incidentKinds, incidentNumber, type IncidentCategor
 import { siteName } from "@/lib/directory";
 import { followUpLabels, HR_REQUEST_KINDS, hrRequestKind, linkProblem, tokenShape, updateProblem, wellbeingExpiry, wellbeingUpdateSchema } from "@/modules/incidents/features/wellbeing/rules";
 
-/** The emailed link's side (docs/incidents.md, "Asking HR"): no sign-in, only
+/** The emailed link's side ("Asking HR"): no sign-in, only
  *  the link's secret, which opens this one request and nothing else. The page
  *  shows who it is about, why, who asked, and what HR has recorded so far
  *  through this link. The report itself only when whoever asked let HR know

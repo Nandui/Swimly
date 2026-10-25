@@ -33,7 +33,7 @@ export type InvestigationProps = {
   canWork: boolean; needsRootCause: boolean;
 };
 
-/** The investigation (docs/incidents.md, phase 2): statements in people's own
+/** The investigation (phase 2): statements in people's own
  *  words, five whys to the root cause, and the actions that fix it. Shown to
  *  those who triage at the site; editable while it is under investigation. */
 export function Investigation(p: InvestigationProps) {

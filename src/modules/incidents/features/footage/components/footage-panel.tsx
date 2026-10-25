@@ -29,7 +29,7 @@ const REQUEST_STATES = {
 
 type Request = FootageOnReport["requests"][number];
 
-/** CCTV footage on a report (docs/incidents.md, "CCTV footage"): ask whoever
+/** CCTV footage on a report ("CCTV footage"): ask whoever
  *  holds it, by email, for a link that uploads straight to this report; the
  *  videos then play here. For those who triage at the site only. */
 export function FootagePanel({ reportId, data }: { reportId: string; data: FootageOnReport }) {

@@ -2,8 +2,7 @@
 
 **Purpose:** counts the stock on the shelf at each site.
 
-The rules for counting, comparing and the product list are in [docs/stock.md](../../../docs/stock.md).
-Ported from Stockly (ADR 0010).
+Its levels are in [docs/apps.md](../../../docs/apps.md).
 
 ## Features
 - `counts` — start a count at a site, count on the sheet, submit, discard or delete it (`/stock`, `/stock/[id]`); the home card.
@@ -13,7 +12,7 @@ Ported from Stockly (ADR 0010).
 
 `shared/` holds what two or more features use: the pure rules (`rules.ts`: status maps, category tones, comparing counts), the access check (`access.ts`), access at a count's site and page refreshes for writes (`server.ts`), site scoping for reads (`reads.ts`) and the dialogs' common bits (`components/form-kit.tsx`).
 
-## Public API (index.ts)
+## Front door (index.ts)
 - The status maps (`STOCK_TAKE_META`, `STOCK_CHANGE_META`, `STOCK_CATEGORY_TONE_META`), for Core's tone check.
 
 ## Data owned

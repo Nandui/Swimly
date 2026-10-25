@@ -7,7 +7,7 @@ import { parseLegendList, placesToConfirm } from "@/modules/activities/features/
 
 /** Confirms Legend agreements from a list exported from Legend, at every
  *  site: the operator's version of "Upload Legend list" on the Legend
- *  agreements page (docs/legend-agreements.md), for when nobody can sign in
+ *  agreements page, for when nobody can sign in
  *  to do it there. Every place still to check whose member number is on the
  *  list is confirmed, recorded under the named staff account.
  *

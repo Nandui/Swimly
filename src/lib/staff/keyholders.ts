@@ -51,7 +51,7 @@ async function simulatedHolders(sim: Simulation, db: Db) {
     if (sim.kind === "deactivate" && user.id === sim.userId) return [];
     const roleId =
       sim.kind === "userRole" && user.id === sim.userId ? sim.roleId : user.staffRoleId;
-    // One role each (docs/how-turnfin-works.md).
+    // One role each (docs/architecture.md).
     const held = roleId ? accessByRole.get(roleId) : undefined;
     return held ? [held] : [];
   });

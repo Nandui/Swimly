@@ -11,7 +11,7 @@ import type { DocumentContent } from "@/modules/docs/shared/types";
 /** The staff API behind Turnfin Me, against real (in-memory) Postgres for the
  *  main, HR and Docs databases. It signs staff in by email code only, returns
  *  only the caller's own records through allowlisted responses, keeps HR
- *  behind a fresh code, and changes nothing until reviewers act on Work. */
+ *  behind a fresh code, and changes nothing until reviewers act in Turnfin. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let hr: Awaited<ReturnType<typeof createHrTestDatabase>>;
 let docs: Awaited<ReturnType<typeof createDocsTestDatabase>>;
@@ -158,7 +158,7 @@ test("HR needs a fresh code; only what is shared appears; the person acknowledge
   assert.ok((await hr.db.query("SELECT 1 FROM access_events WHERE actor_id='riley'")).length >= 1, "reading your own HR record is logged");
 });
 
-test("details changes and certificates change nothing until reviewed on Work", async () => {
+test("details changes and certificates change nothing until reviewed in Turnfin", async () => {
   assert.equal((await call("me", "PATCH", { phone: "111 222" })).status, 201);
   assert.equal((await fixture.prisma.user.findUniqueOrThrow({ where: { id: "riley" } })).phone, "000 000", "unchanged until applied");
   assert.equal((await call("me", "PATCH", { phone: "333" })).status, 409, "one request at a time");

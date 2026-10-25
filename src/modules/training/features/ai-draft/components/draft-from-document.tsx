@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Notice } from "@/components/ui-kit/notice";
 import { THEME } from "@/modules/training/shared/components/dialog-kit";
 
-/** "Draft from a document" beside Start from a template (docs/training.md, AI
+/** "Draft from a document" beside Start from a template (AI
  *  drafting): an SOP, policy or handbook page goes to the AI, and a course
  *  comes back unpublished for an author to check in the builder. */
 export function DraftFromDocument({ enabled }: { enabled: boolean }) {

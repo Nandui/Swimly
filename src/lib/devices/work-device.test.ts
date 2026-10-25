@@ -3,7 +3,7 @@ import { after, before, test } from "node:test";
 import { isolatedPrisma } from "@/test/pglite-prisma";
 import { serverModule } from "@/test/server-module";
 
-/** Work on work PCs: who may sign in to Work away from a registered device. */
+/** Work on work PCs: who may sign in to Turnfin away from a registered device. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let rule: typeof import("./work-device");
 const ORG = "org_leisureworld";

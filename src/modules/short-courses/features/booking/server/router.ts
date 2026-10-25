@@ -1,7 +1,7 @@
 import { book, course, courses, logout, myBookings, requestCode, verifyCode } from "@/modules/short-courses/features/booking/server/api";
 import { AcademyApiError, academyResponse, idSchema, json, notFound, parseInput } from "@/modules/short-courses/features/booking/server/http";
 
-/** /api/academy/v1: the only way the booking site reaches Turnfin. See docs/academy.md.
+/** /api/academy/v1: the only way the booking site reaches Turnfin. See docs/architecture.md, Connected products.
  *
  *  GET  courses               the courses open online, from every module
  *  GET  courses/{id}          one of them

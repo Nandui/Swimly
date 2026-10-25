@@ -6,7 +6,7 @@ import { formatTimeRange, plural } from "@/lib/format";
 import { HOME_ITEM_META, HOME_SESSION_META } from "@/lib/home-meta";
 import type { HomeIcon, HomeItem, HomeSession } from "@/modules/contributions";
 
-/** The pieces the home page and every module overview share (DESIGN.md, "Poolside Clear v2"),
+/** The pieces the home page and every module overview share,
  *  so a figure, a queue, a quick action or the day's timeline looks the same wherever it
  *  appears. Each item carries the icon of the module it came from. */
 export type Placed = HomeItem & { moduleIcon: LucideIcon; key: string };

@@ -1,7 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { addCourseFile, MAX_FILE_BYTES, TrainingFileError } from "@/modules/training/features/builder";
 
-/** Adds an image or PDF to a course (docs/training.md). Same-origin only; the
+/** Adds an image or PDF to a course. Same-origin only; the
  *  body is read as a stream and refused past the size cap. */
 export async function POST(request: Request) {
   try {

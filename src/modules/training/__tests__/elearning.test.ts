@@ -5,7 +5,7 @@ import { serverModule } from "@/test/server-module";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import { cleanDoc, lessonPlace, plainTextDoc, publishProblems, readOutline, videoFor, type Outline } from "../shared/lessons";
 
-/** E-learning (docs/training.md, phase 1) against a real in-memory Postgres:
+/** E-learning (phase 1) against a real in-memory Postgres:
  *  authors build and publish versions, learners take the published version
  *  lesson by lesson, finishing needs every lesson, and people part-way
  *  through keep the version they started. */

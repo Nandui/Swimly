@@ -20,7 +20,7 @@ const MODES = [
  *  What's new (the version and release notes) and Sign out (V2Home-menu). Appearance lives here, with the account, not in the
  *  navigation; Help sits in the rail, the phone bar's More and the deck bar.
  *  The pool deck reuses it without Manage account or What's new, its only desk links
- *  (docs/instructor.md). Role,
+ *. Role,
  *  site and signing out come from the root layout through the frame context
  *  (useFrame), so no shell passes them. Appearance is menu radio items, not the ThemeToggle radio
  *  group, because a menu cancels Tab: arrows must reach every choice. They

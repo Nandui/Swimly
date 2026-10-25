@@ -25,7 +25,7 @@ async function call(path: string, body: unknown) {
   return result;
 }
 
-/** The page the emailed link opens (docs/incidents.md, "CCTV footage"): what
+/** The page the emailed link opens ("CCTV footage"): what
  *  was asked for, a name, the videos, each sent straight to the store with its
  *  progress, and what has arrived so far. Nothing else of the report. */
 export function UploadFootage({ token, link }: { token: string; link: FootageLink }) {

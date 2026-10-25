@@ -9,7 +9,7 @@ import type { IncidentsActor } from "@/modules/incidents/shared/types";
 import { followUpLabels, hrRequestKind, wellbeingExpiry, wellbeingRequestSchema, wellbeingState, type WellbeingRequestInput } from "@/modules/incidents/features/wellbeing/rules";
 import { wellbeingCopies, wellbeingRecipients } from "@/modules/incidents/features/wellbeing/server/settings";
 
-/** Asking HR, the staff side (docs/incidents.md, "Asking HR"). Whoever triages
+/** Asking HR, the staff side ("Asking HR"). Whoever triages
  *  reports at the site asks HR to check on someone, or lets HR know a staff
  *  member was in the incident, while the report is open, as with CCTV footage. Not on your own report, unless you hold
  *  Manage. Those who triage at the site see that a check was asked and how it

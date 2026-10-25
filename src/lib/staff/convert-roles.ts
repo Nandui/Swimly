@@ -14,7 +14,7 @@ export type RoleConversion = {
 };
 
 /** Converts every role that still holds screens and permissions into levels
- *  (docs/how-turnfin-works.md). For each module it takes the lowest level that
+ *  (docs/apps.md). For each module it takes the lowest level that
  *  covers everything the role held there. A role that would lose anything is
  *  never written; one that would gain is written only with `allowGains`, after
  *  the owner has reviewed the dry run. */

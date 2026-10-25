@@ -13,7 +13,7 @@ import { asDefinition, isMine, siteSettings } from "@/modules/tasks/shared/data"
 import { completionProblems, dayIn, exceptions, outOfRange, type TaskRecord } from "@/modules/tasks/shared/rules";
 import { allowedAt, json, loadTask, makeTaskNow, refresh } from "@/modules/tasks/shared/writes";
 
-/** Tasks' writes (docs/tasks.md). Doing a task needs `tasks.complete` at its
+/** Tasks' writes. Doing a task needs `tasks.complete` at its
  *  site and, when it is aimed at roles, one of them (reviewers may always step
  *  in); approving, reopening, not applicable and resolving actions need
  *  `tasks.review` there, and nobody approves their own; templates need

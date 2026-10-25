@@ -1,5 +1,5 @@
 /** The course builder: a course's sections and lessons, its files, preview and
- *  publishing (docs/training.md, e-learning phase 1). Entry for the module and its routes. */
+ *  publishing (e-learning phase 1). Entry for the module and its routes. */
 export { CourseBuilder } from "@/modules/training/features/builder/components/course-builder";
 export { DuplicateCourse, PublishCourse, StartFromTemplate } from "@/modules/training/features/builder/components/library";
 export { CourseFeedback } from "@/modules/training/features/builder/components/feedback";
