@@ -11,7 +11,7 @@ Every doc, once. Each fact lives in one place and the others link to it. Add a n
 | [roadmap.md](roadmap.md) | the 2.0 steps in order, each with "done when"; the owner's open decisions | choosing or planning work |
 | [operations.md](operations.md) | environments, running it, migrations, scheduled jobs, every setting, record management, production scripts | databases, deploys, settings |
 | [decisions.md](decisions.md) | the decisions 2.0 stands on, and how to add one | before changing something fundamental |
-| [../DESIGN.md](../DESIGN.md) | the 2.0 design: its status (open) and how it is decided | before any visual change |
+| [../DESIGN.md](../DESIGN.md) | the 2.0 design, Turnfin Glass: principles, tokens, frame, components, motion, states, forms, accessibility, how it is built, the screen checklist | before any visual change |
 | [parent-api.openapi.json](parent-api.openapi.json) | the parent app's API contract | changing `/api/parent/v1` |
 | [../CHANGELOG.md](../CHANGELOG.md) | what changed for staff, release by release (shown at `/whats-new`) | shipping something staff will notice |
 

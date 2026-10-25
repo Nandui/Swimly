@@ -8,7 +8,7 @@ Turnfin is the staff product for LeisureWorld's leisure centres in Cork. Recepti
 
 Turnfin 2.0 is a **platform of apps**: one product, one sign-in and one set of records, with each area of the business (Swim school, Rota, HR, Incidents, Purchasing and whatever comes next) built as an app on a shared platform. An app can grow as big as a product another company sells on its own and still never break the others.
 
-2.0 also brings a **new look and feel**. It is being designed now; [DESIGN.md](DESIGN.md) says how it is decided and what holds until then.
+2.0 also brings a **new look and feel**, Turnfin Glass, approved on 25 October 2026 and written in [DESIGN.md](DESIGN.md).
 
 The repository is named Swimly. That is a working name only; never show it to staff.
 
