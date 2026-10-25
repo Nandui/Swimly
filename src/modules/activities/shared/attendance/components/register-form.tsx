@@ -4,33 +4,21 @@ import { MEDICAL_STATUS_META, ageLabel } from "@/modules/activities/shared/stude
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import {
-  Check,
-  CheckCheck,
-  ChevronDown,
-  ChevronRight,
-  HeartPulse,
-} from "lucide-react";
+import { Check, CheckCheck, ChevronRight, Clock3, HeartPulse, X } from "lucide-react";
 import { Avatar, AvatarFallback, initials } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/shadcn/collapsible";
 import { Label } from "@/components/shadcn/label";
 import { Textarea } from "@/components/shadcn/textarea";
-import { MarkChoices } from "@/modules/activities/shared/instructor/components/teaching-ui";
+import { Inspector } from "@/components/ui-kit/inspector";
 import { Notice } from "@/components/ui-kit/notice";
+import { ProgressRing } from "@/components/ui-kit/progress-ring";
 import type { AttendanceStatus } from "@/generated/prisma/client";
 import { markRegister } from "@/modules/activities/shared/attendance/actions/register";
-import {
-  ATTENDANCE_ORDER,
-  ATTENDANCE_STATUS_META,
-} from "@/modules/activities/shared/attendance/constants";
+import { ATTENDANCE_STATUS_META } from "@/modules/activities/shared/attendance/constants";
 import type { RegisterLine } from "@/modules/activities/shared/attendance/data/register";
-import { parseAttendanceDraft } from "@/modules/activities/shared/attendance/draft";
+import { parseAttendanceDraft, type DraftMark } from "@/modules/activities/shared/attendance/draft";
+import { nextMark, registerCount, type Marking } from "@/modules/activities/shared/attendance/marking";
 import {
   SAVE_TIMEOUT_MS,
   SAVE_UNCONFIRMED_MESSAGE,
@@ -63,10 +51,20 @@ export function SaveBar({
   );
 }
 
-type Mark = { status: AttendanceStatus; note: string };
+type Mark = { status: Marking; note: string };
+
+/** The symbol inside a swimmer's DoneMark: a tick for present, a clock for late, a cross for absent. */
+const MARK_ICON = { PRESENT: Check, LATE: Clock3, ABSENT: X } as const;
 
 function storageKey(courseId: string, date: string) {
   return `swimly:register:${courseId}:${date}`;
+}
+
+/** Only the swimmers someone has marked: what a draft keeps and a save sends. */
+function markedOnly(marks: Map<string, Mark>) {
+  const out = new Map<string, DraftMark>();
+  for (const [studentId, mark] of marks) if (mark.status) out.set(studentId, { status: mark.status, note: mark.note });
+  return out;
 }
 
 export function RegisterForm(
@@ -80,6 +78,13 @@ export function RegisterForm(
   );
 }
 
+/** The register, as the approved Turnfin Glass canvas draws it (DESIGN.md, The pool deck): a
+ *  green ring with how many are here, how the marks stand and "All here"; then each swimmer as a
+ *  64px row that is one target: one tap marks them here, a second away, a third late, always with
+ *  the word beside the mark. A swimmer nobody has marked yet stays unmarked, and the save button
+ *  reads "4 still to mark" until everyone is. Medical notes stay off the list: a row only says a
+ *  swimmer has some, and the notes this person may read open together from the button above it.
+ *  The marks are mirrored on the device until they are saved. */
 function RegisterFormState({
   courseId,
   date,
@@ -107,7 +112,7 @@ function RegisterFormState({
     const map = new Map<string, Mark>();
     for (const line of lines) {
       map.set(line.studentId, {
-        status: line.status ?? "ABSENT",
+        status: line.status ?? null,
         note: line.note ?? "",
       });
     }
@@ -127,6 +132,7 @@ function RegisterFormState({
     revision,
   );
   const [conflict, setConflict] = React.useState<SavedRegister | null>(null);
+  const [medicalOpen, setMedicalOpen] = React.useState(false);
 
   const key = storageKey(courseId, date);
 
@@ -185,7 +191,7 @@ function RegisterFormState({
         key,
         JSON.stringify({
           version: 2,
-          marks: Object.fromEntries(next),
+          marks: Object.fromEntries(markedOnly(next)),
           note: nextNote,
           revision: nextRevision,
         }),
@@ -229,7 +235,7 @@ function RegisterFormState({
             date,
             teaching,
             revision: expectedRevision,
-            marks: [...marks.entries()].map(([studentId, mark]) => ({
+            marks: [...markedOnly(marks).entries()].map(([studentId, mark]) => ({
               studentId,
               status: mark.status,
               note: mark.note || undefined,
@@ -249,7 +255,7 @@ function RegisterFormState({
         } catch {
           setStorageUnavailable(true);
         }
-        toast.success("Attendance saved");
+        toast.success("Register saved");
         startTransition(() => {
           setError(null);
           setDirty(false);
@@ -272,7 +278,7 @@ function RegisterFormState({
       new Map(
         lines.map((line) => [
           line.studentId,
-          conflict.marks[line.studentId] ?? { status: "ABSENT", note: "" },
+          conflict.marks[line.studentId] ?? { status: null, note: "" },
         ]),
       ),
     );
@@ -290,91 +296,90 @@ function RegisterFormState({
     router.refresh();
   }
 
-  const counts = ATTENDANCE_ORDER.map((status) => ({
-    status,
-    count: [...marks.values()].filter((mark) => mark.status === status).length,
-  })).filter((entry) => entry.count > 0);
+  const count = registerCount([...marks.values()].map((mark) => mark.status));
+  const tally = (["PRESENT", "LATE", "ABSENT"] as const)
+    .map((status) => ({ status, n: [...marks.values()].filter((mark) => mark.status === status).length }))
+    .filter((entry) => entry.n > 0)
+    .map((entry) => `${entry.n} ${ATTENDANCE_STATUS_META[entry.status].label.toLowerCase()}`);
+  const medical = lines.filter((line) => line.medicalNotes);
+  const saved = !dirty && lines.length > 0 && lines.every((line) => line.status !== null);
+  const saveLabel = count.toMark
+    ? `${count.toMark} still to mark`
+    : continueHref
+      ? "Save and continue"
+      : saved
+        ? "Saved"
+        : "Save register";
 
   return (
     <>
-    <section className="pc-panel" aria-label="Attendance">
-      <div className="pc-panel-head">
-        <p className="font-semibold" aria-live="polite">
-          {counts
-            .map(
-              (entry) =>
-                entry.count +
-                " " +
-                ATTENDANCE_STATUS_META[entry.status].label.toLowerCase(),
-            )
-            .join(" · ")}
-        </p>
+    <section className="flex min-w-0 flex-col gap-(--space-5)" aria-labelledby="register-h">
+      <div className="pc-panel reg-head">
+        <ProgressRing value={count.here} max={count.total} label={`${count.here} of ${count.total} swimmers here`}>
+          <span className="reg-ring-n">{count.here}</span>
+          <span className="reg-ring-of">of {count.total} here</span>
+        </ProgressRing>
+        <div className="reg-head-body">
+          <h2 id="register-h">Register</h2>
+          <p className="font-semibold" aria-live="polite">{tally.length ? tally.join(" · ") : "Nobody marked yet"}</p>
+          <p className="text-footnote text-(--label-2)">
+            {readOnly ? "This register is read only." : "Tap a swimmer once for here, twice for away, three times for late."}
+          </p>
+        </div>
         {!readOnly ? (
-          <Button
-            variant="outline"
-            onClick={() => setAll("PRESENT")}
-            disabled={pending}
-          >
+          <Button variant="outline" onClick={() => setAll("PRESENT")} disabled={pending}>
             <CheckCheck aria-hidden="true" />
-            Everyone in
+            All here
           </Button>
         ) : null}
       </div>
-      <ul className="pc-rows">
+      {medical.length ? (
+        <Button variant="outline" className="self-start" onClick={() => setMedicalOpen(true)}>
+          <HeartPulse aria-hidden="true" />
+          Medical notes · {medical.length === 1 ? "1 swimmer" : `${medical.length} swimmers`}
+        </Button>
+      ) : null}
+      <ul className="pc-list reg-list">
         {lines.map((line) => {
-          const mark = marks.get(line.studentId),
-            name = line.firstName + " " + line.lastName;
+          const status = marks.get(line.studentId)?.status ?? null,
+            name = line.firstName + " " + line.lastName,
+            meta = status ? ATTENDANCE_STATUS_META[status] : null,
+            MarkIcon = status ? MARK_ICON[status] : null;
           const hint = [
             line.dateOfBirth ? `Age ${ageLabel(line.dateOfBirth)}` : null,
             line.levelName || null,
             line.offRoster ? "No longer in this class" : null,
           ].filter(Boolean).join(" · ");
-          const row = (
-            <li className="pc-row">
+          const body = (
+            <>
               <Avatar size="lg" aria-hidden="true"><AvatarFallback>{initials(name)}</AvatarFallback></Avatar>
-              <div className="pc-row-body items-start gap-1">
-                <p className="pc-row-title break-words">{name}</p>
-                {hint ? <p className="pc-row-hint">{hint}</p> : null}
-                {/* Medical notes open from the tag where this person may read them; otherwise
-                    the tag only says there are some. */}
-                {line.medicalNotes ? (
-                  <CollapsibleTrigger className="pc-tag-trigger" aria-label={`Medical information for ${name}`}>
-                    <Tag meta={MEDICAL_STATUS_META.notes} label={<>{MEDICAL_STATUS_META.notes.label}<ChevronDown aria-hidden="true" /></>} />
-                  </CollapsibleTrigger>
-                ) : line.hasMedicalNotes ? (
-                  <Tag meta={MEDICAL_STATUS_META.notes} />
-                ) : null}
-              </div>
-              <MarkChoices
-                label={"Attendance for " + name}
-                value={mark?.status ?? "ABSENT"}
-                options={ATTENDANCE_ORDER.map((status) => ({
-                  value: status,
-                  label: ATTENDANCE_STATUS_META[status].label,
-                }))}
-                disabled={readOnly || pending}
-                onChange={(value) =>
-                  set(line.studentId, value as AttendanceStatus)
-                }
-              />
-              {line.medicalNotes ? (
-                <CollapsibleContent className="basis-full">
-                  <p className="pc-note max-w-prose whitespace-pre-wrap">
-                    <HeartPulse aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-                    <span>{line.medicalNotes}</span>
-                  </p>
-                </CollapsibleContent>
-              ) : null}
-            </li>
+              <span className="pc-row-body">
+                <span className="reg-name">{name}</span>
+                {hint ? <span className="pc-row-hint">{hint}</span> : null}
+                {line.medicalNotes || line.hasMedicalNotes ? <span className="reg-flags"><Tag meta={MEDICAL_STATUS_META.notes} /></span> : null}
+              </span>
+              <span className="reg-mark" data-status={status ?? "none"}>
+                <span className="reg-mark-word">{meta?.label ?? "To mark"}</span>
+                <span className="done-mark" data-status={status ?? "none"} aria-hidden="true">{MarkIcon ? <MarkIcon /> : null}</span>
+              </span>
+            </>
           );
-          return line.medicalNotes ? (
-            <Collapsible key={line.studentId} asChild>{row}</Collapsible>
-          ) : (
-            <React.Fragment key={line.studentId}>{row}</React.Fragment>
+          return (
+            <li key={line.studentId}>
+              {readOnly ? (
+                <div className="pc-row reg-row">{body}</div>
+              ) : (
+                <Button type="button" variant="ghost" className="pc-row reg-row" disabled={pending}
+                  aria-label={`${name}: ${meta?.label ?? "not marked"}. Tap to mark ${ATTENDANCE_STATUS_META[nextMark(status)].label.toLowerCase()}`}
+                  onClick={() => set(line.studentId, nextMark(status))}>
+                  {body}
+                </Button>
+              )}
+            </li>
           );
         })}
       </ul>
-      <div className="flex flex-col gap-2">
+      <div className="pc-panel">
         <Label htmlFor="class-note">Class note</Label>
         <Textarea
           id="class-note"
@@ -394,7 +399,7 @@ function RegisterFormState({
       {conflict ? (
         <RegisterConflict
           saved={conflict}
-          marks={marks}
+          marks={markedOnly(marks)}
           note={note}
           lines={lines}
           pending={pending}
@@ -407,6 +412,19 @@ function RegisterFormState({
         <Notice tone="warning" title="This browser cannot keep a backup. Keep this tab open until attendance is saved." />
       ) : null}
     </section>
+    {medical.length ? (
+      <Inspector open={medicalOpen} onOpenChange={setMedicalOpen} title="Medical notes"
+        description="For the swimmers in this class. Each swimmer's full record has the rest.">
+        <ul className="pc-list">
+          {medical.map((line) => (
+            <li key={line.studentId} className="pc-row reg-medical">
+              <span className="reg-name">{line.firstName} {line.lastName}</span>
+              <span className="whitespace-pre-wrap">{line.medicalNotes}</span>
+            </li>
+          ))}
+        </ul>
+      </Inspector>
+    ) : null}
     {!readOnly ? (
       <SaveBar
         status={
@@ -414,21 +432,19 @@ function RegisterFormState({
             ? "Restored on this device · not saved"
             : dirty
               ? "Not saved yet"
-              : lines.some((line) => line.status !== null)
+              : saved
                 ? "Up to date"
-                : "Ready to save"
+                : "Ready to mark"
         }
       >
         <LoadingButton
           pending={pending}
-          disabled={!!conflict}
+          disabled={!!conflict || count.toMark > 0 || (saved && !continueHref)}
           onClick={() => save()}
         >
-          <Check aria-hidden="true" />
-          {continueHref
-              ? "Save and continue"
-              : "Save attendance"}
-          {continueHref ? (
+          {count.toMark ? null : <Check aria-hidden="true" />}
+          {saveLabel}
+          {continueHref && !count.toMark ? (
             <ChevronRight aria-hidden="true" />
           ) : null}
         </LoadingButton>

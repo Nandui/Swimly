@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.8.0 · 25 October 2026 · The register in the new look
+
+- The register opens with a green ring that fills as swimmers arrive, and shows how many are here.
+- Each swimmer is one big row. Tap once for present, twice for absent, three times for late. The word sits beside the mark, so you never rely on the colour alone.
+- Nobody starts as absent any more. Every swimmer starts unmarked, and the save button says how many are still to mark until everyone is done. Then it says Save register (or Save and continue on the pool deck).
+- **All here** marks the whole class present in one tap.
+- Medical notes are no longer opened inside the list. A swimmer's row says they have notes, and **Medical notes** above the list opens the notes for the swimmers in that class, where you may read them.
+
 ## 2.7.0 · 25 October 2026 · Swim school and every app's first page in the new look
 
 - The first page of every app now has your site and today's date under its name.

@@ -100,6 +100,9 @@
 /* Timeline grid places (TimelineGrid): 5-minute columns over a day and its lanes. */
 @source inline("{col-start,col-end,row-start,row-end}-{1..300}");
 @source inline("row-span-{1..20}");
+/* A share of a ring (ProgressRing, scale.ts progressOf), in hundredths. */
+@source inline("progress-at-{0..100}");
+@utility progress-at-* { --progress-at: calc(--value(integer) * 1%); }
 
 /* Layout utilities from the Poolside layout sizes (owner decision, 10 October 2026), so pages
    never need an arbitrary value (owner rule, 20 October 2026). Auto-fit grids of tiles, cards

@@ -59,14 +59,14 @@ export const CLASS_GUIDES: HelpArticle[] = [
   },
   {
     slug: "take-attendance", title: "Take attendance and add a class note", category: "teaching", scopes: ["desk", "instructor"],
-    summary: "Record each swimmer’s attendance for the correct class and date, then save it.", keywords: ["register", "attendance", "present", "absent", "late", "note", "paper", "save attendance"],
-    before: ["You need attendance permission for the class. Check the date before marking. An unrecorded swimmer starts as absent."],
+    summary: "Record each swimmer’s attendance for the correct class and date, then save it.", keywords: ["register", "attendance", "present", "absent", "late", "note", "paper", "save register", "all here", "still to mark", "medical notes"],
+    before: ["You need attendance permission for the class. Check the date before marking. Every swimmer starts unmarked, and the register saves once everyone is marked."],
     steps: [
       { title: "Open your started class", text: "In Instructor, confirm Start class if you have not done so, then choose Open class and the Attendance step. Only the instructor who started the class can save its teaching work here.", scopes: ["instructor"] },
       { title: "Open the correct dated register", text: "Open the teaching record from Schedule or the class’s attendance controls. Select the correct date before copying a paper register. Marking another teacher’s register requires the appropriate permission or offered cover confirmation.", scopes: ["desk"] },
-      { title: "Check each swimmer’s attendance", text: "Work through the roster and choose the attendance status that matches what happened. Review Medical information where needed for teaching. Do not leave present swimmers at the default absent status." },
+      { title: "Check each swimmer’s attendance", text: "Tap a swimmer once for present, twice for absent and three times for late; the word beside each swimmer says which, and the ring counts who is here. All here marks everyone present. Medical notes, above the list, opens the notes for the swimmers in this class where you may read them." },
       { title: "Add a class note if needed", text: "Use Class note for information the team should know about this lesson. Check the entire roster before saving." },
-      { title: "Save the register", text: "Choose Save and continue to move to competencies, or Save attendance when that button is shown. Wait for the saved result before leaving." },
+      { title: "Save the register", text: "Until everyone is marked, the button says how many are still to mark. Then choose Save and continue to move to competencies, or Save register when that button is shown. Wait for the saved result before leaving." },
     ], result: "Attendance and the class note are saved together for the selected class and date.",
     troubleshooting: [{ question: "Someone else saved attendance while I was working.", answer: "Use the comparison the app shows. Review the saved marks before choosing the saved version or deliberately replacing it. A restored draft still needs to be saved." }],
     related: ["start-class", "daily-schedule", "record-competencies", "saving-and-connection"],

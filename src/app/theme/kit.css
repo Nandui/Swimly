@@ -263,13 +263,13 @@
 .turnfin-app .day-tl-block > span { overflow: hidden; text-overflow: ellipsis; font-weight: 450; opacity: 0.85; }
 .turnfin-app .day-tl-block::before { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 3px; background: var(--day-tl-bar, transparent); }
 .turnfin-app a.day-tl-block:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.turnfin-app .day-tl-block[data-kind='done'] { background: var(--fill-2); color: var(--label-2); }
-.turnfin-app .day-tl-block[data-kind='now'] { --day-tl-bar: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
-.turnfin-app .day-tl-block[data-kind='next'] { --day-tl-bar: var(--label-3); background: var(--fill); color: var(--label); }
-.turnfin-app .day-tl-block[data-kind='gap'] { --day-tl-bar: var(--orange); background: var(--orange-soft); color: var(--orange-ink); }
-.turnfin-app .day-tl-block[data-kind='ok'] { --day-tl-bar: var(--green); background: var(--green-soft); color: var(--green-ink); }
-.turnfin-app .day-tl-block[data-kind='book'] { --day-tl-bar: var(--label-3); background: repeating-linear-gradient(135deg, var(--fill) 0 6px, var(--fill-2) 6px 12px); color: var(--label); }
-.turnfin-app .day-tl-block[data-kind='off'] { background: var(--fill-2); color: var(--label-2); text-decoration: line-through; }
+.turnfin-app .day-tl-block[data-kind='done'] { --day-tl-bg: var(--fill-2); --day-tl-ink: var(--label-2); background: var(--day-tl-bg); color: var(--day-tl-ink); }
+.turnfin-app .day-tl-block[data-kind='now'] { --day-tl-bar: var(--accent); --day-tl-bg: var(--accent-soft); --day-tl-ink: var(--accent-ink); background: var(--day-tl-bg); color: var(--day-tl-ink); }
+.turnfin-app .day-tl-block[data-kind='next'] { --day-tl-bar: var(--label-3); --day-tl-bg: var(--fill); --day-tl-ink: var(--label); background: var(--day-tl-bg); color: var(--day-tl-ink); }
+.turnfin-app .day-tl-block[data-kind='gap'] { --day-tl-bar: var(--orange); --day-tl-bg: var(--orange-soft); --day-tl-ink: var(--orange-ink); background: var(--day-tl-bg); color: var(--day-tl-ink); }
+.turnfin-app .day-tl-block[data-kind='ok'] { --day-tl-bar: var(--green); --day-tl-bg: var(--green-soft); --day-tl-ink: var(--green-ink); background: var(--day-tl-bg); color: var(--day-tl-ink); }
+.turnfin-app .day-tl-block[data-kind='book'] { --day-tl-bar: var(--label-3); --day-tl-bg: repeating-linear-gradient(135deg, var(--fill) 0 6px, var(--fill-2) 6px 12px); --day-tl-ink: var(--label); background: var(--day-tl-bg); color: var(--day-tl-ink); }
+.turnfin-app .day-tl-block[data-kind='off'] { --day-tl-bg: var(--fill-2); --day-tl-ink: var(--label-2); background: var(--day-tl-bg); color: var(--day-tl-ink); text-decoration: line-through; }
 .turnfin-app .day-tl-now { position: absolute; top: 0; bottom: 0; z-index: 1; width: 1.5px; margin-left: -0.75px; background: var(--red); }
 /* Phones: the blocks alone, their names left to the words a screen reader reads and the rows
    below the card. */
@@ -287,7 +287,7 @@
 /* A block that opens an Inspector is the kit's Button (DayTimeline `onSelect`): the button's own
    size, capsule and fill give way to the block's, and the open one is ringed in fin blue. */
 .turnfin-app [data-slot='button'].day-tl-block { align-items: flex-start; justify-content: center; gap: 0; min-height: 0; height: auto; padding: 0 8px 0 11px; border-radius: var(--radius-sm); font-size: 12px; line-height: 15px; text-align: left; cursor: pointer; }
-.turnfin-app [data-slot='button'].day-tl-block:hover { filter: brightness(0.97); }
+.turnfin-app [data-slot='button'].day-tl-block:hover:not(:disabled) { background: var(--day-tl-bg); color: var(--day-tl-ink); filter: brightness(0.97); }
 .turnfin-app [data-slot='button'].day-tl-block:active { scale: 0.96; }
 .turnfin-app [data-slot='button'].day-tl-block[aria-expanded='true'] { box-shadow: 0 0 0 2px var(--bg-2), 0 0 0 4px var(--accent); }
 .turnfin-app [data-slot='button'].day-tl-block:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -315,6 +315,52 @@
 .turnfin-app .inspector-actions > [data-slot='button'] { width: 100%; }
 @media (prefers-reduced-transparency: reduce) {
   .turnfin-app [data-slot='sheet-content'].inspector { background: var(--bg-2); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+
+/* ProgressRing (DESIGN.md): shadcn's Progress drawn as a green ring that fills on --spring, the
+   share from a progress-at-* utility (scale.ts progressOf), the figure inside. */
+@property --progress-at { syntax: "<percentage>"; inherits: false; initial-value: 0%; }
+.turnfin-app .progress-ring-wrap { position: relative; display: inline-grid; flex: none; place-items: center; width: 108px; height: 108px; }
+.turnfin-app [data-slot='progress'].progress-ring { position: absolute; inset: 0; width: auto; height: auto; border-radius: var(--radius-capsule); background: conic-gradient(var(--green) var(--progress-at), var(--fill) 0); -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 9px), #000 calc(100% - 8px)); mask: radial-gradient(farthest-side, transparent calc(100% - 9px), #000 calc(100% - 8px)); transition: --progress-at var(--duration-spring) var(--spring); }
+.turnfin-app [data-slot='progress'].progress-ring > [data-slot='progress-indicator'] { display: none; }
+.turnfin-app .progress-ring-figure { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; }
+
+/* The register (DESIGN.md, The pool deck): the ring and the marks in the head, then each swimmer
+   as one 64px target (the kit's Button, its own capsule and size given way to the row's), and
+   the mark on the trailing side as a word and a DoneMark: hollow until marked, green with a tick
+   for present, orange for late, red for absent. */
+.turnfin-app .reg-head { flex-direction: row; flex-wrap: wrap; align-items: center; gap: var(--space-5); }
+.turnfin-app .reg-head-body { display: flex; flex: 1 1 150px; flex-direction: column; gap: 2px; min-width: 0; }
+.turnfin-app .reg-head-body > h2 { margin: 0; }
+.turnfin-app .reg-head-body > p { margin: 0; }
+.turnfin-app .reg-ring-n { font-family: var(--font-display); font-size: 30px; line-height: 34px; font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.turnfin-app .reg-ring-of { color: var(--label-2); font-size: 12px; line-height: 16px; font-weight: 600; }
+.turnfin-app .reg-list > li > .reg-row { flex-wrap: nowrap; width: auto; min-height: var(--row-height-deck); gap: var(--space-4); }
+.turnfin-app .reg-list > li > [data-slot='button'].reg-row { display: flex; width: calc(100% + 2 * var(--space-3)); flex-wrap: nowrap; color: var(--label); justify-content: flex-start; height: auto; border-radius: 0; font-size: 17px; line-height: 22px; font-weight: 400; text-align: left; white-space: normal; }
+.turnfin-app .reg-list > li > [data-slot='button'].reg-row:hover:not(:disabled) { background: var(--bg-3); color: var(--label); }
+.turnfin-app .reg-list > li > [data-slot='button'].reg-row:active { background: var(--fill-2); scale: 1; }
+.turnfin-app .reg-list > li > [data-slot='button'].reg-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.turnfin-app .reg-name { font-weight: 550; overflow-wrap: anywhere; }
+.turnfin-app .reg-flags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.turnfin-app .reg-mark { display: inline-flex; flex: none; align-items: center; gap: var(--space-2); margin-left: auto; color: var(--label-2); font-size: 15px; font-weight: 600; }
+.turnfin-app .reg-mark[data-status='PRESENT'] { color: var(--green-ink); }
+.turnfin-app .reg-mark[data-status='LATE'] { color: var(--orange-ink); }
+.turnfin-app .reg-mark[data-status='ABSENT'] { color: var(--red-ink); }
+.turnfin-app .done-mark { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--radius-capsule); box-shadow: inset 0 0 0 1.5px var(--label-3); }
+.turnfin-app .done-mark > svg { width: 16px; height: 16px; stroke-width: 2.4; }
+.turnfin-app .done-mark[data-status='PRESENT'] { background: var(--green); color: var(--on-green); box-shadow: none; animation: done-mark-pop var(--duration-spring) var(--bounce) both; }
+.turnfin-app .done-mark[data-status='LATE'] { background: var(--orange-soft); color: var(--orange-ink); box-shadow: none; }
+.turnfin-app .done-mark[data-status='ABSENT'] { background: var(--red-soft); color: var(--red-ink); box-shadow: none; }
+@keyframes done-mark-pop { from { scale: 0.6; } to { scale: 1; } }
+@media (max-width: 767px) {
+  .turnfin-app .reg-head { gap: var(--space-4); }
+  .turnfin-app .reg-head .progress-ring-wrap { width: 88px; height: 88px; }
+  .turnfin-app .reg-ring-n { font-size: 26px; line-height: 30px; }
+}
+.turnfin-app .reg-medical { flex-direction: column; align-items: flex-start; gap: var(--space-1); padding-block: var(--space-3); }
+@media (prefers-reduced-motion: reduce) {
+  .turnfin-app [data-slot='progress'].progress-ring { transition: none; }
+  .turnfin-app .done-mark { animation: none; }
 }
 
 /* Figure tiles (Figure): big tabular numbers. On the ground, bg-2 tiles with radius-panel; inside a

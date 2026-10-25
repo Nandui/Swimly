@@ -29,3 +29,6 @@ export function topOf(fraction: number) { return `top-${step(fraction, POSITION_
 export function stretchOf(start: number, end: number) {
   return `left-${step(start, POSITION_STEPS)}/${POSITION_STEPS} right-${POSITION_STEPS - step(end, POSITION_STEPS)}/${POSITION_STEPS}`;
 }
+
+/** A share of a ring (ProgressRing): `progress-at-37` for 37%. */
+export function progressOf(fraction: number) { return `progress-at-${step(fraction, SIZE_STEPS)}`; }
