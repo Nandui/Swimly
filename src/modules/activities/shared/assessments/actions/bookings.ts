@@ -8,6 +8,7 @@ import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { HOLDS_A_PLACE, sessionLabel } from "@/modules/activities/shared/assessments/constants";
 import { ageRangeError } from "@/modules/activities/shared/assessments/age";
 import { withAssessmentSeat } from "@/modules/activities/shared/assessments/seat";
+import { sendAssessmentConfirmation } from "@/modules/activities/shared/assessments/confirmation-email";
 import { logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
@@ -38,6 +39,7 @@ export async function bookStudent(input: BookInput): Promise<ActionResult> {
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const { sessionId, studentId } = parsed.data;
   const clubId = await currentClubId();
+  let bookedId: string | null = null;
 
   const result = await withAssessmentSeat(sessionId, async (tx) => {
     const [student, session] = await Promise.all([
@@ -75,9 +77,11 @@ export async function bookStudent(input: BookInput): Promise<ActionResult> {
       entity: "AssessmentBooking", entityId: booking.id, programmeId: session.programmeId, clubId,
       summary: `Booked ${fullName(student)} onto the assessment on ${sessionLabel(session)}`,
     }, tx);
+    bookedId = booking.id;
     return ok();
   });
   if (result.ok) revalidate();
+  if (result.ok && bookedId) await sendAssessmentConfirmation(bookedId, { actorId: actor.user.id });
   return result;
 }
 
