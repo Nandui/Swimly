@@ -311,8 +311,7 @@ test("copy fills only days with nothing of that department; people come too unle
 
 test("sharing a week: staff see it in Turnfin Me and are told; until then they see nothing", async () => {
   as("maya", [at("rota.plan")]);
-  // The Monday after next: on a Sunday next Monday is tomorrow, whose Main pool earlier tests already staff.
-  const monday = addDaysIso(nextMonday(), 7);
+  const monday = nextMonday();
   assert.equal((await actions.saveNeed(null, need(monday, { place: "Main pool", places: 1, start: "09:00", end: "14:30" }))).ok, true);
   const main = await needOn(monday);
   assert.equal((await actions.assign(null, { needId: main.id, place: 1, userId: "ava", start: "09:00", end: "11:30" })).ok, true);
