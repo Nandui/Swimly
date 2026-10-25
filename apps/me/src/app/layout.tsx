@@ -1,11 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import "@fontsource/plus-jakarta-sans/400.css";
-import "@fontsource/plus-jakarta-sans/600.css";
-import "@fontsource/plus-jakarta-sans/700.css";
 import "./globals.css";
 import "./theme/poolside.css";
 import "./me.css";
+import { inter } from "./fonts";
 
 /** No title here: each page renders its own `<title>` (Frame, sign-in, not-found), so there is
  *  exactly one, and it names the page ("My training · Turnfin Me"). */
@@ -16,17 +14,17 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-/** The status bar takes the canvas the top row sits on (--pc-canvas in globals.css). */
+/** The status bar takes the ground the top row sits on (--bg in theme/glass.css). */
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#eef2f6" },
-    { media: "(prefers-color-scheme: dark)", color: "#0c1320" },
+    { media: "(prefers-color-scheme: light)", color: "#f2f2f7" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
   ],
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  return <html lang="en"><body className="turnfin-app">{children}</body></html>;
+  return <html lang="en" className={inter.variable}><body className="turnfin-app">{children}</body></html>;
 }

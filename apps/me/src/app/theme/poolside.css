@@ -1,7 +1,7 @@
-/* Poolside Clear v2, Turnfin's pre-2.0 theme, kept until the 2.0 design replaces it (DESIGN.md):
-   Plus Jakarta Sans, one calm blue for action and selection, navy-tinted
-   neutrals, five status colours of matched strength, soft single-hue gradients only on time
-   blocks, white 24px panels on a cool canvas inside a rounded frame, and a deep navy dark mode.
+/* Poolside Clear v2, Turnfin's pre-2.0 system rules, kept until the 2.0 kit replaces each part
+   (DESIGN.md, How it is built). Its colours and typeface are already Turnfin Glass: every --pc-*
+   colour below points at a token in glass.css. What is left here is the old shapes, sizes and
+   rules: white 24px panels on the ground inside a rounded frame.
    Tokens and the system rules (type, controls, fields, badges, alerts, dialogs, focus) are
    scoped to .turnfin-app, which the root layout puts on <body>, so every page and every
    portalled dialog gets them. Rules for the Docs/Refunds shell and their pages stay scoped to
@@ -11,47 +11,49 @@
 @media print { :root { color-scheme: light !important; } }
 
 .turnfin-app {
-  /* The ground pair. The viewport themeColor in src/app/layout.tsx repeats these values. */
-  --pc-outer: light-dark(#f7f9fb, #070c14);
-  --pc-canvas: light-dark(#eef2f6, #0c1320);
-  --pc-frame-line: light-dark(#e1e6ee, #1c2739);
-  --pc-surface: light-dark(#ffffff, #131c2b);
-  --pc-surface-sunken: light-dark(#f4f6f9, #182334);
-  --pc-surface-raised: light-dark(#ffffff, #182334);
-  --pc-ink: light-dark(#0f1b2d, #e8eef7);
-  --pc-ink-muted: light-dark(#56627a, #9babc2);
-  --pc-line: light-dark(#e2e7ef, #24324a);
+  /* The pre-2.0 names, pointed at the 2.0 tokens in glass.css, so every screen takes the 2.0
+     colours until the 2.0 kit rebuilds it (DESIGN.md, How it is built). Values live in glass.css. */
+  --pc-outer: var(--bg);
+  --pc-canvas: var(--bg);
+  --pc-frame-line: var(--sep);
+  --pc-surface: var(--bg-2);
+  --pc-surface-sunken: var(--fill-2);
+  --pc-surface-raised: var(--bg-2);
+  --pc-ink: var(--label);
+  --pc-ink-muted: var(--label-2);
+  --pc-line: var(--sep);
   /* Edges of things you type into or choose from: 3:1 against every surface. */
-  --pc-line-strong: light-dark(#77849a, #6b7d99);
-  --pc-primary: light-dark(#1d5fd1, #78a6ff);
-  --pc-primary-hover: light-dark(#174ea8, #9dbfff);
-  --pc-on-primary: light-dark(#ffffff, #081733);
-  --pc-primary-soft: light-dark(#e9f0fd, #17284a);
-  /* A chart's single series: the fin's blue, a step darker in dark mode so it sits in the
-     chart lightness band (dataviz validator: band, chroma and 3:1 against the surface pass). */
-  --pc-chart-1: light-dark(#1d5fd1, #5a8eee);
-  --pc-primary-soft-hover: light-dark(#dde8fc, #1d3360);
-  --pc-primary-ink: light-dark(#174ea8, #a8c5ff);
-  --pc-hover: light-dark(#f4f6f9, #1b2636);
-  --pc-focus: light-dark(#1d5fd1, #78a6ff);
-  --pc-focus-halo: 0 0 0 4px light-dark(rgb(29 95 209 / 0.2), rgb(120 166 255 / 0.28));
-  --pc-success: light-dark(#157046, #7fe0a8);
-  --pc-success-soft: light-dark(#e3f5ec, #10301f);
-  --pc-warning: light-dark(#8a5a00, #f7cf6e);
-  --pc-warning-soft: light-dark(#fdf2dc, #35270b);
-  --pc-danger: light-dark(#b4321f, #ffa395);
-  --pc-danger-soft: light-dark(#fde8e6, #3a1815);
-  --pc-on-danger: light-dark(#ffffff, #2a0906);
-  --pc-danger-hover: light-dark(#962817, #ffc2b8);
-  --pc-cover: light-dark(#5b3fc4, #c3b5ff);
-  --pc-cover-soft: light-dark(#efeafd, #231c47);
-  --pc-neutral-soft: light-dark(#f4f6f9, #182334);
-  /* The single do-first item on a page. */
-  --pc-yellow: light-dark(#fde9a8, #4a3b10);
-  --pc-on-yellow: light-dark(#3a2a00, #fbe7a8);
+  --pc-line-strong: var(--label-2);
+  /* The fin blue as text and marks; a fill with white text on it uses --accent-btn. */
+  --pc-primary: var(--accent);
+  --pc-primary-hover: var(--accent-hi);
+  --pc-on-primary: #ffffff;
+  --pc-primary-soft: var(--accent-soft);
+  --pc-chart-1: var(--accent);
+  --pc-primary-soft-hover: var(--accent-soft);
+  --pc-primary-ink: var(--accent-ink);
+  --pc-hover: var(--bg-3);
+  --pc-focus: var(--accent);
+  --pc-focus-halo: 0 0 0 4px var(--accent-soft);
+  --pc-success: var(--green-ink);
+  --pc-success-soft: var(--green-soft);
+  --pc-warning: var(--orange-ink);
+  --pc-warning-soft: var(--orange-soft);
+  --pc-danger: var(--red-ink);
+  --pc-danger-soft: var(--red-soft);
+  /* Text on --red-ink: white in light, black in dark (the same pair as on green). */
+  --pc-on-danger: var(--on-green);
+  --pc-danger-hover: var(--red-ink);
+  /* Purple and yellow are not 2.0 colours: cover takes the fin blue, the do-first item orange. */
+  --pc-cover: var(--accent-ink);
+  --pc-cover-soft: var(--accent-soft);
+  --pc-neutral-soft: var(--fill-2);
+  --pc-yellow: var(--orange-soft);
+  --pc-on-yellow: var(--orange-ink);
   /* Ink on a light pastel a writer chose (Docs highlights): dark in both themes. */
   --pc-on-pastel: #172033;
-  /* The Docs content palette: text colours a writer picks (lighter in dark mode) and highlights. */
+  /* The Docs content palette: text colours a writer picks (lighter in dark mode) and highlights.
+     They belong to the document, not the interface, so they keep their own values. */
   --pc-docs-blue: light-dark(#2563eb, #93c5fd);
   --pc-docs-teal: light-dark(#0f766e, #5eead4);
   --pc-docs-green: light-dark(#15803d, #86efac);
@@ -64,21 +66,21 @@
   --pc-docs-mark-pink: #fbcfe8;
   --pc-docs-mark-purple: #e9d5ff;
   --pc-docs-mark-orange: #fed7aa;
-  --pc-hatch: light-dark(#e3e8ef, #1f2b3f);
-  /* Time blocks (timelines, schedule cells, shifts): soft single-hue gradients, text 4.5:1 on both ends. */
-  --pc-block-now: linear-gradient(135deg, light-dark(#c8f2da, #1f6040), light-dark(#9fe3bd, #184d33));
-  --pc-on-block-now: light-dark(#0b3d24, #dff7e9);
-  --pc-block-next: linear-gradient(135deg, light-dark(#dce8ff, #27467f), light-dark(#bcd3fb, #1d3866));
-  --pc-on-block-next: light-dark(#0f2f6e, #dde8ff);
-  --pc-block-cover: linear-gradient(135deg, light-dark(#fff0c8, #6e5014), light-dark(#fbdc93, #5b420e));
-  --pc-on-block-cover: light-dark(#4a2f00, #fff1cf);
-  --pc-block-assess: linear-gradient(135deg, light-dark(#e8e1ff, #40307e), light-dark(#d0c3fb, #322567));
-  --pc-on-block-assess: light-dark(#2f1b78, #ece6ff);
-  --pc-shadow-card: none;
-  --pc-shadow-overlay: 0 16px 40px -12px light-dark(rgb(15 27 45 / 0.35), rgb(0 0 0 / 0.6)), 0 0 0 1px var(--pc-line);
-  /* The veil behind dialogs and sheets: a navy tint in light, black in dark. */
-  --pc-scrim: light-dark(rgb(15 27 45 / 0.28), rgb(0 0 0 / 0.5));
-  --pc-ease: cubic-bezier(0.2, 0, 0, 1);
+  --pc-hatch: var(--fill);
+  /* Time blocks, as the 2.0 day timeline draws them: on now in blue, next in grey, cover needed
+     in orange, a booking in the quiet fill. No gradients. */
+  --pc-block-now: var(--accent-soft);
+  --pc-on-block-now: var(--accent-ink);
+  --pc-block-next: var(--fill);
+  --pc-on-block-next: var(--label);
+  --pc-block-cover: var(--orange-soft);
+  --pc-on-block-cover: var(--orange-ink);
+  --pc-block-assess: var(--fill-2);
+  --pc-on-block-assess: var(--label);
+  --pc-shadow-card: var(--shadow-card);
+  --pc-shadow-overlay: var(--shadow-glass), 0 0 0 0.5px var(--sep);
+  --pc-scrim: var(--scrim);
+  --pc-ease: var(--ease);
 
   /* Type scale: five sizes only. Captions and metadata; body, controls and labels; section
      titles; page titles; large figures (page and figure drop to 24px on phones). Reading text
@@ -131,53 +133,13 @@
   --text-3xl: var(--pc-text-figure);
   --text-3xl--line-height: var(--pc-leading-figure);
 
-  /* Shared shadcn tokens. */
-  --ui-background: var(--pc-surface);
-  --ui-workspace: var(--pc-canvas);
-  --ui-foreground: var(--pc-ink);
-  --ui-card: var(--pc-surface);
-  --ui-popover: var(--pc-surface-raised);
-  --ui-primary: var(--pc-primary);
-  --ui-primary-hover: var(--pc-primary-hover);
-  --ui-primary-foreground: var(--pc-on-primary);
-  --ui-brand-soft: var(--pc-primary-soft);
-  --ui-brand-soft-hover: var(--pc-primary-soft-hover);
-  --ui-brand-ink: var(--pc-primary-ink);
-  --ui-brand-border: var(--pc-primary);
-  --ui-muted: var(--pc-surface-sunken);
-  --ui-muted-foreground: var(--pc-ink-muted);
-  --ui-border: var(--pc-line);
-  --ui-input: var(--pc-line-strong);
-  --ui-ring: var(--pc-focus);
-  --ui-destructive: var(--pc-danger);
-  --ui-sidebar: var(--pc-canvas);
-  --ui-sidebar-hover: var(--pc-hover);
-  --ui-accent: var(--pc-primary-soft);
-  --ui-accent-foreground: var(--pc-primary-ink);
-  --ui-secondary: var(--pc-surface-sunken);
-  --ui-secondary-foreground: var(--pc-ink);
-  --ui-card-foreground: var(--pc-ink);
-  --ui-popover-foreground: var(--pc-ink);
-  --ui-status-green: var(--pc-success);
-  --ui-status-green-bg: var(--pc-success-soft);
-  --ui-status-blue: var(--pc-primary-ink);
-  --ui-status-blue-bg: var(--pc-primary-soft);
-  --ui-status-red: var(--pc-danger);
-  --ui-status-red-bg: var(--pc-danger-soft);
-  --ui-status-orange: var(--pc-warning);
-  --ui-status-orange-bg: var(--pc-warning-soft);
-  --ui-status-yellow: var(--pc-warning);
-  --ui-status-yellow-bg: var(--pc-warning-soft);
-  --ui-status-purple: var(--pc-cover);
-  --ui-status-purple-bg: var(--pc-cover-soft);
+  /* Shared shadcn tokens: mapped to glass.css in shadcn.css; only the radius follows the old cards. */
   --ui-radius: var(--pc-radius-card);
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-sans);
+  --font-sans: var(--font-text);
 
   /* Docs layout adapter and brand names, recomputed from Poolside Clear. */
   --brand-ocean: var(--pc-primary);
   --brand-slate: var(--pc-ink-muted);
-  --bg: var(--pc-canvas);
   --paper: var(--pc-surface);
   --ink: var(--pc-ink);
   --text: var(--pc-ink);
@@ -185,7 +147,6 @@
   --line: var(--pc-line);
   --primary: var(--pc-primary);
   --primary-dark: var(--pc-primary-hover);
-  --accent-soft: var(--pc-primary-soft);
   --surface-subtle: var(--pc-surface-sunken);
   --surface-tint: var(--pc-surface-sunken);
   --focus: var(--pc-focus);
@@ -211,11 +172,8 @@
   line-height: var(--pc-leading-body);
   color: var(--pc-ink);
 }
-/* The ground: the outer colour around the frame, and the canvas on phones where the frame is
-   the page, so overscroll matches. The viewport theme-color in src/app/layout.tsx follows the
-   same pair (--pc-outer from 768px, --pc-canvas below); keep them in sync. */
-body.turnfin-app { background: var(--pc-outer); }
-@media (max-width: 767px) { body.turnfin-app { background: var(--pc-canvas); } }
+/* The ground, at every width. The viewport theme-color in src/app/layout.tsx repeats --bg. */
+body.turnfin-app { background: var(--bg); }
 
 /* Type: one bold page title, 600-weight section titles, sentence-case labels (never capitals). */
 .turnfin-app :is(h1, h2, h3, h4) { font-family: var(--font-sans); color: var(--pc-ink); }
@@ -406,7 +364,7 @@ body.turnfin-app { background: var(--pc-outer); }
 .turnfin-app :is(.tf-bar-item, .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger']), .tf-tools > .ui-motion-press):hover::before { background: var(--pc-surface-sunken); }
 .turnfin-app .tf-bar-item[aria-current] { color: var(--pc-on-primary); }
 /* !important: the generic :hover::before above (0,4,1) would turn the current pill grey. */
-.turnfin-app .tf-bar-item[aria-current]::before { background: var(--pc-primary) !important; }
+.turnfin-app .tf-bar-item[aria-current]::before { background: var(--accent-btn) !important; }
 /* Dev build "View as": a soft blue pill while another role is being worn. */
 .turnfin-app .tf-tools > .workspace-preview-toggle[data-active='true'] { color: var(--pc-primary-ink); }
 .turnfin-app .tf-tools > .workspace-preview-toggle[data-active='true']::before { background: var(--pc-primary-soft); }
@@ -430,7 +388,7 @@ body.turnfin-app { background: var(--pc-outer); }
 .turnfin-app .tf-rail-item:hover { color: var(--pc-ink); }
 .turnfin-app .tf-rail-item:hover::before { background: var(--pc-surface-sunken); }
 .turnfin-app .tf-rail-item[aria-current] { color: var(--pc-on-primary); }
-.turnfin-app .tf-rail-item[aria-current]::before { background: var(--pc-primary); }
+.turnfin-app .tf-rail-item[aria-current]::before { background: var(--accent-btn); }
 .turnfin-app .tf-rail-item:focus-visible { outline-offset: -2px; }
 .turnfin-app .tf-rail-label { position: absolute; top: 50%; left: calc(100% + 12px); z-index: 30; padding: 4px 10px; border-radius: 999px; background: var(--pc-ink); color: var(--pc-surface); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; white-space: nowrap; pointer-events: none; opacity: 0; transform: translateY(-50%); transition: opacity 120ms var(--pc-ease); }
 .turnfin-app .tf-rail-item:is(:hover, :focus-visible) .tf-rail-label { opacity: 1; }
@@ -443,9 +401,9 @@ body.turnfin-app { background: var(--pc-outer); }
 .turnfin-app .tf-bottom-icon { display: flex; align-items: center; justify-content: center; width: 56px; height: 32px; border-radius: 999px; }
 .turnfin-app .tf-bottom-icon > svg { width: 20px; height: 20px; }
 .turnfin-app .tf-bottom-item[aria-current] { color: var(--pc-primary); }
-.turnfin-app .tf-bottom-item[aria-current] .tf-bottom-icon { background: var(--pc-primary); color: var(--pc-on-primary); }
+.turnfin-app .tf-bottom-item[aria-current] .tf-bottom-icon { background: var(--accent-btn); color: var(--pc-on-primary); }
 .turnfin-app .tf-bottom-item:hover .tf-bottom-icon { background: var(--pc-surface-sunken); }
-.turnfin-app .tf-bottom-item[aria-current]:hover .tf-bottom-icon { background: var(--pc-primary); }
+.turnfin-app .tf-bottom-item[aria-current]:hover .tf-bottom-icon { background: var(--accent-btn); }
 html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 /* What the bottom bar takes from the foot of the viewport, and the one offset for everything that
    clears it (the frame's padding, the save bar, desk toasts): its 8px edge, its 82px height when
@@ -694,7 +652,7 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 .turnfin-app .rota-free:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
 .turnfin-app .pc-timeline > .pc-block[data-block='shift'] { cursor: default; }
 .turnfin-app .pc-timeline > .pc-block[data-block='shift'] > * { visibility: hidden; }
-.turnfin-app .rota-drag-range { position: absolute; inset-block: 4px; display: flex; align-items: center; justify-content: center; min-width: 0; overflow: hidden; border-radius: 12px; background: var(--pc-primary); color: var(--pc-on-primary); white-space: nowrap; }
+.turnfin-app .rota-drag-range { position: absolute; inset-block: 4px; display: flex; align-items: center; justify-content: center; min-width: 0; overflow: hidden; border-radius: 12px; background: var(--accent-btn); color: var(--pc-on-primary); white-space: nowrap; }
 /* A lane's name that opens its editor: it reads as the name, and the whole name tile is the
    target (a stretched button), so a lane needs no separate edit icon. */
 .turnfin-app .pc-timeline-lane-label > .pc-timeline-lane-link[data-slot='button'] { position: static; display: inline; width: auto; height: auto; min-height: 0; padding: 0; border: 0; background: none; box-shadow: none; color: var(--pc-ink); font: inherit; font-weight: 600; text-align: start; white-space: inherit; text-decoration: none; }
@@ -704,7 +662,7 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 .turnfin-app .pc-timeline-lane-label > .pc-timeline-lane-link[data-slot='button']:focus-visible::after { outline: 2px solid var(--pc-focus); outline-offset: -2px; }
 /* A planning timeline reads out the exact quarter hour under the pointer, on the time bar. */
 .turnfin-app .pc-timeline-wide { position: relative; }
-.turnfin-app .pc-timeline-readout { position: absolute; top: 6px; z-index: 5; padding: 1px 8px; transform: translateX(-50%); border-radius: var(--pc-radius-control); background: var(--pc-primary); color: var(--pc-on-primary); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; font-variant-numeric: tabular-nums; pointer-events: none; }
+.turnfin-app .pc-timeline-readout { position: absolute; top: 6px; z-index: 5; padding: 1px 8px; transform: translateX(-50%); border-radius: var(--pc-radius-control); background: var(--accent-btn); color: var(--pc-on-primary); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; font-variant-numeric: tabular-nums; pointer-events: none; }
 /* The day's summary in the planner's head: gaps to fill (amber) or all covered (quiet). */
 .turnfin-app .rota-summary { display: inline-flex; align-items: center; min-height: 28px; padding-inline: 12px; border-radius: var(--pc-radius-control); background: var(--pc-surface-sunken); color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
 .turnfin-app .rota-summary[data-tone='gap'] { background: var(--pc-warning-soft); color: var(--pc-warning); }
@@ -717,11 +675,11 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 /* A free day on the week sheet: an empty, quiet cell; for managers a + appears on hover or focus. */
 .turnfin-app .rota-empty-day { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 56px; border-radius: var(--pc-radius-card); color: var(--pc-ink-muted); }
 .turnfin-app .rota-empty-day.ui-motion-press:hover { background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
-.turnfin-app .pc-timeline-now-label { position: relative; z-index: 3; align-self: center; justify-self: start; width: max-content; margin-left: var(--at); padding: 2px 8px; transform: translateX(-50%); border-radius: var(--pc-radius-control); background: var(--pc-primary); color: var(--pc-on-primary); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.turnfin-app .pc-timeline-now-label { position: relative; z-index: 3; align-self: center; justify-self: start; width: max-content; margin-left: var(--at); padding: 2px 8px; transform: translateX(-50%); border-radius: var(--pc-radius-control); background: var(--accent-btn); color: var(--pc-on-primary); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .turnfin-app .pc-timeline-heading { align-self: center; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
 .turnfin-app .pc-timeline-hour { display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 44px; overflow: hidden; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .turnfin-app .pc-timeline-hour[data-past] { border-color: transparent; background: var(--pc-hatch); color: var(--pc-ink-muted); }
-.turnfin-app .pc-timeline-hour[data-now] { border-color: var(--pc-primary); background: var(--pc-primary); color: var(--pc-on-primary); }
+.turnfin-app .pc-timeline-hour[data-now] { border-color: var(--accent-btn); background: var(--accent-btn); color: var(--pc-on-primary); }
 .turnfin-app .pc-timeline-lane { display: flex; align-items: center; gap: 12px; min-width: 0; min-height: 56px; margin-inline-end: 4px; padding: 8px 8px 8px 12px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); }
 .turnfin-app .pc-timeline-lane:has(> .pc-tile-icon) { padding-inline-start: 8px; }
 .turnfin-app .pc-timeline-lane[data-header] { border-color: transparent; padding-inline-start: 0; }

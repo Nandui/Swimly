@@ -1,4 +1,4 @@
-/* Neutral surfaces with the logo's blue accent. light-dark() follows the device/theme. */
+/* shadcn primitives on the Turnfin Glass tokens. light-dark() follows the device/theme. */
 @custom-variant dark {
   &:where([data-theme="dark"], [data-theme="dark"] *) {
     @slot;
@@ -11,39 +11,47 @@
 }
 
 :root {
-  --ui-background: light-dark(oklch(1 0 0), oklch(0.145 0 0));
-  --ui-workspace: light-dark(oklch(0.97 0 0), oklch(0.145 0 0));
-  --ui-foreground: light-dark(oklch(0.145 0 0), oklch(0.985 0 0));
-  --ui-card: light-dark(oklch(1 0 0), oklch(0.205 0 0));
-  --ui-popover: light-dark(oklch(1 0 0), oklch(0.205 0 0));
-  /* Deeper logo blue for white labels; lighter blue with dark ink at night. */
-  --ui-primary: light-dark(oklch(0.52181 0.21509 260.64375), oklch(0.74923 0.13165 253.85631));
-  --ui-primary-hover: light-dark(oklch(0.49 0.2 260.64375), oklch(0.79 0.11 253.85631));
-  --ui-primary-foreground: light-dark(oklch(1 0 0), oklch(0.2212 0.05334 255.42033));
-  --ui-brand-soft: light-dark(oklch(0.96778 0.01535 257.19609), oklch(0.28924 0.05974 253.64609));
-  --ui-brand-soft-hover: light-dark(oklch(0.94791 0.02515 255.55971), oklch(0.35115 0.07558 253.02485));
-  --ui-brand-ink: light-dark(oklch(0.44542 0.15183 259.50977), oklch(0.84182 0.07957 255.587));
-  --ui-brand-border: light-dark(oklch(0.61512 0.12177 253.91527), oklch(0.67492 0.1137 253.08737));
-  --ui-muted: light-dark(oklch(0.97 0 0), oklch(0.269 0 0));
-  --ui-muted-foreground: light-dark(oklch(0.45 0 0), oklch(0.75 0 0));
-  --ui-border: light-dark(oklch(0.88 0 0), oklch(0.36 0 0));
-  --ui-input: light-dark(oklch(0.6 0 0), oklch(0.57 0 0));
-  --ui-ring: var(--ui-primary);
-  --ui-destructive: light-dark(oklch(0.48 0.18 27), oklch(0.75 0.14 27));
-  --ui-sidebar: light-dark(oklch(0.985 0 0), oklch(0.18 0 0));
-  --ui-sidebar-hover: light-dark(oklch(0.925 0 0), oklch(0.28 0 0));
-  --ui-status-green: light-dark(oklch(0.37 0.08 155), oklch(0.84 0.1 155));
-  --ui-status-green-bg: light-dark(oklch(0.95 0.03 155), oklch(0.28 0.04 155));
-  --ui-status-blue: light-dark(oklch(0.38 0.1 255), oklch(0.85 0.08 255));
-  --ui-status-blue-bg: light-dark(oklch(0.95 0.02 255), oklch(0.28 0.04 255));
-  --ui-status-red: light-dark(oklch(0.4 0.14 25), oklch(0.84 0.09 25));
-  --ui-status-red-bg: light-dark(oklch(0.96 0.02 25), oklch(0.28 0.05 25));
-  --ui-status-orange: light-dark(oklch(0.4 0.1 50), oklch(0.85 0.09 50));
-  --ui-status-orange-bg: light-dark(oklch(0.96 0.03 50), oklch(0.28 0.04 50));
-  --ui-status-yellow: light-dark(oklch(0.4 0.08 85), oklch(0.86 0.09 85));
-  --ui-status-yellow-bg: light-dark(oklch(0.96 0.04 85), oklch(0.28 0.04 85));
-  --ui-status-purple: light-dark(oklch(0.4 0.12 300), oklch(0.85 0.08 300));
-  --ui-status-purple-bg: light-dark(oklch(0.96 0.02 300), oklch(0.28 0.04 300));
+  /* shadcn's names for the 2.0 tokens (src/app/theme/glass.css), which hold every value. */
+  --ui-background: var(--bg-2);
+  --ui-workspace: var(--bg);
+  --ui-foreground: var(--label);
+  --ui-card: var(--bg-2);
+  --ui-card-foreground: var(--label);
+  --ui-popover: var(--bg-2);
+  --ui-popover-foreground: var(--label);
+  /* The fin blue as text; a fill with white text on it uses --accent-btn (Button, below). */
+  --ui-primary: var(--accent);
+  --ui-primary-hover: var(--accent-hi);
+  --ui-primary-foreground: #ffffff;
+  --ui-brand-soft: var(--accent-soft);
+  --ui-brand-soft-hover: var(--accent-soft);
+  --ui-brand-ink: var(--accent-ink);
+  --ui-brand-border: var(--accent);
+  --ui-muted: var(--fill-2);
+  --ui-muted-foreground: var(--label-2);
+  --ui-secondary: var(--fill-2);
+  --ui-secondary-foreground: var(--label);
+  --ui-accent: var(--accent-soft);
+  --ui-accent-foreground: var(--accent-ink);
+  --ui-border: var(--sep);
+  --ui-input: var(--label-2);
+  --ui-ring: var(--accent);
+  --ui-destructive: var(--red-ink);
+  --ui-sidebar: var(--bg);
+  --ui-sidebar-hover: var(--bg-3);
+  /* Status tones: the 2.0 colours only. Yellow is needs action; purple becomes the fin blue. */
+  --ui-status-green: var(--green-ink);
+  --ui-status-green-bg: var(--green-soft);
+  --ui-status-blue: var(--accent-ink);
+  --ui-status-blue-bg: var(--accent-soft);
+  --ui-status-red: var(--red-ink);
+  --ui-status-red-bg: var(--red-soft);
+  --ui-status-orange: var(--orange-ink);
+  --ui-status-orange-bg: var(--orange-soft);
+  --ui-status-yellow: var(--orange-ink);
+  --ui-status-yellow-bg: var(--orange-soft);
+  --ui-status-purple: var(--accent-ink);
+  --ui-status-purple-bg: var(--accent-soft);
   --ui-radius: 0.625rem;
 }
 
