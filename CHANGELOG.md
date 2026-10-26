@@ -4,6 +4,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.11.0 · 26 October 2026 · Refunds in the new look
+
+- **Refund requests:** the four queue tiles show each queue's name over its count, and a queue with nothing in it is grey. Search and the filters sit above the list, and the list has its own title with how many requests it holds.
+- Each request in the list has a coloured square: orange while it waits for finance or reception, green once paid.
+- **A request** now opens with its status and number above the customer's name, with **Refund requests** above that to go back.
+- What happens next sits beside the request, tinted blue when the next move is yours, with the four steps (logged, with finance, approved, paid) under it. On a phone it comes first.
+- The claim shows the amount large. The decision, the customer and the original payment read as simple rows of label and answer, and what was bought and why sit underneath. The history runs down the side.
+- The form for a new request has its section titles above the fields.
+
 ## 2.10.0 · 26 October 2026 · Page titles on phones
 
 - On a phone, once a page's big title scrolls up out of sight, the bar at the top folds to a single row with the title in it, so you always know where you are.
