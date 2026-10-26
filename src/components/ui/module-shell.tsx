@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
-import { ChevronDown, CircleHelp, House, LayoutGrid, type LucideIcon } from 'lucide-react';
+import { ChevronDown, ChevronLeft, CircleHelp, House, LayoutGrid, type LucideIcon } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/shadcn/dropdown-menu';
 import { AccountMenu } from '@/components/ui/account-menu';
 import { groupFrameModules, useFrame } from '@/components/ui/frame';
@@ -21,7 +21,10 @@ export type ModuleLinkGroup = { label: string; links: ModuleLink[] };
  *  app's pages as a glass segmented control and the app's tools in a glass group. Links are
  *  presentation; every page checks its permission again. The pool deck and Help use the same
  *  tf-shell/tf-frame with their own top bar and no sidebar or tab bar. The person's apps and the
- *  app's extra tools come from the frame context (useFrame). */
+ *  app's extra tools come from the frame context (useFrame). On phones the page's large title
+ *  collapses: once it scrolls under the toolbar, the page bar folds away and the toolbar becomes
+ *  one glass row with the title inline in the middle and the page's way back on the leading side
+ *  (useLargeTitle; kit.css shows it only under 768px). */
 export function ModuleShell({ module, id, current = id, who, links = [], groups, tools, scopeNote, contentClass = 'module-content', scrollKey = '', children }: {
   /** Display name, e.g. "Training". */
   module: string;
@@ -50,6 +53,8 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
   const pages = pageGroups.flatMap((group) => group.links);
   const navRef = useRef<HTMLElement>(null), measureRef = useRef<HTMLDivElement>(null);
   const { fit, measured } = useBarFit(navRef, measureRef, pages.length);
+  const topRef = useRef<HTMLElement>(null);
+  const inline = useLargeTitle(`${id}-main`, topRef, pathname);
   const railCurrent = current === 'core' ? 'admin' : current;
   // Only the open page itself is the "page"; a link to one of its parents is "true".
   const currentFor = (page: ModuleLink) => !page.active ? undefined : pathname === page.href.split('?')[0] ? 'page' as const : 'true' as const;
@@ -64,7 +69,13 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
       <a className="skip-link" href={`#${id}-main`}>Skip to content</a>
       <Sidebar current={railCurrent} name={who.name} />
       <div className="tf-frame">
-        <header className="tf-top">
+        <header ref={topRef} className="tf-top" data-titled={inline ? '' : undefined}>
+          {inline?.back ? (
+            <Glass shape="circle" className="tf-bar tf-inline-back">
+              <Link href={inline.back.href} className="tf-bar-item" aria-label={`Back to ${inline.back.label}`}><ChevronLeft aria-hidden="true" /></Link>
+            </Glass>
+          ) : null}
+          {inline ? <span className="tf-inline-title" aria-hidden="true">{inline.title}</span> : null}
           <Link href="/" className="tf-brand" aria-label="Turnfin home">
             <Image src="/brand/turnfin.png" alt="" width={72} height={72} priority />
           </Link>
@@ -100,6 +111,39 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
       <TabBar current={railCurrent} />
     </div>
   );
+}
+
+/** The page's large title, watched: once its H1 (every page has exactly one, in PageHeader) has
+ *  scrolled up under the toolbar, its words and the header's way back (BackLink's `data-back`),
+ *  else null. It looks for the H1 again whenever the page's content changes, as a page may draw
+ *  its header after loading. */
+function useLargeTitle(mainId: string, top: RefObject<HTMLElement | null>, pathname: string) {
+  const [inline, setInline] = useState<{ title: string; back: { href: string; label: string } | null } | null>(null);
+  useEffect(() => {
+    const main = document.getElementById(mainId);
+    if (!main) return;
+    let observer: IntersectionObserver | null = null, watched: Element | null = null;
+    const watch = () => {
+      const h1 = main.querySelector('h1');
+      if (h1 === watched) return;
+      observer?.disconnect();
+      watched = h1;
+      setInline(null);
+      if (!h1) return;
+      const under = top.current?.offsetHeight ?? 0;
+      observer = new IntersectionObserver(([entry]) => {
+        const gone = !entry.isIntersecting && entry.boundingClientRect.top < (entry.rootBounds?.top ?? 0);
+        const back = main.querySelector<HTMLAnchorElement>('[data-page-header] a[data-back]');
+        setInline(gone ? { title: h1.textContent ?? '', back: back ? { href: back.getAttribute('href') ?? '/', label: back.dataset.back ?? '' } : null } : null);
+      }, { rootMargin: `${-under}px 0% 0% 0%` });
+      observer.observe(h1);
+    };
+    watch();
+    const changes = new MutationObserver(watch);
+    changes.observe(main, { childList: true, subtree: true });
+    return () => { changes.disconnect(); observer?.disconnect(); };
+  }, [mainId, top, pathname]);
+  return inline;
 }
 
 /** As many page links as fit the bar, measured, so a link never scrolls out of sight; the rest go
