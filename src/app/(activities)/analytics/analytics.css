@@ -42,7 +42,7 @@
 .turnfin-app .ins-switch-item { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 999px; color: var(--pc-ink); font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap; transition: background-color 180ms var(--ins-ease), color 180ms var(--ins-ease); }
 .turnfin-app .ins-switch-item svg { width: 18px; height: 18px; flex: none; color: var(--pc-ink-muted); }
 .turnfin-app .ins-switch-item:hover { background: var(--pc-hover); }
-.turnfin-app .ins-switch-item[aria-current] { background: var(--pc-primary); color: var(--pc-on-primary); }
+.turnfin-app .ins-switch-item[aria-current] { background: var(--accent-btn); color: var(--pc-on-primary); }
 .turnfin-app .ins-switch-item[aria-current] svg { color: currentColor; }
 .turnfin-app .ins-switch-item:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
 .turnfin-app .ins-filter .pc-seg { flex-wrap: nowrap; white-space: nowrap; padding: 4px; border-radius: 999px; background: var(--pc-surface); font-size: 14px; }
@@ -70,7 +70,7 @@
 .turnfin-app .ins-range-quick { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .turnfin-app .ins-range-chip { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 999px; background: var(--pc-surface-sunken); color: var(--pc-ink); font-size: 14px; font-weight: 600; text-decoration: none; transition: background-color 180ms ease; }
 .turnfin-app .ins-range-chip:hover { background: var(--pc-hover); }
-.turnfin-app .ins-range-chip[aria-current] { background: var(--pc-primary); color: var(--pc-on-primary); }
+.turnfin-app .ins-range-chip[aria-current] { background: var(--accent-btn); color: var(--pc-on-primary); }
 .turnfin-app .ins-range-chip:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
 .turnfin-app .ins-range-form { display: flex; flex-direction: column; gap: 12px; padding-top: 14px; border-top: 1px solid var(--pc-line); }
 .turnfin-app .ins-range-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -142,7 +142,7 @@
 .turnfin-app .ins-pills { align-self: flex-start; display: flex; flex-wrap: wrap; gap: 4px; max-width: 100%; padding: 4px; border-radius: 24px; background: var(--pc-surface-sunken); }
 .turnfin-app .ins .ins-pill { height: 44px; padding: 0 16px; border-radius: 999px; color: var(--pc-ink); font-size: 14px; font-weight: 600; }
 .turnfin-app .ins .ins-pill:hover { background: var(--pc-hover); }
-.turnfin-app .ins .ins-pill[aria-pressed='true'] { background: var(--pc-primary); color: var(--pc-on-primary); }
+.turnfin-app .ins .ins-pill[aria-pressed='true'] { background: var(--accent-btn); color: var(--pc-on-primary); }
 .turnfin-app .ins .ins-pill:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
 
 /* ── One measure for everyone: a bar each to one scale, the average as a line through all of them. */
@@ -312,8 +312,8 @@ a.ins-kpi:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2p
 .turnfin-app .ins .ins-heat td span { display: block; font-size: 11px; opacity: 0.8; }
 .turnfin-app .ins :is(.ins-heat td, .ins-heat-scale span)[data-band='1'] { background: var(--pc-primary-soft); }
 .turnfin-app .ins :is(.ins-heat td, .ins-heat-scale span)[data-band='2'] { background: var(--pc-block-next); }
-.turnfin-app .ins :is(.ins-heat td, .ins-heat-scale span)[data-band='3'] { background: var(--ins-a); color: var(--pc-on-primary); }
-.turnfin-app .ins :is(.ins-heat td, .ins-heat-scale span)[data-band='4'] { background: var(--pc-primary-hover); color: var(--pc-on-primary); }
+.turnfin-app .ins :is(.ins-heat td, .ins-heat-scale span)[data-band='3'] { background: var(--accent-btn); color: var(--pc-on-primary); }
+.turnfin-app .ins :is(.ins-heat td, .ins-heat-scale span)[data-band='4'] { background: var(--accent-ink); color: var(--bg-2); }
 .turnfin-app .ins .ins-heat .ins-heat-dot { position: absolute; top: 6px; right: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--ins-b); box-shadow: 0 0 0 2px var(--pc-surface); }
 .turnfin-app .ins .ins-heat tr, .turnfin-app .ins .ins-heat tr:hover { border: 0; background: none; }
 .turnfin-app .ins .ins-heat td.ins-heat-corner { width: 4rem; height: auto; background: none; box-shadow: none; }

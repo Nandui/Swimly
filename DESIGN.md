@@ -34,21 +34,21 @@ The values below are the contract. Names are the CSS custom properties the theme
 | `label-2` | rgba(60,60,67,.76) | rgba(235,235,245,.64) | Secondary text (5.3:1 on white). Apple's 60% misses AA. |
 | `label-3` | rgba(60,60,67,.4) | rgba(235,235,245,.36) | Chevrons, disabled, decorative marks. Never text. |
 | `sep` | rgba(60,60,67,.14) | rgba(84,84,88,.55) | Row hairlines (inset to the text), timeline grid. |
-| `accent` | #1d5fd1 | #4f8fff | The fin blue: selection, links, text buttons, sidebar symbols. |
+| `accent` | #1d5fd1 | #6aa4ff | The fin blue: selection, links, text buttons, sidebar symbols. Dark is #6aa4ff, not #4f8fff, so a blue label on a grey button keeps 4.5:1 on a card. |
 | `accent-btn` | #1d5fd1 | #2a68e0 | The one prominent action and filled buttons; white text on it. |
 | `accent-hi` | #2a6be2 | #3a76ee | Hover of `accent-btn`. |
 | `accent-soft` | rgba(29,95,209,.11) | rgba(79,143,255,.18) | Selected list item, best suggestion, avatars, on-now blocks. |
 | `accent-ink` | #1747a3 | #a8c7ff | Text on `accent-soft`. |
 | `green` | #34c759 | #30d158 | Done as a large fill: switch on, rings, covered bar. Not text. |
-| `green-ink` | #1d7a3a | #5ce383 | Text that says done or covered. |
+| `green-ink` | #1b7537 | #5ce383 | Text that says done or covered. |
 | `green-mark` | #1d7a3a | #30d158 | Small done marks (ticks) and the Saved button. |
 | `on-green` | #ffffff | #000000 | Tick or text on `green-mark`. |
 | `green-soft` | rgba(52,199,89,.15) | rgba(48,209,88,.17) | Ground of done tags, covered blocks, resolved tiles. |
 | `orange` | #ff9500 | #ff9f0a | Needs action, as a bar or mark. Not text. |
-| `orange-ink` | #b05000 | #ffb340 | Text that says something needs action. |
+| `orange-ink` | #a84c00 | #ffb340 | Text that says something needs action. |
 | `orange-soft` | rgba(255,149,0,.14) | rgba(255,159,10,.16) | Ground of needs-action tags, gaps, tiles. |
 | `red` | #ff3b30 | #ff453a | Now: the live dot and the now line. Not behind text. |
-| `red-ink` | #c9241a | #ff6b62 | Text for serious. |
+| `red-ink` | #c22219 | #ff6b62 | Text for serious. |
 | `red-badge` | #d70015 | #d70015 | App badges and the now pill, behind white text. |
 | `red-soft` | rgba(255,59,48,.11) | rgba(255,69,58,.16) | Ground of serious tags and warnings. |
 | `scrim` | rgba(0,0,0,.18) | rgba(0,0,0,.42) | Behind a dialog. Sheets push the stage back instead. |
@@ -183,7 +183,7 @@ Turnfin is one frame holding apps ([PRODUCT.md](PRODUCT.md)). The frame changes 
 - Every page is one `PageShell` with one `PageHeader` holding its one H1, as now (AGENTS.md, "Screens"). Step 5 rebuilds both in this design: the header gains the subtitle menu, the large-title collapse on phones and the sticky glass toolbar on desktop.
 - A page leads with what needs the person: a "Needs you" list, or the "Not covered yet" lane. Then what is happening now (figures, the day). Then the rest.
 - Sections are `title-3` headings above opaque grouped content, 26px apart. Cards and lists are `bg-2` with `radius-card` corners. Separators are inset hairlines; never boxes inside boxes.
-- A page that shows the day uses `DayTimeline`: Calendar-style blocks with a 3px leading bar, and the red now line and pill.
+- A page that shows the day uses `DayTimeline`: Calendar-style blocks with a 3px leading bar, and the red now line and pill. Blocks that overlap in time take rows of their own within their lane, as Calendar stacks them; a hairline parts one lane from the next.
 
 ## Components
 
@@ -260,6 +260,8 @@ If Turnfin Me becomes a native iPhone app, its confirmations become real Live Ac
   - Text 4.5:1, or 3:1 at 24px+ or bold 19px+. Marks and focus 3:1.
   - The checked pairs are in the design system's Accessibility section.
   - Apple's own secondary label, white on system green and white on system red miss AA; that is why `label-2` is 76%, and why `green-mark`, `on-green` and `red-badge` exist.
+  - A filled shape with white text is `accent-btn`, never `accent`: `accent` is for blue text and marks.
+  - The light inks (`green-ink`, `orange-ink`, `red-ink`) keep 4.5:1 on their soft ground over `bg` as well as over `bg-2`, because tags also sit on the page ground. A figure of nothing is `label-2`: `label-3` is never text.
 - **Not by colour alone:** every status has a word or symbol.
 - **Targets:** 44px at every width; whole rows on the pool deck.
 - **Focus:** a 2px `accent` ring with a 2px offset. Overlays trap focus, close with Esc and return focus to the control that opened them. Spotlight and lists work with the arrow keys and Enter.
