@@ -396,6 +396,19 @@
 .turnfin-app a.pc-stat:hover { background: var(--bg-3); }
 .turnfin-app a.pc-stat[aria-current] { background: var(--accent-soft); color: var(--accent-ink); box-shadow: none; }
 .turnfin-app .pc-stat-figure { font-family: var(--font-display); letter-spacing: -0.03em; }
+/* A tile that names its figure: the name (with its symbol) over the figure, a hint under it; a
+   zero count is quiet. On phones a compact set (data-compact) drops the hints. */
+.turnfin-app .pc-stat-label { display: inline-flex; align-items: center; gap: 6px; color: var(--label-2); font-weight: 550; }
+.turnfin-app .pc-stat-label > svg { width: 16px; height: 16px; color: var(--accent); }
+.turnfin-app a.pc-stat[aria-current] .pc-stat-label { color: inherit; }
+.turnfin-app a.pc-stat[aria-current] .pc-stat-label > svg { color: inherit; }
+.turnfin-app .pc-stat-figure[data-zero] { color: var(--label-3); }
+.turnfin-app .pc-stat-hint { color: var(--label-2); font-size: 13px; line-height: 18px; }
+@media (max-width: 639px) {
+  .turnfin-app .pc-stats[data-compact] { gap: var(--space-2); }
+  .turnfin-app .pc-stats[data-compact] > li > .pc-stat { padding: var(--space-3) var(--space-4); }
+  .turnfin-app .pc-stats[data-compact] .pc-stat-hint { display: none; }
+}
 
 /* Tables: one card, rows parted by hairlines; the header in caption, secondary ink. */
 .turnfin-app [data-slot='table-container'] { padding: 6px var(--space-5); border: 0; border-radius: var(--radius-card); background: var(--bg-2); box-shadow: var(--shadow-card); }
@@ -588,6 +601,9 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
   .turnfin-app .tf-shell:has(> .tf-bottom) .tf-top { position: fixed; top: 0; right: 0; left: 0; margin: 0; padding: calc(var(--space-2) + env(safe-area-inset-top)) var(--space-5) var(--space-2); }
   .turnfin-app .tf-shell:has(> .tf-bottom) .tf-top::before { inset: 0 0 calc(-1 * var(--space-4)); }
   .turnfin-app .tf-top[data-titled] > .tf-pages { display: none; }
+  /* Whatever the page scrolls to (an anchor, a focused field, an error) stops below the bar. */
+  html:has(.tf-shell > .tf-bottom) { scroll-padding-top: calc(76px + env(safe-area-inset-top)); }
+  html:has(.tf-shell > .tf-bottom):has(.tf-shell .tf-pages) { scroll-padding-top: calc(128px + env(safe-area-inset-top)); }
   .turnfin-app .tf-inline-title { flex: 1 1 0; min-width: 0; overflow: hidden; font-size: 17px; line-height: var(--control-height); font-weight: 600; text-align: center; text-overflow: ellipsis; white-space: nowrap; animation: tf-inline-in var(--duration-fade) var(--ease) both; }
   .turnfin-app .tf-inline-back { flex: none; }
   .turnfin-app .tf-inline-back > .tf-bar-item { justify-content: center; width: 36px; padding: 0; }
@@ -599,6 +615,69 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 @media (prefers-reduced-motion: reduce) {
   .turnfin-app .tf-inline-title { animation: none; }
 }
+/* A record's page (ui-kit/record.tsx; DESIGN.md, after Incidents): the status and number over the
+   record's name; what happens next with its steps beside the record, tinted blue while the move is
+   this person's; the record as opaque cards of label and value rows; the history down the side.
+   One column on phones, the next action first. */
+.turnfin-app .rec-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-1); color: var(--label-3); }
+.turnfin-app .rec-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-6); align-items: start; }
+.turnfin-app :is(.rec-main, .rec-side) { display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; }
+@media (min-width: 1024px) {
+  .turnfin-app .rec-layout { grid-template-columns: minmax(0, 1fr) minmax(300px, 340px); grid-template-areas: "main next" "main side"; grid-template-rows: auto 1fr; }
+  .turnfin-app .rec-layout > .rec-next { grid-area: next; }
+  .turnfin-app .rec-layout > .rec-main { grid-area: main; }
+  .turnfin-app .rec-layout > .rec-side { grid-area: side; }
+}
+.turnfin-app .rec-card { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; margin: 0; padding: var(--space-5) var(--space-6); border-radius: var(--radius-card); background: var(--bg-2); box-shadow: var(--shadow-card); list-style: none; }
+.turnfin-app .rec-muted { margin: 0; color: var(--label-2); }
+.turnfin-app .rec-muted strong { color: var(--label); font-weight: 600; }
+.turnfin-app .rec-small { font-size: 13px; line-height: 18px; }
+.turnfin-app .rec-amount { margin: 0; font-family: var(--font-display); font-size: 34px; line-height: 40px; font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.turnfin-app .rec-facts { display: flex; flex-direction: column; margin: calc(-1 * var(--space-2)) 0 0; }
+.turnfin-app .rec-fact { display: grid; grid-template-columns: minmax(110px, 2fr) minmax(0, 5fr); gap: var(--space-4); padding: 11px 0; }
+.turnfin-app .rec-fact + .rec-fact { border-top: 0.5px solid var(--sep); }
+.turnfin-app .rec-fact > dt { color: var(--label-2); }
+.turnfin-app .rec-fact > dd { margin: 0; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.turnfin-app .rec-fact[data-wide] { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+.turnfin-app .rec-fact[data-wide] > dd { white-space: pre-wrap; }
+.turnfin-app .rec-well { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-4) var(--space-5); border-radius: var(--radius-lg); background: var(--fill-2); }
+.turnfin-app .rec-well > h3 { margin: 0; color: var(--label-2); font-size: 13px; line-height: 18px; font-weight: 600; }
+.turnfin-app .rec-well > p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.turnfin-app .rec-next { gap: var(--space-3); }
+.turnfin-app .rec-next[data-tone='act'] { background: linear-gradient(var(--accent-soft), var(--accent-soft)), var(--bg-2); box-shadow: inset 0 0 0 0.5px var(--accent-soft), var(--shadow-card); }
+.turnfin-app .rec-next-label { margin: 0; color: var(--label-2); font-size: 13px; line-height: 18px; font-weight: 600; }
+.turnfin-app .rec-next[data-tone='act'] .rec-next-label { color: var(--accent-ink); }
+.turnfin-app .rec-next-title { margin: 0; font-family: var(--font-display); font-size: 20px; line-height: 25px; font-weight: 650; letter-spacing: -0.015em; }
+.turnfin-app .rec-steps { display: flex; flex-direction: column; gap: var(--space-3); margin: var(--space-2) 0 0; padding: var(--space-4) 0 0; border-top: 0.5px solid var(--sep); list-style: none; }
+.turnfin-app .rec-steps > li { position: relative; display: grid; grid-template-columns: 22px minmax(0, 1fr); column-gap: var(--space-3); }
+.turnfin-app .rec-steps > li:not(:last-child)::after { content: ""; position: absolute; top: 26px; bottom: -10px; left: 10px; width: 2px; border-radius: var(--radius-capsule); background: var(--sep); }
+.turnfin-app .rec-steps > li[data-state='done']:not(:last-child)::after { background: var(--accent); }
+.turnfin-app .rec-step-dot { display: grid; grid-row: 1 / span 2; place-items: center; width: 22px; height: 22px; border-radius: var(--radius-capsule); box-shadow: inset 0 0 0 1.5px var(--label-3); }
+.turnfin-app .rec-step-dot > svg { width: 12px; height: 12px; stroke-width: 3; }
+.turnfin-app .rec-steps [data-state='done'] > .rec-step-dot { background: var(--accent-btn); color: var(--bg-2); box-shadow: none; }
+.turnfin-app .rec-steps [data-state='current'] > .rec-step-dot { box-shadow: inset 0 0 0 2px var(--accent), 0 0 0 4px var(--accent-soft); }
+.turnfin-app .rec-steps [data-state='current'] > .rec-step-dot::after { content: ""; width: 8px; height: 8px; border-radius: var(--radius-capsule); background: var(--accent); }
+.turnfin-app .rec-steps [data-state='waiting'] > .rec-step-dot { background: var(--orange-soft); color: var(--orange-ink); box-shadow: none; }
+.turnfin-app .rec-steps [data-state='stopped'] > .rec-step-dot { background: var(--red-soft); color: var(--red-ink); box-shadow: none; }
+.turnfin-app .rec-step-label { font-weight: 600; }
+.turnfin-app .rec-steps [data-state='todo'] > .rec-step-label { color: var(--label-2); font-weight: 500; }
+.turnfin-app .rec-step-hint { overflow-wrap: anywhere; color: var(--label-2); font-size: 13px; line-height: 18px; }
+.turnfin-app .rec-steps [data-state='waiting'] > .rec-step-hint { color: var(--orange-ink); font-weight: 600; }
+.turnfin-app .rec-history { gap: 0; }
+.turnfin-app .rec-history > li { position: relative; display: flex; gap: var(--space-3); min-width: 0; padding-bottom: var(--space-4); }
+.turnfin-app .rec-history > li:last-child { padding-bottom: 0; }
+.turnfin-app .rec-history > li:not(:last-child)::before { content: ""; position: absolute; top: 18px; bottom: 0; left: 4px; width: 2px; border-radius: var(--radius-capsule); background: var(--sep); }
+.turnfin-app .rec-history-dot { flex: none; width: 10px; height: 10px; margin-top: 5px; border-radius: var(--radius-capsule); box-shadow: inset 0 0 0 2.5px var(--accent); }
+.turnfin-app .rec-history > li[data-tone='done'] > .rec-history-dot { background: var(--green); box-shadow: none; }
+.turnfin-app .rec-history > li[data-tone='warn'] > .rec-history-dot { box-shadow: inset 0 0 0 2.5px var(--orange); }
+.turnfin-app .rec-history > li[data-tone='stop'] > .rec-history-dot { box-shadow: inset 0 0 0 2.5px var(--red); }
+.turnfin-app .rec-history-title { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.turnfin-app .rec-history-note { margin: var(--space-2) 0 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); background: var(--fill-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 767px) {
+  .turnfin-app .rec-card { padding: var(--space-4) var(--space-5); }
+  .turnfin-app .rec-fact { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+}
+
 /* Print: only the page itself; the frame's bars and padding go. */
 @media print {
   .turnfin-app :is(.tf-top, .tf-side, .tf-bottom) { display: none; }

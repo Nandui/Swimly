@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.12.0 · 26 October 2026 · Coinage in the new look
+
+- **Coinage requests** look like Refund requests now: the queue tiles name each queue over its count, search and the filters sit above the list, and each request has a coloured square, orange while it waits and green once ordered.
+- **A coinage request** opens with its status and number above who it is for, with **Coinage requests** above that to go back. What happens next sits beside it, tinted blue when the move is yours, with the four steps (requested, with accounts, approved, ordered) under it.
+- The coins and their total, the request and how far accounts have got read as simple rows. The history runs down the side.
+- The request form has its section titles above the fields.
+- On a phone, a field or a link you jump to no longer hides under the bar at the top.
+
 ## 2.11.0 · 26 October 2026 · Refunds in the new look
 
 - **Refund requests:** the four queue tiles show each queue's name over its count, and a queue with nothing in it is grey. Search and the filters sit above the list, and the list has its own title with how many requests it holds.
