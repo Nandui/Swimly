@@ -21,7 +21,8 @@ export function PageHeader({
   actions?: React.ReactNode;
   status?: React.ReactNode;
   back?: { href: string; label: string };
-  /** A short line above the title naming the area (analytics: "Swim school analytics"). */
+  /** A short line above the title, under the back link: the area (analytics: "Swim school
+   *  analytics"), or a record's status and number (an incident report). */
   eyebrow?: React.ReactNode;
   /** A picture beside the title and description, such as a person's avatar. */
   leading?: React.ReactNode;
@@ -39,8 +40,8 @@ export function PageHeader({
   return (
     <div data-page-header="" className="min-w-0 flex flex-wrap gap-x-6 gap-y-4 items-end justify-between">
       <div className="min-w-0 flex flex-col gap-1 grow basis-column">
-        {eyebrow}
         {back ? <BackLink href={back.href} label={back.label} /> : null}
+        {eyebrow}
         {leading ? (
           <div className="flex min-w-0 items-center gap-4">
             {leading}
