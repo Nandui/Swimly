@@ -4,7 +4,7 @@
 
 - **The approved screens:** the Turnfin Glass canvas, a clickable prototype of Home, Rota, Incidents and Swim school on desktop and phone (https://claude.ai/artifact/WZWn3yZv7Q7J6bg2wiaYDd).
 - **The design system:** every token, component (with live previews), pattern and accessibility pair, for people and coding agents to browse (https://claude.ai/artifact/6Ex4VcQGtPRBheTqVtgWWM).
-- When this file and either of those disagree, this file wins. Once step 5 moves the tokens into the theme file, the theme file holds the values and this file links to it.
+- When this file and either of those disagree, this file wins. The tokens are now in the theme file, [`src/app/theme/glass.css`](src/app/theme/glass.css), which holds the values; the tables below say what each one is for.
 
 ## The idea
 
@@ -122,7 +122,7 @@ Everything that moves rides a spring, written as CSS `linear()` curves sampled f
 | `--bounce` | 0.5 | about 16% | droplets, presses, ticks, switches, the live banner |
 | `--smooth` | 1 | none | anything that must not overshoot |
 
-The exact `linear()` values (a damped spring sampled at 49 points, settling within the duration) are in the design system's `components/bundle.css`; step 5 copies them into the theme.
+The exact `linear()` values (a damped spring sampled at 49 points, settling within the duration) are in [`src/app/theme/glass.css`](src/app/theme/glass.css).
 
 Durations: `duration-press` 120ms, `duration-fade` 250ms, `duration-spring` 600ms, `duration-island` 700ms. `duration-banner` is 3200ms, how long a live banner stays expanded.
 
@@ -284,7 +284,7 @@ If Turnfin Me becomes a native iPhone app, its confirmations become real Live Ac
 
 Roadmap step 5, in this order. Each part removes the old look it replaces.
 
-1. **The theme.**
+1. **The theme** (built 25 October 2026).
    - These tokens go into one theme file in `src/app/theme`, mapped into `src/app/shadcn.css`, in light and dark.
    - The springs, the glass material and the lens filters go into the kit.
    - `poolside.css` and the `--pc-*` tokens go when nothing uses them.
