@@ -85,12 +85,11 @@
   --radius-ui-lg: var(--ui-radius);
   --radius-ui-xl: calc(var(--ui-radius) * 1.4);
   --radius-ui-2xl: calc(var(--ui-radius) * 1.8);
-  /* Poolside corners (poolside.css): rounded-control (pills), rounded-card (16px, inside a
-     panel), rounded-panel (24px) and rounded-frame. */
+  /* Corners on the 2.0 radii (poolside.css points them at glass.css): rounded-control (capsules),
+     rounded-card (radius-lg, 14px, inside a card) and rounded-panel (radius-card, 26px). */
   --radius-control: var(--pc-radius-control);
   --radius-card: var(--pc-radius-card);
   --radius-panel: var(--pc-radius-panel);
-  --radius-frame: var(--pc-radius-frame);
 }
 
 /* Sizes and positions that come from data (src/components/ui-kit/scale.ts): bar lengths in

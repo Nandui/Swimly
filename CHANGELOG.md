@@ -4,6 +4,16 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.3.0 · 25 October 2026 · New buttons, lists and forms
+
+- Buttons are rounder and calmer. The main button on a page is the only blue one; the others are light grey with blue words.
+- Lists inside a panel are now one card with thin lines between the rows, instead of a box around every row.
+- Boxes you type into are light grey with no edge, and turn blue around the edge when you are typing in them. A box that needs fixing turns pink with a red edge.
+- The words above a box are smaller and grey, so what you type stands out.
+- Menus and lists you open from a button are glass, and windows that open over the page have rounder corners.
+- Switches are green when they are on.
+- Text is a little larger: on a computer it is slightly bigger than before, and on a phone or tablet it is the size your phone uses for its own apps.
+
 ## 2.2.0 · 25 October 2026 · A new frame around every app
 
 - On a computer, your apps are now in a glass panel down the left: Home at the top, then every app you use, then Help. The app you are in is highlighted. Your name, role and site are at the bottom: choose them for Appearance, your account, What's new and Sign out.

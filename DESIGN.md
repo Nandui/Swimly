@@ -288,7 +288,7 @@ Roadmap step 5, in this order. Each part removes the old look it replaces.
    - These tokens go into one theme file in `src/app/theme`, mapped into `src/app/shadcn.css`, in light and dark.
    - The springs, the glass material and the lens filters go into the kit.
    - `poolside.css` and the `--pc-*` tokens go when nothing uses them.
-2. **The kit** (the material, `GlassRoot` and `Glass`, built 25 October 2026; the other components follow).
+2. **The kit** (built 25 October 2026: the material, `GlassRoot` and `Glass`, and the shadcn primitives restyled: buttons, tags, switches, segmented controls, fields, glass menus, dialogs, cards, rows, figure tiles and tables. The new components, such as `DayTimeline`, `Inspector` and `LiveBanner`, follow with the screens that use them).
    - The components above, in `src/components/ui-kit`, built on the shadcn primitives.
    - The lint rules (AGENTS.md, "Enforcement") follow the new kit: the pointer light is set on a ref by `GlassRoot`, not by a `style` attribute.
 3. **The frame** (built 25 October 2026; the large-title collapse on phones follows). `ModuleShell` becomes the sidebar, toolbar and tab bar frame. `PageShell` and `PageHeader` are rebuilt in this design.
