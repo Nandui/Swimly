@@ -5,6 +5,7 @@ import { useState } from "react";
 import { CircleCheck } from "lucide-react";
 import { DocBody } from "@/components/doc-body";
 import { Frame } from "@/components/frame";
+import { useLiveBanner } from "@/components/ui-kit/live-banner";
 import { LoadError, Loading, Notice, useLoad } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
 import { date, day } from "@/lib/format";
@@ -19,12 +20,12 @@ export default function ReadingDetailPage() {
   const { data, setData, error, reload } = useLoad<Doc>(`reading/${id}`);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
-  // The acknowledged Notice is announced only when this visit just produced it.
-  const [justDone, setJustDone] = useState(false);
+  // Reading it ends on a live banner; the Notice below then says so for as long as it is open.
+  const banner = useLiveBanner();
   async function acknowledge() {
     if (!data) return;
     setBusy(true); setFailure(null);
-    try { setData(await api<Doc>(`reading/${id}/acknowledge`, { method: "POST", body: { versionId: data.versionId } })); setJustDone(true); }
+    try { setData(await api<Doc>(`reading/${id}/acknowledge`, { method: "POST", body: { versionId: data.versionId } })); banner("Marked as read", data.title); }
     catch (caught) { setFailure(caught instanceof ApiError ? caught.message : "That didn't save. Try again."); }
     finally { setBusy(false); }
   }
@@ -36,7 +37,7 @@ export default function ReadingDetailPage() {
           <>
             <article className="pc-panel"><DocBody body={data.body} /></article>
             {data.acknowledgedAt ? (
-              <Notice title={`You read this version on ${date(data.acknowledgedAt)}`} live={justDone} />
+              <Notice title={`You read this version on ${date(data.acknowledgedAt)}`} />
             ) : !data.current ? (
               <Notice title="A newer version has been published" tone="warning">It will appear in your reading once it is assigned.</Notice>
             ) : (

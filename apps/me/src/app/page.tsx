@@ -1,12 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, Flame, MessageCircle, PlayCircle } from "lucide-react";
+import { BookOpen, ChevronRight, CircleCheck, Flame, GraduationCap, MessageCircle, PlayCircle, ShieldCheck } from "lucide-react";
 import { Frame } from "@/components/frame";
-import { EmptyRows, LoadError, Loading, Tag, useLoad } from "@/components/ui";
+import { LoadError, Loading, Tag, useLoad } from "@/components/ui";
 import { clock, day } from "@/lib/format";
 import { QUALIFICATION_META, READING_META, SHIFT_WARNING_META, TRAINING_META } from "@/lib/meta";
-import { Button } from "@/components/shadcn/button";
 import { PageShell } from "@/components/ui-kit/page-shell";
 import { PageHeader } from "@/components/ui-kit/page-header";
 
@@ -20,89 +19,93 @@ type Home = {
   refresher: number;
 };
 
-/** What needs you, then your next shifts. Nothing from HR beyond a count. */
+/** Home in the phone frame (DESIGN.md; the approved canvas's phone Home): what needs the person
+ *  first, as one grouped list (the course they were part-way through, today's refresher, a review
+ *  to acknowledge, training to do, reading due and certificates running out), then their next
+ *  shifts. Training waiting for a manager's sign-off needs nothing from them, so it stays in
+ *  Training. Nothing from HR beyond a count. */
 export default function HomePage() {
   const { data, error, reload } = useLoad<Home>("home");
-  const todo = data ? data.training.filter((t) => t.state !== "submitted").length + data.reading.length + data.reviewsToAcknowledge + data.qualifications.length : 0;
+  const toDo = data ? data.training.filter((t) => t.state !== "submitted") : [];
+  const todo = data ? toDo.length + data.reading.length + data.reviewsToAcknowledge + data.qualifications.length : 0;
+  // The course they were part-way through, one tap from the next lesson.
+  const going = toDo.find((t) => t.progress && t.progress.done > 0 && t.progress.nextLessonId);
   return (
     <Frame title="Home">
-      <PageShell header={<PageHeader title={data ? `Hello, ${data.name.split(" ")[0]}` : "Hello"}
+      <PageShell spacing="roomy" header={<PageHeader title={data ? `Hello, ${data.name.split(" ")[0]}` : "Hello"}
         description={data ? (todo === 0 ? "Nothing needs you right now." : `${todo} ${todo === 1 ? "thing needs" : "things need"} you.`) : undefined} />}>
 
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : (
           <>
-            {(() => {
-              // The course they were part-way through, one tap from the next lesson.
-              const going = data.training.find((t) => t.progress && t.progress.done > 0 && t.progress.nextLessonId && t.state !== "submitted");
-              return going?.progress ? (
-                <Link href={`/training/${going.id}/${going.progress.nextLessonId}`} className="notice first">
-                  <PlayCircle aria-hidden="true" />
-                  <span className="notice-body"><strong>Continue {going.title}</strong>{going.progress.done} of {going.progress.total} lessons done. Pick up where you left off.</span>
-                  <ChevronRight className="pc-row-chevron" aria-hidden="true" />
-                </Link>
-              ) : null;
-            })()}
-            {data.refresher > 0 ? (
-              <Link href="/training/refresher" className="notice">
-                <Flame aria-hidden="true" />
-                <span className="notice-body"><strong>Today’s refresher</strong>{data.refresher} {data.refresher === 1 ? "question" : "questions"} from your courses, about two minutes.</span>
-                <ChevronRight className="pc-row-chevron" aria-hidden="true" />
-              </Link>
-            ) : null}
-            {data.reviewsToAcknowledge > 0 ? (
-              <Link href="/hr" className="notice first">
-                <MessageCircle aria-hidden="true" />
-                <span className="notice-body"><strong>A review was shared with you</strong>Open HR to read and acknowledge it. You’ll need a fresh code.</span>
-                <ChevronRight className="pc-row-chevron" aria-hidden="true" />
-              </Link>
-            ) : null}
-
-            <section className="pc-panel" aria-labelledby="home-training">
-              <div className="pc-panel-head"><h2 id="home-training">Training</h2><Button asChild variant="ghost"><Link href="/training">All training<ChevronRight aria-hidden="true" /></Link></Button></div>
-              {data.training.length === 0 ? <EmptyRows>No training to do.</EmptyRows> : (
-                <ul className="pc-rows">{data.training.map((t) => (
+            <section aria-labelledby="home-needs" className="flex min-w-0 flex-col">
+              <div className="pc-section-head"><h2 id="home-needs">Needs you</h2>{todo ? <p>{todo}</p> : null}</div>
+              <ul className="pc-list">
+                {going?.progress ? (
+                  <li><Link href={`/training/${going.id}/${going.progress.nextLessonId}`} className="pc-row">
+                    <span className="pc-tile-icon"><PlayCircle aria-hidden="true" /></span>
+                    <span className="pc-row-body"><span className="font-semibold">Continue {going.title}</span><span className="pc-row-hint">{going.progress.done} of {going.progress.total} lessons done</span></span>
+                    <ChevronRight className="pc-row-chevron" aria-hidden="true" />
+                  </Link></li>
+                ) : null}
+                {data.refresher > 0 ? (
+                  <li><Link href="/training/refresher" className="pc-row">
+                    <span className="pc-tile-icon" data-tone="orange"><Flame aria-hidden="true" /></span>
+                    <span className="pc-row-body"><span>Today’s refresher</span><span className="pc-row-hint">{data.refresher} {data.refresher === 1 ? "question" : "questions"} from your courses, about two minutes</span></span>
+                    <ChevronRight className="pc-row-chevron" aria-hidden="true" />
+                  </Link></li>
+                ) : null}
+                {data.reviewsToAcknowledge > 0 ? (
+                  <li><Link href="/hr" className="pc-row">
+                    <span className="pc-tile-icon" data-tone="orange"><MessageCircle aria-hidden="true" /></span>
+                    <span className="pc-row-body"><span>A review was shared with you</span><span className="pc-row-hint">Read and acknowledge it in HR. You’ll need a fresh code.</span></span>
+                    <ChevronRight className="pc-row-chevron" aria-hidden="true" />
+                  </Link></li>
+                ) : null}
+                {toDo.filter((t) => t.id !== going?.id).map((t) => (
                   <li key={t.id}><Link href={`/training/${t.id}`} className="pc-row">
-                    <span className="pc-row-body"><span className="pc-row-title">{t.title}</span><span className="pc-row-hint">{[t.dueOn ? `Due ${day(t.dueOn)}` : "No deadline", t.progress ? `${t.progress.done} of ${t.progress.total} lessons` : null].filter(Boolean).join(" · ")}</span></span>
-                    <span className="pc-row-trail"><Tag meta={TRAINING_META[t.state]} /><ChevronRight className="pc-row-chevron" aria-hidden="true" /></span>
+                    <span className="pc-tile-icon" data-tone={t.state === "overdue" ? "red" : undefined}><GraduationCap aria-hidden="true" /></span>
+                    <span className="pc-row-body"><span>{t.title}</span><span className="pc-row-hint">{[t.dueOn ? `Due ${day(t.dueOn)}` : "No deadline", t.progress ? `${t.progress.done} of ${t.progress.total} lessons` : null].filter(Boolean).join(" · ")}</span></span>
+                    <Tag meta={TRAINING_META[t.state]} />
+                    <ChevronRight className="pc-row-chevron" aria-hidden="true" />
                   </Link></li>
-                ))}</ul>
-              )}
-            </section>
-
-            <section className="pc-panel" aria-labelledby="home-reading">
-              <div className="pc-panel-head"><h2 id="home-reading">Required reading</h2><Button asChild variant="ghost"><Link href="/reading">All reading<ChevronRight aria-hidden="true" /></Link></Button></div>
-              {data.reading.length === 0 ? <EmptyRows>Nothing to read.</EmptyRows> : (
-                <ul className="pc-rows">{data.reading.map((r) => (
+                ))}
+                {data.reading.map((r) => (
                   <li key={r.documentId}><Link href={`/reading/${r.documentId}`} className="pc-row">
-                    <span className="pc-row-body"><span className="pc-row-title">{r.title}</span><span className="pc-row-hint">{r.dueOn ? `Due ${day(r.dueOn)}` : "No deadline"}</span></span>
-                    <span className="pc-row-trail"><Tag meta={r.overdue ? READING_META.overdue : READING_META.outstanding} /><ChevronRight className="pc-row-chevron" aria-hidden="true" /></span>
+                    <span className="pc-tile-icon" data-tone={r.overdue ? "red" : undefined}><BookOpen aria-hidden="true" /></span>
+                    <span className="pc-row-body"><span>{r.title}</span><span className="pc-row-hint">{r.dueOn ? `Due ${day(r.dueOn)}` : "No deadline"}</span></span>
+                    <Tag meta={r.overdue ? READING_META.overdue : READING_META.outstanding} />
+                    <ChevronRight className="pc-row-chevron" aria-hidden="true" />
                   </Link></li>
-                ))}</ul>
-              )}
+                ))}
+                {data.qualifications.map((q) => (
+                  <li key={q.id}><Link href="/qualifications" className="pc-row">
+                    <span className="pc-tile-icon" data-tone={q.state === "expired" ? "red" : "orange"}><ShieldCheck aria-hidden="true" /></span>
+                    <span className="pc-row-body"><span>{q.name}</span><span className="pc-row-hint" data-tone={q.state === "expired" ? undefined : "orange"}>{QUALIFICATION_META[q.state].label} · {day(q.expiresOn)}</span></span>
+                    <ChevronRight className="pc-row-chevron" aria-hidden="true" />
+                  </Link></li>
+                ))}
+                {todo === 0 && !going && data.refresher === 0 ? (
+                  <li><div className="pc-row">
+                    <span className="pc-tile-icon" data-tone="green"><CircleCheck aria-hidden="true" /></span>
+                    <span className="pc-row-body"><span>Nothing needs you right now</span><span className="pc-row-hint">Training, reading and certificates that need you show here.</span></span>
+                  </div></li>
+                ) : null}
+              </ul>
             </section>
 
-            {data.qualifications.length > 0 ? (
-              <section className="pc-panel" aria-labelledby="home-quals">
-                <div className="pc-panel-head"><h2 id="home-quals">Qualifications</h2><Button asChild variant="ghost"><Link href="/qualifications">All<ChevronRight aria-hidden="true" /></Link></Button></div>
-                <ul className="pc-rows">{data.qualifications.map((q) => (
-                  <li key={q.id} className="pc-row">
-                    <span className="pc-row-body"><span className="pc-row-title">{q.name}</span><span className="pc-row-hint">{q.state === "expired" ? "Expired" : "Expires"} {day(q.expiresOn)}</span></span>
-                    <span className="pc-row-trail"><Tag meta={QUALIFICATION_META[q.state]} /></span>
-                  </li>
-                ))}</ul>
-              </section>
-            ) : null}
-
-            <section className="pc-panel" aria-labelledby="home-shifts">
-              <div className="pc-panel-head"><h2 id="home-shifts">Next shifts</h2><Button asChild variant="ghost"><Link href="/shifts">All shifts<ChevronRight aria-hidden="true" /></Link></Button></div>
-              {data.shifts.length === 0 ? <EmptyRows>No shifts in the next week.</EmptyRows> : (
-                <ul className="pc-rows">{data.shifts.map((s) => (
-                  <li key={s.id} className="pc-row">
-                    <span className="pc-row-body"><span className="pc-row-title">{day(s.date)} · {clock(s.startMinutes)} to {clock(s.endMinutes)}</span><span className="pc-row-hint">{s.role} at {s.site}</span></span>
-                    {s.warnings.length > 0 ? <span className="pc-row-trail">{s.warnings.map((w) => <Tag key={w} meta={SHIFT_WARNING_META[w]} />)}</span> : null}
-                  </li>
-                ))}</ul>
-              )}
+            <section aria-labelledby="home-shifts" className="flex min-w-0 flex-col">
+              <div className="pc-section-head"><h2 id="home-shifts">Next shifts</h2><Link href="/shifts" className="text-subheadline text-(--accent)">All shifts</Link></div>
+              <ul className="pc-list">
+                {data.shifts.length === 0 ? (
+                  <li><div className="pc-row"><span className="pc-row-body"><span className="text-(--label-2)">No shifts in the next week.</span></span></div></li>
+                ) : data.shifts.map((s) => (
+                  <li key={s.id}><div className="pc-row">
+                    <span className="me-when"><span className="font-semibold">{day(s.date)}</span><span className="pc-row-hint">{clock(s.startMinutes)} to {clock(s.endMinutes)}</span></span>
+                    <span className="pc-row-body"><span>{s.role}</span><span className="pc-row-hint">{s.site}</span></span>
+                    {s.warnings.map((w) => <Tag key={w} meta={SHIFT_WARNING_META[w]} />)}
+                  </div></li>
+                ))}
+              </ul>
             </section>
           </>
         )}

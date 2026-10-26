@@ -363,6 +363,31 @@
   .turnfin-app .done-mark { animation: none; }
 }
 
+/* The tab bar minimises to the current tab while the page scrolls down, and comes back on the
+   way up (DESIGN.md, Phone). */
+.turnfin-app .tf-bottom[data-minimised] { right: auto; }
+.turnfin-app .tf-bottom[data-minimised] > .tf-bottom-item:not([aria-current]) { display: none; }
+.turnfin-app .tf-bottom[data-minimised] > .tf-bottom-item[aria-current] { flex: none; min-width: 88px; }
+
+/* LiveBanner (DESIGN.md): phone confirmations grow as a black capsule at the top centre with a
+   green tick, the sentence and one line more, then settle to a compact tick and the time. It is
+   the kit's Button, its own fill given way to the stage; tapping it expands it again. */
+.turnfin-app .live-banner-slot { position: fixed; top: calc(8px + env(safe-area-inset-top)); left: 50%; z-index: 60; display: flex; justify-content: center; translate: -50% 0; pointer-events: none; }
+.turnfin-app .live-banner-slot > [data-slot='button'].live-banner, .turnfin-app .live-banner-slot > [data-slot='button'].live-banner:hover:not(:disabled) { display: flex; align-items: center; justify-content: flex-start; gap: var(--space-3); min-height: 37px; padding: 0 var(--space-4) 0 8px; border-radius: var(--radius-capsule); background: var(--stage); color: #ffffff; box-shadow: var(--shadow-glass); text-align: left; white-space: normal; pointer-events: auto; animation: live-banner-grow var(--duration-island) var(--bounce) both; }
+.turnfin-app .live-banner-slot > [data-slot='button'].live-banner[data-expanded] { width: min(360px, calc(100vw - 32px)); min-height: 72px; padding: 9px var(--space-5) 9px 9px; border-radius: 36px; }
+.turnfin-app .live-banner-tick { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: var(--radius-capsule); background: var(--green); color: var(--stage); }
+.turnfin-app .live-banner-tick > svg { width: 14px; height: 14px; stroke-width: 3; }
+.turnfin-app .live-banner[data-expanded] .live-banner-tick { width: 52px; height: 52px; }
+.turnfin-app .live-banner[data-expanded] .live-banner-tick > svg { width: 26px; height: 26px; }
+.turnfin-app .live-banner-text { display: flex; flex-direction: column; min-width: 0; }
+.turnfin-app .live-banner-title { font-size: 16px; line-height: 21px; font-weight: 650; }
+.turnfin-app .live-banner-detail { color: rgba(255, 255, 255, 0.64); font-size: 13px; line-height: 18px; font-weight: 400; }
+.turnfin-app .live-banner-time { color: var(--green); font-size: 14px; font-weight: 650; font-variant-numeric: tabular-nums; }
+@keyframes live-banner-grow { from { opacity: 0; scale: 0.6; } to { opacity: 1; scale: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .turnfin-app .live-banner-slot > [data-slot='button'].live-banner { animation: none; }
+}
+
 /* Figure tiles (Figure): big tabular numbers. On the ground, bg-2 tiles with radius-panel; inside a
    card, the quiet fill with radius-lg. A tile that filters shows the soft fin blue when open. */
 .turnfin-app .pc-stat { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); min-width: 0; padding: 16px 18px; border: 0; border-radius: var(--radius-lg); background: var(--fill-2); color: var(--label); text-decoration: none; }
