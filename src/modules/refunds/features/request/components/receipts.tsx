@@ -41,7 +41,8 @@ export function RefundReceipts({ id, version, attachments, editable }: { id: str
       operation.current = null; router.refresh();
     } catch { setError('Could not confirm the receipt update. Try again; it will not be added twice.'); } finally { setBusy(null); }
   }
-  return <section className="pc-panel" aria-labelledby="receipts-heading"><h2 id="receipts-heading" className="text-lg font-semibold">Receipts and supporting files</h2>
+  return <section className="flex min-w-0 flex-col" aria-labelledby="receipts-heading"><div className="pc-section-head"><h2 id="receipts-heading">Receipts and supporting files</h2>{attachments.length ? <p>{attachments.length}</p> : null}</div>
+    <div className="pc-panel">
     {attachments.length ? <ul className="pc-rows">{attachments.map(file => <li key={file.id} className="pc-row refund-file">
       <a href={`/api/refunds/files/${file.id}`} className="refund-file-link">
         <span className="pc-tile-icon"><Paperclip aria-hidden="true" /></span>
@@ -52,5 +53,6 @@ export function RefundReceipts({ id, version, attachments, editable }: { id: str
     </li>)}</ul> : <p className="text-sm text-ui-muted-foreground">No receipts attached.</p>}
     {editable && current.length < 5 && <FileField key={picker} id="receipt-upload" label="Add a receipt" optional accept=".pdf,.jpg,.jpeg,.png,.webp" description="PDF, JPEG, PNG or WebP, up to 4 MB each and five per request. Avoid bank or card details." pending={busy?.kind === 'upload'} disabled={busy?.kind === 'remove'} onChange={event => void upload(event)} />}
     {error && <Notice tone="error" live="alert" title={error} />}
+    </div>
   </section>;
 }
