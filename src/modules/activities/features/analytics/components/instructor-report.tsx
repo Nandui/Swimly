@@ -44,8 +44,9 @@ export function InstructorReport({ data }: { data: InstructorAnalyticsData }) {
       <StatTile icon={TriangleAlert} value={formatCount(data.totals.missing)} label="Not taken" caption={data.totals.missing ? <Tag meta={ATTENDANCE_REPORT_META.missing} label="Needs attendance" /> : "Nothing outstanding"} />
     </ul>
     <div className="ins-bento">
-    <section className="pc-panel ins-panel self-start" data-span={5} aria-labelledby="instructor-summary">
-      <div className="pc-panel-head"><h2 id="instructor-summary">This week by instructor</h2></div>
+    <section className="ins-panel-wrap self-start" data-span={5} aria-labelledby="instructor-summary">
+      <div className="pc-section-head"><h2 id="instructor-summary">This week by instructor</h2></div>
+      <div className="rec-card ins-panel">
       <p className="text-xs text-ui-muted-foreground">Finished classes with swimmers only. Cover belongs to the instructor who started the class. Attendance can be saved by a colleague.</p>
       <SearchField label="Find an instructor" placeholder="Name" value={search} onValueChange={setSearch} className="sm:max-w-md" />
       <div className="min-w-0">
@@ -67,12 +68,14 @@ export function InstructorReport({ data }: { data: InstructorAnalyticsData }) {
         </Table>
         {groups.length === 0 ? <EmptyState role="status" compact title={search ? "No instructors match your search." : "No weekly classes are scheduled at this site this week."} /> : null}
       </div>
+      </div>
     </section>
-    <section className="pc-panel ins-panel" data-span={7} aria-labelledby="class-detail">
-      <div className="pc-panel-head"><h2 id="class-detail" tabIndex={-1} className="rounded-ui-md focus-visible:outline-2 focus-visible:outline-ui-ring">{selected ? `${selected.name}’s classes` : "Class details"}</h2>{selected ? <Button variant="outline" onClick={() => setInstructor(null)}>Show all instructors</Button> : null}</div>
+    <section className="ins-panel-wrap" data-span={7} aria-labelledby="class-detail">
+      <div className="pc-section-head"><h2 id="class-detail" tabIndex={-1} className="rounded-ui-md focus-visible:outline-2 focus-visible:outline-ui-ring">{selected ? `${selected.name}’s classes` : "Class details"}</h2>{selected ? <Button variant="outline" onClick={() => setInstructor(null)}>Show all instructors</Button> : null}</div>
+      <div className="rec-card ins-panel">
       <Tabs value={filter} onValueChange={setFilter} className="gap-3">
         <TabsList aria-label="Filter class attendance">
-          {filters.map(item => <TabsTrigger key={item.id} value={item.id}>{item.label} <span className="pc-seg-count tabular-nums">{scoped.filter(row => matches(row.status, item.id)).length}</span></TabsTrigger>)}
+          {filters.map(item => <TabsTrigger key={item.id} value={item.id}>{item.label} <span className="font-normal tabular-nums">{scoped.filter(row => matches(row.status, item.id)).length}</span></TabsTrigger>)}
         </TabsList>
         <TabsContent value={filter} className="m-0 flex min-w-0 flex-col gap-3">
           <p role="status" className="text-xs text-ui-muted-foreground">{plural(classes.length, "class", "classes")}{selected ? ` for ${selected.name}` : " this week"}</p>
@@ -97,6 +100,7 @@ export function InstructorReport({ data }: { data: InstructorAnalyticsData }) {
           {classes.length === 0 ? <EmptyState compact title="No classes match" hint="Choose another tab to see more of this week’s classes." /> : null}
         </TabsContent>
       </Tabs>
+      </div>
     </section>
     </div>
     <footer className="ins-footnote">

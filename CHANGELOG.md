@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.17.0 · 26 October 2026 · Analytics in the new look
+
+- **Analytics** switches between **Business**, **Reception** and **Pool deck** with the same grey switch as the rest of Turnfin; the chosen dashboard is the white one.
+- Each panel's title, and the link beside it, sits above its card, with the line on what it shows underneath.
+- A chosen period, a chosen figure and a chosen view inside a panel are soft blue instead of solid blue.
+- On **Registers**, the class filters wrap onto a second row on narrow screens instead of being cut off.
+
 ## 2.16.0 · 26 October 2026 · The swim school in the new look
 
 - **Swimmers**, **Classes**, **Duty manager**, **Cancelled classes**, **Assessments**, **Awaiting enrolment**, **Legend agreements** and **Programmes** have their search, filters and views on the page, with the list as one card under them.
