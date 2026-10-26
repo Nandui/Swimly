@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ChevronRight, CloudDownload } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { useOffline } from "@/components/offline";
-import { EmptyRows } from "@/components/ui";
+import { EmptyRows, Section } from "@/components/ui";
 import { session } from "@/lib/api";
 import { date } from "@/lib/format";
 import { PageShell } from "@/components/ui-kit/page-shell";
@@ -24,11 +24,11 @@ export default function OfflinePage() {
   if (!token) return null;
   return (
     <Frame title="Saved for offline">
-      <PageShell header={<PageHeader title="Saved for offline"
+      <PageShell spacing="roomy" header={<PageHeader back={{ href: "/more", label: "More" }} title="Saved for offline"
         description={offline ? "With no signal, these courses still open. Anything else waits until you’re back online." : "These courses open even with no signal. Save one from its course page."} />}>
-        <section className="pc-panel" aria-label="Saved courses">
+        <Section label="Saved courses">
           {saved.length ? (
-            <ul className="pc-rows">{saved.map((course) => (
+            <ul className="pc-list">{saved.map((course) => (
               <li key={course.id}><Link href={`/training/${course.id}`} className="pc-row">
                 <span className="pc-tile-icon"><CloudDownload aria-hidden="true" /></span>
                 <span className="pc-row-body"><span className="pc-row-title">{course.title}</span>
@@ -37,7 +37,7 @@ export default function OfflinePage() {
               </Link></li>
             ))}</ul>
           ) : <EmptyRows>Nothing saved on this phone yet.</EmptyRows>}
-        </section>
+        </Section>
         <p className="caption">Saved courses are removed after 30 days without being brought up to date, and when you sign out.</p>
       </PageShell>
     </Frame>

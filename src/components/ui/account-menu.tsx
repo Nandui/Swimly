@@ -25,7 +25,13 @@ const MODES = [
  *  (useFrame), so no shell passes them. Appearance is menu radio items, not the ThemeToggle radio
  *  group, because a menu cancels Tab: arrows must reach every choice. They
  *  wear the shared .pc-seg bar, so it looks the same as on /account. */
-export function AccountMenu({ name, showManageAccount = true }: { name: string; showManageAccount?: boolean }) {
+export function AccountMenu({ name, showManageAccount = true, layout = "bar" }: {
+  name: string;
+  showManageAccount?: boolean;
+  /** `bar`: the avatar in a toolbar. `sidebar`: initials, name and "role · site" at the foot of
+   *  the desktop sidebar (DESIGN.md, Sidebar), opening upwards. */
+  layout?: "bar" | "sidebar";
+}) {
   const [leaving, setLeaving] = useState(false);
   const { mode, setMode } = useThemeMode();
   const { role, site, picture, version, signOut } = useFrame();
@@ -40,10 +46,13 @@ export function AccountMenu({ name, showManageAccount = true }: { name: string; 
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="tf-bar-item tf-who" aria-label={`Account menu: ${name}`} disabled={leaving}>
-          {leaving ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Avatar self aria-hidden="true">{photo}<AvatarFallback>{initials(name)}</AvatarFallback></Avatar>}<ChevronDown aria-hidden="true" />
+          {leaving ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Avatar self aria-hidden="true">{photo}<AvatarFallback>{initials(name)}</AvatarFallback></Avatar>}
+          {layout === "sidebar" ? (
+            <span className="tf-who-text" aria-hidden="true"><span>{name}</span>{caption ? <span>{caption}</span> : null}</span>
+          ) : <ChevronDown aria-hidden="true" />}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent side="bottom" align="end" className="tf-account-menu w-80 max-w-(--pc-overlay-max-width)">
+      <DropdownMenuContent side={layout === "sidebar" ? "top" : "bottom"} align={layout === "sidebar" ? "start" : "end"} className="tf-account-menu w-80 max-w-(--pc-overlay-max-width)">
         <DropdownMenuLabel className="flex items-center gap-3 p-0 text-sm font-normal text-ui-foreground">
           <Avatar size="lg" self aria-hidden="true">{photo}<AvatarFallback>{initials(name)}</AvatarFallback></Avatar>
           <span className="min-w-0 break-words">

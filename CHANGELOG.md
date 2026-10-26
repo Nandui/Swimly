@@ -4,6 +4,127 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.14.0 · 26 October 2026 · Stock in the new look
+
+- **Stock counts** has its open and submitted counts under their own titles, with how many beside each. A count's square is orange while it is still being counted and green once submitted.
+- **The count sheet** shows how many are counted at the top, with **Submit count** beside it and the hint underneath. Each category's tag sits above its products, with how many of them are counted.
+- **Compare counts** lists each category under its tag with the number of products, and the ones not counted on one of the counts sit in their own section with a line on why they are left out.
+- **Products** and **Categories** are plain lists without the extra frame around them.
+
+## 2.13.0 · 26 October 2026 · Tasks in the new look
+
+- **Today in Tasks** is titled just **Today**, with the site and date underneath. The figures name what they count over the number, and a figure of nothing is grey.
+- The day picker, search and filters sit above the tasks, and each group (needs attention, still to do, completed, exceptions) has its own title and a line on what it holds. A task's square is orange when it needs someone, green when done and red for an exception.
+- **A task** opens with its status, priority, time and site above its name. The details, checklist, records, comments and follow-up actions each have their title above them, with **Add** and **Raise one** beside the title. Each record in a log sits in a soft grey well.
+- **Follow-up actions**, **Activity**, **Reports**, the **task library** and the **template editor** have their section titles above their cards too.
+
+## 2.12.0 · 26 October 2026 · Coinage in the new look
+
+- **Coinage requests** look like Refund requests now: the queue tiles name each queue over its count, search and the filters sit above the list, and each request has a coloured square, orange while it waits and green once ordered.
+- **A coinage request** opens with its status and number above who it is for, with **Coinage requests** above that to go back. What happens next sits beside it, tinted blue when the move is yours, with the four steps (requested, with accounts, approved, ordered) under it.
+- The coins and their total, the request and how far accounts have got read as simple rows. The history runs down the side.
+- The request form has its section titles above the fields.
+- On a phone, a field or a link you jump to no longer hides under the bar at the top.
+
+## 2.11.0 · 26 October 2026 · Refunds in the new look
+
+- **Refund requests:** the four queue tiles show each queue's name over its count, and a queue with nothing in it is grey. Search and the filters sit above the list, and the list has its own title with how many requests it holds.
+- Each request in the list has a coloured square: orange while it waits for finance or reception, green once paid.
+- **A request** now opens with its status and number above the customer's name, with **Refund requests** above that to go back.
+- What happens next sits beside the request, tinted blue when the next move is yours, with the four steps (logged, with finance, approved, paid) under it. On a phone it comes first.
+- The claim shows the amount large. The decision, the customer and the original payment read as simple rows of label and answer, and what was bought and why sit underneath. The history runs down the side.
+- The form for a new request has its section titles above the fields.
+
+## 2.10.0 · 26 October 2026 · Page titles on phones
+
+- On a phone, once a page's big title scrolls up out of sight, the bar at the top folds to a single row with the title in it, so you always know where you are.
+- If the page has a way back (such as **Reports** above an incident), it shows as a round button at the start of that row.
+- Scroll back to the top and the app's page bar returns.
+
+## 2.9.1 · 26 October 2026 · Turnfin Me pages tidied
+
+- Every page in **Turnfin Me** now has its section titles above the lists, as Home does: training, reading, shifts, qualifications, your record, search, saved lessons and the course pages.
+- Each day on My shifts has its date as a title, with the paid hours beside it and the times and site underneath.
+- Pages you open from More have a **More** link at the top to go back.
+- Saving a lesson note or sending a course rating now confirms with the black banner at the top.
+
+## 2.9.0 · 26 October 2026 · Turnfin Me in the new look
+
+- **Turnfin Me** on your phone opens each page with a large title. As you scroll, the title moves into a small glass bar at the top.
+- The bar at the bottom now has four tabs: Home, Training, Shifts and More. Required reading is in More, and anything due shows on Home. While you scroll down, the bar shrinks to the tab you are on, and it comes back when you scroll up.
+- Home lists everything that needs you in one place: the course you were part-way through, today's refresher, a review to acknowledge, training and reading that are due, and certificates that are running out. Your next shifts follow.
+- Sign out is at the bottom of More.
+- When you send changes to your details, send a certificate or mark a document as read, a black banner at the top confirms it, then shrinks to a tick and the time. Tap it to read it again.
+
+## 2.8.0 · 25 October 2026 · The register in the new look
+
+- The register opens with a green ring that fills as swimmers arrive, and shows how many are here.
+- Each swimmer is one big row. Tap once for present, twice for absent, three times for late. The word sits beside the mark, so you never rely on the colour alone.
+- Nobody starts as absent any more. Every swimmer starts unmarked, and the save button says how many are still to mark until everyone is done. Then it says Save register (or Save and continue on the pool deck).
+- **All here** marks the whole class present in one tap.
+- Medical notes are no longer opened inside the list. A swimmer's row says they have notes, and **Medical notes** above the list opens the notes for the swimmers in that class, where you may read them.
+
+## 2.7.0 · 25 October 2026 · Swim school and every app's first page in the new look
+
+- The first page of every app now has your site and today's date under its name.
+- Today's figures sit in tiles across the top. When the app has things waiting for you, the last tile says how many, and how many lists need you.
+- In Swim school, today's classes show as a row for each pool, with a red line at the time now. Above them it says how many classes are done, on now and still to come.
+- Choose a class on that timeline to see it in a panel at the side (from the bottom on a tablet or phone): its time, pool and instructor, and a button that opens the class.
+- On a phone, the classes on now and next are listed under the timeline.
+- What waits for you and every page in the app sit side by side underneath, each page with a line on what it is for.
+
+## 2.6.0 · 25 October 2026 · Incidents in the new look
+
+- The reports page is now called **Incidents**. If you triage reports, one list shows at a time: choose **To triage**, **Investigating**, **Yours** or **Closed** above it. Each says how many it holds, and the page opens on To triage.
+- Each report in a list has a coloured square for its kind: red when it alerted the managers, orange for an accident or incident, blue for a near miss. Its status and how serious it is sit underneath.
+- A report now opens with its status and number above what it was about, and who reported it, when and where below.
+- What happens next sits beside the report, tinted blue when the next move is yours, with the four steps (reported, triage, investigation, close) under it.
+- What happened, the people involved and triage read as simple rows of label and answer. How serious it was shows as the same coloured tags as the list.
+
+## 2.5.0 · 25 October 2026 · The rota's Plan in the new look
+
+- The Plan's title is now just **Plan**. The department sits in blue in the line underneath: choose it to switch to another department, or every department. The day follows it.
+- Under the title, three figures say how the day stands: places still to fill (in orange while any are left), people on and hours.
+- The week is a strip of days. The day you are on is dark, today's date is red and each day says how many places are left to fill. Use the arrows either side to move a week.
+- On the day, each person's row has their initials. Their blocks show where they are in the day: finished ones are pale, the one on now is blue, and the ones still to come are grey. Anything not covered is orange, and a red line marks the time now.
+- The button beside something not covered is now **Find cover**, the same as on Home.
+
+## 2.4.0 · 25 October 2026 · A new Home
+
+- Home greets you by name, with the date, your job and your site underneath.
+- Your site's day is at the top: today's classes, the places still to cover and the bookings, with a red line at the time now that moves with the clock. Choose a block to open it, or **Timetable** for the whole day.
+- **Needs you** lists everything waiting for you across your apps in one place, with how many of each. A class that still needs cover comes first, with how soon it starts and a **Find cover** button.
+- **Right now** shows today's figures, such as classes on and who is on the rota. **Up next** shows what starts soon.
+- **New** at the top right starts the things you do from anywhere, such as adding a swimmer or reporting an absence.
+- Your apps are no longer listed on Home: they are in the panel on the left (or **Apps** at the bottom on a phone).
+
+## 2.3.0 · 25 October 2026 · New buttons, lists and forms
+
+- Buttons are rounder and calmer. The main button on a page is the only blue one; the others are light grey with blue words.
+- Lists inside a panel are now one card with thin lines between the rows, instead of a box around every row.
+- Boxes you type into are light grey with no edge, and turn blue around the edge when you are typing in them. A box that needs fixing turns pink with a red edge.
+- The words above a box are smaller and grey, so what you type stands out.
+- Menus and lists you open from a button are glass, and windows that open over the page have rounder corners.
+- Switches are green when they are on.
+- Text is a little larger: on a computer it is slightly bigger than before, and on a phone or tablet it is the size your phone uses for its own apps.
+
+## 2.2.0 · 25 October 2026 · A new frame around every app
+
+- On a computer, your apps are now in a glass panel down the left: Home at the top, then every app you use, then Help. The app you are in is highlighted. Your name, role and site are at the bottom: choose them for Appearance, your account, What's new and Sign out.
+- An app's pages are in a glass bar across the top of the page, with the site and other tools on the right. Pages that don't fit are under **More**, as before.
+- On a tablet and on the pool deck, the panel shrinks to just the symbols. Point at one, or move to it with the keyboard, to see its name.
+- On a phone, a glass bar floats at the bottom with Home, the app you are in, and **Apps**, which lists every app and Help.
+- Page titles are bigger and bolder, with the date or details in grey underneath.
+- Turnfin Me on your phone has the same glass bar at the bottom.
+
+## 2.1.0 · 25 October 2026 · New colours and lettering, the first step of Turnfin's new look
+
+- Turnfin has started moving to its new look. This first step changes the colours and the lettering on every page: a light grey background with white panels, and a true black background in dark mode.
+- The blue is still Turnfin's blue, for what you can choose and the main button on a page. Orange now always means something needs you, green means done, and red means something serious or happening now.
+- The lettering follows your device: Apple's own on iPhones, iPads and Macs, and a clear matching font on Windows and Android.
+- Turnfin Me on your phone has the same new colours and lettering.
+- Nothing moves and nothing works differently. The new menus, buttons and pages arrive over the coming releases.
+
 ## 2.0.0 · 25 October 2026 · Switch an app on or off, site by site
 
 - Superadmins have a new page in Admin: **Apps**, under Places. It lists every app and shows whether it is on everywhere, off, or on only at some sites.

@@ -7,6 +7,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Notice } from "@/components/ui-kit/notice";
+import { RecordNext } from "@/components/ui-kit/record";
 import { saveCoinage } from "@/modules/coinage/features/request/server/actions";
 import { coinageNextStep, denominations, euros, type CoinageFields, type CoinageView } from "@/modules/coinage/shared/types";
 import { plural, today } from "@/lib/format";
@@ -54,21 +55,22 @@ export function CoinageRequestForm({ id, row, sites, defaultSite = "", actions, 
     <LoadingButton type="submit" form="coinage-form" value="save" variant="outline" pending={pending === "save"} pendingLabel="Saving…" disabled={pending === "submit"}>{resend ? "Save changes" : "Save draft"}</LoadingButton>
     <LoadingButton type="submit" form="coinage-form" value="submit" pending={pending === "submit"} pendingLabel="Sending…" disabled={pending === "save"}><Send aria-hidden="true" />{resend ? "Send to accounts again" : "Send to accounts"}</LoadingButton>
   </>;
-  const form = <form id="coinage-form" method="post" onSubmit={save} className="flex min-w-0 flex-col gap-4">
-    <fieldset disabled={pending !== null} className="flex min-w-0 flex-col gap-4">
+  const form = <form id="coinage-form" method="post" onSubmit={save} className="flex min-w-0 flex-col gap-(--space-6)">
+    <fieldset disabled={pending !== null} className="flex min-w-0 flex-col gap-(--space-6)">
       <legend className="sr-only">Coinage request details</legend>
-      <section className="pc-panel" aria-labelledby="coinage-where-heading"><h2 id="coinage-where-heading" className="text-lg font-semibold">Where and when</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
+      <section className="flex min-w-0 flex-col" aria-labelledby="coinage-where-heading"><div className="pc-section-head"><h2 id="coinage-where-heading">Where and when</h2></div>
+        <div className="pc-panel grid gap-4 sm:grid-cols-2">
           <Select id="coinage-site" name="clubId" label="Site" value={fields.clubId} onValueChange={value => change("clubId", value)} placeholder="Choose a site" required options={sites.map(site => ({ value: site.id, label: site.name }))} />
           <Input id="coinage-for" name="forWhom" label="Who it is for" value={fields.forWhom} onChange={value => change("forWhom", value)} maxLength={200} description="The till, desk or area, such as ‘Reception till 2’." />
           <Input id="coinage-needed" name="neededBy" label="Needed by" type="date" min={row ? undefined : today()} value={fields.neededBy} onChange={value => change("neededBy", value)} />
         </div>
       </section>
-      <section className="pc-panel" aria-labelledby="coinage-lines-heading">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 id="coinage-lines-heading" className="text-lg font-semibold">Coins</h2>
-          <p className="font-semibold tabular-nums" aria-live="polite">Total {euros(total)}</p>
+      <section className="flex min-w-0 flex-col" aria-labelledby="coinage-lines-heading">
+        <div className="pc-section-head">
+          <h2 id="coinage-lines-heading">Coins</h2>
+          <p aria-live="polite">Total {euros(total)}</p>
         </div>
+        <div className="pc-panel">
         <p className="text-sm text-ui-muted-foreground">Enter the value in euro for each coin you need, such as 50.00 for €50 of €2 coins. Leave the rest empty.</p>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {denominations.map(d => {
@@ -77,9 +79,12 @@ export function CoinageRequestForm({ id, row, sites, defaultSite = "", actions, 
             return <Input key={d.cents} id={`coinage-${key}`} name={key} label={`${d.label} (€)`} value={fields[key] ?? ""} onChange={value => change(key, value)} inputMode="decimal" maxLength={10} description={count} />;
           })}
         </div>
+        </div>
       </section>
-      <section className="pc-panel" aria-labelledby="coinage-notes-heading"><h2 id="coinage-notes-heading" className="text-lg font-semibold">Notes for accounts</h2>
-        <Textarea id="coinage-notes" name="notes" label="Notes" optional value={fields.notes} onChange={event => change("notes", event.target.value)} maxLength={4000} rows={3} placeholder="Anything accounts should know, such as a busy weekend or an event." />
+      <section className="flex min-w-0 flex-col" aria-labelledby="coinage-notes-heading"><div className="pc-section-head"><h2 id="coinage-notes-heading">Notes for accounts</h2></div>
+        <div className="pc-panel">
+          <Textarea id="coinage-notes" name="notes" label="Notes" optional value={fields.notes} onChange={event => change("notes", event.target.value)} maxLength={4000} rows={3} placeholder="Anything accounts should know, such as a busy weekend or an event." />
+        </div>
       </section>
       <p className="pc-note text-sm"><CircleHelp aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-ui-primary" /><span>A draft needs only the site. Before sending, also add who it is for, when it is needed and at least one coin.</span></p>
     </fieldset>
@@ -89,14 +94,12 @@ export function CoinageRequestForm({ id, row, sites, defaultSite = "", actions, 
     </>}
   </form>;
   if (!row) return form;
-  return <div className="grid min-w-0 items-start gap-4 xl:grid-cols-3">
-    <div className="flex min-w-0 flex-col gap-4 xl:col-span-2">{form}{children}</div>
-    <aside className="pc-panel" aria-labelledby="next-action">
-      <h2 id="next-action" className="text-lg font-semibold">Next action</h2>
-      <p className="text-sm text-ui-muted-foreground">{coinageNextStep(row.status)}</p>
+  return <div className="rec-layout">
+    <RecordNext act label="Your move" body={coinageNextStep(row.status)}>
       {feedback}
       <div className="flex flex-col gap-2">{buttons}</div>
       {actions}
-    </aside>
+    </RecordNext>
+    <div className="rec-main">{form}{children}</div>
   </div>;
 }

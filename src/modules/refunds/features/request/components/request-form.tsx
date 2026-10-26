@@ -7,6 +7,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Notice } from "@/components/ui-kit/notice";
+import { RecordNext } from "@/components/ui-kit/record";
 import { saveRefund } from "@/modules/refunds/features/request/server/actions";
 import { refundNextStep, refundServices, type RefundFields, type RefundView } from "@/modules/refunds/shared/types";
 
@@ -53,8 +54,8 @@ export function RefundRequestForm({ id, row, sites, defaultSite = "", actions, c
   const form = <form id="refund-form" method="post" onSubmit={save} className="refund-request-form">
     <fieldset disabled={pending !== null} className="min-w-0">
       <legend className="sr-only">Refund request details</legend>
-      <section className="pc-panel" aria-labelledby="customer-heading"><h2 id="customer-heading" className="text-lg font-semibold">Customer and service</h2>
-        <div className="refund-fields">
+      <section className="flex min-w-0 flex-col" aria-labelledby="customer-heading"><div className="pc-section-head"><h2 id="customer-heading">Customer and service</h2></div>
+        <div className="pc-panel refund-fields">
           <Input label="Customer name" {...input("customerName")} maxLength={200} />
           <Input label="Member number" optional {...input("memberNumber")} maxLength={80} />
           <Input label="Contact email" optional {...input("contactEmail")} type="email" maxLength={254} />
@@ -64,8 +65,8 @@ export function RefundRequestForm({ id, row, sites, defaultSite = "", actions, c
           <Textarea label="Service description" className="refund-wide" {...text("description")} maxLength={2000} placeholder="What was purchased, and which booking or period does it cover?" />
         </div>
       </section>
-      <section className="pc-panel" aria-labelledby="payment-heading"><h2 id="payment-heading" className="text-lg font-semibold">Original payment and refund</h2>
-        <div className="refund-fields">
+      <section className="flex min-w-0 flex-col" aria-labelledby="payment-heading"><div className="pc-section-head"><h2 id="payment-heading">Original payment and refund</h2></div>
+        <div className="pc-panel refund-fields">
           <Input label="Requested refund (€)" {...input("amount")} inputMode="decimal" maxLength={24} />
           <Input label="Original payment date" {...input("paymentDate")} type="date" />
           <Input label="Original payment reference" {...input("paymentReference")} maxLength={200} description="The reference from Legend, a receipt or your payment system. Do not enter card or bank details." />
@@ -82,12 +83,10 @@ export function RefundRequestForm({ id, row, sites, defaultSite = "", actions, c
   if (!row) return form;
   return <div className="refund-detail-columns">
     <div className="refund-main">{form}{children}</div>
-    <aside className="pc-panel refund-action-panel" aria-labelledby="next-action">
-      <h2 id="next-action" className="text-lg font-semibold">Next action</h2>
-      <p className="text-sm text-ui-muted-foreground">{refundNextStep(row.status)}</p>
+    <RecordNext act label="Your move" body={refundNextStep(row.status)}>
       {feedback}
       <div className="refund-action-buttons">{buttons}</div>
       {actions}
-    </aside>
+    </RecordNext>
   </div>;
 }

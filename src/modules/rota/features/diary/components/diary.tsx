@@ -51,6 +51,9 @@ export function Diary(props: DiaryData) {
   );
 }
 
+/** Initials for the person's round mark on their row: "Alex Byrne" → "AB". */
+const initialsOf = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]!.toUpperCase()).join("");
+
 /* ---------- Not covered yet ---------- */
 
 function NotCovered() {
@@ -58,7 +61,7 @@ function NotCovered() {
   const holes = diary.holes;
   return (
     <section className="diary-panel" aria-labelledby="diary-holes">
-      <h3 id="diary-holes" className="diary-panel-title">Not covered yet{holes.length ? <span className="diary-count tabular-nums">{holes.length}</span> : null}</h3>
+      <h2 id="diary-holes" className="diary-panel-title">Not covered yet{holes.length ? <span className="diary-count tabular-nums">{holes.length}</span> : null}</h2>
       {!diary.needs.length ? <p className="diary-muted">Nothing on this day needs people yet. Add to the day, or set areas&apos; staff in Admin, Areas.</p>
         : !holes.length ? <Notice tone="success" icon={CircleCheck} title="Every need is filled" description="This day is done. Warnings on people's days are still worth a look." />
         : (
@@ -73,7 +76,7 @@ function NotCovered() {
                     <span className="diary-hole-title">{needWords(need)}</span>
                     <span className="diary-muted">{h.why}{h.short > 1 && !h.why.includes("more") ? `, ${h.short} short` : ""}</span>
                   </div>
-                  {canChange && departmentFor ? <Button variant="outline" onClick={() => fill(h.needKey, h, h.why)}>Choose someone</Button> : null}
+                  {canChange && departmentFor ? <Button variant="outline" onClick={() => fill(h.needKey, h, h.why)}>Find cover</Button> : null}
                 </li>
               );
             })}
@@ -129,7 +132,7 @@ function WhosWhere() {
   return (
     <section className="diary-panel" aria-labelledby="diary-where">
       <div className="diary-panel-head">
-        <h3 id="diary-where" className="diary-panel-title">Who&apos;s where</h3>
+        <h2 id="diary-where" className="diary-panel-title">Who&apos;s where</h2>
         <Select label="At" className="diary-at" value={String(at)} onValueChange={setPicked}
           options={[...(now !== null ? [{ value: String(now), label: `Now, ${clock(now)}` }] : []), ...times.filter((t) => t !== now).map((t) => ({ value: String(t), label: clock(t) }))]} />
       </div>
@@ -137,7 +140,7 @@ function WhosWhere() {
         <div className="diary-where-groups">
           {groupWhere(where, departmentId ? null : departmentNames).map(([heading, list]) => (
             <section key={heading} aria-label={heading}>
-              <h4 className="diary-where-head">{heading}</h4>
+              <h3 className="diary-where-head">{heading}</h3>
               <ul className="diary-where">
                 {list.map((w) => (
                   <li key={w.need.key} className="diary-where-row" data-tone={toneOf(w.need.kind)}>
@@ -184,7 +187,7 @@ function TheDay() {
   return (
     <section className="diary-panel" aria-labelledby="diary-day">
       <div className="diary-panel-head">
-        <h3 id="diary-day" className="diary-panel-title">The day, person by person</h3>
+        <h2 id="diary-day" className="diary-panel-title">The day, person by person</h2>
         {canChange && departmentFor ? <div className="diary-tools"><AddSomeone /><AddToDay /></div> : null}
       </div>
       <ul className="diary-key" aria-label="Colours">
@@ -204,6 +207,7 @@ function TheDay() {
               <span />
               <div className="diary-track-ruler">
                 {hours.map((h) => <span key={h} className={`diary-hour absolute ${leftOf(f(h))} tabular-nums`}>{clock(h)}</span>)}
+                {now !== null && f(now) >= 0 && f(now) <= 1 ? <span className={`day-tl-pill ${leftOf(f(now))}`} aria-hidden="true">{clock(now)}</span> : null}
               </div>
             </div>
             {diary.holes.length ? <HoleRows rows={lanes(diary.holes)} f={f} hours={hours} now={now} /> : null}
@@ -240,7 +244,7 @@ function HoleRows({ rows, f, hours, now }: { rows: Hole[][]; f: (t: number) => n
           const body = <><span className="diary-block-title">{need ? needName(need) : null}</span><span className="diary-block-time tabular-nums">{spanWords(h)}</span></>;
           const cls = `diary-block absolute inset-y-1 ${stretchOf(f(h.start), f(h.end))}`;
           return canChange && departmentFor
-            ? <Button variant="ghost" key={h.key} className={cls} data-tone={h.empty ? "hole" : "short"} aria-label={`Choose someone: ${words}`} title={words} onClick={() => fill(h.needKey, h, h.why)}>{body}</Button>
+            ? <Button variant="ghost" key={h.key} className={cls} data-tone={h.empty ? "hole" : "short"} aria-label={`Find cover: ${words}`} title={words} onClick={() => fill(h.needKey, h, h.why)}>{body}</Button>
             : <span key={h.key} className={cls} data-tone={h.empty ? "hole" : "short"} title={words}>{body}</span>;
         })}
       </Track>
@@ -265,19 +269,24 @@ function SubBlock({ person, line, sub, f, changes }: { person: PersonDay; line: 
 }
 
 function PersonRow({ person, f, hours, now }: { person: PersonDay; f: (t: number) => number; hours: number[]; now: number | null }) {
-  const { person: open, line: openLine, canChange, departmentFor } = useDiary();
+  const { person: open, line: openLine, canChange, departmentFor, live } = useDiary();
+  // Blocks show where they are in the day, as the canvas does: finished, on now or still to come.
+  const when = (s: Span) => (now === null ? (live ? "done" : "next") : s.end <= now ? "done" : s.start <= now ? "now" : "next");
   const label = `${person.name}: ${partsWords(person)}`;
   const changes = canChange && !!departmentFor;
   const subs = person.lines.flatMap((l) => l.subs.filter((x) => x.at !== null).map((x, i) => ({ l, x, key: `${l.key}|${x.id ?? x.name}|${x.at}|${i}` })));
   return (
     <div className="diary-row">
       <Button variant="ghost" className="diary-row-label" onClick={() => open(person.userId)} aria-label={`${label}. Open their day`}>
-        <span className="diary-row-name">{person.name}{person.warnings.length ? <TriangleAlert aria-label={`${person.warnings.length} to look at`} className="diary-warn" /> : null}</span>
-        <span className="diary-caption tabular-nums">{person.off ? "Off today" : `${partsWords(person)}, ${hoursWords(person.paidMinutes)}`}</span>
+        <span className="diary-avatar" aria-hidden="true">{initialsOf(person.name)}</span>
+        <span className="diary-row-text">
+          <span className="diary-row-name">{person.name}{person.warnings.length ? <TriangleAlert aria-label={`${person.warnings.length} to look at`} className="diary-warn" /> : null}</span>
+          <span className="diary-caption tabular-nums">{person.off ? "Off today" : `${partsWords(person)}, ${hoursWords(person.paidMinutes)}`}</span>
+        </span>
       </Button>
       <Track f={f} hours={hours} now={now} subs={subs.length > 0}>
         {person.lines.map((l) => (
-          <Button variant="ghost" key={l.key} className={`diary-block absolute inset-y-1 ${stretchOf(f(l.start), f(l.end))}`} data-tone={toneOf(l.kind)} data-subs={l.subs.some((x) => x.at !== null) ? "" : undefined}
+          <Button variant="ghost" key={l.key} className={`diary-block absolute inset-y-1 ${stretchOf(f(l.start), f(l.end))}`} data-tone={toneOf(l.kind)} data-when={when(l)} data-subs={l.subs.some((x) => x.at !== null) ? "" : undefined}
             title={`${lineTitle(l)}, ${spanWords(l)}${l.subs.length ? `: ${subsWords(l)}` : ""}`} aria-label={`${person.name} on ${lineTitle(l)}, ${spanWords(l)}${l.subs.length ? `: ${subsWords(l)}` : ""}${changes ? ". Change or take off" : ". Open their day"}`}
             onClick={() => (changes ? openLine(person.userId, l.key) : open(person.userId))}>
             <span className="diary-block-title">{lineTitle(l)}</span><span className="diary-block-time tabular-nums">{spanWords(l)}</span>

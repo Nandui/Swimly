@@ -12,13 +12,14 @@ import { DevelopmentRolePreview } from "@/components/staff/development-role-prev
 import { YourModulesProvider } from "@/components/workspace/your-modules";
 import { modulesFor } from "@/modules/context";
 import { getCurrentClub } from "@/lib/clubs/current";
-// Poolside Clear across the whole app: its typeface, self-hosted in every
-// environment, and its tokens and system rules (scoped to .turnfin-app on <body>).
-import "@fontsource/plus-jakarta-sans/400.css";
-import "@fontsource/plus-jakarta-sans/600.css";
-import "@fontsource/plus-jakarta-sans/700.css";
+// Turnfin Glass (DESIGN.md): its tokens come in through globals.css (theme/glass.css); the
+// pre-2.0 rules, pointed at those tokens, stay in poolside.css until the 2.0 kit (theme/kit.css,
+// loaded after it) replaces them part by part.
 import "./globals.css";
 import "./theme/poolside.css";
+import "./theme/kit.css";
+import { GlassRoot } from "@/components/ui-kit/glass";
+import { inter } from "./fonts";
 
 /** One template all the way down: a layout that sets a title must also set
  *  TITLE_TEMPLATE. The browser and home-screen icons are the fin, from the
@@ -32,18 +33,14 @@ export const metadata: Metadata = {
 /** `viewportFit: cover` lets the page run under the notch and the home
  *  indicator, which is what makes `env(safe-area-inset-*)` non-zero — the
  *  deck's save bar pads by it. The theme colours tint the browser chrome to
- *  match the ground in each mode, the same rule as the body background in
- *  poolside.css: --pc-canvas below 768px, where the frame is the page, and
- *  --pc-outer from 768px, where the frame sits on the outer ground. */
+ *  match the ground in each mode: --bg in theme/glass.css, at every width. */
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light) and (max-width: 767px)", color: "#eef2f6" },
-    { media: "(prefers-color-scheme: dark) and (max-width: 767px)", color: "#0c1320" },
-    { media: "(prefers-color-scheme: light) and (min-width: 768px)", color: "#f7f9fb" },
-    { media: "(prefers-color-scheme: dark) and (min-width: 768px)", color: "#070c14" },
+    { media: "(prefers-color-scheme: light)", color: "#f2f2f7" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
   ],
 };
 
@@ -70,10 +67,12 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     // The appearance provider updates this attribute when the preference changes.
     <html
       lang="en"
+      className={inter.variable}
       suppressHydrationWarning
       data-theme={mode === "system" ? undefined : mode}
     >
       <body className="turnfin-app">
+        <GlassRoot />
         <ThemeProvider initialMode={mode}>
           <TooltipProvider>
             <ToastBridge />

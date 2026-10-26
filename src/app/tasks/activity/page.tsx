@@ -19,8 +19,9 @@ export default async function TaskActivityPage({ searchParams }: { searchParams:
   return (
     <PageShell header={<PageHeader title="Activity history" description="A record of every change made in Tasks: who did what, where and when."
         actions={who.manage ? <Button asChild variant="outline"><a href="/tasks/export.json"><Download aria-hidden="true" />Export everything</a></Button> : undefined} />}>
-      <section className="pc-panel" aria-labelledby="activity-saved">
-        <div className="pc-panel-head"><h2 id="activity-saved">Saved changes <span className="text-ui-muted-foreground tabular-nums">· {total}</span></h2></div>
+      <section className="flex min-w-0 flex-col" aria-labelledby="activity-saved">
+        <div className="pc-section-head"><h2 id="activity-saved">Saved changes</h2><p>{total}</p></div>
+        <div className="pc-panel">
         {rows.length === 0 ? <EmptyState compact icon="scrollText" title="No changes yet" /> : (
           <ul className="pc-rows">
             {rows.map((r) => (
@@ -35,6 +36,7 @@ export default async function TaskActivityPage({ searchParams }: { searchParams:
           </ul>
         )}
         {pages > 1 ? <LinkPagination label="Activity pages" page={page} totalItems={total} pageSize={ACTIVITY_PAGE} pathname="/tasks/activity" /> : null}
+        </div>
       </section>
     </PageShell>
   );

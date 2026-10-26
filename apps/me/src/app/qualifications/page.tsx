@@ -3,7 +3,8 @@
 import { useState, type FormEvent } from "react";
 import { Send } from "lucide-react";
 import { Frame } from "@/components/frame";
-import { EmptyRows, LoadError, Loading, Notice, Tag, useLoad } from "@/components/ui";
+import { useLiveBanner } from "@/components/ui-kit/live-banner";
+import { EmptyRows, LoadError, Loading, Notice, Section, Tag, useLoad } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
 import { date } from "@/lib/format";
 import { QUALIFICATION_META, UPLOAD_META } from "@/lib/meta";
@@ -35,6 +36,7 @@ export default function QualificationsPage() {
   const { data, error, reload } = useLoad<Data>("qualifications");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ tone?: "error"; text: string } | null>(null);
+  const banner = useLiveBanner();
   // null: not chosen yet, so the first qualification type is selected.
   const [pickedType, setPickedType] = useState<string | null>(null);
   const typeId = pickedType ?? data?.types[0]?.id ?? "";
@@ -56,7 +58,7 @@ export default function QualificationsPage() {
       } });
       form.reset();
       setPickedType(null);
-      setMessage({ text: "Sent. Your manager will check it and add it to your record." });
+      banner("Certificate sent", "Your manager will check it and add it to your record");
       await reload();
     } catch (caught) { setMessage({ tone: "error", text: caught instanceof ApiError ? caught.message : "That didn't send. Try again." }); }
     finally { setBusy(false); }
@@ -64,13 +66,12 @@ export default function QualificationsPage() {
 
   return (
     <Frame title="Qualifications">
-      <PageShell header={<PageHeader title="Qualifications" description="Your certificates on record, and new ones waiting to be checked." />}>
+      <PageShell spacing="roomy" header={<PageHeader back={{ href: "/more", label: "More" }} title="Qualifications" description="Your certificates on record, and new ones waiting to be checked." />}>
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : (
           <>
-            <section className="pc-panel" aria-labelledby="q-held">
-              <div className="pc-panel-head"><h2 id="q-held">On your record</h2></div>
+            <Section id="q-held" title="On your record">
               {data.items.length === 0 ? <EmptyRows>None recorded yet.</EmptyRows> : (
-                <ul className="pc-rows">{data.items.map((q) => (
+                <ul className="pc-list">{data.items.map((q) => (
                   <li key={q.id} className="pc-row">
                     <span className="pc-row-body"><span className="pc-row-title">{q.name}</span>
                       <span className="pc-row-hint">{q.issuedOn ? `Issued ${date(q.issuedOn)} · ` : ""}{q.expiresOn ? `Expires ${date(q.expiresOn)}` : "Does not expire"}{q.reference ? ` · ${q.reference}` : ""}</span></span>
@@ -78,21 +79,20 @@ export default function QualificationsPage() {
                   </li>
                 ))}</ul>
               )}
-            </section>
+            </Section>
             {data.uploads.length > 0 ? (
-              <section className="pc-panel" aria-labelledby="q-sent">
-                <div className="pc-panel-head"><h2 id="q-sent">Sent to be checked</h2></div>
-                <ul className="pc-rows">{data.uploads.map((u) => (
+              <Section id="q-sent" title="Sent to be checked">
+                <ul className="pc-list">{data.uploads.map((u) => (
                   <li key={u.id} className="pc-row">
                     <span className="pc-row-body"><span className="pc-row-title">{u.name || "Certificate"}</span>
                       <span className="pc-row-hint">{u.fileName} · sent {date(u.sentAt)}{u.note ? ` · ${u.note}` : ""}</span></span>
                     <span className="pc-row-trail"><Tag meta={UPLOAD_META[u.status]} /></span>
                   </li>
                 ))}</ul>
-              </section>
+              </Section>
             ) : null}
+            <Section id="q-upload" title="Upload a certificate">
             <form className="pc-panel" onSubmit={upload} aria-labelledby="q-upload">
-              <div className="pc-panel-head"><h2 id="q-upload">Upload a certificate</h2></div>
               <Select id="typeId" name="typeId" label="Which qualification" value={typeId} onValueChange={setPickedType}
                 options={[...data.types.map((t) => ({ value: t.id, label: t.name })), { value: "", label: "Something else" }]} />
               {typeId === "" ? <Input id="typeName" name="typeName" label="What is it?" maxLength={120} required /> : null}
@@ -103,6 +103,7 @@ export default function QualificationsPage() {
               {message ? <Notice title={message.text} tone={message.tone} live /> : null}
               <Button type="submit" className="self-start max-md:self-stretch" disabled={busy}><Send aria-hidden="true" />{busy ? "Sending…" : "Send for checking"}</Button>
             </form>
+            </Section>
           </>
         )}
       </PageShell>

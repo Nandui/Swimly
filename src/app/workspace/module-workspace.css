@@ -89,7 +89,7 @@
 
 /* Purchasing: a purchase order prints as the document the supplier gets, without the workspace around it. */
 @media print {
-  body:has(.turnfin-purchasing) :is(.tf-rail, .tf-top, .tf-bottom, [data-print="hide"]) { display: none !important; }
+  body:has(.turnfin-purchasing) :is(.tf-side, .tf-top, .tf-bottom, [data-print="hide"]) { display: none !important; }
   .turnfin-purchasing :is(.tf-frame, .pc-panel) { box-shadow: none !important; background: var(--pc-surface) !important; color: var(--pc-ink) !important; }
 }
 
@@ -269,101 +269,131 @@
 .turnfin-module .rota-kpis-three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 @media (max-width: 639px) { .turnfin-module .rota-kpis-three { grid-template-columns: minmax(0, 1fr); } }
 
-/* ---------- The day's diary: the Plan (owner, 20 October 2026) ----------
-   Not covered yet and Who's where side by side, then the day person by person. Colours by kind:
-   an area blue, activities and classes green, bookings violet; breaks dashed grey, time not given
-   yet dotted, not covered red (nobody) or amber (too few). */
-.turnfin-module .diary { display: flex; flex-direction: column; gap: 24px; }
-.turnfin-module .diary-glance { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr); }
-@media (min-width: 1024px) { .turnfin-module .diary-glance { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); } }
-.turnfin-module .diary-panel { display: flex; flex-direction: column; gap: 12px; min-width: 0; padding: 20px; border-radius: var(--pc-radius-panel); background: var(--pc-surface); }
+/* ---------- The day's diary: the Plan (owner, 20 October 2026), on the Turnfin Glass canvas ----------
+   The title with the department as a menu and the day under it, the day's figures, the week as a
+   strip of days; then Not covered yet and Who's where side by side, and the day person by person.
+   Blocks show where they are in the day (finished, on now in the fin blue, still to come), a
+   booking hatched, a break outlined and anything not covered in orange, with words beside every
+   colour. */
+.turnfin-module .diary { display: flex; flex-direction: column; gap: var(--space-7); }
+.turnfin-module .diary-glance { display: grid; gap: var(--space-7); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1024px) { .turnfin-module .diary-glance { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); align-items: start; } }
+.turnfin-module .diary-panel { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; padding: 16px 20px 18px; border-radius: var(--radius-card); background: var(--bg-2); box-shadow: var(--shadow-card); }
 .turnfin-module .diary-panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
-.turnfin-module .diary-panel-title { display: inline-flex; align-items: center; gap: 8px; margin: 0; color: var(--pc-ink); font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 700; }
-.turnfin-module .diary-count { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; padding: 2px 8px; border-radius: var(--pc-radius-control); background: var(--pc-danger-soft); color: var(--pc-danger); font-size: var(--pc-text-body); }
-.turnfin-module .diary-muted { margin: 0; color: var(--pc-ink-muted); font-size: var(--pc-text-body); line-height: var(--pc-leading-body); }
-.turnfin-module .diary-caption { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
-.turnfin-module .diary-label { padding: 0; color: var(--pc-ink); font-size: var(--pc-text-body); font-weight: 600; }
+.turnfin-module .diary-panel-title { display: inline-flex; align-items: center; gap: 8px; margin: 0; color: var(--label); font-family: var(--font-display); font-size: 20px; line-height: 25px; font-weight: 650; letter-spacing: -0.015em; }
+.turnfin-module .diary-count { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 8px; border-radius: var(--radius-capsule); background: var(--orange-soft); color: var(--orange-ink); font-family: var(--font-text); font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0; }
+.turnfin-module .diary-muted { margin: 0; color: var(--label-2); font-size: var(--pc-text-body); line-height: var(--pc-leading-body); }
+.turnfin-module .diary-caption { color: var(--label-2); font-size: 13px; line-height: 18px; }
+.turnfin-module .diary-label { padding: 0; color: var(--label); font-size: var(--pc-text-body); font-weight: 600; }
 .turnfin-module .diary-inline-icon { display: inline; width: 16px; height: 16px; margin-inline-end: 6px; vertical-align: -3px; }
 .turnfin-module .diary-tools { display: flex; flex-wrap: wrap; gap: 8px; }
 
-/* The week and the day's title */
-.turnfin-module .diary-week { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
-.turnfin-module .diary-week-range { color: var(--pc-ink); font-weight: 600; }
-.turnfin-module .diary-days { flex-basis: 100%; }
-.turnfin-module .diary-dayhead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
-.turnfin-module .diary-date { margin: 0; color: var(--pc-ink); font-size: var(--pc-text-page); line-height: var(--pc-leading-page); font-weight: 700; }
+/* The department menu in the line under the title: fin-blue words that open the departments. */
+.turnfin-module .rota-dept-menu { display: inline-flex; align-items: center; gap: 2px; padding: 0; border: 0; background: transparent; color: var(--accent); font: inherit; font-weight: 550; cursor: pointer; }
+.turnfin-module .rota-dept-menu > svg { width: 16px; height: 16px; }
+.turnfin-module .rota-dept-menu:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius-xs); }
+/* The day in figures: places to fill (orange while any are left), people on, hours. */
+.turnfin-module .rota-figures { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-8); margin: 0; }
+.turnfin-module .rota-figures > div { display: flex; flex-direction: row-reverse; align-items: baseline; gap: 6px; }
+.turnfin-module .rota-figures dd { margin: 0; color: var(--label); font-family: var(--font-display); font-size: 26px; line-height: 30px; font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.turnfin-module .rota-figures dt { color: var(--label-2); }
+.turnfin-module .rota-figures > div[data-tone='orange'] dd { color: var(--orange-ink); }
+/* The week: a strip of seven days on a card, the chosen one on the dark droplet, today's date red. */
+.turnfin-module .rota-week { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.turnfin-module .rota-days { display: grid; flex: 1 1 520px; grid-template-columns: repeat(7, minmax(0, 1fr)); min-width: 0; margin: 0; padding: 6px; border-radius: 24px; background: var(--bg-2); box-shadow: var(--shadow-card); list-style: none; }
+.turnfin-module .rota-day { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 8px 0 9px; border-radius: 18px; color: var(--label); text-decoration: none; transition: background-color var(--duration-fade) var(--ease), color var(--duration-fade) var(--ease); }
+.turnfin-module .rota-day:hover { background: var(--fill-2); }
+.turnfin-module .rota-day-name { color: var(--label-2); font-size: 12px; line-height: 16px; font-weight: 600; }
+.turnfin-module .rota-day-number { font-family: var(--font-display); font-size: 24px; line-height: 30px; font-weight: 650; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.turnfin-module .rota-day[data-today] .rota-day-number { color: var(--red-ink); }
+.turnfin-module .rota-day-status { max-width: 100%; overflow: hidden; color: var(--label-2); font-size: 12px; line-height: 16px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.turnfin-module .rota-day-status[data-tone='orange'] { color: var(--orange-ink); }
+.turnfin-module .rota-day[aria-current] { background: var(--label); }
+.turnfin-module .rota-day[aria-current] :is(.rota-day-name, .rota-day-number, .rota-day-status) { color: var(--bg); }
+.turnfin-module .rota-day:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 639px) {
+  .turnfin-module .rota-days { flex-basis: 100%; order: -1; padding: 4px; }
+  .turnfin-module .rota-day-number { font-size: 20px; line-height: 26px; }
+  .turnfin-module .rota-day-status { display: none; }
+  .turnfin-module .rota-day:has(.rota-day-status[data-tone='orange'])::after { content: ""; width: 5px; height: 5px; margin-top: 2px; border-radius: var(--radius-capsule); background: var(--orange); }
+  .turnfin-module .rota-day[aria-current]:has(.rota-day-status[data-tone='orange'])::after { background: var(--bg); }
+}
+@media (prefers-reduced-motion: reduce) { .turnfin-module .rota-day { transition: none; } }
 
-/* Not covered yet */
+/* Not covered yet: rows parted by hairlines, the time in orange. */
 .turnfin-module .diary-holes { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
-.turnfin-module .diary-hole { display: grid; grid-template-columns: 112px minmax(0, 1fr) auto; align-items: center; gap: 4px 12px; padding: 10px 0; border-bottom: 1px solid var(--pc-line); }
-.turnfin-module .diary-hole:last-child { border-bottom: 0; }
-.turnfin-module .diary-hole-time { color: var(--pc-warning); font-weight: 700; }
-.turnfin-module .diary-hole[data-empty] .diary-hole-time { color: var(--pc-danger); }
+.turnfin-module .diary-hole { display: grid; grid-template-columns: 112px minmax(0, 1fr) auto; align-items: center; gap: 4px 12px; min-height: var(--row-height); padding: 9px 0; }
+.turnfin-module .diary-hole + .diary-hole { border-top: 0.5px solid var(--sep); }
+.turnfin-module .diary-hole-time { color: var(--orange-ink); font-weight: 650; }
 .turnfin-module .diary-hole-text { display: flex; flex-direction: column; min-width: 0; }
-.turnfin-module .diary-hole-title { color: var(--pc-ink); font-weight: 600; }
+.turnfin-module .diary-hole-title { color: var(--label); font-weight: 600; }
 @media (max-width: 639px) {
   .turnfin-module .diary-hole { grid-template-columns: minmax(0, 1fr); }
   .turnfin-module .diary-hole > .ui-motion-press { justify-self: start; }
 }
 
-/* Who's where */
+/* Who's where: grouped under each area in sentence case, a tone dot beside what each one is. */
 .turnfin-module .diary-at { min-width: 160px; }
-.turnfin-module .diary-where-groups { display: flex; flex-direction: column; gap: 12px; }
-.turnfin-module .diary-where-head { margin: 0 0 2px; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.turnfin-module .diary-where-groups { display: flex; flex-direction: column; gap: var(--space-4); }
+.turnfin-module .diary-where-head { margin: 0 0 2px; color: var(--label-2); font-size: 12px; line-height: 16px; font-weight: 600; }
 .turnfin-module .diary-where { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
-.turnfin-module .diary-where-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); align-items: baseline; gap: 2px 12px; padding: 8px 0 8px 12px; border-bottom: 1px solid var(--pc-line); border-inline-start: 4px solid var(--pc-line); }
-.turnfin-module .diary-where-row:last-child { border-bottom: 0; }
-.turnfin-module .diary-where-row[data-tone="area"] { border-inline-start-color: var(--pc-primary); }
-.turnfin-module .diary-where-row[data-tone="activity"] { border-inline-start-color: var(--pc-on-block-now); }
-.turnfin-module .diary-where-row[data-tone="booking"] { border-inline-start-color: var(--pc-on-block-assess); }
-.turnfin-module .diary-where-need { display: flex; flex-direction: column; min-width: 0; color: var(--pc-ink); font-weight: 600; }
-.turnfin-module .diary-where-need > .diary-muted { font-weight: 400; font-size: var(--pc-text-caption); }
-.turnfin-module .diary-where-names { color: var(--pc-ink); }
-.turnfin-module .diary-short { grid-column: 2; display: inline-flex; align-items: center; gap: 6px; color: var(--pc-warning); font-size: var(--pc-text-body); font-weight: 600; }
+.turnfin-module .diary-where-row { position: relative; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); align-items: baseline; gap: 2px 12px; padding: 8px 0 8px 16px; }
+.turnfin-module .diary-where-row + .diary-where-row { border-top: 0.5px solid var(--sep); }
+.turnfin-module .diary-where-row::before { content: ""; position: absolute; top: 15px; left: 2px; width: 7px; height: 7px; border-radius: var(--radius-capsule); background: var(--label-3); }
+.turnfin-module .diary-where-row[data-tone="booking"]::before { background: transparent; box-shadow: inset 0 0 0 1.5px var(--label-3); }
+.turnfin-module .diary-where-need { display: flex; flex-direction: column; min-width: 0; color: var(--label); font-weight: 600; }
+.turnfin-module .diary-where-need > .diary-muted { font-weight: 400; font-size: 13px; line-height: 18px; }
+.turnfin-module .diary-where-names { color: var(--label); }
+.turnfin-module .diary-short { grid-column: 2; display: inline-flex; align-items: center; gap: 6px; color: var(--orange-ink); font-size: var(--pc-text-body); font-weight: 600; }
 .turnfin-module .diary-short > svg { width: 16px; height: 16px; }
-.turnfin-module .diary-next { margin: 0; padding: 10px 12px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); color: var(--pc-ink); }
+.turnfin-module .diary-next { margin: 0; padding: 10px 14px; border-radius: var(--radius-lg); background: var(--fill-2); color: var(--label); }
 
-/* The key */
-.turnfin-module .diary-key { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; padding: 0; list-style: none; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
+/* The key: a small block for each look, with its words. */
+.turnfin-module .diary-key { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; padding: 0; list-style: none; color: var(--label-2); font-size: 12px; line-height: 16px; }
 .turnfin-module .diary-key > li { display: inline-flex; align-items: center; gap: 6px; }
-.turnfin-module .diary-key > li::before { content: ""; width: 20px; height: 12px; border-radius: 4px; }
-.turnfin-module .diary-key > li[data-tone="area"]::before { background: var(--pc-block-next); }
-.turnfin-module .diary-key > li[data-tone="activity"]::before { background: var(--pc-block-now); }
-.turnfin-module .diary-key > li[data-tone="booking"]::before { background: var(--pc-block-assess); }
-.turnfin-module .diary-key > li[data-tone="break"]::before { border: 1px dashed var(--pc-line-strong); }
-.turnfin-module .diary-key > li[data-tone="free"]::before { border: 1px dotted var(--pc-primary); }
-.turnfin-module .diary-key > li[data-tone="hole"]::before { border: 1px dashed var(--pc-danger); background: var(--pc-danger-soft); }
+.turnfin-module .diary-key > li::before { content: ""; width: 20px; height: 12px; border-radius: 4px; background: var(--fill); }
+.turnfin-module .diary-key > li[data-tone="area"]::before { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+.turnfin-module .diary-key > li[data-tone="activity"]::before { background: var(--fill); box-shadow: inset 3px 0 0 var(--label-3); }
+.turnfin-module .diary-key > li[data-tone="booking"]::before { background: repeating-linear-gradient(135deg, var(--fill) 0 4px, var(--fill-2) 4px 8px); }
+.turnfin-module .diary-key > li[data-tone="break"]::before { background: transparent; box-shadow: inset 0 0 0 1px var(--sep); }
+.turnfin-module .diary-key > li[data-tone="free"]::before { background: transparent; box-shadow: inset 0 0 0 1px var(--accent); }
+.turnfin-module .diary-key > li[data-tone="hole"]::before { background: var(--orange-soft); box-shadow: inset 3px 0 0 var(--orange); }
 
-/* The day, person by person: one row each, a name then a track across the day */
+/* The day, person by person: one row each, a name then a track across the day. */
 .turnfin-module .diary-timeline { display: none; flex-direction: column; }
 @media (min-width: 1024px) { .turnfin-module .diary-timeline { display: flex; } .turnfin-module .diary .diary-cards { display: none; } }
-.turnfin-module .diary-row { display: grid; grid-template-columns: 216px minmax(0, 1fr); gap: 12px; padding-block: 4px; border-bottom: 1px solid var(--pc-line); }
-.turnfin-module .diary-ruler { position: sticky; top: 0; z-index: 2; padding-block: 0 6px; background: var(--pc-surface); }
+.turnfin-module .diary-row { display: grid; grid-template-columns: 216px minmax(0, 1fr); gap: 16px; align-items: center; min-height: 54px; padding-block: 2px; }
+.turnfin-module .diary-row + .diary-row { border-top: 0.5px solid var(--sep); }
+.turnfin-module .diary-ruler { position: sticky; top: 64px; z-index: 3; min-height: 0; padding-block: 0 6px; background: var(--bg-2); }
 .turnfin-module .diary-track-ruler { position: relative; height: 20px; }
-.turnfin-module .diary-hour { top: 0; translate: -50% 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); font-weight: 600; white-space: nowrap; }
-.turnfin-module .diary-hour:last-child { translate: -100% 0; }
-.turnfin-module .diary-row-label { height: auto; align-items: stretch; font-weight: 400; white-space: normal; display: flex; flex-direction: column; justify-content: center; gap: 2px; min-width: 0; min-height: 52px; padding: 4px 8px; border: 0; border-radius: var(--pc-radius-card); background: none; color: var(--pc-ink); text-align: start; cursor: pointer; }
-.turnfin-module button.diary-row-label:hover { background: var(--pc-surface-sunken); }
-.turnfin-module .diary-row-holes { color: var(--pc-danger); font-weight: 700; cursor: default; }
+.turnfin-module .diary-hour { top: 2px; translate: -50% 0; color: var(--label-2); font-size: 11px; line-height: 13px; font-weight: 550; white-space: nowrap; }
+.turnfin-module .diary-hour:first-child { translate: 0 0; }
+.turnfin-module .diary-hour:last-of-type { translate: -100% 0; }
+.turnfin-module .diary-row-label, .turnfin-module .diary-row-label[data-variant] { height: auto; align-items: center; font-weight: 400; white-space: normal; display: flex; flex-direction: row; justify-content: flex-start; gap: 10px; min-width: 0; min-height: 48px; padding: 4px 8px; border: 0; border-radius: var(--radius-lg); background: none; color: var(--label); text-align: start; cursor: pointer; }
+.turnfin-module button.diary-row-label:hover, .turnfin-module .diary-row-label[data-variant]:hover { background: var(--fill-2); color: var(--label); }
+.turnfin-module .diary-row-holes { color: var(--orange-ink); font-weight: 650; cursor: default; }
+.turnfin-module .diary-row-text { display: flex; flex-direction: column; min-width: 0; }
+.turnfin-module .diary-avatar { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: var(--radius-capsule); background: var(--accent-soft); color: var(--accent-ink); font-size: 11px; font-weight: 650; }
 .turnfin-module .diary-row-name { display: inline-flex; align-items: center; gap: 6px; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
-.turnfin-module .diary-warn { flex: none; width: 16px; height: 16px; color: var(--pc-warning); }
-.turnfin-module .diary-track { position: relative; min-height: 52px; }
-.turnfin-module .diary-hourline { width: 1px; background: var(--pc-line); }
-.turnfin-module .diary-now { z-index: 1; width: 2px; background: var(--pc-danger); }
-.turnfin-module .diary-block { container-type: inline-size; height: auto; min-height: 0; gap: 0; align-items: stretch; display: flex; flex-direction: column; justify-content: center; min-width: 0; margin-inline: 1px; padding: 2px 8px; overflow: hidden; border: 0; border-radius: 10px; font: inherit; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); text-align: start; white-space: nowrap; }
+.turnfin-module .diary-warn { flex: none; width: 16px; height: 16px; color: var(--orange-ink); }
+.turnfin-module .diary-track { position: relative; min-height: 46px; }
+.turnfin-module .diary-hourline { width: 0.5px; background: var(--sep); }
+.turnfin-module .diary-now { z-index: 2; width: 1.5px; margin-left: -0.75px; background: var(--red); }
+.turnfin-module .diary-block { container-type: inline-size; height: auto; min-height: 0; gap: 0; align-items: stretch; display: flex; flex-direction: column; justify-content: center; min-width: 0; margin-inline: 1px 3px; padding: 2px 8px 2px 11px; overflow: hidden; border: 0; border-radius: var(--radius-sm); background: var(--fill); color: var(--label); font: inherit; font-size: 12px; line-height: 15px; text-align: start; white-space: nowrap; }
+.turnfin-module .diary-block::before { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 3px; background: var(--diary-bar, transparent); }
 .turnfin-module button.diary-block { cursor: pointer; }
 .turnfin-module button.diary-block:hover { filter: brightness(0.97); }
-.turnfin-module .diary-block-title { overflow: hidden; font-weight: 700; text-overflow: ellipsis; }
-.turnfin-module .diary-block-time { overflow: hidden; text-overflow: ellipsis; }
+.turnfin-module .diary-block-title { overflow: hidden; font-weight: 600; text-overflow: ellipsis; }
+.turnfin-module .diary-block-time { overflow: hidden; font-weight: 450; opacity: 0.85; text-overflow: ellipsis; }
 @container (max-width: 72px) { .turnfin-module .diary-block-time { display: none; } }
 @container (max-width: 28px) { .turnfin-module .diary-block-title { display: none; } }
-.turnfin-module .diary-block[data-tone="area"] { background: var(--pc-block-next); color: var(--pc-on-block-next); }
-.turnfin-module .diary-block[data-tone="activity"] { background: var(--pc-block-now); color: var(--pc-on-block-now); }
-.turnfin-module .diary-block[data-tone="booking"] { background: var(--pc-block-assess); color: var(--pc-on-block-assess); }
-.turnfin-module .diary-block[data-tone="break"] { border: 1px dashed var(--pc-line-strong); background: var(--pc-surface); color: var(--pc-ink-muted); }
-.turnfin-module .diary-block[data-tone="free"] { border: 1px dotted var(--pc-primary); background: none; color: var(--pc-primary); }
-.turnfin-module .diary-block[data-tone="hole"] { border: 1px dashed var(--pc-danger); background: var(--pc-danger-soft); color: var(--pc-danger); }
-.turnfin-module .diary-block[data-tone="short"] { border: 1px dashed var(--pc-warning); background: var(--pc-warning-soft); color: var(--pc-warning); }
+.turnfin-module .diary-block[data-when="done"] { --diary-bar: transparent; background: var(--fill-2); color: var(--label-2); }
+.turnfin-module .diary-block[data-when="now"] { --diary-bar: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
+.turnfin-module .diary-block[data-when="next"] { --diary-bar: var(--label-3); background: var(--fill); color: var(--label); }
+.turnfin-module .diary-block[data-tone="booking"] { --diary-bar: var(--label-3); background: repeating-linear-gradient(135deg, var(--fill) 0 6px, var(--fill-2) 6px 12px); color: var(--label); }
+.turnfin-module .diary-block[data-tone="break"] { --diary-bar: transparent; background: transparent; box-shadow: inset 0 0 0 1px var(--sep); color: var(--label-2); }
+.turnfin-module .diary-block[data-tone="free"] { --diary-bar: transparent; background: transparent; box-shadow: inset 0 0 0 1px var(--accent); color: var(--accent); }
+.turnfin-module .diary-block:is([data-tone="hole"], [data-tone="short"]) { --diary-bar: var(--orange); background: var(--orange-soft); color: var(--orange-ink); }
 /* Sub-activities inside the block they belong to (owner, 22 October 2026): the row grows, the
    block's words sit at its top and each sub-activity is a white strip along its foot, as long
    as it lasts; one at a moment is a short mark. */
@@ -376,20 +406,21 @@
 .turnfin-module button.diary-sub-block:hover { background: var(--pc-surface); border-color: var(--pc-primary); }
 
 /* On a phone and tablet: each person's day as a short list */
-.turnfin-module .diary-cards { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; grid-template-columns: minmax(0, 1fr); }
+.turnfin-module .diary-cards { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 640px) { .turnfin-module .diary-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.turnfin-module .diary-card { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); }
-.turnfin-module .diary-card-head { height: auto; font-weight: 400; white-space: normal; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 0 8px; min-height: 44px; padding: 0; border: 0; background: none; color: var(--pc-ink); text-align: start; cursor: pointer; }
-.turnfin-module .diary-card-head > svg { grid-row: span 2; width: 20px; height: 20px; color: var(--pc-ink-muted); }
+.turnfin-module .diary-card { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: var(--radius-lg); background: var(--fill-2); }
+.turnfin-module .diary-card-head, .turnfin-module .diary-card-head[data-variant] { height: auto; font-weight: 400; white-space: normal; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 0 8px; min-height: 44px; padding: 0; border: 0; background: none; color: var(--label); text-align: start; cursor: pointer; }
+.turnfin-module .diary-card-head > svg { grid-row: span 2; width: 20px; height: 20px; color: var(--accent); }
 .turnfin-module .diary-card-steps { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; }
-.turnfin-module .diary-card-steps > li { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 8px; padding: 4px 8px; border-inline-start: 4px solid var(--pc-line); color: var(--pc-ink); }
-.turnfin-module .diary-card-steps > li > :first-child { color: var(--pc-ink-muted); font-weight: 600; }
-.turnfin-module .diary-card-steps > li[data-tone="area"] { border-inline-start-color: var(--pc-primary); }
-.turnfin-module .diary-card-steps > li[data-tone="activity"] { border-inline-start-color: var(--pc-on-block-now); }
-.turnfin-module .diary-card-steps > li[data-tone="booking"] { border-inline-start-color: var(--pc-on-block-assess); }
-.turnfin-module .diary-card-steps > li[data-tone="break"], .turnfin-module .diary-card-steps > li[data-tone="off"] { border-inline-start-style: dashed; color: var(--pc-ink-muted); }
-.turnfin-module .diary-card-steps > li[data-tone="free"] { border-inline-start-style: dotted; border-inline-start-color: var(--pc-primary); color: var(--pc-primary); }
-.turnfin-module .diary-card-step { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; height: auto; min-height: 44px; margin: -4px 0; padding: 0; color: var(--pc-ink); font-weight: 400; white-space: normal; text-align: start; }
+.turnfin-module .diary-card-steps > li { position: relative; display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 8px; padding: 4px 8px 4px 16px; color: var(--label); }
+.turnfin-module .diary-card-steps > li::before { content: ""; position: absolute; top: 11px; left: 2px; width: 7px; height: 7px; border-radius: var(--radius-capsule); background: var(--label-3); }
+.turnfin-module .diary-card-steps > li > :first-child { color: var(--label-2); font-weight: 600; }
+.turnfin-module .diary-card-steps > li[data-tone="booking"]::before { background: transparent; box-shadow: inset 0 0 0 1.5px var(--label-3); }
+.turnfin-module .diary-card-steps > li:is([data-tone="break"], [data-tone="off"]) { color: var(--label-2); }
+.turnfin-module .diary-card-steps > li:is([data-tone="break"], [data-tone="off"], [data-tone="finish"])::before { background: transparent; box-shadow: inset 0 0 0 1px var(--sep); }
+.turnfin-module .diary-card-steps > li[data-tone="free"] { color: var(--accent); }
+.turnfin-module .diary-card-steps > li[data-tone="free"]::before { background: transparent; box-shadow: inset 0 0 0 1.5px var(--accent); }
+.turnfin-module .diary-card-step, .turnfin-module .diary-card-step[data-variant] { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; height: auto; min-height: 44px; margin: -4px 0; padding: 0; color: var(--label); font-weight: 400; white-space: normal; text-align: start; }
 
 /* The sheets: choosing someone, and someone's day */
 .turnfin-module .diary-sheet { overflow-y: auto; }
@@ -410,13 +441,12 @@
 .turnfin-module .diary-cannot [data-state="open"] > svg { rotate: 180deg; }
 .turnfin-module .diary-warnings { margin: 0; padding-inline-start: 18px; list-style: disc; }
 .turnfin-module .diary-steps { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
-.turnfin-module .diary-step { display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: 4px 12px; padding: 10px 0 10px 12px; border-bottom: 1px solid var(--pc-line); border-inline-start: 4px solid var(--pc-line); }
-.turnfin-module .diary-step:last-child { border-bottom: 0; }
-.turnfin-module .diary-step[data-tone="area"] { border-inline-start-color: var(--pc-primary); }
-.turnfin-module .diary-step[data-tone="activity"] { border-inline-start-color: var(--pc-on-block-now); }
-.turnfin-module .diary-step[data-tone="booking"] { border-inline-start-color: var(--pc-on-block-assess); }
-.turnfin-module .diary-step[data-tone="break"], .turnfin-module .diary-step[data-tone="off"] { border-inline-start-style: dashed; }
-.turnfin-module .diary-step[data-tone="free"] { border-inline-start-style: dotted; border-inline-start-color: var(--pc-primary); }
+.turnfin-module .diary-step { position: relative; display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: 4px 12px; padding: 10px 0 10px 18px; }
+.turnfin-module .diary-step + .diary-step { border-top: 0.5px solid var(--sep); }
+.turnfin-module .diary-step::before { content: ""; position: absolute; top: 17px; left: 2px; width: 7px; height: 7px; border-radius: var(--radius-capsule); background: var(--label-3); }
+.turnfin-module .diary-step[data-tone="booking"]::before { background: transparent; box-shadow: inset 0 0 0 1.5px var(--label-3); }
+.turnfin-module .diary-step:is([data-tone="break"], [data-tone="off"])::before { background: transparent; box-shadow: inset 0 0 0 1px var(--sep); }
+.turnfin-module .diary-step[data-tone="free"]::before { background: transparent; box-shadow: inset 0 0 0 1.5px var(--accent); }
 .turnfin-module .diary-step-time { color: var(--pc-ink-muted); font-weight: 600; }
 .turnfin-module .diary-step-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .turnfin-module .diary-step-title { display: inline-flex; align-items: center; gap: 6px; color: var(--pc-ink); font-weight: 600; }

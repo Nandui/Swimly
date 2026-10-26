@@ -6,7 +6,8 @@ import { Button } from "@/components/shadcn/button";
 import { Label } from "@/components/shadcn/label";
 import { RadioGroup, RadioGroupItem } from "@/components/shadcn/radio-group";
 import { Textarea } from "@/components/ui/textarea";
-import { Notice } from "@/components/ui";
+import { Notice, Section } from "@/components/ui";
+import { useLiveBanner } from "@/components/ui-kit/live-banner";
 import { ApiError, api } from "@/lib/api";
 
 /** The learner's own tools (Training e-learning phase 6): text size, read
@@ -129,24 +130,26 @@ export function LessonNote({ assignmentId, lessonId, initial }: { assignmentId: 
   const [saved, setSaved] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<{ tone?: "error"; title: string } | null>(null);
+  const banner = useLiveBanner();
   async function save() {
     setBusy(true); setStatus(null);
     try {
       const result = await api<Saved>(notePath(assignmentId, lessonId), { method: "PUT", body: { note: text } });
       setSaved(result.note); setText(result.note);
-      setStatus({ title: result.note ? "Note saved" : "Note removed" });
+      banner(result.note ? "Note saved" : "Note removed", "Find your notes under Saved");
     } catch (caught) { setStatus({ tone: "error", title: caught instanceof ApiError ? caught.message : "That didn't save. Try again." }); }
     finally { setBusy(false); }
   }
   const id = `note-${lessonId}`;
   return (
-    <section className="pc-panel stack-sm" aria-labelledby={`${id}-title`}>
-      <h2 id={`${id}-title`}>My notes</h2>
+    <Section id={`${id}-title`} title="My notes">
+      <div className="pc-panel stack-sm">
       <Textarea id={id} aria-label="My notes on this lesson" description="Only you can see your notes. Find them again under Saved." maxLength={2000} value={text}
         onChange={(e) => { setText(e.target.value); setStatus(null); }} placeholder="Anything to remember from this lesson" />
       {status ? <Notice title={status.title} tone={status.tone} live /> : null}
       <Button type="button" variant="outline" className="self-start max-md:self-stretch" onClick={save} disabled={busy || text.trim() === saved}>{busy ? "Saving…" : "Save note"}</Button>
-    </section>
+      </div>
+    </Section>
   );
 }
 
@@ -163,24 +166,25 @@ export function RateCourse({ assignmentId, initial }: { assignmentId: string; in
   const [editing, setEditing] = useState(!initial);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
-  const [justSent, setJustSent] = useState(false);
+  const banner = useLiveBanner();
   const first = useRef<HTMLButtonElement>(null);
   async function send() {
     setBusy(true); setFailure(null);
     try {
       const result = await api<{ rating: number; unclear: string }>(`training/${assignmentId}/feedback`, { method: "POST", body: { rating, unclear } });
-      setSent(result); setEditing(false); setJustSent(true);
+      setSent(result); setEditing(false);
+      banner("Rating sent", "Your trainer sees it without your name");
     } catch (caught) { setFailure(caught instanceof ApiError ? caught.message : "That didn't send. Try again."); }
     finally { setBusy(false); }
   }
   return (
-    <section className="pc-panel stack-sm" aria-labelledby="rate-title">
-      <h2 id="rate-title">How was this course?</h2>
+    <Section id="rate-title" title="How was this course?">
+      <div className="pc-panel stack-sm">
       {!editing && sent ? (
         <>
-          <p role={justSent ? "status" : undefined}><span className="stars-read" aria-label={`${sent.rating} of 5 stars`}>{[1, 2, 3, 4, 5].map((n) => <Star key={n} aria-hidden="true" data-on={n <= sent.rating || undefined} />)}</span> Thanks, your trainer will see this without your name.</p>
+          <p><span className="stars-read" aria-label={`${sent.rating} of 5 stars`}>{[1, 2, 3, 4, 5].map((n) => <Star key={n} aria-hidden="true" data-on={n <= sent.rating || undefined} />)}</span> Thanks, your trainer will see this without your name.</p>
           {sent.unclear ? <p className="muted pre">{sent.unclear}</p> : null}
-          <Button type="button" variant="ghost" className="self-start" onClick={() => { setEditing(true); setJustSent(false); setTimeout(() => first.current?.focus(), 0); }}>Change my answer</Button>
+          <Button type="button" variant="ghost" className="self-start" onClick={() => { setEditing(true); setTimeout(() => first.current?.focus(), 0); }}>Change my answer</Button>
         </>
       ) : (
         <>
@@ -202,6 +206,7 @@ export function RateCourse({ assignmentId, initial }: { assignmentId: string; in
           <Button type="button" className="self-start max-md:self-stretch" onClick={send} disabled={busy || !rating}>{busy ? "Sending…" : "Send"}</Button>
         </>
       )}
-    </section>
+      </div>
+    </Section>
   );
 }

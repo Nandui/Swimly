@@ -13,6 +13,7 @@ let raise: typeof import("../features/actions/server/raise");
 let data: typeof import("../features/actions/server/data");
 let actions: typeof import("../features/actions/server/actions");
 let home: typeof import("../features/actions/server/home");
+let doubles: Record<string, unknown>;
 const ORG = "org_leisureworld";
 type GrantRow = { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string };
 const state = { id: "mia", permissions: [] as string[], grants: [] as GrantRow[] };
@@ -54,12 +55,13 @@ before(async () => {
     "server-only": {},
     react: { cache: <T,>(fn: T) => fn },
   };
+  doubles = d;
   raise = serverModule("src/modules/site-monitoring/features/actions/server/raise.ts", d);
   data = serverModule("src/modules/site-monitoring/features/actions/server/data.ts", d);
   actions = serverModule("src/modules/site-monitoring/features/actions/server/actions.ts", d);
   home = serverModule("src/modules/site-monitoring/features/actions/server/home.ts", d);
 });
-after(async () => { await fixture?.close(); });
+after(async () => { (globalThis as { siteMonitoringStop?: () => void }).siteMonitoringStop?.(); await fixture?.close(); });
 
 test("a task completed out of range raises one action per reading, once", async () => {
   assert.equal(await raise.raiseFromTaskReadings(reading(bishopstown, "task-1", "0.4")), 2);
@@ -124,4 +126,26 @@ test("Home counts the open actions at the person's sites, and shows nothing with
   for (const a of open) assert.equal((await actions.setMonitoringActionClosed(a.id, true, "Retested in range")).ok, true);
   as("mia", [], [at(bishopstown, ["site-monitoring.read"])]);
   assert.deepEqual(await home.monitoringHomeItems(viewer("mia", ["site-monitoring.read"])), [], "nothing left to act on, nothing on Home");
+});
+
+test("the plug listens for readings out of range as Site Monitoring: quiet while switched off, and once however often it is loaded", async () => {
+  // The real bus and the real plug (module.ts); only the home card registry is a stand-in.
+  const events = serverModule<typeof import("@/platform/events")>("src/platform/events/index.ts", {});
+  const cards: string[] = [];
+  const load = () => serverModule("src/modules/site-monitoring/module.ts", { ...doubles, "@/platform/events": events, "@/modules/contributions": { registerHomeCard: (card: { moduleId: string }) => { cards.push(card.moduleId); } } });
+  load();
+  load(); // a reload in development stops the old listener first
+  assert.deepEqual(cards, ["site-monitoring", "site-monitoring"]);
+  const raised = () => fixture.prisma.monitoringAction.count({ where: { sourceHref: "/tasks/task-plug" } });
+  const asked: string[] = [];
+  const announce = (on: boolean) => events.emit("tasks.reading.out_of_range", reading(churchfield, "task-plug", "0.3"), (app) => { asked.push(app); return on; });
+
+  await announce(false);
+  assert.deepEqual(asked, ["site-monitoring"], "one listener, named for its app");
+  assert.equal(await raised(), 0, "switched off, nothing is raised");
+  await announce(true);
+  assert.equal(await raised(), 2, "switched on, one action per reading");
+  await announce(true);
+  assert.equal(await raised(), 2, "announced again, nothing new");
+  assert.deepEqual(asked, ["site-monitoring", "site-monitoring", "site-monitoring"], "still one listener after the reload");
 });

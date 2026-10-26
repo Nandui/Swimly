@@ -35,7 +35,7 @@ export function HelpArticleView({ article, related, scope, filters, action }: {
         </section>
         <section id="steps" aria-labelledby="steps-heading" className="flex scroll-mt-6 flex-col gap-4"><h2 id="steps-heading">Step by step</h2>
           <ol className="pc-rows">{article.steps.map((step, index) => <li key={step.title} className="pc-note break-inside-avoid">
-            <span aria-hidden="true" className="flex size-6 shrink-0 items-center justify-center rounded-full bg-ui-primary text-xs font-semibold tabular-nums text-ui-primary-foreground">{index + 1}</span>
+            <span aria-hidden="true" className="flex size-6 shrink-0 items-center justify-center rounded-full bg-(--accent-btn) text-xs font-semibold tabular-nums text-ui-primary-foreground">{index + 1}</span>
             <div className="flex min-w-0 flex-1 flex-col gap-1"><h3>{step.title}</h3><p className="max-w-prose">{step.text}</p>{step.screenshots?.map(screenshot => <GuideScreenshot key={screenshot.id} screenshot={screenshot} />)}</div>
           </li>)}</ol>
         </section>

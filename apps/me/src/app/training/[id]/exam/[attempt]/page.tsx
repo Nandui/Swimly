@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { QuestionField, type Answer, type LearnerQuestion } from "@/components/question";
-import { LoadError, Loading, Notice, Tag, useLoad } from "@/components/ui";
+import { LoadError, Loading, Notice, Section, Tag, useLoad } from "@/components/ui";
 import { Button } from "@/components/shadcn/button";
 import { PageShell } from "@/components/ui-kit/page-shell";
 import { PageHeader } from "@/components/ui-kit/page-header";
@@ -51,10 +51,9 @@ export default function ExamResultPage() {
                 : null}
             </section>
             {!data.passed ? (
-              <section className="pc-panel stack-sm" aria-labelledby="revisit-title">
-                <h2 id="revisit-title">Go over these again</h2>
-                <p className="muted">You got questions wrong from these parts of the course. Have another look, then try the exam again from the course page.</p>
-                <ul className="pc-rows">
+              <Section id="revisit-title" title="Go over these again" className="gap-(--space-3)">
+                <p className="me-section-note">You got questions wrong from these parts of the course. Have another look, then try the exam again from the course page.</p>
+                <ul className="pc-list">
                   {data.revisit.map((s) => (
                     <li key={s.id}><Link href={s.firstLessonId ? `/training/${id}/${s.firstLessonId}` : `/training/${id}`} className="pc-row">
                       <span className="pc-row-body"><span className="pc-row-title">{s.title}</span></span><ChevronRight className="pc-row-chevron" aria-hidden="true" />
@@ -62,7 +61,7 @@ export default function ExamResultPage() {
                   ))}
                 </ul>
                 <Button asChild variant="outline" className="w-full"><Link href={`/training/${id}`}>Back to the course</Link></Button>
-              </section>
+              </Section>
             ) : null}
             {data.review ? (
               <section className="stack" aria-labelledby="review-title">

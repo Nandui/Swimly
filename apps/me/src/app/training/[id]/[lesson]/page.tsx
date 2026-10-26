@@ -100,7 +100,7 @@ export default function LessonPage() {
   const label = !data ? "" : handInWaiting ? (data.next ? "Next lesson" : "Back to the course") : !data.open || data.done ? (data.next ? "Next lesson" : "Back to the course")
     : data.next ? (data.kind === "VIDEO" ? "Watched it, next" : data.kind === "AUDIO" ? "Listened, next" : "Done, next lesson") : "Done, finish up";
   return (
-    <Frame title="My training">
+    <Frame title={data?.title ?? "My training"}>
       <PageShell header={<PageHeader back={{ href: `/training/${id}`, label: "Course" }} title={data?.title ?? "Lesson"}
         eyebrow={data ? <span className="tabular">{data.section} · Lesson {data.index + 1} of {data.total}{data.minutes ? ` · ${data.minutes} min` : ""}</span> : undefined} />}>
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : (
