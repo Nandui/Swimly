@@ -1,0 +1,87 @@
+// Maintenance (owner, 26 October 2026, D14): what is broken at each site, from the first report
+// until it is fixed. The maintenance team works in Trackplan; Turnfin only keeps what staff type
+// about it (whether it is already there, and its reference) and never connects to it. Sites,
+// areas and people are Core's and read only through its functions, so the tables keep plain ids
+// and names. Requests are closed, never deleted; a removed photo is hidden.
+
+/// One problem at one site, and how it was put right or why it was not.
+model MaintenanceRequest {
+  id             String             @id
+  orgId          String
+  number         Int                @unique @default(autoincrement())
+  siteId         String
+  /// The site's area by name, so an area rename reaches it (registerAreaRename); "" when not given.
+  area           String             @default("")
+  /// Exactly where, in the reporter's words: "third locker from the left".
+  place          String             @default("")
+  /// What is broken, in a line: "Shower 3 will not turn off".
+  title          String
+  details        String             @default("")
+  /// low | normal | urgent (`MAINTENANCE_URGENCY_META`). "Could hurt someone" is always urgent.
+  urgency        String             @default("normal")
+  /// none | out_of_use | could_hurt
+  risk           String             @default("none")
+  /// The answer to "Is it already in Trackplan?": yes | no | unsure.
+  trackplan      String             @default("unsure")
+  /// The Trackplan reference, typed by a person; never looked up.
+  trackplanRef   String             @default("")
+  /// reported | in_trackplan | fixed | closed (`MAINTENANCE_STATUS_META`)
+  status         String             @default("reported")
+  /// What was done, or why it was closed not fixed, as the last close said.
+  outcome        String             @default("")
+  /// The request this one repeats, when it was closed as a duplicate.
+  duplicateOfId  String?
+  version        Int                @default(1)
+  reportedById   String
+  reportedByName String
+  closedAt       DateTime?
+  closedById     String?
+  closedByName   String?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  events         MaintenanceEvent[]
+  photos         MaintenancePhoto[]
+
+  @@index([orgId, siteId, status])
+  @@index([siteId, area, status])
+  @@index([reportedById])
+  @@map("maintenance_requests")
+}
+
+/// A request's history: one row per step, with the note given. `operationId` makes a repeated
+/// press of the same button land once.
+model MaintenanceEvent {
+  id          String             @id @default(cuid())
+  orgId       String
+  requestId   String
+  operationId String
+  actorId     String
+  actorName   String
+  action      String
+  note        String             @default("")
+  createdAt   DateTime           @default(now())
+  request     MaintenanceRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+
+  @@unique([requestId, operationId])
+  @@index([requestId, createdAt])
+  @@map("maintenance_events")
+}
+
+/// A photo of the problem, shrunk and stripped of camera details before it is kept.
+model MaintenancePhoto {
+  id          String             @id
+  orgId       String
+  requestId   String
+  name        String
+  mime        String
+  size        Int
+  bytes       Bytes
+  addedById   String
+  addedByName String
+  createdAt   DateTime           @default(now())
+  removedAt   DateTime?
+  request     MaintenanceRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+
+  @@index([requestId])
+  @@map("maintenance_photos")
+}

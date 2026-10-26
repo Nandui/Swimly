@@ -4,7 +4,7 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 2.15.0 · 26 October 2026 · Training in the new look
+## 2.16.0 · 26 October 2026 · Training in the new look
 
 - **Training** opens with its figures (overdue, awaiting sign-off, qualifications expiring, completed), each naming what it counts above the number. A figure that needs someone has an orange line under it, and a figure of nothing is grey.
 - The search and filters sit on the page above the list, and each list (open training, courses by category, sessions, rules, learning paths, sign-off, work handed in, expiring and missing qualifications) has its own title above it with how many it holds.
@@ -14,6 +14,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - **The course builder** has the outline, the course overview, each lesson, the questions, the final exam, the practical checklist, the cover picture and review comments under their own titles. The open lesson in the outline is soft blue.
 - **Observe a practical** shows each step to watch for as its own card, then the photos and your decision.
 - Small labels across Training and Turnfin Me lessons are in ordinary sentence case instead of capitals.
+
+## 2.15.0 · 26 October 2026 · Maintenance: report what is broken
+
+- A new app, **Maintenance**, for anything broken or needing repair at your site: a leaking shower, a light out, a loose handrail. It starts at one site first.
+- **Report a problem** asks where it is, what is broken, whether it is out of use or could hurt someone, and how urgent it is. Anything that could hurt someone is always **Urgent**. You can add up to three photos; they are kept without their location.
+- It also asks **Is it already in Trackplan?**, the maintenance team's own system. Choose **Not sure** if you don't know, and a manager will check.
+- Before you send, the form lists what is already reported in that area, so the same problem isn't reported twice.
+- Managers who look after a site see **Maintenance to put in Trackplan** and **Urgent maintenance still open** on Home. On each request they record it as in Trackplan, mark it fixed, or close it without a fix, and can open it again if the problem comes back.
+- Everyone can follow their own reports under **Yours**, with where each has got to.
 
 ## 2.14.1 · 26 October 2026 · Classes side by side, and easier to read
 

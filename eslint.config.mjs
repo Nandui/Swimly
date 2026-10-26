@@ -37,6 +37,7 @@ const otherModules = {
   stock: moduleArea("stock"),
   cctv: moduleArea("cctv"),
   "site-monitoring": moduleArea("site-monitoring"),
+  maintenance: moduleArea("maintenance", "src/app/api/maintenance/**"),
   incidents: moduleArea("incidents", "src/app/api/incidents/**", "src/app/api/cron/incidents/**", "src/app/footage/**", "src/app/wellbeing/**"),
 };
 const moduleFiles = { activities: activitiesFiles, ...otherModules };
@@ -112,6 +113,7 @@ const coreThroughFunctions = {
   stock: [],
   cctv: [],
   "site-monitoring": [],
+  maintenance: [],
   hr: [],
   training: ["grantsType", "organisation", "user"],
   rota: ["department", "organisation", "requiredType", "site", "type", "user"],
