@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 This is the one rulebook for anyone changing Turnfin: people and coding agents alike (Claude, ChatGPT, Codex or any other). `CLAUDE.md` only points here. If a request would break a rule here, stop and explain the conflict; the owner (Fernando) may approve an exception, recorded in [docs/decisions.md](docs/decisions.md).
 
-Turnfin is the staff product for LeisureWorld's leisure centres. Version 2.0 is a **platform of apps** with a **new design** on the way, evolved from the live app step by step. The repository is named Swimly; that is a working name only.
+Turnfin is the staff product for LeisureWorld's leisure centres. Version 2.0 is a **platform of apps** with a **new design**, Turnfin Glass ([DESIGN.md](DESIGN.md)), evolved from the live app step by step. The repository is named Swimly; that is a working name only.
 
 ## Read first
 
@@ -20,7 +20,7 @@ Turnfin is the staff product for LeisureWorld's leisure centres. Version 2.0 is 
 2. This file, all of it.
 3. [docs/architecture.md](docs/architecture.md): how it is built, and what is built versus planned.
 4. [docs/roadmap.md](docs/roadmap.md): what is being built next, in order.
-5. As the task needs: [docs/apps.md](docs/apps.md) (every app and its levels), [docs/operations.md](docs/operations.md) (environments, databases, settings), [DESIGN.md](DESIGN.md) (the design and its status), [docs/decisions.md](docs/decisions.md), and the module's own `src/modules/<id>/README.md`.
+5. As the task needs: [docs/apps.md](docs/apps.md) (every app and its levels), [docs/operations.md](docs/operations.md) (environments, databases, settings), [DESIGN.md](DESIGN.md) (the design contract), [docs/decisions.md](docs/decisions.md), and the module's own `src/modules/<id>/README.md`.
 
 The map of every doc is [docs/README.md](docs/README.md). Nothing written before 2.0 binds you; if old code or a comment disagrees with these docs, the docs win and the code is fixed.
 
@@ -155,7 +155,7 @@ Move code down a layer only when a second user actually exists. The platform kno
 
 ## Screens
 
-The look is set by [DESIGN.md](DESIGN.md). **Its status is open**: until the 2.0 contract is written there, add no new visual ideas, tokens or restyled components to the live app. These rules hold for any design (owner rules, 20 October 2026):
+The look is set by [DESIGN.md](DESIGN.md): **Turnfin Glass**, approved on 25 October 2026 ([D13](docs/decisions.md)). Roadmap step 5 builds it part by part; until a part is built, the live app keeps the pre-2.0 theme, so add no new visual ideas, tokens or restyled components to old screens and never start the new look piecemeal. These rules hold for any design (owner rules, 20 October 2026):
 
 - **Components from the kit.** Controls come from the shadcn components in `src/components/shadcn`; frame pieces in `src/components/ui-kit` and `src/components/ui` are built from them. Charts use the kit's chart (recharts), never hand-drawn `<svg>`. Icons are lucide-react.
 - **No arbitrary values.** Use the Tailwind scale, the named theme utilities in `src/app/shadcn.css` or a theme variable as `(--name)`. Variants such as `data-[state=open]:` are selectors and allowed.
@@ -166,7 +166,7 @@ The look is set by [DESIGN.md](DESIGN.md). **Its status is open**: until the 2.0
 - Plain staff words on screen (PRODUCT.md), and every screen covers loading, empty, error and saved states.
 - Turnfin Me and the Academy booking site follow the same rules with their own copies of the kit and theme.
 
-The 2.0 design contract may replace the kit, tokens and page frame; when it does, these rules follow the new ones.
+Step 5 replaces the kit, tokens and page frame with those in DESIGN.md; the new components it lists are approved by that contract, and these rules then apply to the new ones.
 
 ## Every change
 

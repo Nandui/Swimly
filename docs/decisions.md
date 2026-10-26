@@ -6,6 +6,12 @@ The decisions Turnfin 2.0 stands on, newest first. Each says what was decided, w
 
 ---
 
+### D13 · 25 October 2026 · Turnfin Glass is the 2.0 design
+
+The 2.0 design is **Turnfin Glass**: Apple's Liquid Glass and Human Interface Guidelines, brought to Turnfin's web app. A plain ground, opaque content, and glass only on the controls that float; colour only for selected, needs action, done, now and serious; springs and in-place feedback throughout. It was chosen from screenshot-checked, clickable mockups, after Poolside Clear refinements, editorial, colourful glass, Material 3 Expressive and Turnfin Live were tried.
+**Why:** staff need calm, legible screens that let them act where they are looking; it looks and feels premium enough to stand beside the apps people use every day.
+**Follows:** [../DESIGN.md](../DESIGN.md) is the contract (it replaces D9's placeholder). The design system (https://claude.ai/artifact/6Ex4VcQGtPRBheTqVtgWWM) shows it live; roadmap step 5 builds it.
+
 ### D12 · 24 October 2026 · Turnfin 2.0 begins
 
 Turnfin 2.0 is the platform of apps (D11), jobs at places (D10) and a new look and feel (D9). It **evolves the live app**: same repository, data and deploy, moved forward in steps. Every pre-2.0 doc, plan and design rule was removed; these docs replace them.
