@@ -6,7 +6,7 @@ Its levels are in [docs/apps.md](../../../docs/apps.md); the decision to add it 
 
 ## Features
 - `report`: the report form (`/maintenance/new`). Staff give the site, area and exactly where, what is broken, urgency, and whether it is out of use or could hurt someone ("Could hurt someone" makes it Urgent). They also answer "Is it already in Trackplan?" (Yes, No or Not sure, with an optional reference) and can add up to three photos. The form lists the open requests in the chosen area first, so a problem is not reported twice.
-- `photos`: adding photos (the reporter while the request is Reported, Manage while it is open) and opening them (`/api/maintenance/photos`, `/api/maintenance/photos/[id]`). Checked by the platform's file check (`src/lib/files`).
+- `photos`: adding photos to an open request (the reporter to their own, Manage to any at the site) and opening them (`/api/maintenance/photos`, `/api/maintenance/photos/[id]`). Checked by the platform's file check (`src/lib/files`).
 - `requests`: the lists (`/maintenance`: open, to put in Trackplan, yours, closed) and one request's page (`/maintenance/[id]`). Manage's moves happen on that page: put it in Trackplan, mark it fixed, close it not fixed (with a reason, or as a duplicate of another request), open it again, and correct its details. This feature also gives the Home and starter-page items and the subject access records.
 - `workspace`: the frame, its one page list (`pages.ts`) and the starter page `/maintenance/overview`.
 
@@ -18,7 +18,7 @@ Its levels are in [docs/apps.md](../../../docs/apps.md); the decision to add it 
 Nothing else in Turnfin calls into Maintenance. Routes use the feature entries.
 
 ## Data owned
-Declared in `prisma/schema/maintenance.prisma`, migration `20261026120000_maintenance` (new tables only):
+Declared in `prisma/schema/maintenance.prisma`, migration `20261209090000_maintenance` (new tables only):
 - `MaintenanceRequest` (`maintenance_requests`): one problem at one site. It holds where it is, what is broken, urgency, risk, the Trackplan answer and reference, status, and how it was closed.
 - `MaintenanceEvent` (`maintenance_events`): the request's history, one row per step, with the note given.
 - `MaintenancePhoto` (`maintenance_photos`): photos, stored as bytes. A removed photo is hidden, never deleted.

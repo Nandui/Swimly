@@ -8,7 +8,7 @@ import { MaintenanceError } from "@/modules/maintenance/shared/rules";
 import { maintenanceView } from "@/modules/maintenance/shared/service";
 import { MAX_PHOTOS, OPEN_STATUSES, type MaintenanceAction, type MaintenanceHistory } from "@/modules/maintenance/shared/types";
 
-export const VIEWS = ["open", "trackplan", "mine", "closed"] as const;
+export const VIEWS = ["trackplan", "open", "mine", "closed"] as const;
 export type View = (typeof VIEWS)[number];
 const PAGE = 25;
 

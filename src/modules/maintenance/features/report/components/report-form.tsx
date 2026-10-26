@@ -180,8 +180,10 @@ export function ReportForm({ sites, areas, start }: { sites: Site[]; areas: Reco
                 ))}
               </ul>
             ) : null}
-            <Input ref={picker} id="mnt-photo-input" type="file" accept={acceptFor(["photo"])} multiple className="sr-only" tabIndex={-1} aria-hidden="true" onChange={(e) => choose(e.target.files)} />
-            {photos.length < MAX_PHOTOS ? <div><Button type="button" variant="outline" className="min-h-11" onClick={() => picker.current?.click()}><Camera aria-hidden="true" />Add a photo</Button></div> : null}
+            <div className="relative min-w-0">
+              <Input ref={picker} id="mnt-photo-input" type="file" accept={acceptFor(["photo"])} multiple className="sr-only" tabIndex={-1} aria-hidden="true" onChange={(e) => choose(e.target.files)} />
+              {photos.length < MAX_PHOTOS ? <Button type="button" variant="outline" className="min-h-11" onClick={() => picker.current?.click()}><Camera aria-hidden="true" />Add a photo</Button> : null}
+            </div>
           </div>
         </section>
       </fieldset>

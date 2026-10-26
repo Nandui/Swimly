@@ -55,8 +55,8 @@ export function PhotoStrip({ requestId, photos, canAdd, canRemove }: { requestId
                 <Image src={`/api/maintenance/photos/${p.id}`} alt={`Photo added by ${p.addedByName}`} fill unoptimized className="object-cover" />
                 <span className="sr-only"> (opens full size in a new tab)</span>
               </a>
-              <div className="flex min-w-0 items-center justify-between gap-1">
-                <span className="rec-muted rec-small truncate">{p.addedByName} · {formatDateTime(new Date(p.createdAt))}</span>
+              <div className="flex min-w-0 items-start justify-between gap-1">
+                <span className="rec-muted rec-small min-w-0 break-words">{p.addedByName} · {formatDateTime(new Date(p.createdAt))}</span>
                 {canRemove ? <Button type="button" variant="ghost" size="icon" className="min-h-11 min-w-11" disabled={pending} onClick={() => remove(p.id)}><Trash2 aria-hidden="true" /><span className="sr-only">Remove this photo</span></Button> : null}
               </div>
             </li>
@@ -65,7 +65,7 @@ export function PhotoStrip({ requestId, photos, canAdd, canRemove }: { requestId
       ) : null}
       {error ? <Notice tone="error" live="alert" title={error} /> : null}
       {canAdd ? (
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex min-w-0 flex-wrap items-center gap-3">
           <Input ref={picker} type="file" accept={acceptFor(["photo"])} className="sr-only" tabIndex={-1} aria-hidden="true" onChange={(e) => add(e.target.files?.[0])} />
           <Button type="button" variant="outline" className="min-h-11" disabled={pending} onClick={() => picker.current?.click()}><Camera aria-hidden="true" />{pending ? "Adding…" : "Add a photo"}</Button>
           <span className="rec-muted rec-small">Up to {MAX_PHOTOS}, {sizeLimit(MAX_PHOTO_BYTES)} each, kept without their location</span>

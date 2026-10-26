@@ -15,7 +15,7 @@ export async function maintenanceHomeItems(viewer: HomeViewer): Promise<HomeItem
   if (who.manage) {
     const { toTrackplan, urgent } = await managerCounts(who.orgId);
     items.push({ label: "Maintenance to put in Trackplan", hint: "Reported, not in Trackplan yet", href: "/maintenance?show=trackplan", count: toTrackplan, attention: toTrackplan > 0 });
-    if (urgent) items.push({ label: "Urgent maintenance still open", hint: "Out of use or could hurt someone", href: "/maintenance?show=open", count: urgent, attention: true });
+    if (urgent) items.push({ label: "Urgent maintenance still open", hint: "Marked urgent, not fixed yet", href: "/maintenance?show=open", count: urgent, attention: true });
   }
   const mine = await ownOpenCount(who);
   if (mine) items.push({ label: "Your maintenance requests still open", hint: "Reported by you, not fixed yet", href: "/maintenance?show=mine", count: mine });
