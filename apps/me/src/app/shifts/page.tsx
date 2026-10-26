@@ -1,7 +1,7 @@
 "use client";
 
 import { Frame } from "@/components/frame";
-import { EmptyRows, LoadError, Loading, Notice, Tag, useLoad } from "@/components/ui";
+import { EmptyRows, LoadError, Loading, Notice, Section, Tag, useLoad } from "@/components/ui";
 import { clock, day } from "@/lib/format";
 import { DAY_META, SHIFT_WARNING_META } from "@/lib/meta";
 import { PageShell } from "@/components/ui-kit/page-shell";
@@ -20,18 +20,14 @@ export default function ShiftsPage() {
   const problems = data?.items.filter((d) => d.blocks.some((b) => b.warning)).length ?? 0;
   return (
     <Frame title="My shifts">
-      <PageShell header={<PageHeader title="My shifts" description="The next four weeks, as your days are shared." />}>
+      <PageShell spacing="roomy" header={<PageHeader title="My shifts" description="The next four weeks, as your days are shared." />}>
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : (
           <>
             {problems > 0 ? <Notice title="An activity needs a qualification you don't hold" tone="warning">Tell your manager before the day, or upload your new certificate under More, then Qualifications.</Notice> : null}
-            {data.items.length === 0 ? <section className="pc-panel" aria-label="Shifts"><EmptyRows>Nothing shared for the next four weeks yet.</EmptyRows></section> : data.items.map((d) => (
-              <section key={d.id} className="pc-panel" aria-labelledby={`day-${d.id}`}>
-                <div className="stack-sm">
-                  <h2 id={`day-${d.id}`}>{day(d.date)}</h2>
-                  <p className="text-ui-muted-foreground">{clock(d.startMinutes)} to {clock(d.endMinutes)} · {hours(d.paidMinutes)} paid · {d.site}</p>
-                  {d.changed || d.breaksToArrange ? <p>{d.changed ? <Tag meta={DAY_META.changed} /> : null} {d.breaksToArrange ? <Tag meta={DAY_META.breaks} /> : null}</p> : null}
-                </div>
-                <ul className="pc-rows">{d.blocks.map((b, i) => (
+            {data.items.length === 0 ? <Section label="Shifts"><EmptyRows>Nothing shared for the next four weeks yet.</EmptyRows></Section> : data.items.map((d) => (
+              <Section key={d.id} id={`day-${d.id}`} title={day(d.date)} aside={<p>{hours(d.paidMinutes)} paid</p>}>
+                <p className="me-section-note">{clock(d.startMinutes)} to {clock(d.endMinutes)} · {d.site}{d.changed ? <Tag meta={DAY_META.changed} /> : null}{d.breaksToArrange ? <Tag meta={DAY_META.breaks} /> : null}</p>
+                <ul className="pc-list">{d.blocks.map((b, i) => (
                   <li key={i} className="pc-row" {...(b.kind === "break" ? { "data-muted": "" } : {})}>
                     <span className="pc-row-body">
                       <span className="pc-row-title">{clock(b.startMinutes)} to {clock(b.endMinutes)} · {b.label}</span>
@@ -40,8 +36,8 @@ export default function ShiftsPage() {
                     {b.warning ? <span className="pc-row-trail"><Tag meta={SHIFT_WARNING_META[b.warning]} /></span> : null}
                   </li>
                 ))}</ul>
-                {d.breaksToArrange ? <p className="text-ui-muted-foreground">You are owed {d.breaksToArrange} minutes of breaks with no free time planned for them. Your duty manager arranges them on the day.</p> : null}
-              </section>
+                {d.breaksToArrange ? <p className="me-section-foot">You are owed {d.breaksToArrange} minutes of breaks with no free time planned for them. Your duty manager arranges them on the day.</p> : null}
+              </Section>
             ))}
           </>
         )}

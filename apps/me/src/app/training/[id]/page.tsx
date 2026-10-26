@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { Award, BookOpen, ChevronRight, CircleCheck, ClipboardCheck, Columns3, FileText, GitBranch, GraduationCap, Headphones, Layers, ListChecks, ListTodo, Lock, MonitorPlay, PlayCircle, ScanSearch, Send, Upload } from "lucide-react";
+import { Award, BookOpen, ChevronRight, CircleCheck, Columns3, FileText, GitBranch, Headphones, Layers, ListChecks, ListTodo, Lock, MonitorPlay, PlayCircle, ScanSearch, Send, Upload } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { OfflineCourse } from "@/components/offline";
 import { RateCourse } from "@/components/learner";
 import { CourseImage, type ExamInfo } from "@/components/question";
-import { Bar, LoadError, Loading, Notice, Tag, useLoad } from "@/components/ui";
+import { Bar, LoadError, Loading, Notice, Section, Tag, useLoad } from "@/components/ui";
 import { Button } from "@/components/shadcn/button";
 import { PageShell } from "@/components/ui-kit/page-shell";
 import { PageHeader } from "@/components/ui-kit/page-header";
@@ -46,10 +46,9 @@ function PracticalCard({ practical, open }: { practical: Practical; open: boolea
   const last = new Map(practical.last?.steps.map((s) => [s.id, s]) ?? []);
   const toPractise = practical.last?.steps.filter((s) => s.result === "not-yet") ?? [];
   return (
-    <section className="pc-panel stack-sm" aria-labelledby="practical-title">
-      <div className="row"><span className="pc-tile-icon"><ClipboardCheck aria-hidden="true" /></span><h2 id="practical-title">What the trainer will watch for</h2></div>
+    <Section id="practical-title" title="What the trainer will watch for" className="gap-(--space-3)">
       {open && toPractise.length ? <Notice title="To practise from last time" tone="warning">{toPractise.map((s) => `${s.text}${s.note ? ` (${s.note})` : ""}`).join("; ")}</Notice> : null}
-      <ol className="pc-rows">
+      <ol className="pc-list">
         {practical.steps.map((step, i) => {
           const was = last.get(step.id);
           return (
@@ -63,8 +62,8 @@ function PracticalCard({ practical, open }: { practical: Practical; open: boolea
           );
         })}
       </ol>
-      {practical.last ? <p className="caption">Last observed by {practical.last.observedBy} on {date(practical.last.observedAt)}.</p> : null}
-    </section>
+      {practical.last ? <p className="me-section-foot">Last observed by {practical.last.observedBy} on {date(practical.last.observedAt)}.</p> : null}
+    </Section>
   );
 }
 
@@ -79,9 +78,8 @@ function ExamCard({ id, exam, open }: { id: string; exam: ExamInfo; open: boolea
   const facts = [`${exam.questions} questions`, `pass mark ${exam.passMark}%`, exam.timeLimit ? `${exam.timeLimit} minutes` : null,
     open && !exam.passed ? `${exam.attempts.left} ${exam.attempts.left === 1 ? "attempt" : "attempts"} left` : null].filter(Boolean).join(" · ");
   return (
-    <section className="pc-panel stack-sm" aria-labelledby="exam-title">
-      <div className="row"><span className="pc-tile-icon"><GraduationCap aria-hidden="true" /></span><h2 id="exam-title">Final exam</h2>
-        {exam.passed ? <Tag meta={EXAM_RESULT_META.passed} /> : null}</div>
+    <Section id="exam-title" title="Final exam" aside={exam.passed ? <Tag meta={EXAM_RESULT_META.passed} /> : null} className="gap-(--space-3)">
+      <div className="pc-panel">
       <p className="muted tabular">{facts}</p>
       {open && !exam.passed ? (
         exam.open ? (
@@ -93,8 +91,9 @@ function ExamCard({ id, exam, open }: { id: string; exam: ExamInfo; open: boolea
           </>
         ) : <p className="caption">{exam.reason}</p>
       ) : null}
+      </div>
       {exam.history.length ? (
-        <ol className="pc-rows">
+        <ol className="pc-list" aria-label="Your attempts">
           {exam.history.map((a) => (
               <li key={a.number}><Link href={`/training/${id}/exam/${a.number}`} className="pc-row">
                 <span className="pc-row-body"><span className="pc-row-title tabular">Attempt {a.number}: {a.percent}%</span><span className="pc-row-hint tabular">{a.correct} of {a.total} right · {date(a.submittedAt)}</span></span>
@@ -104,7 +103,7 @@ function ExamCard({ id, exam, open }: { id: string; exam: ExamInfo; open: boolea
           ))}
         </ol>
       ) : null}
-    </section>
+    </Section>
   );
 }
 
@@ -131,8 +130,8 @@ export default function TrainingDetailPage() {
   const examFirst = !!data?.exam && open && (!next || (data.exam.testOut && data.exam.canStart) || !!data.exam.open);
   const minutesLeft = lessons.filter((l) => !l.done).reduce((n, l) => n + (l.minutes ?? 0), 0);
   return (
-    <Frame title="My training">
-      <PageShell header={<PageHeader back={{ href: "/training", label: "My training" }} eyebrow={data?.category || undefined} title={data?.title ?? "My training"}
+    <Frame title={data?.title ?? "My training"}>
+      <PageShell spacing="roomy" header={<PageHeader back={{ href: "/training", label: "My training" }} eyebrow={data?.category || undefined} title={data?.title ?? "My training"}
         status={data ? <Tag meta={TRAINING_META[data.state]} /> : undefined}
         description={data ? <>{data.summary ? <>{data.summary}<br /></> : null}
           {[`Assigned by ${data.assignedBy} on ${date(data.assignedAt)}`, data.dueOn ? `due ${day(data.dueOn)}` : null,
@@ -164,9 +163,9 @@ export default function TrainingDetailPage() {
                 {data.exam && examFirst ? <ExamCard id={data.id} exam={data.exam} open={open} /> : null}
                 {open && data.inOrder ? <p className="caption">The lessons open one at a time, in order.</p> : null}
                 {data.sections.map((section, si) => (
-                  <section key={section.id} className="pc-panel" aria-labelledby={`section-${section.id}`}>
-                    <div className="pc-panel-head"><h2 id={`section-${section.id}`}><span className="muted tabular">{si + 1}.</span> {section.title}</h2></div>
-                    <ol className="pc-rows">
+                  <Section key={section.id} id={`section-${section.id}`} title={<><span className="muted tabular">{si + 1}.</span> {section.title}</>}
+                    aside={<p>{section.lessons.filter((l) => l.done).length} of {section.lessons.length}</p>}>
+                    <ol className="pc-list">
                       {section.lessons.map((lesson) => {
                         const Icon = lesson.done ? CircleCheck : lesson.locked ? Lock : KIND_ICON[lesson.kind] ?? BookOpen;
                         return (
@@ -179,15 +178,14 @@ export default function TrainingDetailPage() {
                         );
                       })}
                     </ol>
-                  </section>
+                  </Section>
                 ))}
                 {data.exam && !examFirst ? <ExamCard id={data.id} exam={data.exam} open={open} /> : null}
               </>
             ) : (
-              <section className="pc-panel" aria-labelledby="material">
-                <h2 id="material">What to do</h2>
-                {data.content ? <p className="pre">{data.content}</p> : <p className="muted">Your trainer will go through this with you.</p>}
-              </section>
+              <Section id="material" title="What to do">
+                <div className="pc-panel">{data.content ? <p className="pre">{data.content}</p> : <p className="muted">Your trainer will go through this with you.</p>}</div>
+              </Section>
             )}
 
             {open && data.sections?.length ? <OfflineCourse id={data.id} /> : null}
@@ -195,15 +193,16 @@ export default function TrainingDetailPage() {
             {data.practical ? <PracticalCard practical={data.practical} open={open && !data.trainerNote} /> : null}
 
             {open && allDone ? (
-              <section className="pc-panel" aria-labelledby="done-title">
-                <h2 id="done-title">{data.sections ? (data.requiresSignoff ? "All lessons done. Ready to show your trainer?" : "All lessons done") : data.requiresSignoff ? "Ready for sign-off?" : "Done it?"}</h2>
+              <Section id="done-title" title={data.sections ? (data.requiresSignoff ? "All lessons done. Ready to show your trainer?" : "All lessons done") : data.requiresSignoff ? "Ready for sign-off?" : "Done it?"}>
+                <div className="pc-panel">
                 <Textarea id="note" label={data.requiresSignoff ? "Note for your trainer" : "Note"} optional maxLength={1000} value={note} onChange={(e) => setNote(e.target.value)}
                   description={data.requiresSignoff ? "For example, when you are next on shift to show it." : undefined} />
                 {failure ? <Notice title={failure} tone="error" live /> : null}
                 <Button type="button" className="w-full" onClick={complete} disabled={busy}>
                   {data.requiresSignoff ? <><Send aria-hidden="true" />Ask for sign-off</> : <><CircleCheck aria-hidden="true" />{data.sections ? "Finish the course" : "Mark as done"}</>}
                 </Button>
-              </section>
+                </div>
+              </Section>
             ) : null}
           </>
         )}

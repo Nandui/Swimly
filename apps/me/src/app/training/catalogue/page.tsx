@@ -6,7 +6,7 @@ import { useState } from "react";
 import { ChevronRight, GraduationCap, Plus, Star } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { CourseImage } from "@/components/question";
-import { EmptyRows, LoadError, Loading, Notice, useLoad } from "@/components/ui";
+import { EmptyRows, LoadError, Loading, Notice, Section, useLoad } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
 import { Button } from "@/components/shadcn/button";
 import { PageShell } from "@/components/ui-kit/page-shell";
@@ -39,10 +39,10 @@ export default function CataloguePage() {
   const groups = [...new Set(shown.map((c) => c.category))].map((category) => ({ category, courses: shown.filter((c) => c.category === category) }));
   return (
     <Frame title="Find a course">
-      <PageShell header={<PageHeader back={{ href: "/training", label: "My training" }} title="Find a course" description="Courses open to everyone. Enrol to take one when it suits you; there is no deadline." />}>
+      <PageShell spacing="roomy" header={<PageHeader back={{ href: "/training", label: "My training" }} title="Find a course" description="Courses open to everyone. Enrol to take one when it suits you; there is no deadline." />}>
         {failure ? <Notice title={failure} tone="error" live /> : null}
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : data.items.length === 0 ? (
-          <section className="pc-panel"><EmptyRows>No courses are open to everyone yet.</EmptyRows></section>
+          <EmptyRows>No courses are open to everyone yet.</EmptyRows>
         ) : (
           <>
             {data.items.length > 4 ? (
@@ -50,9 +50,8 @@ export default function CataloguePage() {
             ) : null}
             {shown.length === 0 ? <p className="text-ui-muted-foreground" role="status">No course matches “{filter}”.</p> : null}
             {groups.map((group) => (
-              <section key={group.category || "other"} className="pc-panel" aria-label={group.category || "Other courses"}>
-                {group.category ? <h2>{group.category}</h2> : null}
-                <ul className="pc-rows">{group.courses.map((c) => (
+              <Section key={group.category || "other"} id={`cat-${(group.category || "other").toLowerCase().replace(/[^a-z0-9]+/g, "-")}`} title={group.category || undefined} label="Other courses" aside={<p>{group.courses.length}</p>}>
+                <ul className="pc-list">{group.courses.map((c) => (
                   <li key={c.id} className="pc-row">
                     {c.hasCover ? <CourseImage assignmentId="" fileId={c.id} path={`training/catalogue/${c.id}/cover`} alt="" className="course-thumb" /> : <span className="pc-tile-icon"><GraduationCap aria-hidden="true" /></span>}
                     <span className="pc-row-body">
@@ -75,7 +74,7 @@ export default function CataloguePage() {
                     </span>
                   </li>
                 ))}</ul>
-              </section>
+              </Section>
             ))}
           </>
         )}
