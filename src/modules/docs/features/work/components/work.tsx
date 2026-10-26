@@ -84,7 +84,7 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
   const queue = queues.find((q) => q.id === params.get('view')) || queues[0];
   if (!queue) {
     return (
-      <PageShell header={<PageHeader title="My work" description="Authoring, reviews and review dates for people who write documents" />}>
+      <PageShell spacing="roomy" header={<PageHeader title="My work" description="Authoring, reviews and review dates for people who write documents" />}>
         <EmptyState
           as="h2"
           icon="book"
@@ -167,10 +167,10 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
           ) : undefined
         }
       />}>
-      <div className="grid min-w-0 items-start gap-4 lg:grid-cols-rail-main">
-        <nav className="pc-panel" aria-labelledby="queues-heading">
-          <h2 id="queues-heading">Queues</h2>
-          <ul className="pc-rows">
+      <div className="grid min-w-0 items-start gap-(--space-7) lg:grid-cols-rail-main">
+        <nav className="flex min-w-0 flex-col" aria-labelledby="queues-heading">
+          <div className="pc-section-head"><h2 id="queues-heading">Queues</h2></div>
+          <ul className="pc-list">
             {queues.map(({ id, label, count, Icon }) => (
               <li key={id}>
                 <Link
@@ -181,17 +181,17 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
                 >
                   <span className="pc-tile-icon"><Icon aria-hidden="true" /></span>
                   <span className="pc-row-title min-w-0 flex-1">{label}</span>
-                  <span className="pc-row-count">{count}</span>
+                  <span className="pc-row-value">{count}</span>
                   <ChevronRight className="pc-row-chevron" aria-hidden="true" />
                 </Link>
               </li>
             ))}
           </ul>
         </nav>
-        <section className="pc-panel" aria-labelledby="queue-heading">
+        <section className="flex min-w-0 flex-col gap-(--space-4)" aria-labelledby="queue-heading">
           <div>
-            <h2 id="queue-heading">{queue.label}</h2>
-            <p className="text-sm text-ui-muted-foreground">{queue.description}</p>
+            <div className="pc-section-head"><h2 id="queue-heading">{queue.label}</h2>{visible.length ? <p>{visible.length}</p> : null}</div>
+            <p className="pc-section-note mb-0">{queue.description}</p>
           </div>
           <div className="flex flex-wrap items-end gap-3">
             <form
@@ -220,7 +220,7 @@ export function WorkView({ workspace: w, drafts }: { workspace: Workspace; draft
             {visible.length ? `${visible.length} ${visible.length === 1 ? 'document' : 'documents'}${search ? ` matching “${search}”` : ''}` : ''}
           </p>
           {visible.length ? (
-            <ul className="pc-rows">
+            <ul className="pc-list">
               {visible.map((item) => (
                 <li key={item.id}>
                   <Link className="pc-row" href={item.href}>

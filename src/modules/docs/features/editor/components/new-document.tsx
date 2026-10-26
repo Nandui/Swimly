@@ -70,12 +70,14 @@ export function NewDocument({ workspace: w }: { workspace: Workspace }) {
       </ol>
       {step === 1 && (
         <div className="editor-columns">
-          <section className="pc-panel min-w-0" aria-labelledby="template-heading">
-            <h2 id="template-heading" tabIndex={-1} ref={stepHeading}>
-              What kind of document are you creating?
-            </h2>
+          <section className="flex min-w-0 flex-col" aria-labelledby="template-heading">
+            <div className="pc-section-head">
+              <h2 id="template-heading" tabIndex={-1} ref={stepHeading}>
+                What kind of document are you creating?
+              </h2>
+            </div>
             <RadioGroup
-              className="pc-rows pc-rows-grid"
+              className="pc-list"
               aria-labelledby="template-heading"
               value={type}
               onValueChange={(value) => {
@@ -95,11 +97,10 @@ export function NewDocument({ workspace: w }: { workspace: Workspace }) {
               ))}
             </RadioGroup>
           </section>
-          <aside className="pc-panel min-w-0" aria-labelledby="preview-heading">
-            <div>
-              <h2 id="preview-heading">{selectedTemplate?.name || 'Blank document'}</h2>
-              <p className="text-sm text-ui-muted-foreground">{descriptions[type]}</p>
-            </div>
+          <aside className="flex min-w-0 flex-col" aria-labelledby="preview-heading">
+            <div className="pc-section-head"><h2 id="preview-heading">{selectedTemplate?.name || 'Blank document'}</h2></div>
+            <p className="pc-section-note">{descriptions[type]}</p>
+            <div className="rec-card">
             <h3 className="text-xs text-ui-muted-foreground">Your starting structure</h3>
             {templateSections.length ? (
               <ol className="pc-rows">
@@ -118,12 +119,13 @@ export function NewDocument({ workspace: w }: { workspace: Workspace }) {
               <ChevronRight aria-hidden="true" />
             </Button>
             <p className="text-xs text-ui-muted-foreground">You can edit every section in the document editor</p>
-          </aside>
+          </div>
+</aside>
         </div>
       )}
       {step === 2 && (
           <form
-            className="pc-panel"
+            className="rec-card"
             aria-labelledby="essentials-heading"
             onSubmit={async (e) => {
               e.preventDefault();
@@ -163,7 +165,7 @@ export function NewDocument({ workspace: w }: { workspace: Workspace }) {
               }
             }}
           >
-            <h2 id="essentials-heading" tabIndex={-1} ref={stepHeading}>
+            <h2 id="essentials-heading" className="text-title-3" tabIndex={-1} ref={stepHeading}>
               Give your document a clear identity
             </h2>
             <div className="pc-row">

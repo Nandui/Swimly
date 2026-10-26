@@ -83,6 +83,9 @@
 .turnfin-app .ui-motion-press[data-variant='default']:hover:not(:disabled, [aria-disabled='true']) { background: var(--accent-hi); }
 .turnfin-app .ui-motion-press[data-variant='outline'] { border: 0; background: var(--fill); box-shadow: none; color: var(--accent); }
 .turnfin-app .ui-motion-press[data-variant='outline']:hover:not(:disabled, [aria-disabled='true']) { background: var(--glass-sel); color: var(--accent); }
+/* A tinted button inside a toned notice (error, warning, success) is the card's white with the
+   notice's ink: blue, or ink on grey, would miss 4.5:1 on the soft red, orange or green. */
+.turnfin-app [data-slot='alert']:is([data-tone='error'], [data-tone='warning'], [data-tone='success']) .ui-motion-press[data-variant='outline']:is(*, :hover) { background: var(--bg-2); color: inherit; }
 .turnfin-app .ui-motion-press[data-variant='ghost'] { background: transparent; color: var(--accent); }
 .turnfin-app .ui-motion-press[data-variant='ghost']:hover:not(:disabled, [aria-disabled='true']) { background: var(--fill-2); color: var(--accent); }
 .turnfin-app .ui-motion-press[data-variant='link'] { padding-inline: 0; color: var(--accent); }
@@ -117,7 +120,7 @@
 .turnfin-app .pc-seg,
 .turnfin-app [data-slot='tabs-list'][data-variant='default'] { display: inline-flex; flex: none; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: 8px 0; width: max-content; max-width: 100%; height: auto; min-height: var(--control-height); padding: var(--space-1); border-radius: var(--radius-panel); background: var(--pc-seg-track, var(--fill)); overflow: visible; }
 .turnfin-app :is([data-slot='dialog-content'], [data-slot='alert-dialog-content'], [data-slot='sheet-content'], [data-slot='popover-content']) { --pc-seg-track: var(--fill); --pc-seg-thumb: var(--bg-2); }
-.turnfin-app :is(.pc-seg-item, [data-slot='tabs-list'][data-variant='default'] [data-slot='tabs-trigger']) { position: relative; isolation: isolate; display: inline-flex; flex: none; align-items: center; justify-content: center; gap: 6px; min-width: var(--control-height); min-height: var(--control-height); margin: -4px 0; padding: 0 15px; border: 0; border-radius: var(--radius-capsule); background: none; box-shadow: none; color: var(--label); font-size: 15px; font-weight: 550; white-space: nowrap; text-decoration: none; cursor: pointer; }
+.turnfin-app :is(.pc-seg-item, [data-slot='tabs-list'][data-variant='default'] [data-slot='tabs-trigger']) { position: relative; isolation: isolate; display: inline-flex; flex: none; align-items: center; justify-content: center; gap: 6px; min-width: var(--control-height); min-height: var(--control-height); height: auto; margin: -4px 0; padding: 0 15px; border: 0; border-radius: var(--radius-capsule); background: none; box-shadow: none; color: var(--label); font-size: 15px; font-weight: 550; white-space: nowrap; text-decoration: none; cursor: pointer; }
 .turnfin-app :is(.pc-seg-item, [data-slot='tabs-list'][data-variant='default'] [data-slot='tabs-trigger'])::before { content: ''; position: absolute; inset: 4px 0; z-index: -1; border-radius: var(--radius-capsule); transition: background-color var(--duration-fade) var(--ease); }
 .turnfin-app :is(.pc-seg-item, [data-slot='tabs-list'][data-variant='default'] [data-slot='tabs-trigger']):is(:hover, [data-highlighted])::before { background: var(--fill-2); }
 .turnfin-app .pc-seg-item:is(:focus, [data-highlighted]) { background: none; }
@@ -197,6 +200,8 @@
 .turnfin-app :is([data-slot='card'], [data-slot='dialog-content'], [data-slot='alert-dialog-content'], [data-slot='sheet-content'], [data-slot='popover-content'], .pc-panel, .rec-card, .pc-list) .pc-row { width: auto; margin-inline: calc(-1 * var(--space-3)); padding-inline: var(--space-3); background: transparent; }
 .turnfin-app :is([data-slot='card'], [data-slot='dialog-content'], [data-slot='alert-dialog-content'], [data-slot='sheet-content'], [data-slot='popover-content'], .pc-panel, .rec-card, .pc-list) :is(a, button, label).pc-row:hover { background: var(--fill-2); }
 .turnfin-app :is([data-slot='card'], [data-slot='dialog-content'], [data-slot='alert-dialog-content'], [data-slot='sheet-content'], [data-slot='popover-content'], .pc-panel, .rec-card, .pc-list) .pc-rows > :is(li, .pc-row) + :is(li, .pc-row) { border-top: 0.5px solid var(--sep); }
+/* A row that carries the hairline itself is square, so the line runs straight to its ends. */
+.turnfin-app :is([data-slot='card'], [data-slot='dialog-content'], [data-slot='alert-dialog-content'], [data-slot='sheet-content'], [data-slot='popover-content'], .pc-panel, .rec-card, .pc-list) .pc-rows > .pc-row { border-radius: 0; }
 /* The single do-first row is the needs-action tone; the current row of a filtering list the soft
    fin blue. A row that opens in place keeps its look while open. */
 .turnfin-app .pc-row[data-first] { background: var(--orange-soft); color: var(--orange-ink); }

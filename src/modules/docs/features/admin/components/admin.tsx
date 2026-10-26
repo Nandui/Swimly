@@ -1,6 +1,5 @@
 'use client';
 import dynamic from 'next/dynamic';
-import { Card } from '@/components/shadcn/card';
 import { Skeleton } from '@/components/shadcn/skeleton';
 import { Label } from '@/components/shadcn/label';
 import { NativeSelect, NativeSelectOption } from '@/components/shadcn/native-select';
@@ -159,14 +158,13 @@ export function AdminView({
         <div className="flex min-w-0 flex-col gap-4">
           {error ? <Notice tone="error" live="alert" title={error} /> : success ? <Notice tone="success" live="status" title={success} /> : null}
           {tab === 'people' && (
-            <section className="pc-panel" aria-labelledby="staff-heading">
-              <div className="pc-panel-head">
-                <div>
-                  <h2 id="staff-heading">Staff directory</h2>
-                  <p className="text-sm text-ui-muted-foreground">Everyone has their own account and a clear role</p>
-                </div>
-                <Tag meta={DOC_STATUS_META.active} label={`${w.members.filter((m) => m.active).length} active staff`} />
+            <section className="flex min-w-0 flex-col" aria-labelledby="staff-heading">
+              <div className="pc-section-head">
+                <h2 id="staff-heading">Staff directory</h2>
+                <p>{w.members.filter((m) => m.active).length} active</p>
               </div>
+              <p className="pc-section-note">Everyone has their own account and a clear role</p>
+              <div className="rec-card">
               <div className="flex flex-wrap items-end gap-3">
                 <SearchField
                   label="Search staff"
@@ -226,21 +224,21 @@ export function AdminView({
                   hint="Try another name, or change the Show filter"
                 />
               )}
-            </section>
+            </div>
+          </section>
           )}
           {(tab === 'facility' || tab === 'team') && (
             <div className="docs-split">
-              <section className="pc-panel" aria-labelledby="groups-heading">
-                <div>
-                  <h2 id="groups-heading">{tab === 'facility' ? 'Facilities' : 'Teams'}</h2>
-                  <p className="text-sm text-ui-muted-foreground">
-                    {tab === 'facility'
-                      ? 'Organise guidance around the places your staff work.'
-                      : 'Group staff to make required reading easier to assign.'}{' '}
-                    Sites and departments come from Staff, under Organisation, and so does who
-                    belongs to them.
-                  </p>
-                </div>
+              <section className="flex min-w-0 flex-col" aria-labelledby="groups-heading">
+                <div className="pc-section-head"><h2 id="groups-heading">{tab === 'facility' ? 'Facilities' : 'Teams'}</h2></div>
+                <p className="pc-section-note">
+                  {tab === 'facility'
+                    ? 'Organise guidance around the places your staff work.'
+                    : 'Group staff to make required reading easier to assign.'}{' '}
+                  Sites and departments come from Staff, under Organisation, and so does who
+                  belongs to them.
+                </p>
+                <div className="rec-card">
                 <ul className="pc-rows">
                   {(tab === 'facility' ? w.facilities : w.teams).map((g) => {
                     const count = w.members.filter((m) =>
@@ -270,9 +268,10 @@ export function AdminView({
                     );
                   })}
                 </ul>
-              </section>
+              </div>
+            </section>
               <form
-                className="pc-panel"
+                className="flex min-w-0 flex-col"
                 aria-labelledby="group-form-heading"
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -282,7 +281,8 @@ export function AdminView({
                   );
                 }}
               >
-                <h2 id="group-form-heading">{groupId ? 'Rename' : tab === 'facility' ? 'Add a facility' : 'Add a team'}</h2>
+                <div className="pc-section-head"><h2 id="group-form-heading">{groupId ? 'Rename' : tab === 'facility' ? 'Add a facility' : 'Add a team'}</h2></div>
+                <div className="rec-card">
                 <div className="flex flex-col gap-2">
                   <Label className="block" htmlFor="docs-group-name">Name</Label>
                   <Input
@@ -297,18 +297,15 @@ export function AdminView({
                   {groupId ? <Save aria-hidden="true" /> : <Plus aria-hidden="true" />}
                   {groupId ? 'Save name' : tab === 'facility' ? 'Add facility' : 'Add team'}
                 </Button>
+                </div>
               </form>
             </div>
           )}
           {tab === 'templates' && template && (
-            <Card asChild>
-              <section className="pc-panel" aria-labelledby="templates-heading">
-                <div>
-                  <h2 id="templates-heading">Document templates</h2>
-                  <p className="text-sm text-ui-muted-foreground">
-                    Template changes apply to new documents. Existing documents keep their content.
-                  </p>
-                </div>
+              <section className="flex min-w-0 flex-col" aria-labelledby="templates-heading">
+                <div className="pc-section-head"><h2 id="templates-heading">Document templates</h2></div>
+                <p className="pc-section-note">Template changes apply to new documents. Existing documents keep their content.</p>
+                <div className="rec-card">
                 <div className="flex flex-wrap items-end gap-3">
                   <FilterSelect
                     label="Template"
@@ -352,22 +349,17 @@ export function AdminView({
                     Save template
                   </Button>
                 </div>
-              </section>
-            </Card>
+              </div>
+            </section>
           )}
           {tab === 'matrix' && (
-            <Card asChild>
-              <section className="pc-panel matrix-admin" aria-labelledby="matrix-heading">
-                <div className="pc-panel-head">
-                  <div>
-                    <h2 id="matrix-heading">Risk scoring matrix</h2>
-                    <p className="text-sm text-ui-muted-foreground">
-                      Set your organisation’s 5×5 definitions and bands. Published assessments
-                      keep their original matrix.
-                    </p>
-                  </div>
+              <section className="flex min-w-0 flex-col matrix-admin" aria-labelledby="matrix-heading">
+                <div className="pc-section-head">
+                  <h2 id="matrix-heading">Risk scoring matrix</h2>
                   <Tag meta={DOC_STATUS_META[w.matrix.configured ? 'configured' : 'setupRequired']} />
                 </div>
+                <p className="pc-section-note">Set your organisation’s 5×5 definitions and bands. Published assessments keep their original matrix.</p>
+                <div className="rec-card">
                 {w.localMode && (
                   <Notice
                     tone="warning"
@@ -550,12 +542,13 @@ export function AdminView({
                     Confirm and save matrix
                   </Button>
                 </div>
-              </section>
-            </Card>
+              </div>
+            </section>
           )}
           {tab === 'activity' && (
-            <section className="pc-panel" aria-labelledby="activity-heading">
-              <h2 id="activity-heading">Workspace activity</h2>
+            <section className="flex min-w-0 flex-col" aria-labelledby="activity-heading">
+              <div className="pc-section-head"><h2 id="activity-heading">Workspace activity</h2></div>
+              <div className="rec-card">
               {events.length ? (
                 <ul className="pc-feed">
                   {events.map((e) => (
@@ -574,17 +567,15 @@ export function AdminView({
               ) : (
                 <EmptyState as="h3" icon="book" title="No activity yet" hint="Changes to documents, groups and settings appear here" />
               )}
-            </section>
+            </div>
+          </section>
           )}
           {tab === 'hr' && hrProcedures}
           {tab === 'mail' && (
-            <section className="pc-panel" aria-labelledby="mail-heading">
-              <div>
-                <h2 id="mail-heading">Local invitation and reset mailbox</h2>
-                <p className="text-sm text-ui-muted-foreground">
-                  Development delivery only. These links are visible to administrators; no email is sent.
-                </p>
-              </div>
+            <section className="flex min-w-0 flex-col" aria-labelledby="mail-heading">
+              <div className="pc-section-head"><h2 id="mail-heading">Local invitation and reset mailbox</h2></div>
+              <p className="pc-section-note">Development delivery only. These links are visible to administrators; no email is sent.</p>
+              <div className="rec-card">
               {mail.length ? (
                 <ul className="pc-rows">
                   {mail.map((item) => (
@@ -606,7 +597,8 @@ export function AdminView({
               ) : (
                 <EmptyState as="h3" icon="book" title="No messages yet" hint="Invitations and password resets appear here" />
               )}
-            </section>
+            </div>
+          </section>
           )}
         </div>
       </div>

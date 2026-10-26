@@ -59,9 +59,9 @@ import { Input as FieldInput } from '@/components/ui/input';
 import { Notice } from '@/components/ui-kit/notice';
 import { Tag } from '@/components/ui-kit/tag';
 
-/** One fact in the document's meta grid: a box with its caption over the value, or one line on phones. */
+/** One fact in the document's meta grid: a soft well with its caption over the value, or one line on phones. */
 const metaBox =
-  'rounded-ui-md border border-ui-border px-4 py-3 max-sm:flex max-sm:flex-wrap max-sm:items-baseline max-sm:justify-between max-sm:gap-x-3 max-sm:py-2';
+  'rounded-card bg-(--fill-2) px-4 py-3 max-sm:flex max-sm:flex-wrap max-sm:items-baseline max-sm:justify-between max-sm:gap-x-3 max-sm:py-2';
 /** The reader's text sizes (V2Document's A−, A, A+): 16px is the default reading size
  *  (`data-reading-size`, docs-integration.css). */
 const SIZES = [
@@ -254,7 +254,7 @@ export function Reader({
       )}
       <div className="flex min-w-0 flex-wrap items-start gap-4">
         <article
-          className="pc-panel document-article min-w-0 grow-999 basis-xl"
+          className="rec-card document-article min-w-0 grow-999 basis-xl"
           data-reading-size={size}
         >
           <div className="flex flex-wrap gap-2">
@@ -338,7 +338,7 @@ export function Reader({
             </section>
           )}
           {s?.kind === 'publication' && !historical && !d.archivedAt && (
-            <div className="pc-note" id="acknowledge">
+            <div className="flex items-start gap-3 rounded-card bg-(--fill-2) p-4" id="acknowledge">
               {acknowledgedAt ? <CheckCircle2 aria-hidden="true" className="size-5 text-ui-primary" /> : <Smartphone aria-hidden="true" className="size-5 text-ui-primary" />}
               <div className="min-w-0">
                 <h3>{acknowledgedAt ? 'You’ve read this version' : 'Assigned to you?'}</h3>
@@ -358,9 +358,10 @@ export function Reader({
         <aside className="reader-rail flex min-w-0 grow basis-(--pc-rail-width) flex-col gap-4">
           {/* Below 768px the contents would sit after the whole document, so it is left out (V2PhoneDocument). */}
           {contents.length > 0 && (
-            <nav className="pc-panel max-md:hidden!" aria-labelledby="contents-title">
-              <h2 id="contents-title">On this page</h2>
-              <ul className="flex flex-col gap-2">
+            <nav className="flex min-w-0 flex-col max-md:hidden!" aria-labelledby="contents-title">
+              <div className="pc-section-head"><h2 id="contents-title">On this page</h2></div>
+              <div className="rec-card">
+              <ul className="flex flex-col gap-0.5">
                 {contents.map((item) => (
                   <li key={item.href}>
                     <a className="reader-contents-link" data-nested={item.nested || undefined} href={item.href}>
@@ -369,11 +370,13 @@ export function Reader({
                   </li>
                 ))}
               </ul>
-            </nav>
+            </div>
+</nav>
           )}
           {(totals || owns) && (
-            <section className="pc-panel" aria-labelledby="reading-title">
-              <h2 id="reading-title">Reading this version</h2>
+            <section className="flex min-w-0 flex-col" aria-labelledby="reading-title">
+              <div className="pc-section-head"><h2 id="reading-title">Reading this version</h2></div>
+              <div className="rec-card">
               {totals ? (
                 <div className="flex flex-col gap-2">
                   <p>
@@ -441,16 +444,16 @@ export function Reader({
                   </Button>
                 </div>
               )}
-            </section>
+            </div>
+          </section>
           )}
         </aside>
       </div>
       {reviewable && (
-        <section className="pc-panel" aria-labelledby="review-title">
-          <div>
-            <h2 id="review-title">Ready for the team?</h2>
-            <p className="text-sm text-ui-muted-foreground">Change summary: {s.changeSummary}</p>
-          </div>
+        <section className="flex min-w-0 flex-col" aria-labelledby="review-title">
+          <div className="pc-section-head"><h2 id="review-title">Ready for the team?</h2></div>
+          <p className="pc-section-note">Change summary: {s.changeSummary}</p>
+          <div className="rec-card">
           <div className="flex flex-col gap-2">
             <Label className="block" htmlFor={feedbackId}>Review feedback</Label>
             <Textarea
@@ -489,7 +492,8 @@ export function Reader({
               Approve and publish
             </Button>
           </div>
-        </section>
+        </div>
+      </section>
       )}
       <AlertDialog
         open={archiving}

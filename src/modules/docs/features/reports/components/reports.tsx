@@ -24,6 +24,7 @@ import { FilterSelect } from '@/modules/docs/shared/components/ui';
 import { EmptyState } from '@/components/ui-kit/empty-state';
 import { PageHeader } from '@/components/ui-kit/page-header';
 import { PageShell } from '@/components/ui-kit/page-shell';
+import { Figure, Figures } from '@/components/ui-kit/figure';
 
 /** Where one person's required reading stands. */
 const readingStatus = (r: Pick<Requirement, 'status' | 'dueDate'>): DocStatus =>
@@ -105,7 +106,7 @@ export function ReportsView({
   const when = (r: Requirement) =>
     r.acknowledgedAt ? `read ${formatDate(r.acknowledgedAt)}` : r.dueDate ? `due ${formatDate(r.dueDate)}` : 'due date not set';
   return (
-    <PageShell header={<PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         title="Reading reports"
         description="See who has read each version, and where your team needs a reminder"
         actions={
@@ -117,38 +118,15 @@ export function ReportsView({
           </Button>
         }
       />}>
-      <ul className="pc-stats" aria-label="Reading at a glance">
-        {tiles.map(({ status, icon: Icon, value, label, caption }) => (
-          <li key={label} className="flex min-w-0">
-            <Link
-              href={statusHref(status)}
-              scroll={false}
-              className="pc-stat w-full"
-              aria-current={status && filters.status === status ? 'true' : undefined}
-            >
-              <span className="pc-tile-icon"><Icon aria-hidden="true" /></span>
-              <span>
-                <span className="pc-stat-figure block">{value}</span>
-                <span className="block font-semibold">{label}</span>
-              </span>
-              {typeof caption === 'string' ? <span className="text-xs text-ui-muted-foreground">{caption}</span> : caption}
-            </Link>
-          </li>
+      <Figures label="Reading at a glance">
+        {tiles.map(({ status, icon, value, label, caption }) => (
+          <Figure key={label} icon={icon} label={label} value={value} hint={caption} href={statusHref(status)} current={!!status && filters.status === status} />
         ))}
-        <li className="flex min-w-0">
-          <div className="pc-stat w-full">
-            <span className="pc-tile-icon"><ChartNoAxesColumn aria-hidden="true" /></span>
-            <span>
-              <span className="pc-stat-figure block">{active ? `${Math.round((completed / active) * 100)}%` : '—'}</span>
-              <span className="block font-semibold">Reading complete</span>
-            </span>
-            <span className="text-xs text-ui-muted-foreground">Across all current assignments</span>
-          </div>
-        </li>
-      </ul>
-      <div className="grid min-w-0 items-start gap-4 lg:grid-cols-rail-main">
-        <section className="pc-panel" aria-labelledby="report-filter-heading">
-          <div className="pc-panel-head">
+        <Figure icon={ChartNoAxesColumn} label="Reading complete" value={active ? `${Math.round((completed / active) * 100)}%` : '—'} quiet={!active} hint="Across all current assignments" />
+      </Figures>
+      <div className="grid min-w-0 items-start gap-(--space-7) lg:grid-cols-rail-main">
+        <section className="flex min-w-0 flex-col" aria-labelledby="report-filter-heading">
+          <div className="pc-section-head">
             <h2 id="report-filter-heading">Filter records</h2>
             {hasFilters && (
               <Button asChild variant="link">
@@ -168,7 +146,7 @@ export function ReportsView({
             <SlidersHorizontal aria-hidden="true" />
             Filters{filterCount ? ` (${filterCount})` : ''}
           </Button>
-          <div id="report-filters" className={cn('contents', !phoneOpen && 'max-sm:hidden')}>
+          <div id="report-filters" className={cn('rec-card', !phoneOpen && 'max-sm:hidden')}>
           <div className="flex flex-wrap items-end gap-3 lg:flex-col lg:items-stretch">
             <FilterSelect label="Document" className="grow basis-48 lg:basis-auto" value={filters.document || ''} onChange={(value) => set('document', value)}>
               <NativeSelectOption value="">All documents</NativeSelectOption>
@@ -219,8 +197,8 @@ export function ReportsView({
           </Label>
           </div>
         </section>
-        <section className="pc-panel" aria-labelledby="report-records-heading">
-          <div>
+        <section className="flex min-w-0 flex-col" aria-labelledby="report-records-heading">
+          <div className="pc-section-head">
             <h2 id="report-records-heading">
               {filters.status === 'outstanding'
                 ? 'Outstanding reading'
@@ -228,11 +206,12 @@ export function ReportsView({
                   ? 'Acknowledged reading'
                   : 'Reading records'}
             </h2>
-            <p role="status" className="text-xs text-ui-muted-foreground">
-              {visible.length} {visible.length === 1 ? 'record' : 'records'} ·{' '}
-              {filters.history ? 'Includes earlier versions' : 'Current published versions'}
-            </p>
+            <p role="status">{visible.length}</p>
           </div>
+          <p className="pc-section-note">
+            {visible.length} {visible.length === 1 ? 'record' : 'records'} ·{' '}
+            {filters.history ? 'Includes earlier versions' : 'Current published versions'}
+          </p>
           {visible.length ? (
             <Table>
               <TableHeader>

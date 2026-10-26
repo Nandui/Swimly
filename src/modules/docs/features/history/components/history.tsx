@@ -73,8 +73,9 @@ export function HistoryView({
       <div className="docs-split">
         <div className="flex min-w-0 flex-col gap-4">
           {compare && a && b && (
-              <section className="pc-panel comparison" aria-labelledby="compare-heading">
-                <h2 id="compare-heading">Compare versions</h2>
+              <section className="flex min-w-0 flex-col comparison" aria-labelledby="compare-heading">
+                <div className="pc-section-head"><h2 id="compare-heading">Compare versions</h2></div>
+                <div className="rec-card">
                 <div className="flex flex-wrap gap-3">
                   <FilterSelect label="Earlier version" value={left} onChange={setLeft}>
                     {snapshots.map((s) => (
@@ -140,12 +141,13 @@ export function HistoryView({
                     </article>
                   ))}
                 </div>
-              </section>
+              </div>
+            </section>
           )}
-          <section className="pc-panel" aria-labelledby="versions-heading">
-            <h2 id="versions-heading">{title || 'Versions'}</h2>
+<section className="flex min-w-0 flex-col" aria-labelledby="versions-heading">
+            <div className="pc-section-head"><h2 id="versions-heading">{title || 'Versions'}</h2><p>{snapshots.length}</p></div>
             {snapshots.length ? (
-              <ul className="pc-rows">
+              <ul className="pc-list">
                 {snapshots.map((s) => (
                   <li className="pc-row" key={s.id}>
                     <div className="flex min-w-0 flex-1 basis-full flex-col gap-2">
@@ -204,8 +206,9 @@ export function HistoryView({
           </section>
         </div>
         {events.length > 0 && (
-          <section className="pc-panel" aria-labelledby="activity-heading">
-            <h2 id="activity-heading">Activity log</h2>
+          <section className="flex min-w-0 flex-col" aria-labelledby="activity-heading">
+            <div className="pc-section-head"><h2 id="activity-heading">Activity log</h2></div>
+            <div className="rec-card">
             <ul className="pc-feed">
               {events.map((event) => (
                 <li key={event.id}>
@@ -220,7 +223,8 @@ export function HistoryView({
                 </li>
               ))}
             </ul>
-          </section>
+          </div>
+        </section>
         )}
       </div>
     </PageShell>
