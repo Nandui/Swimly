@@ -25,12 +25,10 @@ export default async function ShortCoursesPage() {
         actions={canPutOn ? <CourseDialog sites={options.sites} types={options.types} perSite={options.perSite} today={options.today} />
           : who.manage ? <Button asChild><Link href="/short-courses/types">Add a course to the list</Link></Button> : undefined} />}>
       {toPhone.length ? (
-        <section aria-labelledby="sc-phone-h" className="pc-panel">
-          <div className="pc-panel-head">
-            <div className="flex flex-col gap-1"><h2 id="sc-phone-h">To phone · {toPhone.length}</h2>
-              <p className="pc-row-hint">Booked online and still to pay. Phone within 72 hours, take payment at the till, then record it on the course.</p></div>
-          </div>
-          <ul className="pc-rows">
+        <section aria-labelledby="sc-phone-h" className="flex min-w-0 flex-col">
+          <div className="pc-section-head"><h2 id="sc-phone-h">To phone · {toPhone.length}</h2></div>
+          <p className="pc-section-note">Booked online and still to pay. Phone within 72 hours, take payment at the till, then record it on the course.</p>
+          <ul className="pc-list">
             {toPhone.map((p) => (
               <li key={p.id}>
                 <Link href={`/short-courses/${p.courseId}`} className="pc-row">
@@ -59,10 +57,10 @@ export default async function ShortCoursesPage() {
 
 function Panel({ id, title, courses, empty }: { id: string; title: string; courses: CourseRow[]; empty?: { title: string; hint?: string } }) {
   return (
-    <section aria-labelledby={`${id}-h`} id={id} className="pc-panel">
-      <div className="pc-panel-head"><h2 id={`${id}-h`}>{title}</h2></div>
+    <section aria-labelledby={`${id}-h`} id={id} className="flex min-w-0 flex-col">
+      <div className="pc-section-head"><h2 id={`${id}-h`}>{title}</h2></div>
       {courses.length === 0 ? <EmptyState compact icon="calendarRange" title={empty?.title ?? "None"} hint={empty?.hint} /> : (
-        <ul className="pc-rows">
+        <ul className="pc-list">
           {courses.map((c) => {
             const area = SHORT_COURSE_AREA_META[c.area as ShortCourseArea] ?? SHORT_COURSE_AREA_META.other;
             const Icon = area.icon;
