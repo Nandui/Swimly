@@ -59,10 +59,12 @@ export function CoinageRequestForm({ id, row, sites, defaultSite = "", actions, 
     <fieldset disabled={pending !== null} className="flex min-w-0 flex-col gap-(--space-6)">
       <legend className="sr-only">Coinage request details</legend>
       <section className="flex min-w-0 flex-col" aria-labelledby="coinage-where-heading"><div className="pc-section-head"><h2 id="coinage-where-heading">Where and when</h2></div>
-        <div className="pc-panel grid gap-4 sm:grid-cols-2">
-          <Select id="coinage-site" name="clubId" label="Site" value={fields.clubId} onValueChange={value => change("clubId", value)} placeholder="Choose a site" required options={sites.map(site => ({ value: site.id, label: site.name }))} />
-          <Input id="coinage-for" name="forWhom" label="Who it is for" value={fields.forWhom} onChange={value => change("forWhom", value)} maxLength={200} description="The till, desk or area, such as ‘Reception till 2’." />
-          <Input id="coinage-needed" name="neededBy" label="Needed by" type="date" min={row ? undefined : today()} value={fields.neededBy} onChange={value => change("neededBy", value)} />
+        <div className="rec-card">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Select id="coinage-site" name="clubId" label="Site" value={fields.clubId} onValueChange={value => change("clubId", value)} placeholder="Choose a site" required options={sites.map(site => ({ value: site.id, label: site.name }))} />
+            <Input id="coinage-for" name="forWhom" label="Who it is for" value={fields.forWhom} onChange={value => change("forWhom", value)} maxLength={200} description="The till, desk or area, such as ‘Reception till 2’." />
+            <Input id="coinage-needed" name="neededBy" label="Needed by" type="date" min={row ? undefined : today()} value={fields.neededBy} onChange={value => change("neededBy", value)} />
+          </div>
         </div>
       </section>
       <section className="flex min-w-0 flex-col" aria-labelledby="coinage-lines-heading">

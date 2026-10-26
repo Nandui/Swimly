@@ -83,24 +83,28 @@ export function ReportForm({ sites, areas, start }: { sites: Site[]; areas: Reco
         <legend className="sr-only">The problem</legend>
         <section aria-labelledby="mnt-where" className="flex min-w-0 flex-col">
           <div className="pc-section-head"><h2 id="mnt-where">Where</h2></div>
-          <div className="pc-panel grid gap-4 sm:grid-cols-2">
-            {sites.length > 1 ? (
-              <Field label="Site" htmlFor="mnt-site">
-                <NativeSelect id="mnt-site" value={f.siteId} onChange={(e) => { setF((x) => ({ ...x, siteId: e.target.value, area: "" })); lookNearby(e.target.value, ""); }} required className="min-h-11 w-full">
-                  <NativeSelectOption value="" disabled>Choose a site</NativeSelectOption>
-                  {sites.map((s) => <NativeSelectOption key={s.id} value={s.id}>{s.name}</NativeSelectOption>)}
+          <div className="rec-card">
+            <div className="grid gap-4 sm:grid-cols-2">
+              {sites.length > 1 ? (
+                <Field label="Site" htmlFor="mnt-site">
+                  <NativeSelect id="mnt-site" value={f.siteId} onChange={(e) => { setF((x) => ({ ...x, siteId: e.target.value, area: "" })); lookNearby(e.target.value, ""); }} required className="min-h-11 w-full">
+                    <NativeSelectOption value="" disabled>Choose a site</NativeSelectOption>
+                    {sites.map((s) => <NativeSelectOption key={s.id} value={s.id}>{s.name}</NativeSelectOption>)}
+                  </NativeSelect>
+                </Field>
+              ) : null}
+              <Field label="Area" htmlFor="mnt-area" optional>
+                <NativeSelect id="mnt-area" value={f.area} onChange={(e) => { set("area", e.target.value); lookNearby(f.siteId, e.target.value); }} className="min-h-11 w-full">
+                  <NativeSelectOption value="">{siteAreas.length ? "Not in one area" : "No areas listed for this site"}</NativeSelectOption>
+                  {siteAreas.map((a) => <NativeSelectOption key={a} value={a}>{a}</NativeSelectOption>)}
                 </NativeSelect>
               </Field>
-            ) : null}
-            <Field label="Area" htmlFor="mnt-area" optional>
-              <NativeSelect id="mnt-area" value={f.area} onChange={(e) => { set("area", e.target.value); lookNearby(f.siteId, e.target.value); }} className="min-h-11 w-full">
-                <NativeSelectOption value="">{siteAreas.length ? "Not in one area" : "No areas listed for this site"}</NativeSelectOption>
-                {siteAreas.map((a) => <NativeSelectOption key={a} value={a}>{a}</NativeSelectOption>)}
-              </NativeSelect>
-            </Field>
-            <Field label="Exactly where" htmlFor="mnt-place" hint="So someone who does not know the site can find it" optional>
-              <Input id="mnt-place" value={f.place} onChange={(e) => set("place", e.target.value)} maxLength={200} placeholder="For example: third locker from the left" />
-            </Field>
+              <div className="sm:col-span-2">
+                <Field label="Exactly where" htmlFor="mnt-place" hint="So someone who does not know the site can find it" optional>
+                  <Input id="mnt-place" value={f.place} onChange={(e) => set("place", e.target.value)} maxLength={200} placeholder="For example: third locker from the left" />
+                </Field>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -121,7 +125,7 @@ export function ReportForm({ sites, areas, start }: { sites: Site[]; areas: Reco
 
         <section aria-labelledby="mnt-what" className="flex min-w-0 flex-col">
           <div className="pc-section-head"><h2 id="mnt-what">What is broken</h2></div>
-          <div className="pc-panel flex flex-col gap-4">
+          <div className="rec-card">
             <Field label="In a few words" htmlFor="mnt-title">
               <Input id="mnt-title" value={f.title} onChange={(e) => set("title", e.target.value)} maxLength={160} required placeholder="For example: Shower 3 will not turn off" />
             </Field>
@@ -133,7 +137,7 @@ export function ReportForm({ sites, areas, start }: { sites: Site[]; areas: Reco
 
         <section aria-labelledby="mnt-bad" className="flex min-w-0 flex-col">
           <div className="pc-section-head"><h2 id="mnt-bad">How bad</h2></div>
-          <div className="pc-panel flex flex-col gap-5">
+          <div className="rec-card">
             <fieldset className="space-y-2">
               <legend className="text-sm font-semibold">Is it out of use, or could it hurt someone?</legend>
               <RadioGroup value={f.risk} onValueChange={(v) => set("risk", v as Risk)} className="gap-2">
@@ -151,7 +155,7 @@ export function ReportForm({ sites, areas, start }: { sites: Site[]; areas: Reco
 
         <section aria-labelledby="mnt-trackplan" className="flex min-w-0 flex-col">
           <div className="pc-section-head"><h2 id="mnt-trackplan">Trackplan</h2></div>
-          <div className="pc-panel flex flex-col gap-4">
+          <div className="rec-card">
             <div className="space-y-2">
               <p id="mnt-in-trackplan" className="text-sm font-semibold">Is it already in Trackplan?</p>
               <p id="mnt-in-trackplan-hint" className="text-sm text-ui-muted-foreground">Trackplan is the maintenance team’s own system. If you don’t know, choose Not sure: a manager will check.</p>
@@ -168,7 +172,7 @@ export function ReportForm({ sites, areas, start }: { sites: Site[]; areas: Reco
 
         <section aria-labelledby="mnt-photos" className="flex min-w-0 flex-col">
           <div className="pc-section-head"><h2 id="mnt-photos">Photos</h2><p>{photos.length} of {MAX_PHOTOS}</p></div>
-          <div className="pc-panel flex flex-col gap-3">
+          <div className="rec-card">
             <p className="text-sm text-ui-muted-foreground">Up to {MAX_PHOTOS} photos, {sizeLimit(MAX_PHOTO_BYTES)} each. Photos are kept without their location.</p>
             {photos.length ? (
               <ul className="flex flex-col gap-2">
