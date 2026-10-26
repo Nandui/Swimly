@@ -30,7 +30,7 @@ export default function ReadingDetailPage() {
     finally { setBusy(false); }
   }
   return (
-    <Frame title="Required reading">
+    <Frame title={data?.title ?? "Required reading"}>
       <PageShell header={<PageHeader back={{ href: "/reading", label: "Required reading" }} title={data?.title ?? "Required reading"}
         description={data ? <>{`${data.reference} · version ${data.version}${data.dueOn ? ` · due ${day(data.dueOn)}` : ""}`}{data.summary ? <><br />{data.summary}</> : null}</> : undefined} />}>
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : (

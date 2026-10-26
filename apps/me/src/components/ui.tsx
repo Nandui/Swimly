@@ -28,9 +28,21 @@ export function Bar({ value, max, label }: { value: number; max: number; label: 
   return <Progress value={max > 0 ? Math.round((Math.min(value, max) / max) * 100) : 0} aria-label={label} />;
 }
 
-/** An empty list: one muted row in the panel, where the rows would be. */
+/** An empty list: one muted row in the grouped list, where the rows would be. */
 export function EmptyRows({ children }: { children: ReactNode }) {
-  return <ul className="pc-rows"><li className="pc-row" data-muted>{children}</li></ul>;
+  return <ul className="pc-list"><li className="pc-row" data-muted>{children}</li></ul>;
+}
+
+/** A section as Turnfin Glass draws it (DESIGN.md, The page shell): its heading above the grouped
+ *  content, with a count or a quiet link at the end of the heading, never inside the card. Without
+ *  a title it is a plain section named by `label`. */
+export function Section({ id, title, aside, label, className, children }: { id?: string; title?: ReactNode; aside?: ReactNode; label?: string; className?: string; children: ReactNode }) {
+  return (
+    <section aria-labelledby={title ? id : undefined} aria-label={title ? undefined : label} className={`flex min-w-0 flex-col${className ? ` ${className}` : ""}`}>
+      {title ? <div className="pc-section-head"><h2 id={id}>{title}</h2>{aside}</div> : null}
+      {children}
+    </section>
+  );
 }
 
 /** Loads one API resource for the page. Signed out → the sign-in page, and

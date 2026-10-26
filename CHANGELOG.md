@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.9.1 · 26 October 2026 · Turnfin Me pages tidied
+
+- Every page in **Turnfin Me** now has its section titles above the lists, as Home does: training, reading, shifts, qualifications, your record, search, saved lessons and the course pages.
+- Each day on My shifts has its date as a title, with the paid hours beside it and the times and site underneath.
+- Pages you open from More have a **More** link at the top to go back.
+- Saving a lesson note or sending a course rating now confirms with the black banner at the top.
+
 ## 2.9.0 · 26 October 2026 · Turnfin Me in the new look
 
 - **Turnfin Me** on your phone opens each page with a large title. As you scroll, the title moves into a small glass bar at the top.

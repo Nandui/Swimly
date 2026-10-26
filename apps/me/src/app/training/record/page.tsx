@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Award, Download, Printer } from "lucide-react";
 import { Frame } from "@/components/frame";
-import { EmptyRows, LoadError, Loading, Tag, useLoad } from "@/components/ui";
+import { EmptyRows, LoadError, Loading, Section, Tag, useLoad } from "@/components/ui";
 import { date } from "@/lib/format";
 import { TRAINING_META } from "@/lib/meta";
 import { Button } from "@/components/shadcn/button";
@@ -51,17 +51,16 @@ export default function RecordPage() {
   const minutes = data?.hours.log.reduce((n, l) => n + l.minutes, 0) ?? 0;
   return (
     <Frame title="My record">
-      <PageShell className="no-print-back" header={<PageHeader back={{ href: "/training", label: "My training" }} title="My training record" description={<>{data ? `${data.name} · ` : ""}every course you have had, with scores and certificates.</>} />}>
+      <PageShell className="no-print-back" spacing="roomy" header={<PageHeader back={{ href: "/training", label: "My training" }} title="My training record" description={<>{data ? `${data.name} · ` : ""}every course you have had, with scores and certificates.</>} />}>
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading rows={4} /> : (
           <>
             <div className="flex flex-wrap items-center gap-2 no-print">
               <Button type="button" variant="outline" onClick={() => download(data)}><Download aria-hidden="true" />Download (Excel)</Button>
               <Button type="button" variant="outline" onClick={() => window.print()}><Printer aria-hidden="true" />Print or save as PDF</Button>
             </div>
-            <section className="pc-panel" aria-labelledby="record-done">
-              <div className="pc-panel-head"><h2 id="record-done">Completed</h2><span className="text-ui-muted-foreground tabular-nums">{done.length} {done.length === 1 ? "course" : "courses"}</span></div>
+            <Section id="record-done" title="Completed" aside={<p>{done.length} {done.length === 1 ? "course" : "courses"}</p>}>
               {done.length === 0 ? <EmptyRows>Nothing completed yet.</EmptyRows> : (
-                <ul className="pc-rows">{done.map((c) => (
+                <ul className="pc-list">{done.map((c) => (
                   <li key={c.id} className="pc-row">
                     <span className="pc-row-body">
                       <span className="pc-row-title">{c.title}</span>
@@ -71,43 +70,38 @@ export default function RecordPage() {
                   </li>
                 ))}</ul>
               )}
-            </section>
+            </Section>
             {open.length ? (
-              <section className="pc-panel" aria-labelledby="record-open">
-                <h2 id="record-open">Still to finish</h2>
-                <ul className="pc-rows">{open.map((c) => (
+              <Section id="record-open" title="Still to finish" aside={<p>{open.length}</p>}>
+                <ul className="pc-list">{open.map((c) => (
                   <li key={c.id}><Link href={`/training/${c.id}`} className="pc-row">
                     <span className="pc-row-body"><span className="pc-row-title">{c.title}</span><span className="pc-row-hint">{[`Assigned ${date(c.assignedAt)} by ${c.assignedBy}`, c.dueOn ? `due ${date(c.dueOn)}` : null, c.exam ? `best exam ${c.exam.best}%` : null].filter(Boolean).join(" · ")}</span></span>
                     <Tag meta={TRAINING_META[c.state] ?? TRAINING_META.assigned} />
                   </Link></li>
                 ))}</ul>
-              </section>
+              </Section>
             ) : null}
             {data.paths.length ? (
-              <section className="pc-panel" aria-labelledby="record-paths">
-                <h2 id="record-paths">Learning paths</h2>
-                <ul className="pc-rows">{data.paths.map((p) => (
+              <Section id="record-paths" title="Learning paths">
+                <ul className="pc-list">{data.paths.map((p) => (
                   <li key={`${p.title}-${p.startsOn}`} className="pc-row"><span className="pc-row-body"><span className="pc-row-title">{p.title}</span><span className="pc-row-hint tabular-nums">{p.finishedOn ? `Finished ${date(p.finishedOn)}` : `${p.done} of ${p.total} courses done`} · started {date(p.startsOn)}</span></span></li>
                 ))}</ul>
-              </section>
+              </Section>
             ) : null}
             {data.sessions.length ? (
-              <section className="pc-panel" aria-labelledby="record-sessions">
-                <h2 id="record-sessions">Sessions attended</h2>
-                <ul className="pc-rows">{data.sessions.map((s, i) => (
+              <Section id="record-sessions" title="Sessions attended">
+                <ul className="pc-list">{data.sessions.map((s, i) => (
                   <li key={i} className="pc-row"><span className="pc-row-body"><span className="pc-row-title">{s.title}</span><span className="pc-row-hint">{[s.when, s.trainer ? `with ${s.trainer}` : null, s.course ? `completes ${s.course}` : null].filter(Boolean).join(" · ")}</span></span></li>
                 ))}</ul>
-              </section>
+              </Section>
             ) : null}
             {data.hours.log.length || data.hours.progress.length ? (
-              <section className="pc-panel stack-sm" aria-labelledby="record-hours">
-                <h2 id="record-hours">In-service hours</h2>
-                {data.hours.progress.map((h) => <p key={h.qualification} className="tabular"><strong>{h.qualification}</strong>: {inWords(h.minutes)} of {h.hours} h since {date(h.since)}{h.met ? ", done" : ""}</p>)}
-                <p className="muted tabular">{inWords(minutes)} logged in all</p>
-                <ul className="pc-rows">{data.hours.log.map((l, i) => (
+              <Section id="record-hours" title="In-service hours" aside={<p>{inWords(minutes)} in all</p>}>
+                {data.hours.progress.length ? <div className="me-section-note stack-sm">{data.hours.progress.map((h) => <span key={h.qualification} className="tabular"><strong>{h.qualification}</strong>: {inWords(h.minutes)} of {h.hours} h since {date(h.since)}{h.met ? ", done" : ""}</span>)}</div> : null}
+                <ul className="pc-list">{data.hours.log.map((l, i) => (
                   <li key={i} className="pc-row"><span className="pc-row-body"><span className="pc-row-title">{inWords(l.minutes)} · {l.topic}</span><span className="pc-row-hint">{[date(l.on), l.qualification].filter(Boolean).join(" · ")}</span></span></li>
                 ))}</ul>
-              </section>
+              </Section>
             ) : null}
           </>
         )}

@@ -42,6 +42,12 @@ body.turnfin-app { min-height: 100dvh; background: var(--pc-canvas); }
 html:has(.tf-bottom) { scroll-padding-bottom: calc(112px + env(safe-area-inset-bottom)); }
 
 
+/* A line between a section's heading and its list (a day's times, a path's progress), and one
+   under the list (what the day still needs). Footnote size, the secondary label colour. */
+.turnfin-app .me-section-note { margin: calc(-1 * var(--space-1)) var(--space-1) var(--space-3); color: var(--label-2); font-size: 13px; line-height: 18px; }
+.turnfin-app .me-section-note > [data-slot='badge'] { margin-left: var(--space-2); }
+.turnfin-app .me-section-foot { margin: var(--space-2) var(--space-1) 0; color: var(--label-2); font-size: 13px; line-height: 18px; }
+
 /* A shift's day and times, in a fixed column before what it is (Home, Next shifts). */
 .turnfin-app .me-when { display: flex; flex: none; flex-direction: column; width: 108px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
@@ -172,7 +178,7 @@ html:has(.tf-bottom) { scroll-padding-bottom: calc(112px + env(safe-area-inset-b
 .certificate-course { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 700; text-wrap: balance; }
 .certificate-code { margin-top: 16px; padding: 8px 16px; border-radius: 999px; background: var(--pc-surface-sunken); letter-spacing: 0.04em; }
 @media print {
-  .no-print, .topbar, .tf-bottom { display: none !important; }
+  .no-print, .me-nav, .tf-bottom { display: none !important; }
   body.turnfin-app { background: var(--pc-surface); }
   .page { padding: 0; }
   .certificate { border: 2px solid var(--pc-ink); min-height: 90vh; justify-content: center; }
@@ -233,9 +239,6 @@ html[data-text] .turnfin-app [data-slot="input"] { font-size: max(16px, var(--pc
 .record-table { width: 100%; border-collapse: collapse; font-size: var(--pc-text-caption); }
 .record-table :is(th, td) { padding: 8px; border-bottom: 1px solid var(--pc-line); text-align: left; vertical-align: top; }
 .record-wrap { overflow-x: auto; }
-/* A fieldset's legend set as the panel's heading. */
-.panel-legend { float: left; width: 100%; padding: 0; margin-bottom: 4px; font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 600; }
-.panel-legend + * { clear: both; }
 
 /* Training e-learning phase 8: typed answers, tabs, sort into groups, explore a picture, slides and hand in work. */
 .typed-answer { display: flex; align-items: center; gap: 8px; }

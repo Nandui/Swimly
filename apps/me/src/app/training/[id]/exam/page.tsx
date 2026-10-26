@@ -97,7 +97,7 @@ export default function ExamPage() {
   const description = !data || paper ? undefined
     : data.passed ? "You have passed this exam." : data.attempts.used ? `Attempt ${data.attempts.used + 1} of ${data.attempts.allowed}.` : "Take your time and read each question carefully.";
   return (
-    <Frame title="My training">
+    <Frame title={title}>
       <PageShell header={<PageHeader back={{ href: `/training/${id}`, label: "Course" }} title={title} description={description} />}>
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : !paper ? (
           <section className="pc-panel stack" aria-label="About the exam">

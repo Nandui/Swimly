@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { Send } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { useLiveBanner } from "@/components/ui-kit/live-banner";
-import { LoadError, Loading, Notice, useLoad } from "@/components/ui";
+import { LoadError, Loading, Notice, Section, useLoad } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
 import { date } from "@/lib/format";
 import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
@@ -58,10 +58,10 @@ export default function DetailsPage() {
 
   return (
     <Frame title="My details">
-      <PageShell header={<PageHeader title="My details" description="Keep these right so we can reach you, and someone for you in an emergency." />}>
+      <PageShell spacing="roomy" header={<PageHeader back={{ href: "/more", label: "More" }} title="My details" description="Keep these right so we can reach you, and someone for you in an emergency." />}>
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : (
           <>
-            <section className="pc-panel" aria-label="You">
+            <section className="pc-list" aria-label="You">
               <div className="pc-row">
                 <Avatar aria-hidden="true"><AvatarFallback>{initials(data.name)}</AvatarFallback></Avatar>
                 <span className="pc-row-body">
@@ -72,8 +72,8 @@ export default function DetailsPage() {
             </section>
             {data.pendingChange ? <Notice title={`Changes sent ${date(data.pendingChange.sentAt)}`}>The office is checking them. You can send more once they are done.</Notice>
               : data.lastDecision?.status === "DECLINED" ? <Notice title="Your last changes were not made" tone="warning">{data.lastDecision.reply}</Notice> : null}
+            <Section id="details-title" title="Your details">
             <form className="pc-panel" onSubmit={send} aria-labelledby="details-title">
-              <div className="pc-panel-head"><h2 id="details-title">Your details</h2></div>
               <fieldset disabled={!!data.pendingChange || busy} className="stack">
                 {FIELDS.map((f) => f.type === "textarea"
                   ? <Textarea key={f.key} id={f.key} name={f.key} label={f.label} maxLength={f.max} defaultValue={data.details[f.key] ?? ""} />
@@ -83,6 +83,7 @@ export default function DetailsPage() {
                 <Button type="submit" className="self-start max-md:self-stretch"><Send aria-hidden="true" />Send changes</Button>
               </fieldset>
             </form>
+            </Section>
           </>
         )}
       </PageShell>

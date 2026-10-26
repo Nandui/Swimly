@@ -224,9 +224,9 @@
 /* A card of grouped rows (DESIGN.md, List): rows inside it part with an inset hairline, and a
    section title sits above the card, not in it. */
 .turnfin-app .pc-list { display: flex; flex-direction: column; margin: 0; padding: 6px var(--space-3); border-radius: var(--radius-card); background: var(--bg-2); box-shadow: var(--shadow-card); list-style: none; }
-.turnfin-app .pc-list > li > .pc-row { width: auto; margin-inline: calc(-1 * var(--space-3)); padding-inline: var(--space-5); background: transparent; }
+.turnfin-app :is(.pc-list > li > .pc-row, .pc-list > .pc-row) { width: auto; margin-inline: calc(-1 * var(--space-3)); padding-inline: var(--space-5); border-radius: 0; background: transparent; }
 .turnfin-app .pc-list > li > :is(a, button).pc-row:hover { background: var(--bg-3); }
-.turnfin-app .pc-list > li + li { border-top: 0.5px solid var(--sep); }
+.turnfin-app .pc-list > :is(li, .pc-row) + :is(li, .pc-row) { border-top: 0.5px solid var(--sep); }
 /* A section title above grouped content, with a count or a quiet link at its end. */
 .turnfin-app .pc-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); margin: 0 var(--space-1) var(--space-2); }
 .turnfin-app .pc-section-head > p { margin: 0; color: var(--label-2); font-weight: 600; font-variant-numeric: tabular-nums; }
