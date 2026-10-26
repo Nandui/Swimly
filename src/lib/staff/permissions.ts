@@ -327,6 +327,18 @@ export const PERMISSIONS = [
     description: "Close an action by saying what was done, or open it again, at the sites this role covers. Includes seeing them.",
   },
   {
+    key: "maintenance.report",
+    group: "Maintenance",
+    label: "Report maintenance problems",
+    description: "Report something broken or needing repair at the sites this role covers, and see every request there.",
+  },
+  {
+    key: "maintenance.manage",
+    group: "Maintenance",
+    label: "Manage maintenance requests",
+    description: "Put requests in Trackplan, correct them, mark them fixed, close them not fixed and open them again, at the sites this role covers. Includes reporting.",
+  },
+  {
     key: "hr.records.read",
     group: "HR",
     label: "Read HR records",
@@ -466,6 +478,7 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "stock.manage": ["stock.count", "stock.read"],
   "cctv.review": ["cctv.record"],
   "site-monitoring.act": ["site-monitoring.read"],
+  "maintenance.manage": ["maintenance.report"],
   "hr.notes.write": ["hr.records.read"],
   "hr.reviews.write": ["hr.records.read"],
   "hr.details.write": ["hr.records.read"],
