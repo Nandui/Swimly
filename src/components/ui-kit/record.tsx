@@ -6,11 +6,13 @@ import { Check, CircleHelp, X, type LucideIcon } from "lucide-react";
  *  (kit.css): `.rec-next` beside `.rec-main`, `.rec-side` under it, one column on phones with the
  *  next action first. No business rules here. */
 
-/** A section: its title above its card (DESIGN.md, The page shell). */
-export function RecordSection({ id, title, aside, children }: { id: string; title: string; aside?: React.ReactNode; children: React.ReactNode }) {
+/** A section: its title above its card (DESIGN.md, The page shell), a count, link or action at the
+ *  title's end, and `note`, one line on what the section holds. */
+export function RecordSection({ id, title, aside, note, children }: { id: string; title: React.ReactNode; aside?: React.ReactNode; note?: React.ReactNode; children: React.ReactNode }) {
   return (
     <section aria-labelledby={id} className="flex min-w-0 flex-col">
       <div className="pc-section-head"><h2 id={id}>{title}</h2>{aside}</div>
+      {note ? <p className="pc-section-note">{note}</p> : null}
       {children}
     </section>
   );

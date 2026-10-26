@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowUpRight, Building2, CalendarDays, Check, ChevronLeft, ChevronRight, CircleCheck, ClipboardList, Clock3, Flag, Gauge, ShieldCheck } from "lucide-react";
+import { Building2, CalendarDays, Check, ChevronLeft, ChevronRight, CircleCheck, ClipboardList, Clock3, Flag, Gauge, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
 import { Label } from "@/components/shadcn/label";
@@ -9,6 +9,7 @@ import { Progress } from "@/components/shadcn/progress";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
+import { RecordFacts, RecordSection } from "@/components/ui-kit/record";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { Tag } from "@/components/ui-kit/tag";
 import { SiteSettings } from "@/modules/tasks/features/sites";
@@ -43,44 +44,44 @@ export default async function TasksTodayPage({ searchParams }: { searchParams: P
   const isToday = date === day;
   const filtered = !!(filters.q || filters.tag || filters.status !== "all");
   return (
-    <PageShell header={<PageHeader
-        title={isToday ? `Today: ${site.name}` : `${site.name}: ${formatWeekday(date)} ${formatDayMonth(date)}`}
-        description={isToday ? `${formatWeekday(date)} ${formatDayMonth(date)} · a clear view of the day` : date > day ? "Planned from the published schedules" : "An earlier day"}
+    <PageShell spacing="roomy" header={<PageHeader
+        title={isToday ? "Today" : `${formatWeekday(date)} ${formatDayMonth(date)}`}
+        description={`${site.name} · ${isToday ? `${formatWeekday(date)} ${formatDayMonth(date)}` : date > day ? "planned from the published schedules" : "an earlier day"}`}
         status={settings.status !== "live" ? <Tag meta={SITE_STATUS_META[settings.status]} /> : undefined}
         actions={date <= day && addable.length && !closed ? <AddTask siteId={site.id} date={date} templates={addable} /> : undefined}
       />}>
 
       {date <= day ? (
-        <ul className="pc-stats" aria-label="The day at a glance">
+        <ul className="pc-stats" data-compact aria-label="The day at a glance">
           <li className="flex"><div className="pc-stat w-full">
-            <span className="pc-tile-icon"><CircleCheck aria-hidden="true" /></span>
-            <span><span className="pc-stat-figure block">{figures.done} <span className="text-ui-muted-foreground">/ {figures.total}</span></span><span className="block font-semibold">Completed</span></span>
+            <span className="pc-stat-label"><CircleCheck aria-hidden="true" />Completed</span>
+            <span className="pc-stat-figure">{figures.done}<span className="text-(--label-3)"> of {figures.total}</span></span>
             <Progress value={figures.total ? (figures.done / figures.total) * 100 : 0} aria-label={`${figures.done} of ${figures.total} completed`} className="w-full" />
           </div></li>
           <li className="flex"><div className="pc-stat w-full">
-            <span className="pc-tile-icon"><Clock3 aria-hidden="true" /></span>
-            <span><span className="pc-stat-figure block">{figures.remaining}</span><span className="block font-semibold">Remaining</span></span>
-            <span className="text-xs text-ui-muted-foreground">{figures.overdue ? `${figures.overdue} overdue or missed` : "Across the working day"}</span>
+            <span className="pc-stat-label"><Clock3 aria-hidden="true" />Remaining</span>
+            <span className="pc-stat-figure" data-zero={figures.remaining ? undefined : ""}>{figures.remaining}</span>
+            <span className="pc-stat-hint" data-tone={figures.overdue ? "orange" : undefined}>{figures.overdue ? `${figures.overdue} overdue or missed` : "Across the working day"}</span>
           </div></li>
           <li className="flex"><Link href={link({ status: "approval" })} className="pc-stat w-full" aria-current={filters.status === "approval" ? "true" : undefined}>
-            <span className="pc-tile-icon"><ShieldCheck aria-hidden="true" /></span>
-            <span><span className="pc-stat-figure block">{figures.approval}</span><span className="block font-semibold">Awaiting approval</span></span>
-            <span className="inline-flex items-center gap-1 text-xs text-ui-primary">Review completed work<ArrowUpRight aria-hidden="true" className="size-3" /></span>
+            <span className="pc-stat-label"><ShieldCheck aria-hidden="true" />Awaiting approval</span>
+            <span className="pc-stat-figure" data-zero={figures.approval ? undefined : ""}>{figures.approval}</span>
+            <span className="pc-stat-hint">Review completed work</span>
           </Link></li>
           <li className="flex"><Link href={`/tasks/actions?site=${site.id}`} className="pc-stat w-full">
-            <span className="pc-tile-icon"><Flag aria-hidden="true" /></span>
-            <span><span className="pc-stat-figure block">{openActions}</span><span className="block font-semibold">Open actions</span></span>
-            <span className="inline-flex items-center gap-1 text-xs text-ui-primary">See what needs follow-up<ArrowUpRight aria-hidden="true" className="size-3" /></span>
+            <span className="pc-stat-label"><Flag aria-hidden="true" />Open actions</span>
+            <span className="pc-stat-figure" data-zero={openActions ? undefined : ""}>{openActions}</span>
+            <span className="pc-stat-hint">See what needs follow-up</span>
           </Link></li>
           <li className="flex"><div className="pc-stat w-full">
-            <span className="pc-tile-icon"><Gauge aria-hidden="true" /></span>
-            <span><span className="pc-stat-figure block">{figures.score === null ? "None yet" : `${figures.score}%`}</span><span className="block font-semibold">Score</span></span>
-            <span className="text-xs text-ui-muted-foreground">On time counts in full, late half</span>
+            <span className="pc-stat-label"><Gauge aria-hidden="true" />Score</span>
+            <span className="pc-stat-figure" data-zero={figures.score === null ? "" : undefined}>{figures.score === null ? "None yet" : `${figures.score}%`}</span>
+            <span className="pc-stat-hint">On time counts in full, late half</span>
           </div></li>
         </ul>
       ) : null}
 
-      <section className="pc-panel" aria-label="Day and filters">
+      <section className="flex min-w-0 flex-col gap-(--space-3)" aria-label="Day and filters">
         <div className="flex flex-wrap items-end gap-4">
           <nav aria-label="Day" className="flex items-end gap-2">
             <Button asChild variant="outline" size="icon"><Link href={dayLink(addDaysIso(date, -1))} aria-label="Previous day"><ChevronLeft aria-hidden="true" /></Link></Button>
@@ -117,13 +118,12 @@ export default async function TasksTodayPage({ searchParams }: { searchParams: P
         {filtered ? <p className="text-xs text-ui-muted-foreground">{tasks.length} of {total} tasks match.</p> : null}
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-main-rail lg:items-start">
-        <div className="flex min-w-0 flex-col gap-4">
+      <div className="grid gap-(--space-6) lg:grid-cols-main-rail lg:items-start">
+        <div className="flex min-w-0 flex-col gap-(--space-6)">
           {date > day ? (
-            <section className="pc-panel" aria-labelledby="tasks-planned">
-              <div className="pc-panel-head"><h2 id="tasks-planned">Planned</h2></div>
-              {planned.length === 0 ? <EmptyState compact icon="clipboardCheck" title={closed ? "The site is closed that day" : "Nothing is scheduled that day"} /> : (
-                <ul className="pc-rows">
+            <RecordSection id="tasks-planned" title="Planned" aside={planned.length ? <p>{planned.length}</p> : null}>
+              {planned.length === 0 ? <div className="pc-list"><EmptyState compact icon="clipboardCheck" title={closed ? "The site is closed that day" : "Nothing is scheduled that day"} /></div> : (
+                <ul className="pc-list">
                   {planned.map((p) => (
                     <li key={p.key} className="pc-row">
                       <span className="pc-tile-icon" aria-hidden="true">{p.priority ? <Flag /> : <ClipboardList />}</span>
@@ -133,52 +133,47 @@ export default async function TasksTodayPage({ searchParams }: { searchParams: P
                   ))}
                 </ul>
               )}
-            </section>
+            </RecordSection>
           ) : (() => {
             const groups = GROUPS.map((g) => ({ ...g, rows: tasks.filter((t) => g.states.includes(t.state)) })).filter((g) => g.rows.length);
             if (!groups.length) {
               return (
-                <section className="pc-panel" aria-label="Tasks">
-                  <EmptyState icon="clipboardCheck" title={closed ? "Site closed today" : total ? "Nothing matches" : "Nothing here just now"}
-                    hint={closed ? "No tasks are made on a closed date." : total ? "Try another filter." : "Try another date, or add an ad hoc task."} />
-                </section>
+                <EmptyState icon="clipboardCheck" title={closed ? "Site closed today" : total ? "Nothing matches" : "Nothing here just now"}
+                  hint={closed ? "No tasks are made on a closed date." : total ? "Try another filter." : "Try another date, or add an ad hoc task."} />
               );
             }
-            return groups.map((g) => <TaskPanel key={g.id} id={`tasks-${g.id}`} title={g.title} hint={g.hint} tasks={g.rows} zone={settings.timezone} />);
+            return groups.map((g) => <TaskGroup key={g.id} id={`tasks-${g.id}`} group={g.id} title={g.title} hint={g.hint} tasks={g.rows} zone={settings.timezone} />);
           })()}
         </div>
 
-        <aside className="pc-panel" aria-labelledby="tasks-glance">
-          <div className="pc-panel-head"><h2 id="tasks-glance">At a glance</h2><CalendarDays aria-hidden="true" className="size-5 text-ui-muted-foreground" /></div>
-          <div className="flex items-center gap-3">
-            <span className="pc-tile-icon" aria-hidden="true"><Building2 /></span>
-            <span className="min-w-0"><span className="block font-semibold">{site.name}</span><span className="block text-xs text-ui-muted-foreground">{[settings.area, settings.timezone].filter(Boolean).join(" · ")}</span></span>
+        <RecordSection id="tasks-glance" title="At a glance">
+          <div className="rec-card">
+            <div className="flex items-center gap-3">
+              <span className="pc-tile-icon" aria-hidden="true"><Building2 /></span>
+              <span className="min-w-0"><span className="block font-semibold">{site.name}</span><span className="rec-muted rec-small block">{[settings.area, settings.timezone].filter(Boolean).join(" · ")}</span></span>
+            </div>
+            <RecordFacts items={[["Opening", settings.opening], ["Closing", settings.closing], ["High-priority tasks left", String(figures.priorityLeft)], ["Closed dates ahead", String(settings.closedDates.filter((d) => d >= day).length)]]} />
+            {data.who.manage ? <SiteSettings site={{ ...settings, name: site.name }} /> : null}
           </div>
-          <dl className="flex flex-col">
-            {[["Opening", settings.opening], ["Closing", settings.closing], ["High-priority tasks left", String(figures.priorityLeft)], ["Closed dates ahead", String(settings.closedDates.filter((d) => d >= day).length)]].map(([k, v]) => (
-              <div key={k} className="flex min-h-11 items-center justify-between gap-2 border-b border-ui-border last:border-b-0">
-                <dt className="text-sm text-ui-muted-foreground">{k}</dt><dd className="font-semibold tabular-nums">{v}</dd>
-              </div>
-            ))}
-          </dl>
-          {data.who.manage ? <SiteSettings site={{ ...settings, name: site.name }} /> : null}
-        </aside>
+        </RecordSection>
       </div>
     </PageShell>
   );
 }
 
-function TaskPanel({ id, title, hint, tasks, zone }: { id: string; title: string; hint: string; tasks: TaskRow[]; zone: string }) {
+/** A group's tile tone: orange where it needs someone, green once done, red for an exception. */
+const GROUP_TONE: Record<string, "orange" | "green" | "red" | undefined> = { attention: "orange", done: "green", exceptions: "red" };
+
+/** One group of the day's tasks: its title and count above, what it holds under the title, the
+ *  tasks as a grouped list, each tile toned by the group. */
+function TaskGroup({ id, group, title, hint, tasks, zone }: { id: string; group: string; title: string; hint: string; tasks: TaskRow[]; zone: string }) {
   return (
-    <section className="pc-panel" aria-labelledby={id}>
-      <div className="pc-panel-head">
-        <div className="flex flex-col gap-1"><h2 id={id}>{title} <span className="text-ui-muted-foreground tabular-nums">· {tasks.length}</span></h2><p className="pc-row-hint">{hint}</p></div>
-      </div>
-      <ul className="pc-rows">
+    <RecordSection id={id} title={title} aside={<p>{tasks.length}</p>} note={hint}>
+      <ul className="pc-list">
         {tasks.map((t) => (
           <li key={t.id}>
             <Link href={`/tasks/${t.id}`} className="pc-row">
-              <span className="pc-tile-icon" aria-hidden="true">{t.completedAt && t.state !== "cant_complete" && t.state !== "not_applicable" ? <Check /> : t.priority ? <Flag /> : <ClipboardList />}</span>
+              <span className="pc-tile-icon" data-tone={GROUP_TONE[group]} aria-hidden="true">{t.completedAt && t.state !== "cant_complete" && t.state !== "not_applicable" ? <Check /> : t.priority ? <Flag /> : <ClipboardList />}</span>
               <span className="pc-row-body">
                 <span className="pc-row-title">{t.title}</span>
                 <span className="pc-row-hint">{[
@@ -189,7 +184,7 @@ function TaskPanel({ id, title, hint, tasks, zone }: { id: string; title: string
                 ].filter(Boolean).join(" · ")}</span>
               </span>
               <span className="pc-row-trail">
-                <span className="inline-flex items-center gap-1 text-sm tabular-nums text-ui-muted-foreground"><Clock3 aria-hidden="true" className="size-4" /><span className="sr-only">Due </span>{clockOf(t.dueAt, zone)}</span>
+                <span className="pc-row-value"><span className="sr-only">Due </span>{clockOf(t.dueAt, zone)}</span>
                 <TaskStateTag state={t.state} />
                 <ChevronRight aria-hidden="true" className="pc-row-chevron" />
               </span>
@@ -197,6 +192,6 @@ function TaskPanel({ id, title, hint, tasks, zone }: { id: string; title: string
           </li>
         ))}
       </ul>
-    </section>
+    </RecordSection>
   );
 }

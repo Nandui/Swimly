@@ -94,13 +94,13 @@ export function TaskWork({ id, version, definition: def, checks: initialChecks, 
   const fileName = (fileId: string) => files.find((f) => f.id === fileId)?.fileName ?? "Attached file";
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-(--space-6)">
       {def.checklist.length ? (
-        <section className="pc-panel" aria-labelledby="task-checklist">
-          <div className="pc-panel-head">
-            <h2 id="task-checklist">Checklist <span className="text-ui-muted-foreground tabular-nums">· {checks.filter(Boolean).length} of {checks.length}</span></h2>
+        <section className="flex min-w-0 flex-col" aria-labelledby="task-checklist">
+          <div className="pc-section-head">
+            <h2 id="task-checklist">Checklist</h2><p>{checks.filter(Boolean).length} of {checks.length}</p>
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="pc-panel">
             {def.checklist.map((item, i) => (
               <ChoiceRow key={i} type="checkbox" id={`check-${i}`} title={item} checked={checks[i]} disabled={!editable}
                 onCheckedChange={(v) => { setChecks((c) => c.map((x, j) => (j === i ? v === true : x))); setDirty(true); }} />
@@ -110,13 +110,12 @@ export function TaskWork({ id, version, definition: def, checks: initialChecks, 
       ) : null}
 
       {asks ? (
-        <section className="pc-panel" aria-labelledby="task-records">
-          <div className="pc-panel-head">
-            <div className="flex flex-col gap-1">
-              <h2 id="task-records">{log ? "Records" : "Answers"}{log ? <span className="text-ui-muted-foreground tabular-nums"> · {records.length}</span> : null}</h2>
-              {def.minimumRecords > 1 ? <p className="pc-row-hint">At least {def.minimumRecords} records.</p> : null}
-            </div>
+        <section className="flex min-w-0 flex-col" aria-labelledby="task-records">
+          <div className="pc-section-head">
+            <h2 id="task-records">{log ? "Records" : "Answers"}</h2>{log ? <p>{records.length}</p> : null}
           </div>
+          {def.minimumRecords > 1 ? <p className="pc-section-note">At least {def.minimumRecords} records.</p> : null}
+          <div className="pc-panel">
           {!editable && log ? (
             <Table>
               <TableHeader><TableRow>
@@ -138,7 +137,7 @@ export function TaskWork({ id, version, definition: def, checks: initialChecks, 
               </TableBody>
             </Table>
           ) : records.map((row, i) => (
-            <fieldset key={i} className="flex flex-col gap-4 rounded-card border border-ui-border p-4">
+            <fieldset key={i} className="flex flex-col gap-4 rounded-(--radius-lg) bg-(--fill-2) p-4">
               {log ? (
                 <legend className="flex w-full items-center justify-between gap-2 px-1">
                   <span className="font-semibold">Record {i + 1}</span>
@@ -192,6 +191,7 @@ export function TaskWork({ id, version, definition: def, checks: initialChecks, 
           {editable && log ? (
             <div><Button type="button" variant="outline" onClick={() => { setRecords((rows) => [...rows, {}]); setDirty(true); }}><Plus aria-hidden="true" />Add a record</Button></div>
           ) : null}
+          </div>
         </section>
       ) : null}
 
