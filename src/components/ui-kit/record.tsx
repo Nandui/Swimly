@@ -16,23 +16,27 @@ export function RecordSection({ id, title, aside, children }: { id: string; titl
   );
 }
 
-/** Label and value rows with hairlines between (DESIGN.md, Content: rows). `wide` rows stack, for
- *  long text. */
-export function RecordFacts({ items }: { items: [label: string, value: React.ReactNode, wide?: boolean][] }) {
+/** One label and its value, a row of RecordFacts. `wide` stacks it, for long text. */
+export function RecordFact({ label, wide = false, children }: { label: string; wide?: boolean; children: React.ReactNode }) {
+  return <div className="rec-fact" data-wide={wide ? "" : undefined}><dt>{label}</dt><dd>{children}</dd></div>;
+}
+
+/** Label and value rows with hairlines between (DESIGN.md, Content: rows): from `items`, or from
+ *  RecordFact children where rows come and go with the record. */
+export function RecordFacts({ items = [], children }: { items?: [label: string, value: React.ReactNode, wide?: boolean][]; children?: React.ReactNode }) {
   return (
     <dl className="rec-facts">
-      {items.map(([label, value, wide]) => (
-        <div key={label} className="rec-fact" data-wide={wide ? "" : undefined}><dt>{label}</dt><dd>{value}</dd></div>
-      ))}
+      {items.map(([label, value, wide]) => <RecordFact key={label} label={label} wide={wide}>{value}</RecordFact>)}
+      {children}
     </dl>
   );
 }
 
-export type RecordStepState = "done" | "current" | "waiting" | "stopped" | "todo";
-const STEP_ICON: Record<RecordStepState, LucideIcon | null> = { done: Check, current: null, waiting: CircleHelp, stopped: X, todo: null };
+export type RecordStepState = "done" | "current" | "waiting" | "stopped" | "skipped" | "todo";
+const STEP_ICON: Record<RecordStepState, LucideIcon | null> = { done: Check, current: null, waiting: CircleHelp, stopped: X, skipped: null, todo: null };
 
 /** Where a record has got to, down the card: filled when done, ringed where it is now, orange while
- *  it waits on someone else, red where it stopped. */
+ *  it waits on someone else, red where it stopped, dashed where a step was not needed. */
 export function RecordSteps({ steps, label = "Where it has got to" }: { steps: { label: string; hint: string; state: RecordStepState }[]; label?: string }) {
   return (
     <ol className="rec-steps" aria-label={label}>

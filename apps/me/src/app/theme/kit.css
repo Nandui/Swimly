@@ -641,6 +641,7 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 .turnfin-app .rec-fact[data-wide] { grid-template-columns: minmax(0, 1fr); gap: 2px; }
 .turnfin-app .rec-fact[data-wide] > dd { white-space: pre-wrap; }
 .turnfin-app .rec-well { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-4) var(--space-5); border-radius: var(--radius-lg); background: var(--fill-2); }
+.turnfin-app .rec-well[data-tone='green'] { background: var(--green-soft); }
 .turnfin-app .rec-well > h3 { margin: 0; color: var(--label-2); font-size: 13px; line-height: 18px; font-weight: 600; }
 .turnfin-app .rec-well > p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .turnfin-app .rec-next { gap: var(--space-3); }
@@ -659,8 +660,9 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 .turnfin-app .rec-steps [data-state='current'] > .rec-step-dot::after { content: ""; width: 8px; height: 8px; border-radius: var(--radius-capsule); background: var(--accent); }
 .turnfin-app .rec-steps [data-state='waiting'] > .rec-step-dot { background: var(--orange-soft); color: var(--orange-ink); box-shadow: none; }
 .turnfin-app .rec-steps [data-state='stopped'] > .rec-step-dot { background: var(--red-soft); color: var(--red-ink); box-shadow: none; }
+.turnfin-app .rec-steps [data-state='skipped'] > .rec-step-dot { box-shadow: none; outline: 1.5px dashed var(--label-3); outline-offset: -1.5px; }
 .turnfin-app .rec-step-label { font-weight: 600; }
-.turnfin-app .rec-steps [data-state='todo'] > .rec-step-label { color: var(--label-2); font-weight: 500; }
+.turnfin-app .rec-steps :is([data-state='todo'], [data-state='skipped']) > .rec-step-label { color: var(--label-2); font-weight: 500; }
 .turnfin-app .rec-step-hint { overflow-wrap: anywhere; color: var(--label-2); font-size: 13px; line-height: 18px; }
 .turnfin-app .rec-steps [data-state='waiting'] > .rec-step-hint { color: var(--orange-ink); font-weight: 600; }
 .turnfin-app .rec-history { gap: 0; }

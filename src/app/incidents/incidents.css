@@ -1,8 +1,9 @@
 /* ── Incidents in Turnfin Glass (DESIGN.md; approved canvas, 25 October 2026) ─────────────────
-   The list is the kit's grouped list (kit.css, .pc-list). A report opens with its status and
-   number above what it was about; then what happens next, with the four steps, beside the report
-   itself, which is opaque cards of label and value rows with hairline separators, as the canvas
-   draws "What happened". The forms the page passes in are the kit's own panels. Colour carries
+   The list is the kit's grouped list (kit.css, .pc-list). A report is a record page
+   (ui-kit/record.tsx and kit.css, .rec-*): its status and number above what it was about, what
+   happens next with the four steps beside the report, cards of label and value rows, the history.
+   This file holds only what is Incidents' own: the list's tags, the account as written, the
+   people, the checklist and the HSA deadline. The forms the page passes in are the kit's panels. Colour carries
    meaning only: blue is this person's move, orange someone hurt or a deadline, red serious or
    late, green done. One column on phones, the next step first. */
 
@@ -12,50 +13,25 @@
 .turnfin-app .inc-reports .pc-row > .pc-row-chevron { align-self: center; }
 .turnfin-app .inc-row-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
 
-/* The report's opening line: status tags, then the number and kind. */
-.turnfin-app .inc-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-1); color: var(--label-3); }
-
+/* The report: its sections and the forms the page passes in, one column. */
 .turnfin-app .inc-file { display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; }
 .turnfin-app .inc-file svg { stroke-width: 1.9; }
-.turnfin-app .inc-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-6); align-items: start; }
-.turnfin-app .inc-main, .turnfin-app .inc-side, .turnfin-app .inc-forms { display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; }
+.turnfin-app .inc-forms { display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; }
 .turnfin-app .inc-forms:empty { display: none; }
-@media (min-width: 1024px) {
-  .turnfin-app .inc-layout { grid-template-columns: minmax(0, 1fr) minmax(300px, 340px); grid-template-areas: "main next" "main side"; grid-template-rows: auto 1fr; }
-  .turnfin-app .inc-next-slot { grid-area: next; }
-  .turnfin-app .inc-main { grid-area: main; }
-  .turnfin-app .inc-side { grid-area: side; }
-}
-
-/* Cards: opaque, inset grouped, as the kit's lists. */
-.turnfin-app .inc-card { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; margin: 0; padding: var(--space-5) var(--space-6); border-radius: var(--radius-card); background: var(--bg-2); box-shadow: var(--shadow-card); list-style: none; }
-.turnfin-app .inc-card h3 { margin: 0; font-size: 15px; line-height: 20px; font-weight: 650; }
-.turnfin-app .inc-muted { margin: 0; color: var(--label-2); }
-.turnfin-app .inc-muted strong { color: var(--label); font-weight: 600; }
+/* "Kept as written" beside a section title. */
 .turnfin-app .inc-kept { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; line-height: 18px; font-weight: 550 !important; }
 .turnfin-app .inc-kept > svg { width: 14px; height: 14px; }
 
-/* Label and value rows: the label grey on the left, the value on the right, a hairline between. */
-.turnfin-app .inc-facts { display: flex; flex-direction: column; margin: calc(-1 * var(--space-2)) 0 0; }
-.turnfin-app .inc-fact { display: grid; grid-template-columns: minmax(110px, 2fr) minmax(0, 5fr); gap: var(--space-4); padding: 11px 0; }
-.turnfin-app .inc-fact + .inc-fact { border-top: 0.5px solid var(--sep); }
-.turnfin-app .inc-fact > dt { color: var(--label-2); }
-.turnfin-app .inc-fact > dd { margin: 0; min-width: 0; font-weight: 500; white-space: pre-line; overflow-wrap: anywhere; }
-
-/* The account as written, then what was done straight away and notes as wells. */
+/* The account as written, under the facts. */
 .turnfin-app .inc-quote { margin: 0; padding-top: var(--space-4); border-top: 0.5px solid var(--sep); font-size: 17px; line-height: 25px; white-space: pre-wrap; overflow-wrap: anywhere; }
-.turnfin-app .inc-well { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-4) var(--space-5); border-radius: var(--radius-lg); background: var(--fill-2); }
-.turnfin-app .inc-well[data-tone='green'] { background: var(--green-soft); }
-.turnfin-app .inc-well > h3 { color: var(--label-2); font-size: 13px; line-height: 18px; font-weight: 600; }
-.turnfin-app .inc-well > p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 
 /* The people, each a name with a tile, then their rows. */
 .turnfin-app .inc-people { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
 .turnfin-app .inc-person { display: flex; flex-direction: column; gap: var(--space-3); padding-block: var(--space-2); }
 .turnfin-app .inc-person + .inc-person { margin-top: var(--space-2); padding-top: var(--space-4); border-top: 0.5px solid var(--sep); }
 .turnfin-app .inc-person-head { display: flex; align-items: center; gap: var(--space-4); min-width: 0; }
-.turnfin-app .inc-person-head h3 { overflow-wrap: anywhere; }
-.turnfin-app .inc-person .inc-facts { margin: 0; }
+.turnfin-app :is(.inc-person-head, .inc-witnesses) h3 { margin: 0; font-size: 15px; line-height: 20px; font-weight: 650; overflow-wrap: anywhere; }
+.turnfin-app .inc-person .rec-facts { margin: 0; }
 .turnfin-app .inc-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--space-2); white-space: normal; }
 .turnfin-app .inc-chip { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 9px; border-radius: var(--radius-capsule); font-size: 12px; font-weight: 600; }
 .turnfin-app .inc-chip > svg { width: 13px; height: 13px; }
@@ -67,12 +43,7 @@
 .turnfin-app :is(.inc-witnesses, .inc-reads) li > svg { flex: none; width: 16px; height: 16px; margin-top: 2px; color: var(--label-2); }
 .turnfin-app .inc-witnesses strong { font-weight: 600; }
 
-/* What happens next: tinted blue while it is this person's move. */
-.turnfin-app .inc-next { gap: var(--space-3); }
-.turnfin-app .inc-next[data-tone='act'] { background: linear-gradient(var(--accent-soft), var(--accent-soft)), var(--bg-2); box-shadow: inset 0 0 0 0.5px var(--accent-soft), var(--shadow-card); }
-.turnfin-app .inc-next-label { margin: 0; color: var(--label-2); font-size: 13px; line-height: 18px; font-weight: 600; }
-.turnfin-app .inc-next[data-tone='act'] .inc-next-label { color: var(--accent-ink); }
-.turnfin-app .inc-next-title { margin: 0; font-family: var(--font-display); font-size: 20px; line-height: 25px; font-weight: 650; letter-spacing: -0.015em; }
+/* In what happens next: the investigation's checklist and the HSA deadline. */
 .turnfin-app .inc-checklist { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
 .turnfin-app .inc-checklist > li { display: flex; align-items: center; gap: var(--space-3); }
 .turnfin-app .inc-check { display: grid; place-items: center; flex: none; width: 22px; height: 22px; border-radius: var(--radius-capsule); box-shadow: inset 0 0 0 1.5px var(--label-3); }
@@ -87,42 +58,12 @@
 .turnfin-app .inc-hsa-body { color: var(--label-2); font-size: 13px; line-height: 18px; }
 .turnfin-app .inc-next-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 
-/* The four steps, down the card: a dot for each, filled when done, ringed where it is now. */
-.turnfin-app .inc-stages { display: flex; flex-direction: column; gap: var(--space-3); margin: var(--space-2) 0 0; padding: var(--space-4) 0 0; border-top: 0.5px solid var(--sep); list-style: none; }
-.turnfin-app .inc-stages > li { position: relative; display: grid; grid-template-columns: 22px minmax(0, 1fr); column-gap: var(--space-3); }
-.turnfin-app .inc-stages > li:not(:last-child)::after { content: ""; position: absolute; top: 26px; bottom: -10px; left: 10px; width: 2px; border-radius: var(--radius-capsule); background: var(--sep); }
-.turnfin-app .inc-stages > li[data-state='done']:not(:last-child)::after { background: var(--accent); }
-.turnfin-app .inc-stage-dot { display: grid; grid-row: 1 / span 2; place-items: center; width: 22px; height: 22px; border-radius: var(--radius-capsule); box-shadow: inset 0 0 0 1.5px var(--label-3); }
-.turnfin-app .inc-stage-dot > svg { width: 12px; height: 12px; stroke-width: 3; }
-.turnfin-app [data-state='done'] > .inc-stage-dot { background: var(--accent-btn); color: var(--bg-2); box-shadow: none; }
-.turnfin-app [data-state='current'] > .inc-stage-dot { box-shadow: inset 0 0 0 2px var(--accent), 0 0 0 4px var(--accent-soft); }
-.turnfin-app [data-state='current'] > .inc-stage-dot::after { content: ""; width: 8px; height: 8px; border-radius: var(--radius-capsule); background: var(--accent); }
-.turnfin-app [data-state='skipped'] > .inc-stage-dot { box-shadow: none; outline: 1.5px dashed var(--label-3); outline-offset: -1.5px; }
-.turnfin-app .inc-stage-label { font-weight: 600; }
-.turnfin-app :is([data-state='todo'], [data-state='skipped']) > .inc-stage-label { color: var(--label-2); font-weight: 500; }
-.turnfin-app .inc-stage-hint { overflow-wrap: anywhere; color: var(--label-2); font-size: 13px; line-height: 18px; }
-
-/* The history: a quiet line of dots, green when something closed, orange when it reopened. */
-.turnfin-app .inc-history { gap: 0; }
-.turnfin-app .inc-history > li { position: relative; display: flex; gap: var(--space-3); min-width: 0; padding-bottom: var(--space-4); }
-.turnfin-app .inc-history > li:last-child { padding-bottom: 0; }
-.turnfin-app .inc-history > li:not(:last-child)::before { content: ""; position: absolute; top: 18px; bottom: 0; left: 4px; width: 2px; border-radius: var(--radius-capsule); background: var(--sep); }
-.turnfin-app .inc-history-dot { flex: none; width: 10px; height: 10px; margin-top: 5px; border-radius: var(--radius-capsule); box-shadow: inset 0 0 0 2.5px var(--accent); }
-.turnfin-app .inc-history > li:is([data-action='close'], [data-action='action_done']) > .inc-history-dot { background: var(--green); box-shadow: none; }
-.turnfin-app .inc-history > li:is([data-action='reopen'], [data-action='action_cancel'], [data-action='file_remove']) > .inc-history-dot { box-shadow: inset 0 0 0 2.5px var(--orange); }
-.turnfin-app .inc-history > li[data-action='addendum'] > .inc-history-dot { background: var(--accent); box-shadow: none; }
-.turnfin-app .inc-history-title { margin: 0; font-weight: 600; }
-.turnfin-app .inc-history .inc-muted { font-size: 13px; line-height: 18px; }
-.turnfin-app .inc-history-note { margin: var(--space-2) 0 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); background: var(--fill-2); white-space: pre-wrap; overflow-wrap: anywhere; }
-
 /* Statements under the investigation read as wells. */
 .turnfin-app .inc-statement { border: 0; border-radius: var(--radius-lg); background: var(--fill-2); }
 
 @media (max-width: 767px) {
-  .turnfin-app .inc-card { padding: var(--space-4) var(--space-5); }
-  .turnfin-app .inc-fact { grid-template-columns: minmax(0, 1fr); gap: 2px; }
   .turnfin-app .inc-quote { font-size: 15px; line-height: 22px; }
 }
 @media print {
-  .turnfin-app .inc-card { box-shadow: inset 0 0 0 0.5px var(--sep); }
+  .turnfin-app .inc-file .rec-card { box-shadow: inset 0 0 0 0.5px var(--sep); }
 }
