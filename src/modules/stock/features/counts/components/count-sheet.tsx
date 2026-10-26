@@ -92,19 +92,17 @@ export function CountSheet({ takeId, products, lines, canCount }: {
 
   return (
     <>
-      <section className="pc-panel" aria-labelledby="stk-progress">
-        <div className="pc-panel-head">
-          <div className="flex flex-col gap-1">
-            <h2 id="stk-progress" className="tabular-nums">{counted} of {total} counted</h2>
-            <p className="pc-row-hint">{canCount ? "An empty box is not counted. None means counted, none on the shelf. Numbers save as you type." : "An empty line was not counted."}</p>
-          </div>
+      <section className="flex min-w-0 flex-col" aria-labelledby="stk-progress">
+        <div className="pc-section-head">
+          <h2 id="stk-progress" className="tabular-nums">{counted} of {total} counted</h2>
           {canCount ? (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 self-center">
               {counted === 0 ? <DiscardCount id={takeId} /> : null}
               <SubmitCount id={takeId} counted={counted} total={total} />
             </div>
           ) : null}
         </div>
+        <p className="pc-section-note">{canCount ? "An empty box is not counted. None means counted, none on the shelf. Numbers save as you type." : "An empty line was not counted."}</p>
         <div className="flex flex-wrap items-end gap-4">
           <SearchField label="Find a product" value={query} onValueChange={setQuery} placeholder="Goggles" className="grow basis-(--pc-field-min)" />
           <SegmentedChoice aria-label="Show" value={filter} onValueChange={(v) => setFilter(v as Filter)} fill="phone"
@@ -116,13 +114,13 @@ export function CountSheet({ takeId, products, lines, canCount }: {
         <EmptyState icon="searchX" title={total === 0 ? "No products to count" : "Nothing here"}
           hint={total === 0 ? "Whoever manages Stock adds the products first." : q ? "Nothing matches that search." : filter === "todo" ? "Everything has been counted." : "Nothing has been counted yet."} />
       ) : groups.map((g) => (
-        <section key={g.id} className="pc-panel" aria-labelledby={`stk-cat-${g.id}`}>
-          <div className="pc-panel-head">
+        <section key={g.id} className="flex min-w-0 flex-col" aria-labelledby={`stk-cat-${g.id}`}>
+          <div className="pc-section-head">
             <h2 id={`stk-cat-${g.id}`} className="sr-only">{g.name}</h2>
             <CategoryTag name={g.name} tone={g.tone} />
-            <span className="pc-row-hint tabular-nums">{g.products.filter((p) => p.id in counts).length} of {g.products.length}</span>
+            <p>{g.products.filter((p) => p.id in counts).length} of {g.products.length}</p>
           </div>
-          <ul className="pc-rows">
+          <ul className="pc-list">
             {g.products.map((p) => {
               const has = p.id in counts;
               const isNone = has && counts[p.id] === 0;
