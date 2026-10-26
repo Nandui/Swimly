@@ -576,6 +576,29 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 @media (prefers-reduced-motion: reduce) {
   .turnfin-app :is(.tf-bar-item, .tf-side-item, .tf-bottom-item, .tf-tools > *) { transition: none; }
 }
+/* Phones, the app frame only (DESIGN.md, Phone): the toolbar is fixed to the top, with its room
+   kept above the page, so it can fold to one row without moving the page under the finger (Safari
+   does not anchor the scroll when a sticky bar changes height). Once the large title has scrolled
+   under it (ModuleShell, useLargeTitle), the page bar folds away and the title shows inline in the
+   room between the page's way back (a glass circle on the leading side) and the tools. */
+@media (max-width: 767px) {
+  .turnfin-app .tf-shell:has(> .tf-bottom) { --tf-top-space: 68px; }
+  .turnfin-app .tf-shell:has(> .tf-bottom):has(.tf-pages) { --tf-top-space: 120px; }
+  .turnfin-app .tf-shell:has(> .tf-bottom) > .tf-frame { padding-top: calc(var(--tf-top-space) + env(safe-area-inset-top)); }
+  .turnfin-app .tf-shell:has(> .tf-bottom) .tf-top { position: fixed; top: 0; right: 0; left: 0; margin: 0; padding: calc(var(--space-2) + env(safe-area-inset-top)) var(--space-5) var(--space-2); }
+  .turnfin-app .tf-shell:has(> .tf-bottom) .tf-top::before { inset: 0 0 calc(-1 * var(--space-4)); }
+  .turnfin-app .tf-top[data-titled] > .tf-pages { display: none; }
+  .turnfin-app .tf-inline-title { flex: 1 1 0; min-width: 0; overflow: hidden; font-size: 17px; line-height: var(--control-height); font-weight: 600; text-align: center; text-overflow: ellipsis; white-space: nowrap; animation: tf-inline-in var(--duration-fade) var(--ease) both; }
+  .turnfin-app .tf-inline-back { flex: none; }
+  .turnfin-app .tf-inline-back > .tf-bar-item { justify-content: center; width: 36px; padding: 0; }
+}
+@media (min-width: 768px) {
+  .turnfin-app :is(.tf-inline-title, .tf-inline-back) { display: none; }
+}
+@keyframes tf-inline-in { from { opacity: 0; translate: 0 4px; } to { opacity: 1; translate: 0 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .turnfin-app .tf-inline-title { animation: none; }
+}
 /* Print: only the page itself; the frame's bars and padding go. */
 @media print {
   .turnfin-app :is(.tf-top, .tf-side, .tf-bottom) { display: none; }
