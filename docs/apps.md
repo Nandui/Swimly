@@ -168,6 +168,20 @@ What managers need to act on at their sites, raised automatically.
 
 Listens to `tasks.reading.out_of_range`.
 
+### Maintenance
+*Module `maintenance` · `/maintenance/overview` · reach: sites · data: `maintenance.prisma`*
+
+What is broken at each site, from the first report until it is fixed. The maintenance team works in Trackplan, their own tool. Turnfin asks whether a problem is already in Trackplan, and keeps a Trackplan reference if one is given. It never connects to Trackplan ([D14](decisions.md)).
+
+| Level | Gives |
+| --- | --- |
+| Report | report a problem at their sites, and see every request there, so nothing is reported twice |
+| Manage | also put requests in Trackplan, correct them, mark them fixed, close them not fixed, and open them again |
+
+A request is **Reported**, **In Trackplan**, **Fixed** or **Closed, not fixed**. It starts In Trackplan when the reporter answers that it is already there. "Could hurt someone" always makes it Urgent.
+
+Connects: subject records; area renames.
+
 ### Analytics
 *Module `activities` · `/analytics` · reach: sites · data: reads the swim school's and desk measures*
 

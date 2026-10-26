@@ -6,6 +6,13 @@ The decisions Turnfin 2.0 stands on, newest first. Each says what was decided, w
 
 ---
 
+### D14 · 26 October 2026 · Maintenance, a new app, and the platform's one file check
+
+**Maintenance** is a new app in the Managers group. Staff report what is broken at a site, and the site's managers follow it until it is fixed. It is not part of Incidents, which is for accidents and near misses, with triage and sign-off. It is not part of Tasks, which gets each site's checks done on time. The maintenance team keeps working in **Trackplan**. Turnfin asks "Is it already in Trackplan?" (Yes, No or Not sure, with an optional reference) and never connects to Trackplan. The owner decided each of these points in turn: two levels (Report, Manage); a separate urgency (Low, Normal or Urgent); and "Could hurt someone" always being Urgent. Reporters see the open requests in the area before sending. Manage notes come only with status moves, with no comments thread. There is no email until the platform outbox lands, and the app goes live at one site first.
+The platform's **one file check** (`src/lib/files`, roadmap step 4) starts here. Maintenance's photos use it first, and the other apps move onto it in step 4.
+**Why:** a broken light or locker belongs neither in an incident's triage queue nor in a site's checks. Staff need one place to say what is broken, and managers need to see what still has to reach Trackplan. A copy of every app's file check would have been a seventh.
+**Follows:** [apps.md](apps.md#maintenance) and `src/modules/maintenance/README.md`. Later: urgent requests email the site's managers through the outbox, and an Incidents report of kind "Equipment or building" links to its maintenance request.
+
 ### D13 · 25 October 2026 · Turnfin Glass is the 2.0 design
 
 The 2.0 design is **Turnfin Glass**: Apple's Liquid Glass and Human Interface Guidelines, brought to Turnfin's web app. A plain ground, opaque content, and glass only on the controls that float; colour only for selected, needs action, done, now and serious; springs and in-place feedback throughout. It was chosen from screenshot-checked, clickable mockups, after Poolside Clear refinements, editorial, colourful glass, Material 3 Expressive and Turnfin Live were tried.
