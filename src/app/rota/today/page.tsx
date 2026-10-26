@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Plus, UserX } from "lucide-react";
+import { Clock3, Plus, RefreshCw, TriangleAlert, Users, UserX } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
+import { Figure, Figures } from "@/components/ui-kit/figure";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
@@ -52,7 +53,7 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
   const todo = changes.filter((c) => !c.timepointAt).length;
   const todayChanges = changes.filter((c) => c.date.toISOString().slice(0, 10) === now || !c.timepointAt);
   return (
-    <PageShell header={<PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         title={`Today: ${site.name}`}
         description={`${formatWeekday(now)} ${formatDayMonth(now)} · ${clock(nowMinutes)} · every department`}
         status={day.groups.length ? <Tag meta={ROTA_DAY_META[gaps.length ? "gaps" : "covered"]} label={gaps.length ? `${gaps.length} ${gaps.length === 1 ? "gap" : "gaps"}` : "No gaps left today"} /> : undefined}
@@ -62,40 +63,40 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
             trigger={<Button variant="outline"><Plus aria-hidden="true" />Add activity</Button>} /> : null}
         </> : undefined}
       />}>
-      <dl className="rota-kpis tabular-nums">
-        <div data-tone={gaps.length ? "warning" : "success"}><dt>Gaps left today</dt><dd>{gaps.length}</dd></div>
-        <div><dt>On now</dt><dd>{new Set(onNow.flatMap((x) => x.who)).size}</dd></div>
-        <div><dt>Starting in 3 hours</dt><dd>{soon.length}</dd></div>
-        <div><dt>Off today</dt><dd>{off.length}</dd></div>
-        <div data-tone={todo ? "warning" : undefined}><dt>To update in Timepoint</dt><dd>{todo}</dd></div>
-      </dl>
-      <div className="rota-today">
-      <div className="rota-today-main">
-      <section className="pc-panel" aria-labelledby="today-gaps">
-        <div className="pc-panel-head"><div><h2 id="today-gaps">Gaps to fill</h2>
-          <p className="text-sm text-ui-muted-foreground">{run ? "Best fits first. Putting someone on logs it as covering an absence, or filling a gap." : "The duty manager fills these."}</p></div></div>
+      <Figures label="The day at a glance" compact>
+        <Figure icon={TriangleAlert} label="Gaps left today" value={gaps.length} hint={gaps.length ? "Need someone" : "Everything is covered"} tone={gaps.length ? "orange" : undefined} />
+        <Figure icon={Users} label="On now" value={new Set(onNow.flatMap((x) => x.who)).size} />
+        <Figure icon={Clock3} label="Starting in 3 hours" value={soon.length} />
+        <Figure icon={UserX} label="Off today" value={off.length} />
+        <Figure icon={RefreshCw} label="To update in Timepoint" value={todo} hint={todo ? "Changes not in Timepoint yet" : undefined} tone={todo ? "orange" : undefined} />
+      </Figures>
+      <div className="grid min-w-0 items-start gap-(--space-7) lg:grid-cols-main-rail">
+      <div className="flex min-w-0 flex-col gap-(--space-7)">
+      <section className="flex min-w-0 flex-col" aria-labelledby="today-gaps">
+        <div className="pc-section-head"><h2 id="today-gaps">Gaps to fill</h2>{gaps.length ? <p>{gaps.length}</p> : null}</div>
+        <p className="pc-section-note">{run ? "Best fits first. Putting someone on logs it as covering an absence, or filling a gap." : "The duty manager fills these."}</p>
         {gaps.length === 0 ? <EmptyState compact icon="calendarDays" title={day.groups.length ? "No gaps for the rest of today" : "Nothing is planned here today"} />
           : run ? <TodayGaps gaps={fitted} /> : (
-            <ul className="pc-rows">{fitted.map((g, i) => {
+            <ul className="pc-list">{fitted.map((g, i) => {
               const Icon = activityIcon(g.icon);
               return <li key={i} className="pc-row"><span className="pc-tile-icon" aria-hidden="true"><Icon /></span><span className="pc-row-body"><span className="pc-row-title">{g.what}, {clock(g.start)} to {clock(g.end)}</span><span className="pc-row-hint">{g.why}</span></span></li>;
             })}</ul>
           )}
       </section>
-        <section className="pc-panel" aria-labelledby="today-now">
-          <div className="pc-panel-head"><h2 id="today-now">On now · {clock(nowMinutes)}</h2><Button asChild variant="ghost"><Link href={`/rota?${new URLSearchParams({ site: site.id, day: now })}`}>Full day</Link></Button></div>
+        <section className="flex min-w-0 flex-col" aria-labelledby="today-now">
+          <div className="pc-section-head"><h2 id="today-now">On now · {clock(nowMinutes)}</h2><Button asChild variant="ghost"><Link href={`/rota?${new URLSearchParams({ site: site.id, day: now })}`}>Full day</Link></Button></div>
           {onNow.length === 0 ? <EmptyState compact icon="calendarDays" title="Nobody is on right now" /> : (
-            <ul className="pc-rows">{onNow.map(({ g, who }) => {
+            <ul className="pc-list">{onNow.map(({ g, who }) => {
               const Icon = activityIcon(g.icon);
               return <li key={g.key} className="pc-row"><span className="pc-tile-icon" aria-hidden="true"><Icon /></span>
                 <span className="pc-row-body"><span className="pc-row-title">{[g.name, g.place].filter(Boolean).join(" · ")}</span><span className="pc-row-hint">{who.join(" · ")}</span></span></li>;
             })}</ul>
           )}
         </section>
-        <section className="pc-panel" aria-labelledby="today-next">
-          <div className="pc-panel-head"><h2 id="today-next">Coming up</h2></div>
+        <section className="flex min-w-0 flex-col" aria-labelledby="today-next">
+          <div className="pc-section-head"><h2 id="today-next">Coming up</h2></div>
           {soon.length === 0 ? <EmptyState compact icon="calendarDays" title="Nothing starts in the next three hours" /> : (
-            <ul className="pc-rows">{soon.map((b, i) => (
+            <ul className="pc-list">{soon.map((b, i) => (
               <li key={i} className="pc-row">
                 <span className="pc-row-body"><span className="pc-row-title tabular-nums">{clock(b.start)}</span>
                   <span className="pc-row-hint">{[b.group.name, b.group.place].filter(Boolean).join(" · ")} · {b.kind === "gap" ? "Nobody yet" : `${b.name} starts`}</span></span>
@@ -105,11 +106,11 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
           )}
         </section>
       </div>
-      <div className="rota-today-side">
-        <section className="pc-panel" aria-labelledby="today-off">
-          <div className="pc-panel-head"><h2 id="today-off">Off today</h2>{run ? <Button asChild variant="ghost"><Link href="/rota/absences">Absences</Link></Button> : null}</div>
+      <div className="flex min-w-0 flex-col gap-(--space-7)">
+        <section className="flex min-w-0 flex-col" aria-labelledby="today-off">
+          <div className="pc-section-head"><h2 id="today-off">Off today</h2>{run ? <Button asChild variant="ghost"><Link href="/rota/absences">Absences</Link></Button> : null}</div>
           {off.length === 0 ? <EmptyState compact icon="calendarDays" title="Nobody is recorded as off" /> : (
-            <ul className="pc-rows">{off.map((a) => (
+            <ul className="pc-list">{off.map((a) => (
               <li key={a.id} className="pc-row">
                 <span className="pc-row-body"><span className="pc-row-title">{a.user?.name ?? "Someone"}</span>
                   <span className="pc-row-hint">{run ? `${ABSENCE_REASON_META[a.reason as AbsenceReason]?.label ?? "Off"} · ` : ""}{a.lastDay ? `back after ${formatDayMonth(a.lastDay.toISOString().slice(0, 10))}` : "no return date yet"} · reported by {a.reportedByName}</span></span>
@@ -117,10 +118,10 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
             ))}</ul>
           )}
         </section>
-        <section className="pc-panel" aria-labelledby="today-changes">
-          <div className="pc-panel-head"><h2 id="today-changes">Changes today</h2>{todo ? <Tag meta={ROTA_TIMEPOINT_META.todo} label={`${todo} to update in Timepoint`} /> : null}</div>
+        <section className="flex min-w-0 flex-col" aria-labelledby="today-changes">
+          <div className="pc-section-head"><h2 id="today-changes">Changes today</h2>{todo ? <Tag meta={ROTA_TIMEPOINT_META.todo} label={`${todo} to update in Timepoint`} /> : null}</div>
           {todayChanges.length === 0 ? <EmptyState compact icon="calendarDays" title="No changes yet today" /> : (
-            <ul className="pc-rows">{todayChanges.map((c) => (
+            <ul className="pc-list">{todayChanges.map((c) => (
               <li key={c.id} className="pc-row">
                 <span className="pc-row-body"><span className="pc-row-title">{c.summary}</span>
                   <span className="pc-row-hint">{clock(minutesNow(c.createdAt))} · {ROTA_CHANGE_REASON_META[c.reason as RotaChangeReason]?.label ?? c.reason}{c.note ? ` · ${c.note}` : ""} · by {c.byName}</span>
@@ -130,9 +131,12 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
             ))}</ul>
           )}
         </section>
-      <section className="pc-panel" aria-labelledby="today-note">
-        <div className="pc-panel-head"><h2 id="today-note">Day note</h2><span className="text-xs text-ui-muted-foreground">Seen by every duty manager here today</span></div>
-        {run ? <DayNote siteId={site.id} date={now} text={note?.text ?? ""} labelledBy="today-note" /> : <p>{note?.text || "No note today."}</p>}
+      <section className="flex min-w-0 flex-col" aria-labelledby="today-note">
+        <div className="pc-section-head"><h2 id="today-note">Day note</h2></div>
+        <p className="pc-section-note">Seen by every duty manager here today</p>
+        <div className="rec-card">
+          {run ? <DayNote siteId={site.id} date={now} text={note?.text ?? ""} labelledBy="today-note" /> : <p>{note?.text || "No note today."}</p>}
+        </div>
       </section>
       </div>
       </div>

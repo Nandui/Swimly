@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.22.0 · 26 October 2026 · Rota's Today, Bookings and Absences in the new look
+
+- **Today** opens with its five figures, each naming what it counts above the number; gaps left and changes still to put in Timepoint are marked in orange when there are some.
+- **Gaps to fill**, **On now**, **Coming up**, **Off today**, **Changes today** and the **Day note** each have their title above their card. The people who could fill a gap sit in soft grey wells under it.
+- **Bookings** opens with its figures, and **Running** and **Finished** have their titles and how many above them.
+- **Absences** has **Off now or soon**, **Return to work** and the rest under their own titles, as plain lists.
+
 ## 2.21.0 · 26 October 2026 · Purchasing in the new look
 
 - **Purchase orders** opens with its figures, then the orders waiting for you, your orders and the latest at your sites as plain lists. Each order's symbol is orange while it waits, green once approved and red if rejected.
