@@ -20,7 +20,7 @@ function Fin({ className }: { className?: string }) {
  *  The brand panel's headline is a paragraph, so the form's H1 stays the only one. */
 export function AuthFrame({ welcome = false, fin, children }: { welcome?: boolean; fin?: "start" | "center"; children: React.ReactNode }) {
   return (
-    <div className="min-h-svh min-w-0 bg-(--pc-outer)">
+    <div className="min-h-svh min-w-0 bg-(--bg)">
       <main className="mx-auto flex min-h-svh max-w-6xl min-w-0 flex-wrap items-stretch justify-center gap-6 p-4 sm:p-6">
         {welcome ? (
           <div className="hidden min-w-0 grow basis-md flex-col justify-between gap-6 rounded-ui-2xl bg-(--accent-btn) p-12 text-ui-primary-foreground md:flex">

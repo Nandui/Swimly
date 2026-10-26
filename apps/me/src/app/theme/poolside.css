@@ -276,7 +276,6 @@ body.turnfin-app { background: var(--bg); }
    these; they never restyle them. */
 .turnfin-app .pc-panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; min-height: 44px; }
 .turnfin-app .pc-panel-head > h2 { margin: 0; }
-.turnfin-app .pc-rows-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
 .turnfin-app .pc-row-body { display: flex; flex: 1 1 140px; flex-direction: column; min-width: 0; }
 .turnfin-app .pc-row-title { font-weight: 600; }
 .turnfin-app .pc-row-hint { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 400; color: var(--pc-ink-muted); }
@@ -317,15 +316,12 @@ body.turnfin-app { background: var(--bg); }
    over Quick actions, beside Waiting) and hands them to the row at 1280px; a lone child spans
    the row, so a missing panel never leaves a void. */
 .turnfin-app .pc-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
-.turnfin-app .pc-grid-stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 @media (min-width: 768px) {
   .turnfin-app .pc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .turnfin-app .pc-grid > :only-child { grid-column: 1 / -1; }
-  .turnfin-app .pc-grid > .pc-grid-stack:only-child { display: contents; }
 }
 @media (min-width: 1280px) {
   .turnfin-app .pc-grid { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
-  .turnfin-app .pc-grid > .pc-grid-stack { display: contents; }
 }
 .turnfin-app .pc-stat-figure { font-size: var(--pc-text-figure); line-height: var(--pc-leading-figure); font-weight: 700; font-variant-numeric: tabular-nums; }
 .turnfin-app .pc-stat [data-slot='badge'] { max-width: 100%; white-space: normal; }
@@ -335,17 +331,6 @@ body.turnfin-app { background: var(--bg); }
    above the viewport's edge while the page scrolls. Where the bottom bar shows (desk phones and
    touch screens) it sits 16px above that bar instead (--tf-bottom-space). */
 .turnfin-app .pc-save-bar { position: sticky; z-index: 10; bottom: calc(16px + env(safe-area-inset-bottom)); flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px 12px 24px; box-shadow: var(--pc-shadow-overlay); }
-/* A status tag that opens more (the register's Medical tag): the tag's own height in the row,
-   a 44px hit area around it. */
-.turnfin-app .pc-tag-trigger { position: relative; display: inline-flex; align-items: center; min-height: 24px; min-width: 0; padding: 0; border: 0; background: none; cursor: pointer; }
-.turnfin-app .pc-tag-trigger::before { content: ''; position: absolute; inset: -10px -4px; }
-.turnfin-app .pc-tag-trigger:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; border-radius: 999px; }
-.turnfin-app .pc-tag-trigger > [data-slot='badge'] > svg:last-child { transition: transform 120ms var(--pc-ease); }
-.turnfin-app .pc-tag-trigger[data-state='open'] > [data-slot='badge'] > svg:last-child { transform: rotate(180deg); }
-/* A feed (V2System .feed, HRActivity): a dot, a 600 line and a caption, with no row edges. */
-.turnfin-app .pc-feed { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.turnfin-app .pc-feed > li { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
-.turnfin-app .pc-feed-dot { flex: none; width: 8px; height: 8px; margin-top: 6px; border-radius: 999px; background: var(--pc-primary); }
 .turnfin-app a.pc-note { color: inherit; text-decoration: none; }
 .turnfin-app a.pc-note:hover { box-shadow: inset 0 0 0 1px var(--pc-line); }
 
@@ -362,8 +347,6 @@ body.turnfin-app { background: var(--bg); }
 /* v2 primitives */
 /* shadcn's card, table, tabs and outline items take the component sheet's shapes,
    so every page built from them follows without per-page work. */
-
-
 
 /* A toggle button as a segment (aria-pressed: the deck's Competency view) wears the segment's
    colours, not the ghost button's blue. */

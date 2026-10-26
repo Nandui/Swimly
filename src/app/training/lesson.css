@@ -3,106 +3,106 @@
    lesson text with its own copy of .tf-lesson (apps/me/src/app/globals.css). */
 
 /* Lesson text: comfortable reading width and rhythm. */
-.tf-lesson { display: flex; flex-direction: column; gap: 12px; max-width: 68ch; color: var(--pc-ink); font-size: 16px; line-height: 26px; }
+.tf-lesson { display: flex; flex-direction: column; gap: 12px; max-width: 68ch; color: var(--label); font-size: 16px; line-height: 26px; }
 .tf-lesson > :is(h2, h3) { margin-top: 12px; }
-.tf-lesson h2 { font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 600; }
+.tf-lesson h2 { font-size: 20px; line-height: 25px; font-weight: 600; }
 .tf-lesson h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
 .tf-lesson :is(ul, ol) { display: flex; flex-direction: column; gap: 4px; padding-left: 24px; }
 .tf-lesson ul { list-style: disc; }
 .tf-lesson ol { list-style: decimal; }
 .tf-lesson li > p { margin: 0; }
-.tf-lesson blockquote { padding: 12px 16px; border-radius: var(--pc-radius-card); background: var(--pc-primary-soft); color: var(--pc-primary-ink); font-weight: 500; }
-.tf-lesson a { color: var(--pc-primary); text-decoration: underline; text-underline-offset: 3px; }
-.tf-lesson img { display: block; max-width: 100%; height: auto; border-radius: var(--pc-radius-card); }
-.tf-lesson img.ProseMirror-selectednode { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
-.tf-lesson hr { border: 0; border-top: 1px solid var(--pc-line); margin: 8px 0; }
-.tf-lesson code { padding: 1px 6px; border-radius: 6px; background: var(--pc-surface-sunken); font-size: 0.9em; }
+.tf-lesson blockquote { padding: 12px 16px; border-radius: var(--radius-lg); background: var(--accent-soft); color: var(--accent-ink); font-weight: 500; }
+.tf-lesson a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.tf-lesson img { display: block; max-width: 100%; height: auto; border-radius: var(--radius-lg); }
+.tf-lesson img.ProseMirror-selectednode { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tf-lesson hr { border: 0; border-top: 1px solid var(--sep); margin: 8px 0; }
+.tf-lesson code { padding: 1px 6px; border-radius: 6px; background: var(--fill-2); font-size: 0.9em; }
 .tf-lesson .tableWrapper { overflow-x: auto; }
 .tf-lesson table { border-collapse: collapse; min-width: 100%; font-size: var(--pc-text-body); line-height: var(--pc-leading-body); }
-.tf-lesson :is(th, td) { padding: 8px 12px; border: 1px solid var(--pc-line); text-align: left; vertical-align: top; min-width: 6rem; }
-.tf-lesson th { background: var(--pc-surface-sunken); font-weight: 600; }
+.tf-lesson :is(th, td) { padding: 8px 12px; border: 1px solid var(--sep); text-align: left; vertical-align: top; min-width: 6rem; }
+.tf-lesson th { background: var(--fill-2); font-weight: 600; }
 .tf-lesson :is(th, td) > p { margin: 0; }
 
 /* The editor: a sunken toolbar over a writing surface. */
-.tf-editor { display: flex; flex-direction: column; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); background: var(--pc-surface); overflow: hidden; }
-.tf-editor:focus-within { border-color: var(--pc-focus); box-shadow: var(--pc-focus-halo); }
-.tf-editor-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; padding: 4px; background: var(--pc-surface-sunken); border-bottom: 1px solid var(--pc-line); }
-.tf-editor-toolbar [aria-pressed="true"] { background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
-.tf-editor-divider { width: 1px; align-self: stretch; margin: 8px 4px; background: var(--pc-line); }
-.tf-editor-panel { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-bottom: 1px solid var(--pc-line); background: var(--pc-surface); }
+.tf-editor { display: flex; flex-direction: column; border: 1px solid var(--sep); border-radius: var(--radius-lg); background: var(--bg-2); overflow: hidden; }
+.tf-editor:focus-within { border-color: var(--accent); box-shadow: var(--pc-focus-halo); }
+.tf-editor-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; padding: 4px; background: var(--fill-2); border-bottom: 1px solid var(--sep); }
+.tf-editor-toolbar [aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-ink); }
+.tf-editor-divider { width: 1px; align-self: stretch; margin: 8px 4px; background: var(--sep); }
+.tf-editor-panel { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-bottom: 1px solid var(--sep); background: var(--bg-2); }
 .tf-editor-prose { min-height: 16rem; padding: 16px 20px; outline: none; max-width: none; }
-.tf-editor-prose p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: var(--pc-ink-muted); float: left; height: 0; pointer-events: none; }
-.tf-editor[data-disabled] .tf-editor-prose { color: var(--pc-ink-muted); }
+.tf-editor-prose p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: var(--label-2); float: left; height: 0; pointer-events: none; }
+.tf-editor[data-disabled] .tf-editor-prose { color: var(--label-2); }
 
 /* The outline: one row per lesson, the open one in the fin's blue. */
-.tf-outline-row { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 12px; border-radius: var(--pc-radius-control); color: var(--pc-ink); font-size: var(--pc-text-body); line-height: var(--pc-leading-body); text-decoration: none; transition: background-color 120ms var(--pc-ease); }
-.tf-outline-row > svg { width: 16px; height: 16px; flex: none; color: var(--pc-ink-muted); }
-.tf-outline-row:hover { background: var(--pc-surface-sunken); }
-.tf-outline-row:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.tf-outline-row { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 12px; border-radius: var(--radius-capsule); color: var(--label); font-size: var(--pc-text-body); line-height: var(--pc-leading-body); text-decoration: none; transition: background-color 120ms var(--ease); }
+.tf-outline-row > svg { width: 16px; height: 16px; flex: none; color: var(--label-2); }
+.tf-outline-row:hover { background: var(--fill-2); }
+.tf-outline-row:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .tf-outline-row.is-current { background: var(--accent-soft); color: var(--accent-ink); font-weight: 600; }
 .tf-outline-row.is-current > svg, .tf-outline-row.is-current span { color: inherit; }
 
 /* A video plays at 16:9 at any width. */
-.tf-video { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: var(--pc-radius-card); overflow: hidden; background: var(--pc-surface-sunken); }
+.tf-video { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: var(--radius-lg); overflow: hidden; background: var(--fill-2); }
 .tf-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 
 /* Interactive blocks (phase 3). The builder and Preview show them open and labelled;
    Turnfin Me makes them interactive (apps/me/src/app/globals.css). */
-.tf-callout { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 32px 16px 12px; border-radius: var(--pc-radius-card); background: var(--pc-primary-soft); color: var(--pc-ink); }
-.tf-callout::before { content: attr(data-label); position: absolute; top: 8px; left: 16px; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 700; color: var(--pc-primary-ink); }
-.tf-callout[data-tone="tip"] { background: var(--pc-success-soft); }
-.tf-callout[data-tone="tip"]::before { color: var(--pc-success); }
-.tf-callout[data-tone="warning"] { background: var(--pc-warning-soft); }
-.tf-callout[data-tone="warning"]::before { color: var(--pc-ink); }
-.tf-callout[data-tone="danger"] { background: var(--pc-danger-soft); }
-.tf-callout[data-tone="danger"]::before { color: var(--pc-danger); }
-.tf-reveal { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); }
+.tf-callout { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 32px 16px 12px; border-radius: var(--radius-lg); background: var(--accent-soft); color: var(--label); }
+.tf-callout::before { content: attr(data-label); position: absolute; top: 8px; left: 16px; font-size: 12px; line-height: 16px; font-weight: 700; color: var(--accent-ink); }
+.tf-callout[data-tone="tip"] { background: var(--green-soft); }
+.tf-callout[data-tone="tip"]::before { color: var(--green-ink); }
+.tf-callout[data-tone="warning"] { background: var(--orange-soft); }
+.tf-callout[data-tone="warning"]::before { color: var(--label); }
+.tf-callout[data-tone="danger"] { background: var(--red-soft); }
+.tf-callout[data-tone="danger"]::before { color: var(--red-ink); }
+.tf-reveal { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; border: 1px solid var(--sep); border-radius: var(--radius-lg); }
 .tf-reveal-title { font-weight: 600; }
-.tf-reveal-title::before { content: "Tap to reveal · "; color: var(--pc-ink-muted); font-weight: 500; font-size: var(--pc-text-caption); }
-.tf-reveal-content { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; border-top: 1px dashed var(--pc-line); }
+.tf-reveal-title::before { content: "Tap to reveal · "; color: var(--label-2); font-weight: 500; font-size: 12px; }
+.tf-reveal-content { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; border-top: 1px dashed var(--sep); }
 .tf-flip-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--pc-tile-min), 1fr)); gap: 12px; padding: 0; list-style: none; }
-.tf-flip-card { display: grid; grid-template-rows: auto auto; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); overflow: hidden; }
+.tf-flip-card { display: grid; grid-template-rows: auto auto; border: 1px solid var(--sep); border-radius: var(--radius-lg); overflow: hidden; }
 .tf-flip-front, .tf-flip-back { display: flex; flex-direction: column; gap: 6px; padding: 28px 12px 12px; position: relative; }
-.tf-flip-front { background: var(--pc-surface-sunken); font-weight: 600; }
-.tf-flip-front::before, .tf-flip-back::before { position: absolute; top: 6px; left: 12px; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; color: var(--pc-ink-muted); }
+.tf-flip-front { background: var(--fill-2); font-weight: 600; }
+.tf-flip-front::before, .tf-flip-back::before { position: absolute; top: 6px; left: 12px; font-size: 12px; line-height: 16px; font-weight: 600; color: var(--label-2); }
 .tf-flip-front::before { content: "Front"; }
 .tf-flip-back::before { content: "Back"; }
 .tf-flip-front img { max-height: 8rem; width: auto; }
 .tf-stepper { display: flex; flex-direction: column; gap: 8px; counter-reset: tf-step; }
-.tf-step { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 12px 16px 12px 52px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); counter-increment: tf-step; }
-.tf-step::before { content: counter(tf-step); position: absolute; left: 14px; top: 12px; display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 999px; background: var(--accent-btn); color: var(--pc-on-primary); font-size: var(--pc-text-caption); font-weight: 700; }
+.tf-step { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 12px 16px 12px 52px; border-radius: var(--radius-lg); background: var(--fill-2); counter-increment: tf-step; }
+.tf-step::before { content: counter(tf-step); position: absolute; left: 14px; top: 12px; display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 999px; background: var(--accent-btn); color: var(--pc-on-primary); font-size: 12px; font-weight: 700; }
 .tf-step > :is(h2, h3) { margin-top: 0; }
-.tf-check { display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px; border: 2px dashed var(--pc-primary); border-radius: var(--pc-radius-card); background: var(--pc-surface); }
-.tf-check > svg { flex: none; width: 20px; height: 20px; color: var(--pc-primary); margin-top: 3px; }
-.tf-check.ProseMirror-selectednode { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
-.tf-check-box { flex: none; width: 22px; height: 22px; border: 2px solid var(--pc-line-strong); border-radius: 6px; }
-.tf-editor-context { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%; padding: 4px 8px; border-top: 1px solid var(--pc-line); }
+.tf-check { display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px; border: 2px dashed var(--accent); border-radius: var(--radius-lg); background: var(--bg-2); }
+.tf-check > svg { flex: none; width: 20px; height: 20px; color: var(--accent); margin-top: 3px; }
+.tf-check.ProseMirror-selectednode { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tf-check-box { flex: none; width: 22px; height: 22px; border: 2px solid var(--label-2); border-radius: 6px; }
+.tf-editor-context { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%; padding: 4px 8px; border-top: 1px solid var(--sep); }
 
 /* Pick the spot: boxes drawn over the picture, in percent of it. */
-.tf-spot-frame { position: relative; display: inline-block; max-width: 100%; cursor: crosshair; touch-action: none; user-select: none; border-radius: var(--pc-radius-card); overflow: hidden; }
+.tf-spot-frame { position: relative; display: inline-block; max-width: 100%; cursor: crosshair; touch-action: none; user-select: none; border-radius: var(--radius-lg); overflow: hidden; }
 .tf-spot-frame.is-static { cursor: default; max-width: 28rem; }
 .tf-spot-frame img { display: block; max-width: 100%; height: auto; pointer-events: none; }
-.tf-spot-area { position: absolute; border: 2px solid var(--pc-primary); border-radius: 6px; background: var(--pc-primary-soft-hover); }
-.tf-spot-number { position: absolute; top: 2px; left: 2px; display: flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 4px; border-radius: 999px; background: var(--accent-btn); color: var(--pc-on-primary); font-size: var(--pc-text-caption); font-weight: 700; }
+.tf-spot-area { position: absolute; border: 2px solid var(--accent); border-radius: 6px; background: var(--accent-soft); }
+.tf-spot-number { position: absolute; top: 2px; left: 2px; display: flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 4px; border-radius: 999px; background: var(--accent-btn); color: var(--pc-on-primary); font-size: 12px; font-weight: 700; }
 
 /* A course's cover picture and tags. */
-.tf-cover { display: block; width: 100%; max-height: 16rem; object-fit: cover; border-radius: var(--pc-radius-card); }
-.tf-cover-thumb { flex: none; width: 64px; height: 44px; object-fit: cover; border-radius: var(--pc-radius-control); }
-.tf-tag { display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px; border-radius: 999px; background: var(--pc-surface-sunken); color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
+.tf-cover { display: block; width: 100%; max-height: 16rem; object-fit: cover; border-radius: var(--radius-lg); }
+.tf-cover-thumb { flex: none; width: 64px; height: 44px; object-fit: cover; border-radius: var(--radius-capsule); }
+.tf-tag { display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px; border-radius: 999px; background: var(--fill-2); color: var(--label-2); font-size: 12px; }
 
 @media (prefers-reduced-motion: reduce) { .tf-outline-row { transition: none; } }
 
 /* Explore a picture (phase 8): numbered spots on the picture. */
-.tf-explore-marker { position: absolute; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; transform: translate(-50%, -50%); border-radius: 999px; border: 2px solid var(--pc-surface); background: var(--accent-btn); color: var(--pc-on-primary); font-size: var(--pc-text-caption); font-weight: 700; box-shadow: none; }
+.tf-explore-marker { position: absolute; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; transform: translate(-50%, -50%); border-radius: 999px; border: 2px solid var(--bg-2); background: var(--accent-btn); color: var(--pc-on-primary); font-size: 12px; font-weight: 700; box-shadow: none; }
 
 /* Tabs, a video in the text and a file button (phase 8), shown open for the author. */
-.tf-tabs { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); }
-.tf-tabs::before { content: "Tabs"; font-size: var(--pc-text-caption); font-weight: 600; color: var(--pc-ink-muted); }
-.tf-tab { display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; background: var(--pc-surface-sunken); border-radius: var(--pc-radius-card); }
-.tf-tab-title { font-weight: 700; margin: 0; color: var(--pc-primary); }
-.tf-media-block { display: flex; align-items: center; gap: 8px; padding: 12px; border: 1px dashed var(--pc-line-strong); border-radius: var(--pc-radius-card); color: var(--pc-ink-muted); }
-.tf-media-block svg { flex: none; width: 20px; height: 20px; color: var(--pc-primary); }
-.tf-embed { position: relative; width: 100%; aspect-ratio: 16 / 10; border-radius: var(--pc-radius-card); overflow: hidden; background: var(--pc-surface-sunken); }
+.tf-tabs { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--sep); border-radius: var(--radius-lg); }
+.tf-tabs::before { content: "Tabs"; font-size: 12px; font-weight: 600; color: var(--label-2); }
+.tf-tab { display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; background: var(--fill-2); border-radius: var(--radius-lg); }
+.tf-tab-title { font-weight: 700; margin: 0; color: var(--accent); }
+.tf-media-block { display: flex; align-items: center; gap: 8px; padding: 12px; border: 1px dashed var(--label-2); border-radius: var(--radius-lg); color: var(--label-2); }
+.tf-media-block svg { flex: none; width: 20px; height: 20px; color: var(--accent); }
+.tf-embed { position: relative; width: 100%; aspect-ratio: 16 / 10; border-radius: var(--radius-lg); overflow: hidden; background: var(--fill-2); }
 .tf-embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 
 /* Sort into groups, in the preview. */

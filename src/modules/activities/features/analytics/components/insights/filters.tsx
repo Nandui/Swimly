@@ -72,15 +72,15 @@ export function FilterBar({ path, presets, custom, sites, programme, reset, swit
               <div className="ins-range-fields">
                 <div className="flex min-w-0 flex-col gap-1.5">
                   <Label htmlFor={`${id}-from`}>From</Label>
-                  <Input id={`${id}-from`} type="date" value={from} max={to || custom.today} onChange={e => setFrom(e.target.value)} className="h-(--pc-control-height)" required />
+                  <Input id={`${id}-from`} type="date" value={from} max={to || custom.today} onChange={e => setFrom(e.target.value)} className="h-(--control-height)" required />
                 </div>
                 <div className="flex min-w-0 flex-col gap-1.5">
                   <Label htmlFor={`${id}-to`}>To</Label>
-                  <Input id={`${id}-to`} type="date" value={to} min={from || undefined} max={custom.today} onChange={e => setTo(e.target.value)} className="h-(--pc-control-height)" required />
+                  <Input id={`${id}-to`} type="date" value={to} min={from || undefined} max={custom.today} onChange={e => setTo(e.target.value)} className="h-(--control-height)" required />
                 </div>
               </div>
               <p className="ins-range-hint">Compared with the same number of days just before. Up to three years.</p>
-              <Button type="submit" disabled={!valid} className="h-(--pc-control-height) rounded-full">Show these dates</Button>
+              <Button type="submit" disabled={!valid} className="h-(--control-height) rounded-full">Show these dates</Button>
             </form>
           </PopoverContent>
         </Popover>
