@@ -7,6 +7,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Notice } from "@/components/ui-kit/notice";
+import { RecordNext } from "@/components/ui-kit/record";
 import { saveRefund } from "@/modules/refunds/features/request/server/actions";
 import { refundNextStep, refundServices, type RefundFields, type RefundView } from "@/modules/refunds/shared/types";
 
@@ -82,13 +83,10 @@ export function RefundRequestForm({ id, row, sites, defaultSite = "", actions, c
   if (!row) return form;
   return <div className="refund-detail-columns">
     <div className="refund-main">{form}{children}</div>
-    <aside className="refund-card refund-next" data-tone="act" aria-labelledby="next-action">
-      <p className="refund-next-label">Your move</p>
-      <h2 id="next-action" className="refund-next-title">Next action</h2>
-      <p className="refund-muted">{refundNextStep(row.status)}</p>
+    <RecordNext act label="Your move" body={refundNextStep(row.status)}>
       {feedback}
       <div className="refund-action-buttons">{buttons}</div>
       {actions}
-    </aside>
+    </RecordNext>
   </div>;
 }

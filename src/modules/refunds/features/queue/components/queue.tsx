@@ -72,18 +72,18 @@ export function RefundQueue({ data }: { data: Data }) {
   const title = view === "mine" ? "My requests" : view === "drafts" ? "My drafts" : "Refund requests";
   const create = who.request ? <Button asChild className="refund-new"><Link href="/refunds/new"><ReceiptText aria-hidden="true" />Log a refund request</Link></Button> : null;
   return <PageShell spacing="roomy" header={<PageHeader title={title} description={`${what} · ${site}`} actions={create} />}>
-    <ul className="pc-stats refund-tiles" aria-label="Follow-up queues">
+    <ul className="pc-stats" data-compact aria-label="Follow-up queues">
       {TILES.map(tile => {
         const value = count(tile.counts), Icon = tile.icon;
         return <li key={tile.status} className="flex">
           <Link href={href({ status: tile.status })} className="pc-stat w-full" aria-current={f.status === tile.status ? "true" : undefined}>
-            <span className="refund-tile-text"><span className="refund-tile-label"><Icon aria-hidden="true" />{tile.label}</span><span className="pc-stat-figure" data-zero={value ? undefined : ""}>{value}</span></span>
-            <span className="refund-tile-hint">{tile.hint}</span>
+            <span className="pc-stat-label"><Icon aria-hidden="true" />{tile.label}</span><span className="pc-stat-figure" data-zero={value ? undefined : ""}>{value}</span>
+            <span className="pc-stat-hint">{tile.hint}</span>
           </Link>
         </li>;
       })}
     </ul>
-    <div className="refund-find">
+    <div className="flex min-w-0 flex-col gap-(--space-3)">
       <Form action="/refunds" role="search" aria-label="Find a refund request" className="min-w-0">
         {KEPT.map(key => key !== "q" && f[key] ? <input key={key} type="hidden" name={key} value={f[key]} /> : null)}
         <SearchField id="refund-search" label="Find a request" defaultValue={f.q ?? ""} placeholder="Name, member or RF number" maxLength={200} clearHref={href({ q: null })} />

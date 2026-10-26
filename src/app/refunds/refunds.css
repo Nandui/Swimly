@@ -1,30 +1,17 @@
 /* ── Refunds in Turnfin Glass (DESIGN.md) ─────────────────────────────────────────────────────
-   The list is the queue tiles (the kit's figure tiles, each a filter), search and filters on the
-   ground, then the kit's grouped list. A request reads like Incidents: what happens next with the
-   four steps beside the request, tinted blue while the move is this person's; the claim large,
-   then label and value rows with hairlines between; receipts; the history. Colour carries meaning
-   only: blue is your move, orange waits on someone, green paid, red closed without a refund. */
+   The list is the kit's figure tiles (pc-stat-label, data-compact) as filters, search and filters
+   on the ground, then the kit's grouped list. A request is a record page (ui-kit/record.tsx and
+   kit.css, .rec-*). This file holds only what is Refunds' own: the request form and its bar,
+   receipts, and the list's rows. */
 .turnfin-refunds .refund-content { min-width: 0; }
-
-/* The queue tiles: the queue's name over its figure, a hint under it; a zero count is quiet. */
-.turnfin-refunds .refund-tile-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.turnfin-refunds .refund-tile-label { display: inline-flex; align-items: center; gap: 6px; color: var(--label-2); font-weight: 550; }
-.turnfin-refunds .refund-tile-label > svg { width: 16px; height: 16px; color: var(--accent); }
-.turnfin-refunds .refund-tiles .pc-stat-figure[data-zero] { color: var(--label-3); }
-.turnfin-refunds .refund-tile-hint { color: var(--label-2); font-size: 13px; line-height: 18px; }
-.turnfin-refunds .refund-tiles a.pc-stat[aria-current] .refund-tile-label > svg { color: inherit; }
-
-/* Search and filters sit on the ground above the list, not in a card. */
-.turnfin-refunds .refund-find { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
 .turnfin-refunds .refund-list .pc-row-trail { flex-wrap: nowrap; }
 
-/* A new request or a draft: the form, then the next action (beside it from 1280px), the same
-   tinted card as on a submitted request. */
+/* A new request or a draft: the form, then the next action (beside it from 1280px). */
 .turnfin-refunds .refund-detail-columns { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-6); align-items: start; }
 .turnfin-refunds .refund-main,
 .turnfin-refunds .refund-request-form,
 .turnfin-refunds .refund-request-form > fieldset { display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; }
-/* Its buttons stack full width with the primary first, whatever their order in the page. */
+/* The next action's buttons stack full width with the primary first, whatever their order. */
 .turnfin-refunds .refund-action-buttons { display: flex; flex-direction: column; gap: var(--space-2); }
 .turnfin-refunds .refund-action-buttons > [data-variant='default'] { order: -1; }
 
@@ -46,90 +33,10 @@ html:has(.refund-submit-bar) { scroll-padding-bottom: 120px; }
   .turnfin-refunds .refund-detail-columns { grid-template-columns: minmax(0, 1fr) minmax(280px, 320px); }
   .turnfin-refunds .refund-detail-columns > aside { position: sticky; top: 88px; }
 }
-
-/* A request: the status and number over the customer's name. */
-.turnfin-refunds .refund-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-1); color: var(--label-3); }
-
-.turnfin-refunds .refund-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-6); align-items: start; }
-.turnfin-refunds :is(.refund-main, .refund-side) { display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; }
-@media (min-width: 1024px) {
-  .turnfin-refunds .refund-layout { grid-template-columns: minmax(0, 1fr) minmax(300px, 340px); grid-template-areas: "main next" "main side"; grid-template-rows: auto 1fr; }
-  .turnfin-refunds .refund-layout > .refund-next { grid-area: next; }
-  .turnfin-refunds .refund-layout > .refund-main { grid-area: main; }
-  .turnfin-refunds .refund-layout > .refund-side { grid-area: side; }
-}
-
-/* Cards: opaque, inset grouped, as the kit's lists. */
-.turnfin-refunds .refund-card { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; margin: 0; padding: var(--space-5) var(--space-6); border-radius: var(--radius-card); background: var(--bg-2); box-shadow: var(--shadow-card); list-style: none; }
-.turnfin-refunds .refund-muted { margin: 0; color: var(--label-2); }
-.turnfin-refunds .refund-muted strong { color: var(--label); font-weight: 600; }
-.turnfin-refunds .refund-small { font-size: 13px; line-height: 18px; }
-.turnfin-refunds .refund-amount { margin: 0; font-family: var(--font-display); font-size: 34px; line-height: 40px; font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
-
-/* Label and value rows: the label grey on the left, the value on the right, a hairline between. */
-.turnfin-refunds .refund-facts { display: flex; flex-direction: column; margin: calc(-1 * var(--space-2)) 0 0; }
-.turnfin-refunds .refund-fact { display: grid; grid-template-columns: minmax(110px, 2fr) minmax(0, 5fr); gap: var(--space-4); padding: 11px 0; }
-.turnfin-refunds .refund-fact + .refund-fact { border-top: 0.5px solid var(--sep); }
-.turnfin-refunds .refund-fact > dt { color: var(--label-2); }
-.turnfin-refunds .refund-fact > dd { margin: 0; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
-.turnfin-refunds .refund-fact[data-wide] { grid-template-columns: minmax(0, 1fr); gap: 2px; }
-.turnfin-refunds .refund-fact[data-wide] > dd { white-space: pre-wrap; }
-
-/* What was bought and why: the customer's words in quiet wells. */
-.turnfin-refunds .refund-well { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-4) var(--space-5); border-radius: var(--radius-lg); background: var(--fill-2); }
-.turnfin-refunds .refund-well > h3 { margin: 0; color: var(--label-2); font-size: 13px; line-height: 18px; font-weight: 600; }
-.turnfin-refunds .refund-well > p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
-
-/* What happens next: tinted blue while it is this person's move. */
-.turnfin-refunds .refund-next { gap: var(--space-3); }
-.turnfin-refunds .refund-next[data-tone='act'] { background: linear-gradient(var(--accent-soft), var(--accent-soft)), var(--bg-2); box-shadow: inset 0 0 0 0.5px var(--accent-soft), var(--shadow-card); }
-.turnfin-refunds .refund-next-label { margin: 0; color: var(--label-2); font-size: 13px; line-height: 18px; font-weight: 600; }
-.turnfin-refunds .refund-next[data-tone='act'] .refund-next-label { color: var(--accent-ink); }
-.turnfin-refunds .refund-next-title { margin: 0; font-family: var(--font-display); font-size: 20px; line-height: 25px; font-weight: 650; letter-spacing: -0.015em; }
-
-/* The four steps, down the card: filled when done, ringed where it is now, orange while it waits
-   on reception, red where it stopped. */
-.turnfin-refunds .refund-stages { display: flex; flex-direction: column; gap: var(--space-3); margin: var(--space-2) 0 0; padding: var(--space-4) 0 0; border-top: 0.5px solid var(--sep); list-style: none; }
-.turnfin-refunds .refund-stages > li { position: relative; display: grid; grid-template-columns: 22px minmax(0, 1fr); column-gap: var(--space-3); }
-.turnfin-refunds .refund-stages > li:not(:last-child)::after { content: ""; position: absolute; top: 26px; bottom: -10px; left: 10px; width: 2px; border-radius: var(--radius-capsule); background: var(--sep); }
-.turnfin-refunds .refund-stages > li[data-state='done']:not(:last-child)::after { background: var(--accent); }
-.turnfin-refunds .refund-stage-dot { display: grid; grid-row: 1 / span 2; place-items: center; width: 22px; height: 22px; border-radius: var(--radius-capsule); box-shadow: inset 0 0 0 1.5px var(--label-3); }
-.turnfin-refunds .refund-stage-dot > svg { width: 12px; height: 12px; stroke-width: 3; }
-.turnfin-refunds [data-state='done'] > .refund-stage-dot { background: var(--accent-btn); color: var(--bg-2); box-shadow: none; }
-.turnfin-refunds [data-state='current'] > .refund-stage-dot { box-shadow: inset 0 0 0 2px var(--accent), 0 0 0 4px var(--accent-soft); }
-.turnfin-refunds [data-state='current'] > .refund-stage-dot::after { content: ""; width: 8px; height: 8px; border-radius: var(--radius-capsule); background: var(--accent); }
-.turnfin-refunds [data-state='waiting'] > .refund-stage-dot { background: var(--orange-soft); color: var(--orange-ink); box-shadow: none; }
-.turnfin-refunds [data-state='stopped'] > .refund-stage-dot { background: var(--red-soft); color: var(--red-ink); box-shadow: none; }
-.turnfin-refunds .refund-stage-label { font-weight: 600; }
-.turnfin-refunds [data-state='todo'] > .refund-stage-label { color: var(--label-2); font-weight: 500; }
-.turnfin-refunds .refund-stage-hint { overflow-wrap: anywhere; color: var(--label-2); font-size: 13px; line-height: 18px; }
-.turnfin-refunds [data-state='waiting'] > .refund-stage-hint { color: var(--orange-ink); font-weight: 600; }
-
-/* The history: a quiet line of dots, green when approved or paid, orange when sent back, red when
-   closed. */
-.turnfin-refunds .refund-history { gap: 0; }
-.turnfin-refunds .refund-history > li { position: relative; display: flex; gap: var(--space-3); min-width: 0; padding-bottom: var(--space-4); }
-.turnfin-refunds .refund-history > li:last-child { padding-bottom: 0; }
-.turnfin-refunds .refund-history > li:not(:last-child)::before { content: ""; position: absolute; top: 18px; bottom: 0; left: 4px; width: 2px; border-radius: var(--radius-capsule); background: var(--sep); }
-.turnfin-refunds .refund-history-dot { flex: none; width: 10px; height: 10px; margin-top: 5px; border-radius: var(--radius-capsule); box-shadow: inset 0 0 0 2.5px var(--accent); }
-.turnfin-refunds .refund-history > li:is([data-action='decline'], [data-action='withdraw'], [data-action='cancel']) > .refund-history-dot { box-shadow: inset 0 0 0 2.5px var(--red); }
-.turnfin-refunds .refund-history > li[data-action='information'] > .refund-history-dot { box-shadow: inset 0 0 0 2.5px var(--orange); }
-.turnfin-refunds .refund-history > li:is([data-action='approve'], [data-action='pay']) > .refund-history-dot { background: var(--green); box-shadow: none; }
-.turnfin-refunds .refund-history-title { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
-.turnfin-refunds .refund-history-note { margin: var(--space-2) 0 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); background: var(--fill-2); white-space: pre-wrap; overflow-wrap: anywhere; }
-
-/* Phones: the tiles go compact (the figure beside its name, no hint) so the list starts on the
-   first screen; "Log a refund request" stays a pill; the bar clears the tab bar; facts stack. */
-@media (max-width: 639px) {
-  .turnfin-app .turnfin-refunds ul.refund-tiles.pc-stats { gap: var(--space-2); }
-  .turnfin-app .turnfin-refunds ul.refund-tiles.pc-stats > li > .pc-stat { padding: var(--space-3) var(--space-4); }
-  .turnfin-refunds .refund-tile-hint { display: none; }
-}
+/* Phones: "Log a refund request" stays a pill; the bar clears the tab bar. */
 @media (max-width: 767px) {
   .turnfin-refunds .pc-phead-actions:has(> .refund-new) { width: auto; }
   .turnfin-app .turnfin-refunds .pc-phead-actions > .refund-new.ui-motion-press { flex: none; }
   .turnfin-refunds .refund-submit-bar { bottom: calc(var(--tf-bottom-space) + env(safe-area-inset-bottom)); padding-left: var(--space-4); }
   html:has(.refund-submit-bar) { scroll-padding-bottom: 200px; }
-  .turnfin-refunds .refund-card { padding: var(--space-4) var(--space-5); }
-  .turnfin-refunds .refund-fact { grid-template-columns: minmax(0, 1fr); gap: 2px; }
 }
