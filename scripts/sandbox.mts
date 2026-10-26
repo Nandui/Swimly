@@ -152,6 +152,8 @@ console.log(`[sandbox] Seeded a fictional leisure group (Riverside and Hillview)
 const env = {
   ...process.env,
   DATABASE_URL: mainUrl, DIRECT_URL: mainUrl, DOCS_DATABASE_URL: docsUrl, DOCS_DIRECT_URL: docsUrl,
+  // Each PGlite is one Postgres session: parallel connections would cross their queries.
+  DATABASE_POOL_MAX: "1",
   ...(hrUrl ? { HR_DATABASE_URL: hrUrl, HR_DIRECT_URL: hrUrl } : {}),
   AUTH_SECRET: "sandbox-only-secret-not-for-deployment-0000", AUTH_TRUST_HOST: "true",
   DEV_AUTH_BYPASS: "", NEXT_TELEMETRY_DISABLED: "1",

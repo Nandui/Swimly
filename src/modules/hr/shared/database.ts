@@ -1,6 +1,6 @@
 import 'server-only';
 import { Pool, type PoolClient, type QueryResultRow } from 'pg';
-import { postgresConnectionString } from '@/lib/postgres-connection';
+import { poolMax, postgresConnectionString } from '@/lib/postgres-connection';
 import { hrStorageConfig } from '@/modules/hr/shared/storage-config';
 
 /** The HR database connection. Plain SQL in schema `turnfin_hr`; identity and
@@ -18,7 +18,7 @@ function pool() {
   const config = hrStorageConfig(process.env);
   if (!config) throw new HrUnavailable();
   if (!globalHr.hrPool) {
-    globalHr.hrPool = new Pool({ connectionString: postgresConnectionString(config.runtime), max: 5 });
+    globalHr.hrPool = new Pool({ connectionString: postgresConnectionString(config.runtime), max: poolMax(5) });
     globalHr.hrPool.on('error', () => console.error('[hr] database connection interrupted'));
   }
   return globalHr.hrPool;

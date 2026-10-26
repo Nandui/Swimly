@@ -5,7 +5,7 @@ import { auth } from '@/auth';
 import { DomainError } from '@/modules/docs/shared/domain';
 import type { Database, Sql } from '@/modules/docs/shared/database';
 import { staffDirectory } from '@/modules/docs/shared/staff-directory';
-import { postgresConnectionString } from '@/lib/postgres-connection';
+import { poolMax, postgresConnectionString } from '@/lib/postgres-connection';
 import { docsStorageConfig } from '@/modules/docs/shared/storage-config';
 import { ALL_PERMISSIONS } from '@/lib/staff/permissions';
 
@@ -13,7 +13,7 @@ const globalDocs = globalThis as unknown as { docsPool?: Pool };
 function pool() {
   if (!process.env.DOCS_DATABASE_URL) throw new DomainError('Docs storage is not configured.', 503);
   if (!globalDocs.docsPool) {
-    globalDocs.docsPool = new Pool({ connectionString: postgresConnectionString(docsStorageConfig(process.env).runtime), max: 5 });
+    globalDocs.docsPool = new Pool({ connectionString: postgresConnectionString(docsStorageConfig(process.env).runtime), max: poolMax(5) });
     globalDocs.docsPool.on('error', () => console.error('[docs] database connection interrupted'));
   }
   return globalDocs.docsPool;
