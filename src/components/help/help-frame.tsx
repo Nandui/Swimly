@@ -16,7 +16,7 @@ export function HelpFrame({ scope, home, children }: { scope: HelpScope; home: s
       <header className="tf-top">
         <Link href={helpHref(scope)} className="tf-brand" aria-label="Help centre home"><Image src="/brand/turnfin.png" alt="" width={72} height={72} priority /></Link>
         <span className="text-lg font-semibold">Help centre</span>
-        <div className="tf-bar tf-tools" role="group" aria-label="The way back">
+        <div className="tf-bar tf-tools glass" role="group" aria-label="The way back">
           <Link href={home} className="tf-bar-item"><ChevronLeft aria-hidden="true" /><span className="max-md:sr-only">{back}</span></Link>
         </div>
       </header>

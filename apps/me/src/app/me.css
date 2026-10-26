@@ -34,7 +34,7 @@ body.turnfin-app { min-height: 100dvh; background: var(--pc-canvas); }
    Me only: the single place Me differs from Turnfin. Me has no module rail, so the bottom bar shows
    at every width, capped to the page's 720px column, and clears the home indicator; the page
    scrolls focus targets clear of it. */
-.turnfin-app .tf-bottom { display: flex; left: max(8px, calc(50% - 352px)); right: max(8px, calc(50% - 352px)); bottom: calc(8px + env(safe-area-inset-bottom)); }
+.turnfin-app .tf-bottom { display: flex; left: max(20px, calc(50% - 352px)); right: max(20px, calc(50% - 352px)); bottom: calc(24px + env(safe-area-inset-bottom)); }
 html:has(.tf-bottom) { scroll-padding-bottom: calc(112px + env(safe-area-inset-bottom)); }
 
 

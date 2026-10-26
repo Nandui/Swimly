@@ -56,7 +56,7 @@ export function Frame({ title, children }: { title: string; children: ReactNode 
       <TextSizeEffect />
       <header className="topbar">
         <Brand href="/" />
-        <div className="tf-bar">
+        <div className="tf-bar glass">
           <Button type="button" variant="ghost" className="tf-bar-item" onClick={() => void signOut()} disabled={leaving}><LogOut aria-hidden="true" />{leaving ? "Signing out…" : "Sign out"}</Button>
         </div>
       </header>
@@ -71,7 +71,7 @@ export function Frame({ title, children }: { title: string; children: ReactNode 
         </div>
       ) : null}
       <main className="page" id="main" aria-label={title}>{children}</main>
-      <nav className="tf-bottom" aria-label="Turnfin Me">
+      <nav className="tf-bottom glass" aria-label="Turnfin Me">
         {TABS.map(({ href, label, icon: Icon }) => (
           <Link key={href} href={href} className="tf-bottom-item" aria-current={active(href) ? "page" : undefined}>
             <span className="tf-bottom-icon"><Icon aria-hidden="true" /></span>

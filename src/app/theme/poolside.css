@@ -177,7 +177,7 @@ body.turnfin-app { background: var(--bg); }
 
 /* Type: one bold page title, 600-weight section titles, sentence-case labels (never capitals). */
 .turnfin-app :is(h1, h2, h3, h4) { font-family: var(--font-sans); color: var(--pc-ink); }
-.turnfin-app h1 { font-size: var(--pc-text-page); font-weight: 600; line-height: var(--pc-leading-page); letter-spacing: -0.01em; }
+/* The H1 is Turnfin Glass now (kit.css, The page header). */
 /* No letter-spacing anywhere else: unlayered, so it beats Docs' legacy heading rules. */
 .turnfin-app :is(h2, h3, h4) { letter-spacing: 0; }
 /* Heading defaults sit in the base layer so module rules (e.g. a card title at body size) and
@@ -332,128 +332,7 @@ body.turnfin-app { background: var(--bg); }
   .turnfin-app :is([data-slot='button'], [data-slot='input'], [data-slot='select-trigger'], [data-slot='native-select'], .ui-motion-press).h-11 { height: var(--pc-control-height); }
 }
 
-/* ---------------------------------------------------------------------------------------------
-   The frame (Poolside Clear v2, ModuleShell): a rounded canvas on the outer ground; the fin, the
-   module's page links and the tools along the top; the module bar down the left; a labelled
-   bottom bar on phones and touch screens. Every menu is one "bar": a 4px inset on all sides, its
-   items drawn 36px with a 44px hit area, so a bar is 44px tall like every control. On the canvas
-   a bar is white; inside a panel it is the sunken grey. */
-.turnfin-app .tf-shell { min-height: 100dvh; padding: 24px; background: var(--pc-outer); }
-.turnfin-app .tf-frame { display: flex; flex-direction: column; gap: 24px; min-height: calc(100dvh - 48px); margin: 0 auto; padding: 24px; border-radius: var(--pc-radius-frame); border: 1px solid var(--pc-frame-line); background: var(--pc-canvas); }
-.turnfin-app .tf-top { display: flex; align-items: center; gap: 24px; min-width: 0; }
-.turnfin-app .tf-brand { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: var(--pc-radius-card); }
-.turnfin-app .tf-brand img { display: block; width: 72px; height: 72px; max-width: none; margin: -4px; transform: translateX(3px); }
-.turnfin-app .tf-brand:hover { background: var(--pc-surface); }
-.turnfin-app .tf-body { display: flex; flex: 1; gap: 24px; align-items: flex-start; min-width: 0; }
-.turnfin-app .tf-main { flex: 1 1 auto; min-width: 0; outline: none; }
-
-.turnfin-app .tf-bar { position: relative; display: inline-flex; flex: none; align-items: center; width: max-content; max-width: 100%; padding: 4px; border-radius: 999px; background: var(--pc-surface); overflow-x: auto; scrollbar-width: none; }
-.turnfin-app .tf-pages { position: relative; display: flex; flex: 1 1 0; min-width: 0; }
-/* The frame's page bar never scrolls: links that do not fit wrap out of sight until useBarFit
-   moves them under "More" (the deck's own bar has no More, so this stays in the frame). */
-.turnfin-app .tf-shell .tf-pages > .tf-bar { flex-wrap: wrap; height: 44px; overflow: hidden; }
-/* Until measured (the server render, before "More" exists) the open page's link goes first, so
-   a page that will live under "More" is never the one wrapped out of sight. */
-.turnfin-app .tf-shell .tf-pages > .tf-bar:not([data-measured]) > [aria-current] { order: -1; }
-/* ModuleShell measures every page label here to decide how many fit before "More". */
-.turnfin-app .tf-bar-measure { position: absolute; top: 0; left: 0; display: flex; height: 0; overflow: hidden; visibility: hidden; pointer-events: none; }
-.turnfin-app .tf-tools { margin-left: auto; overflow: visible; }
-.turnfin-app :is(.tf-bar-item, .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger']), .tf-tools > .ui-motion-press) { position: relative; isolation: isolate; display: inline-flex; flex: none; align-items: center; justify-content: center; gap: 6px; width: auto; min-width: 44px; min-height: 44px; height: 44px; margin: -4px 0; padding: 0 16px; border: 0; border-radius: 999px; background: none; box-shadow: none; color: var(--pc-ink); font-size: var(--pc-text-body); font-weight: 600; white-space: nowrap; text-decoration: none; cursor: pointer; }
-.turnfin-app :is(.tf-bar-item, .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger']), .tf-tools > .ui-motion-press)::before { content: ''; position: absolute; inset: 4px 0; z-index: -1; border-radius: 999px; transition: background-color 120ms var(--pc-ease); }
-.turnfin-app :is(.tf-bar-item, .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger']), .tf-tools > .ui-motion-press):hover { background: none; }
-.turnfin-app :is(.tf-bar-item, .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger']), .tf-tools > .ui-motion-press):hover::before { background: var(--pc-surface-sunken); }
-.turnfin-app .tf-bar-item[aria-current] { color: var(--pc-on-primary); }
-/* !important: the generic :hover::before above (0,4,1) would turn the current pill grey. */
-.turnfin-app .tf-bar-item[aria-current]::before { background: var(--accent-btn) !important; }
-/* Dev build "View as": a soft blue pill while another role is being worn. */
-.turnfin-app .tf-tools > .workspace-preview-toggle[data-active='true'] { color: var(--pc-primary-ink); }
-.turnfin-app .tf-tools > .workspace-preview-toggle[data-active='true']::before { background: var(--pc-primary-soft); }
-.turnfin-app .tf-tools > .workspace-preview-toggle[data-active='true']:hover::before { background: var(--pc-primary-soft-hover); }
-.turnfin-app :is(.tf-bar-item, .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger'])):focus-visible { outline-offset: -2px; }
-/* Focus on a filled (current) item: an inset outline would vanish into the blue, so the pill
-   takes a ring with a surface gap. The transparent outline still shows in forced colours. */
-.turnfin-app :is(.tf-bar-item, .tf-rail-item, .tf-bottom-item)[aria-current]:focus-visible { outline: 2px solid transparent; }
-.turnfin-app :is(.tf-bar-item, .tf-rail-item)[aria-current]:focus-visible::before,
-.turnfin-app .tf-bottom-item[aria-current]:focus-visible .tf-bottom-icon { box-shadow: 0 0 0 2px var(--pc-surface), 0 0 0 4px var(--pc-focus); }
-.turnfin-app :is(.tf-bar-item, .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger'])) > svg { width: 16px; height: 16px; }
-.turnfin-app :is(.tf-icon, .tf-tools > [data-size^='icon']) { width: 44px; padding: 0; }
-.turnfin-app .tf-who { padding: 0 10px 0 4px; gap: 4px; }
-.turnfin-app .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger']):not(.tf-who) > span:not([data-slot='avatar']) { max-width: 28ch; overflow: hidden; text-overflow: ellipsis; }
-
-.turnfin-app .tf-rail { position: sticky; top: 24px; display: flex; flex: none; flex-direction: column; align-items: center; gap: 12px; width: 64px; }
-.turnfin-app .tf-rail-group { display: flex; flex-direction: column; align-items: center; padding: 4px; border-radius: 999px; background: var(--pc-surface); }
-.turnfin-app .tf-rail-item { position: relative; isolation: isolate; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin: 0 -4px; border-radius: 999px; color: var(--pc-ink-muted); }
-.turnfin-app .tf-rail-item > svg { width: 20px; height: 20px; }
-.turnfin-app .tf-rail-item::before { content: ''; position: absolute; inset: 4px; z-index: -1; border-radius: 999px; }
-.turnfin-app .tf-rail-item:hover { color: var(--pc-ink); }
-.turnfin-app .tf-rail-item:hover::before { background: var(--pc-surface-sunken); }
-.turnfin-app .tf-rail-item[aria-current] { color: var(--pc-on-primary); }
-.turnfin-app .tf-rail-item[aria-current]::before { background: var(--accent-btn); }
-.turnfin-app .tf-rail-item:focus-visible { outline-offset: -2px; }
-.turnfin-app .tf-rail-label { position: absolute; top: 50%; left: calc(100% + 12px); z-index: 30; padding: 4px 10px; border-radius: 999px; background: var(--pc-ink); color: var(--pc-surface); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; white-space: nowrap; pointer-events: none; opacity: 0; transform: translateY(-50%); transition: opacity 120ms var(--pc-ease); }
-.turnfin-app .tf-rail-item:is(:hover, :focus-visible) .tf-rail-label { opacity: 1; }
-
-.turnfin-app .tf-bottom { position: fixed; right: 8px; bottom: 8px; left: 8px; z-index: 40; display: none; max-width: 480px; margin-inline: auto; padding: 4px; border-radius: 999px; background: var(--pc-surface); box-shadow: var(--pc-shadow-overlay); }
-/* Equal shares, so a long module name ("Swim school") wraps to two centred lines rather than
-   overlapping its neighbours; the items stretch, so they all keep one height. */
-.turnfin-app .tf-bottom-item { display: flex; flex: 1 1 0; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 0; min-height: 56px; padding: 4px 2px; border: 0; border-radius: 999px; background: none; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; text-decoration: none; cursor: pointer; }
-.turnfin-app .tf-bottom-item > span:last-child { max-width: 100%; white-space: normal; text-align: center; text-wrap: balance; overflow-wrap: anywhere; }
-.turnfin-app .tf-bottom-icon { display: flex; align-items: center; justify-content: center; width: 56px; height: 32px; border-radius: 999px; }
-.turnfin-app .tf-bottom-icon > svg { width: 20px; height: 20px; }
-.turnfin-app .tf-bottom-item[aria-current] { color: var(--pc-primary); }
-.turnfin-app .tf-bottom-item[aria-current] .tf-bottom-icon { background: var(--accent-btn); color: var(--pc-on-primary); }
-.turnfin-app .tf-bottom-item:hover .tf-bottom-icon { background: var(--pc-surface-sunken); }
-.turnfin-app .tf-bottom-item[aria-current]:hover .tf-bottom-icon { background: var(--accent-btn); }
-html:has(.tf-shell) { scroll-padding-bottom: 112px; }
-/* What the bottom bar takes from the foot of the viewport, and the one offset for everything that
-   clears it (the frame's padding, the save bar, desk toasts): its 8px edge, its 82px height when
-   a label wraps, and a 16px gap. */
-.turnfin-app { --tf-bottom-space: 106px; }
-
-/* Tablet: page links take their own row, lined up with the page. */
-@media (min-width: 768px) and (max-width: 1099px) {
-  .turnfin-app .tf-shell .tf-top { flex-wrap: wrap; row-gap: 16px; }
-  .turnfin-app .tf-shell .tf-pages { order: 3; flex: 1 1 100%; width: auto; margin-left: 88px; }
-}
-/* Phones, and any touch screen: the labelled bottom bar replaces the module bar, so the page
-   bar lines up with the page instead of past the rail. */
-@media (max-width: 767px), (hover: none) and (pointer: coarse) {
-  .turnfin-app .tf-rail { display: none; }
-  .turnfin-app .tf-bottom { display: flex; }
-  /* Room for the bottom bar, only where there is one (the pool deck has none). */
-  .turnfin-app .tf-shell:has(> .tf-bottom) > .tf-frame { padding-bottom: var(--tf-bottom-space); }
-  .turnfin-app .tf-shell:has(> .tf-bottom) .pc-save-bar { bottom: calc(var(--tf-bottom-space) + env(safe-area-inset-bottom)); }
-  .turnfin-app .tf-pages, .turnfin-app .tf-shell .tf-pages { margin-left: 0; }
-}
-@media (max-width: 767px) {
-  .turnfin-app .tf-shell { padding: 0; }
-  .turnfin-app .tf-frame { min-height: 100dvh; gap: 16px; padding: 16px; border: 0; border-radius: 0; }
-  .turnfin-app .tf-shell:has(> .tf-bottom) > .tf-frame { padding-bottom: var(--tf-bottom-space); }
-  .turnfin-app .tf-top { flex-wrap: wrap; gap: 12px; }
-  .turnfin-app .tf-pages { order: 3; flex: 1 1 100%; width: auto; }
-  .turnfin-app .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger']):not(.tf-who) > span:not([data-slot='avatar']) { display: none; }
-  /* A labelled menu (the working site) becomes a 44px icon button: its name and chevron go. */
-  .turnfin-app .tf-tools > [data-slot='dropdown-menu-trigger']:not(.tf-who):has(> span + svg) { width: 44px; padding: 0; }
-  .turnfin-app .tf-tools > [data-slot='dropdown-menu-trigger']:not(.tf-who) > span + svg { display: none; }
-}
-/* Help's frame has no bottom bar, so it needs no room for one on phones and touch screens. */
-@media (hover: none) and (pointer: coarse) {
-  .turnfin-app .tf-help > .tf-frame { padding-bottom: 24px; }
-}
-@media (max-width: 767px) {
-  .turnfin-app .tf-help > .tf-frame { padding-bottom: 16px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .turnfin-app .tf-rail-label, .turnfin-app :is(.tf-bar-item, .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger']))::before { transition: none; }
-}
-/* Print: only the page itself; the frame's bars, edge and padding go. */
-@media print {
-  .turnfin-app :is(.tf-top, .tf-rail, .tf-bottom) { display: none; }
-  .turnfin-app .tf-shell { padding: 0; background: none; }
-  .turnfin-app .tf-frame { min-height: 0; padding: 0; border: 0; border-radius: 0; background: none; }
-  /* A printed guide keeps its words, not its links back or its tools. */
-  .turnfin-app .tf-help .tf-main a[data-slot='button'] { display: none; }
-}
+/* The frame (ModuleShell, the pool deck and Help) is Turnfin Glass now: src/app/theme/kit.css. */
 
 /* Toasts (sonner, via src/components/ui/toast.tsx): the app's type, a 16px card with the overlay shadow,
    the icon in its status colour and a 44px round close inside on the right. Sonner injects its

@@ -4,6 +4,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.2.0 · 25 October 2026 · A new frame around every app
+
+- On a computer, your apps are now in a glass panel down the left: Home at the top, then every app you use, then Help. The app you are in is highlighted. Your name, role and site are at the bottom: choose them for Appearance, your account, What's new and Sign out.
+- An app's pages are in a glass bar across the top of the page, with the site and other tools on the right. Pages that don't fit are under **More**, as before.
+- On a tablet and on the pool deck, the panel shrinks to just the symbols. Point at one, or move to it with the keyboard, to see its name.
+- On a phone, a glass bar floats at the bottom with Home, the app you are in, and **Apps**, which lists every app and Help.
+- Page titles are bigger and bolder, with the date or details in grey underneath.
+- Turnfin Me on your phone has the same glass bar at the bottom.
+
 ## 2.1.0 · 25 October 2026 · New colours and lettering, the first step of Turnfin's new look
 
 - Turnfin has started moving to its new look. This first step changes the colours and the lettering on every page: a light grey background with white panels, and a true black background in dark mode.

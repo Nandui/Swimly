@@ -288,10 +288,10 @@ Roadmap step 5, in this order. Each part removes the old look it replaces.
    - These tokens go into one theme file in `src/app/theme`, mapped into `src/app/shadcn.css`, in light and dark.
    - The springs, the glass material and the lens filters go into the kit.
    - `poolside.css` and the `--pc-*` tokens go when nothing uses them.
-2. **The kit.**
+2. **The kit** (the material, `GlassRoot` and `Glass`, built 25 October 2026; the other components follow).
    - The components above, in `src/components/ui-kit`, built on the shadcn primitives.
    - The lint rules (AGENTS.md, "Enforcement") follow the new kit: the pointer light is set on a ref by `GlassRoot`, not by a `style` attribute.
-3. **The frame.** `ModuleShell` becomes the sidebar, toolbar and tab bar frame. `PageShell` and `PageHeader` are rebuilt in this design.
+3. **The frame** (built 25 October 2026; the large-title collapse on phones follows). `ModuleShell` becomes the sidebar, toolbar and tab bar frame. `PageShell` and `PageHeader` are rebuilt in this design.
 4. **Home and the app frame,** then each app, one pull request each, checked in the running app at phone, tablet and desktop widths in light and dark.
 5. **Turnfin Me and the Academy booking site,** with their own copies of the theme and kit.
 

@@ -48,9 +48,9 @@ html:has(.refund-submit-bar) { scroll-padding-bottom: 120px; }
   .turnfin-refunds .pc-phead-actions:has(> .refund-new) { width: auto; }
   .turnfin-app .turnfin-refunds .pc-phead-actions > .refund-new.ui-motion-press { flex: none; }
 }
-/* Phones and touch screens: the bar clears the labelled bottom bar (poolside.css, .tf-bottom). */
-@media (max-width: 767px), (hover: none) and (pointer: coarse) {
-  .turnfin-refunds .refund-submit-bar { bottom: 88px; padding-left: 16px; }
+/* Phones: the bar clears the tab bar (kit.css, .tf-bottom and --tf-bottom-space). */
+@media (max-width: 767px) {
+  .turnfin-refunds .refund-submit-bar { bottom: calc(var(--tf-bottom-space) + env(safe-area-inset-bottom)); padding-left: 16px; }
   html:has(.refund-submit-bar) { scroll-padding-bottom: 200px; }
 }
 

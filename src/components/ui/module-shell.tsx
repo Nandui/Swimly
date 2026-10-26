@@ -8,18 +8,20 @@ import { ChevronDown, CircleHelp, House, LayoutGrid, type LucideIcon } from 'luc
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/shadcn/dropdown-menu';
 import { AccountMenu } from '@/components/ui/account-menu';
 import { groupFrameModules, useFrame } from '@/components/ui/frame';
+import { Glass } from '@/components/ui-kit/glass';
 
 /** A page in the bar. The icon shows in the "More" menu; links handed over by a server page
  *  (the home page's) have none, because a component cannot cross to the client. */
 export type ModuleLink = { href: string; label: string; icon?: LucideIcon; active: boolean };
 export type ModuleLinkGroup = { label: string; links: ModuleLink[] };
 
-/** The one frame every module opens in (docs/architecture.md):
- *  the fin and the module's pages along the top, search, site and account on the right;
- *  the person's modules in an icon bar down the left (a labelled bar along the bottom on phones
- *  and touch screens). Links are presentation; every page checks its permission again. The pool
- *  deck uses the same tf-shell/tf-frame with its own top bar and no rail or bottom bar. The
- *  person's modules and the app's extra tools come from the frame context (useFrame). */
+/** The one frame every app opens in (DESIGN.md, The frame and navigation): on desktop the
+ *  floating glass sidebar of the person's apps, with their account at its foot; on tablet the same
+ *  as a rail of symbols; on phones a glass tab bar. Above the page a sticky toolbar holds the
+ *  app's pages as a glass segmented control and the app's tools in a glass group. Links are
+ *  presentation; every page checks its permission again. The pool deck and Help use the same
+ *  tf-shell/tf-frame with their own top bar and no sidebar or tab bar. The person's apps and the
+ *  app's extra tools come from the frame context (useFrame). */
 export function ModuleShell({ module, id, current = id, who, links = [], groups, tools, scopeNote, contentClass = 'module-content', scrollKey = '', children }: {
   /** Display name, e.g. "Training". */
   module: string;
@@ -60,6 +62,7 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
   return (
     <div className={`turnfin-module turnfin-${id} tf-shell`}>
       <a className="skip-link" href={`#${id}-main`}>Skip to content</a>
+      <Sidebar current={railCurrent} name={who.name} />
       <div className="tf-frame">
         <header className="tf-top">
           <Link href="/" className="tf-brand" aria-label="Turnfin home">
@@ -69,12 +72,12 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
           {pages.length > 1 ? (
             <nav ref={navRef} className="tf-pages" aria-label={`${module} pages`}>
               <span className="sr-only">{scopeNote}</span>
-              <div className="tf-bar" data-measured={measured || undefined}>
+              <Glass className="tf-bar" data-measured={measured || undefined}>
                 {pages.slice(0, fit).map((page) => (
                   <Link key={page.href} href={page.href} className="tf-bar-item" aria-current={currentFor(page)}>{page.label}</Link>
                 ))}
                 {fit < pages.length && <PagesMore groups={overflow} currentFor={currentFor} />}
-              </div>
+              </Glass>
               {/* Every label at its natural width, unseen, so the bar can tell how many fit. */}
               <div ref={measureRef} className="tf-bar-measure" aria-hidden="true">
                 {pages.map((page) => <span key={page.href} className="tf-bar-item">{page.label}</span>)}
@@ -82,20 +85,19 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
               </div>
             </nav>
           ) : <span className="sr-only">{scopeNote}</span>}
-          <div className="tf-bar tf-tools" role="group" aria-label="Search, site and account">
+          {/* On desktop the account is at the sidebar's foot, so this group shows only when the
+              app or the frame adds a tool (kit.css). */}
+          <Glass className="tf-bar tf-tools" role="group" aria-label="Search, site and account">
             {tools}
             {frame.tools}
             <AccountMenu name={who.name} />
-          </div>
+          </Glass>
         </header>
-        <div className="tf-body">
-          <ModuleRail current={railCurrent} />
-          <main id={`${id}-main`} tabIndex={-1} className="tf-main">
-            <div className={`tf-content ${contentClass}`}>{children}</div>
-          </main>
-        </div>
+        <main id={`${id}-main`} tabIndex={-1} className="tf-main">
+          <div className={`tf-content ${contentClass}`}>{children}</div>
+        </main>
       </div>
-      <ModuleBottomBar current={railCurrent} />
+      <TabBar current={railCurrent} />
     </div>
   );
 }
@@ -152,64 +154,64 @@ function PagesMore({ groups, currentFor }: { groups: ModuleLinkGroup[]; currentF
   );
 }
 
-/** The person's modules, down the left on a desktop with a mouse, one pill per group
- *  (MODULE_GROUPS). Each icon names itself on hover and on keyboard focus. */
-function ModuleRail({ current }: { current: string }) {
+/** The person's apps (DESIGN.md, Sidebar): the fin to Home, Home, one "Apps" heading and their
+ *  apps in the groups' order, Help, and their account at the foot. Symbols are the fin blue; the
+ *  open app has the glass droplet. On tablet only the symbols show (kit.css): each keeps its name
+ *  for screen readers and shows it on hover and focus. */
+function Sidebar({ current, name }: { current: string; name: string }) {
   const { modules, groups } = useFrame();
+  const apps = groupFrameModules(modules, groups).flatMap((group) => group.modules);
   const item = (key: string, href: string, label: string, Icon: LucideIcon) => (
-    <Link key={key} href={href} className="tf-rail-item" aria-label={label} aria-current={current === key ? 'true' : undefined}>
-      <Icon aria-hidden="true" /><span className="tf-rail-label" aria-hidden="true">{label}</span>
+    <Link key={key} href={href} className="tf-side-item" aria-current={current === key ? 'true' : undefined}>
+      <Icon aria-hidden="true" /><span className="tf-side-label">{label}</span><span className="tf-side-tip" aria-hidden="true">{label}</span>
     </Link>
   );
   return (
-    <nav className="tf-rail" aria-label="Apps">
-      <div className="tf-rail-group">{item('home', '/', 'Home', House)}</div>
-      {groupFrameModules(modules, groups).map((group) => (
-        <div key={group.key} role="group" aria-label={group.label} className="tf-rail-group">{group.modules.map((m) => item(m.id, m.href, m.name, m.icon))}</div>
-      ))}
-      <div className="tf-rail-group">
-        <a href="/help" target="_blank" rel="noopener noreferrer" className="tf-rail-item" aria-label="Help (opens in a new tab)"><CircleHelp aria-hidden="true" /><span className="tf-rail-label" aria-hidden="true">Help</span></a>
+    <Glass as="nav" shape="panel" className="tf-side" aria-label="Apps">
+      <Link href="/" className="tf-side-brand" aria-label="Turnfin home">
+        <Image src="/brand/turnfin.png" alt="" width={72} height={72} priority />
+      </Link>
+      <div className="tf-side-list">
+        {item('home', '/', 'Home', House)}
+        {apps.length > 0 && <p className="tf-side-heading">Apps</p>}
+        {apps.map((m) => item(m.id, m.href, m.name, m.icon))}
+        <a href="/help" target="_blank" rel="noopener noreferrer" className="tf-side-item">
+          <CircleHelp aria-hidden="true" /><span className="tf-side-label">Help<span className="sr-only"> (opens in a new tab)</span></span><span className="tf-side-tip" aria-hidden="true">Help</span>
+        </a>
       </div>
-    </nav>
+      <div className="tf-side-foot"><AccountMenu name={name} layout="sidebar" /></div>
+    </Glass>
   );
 }
 
-/** Phones and touch screens: the modules along the bottom, each with its name, since touch has
- *  no hover. Home, up to three modules (the current one always among them) and More; with no
- *  modules left over, Help takes More's place. */
-function ModuleBottomBar({ current }: { current: string }) {
+/** Phones (DESIGN.md, Tab bar): a glass capsule with Home, the open app and Apps, which lists
+ *  every app under its group, and Help. */
+function TabBar({ current }: { current: string }) {
   const { modules, groups } = useFrame();
-  const first = modules.slice(0, 3);
-  const active = modules.find((m) => m.id === current);
-  const chosen = active && !first.includes(active) ? [...first.slice(0, 2), active] : first;
-  const rest = modules.filter((m) => !chosen.includes(m));
+  const open = modules.find((m) => m.id === current);
   const item = (key: string, href: string, label: string, Icon: LucideIcon) => (
     <Link key={key} href={href} className="tf-bottom-item" aria-current={current === key ? 'true' : undefined}>
       <span className="tf-bottom-icon"><Icon aria-hidden="true" /></span><span>{label}</span>
     </Link>
   );
   return (
-    <nav className="tf-bottom" aria-label="Apps">
+    <Glass as="nav" className="tf-bottom" aria-label="Apps">
       {item('home', '/', 'Home', House)}
-      {chosen.map((m) => item(m.id, m.href, m.name, m.icon))}
-      {rest.length === 0 ? (
-        <a href="/help" target="_blank" rel="noopener noreferrer" className="tf-bottom-item">
-          <span className="tf-bottom-icon"><CircleHelp aria-hidden="true" /></span><span>Help<span className="sr-only"> (opens in a new tab)</span></span>
-        </a>
-      ) : <DropdownMenu>
-        <DropdownMenuTrigger className="tf-bottom-item"><span className="tf-bottom-icon"><LayoutGrid aria-hidden="true" /></span><span>More</span></DropdownMenuTrigger>
+      {open ? item(open.id, open.href, open.name, open.icon) : null}
+      <DropdownMenu>
+        <DropdownMenuTrigger className="tf-bottom-item"><span className="tf-bottom-icon"><LayoutGrid aria-hidden="true" /></span><span>Apps</span></DropdownMenuTrigger>
         <DropdownMenuContent side="top" align="end" className="w-64 max-w-(--pc-overlay-max-width)">
-          {groupFrameModules(rest, groups).map((group) => (
+          {groupFrameModules(modules, groups).map((group) => (
             <DropdownMenuGroup key={group.key}>
               <DropdownMenuLabel className="text-xs font-semibold text-ui-muted-foreground">{group.label}</DropdownMenuLabel>
               {group.modules.map((m) => (
-                <DropdownMenuItem key={m.id} asChild className="min-h-11"><Link href={m.href}><m.icon aria-hidden="true" />{m.name}</Link></DropdownMenuItem>
+                <DropdownMenuItem key={m.id} asChild className="min-h-11"><Link href={m.href} aria-current={current === m.id ? 'true' : undefined}><m.icon aria-hidden="true" />{m.name}</Link></DropdownMenuItem>
               ))}
             </DropdownMenuGroup>
           ))}
           <DropdownMenuItem asChild className="min-h-11"><a href="/help" target="_blank" rel="noopener noreferrer"><CircleHelp aria-hidden="true" />Help<span className="sr-only"> (opens in a new tab)</span></a></DropdownMenuItem>
         </DropdownMenuContent>
-      </DropdownMenu>}
-    </nav>
+      </DropdownMenu>
+    </Glass>
   );
 }

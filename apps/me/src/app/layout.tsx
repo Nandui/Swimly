@@ -2,8 +2,10 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 import "./theme/poolside.css";
+import "./theme/kit.css";
 import "./me.css";
 import { inter } from "./fonts";
+import { GlassRoot } from "@/components/ui-kit/glass";
 
 /** No title here: each page renders its own `<title>` (Frame, sign-in, not-found), so there is
  *  exactly one, and it names the page ("My training · Turnfin Me"). */
@@ -26,5 +28,5 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  return <html lang="en" className={inter.variable}><body className="turnfin-app">{children}</body></html>;
+  return <html lang="en" className={inter.variable}><body className="turnfin-app"><GlassRoot />{children}</body></html>;
 }
