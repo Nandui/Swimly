@@ -11,12 +11,10 @@ const RESULT_WORDS = { met: "Met", "not-yet": "Not yet", na: "Not needed" } as c
 
 function Section({ id, title, hint, children }: { id: string; title: string; hint?: string; children: ReactNode }) {
   return (
-    <section aria-labelledby={id} className="pc-panel break-inside-avoid">
-      <div className="space-y-1">
-        <h2 id={id}>{title}</h2>
-        {hint ? <p className="text-sm text-ui-muted-foreground">{hint}</p> : null}
-      </div>
-      {children}
+    <section aria-labelledby={id} className="flex min-w-0 flex-col break-inside-avoid">
+      <div className="pc-section-head"><h2 id={id}>{title}</h2></div>
+      {hint ? <p className="pc-section-note">{hint}</p> : null}
+      <div className="rec-card">{children}</div>
     </section>
   );
 }
@@ -27,7 +25,7 @@ function Facts({ rows }: { rows: [string, ReactNode][] }) {
     <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
       {rows.map(([label, value]) => (
         <div key={label} className="min-w-0 space-y-1">
-          <dt className="text-xs font-semibold tracking-wide text-ui-muted-foreground uppercase">{label}</dt>
+          <dt className="text-xs font-semibold text-ui-muted-foreground">{label}</dt>
           <dd className="text-sm break-words whitespace-pre-line">{value || "None"}</dd>
         </div>
       ))}
@@ -36,7 +34,7 @@ function Facts({ rows }: { rows: [string, ReactNode][] }) {
 }
 
 function Trail({ rows }: { rows: { id: string; createdAt: Date; actorName: string; summary: string; about: string }[] }) {
-  if (!rows.length) return <p className="text-sm text-ui-muted-foreground">Nothing recorded.</p>;
+  if (!rows.length) return <p className="rec-card text-sm text-ui-muted-foreground">Nothing recorded.</p>;
   return (
     <Table>
       <TableCaption className="sr-only">Every change recorded, oldest first</TableCaption>
@@ -68,7 +66,7 @@ const score = (a: { percent: number | null; correct?: number | null; total?: num
  *  an insurer or after an incident (e-learning phase 7). */
 export function PersonAuditPackView({ data }: { data: PersonAuditPack }) {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-(--space-7)">
       <Section id="pack-who" title="About this record">
         <Facts rows={[
           ["Person", data.person.name], ["Job", data.person.jobTitle ?? ""], ["Sites", data.person.sites],
@@ -156,8 +154,9 @@ export function PersonAuditPackView({ data }: { data: PersonAuditPack }) {
         </Section>
       ) : null}
 
-      <section aria-labelledby="pack-trail" className="pc-panel break-inside-avoid">
-        <div className="space-y-1"><h2 id="pack-trail">Audit trail</h2><p className="text-sm text-ui-muted-foreground">Every change to this person’s training and qualifications, oldest first.</p></div>
+      <section aria-labelledby="pack-trail" className="flex min-w-0 flex-col break-inside-avoid">
+        <div className="pc-section-head"><h2 id="pack-trail">Audit trail</h2></div>
+        <p className="pc-section-note">Every change to this person’s training and qualifications, oldest first.</p>
         <Trail rows={data.trail} />
       </section>
     </div>
@@ -168,7 +167,7 @@ export function PersonAuditPackView({ data }: { data: PersonAuditPack }) {
  *  person the reader covers who was given it, with the version taught and the result. */
 export function CourseAuditPackView({ data }: { data: CourseAuditPack }) {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-(--space-7)">
       <Section id="pack-course" title="About this record">
         <Facts rows={[
           ["Course", data.course.title], ["Made", formatDateTime(data.generatedAt)], ["Made by", data.who.name],
@@ -192,8 +191,9 @@ export function CourseAuditPackView({ data }: { data: CourseAuditPack }) {
         ) : <p className="text-sm text-ui-muted-foreground">Never published.</p>}
       </Section>
 
-      <section aria-labelledby="pack-learners" className="pc-panel break-inside-avoid">
-        <div className="space-y-1"><h2 id="pack-learners">People · {data.learners.length}</h2><p className="text-sm text-ui-muted-foreground">Everyone you cover who was given it, cancelled training included.</p></div>
+      <section aria-labelledby="pack-learners" className="flex min-w-0 flex-col break-inside-avoid">
+        <div className="pc-section-head"><h2 id="pack-learners">People</h2><p>{data.learners.length}</p></div>
+        <p className="pc-section-note">Everyone you cover who was given it, cancelled training included.</p>
         {data.learners.length ? (
           <Table>
             <TableCaption className="sr-only">Each person given this course, the version taught and their result</TableCaption>
@@ -224,11 +224,12 @@ export function CourseAuditPackView({ data }: { data: CourseAuditPack }) {
               ))}
             </TableBody>
           </Table>
-        ) : <p className="text-sm text-ui-muted-foreground">Nobody you cover was given it.</p>}
+        ) : <p className="rec-card text-sm text-ui-muted-foreground">Nobody you cover was given it.</p>}
       </section>
 
-      <section aria-labelledby="pack-trail" className="pc-panel break-inside-avoid">
-        <div className="space-y-1"><h2 id="pack-trail">Audit trail</h2><p className="text-sm text-ui-muted-foreground">Changes to the course and to these people’s training on it, oldest first.</p></div>
+      <section aria-labelledby="pack-trail" className="flex min-w-0 flex-col break-inside-avoid">
+        <div className="pc-section-head"><h2 id="pack-trail">Audit trail</h2></div>
+        <p className="pc-section-note">Changes to the course and to these people’s training on it, oldest first.</p>
         <Trail rows={data.trail} />
       </section>
     </div>

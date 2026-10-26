@@ -122,7 +122,7 @@ html:has(.tf-bottom) { scroll-padding-bottom: calc(112px + env(safe-area-inset-b
 
 /* Richer lessons (Training e-learning phase 3): callouts, tap to reveal, flip cards, step by
    step, knowledge checks, branching scenarios, flashcards, checklists and recordings. */
-.eyebrow { color: var(--pc-primary-ink); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.eyebrow { color: var(--pc-primary-ink); font-weight: 600; }
 .inline-icon { display: inline-block; width: 16px; height: 16px; margin-right: 6px; vertical-align: -3px; }
 .course-cover { display: block; width: 100%; aspect-ratio: 16 / 7; object-fit: cover; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); }
 .course-thumb { flex: none; width: 56px; height: 40px; object-fit: cover; border-radius: 10px; background: var(--pc-surface-sunken); }
@@ -132,7 +132,7 @@ html:has(.tf-bottom) { scroll-padding-bottom: calc(112px + env(safe-area-inset-b
 .callout-box[data-tone="tip"] { border-left-color: var(--pc-success); background: var(--pc-success-soft); }
 .callout-box[data-tone="warning"] { border-left-color: var(--pc-warning); background: var(--pc-warning-soft); }
 .callout-box[data-tone="danger"] { border-left-color: var(--pc-danger); background: var(--pc-danger-soft); }
-.callout-label { margin: 0; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.callout-label { margin: 0; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 700; }
 .reveal { border: 1px solid var(--pc-line-strong); border-radius: var(--pc-radius-card); background: var(--pc-surface); overflow: hidden; }
 .reveal-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 56px; padding: 8px 16px; border: 0; background: none; color: var(--pc-ink); font: inherit; font-weight: 600; text-align: left; cursor: pointer; }
 .reveal-toggle:hover { background: var(--pc-hover); }
@@ -152,7 +152,7 @@ html:has(.tf-bottom) { scroll-padding-bottom: calc(112px + env(safe-area-inset-b
 .stepper-body { min-height: 72px; }
 .stepper-body .step-item > * + * { margin-top: 12px; }
 .knowledge-check { display: flex; flex-direction: column; gap: 16px; padding: 16px; border: 1px solid var(--pc-primary-soft); border-radius: var(--pc-radius-card); background: var(--pc-surface); }
-.knowledge-check-label { display: inline-flex; align-items: center; gap: 6px; margin: 0; color: var(--pc-primary-ink); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.knowledge-check-label { display: inline-flex; align-items: center; gap: 6px; margin: 0; color: var(--pc-primary-ink); font-weight: 700; }
 .knowledge-check-label > svg { width: 16px; height: 16px; }
 .scene-text { font-size: var(--pc-text-reading); line-height: var(--pc-leading-reading); white-space: pre-line; }
 .scene-choice { width: 100%; color: var(--pc-ink); font: inherit; text-align: left; }

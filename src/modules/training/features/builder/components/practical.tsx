@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ClipboardCheck, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { ChoiceRow } from "@/components/ui/choice-row";
 import { Input } from "@/components/ui/input";
@@ -22,14 +22,9 @@ export function PracticalPanel({ courseId, steps: saved, requiresSignoff, canEdi
   const set = (next: ObservationStep[]) => { setSteps(next); setDirty(true); };
   const filled = steps.filter((s) => s.text.trim());
   return (
-    <section className="pc-panel flex flex-col gap-5" aria-labelledby="practical-heading">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="pc-tile-icon"><ClipboardCheck aria-hidden="true" /></span>
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-ui-muted-foreground">Sign-off</p>
-          <h2 id="practical-heading" className="text-lg">Practical checklist</h2>
-        </div>
-      </div>
+    <section className="flex min-w-0 flex-col" aria-labelledby="practical-heading">
+      <div className="pc-section-head"><h2 id="practical-heading">Practical checklist</h2><p>{filled.length} {filled.length === 1 ? "step" : "steps"}</p></div>
+      <div className="rec-card gap-5">
       {!requiresSignoff ? (
         <Notice tone="info" title="This course has no practical sign-off">Turn on “A trainer signs it off in person at the end” in the course settings to use this checklist.</Notice>
       ) : null}
@@ -62,6 +57,7 @@ export function PracticalPanel({ courseId, steps: saved, requiresSignoff, canEdi
           <span className="text-sm text-ui-muted-foreground tabular-nums">{filled.length} {filled.length === 1 ? "step" : "steps"}, {filled.filter((s) => s.critical).length} must be seen. Applies to the next sign-off; no need to publish.</span>
         </div>
       ) : null}
+      </div>
     </section>
   );
 }

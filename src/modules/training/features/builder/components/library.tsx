@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
-import { Check, ClipboardPaste, Copy, CopyPlus, ImageIcon, MessageSquare, Rocket, Send } from "lucide-react";
+import { Check, ClipboardPaste, Copy, CopyPlus, Rocket, Send } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
@@ -147,7 +147,7 @@ export function CopyIntoSection({ courseId, sectionId, sectionTitle, courses }: 
         <div className="flex max-h-(--pc-overlay-max-height) flex-col gap-4 overflow-y-auto">
           {source.sections.map((s) => (
             <fieldset key={s.id} className="flex flex-col gap-2">
-              <legend className="mb-1 text-xs font-semibold uppercase tracking-wide text-ui-muted-foreground">{s.title}</legend>
+              <legend className="mb-1 text-xs font-semibold text-ui-muted-foreground">{s.title}</legend>
               {s.lessons.map((l) => (
                 <ChoiceRow key={l.id} type="checkbox" id={`copy-l-${l.id}`} title={l.title} hint={`${LESSON_KIND_META[l.kind as LessonKind].label} lesson`}
                   checked={lessons.has(l.id)} onCheckedChange={(on) => setLessons((now) => toggle(now, l.id, on === true))} />
@@ -242,14 +242,10 @@ export function CoverPicker({ courseId, coverId, files, onUploaded, canEdit }: {
     finally { setUploading(false); }
   }
   return (
-    <section className="pc-panel flex flex-col gap-4" aria-labelledby="cover-heading">
-      <div className="flex items-center gap-3">
-        <span className="pc-tile-icon"><ImageIcon aria-hidden="true" /></span>
-        <div className="min-w-0 flex-1">
-          <h2 id="cover-heading" className="text-lg">Cover picture</h2>
-          <p className="text-sm text-ui-muted-foreground">Shown on the course in Turnfin Me and the course list. A wide photo of the real place or kit works best.</p>
-        </div>
-      </div>
+    <section className="flex min-w-0 flex-col" aria-labelledby="cover-heading">
+      <div className="pc-section-head"><h2 id="cover-heading">Cover picture</h2></div>
+      <p className="pc-section-note">Shown on the course in Turnfin Me and the course list. A wide photo of the real place or kit works best.</p>
+      <div className="rec-card">
       {/* eslint-disable-next-line @next/next/no-img-element -- a private file served by this app */}
       {coverId ? <img src={fileSrc(coverId)} alt="The course's cover" className="tf-cover" /> : null}
       {canEdit ? (
@@ -265,6 +261,7 @@ export function CoverPicker({ courseId, coverId, files, onUploaded, canEdit }: {
           <FileField label={images.length ? "Or add a new one" : "Add a picture"} description="JPEG, PNG or WebP, up to 4 MB." accept="image/png,image/jpeg,image/webp" pending={uploading || pending} onChange={(event) => upload(event.target.files?.[0])} error={error || undefined} />
         </div>
       ) : null}
+      </div>
     </section>
   );
 }
@@ -289,14 +286,10 @@ export function ReviewComments({ courseId, lessonId, comments, canComment, lesso
   });
   if (!canComment && !comments.length) return null;
   return (
-    <section className="pc-panel flex flex-col gap-4" aria-labelledby={`comments-${lessonId ?? "course"}`}>
-      <div className="flex items-center gap-3">
-        <span className="pc-tile-icon"><MessageSquare aria-hidden="true" /></span>
-        <div className="min-w-0 flex-1">
-          <h2 id={`comments-${lessonId ?? "course"}`} className="text-lg">Review comments</h2>
-          <p className="text-sm text-ui-muted-foreground">{lessonId ? "Notes on this lesson for whoever builds the course. Learners never see them." : "Every open comment on the course. Learners never see them."}</p>
-        </div>
-      </div>
+    <section className="flex min-w-0 flex-col" aria-labelledby={`comments-${lessonId ?? "course"}`}>
+      <div className="pc-section-head"><h2 id={`comments-${lessonId ?? "course"}`}>Review comments</h2>{open.length ? <p>{open.length}</p> : null}</div>
+      <p className="pc-section-note">{lessonId ? "Notes on this lesson for whoever builds the course. Learners never see them." : "Every open comment on the course. Learners never see them."}</p>
+      <div className="rec-card">
       {open.length ? (
         <ol className="pc-rows">
           {open.map((c) => (
@@ -326,6 +319,7 @@ export function ReviewComments({ courseId, lessonId, comments, canComment, lesso
           </CollapsibleContent>
         </Collapsible>
       ) : null}
+      </div>
     </section>
   );
 }

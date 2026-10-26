@@ -4,6 +4,17 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.15.0 · 26 October 2026 · Training in the new look
+
+- **Training** opens with its figures (overdue, awaiting sign-off, qualifications expiring, completed), each naming what it counts above the number. A figure that needs someone has an orange line under it, and a figure of nothing is grey.
+- The search and filters sit on the page above the list, and each list (open training, courses by category, sessions, rules, learning paths, sign-off, work handed in, expiring and missing qualifications) has its own title above it with how many it holds.
+- **A person's training** shows their training, learning paths and sessions on the left, with their qualifications and in-service hours beside them.
+- **A session** shows its details as label and value rows, and its register or booked list under its own title.
+- **Reports** and **course insight** put the figures first, then each table under its title, with **Download for Excel** beside the title. On a laptop the two overdue tables sit one above the other, so no column is cut off.
+- **The course builder** has the outline, the course overview, each lesson, the questions, the final exam, the practical checklist, the cover picture and review comments under their own titles. The open lesson in the outline is soft blue.
+- **Observe a practical** shows each step to watch for as its own card, then the photos and your decision.
+- Small labels across Training and Turnfin Me lessons are in ordinary sentence case instead of capitals.
+
 ## 2.14.1 · 26 October 2026 · Classes side by side, and easier to read
 
 - On **Home** and the **swim school**'s day, classes at the same time sit on rows of their own instead of on top of each other, and a thin line parts one pool from the next.

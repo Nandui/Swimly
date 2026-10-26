@@ -69,24 +69,24 @@ export function ObservePractical({ id, name, title, steps, evidence: savedEviden
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-(--space-7)">
       {last?.some((s) => s.result === "not-yet") ? (
         <Notice tone="info" title="Last time">Not met yet: {last.filter((s) => s.result === "not-yet").map((s) => s.text).join("; ")}.</Notice>
       ) : null}
-      <section className="pc-panel" aria-labelledby="steps-heading">
-        <div className="pc-panel-head">
+      <section className="flex min-w-0 flex-col" aria-labelledby="steps-heading">
+        <div className="pc-section-head">
           <h2 id="steps-heading">Watch for</h2>
-          <span className="text-sm text-ui-muted-foreground tabular-nums" aria-live="polite">{answered} of {steps.length} marked</span>
+          <p aria-live="polite">{answered} of {steps.length} marked</p>
         </div>
         <ol className="flex flex-col gap-3">
           {steps.map((step, i) => {
             const current = marks[step.id];
             return (
-              <li key={step.id} className={cn("flex flex-col gap-3 rounded-card border border-ui-border p-4", current?.result === "not-yet" && "border-ui-destructive")}>
+              <li key={step.id} className={cn("rec-card gap-3", current?.result === "not-yet" && "ring-1 ring-(--red-ink)")}>
                 <div className="flex flex-wrap items-start gap-x-3 gap-y-1">
                   <span className="text-sm font-semibold tabular-nums text-ui-muted-foreground">{i + 1}</span>
                   <p className="min-w-0 flex-1 text-base font-medium" id={`step-${step.id}`}>{step.text}</p>
-                  {step.critical ? <span className="text-xs font-semibold uppercase tracking-wide text-ui-primary">Must be seen</span> : null}
+                  {step.critical ? <span className="text-xs font-semibold text-ui-primary">Must be seen</span> : null}
                 </div>
                 <div className="grid grid-cols-3 gap-2" role="group" aria-labelledby={`step-${step.id}`}>
                   {CHOICES.filter((c) => !(c.result === "na" && step.critical)).map((choice) => {
@@ -111,8 +111,9 @@ export function ObservePractical({ id, name, title, steps, evidence: savedEviden
         </ol>
       </section>
 
-      <section className="pc-panel" aria-labelledby="photos-heading">
-        <div className="pc-panel-head"><h2 id="photos-heading">Photos</h2></div>
+      <section className="flex min-w-0 flex-col" aria-labelledby="photos-heading">
+        <div className="pc-section-head"><h2 id="photos-heading">Photos</h2>{evidence.length ? <p>{evidence.length}</p> : null}</div>
+        <div className="rec-card">
         {evidence.length < 6 ? (
           <FileField label="Take or add a photo" description={`Optional. Kept with ${name}'s training record, up to 6. JPEG, PNG or WebP, up to 4 MB.`}
             accept="image/jpeg,image/png,image/webp" capture="environment" pending={uploading} pendingLabel="Adding…"
@@ -122,7 +123,7 @@ export function ObservePractical({ id, name, title, steps, evidence: savedEviden
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {evidence.map((e) => (
               <li key={e.id}>
-                <a href={`/training/evidence/${e.id}`} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-card border border-ui-border">
+                <a href={`/training/evidence/${e.id}`} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-card">
                   {/* eslint-disable-next-line @next/next/no-img-element -- a private file served by this app */}
                   <img src={`/training/evidence/${e.id}`} alt={`Evidence photo ${e.name}`} loading="lazy" className="aspect-video w-full object-cover" />
                 </a>
@@ -130,10 +131,12 @@ export function ObservePractical({ id, name, title, steps, evidence: savedEviden
             ))}
           </ul>
         ) : null}
+        </div>
       </section>
 
-      <section className="pc-panel" aria-labelledby="decision-heading">
-        <h2 id="decision-heading">Your decision</h2>
+      <section className="flex min-w-0 flex-col" aria-labelledby="decision-heading">
+        <div className="pc-section-head"><h2 id="decision-heading">Your decision</h2></div>
+        <div className="rec-card">
         <Field label="Note for the record" htmlFor="overall-note" optional hint={passes ? "Where and how you checked." : "Anything else to practise, on top of the steps not met yet."}>
           <Textarea id="overall-note" value={overall} onChange={(event) => setOverall(event.target.value)} rows={3} maxLength={1000} />
         </Field>
@@ -148,6 +151,7 @@ export function ObservePractical({ id, name, title, steps, evidence: savedEviden
             onClick={() => finish(() => returnForPractice(id, overall, payload()), "Sent back with what to practise")}>
             <RotateCcw aria-hidden="true" />Send back
           </Button>
+        </div>
         </div>
       </section>
     </div>
