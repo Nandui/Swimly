@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { ArrowDown, Ambulance, Baby, CalendarClock, Check, Eye, FileText, Hospital, Lock, ShieldAlert, UserRound } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Notice } from "@/components/ui-kit/notice";
+import { RecordFact as Fact, RecordFacts, RecordHistory, RecordNext, RecordSection, RecordSteps, type RecordStepState } from "@/components/ui-kit/record";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDate, formatDateTime } from "@/lib/format";
 import type { IncidentDetail } from "@/modules/incidents/features/reports/server/data";
@@ -16,22 +17,11 @@ const daysBetween = (from: string, to: string) => Math.round((Date.parse(`${to}T
 /** A report closed in the same moment it was triaged skipped the investigation. */
 const CLOSED_AT_TRIAGE_MS = 5_000;
 
-type StageState = "done" | "current" | "todo" | "skipped";
-type Stage = { label: string; state: StageState; hint: string };
-
-/** One label and its value, as a row of the card's list (DESIGN.md, Content: rows). */
-function Fact({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="inc-fact">
-      <dt>{label}</dt>
-      <dd>{children}</dd>
-    </div>
-  );
-}
+type Stage = { label: string; state: RecordStepState; hint: string };
 
 /** A level as its tag, or "Not rated yet". */
 function Level({ value }: { value: Severity | null }) {
-  return value ? <Tag meta={SEVERITY_META[value]} /> : <span className="inc-muted">Not rated yet</span>;
+  return value ? <Tag meta={SEVERITY_META[value]} /> : <span className="rec-muted">Not rated yet</span>;
 }
 
 /** Where the report has got to, in the four steps everyone recognises. */
@@ -55,30 +45,34 @@ function stagesOf(r: IncidentDetail["report"], needsSignoff: boolean): Stage[] {
   ];
 }
 
+/** The history dot's tone, by what happened: closed or an action done, sent back or undone. */
+const historyTone = (action: string) => action === "close" || action === "action_done" ? "done" as const
+  : action === "reopen" || action === "action_cancel" || action === "file_remove" ? "warn" as const : undefined;
+
 /** What happens next and whose move it is, from what this person may do, with the four steps
- *  under it. The card is tinted blue while the move is this person's. */
+ *  under it (RecordNext: tinted blue while the move is this person's). */
 function NextStep({ data, stages }: { data: IncidentDetail; stages: Stage[] }) {
   const { report: r, can } = data;
   const site = r.site.name;
   const hsaOpen = r.hsaReportable && r.status !== "closed";
   const left = hsaOpen && r.hsaDueOn ? daysBetween(data.today, r.hsaDueOn) : null;
-  let tone: "act" | "wait" | "done" = "wait";
+  let act = false;
   let title: string;
   let body: string;
   let jump: { href: string; label: string } | null = null;
   let second: { href: string; label: string } | null = null;
   if (r.status === "reported") {
-    if (can.triage) { tone = "act"; title = "Triage this report"; body = "Rate what happened and what could have, answer the HSA questions, then investigate it or close it."; jump = { href: "#inc-triage", label: "Start triage" }; }
+    if (can.triage) { act = true; title = "Triage this report"; body = "Rate what happened and what could have, answer the HSA questions, then investigate it or close it."; jump = { href: "#inc-triage", label: "Start triage" }; }
     else { title = "Waiting for triage"; body = `Someone who triages reports at ${site} will rate it and decide what happens next.`; }
   } else if (r.status === "investigating") {
     if (can.investigate) {
-      tone = "act"; title = "Investigate it"; body = "Take statements, find the root cause and raise the actions that fix it. It closes when no action is open.";
+      act = true; title = "Investigate it"; body = "Take statements, find the root cause and raise the actions that fix it. It closes when no action is open.";
       jump = { href: "#inc-investigation-h", label: "Go to the investigation" };
       if (can.close) second = { href: "#inc-close", label: "Close the report" };
       else if (data.needsSignoff) body += " A manager signs this one off and closes it.";
     } else { title = "Under investigation"; body = `Someone who triages reports at ${site} is finding the cause and what to change. The outcome shows here when it closes.`; }
   } else {
-    tone = "done"; title = "Closed and locked";
+    title = "Closed and locked";
     body = `${r.closedByName ? `Closed by ${r.closedByName}${r.closedAt ? `, ${formatDateTime(r.closedAt)}` : ""}. ` : ""}${can.reopen ? "Reopen it from the top of the page if new facts come in. " : ""}Anyone who reads it can still add to it.`;
   }
   const checklist = r.status === "investigating" && can.seeInvestigation ? [
@@ -87,10 +81,7 @@ function NextStep({ data, stages }: { data: IncidentDetail; stages: Stage[] }) {
     { done: r.actions.length > 0 && data.openActions === 0, label: r.actions.length ? `${data.openActions} of ${r.actions.length} action${r.actions.length === 1 ? "" : "s"} open` : "No actions yet" },
   ] : [];
   return (
-    <section aria-labelledby="inc-next-h" className="inc-card inc-next" data-tone={tone}>
-      <p className="inc-next-label">What happens next</p>
-      <h2 id="inc-next-h" className="inc-next-title">{title}</h2>
-      <p className="inc-muted">{body}</p>
+    <RecordNext act={act} label="What happens next" title={title} body={body}>
       {checklist.length ? (
         <ul className="inc-checklist">
           {checklist.map((c) => (
@@ -117,23 +108,16 @@ function NextStep({ data, stages }: { data: IncidentDetail; stages: Stage[] }) {
           {second ? <Button asChild variant="outline"><a href={second.href}><Lock aria-hidden="true" />{second.label}</a></Button> : null}
         </div>
       ) : null}
-      <ol className="inc-stages" aria-label="Where the report has got to">
-        {stages.map((s) => (
-          <li key={s.label} data-state={s.state} aria-current={s.state === "current" ? "step" : undefined}>
-            <span className="inc-stage-dot" aria-hidden="true">{s.state === "done" ? <Check /> : null}</span>
-            <span className="inc-stage-label">{s.label}</span>
-            <span className="inc-stage-hint">{s.hint}</span>
-          </li>
-        ))}
-      </ol>
-    </section>
+      <RecordSteps steps={stages} label="Where the report has got to" />
+    </RecordNext>
   );
 }
 
-/** One report, laid out as the approved Turnfin Glass canvas lays it out: what happens next (and
- *  where the report has got to) beside the report; the report as cards of label and value rows:
- *  what happened and the account as written, the people, triage; then the working (the forms the
- *  route passes in for this person) and its history. One column on phones, next step first. */
+/** One report as a record page (ui-kit/record.tsx), as the approved canvas lays it out: what
+ *  happens next (and where the report has got to) beside the report; the report as cards of label
+ *  and value rows: what happened and the account as written, the people, triage; then the working
+ *  (the forms the route passes in for this person) and its history. One column on phones, next
+ *  step first. */
 export function ReportView({ data, forms }: { data: IncidentDetail; forms: ReactNode }) {
   const { report: r, reads } = data;
   const actual = (r.severityActual ?? null) as Severity | null;
@@ -147,14 +131,13 @@ export function ReportView({ data, forms }: { data: IncidentDetail; forms: React
         <Notice tone="warning" title="The serious-incident alert did not reach everyone" description={`${[...new Set(failedAlerts.map((n) => n.error).filter(Boolean))].join(" ")} Tell the centre manager directly.`} />
       ) : null}
 
-      <div className="inc-layout">
-        <div className="inc-next-slot"><NextStep data={data} stages={stages} /></div>
+      <div className="rec-layout">
+        <NextStep data={data} stages={stages} />
 
-        <div className="inc-main">
-          <section aria-labelledby="inc-what-h">
-            <div className="pc-section-head"><h2 id="inc-what-h">What happened</h2><p className="inc-kept"><Lock aria-hidden="true" />Kept as written</p></div>
-            <div className="inc-card">
-              <dl className="inc-facts">
+        <div className="rec-main">
+          <RecordSection id="inc-what-h" title="What happened" aside={<p className="inc-kept"><Lock aria-hidden="true" />Kept as written</p>}>
+            <div className="rec-card">
+              <RecordFacts>
                 <Fact label="Kind">{incidentKinds[r.kind as IncidentKind]?.label ?? "Incident"}</Fact>
                 <Fact label="Where">{[r.site.name, r.area].filter(Boolean).join(", ")}</Fact>
                 <Fact label="When"><span className="tabular-nums">{day(r.occurredOn)} at {r.occurredAt}</span></Fact>
@@ -163,22 +146,21 @@ export function ReportView({ data, forms }: { data: IncidentDetail; forms: React
                   <Fact label="Happened"><Level value={actual} /></Fact>
                   <Fact label="Could have"><Level value={potential} /></Fact>
                 </> : null}
-              </dl>
+              </RecordFacts>
               <p className="inc-quote">{r.description}</p>
               {r.immediateAction ? (
-                <div className="inc-well">
+                <div className="rec-well">
                   <h3>Done straight away</h3>
                   <p>{r.immediateAction}</p>
                 </div>
               ) : null}
-              {r.raisedBy ? <p className="inc-muted">Told by <strong>{r.raisedBy}</strong>.</p> : null}
+              {r.raisedBy ? <p className="rec-muted">Told by <strong>{r.raisedBy}</strong>.</p> : null}
             </div>
-          </section>
+          </RecordSection>
 
-          <section aria-labelledby="inc-people-h">
-            <div className="pc-section-head"><h2 id="inc-people-h">People involved</h2><p className="inc-kept"><ShieldAlert aria-hidden="true" />Personal and health details</p></div>
-            <div className="inc-card">
-              {r.people.length === 0 ? <p className="inc-muted">Nobody named.</p> : (
+          <RecordSection id="inc-people-h" title="People involved" aside={<p className="inc-kept"><ShieldAlert aria-hidden="true" />Personal and health details</p>}>
+            <div className="rec-card">
+              {r.people.length === 0 ? <p className="rec-muted">Nobody named.</p> : (
                 <ul className="inc-people">
                   {r.people.map((p, i) => {
                     const treatment = [p.firstAid ? `First aid: ${p.firstAid}${p.firstAidBy ? ` (${p.firstAidBy})` : ""}` : null].filter(Boolean);
@@ -188,10 +170,10 @@ export function ReportView({ data, forms }: { data: IncidentDetail; forms: React
                           <span className="pc-tile-icon" data-tone={p.injured ? "orange" : undefined} aria-hidden="true">{p.ageGroup === "child" ? <Baby /> : <UserRound />}</span>
                           <div className="min-w-0">
                             <h3><span className="sr-only">Person {i + 1}: </span>{p.name || "Not named"}</h3>
-                            <p className="inc-muted">{personTypes[p.type as PersonType]} · {ageGroups[p.ageGroup as AgeGroup]}{p.contact ? ` · ${p.contact}` : ""}</p>
+                            <p className="rec-muted">{personTypes[p.type as PersonType]} · {ageGroups[p.ageGroup as AgeGroup]}{p.contact ? ` · ${p.contact}` : ""}</p>
                           </div>
                         </div>
-                        <dl className="inc-facts">
+                        <RecordFacts>
                           <Fact label="Injury">{p.injured ? [p.injury, p.bodyPart].filter(Boolean).join(", ") || "Hurt or ill, not described" : "Not hurt"}</Fact>
                           {p.injured ? (
                             <Fact label="Treatment">
@@ -204,7 +186,7 @@ export function ReportView({ data, forms }: { data: IncidentDetail; forms: React
                               ) : null}
                             </Fact>
                           ) : null}
-                        </dl>
+                        </RecordFacts>
                       </li>
                     );
                   })}
@@ -219,58 +201,49 @@ export function ReportView({ data, forms }: { data: IncidentDetail; forms: React
                 </div>
               ) : null}
             </div>
-          </section>
+          </RecordSection>
 
           {r.triagedAt ? (
-            <section aria-labelledby="inc-triaged-h">
-              <div className="pc-section-head"><h2 id="inc-triaged-h">Triage</h2></div>
-              <div className="inc-card">
-                <dl className="inc-facts">
+            <RecordSection id="inc-triaged-h" title="Triage">
+              <div className="rec-card">
+                <RecordFacts>
                   <Fact label="HSA">{r.hsaReportable ? `Reportable, due by ${r.hsaDueOn ? day(r.hsaDueOn) : "the deadline"}${r.hsaReference ? `. Reference: ${r.hsaReference}` : ""}` : "Not reportable"}</Fact>
                   {r.parentInformed ? <Fact label="Parent or guardian told">{r.parentInformed}</Fact> : null}
                   {triageAnswerRows({ category: r.category, hasStaff: r.people.some((p) => p.type === "staff") }, r.triageAnswers).map(([label, text]) => <Fact key={label} label={label}>{text}</Fact>)}
-                </dl>
-                <div className="inc-well">
+                </RecordFacts>
+                <div className="rec-well">
                   <h3>Note from {r.triagedByName}</h3>
                   <p>{r.triageNote}</p>
                 </div>
                 {r.closedAt && r.closeNote && r.closeNote !== r.triageNote ? (
-                  <div className="inc-well" data-tone="green">
+                  <div className="rec-well" data-tone="green">
                     <h3>Closed by {r.closedByName}, {formatDateTime(r.closedAt)}</h3>
                     <p>{r.closeNote}</p>
                   </div>
                 ) : null}
               </div>
-            </section>
+            </RecordSection>
           ) : null}
 
           <div className="inc-forms">{forms}</div>
         </div>
 
-        <div className="inc-side">
-          <section aria-labelledby="inc-history-h">
-            <div className="pc-section-head"><h2 id="inc-history-h">History</h2></div>
-            <ol className="inc-card inc-history">
-              {r.events.map((e) => (
-                <li key={e.id} data-action={e.action}>
-                  <span className="inc-history-dot" aria-hidden="true" />
-                  <div className="min-w-0">
-                    <p className="inc-history-title">{incidentActions[e.action as keyof typeof incidentActions] ?? e.action}</p>
-                    <p className="inc-muted">{e.actorName} · {formatDateTime(e.createdAt)}</p>
-                    {e.note && (OPEN_NOTES.has(e.action) || data.can.seeInvestigation) && e.action !== "triage" && e.action !== "close" ? <p className="inc-history-note">{e.note}</p> : null}
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </section>
+        <div className="rec-side">
+          <RecordSection id="inc-history-h" title="History">
+            <RecordHistory items={r.events.map((e) => ({
+              key: e.id, tone: historyTone(e.action),
+              title: incidentActions[e.action as keyof typeof incidentActions] ?? e.action,
+              meta: `${e.actorName} · ${formatDateTime(e.createdAt)}`,
+              note: e.note && (OPEN_NOTES.has(e.action) || data.can.seeInvestigation) && e.action !== "triage" && e.action !== "close" ? e.note : null,
+            }))} />
+          </RecordSection>
 
           {reads.length ? (
-            <section aria-labelledby="inc-reads-h">
-              <div className="pc-section-head"><h2 id="inc-reads-h">Who opened the injury details</h2></div>
-              <ul className="inc-card inc-reads">
-                {reads.map((x) => <li key={x.id}><FileText aria-hidden="true" /><span>{x.actorName} <span className="inc-muted">· {formatDateTime(x.createdAt)}</span></span></li>)}
+            <RecordSection id="inc-reads-h" title="Who opened the injury details">
+              <ul className="rec-card inc-reads">
+                {reads.map((x) => <li key={x.id}><FileText aria-hidden="true" /><span>{x.actorName} <span className="rec-muted">· {formatDateTime(x.createdAt)}</span></span></li>)}
               </ul>
-            </section>
+            </RecordSection>
           ) : null}
         </div>
       </div>

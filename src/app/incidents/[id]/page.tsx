@@ -26,7 +26,7 @@ export default async function IncidentPage({ params }: { params: Promise<{ id: s
   const [footage, wellbeing] = await Promise.all([footageOnReport(r.id), wellbeingOnReport(r.id)]);
   return (
     <PageShell spacing="roomy" header={<PageHeader title={incidentCategories[r.category as keyof typeof incidentCategories]?.label ?? "Incident report"} back={{ href: "/incidents", label: "Incidents" }}
-        eyebrow={<p className="inc-head"><Tag meta={incidentStatuses[r.status]} />{r.serious ? <Tag meta={seriousMeta} /> : null}
+        eyebrow={<p className="rec-head"><Tag meta={incidentStatuses[r.status]} />{r.serious ? <Tag meta={seriousMeta} /> : null}
           <span className="tabular-nums">{[incidentNumber(r.number), incidentKinds[r.kind as keyof typeof incidentKinds]?.label].filter(Boolean).join(" · ")}</span></p>}
         description={`Reported by ${r.reporterName}, ${formatDateTime(r.createdAt)} · ${[r.site.name, r.area].filter(Boolean).join(", ")}`}
         actions={<span className="flex flex-wrap gap-2">
