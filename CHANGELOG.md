@@ -4,6 +4,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.19.0 · 26 October 2026 · Admin in the new look
+
+- **Staff**, **Roles**, **Sites**, **Areas**, **Apps**, **Positions**, **Departments**, **Qualifications**, **Activities**, **Activity** and **Work devices** show their lists as one card each, with the titles and the line on what they hold above them instead of inside a frame.
+- **Find a person** and its filters sit on the page above the staff list.
+- **A person** in Admin shows their role, how they sign in and where they work under **Role and sites**, with **Change role** and **Change sites** beside the title. On a phone the buttons move under the title rather than squeezing it.
+
 ## 2.18.0 · 26 October 2026 · Analytics in the new look
 
 - **Analytics** switches between **Business**, **Reception** and **Pool deck** with the same grey switch as the rest of Turnfin; the chosen dashboard is the white one.

@@ -90,7 +90,7 @@ export default async function StaffPage(props: PageProps<"/staff">) {
   const filtering = filtersChosen(filters);
 
   return (
-    <PageShell header={<PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         title="Staff"
         description="Who can sign in, and what each of them is allowed to change."
         actions={
@@ -111,11 +111,11 @@ export default async function StaffPage(props: PageProps<"/staff">) {
       ) : null}
 
       {waiting.length > 0 ? (
-        <section className="pc-panel" aria-labelledby="staff-waiting">
-          <div className="pc-panel-head">
-            <h2 id="staff-waiting" className="text-lg font-semibold">Waiting for a role</h2>
+        <section className="flex min-w-0 flex-col" aria-labelledby="staff-waiting">
+          <div className="pc-section-head">
+            <h2 id="staff-waiting">Waiting for a role</h2>
           </div>
-          <p className="text-sm text-ui-muted-foreground">
+          <p className="pc-section-note">
             They signed in with their work Google account for the first time, so their account was made for them.
             They can&apos;t open anything until you give them a role with the pencil. If they shouldn&apos;t be here, deactivate them.
           </p>
@@ -139,15 +139,15 @@ export default async function StaffPage(props: PageProps<"/staff">) {
         />
       ) : active.length > 0 ? (
         filtering ? (
-          <section className="pc-panel" aria-labelledby="staff-can-sign-in">
-            <div className="pc-panel-head">
-              <h2 id="staff-can-sign-in" className="text-lg font-semibold">Can sign in</h2>
+          <section className="flex min-w-0 flex-col" aria-labelledby="staff-can-sign-in">
+            <div className="pc-section-head">
+              <h2 id="staff-can-sign-in">Can sign in</h2>
             </div>
             <PeopleTable people={active} roles={roles} currentUserId={session.user.id} personHref={personHref} google={google} />
           </section>
         ) : (
-          <section className="pc-panel" aria-label="Staff">
-            <p className="text-sm text-ui-muted-foreground">
+          <section className="flex min-w-0 flex-col" aria-label="Staff">
+            <p className="pc-section-note">
               {plural(allActive.length, "person", "people")} can sign in, across {plural(roles.length, "role")}.{" "}
               {keyholders} of them can manage accounts. {google
                 ? "People sign in with their work Google account; a first sign-in makes their account, and you give them a role."
@@ -159,11 +159,11 @@ export default async function StaffPage(props: PageProps<"/staff">) {
       ) : null}
 
       {inactive.length > 0 ? (
-        <section className="pc-panel" aria-labelledby="staff-deactivated">
-          <div className="pc-panel-head">
-            <h2 id="staff-deactivated" className="text-lg font-semibold">Deactivated</h2>
+        <section className="flex min-w-0 flex-col" aria-labelledby="staff-deactivated">
+          <div className="pc-section-head">
+            <h2 id="staff-deactivated">Deactivated</h2>
           </div>
-          <p className="text-sm text-ui-muted-foreground">
+          <p className="pc-section-note">
             They cannot sign in. Everything they recorded is still readable.
           </p>
           <PeopleTable

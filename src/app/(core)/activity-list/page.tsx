@@ -23,8 +23,8 @@ export default async function ActivityListPage() {
       {types.length === 0 ? (
         <EmptyState icon="calendarDays" title="No activities yet" hint={departments.length ? "Add the kinds of work the rota plans, such as Lifeguarding, Teaching and Reception." : "Add departments first: every activity belongs to one."} />
       ) : (
-        <section aria-label="Activities" className="pc-panel">
-          <ul className="pc-rows">
+        <section aria-label="Activities" className="flex min-w-0 flex-col">
+          <ul className="pc-list">
             {types.map((t) => {
               const Icon = activityIcon(t.icon);
               return (
