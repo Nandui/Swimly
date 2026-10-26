@@ -192,7 +192,7 @@ body.turnfin-app { background: var(--bg); }
 .turnfin-docs .workspace-page-content { padding: 32px clamp(16px, 3vw, 48px); }
 /* "Skip to content", the one skip link: off-screen until it has keyboard focus, then a 44px
    pill above the frame and the bottom bar (z-index 40). */
-.turnfin-app .skip-link { position: fixed; top: 16px; left: 16px; z-index: 60; transform: translateY(calc(-100% - 32px)); display: inline-flex; align-items: center; justify-content: center; min-height: var(--pc-control-height); padding: 0 var(--pc-control-pad); border-radius: var(--pc-radius-control); background: var(--pc-primary); color: var(--pc-on-primary); font-weight: 600; text-decoration: none; }
+.turnfin-app .skip-link { position: fixed; top: 16px; left: 16px; z-index: 60; transform: translateY(calc(-100% - 32px)); display: inline-flex; align-items: center; justify-content: center; min-height: var(--pc-control-height); padding: 0 var(--pc-control-pad); border-radius: var(--pc-radius-control); background: var(--accent-btn); color: var(--pc-on-primary); font-weight: 600; text-decoration: none; }
 .turnfin-app .skip-link:focus-visible { transform: none; }
 @media print { .turnfin-app .skip-link { display: none; } }
 

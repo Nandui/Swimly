@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import Link from "next/link";
 import { Button } from "@/components/shadcn/button";
 import { leftOf, stretchOf } from "@/components/ui-kit/scale";
@@ -27,7 +28,8 @@ export type DayTimelineBlock = {
  *  caller places it in a card with its title and decides every word; the kit only draws. Times are
  *  minutes after midnight, `from` to `to`; `now` outside that range draws no line. With
  *  `onSelect` (a client caller) every block is a button that hands back its key, for an
- *  Inspector; `selected` rings the one that is open. */
+ *  Inspector; `selected` rings the one that is open. Blocks that overlap in time take rows of their
+ *  own within their lane, as Calendar stacks them, so no two are ever drawn over each other. */
 export function DayTimeline({ from, to, now, nowLabel, hours, lanes, blocks, label, onSelect, selected = null }: {
   from: number;
   to: number;
@@ -45,6 +47,20 @@ export function DayTimeline({ from, to, now, nowLabel, hours, lanes, blocks, lab
   const span = Math.max(1, to - from);
   const at = (minutes: number) => (minutes - from) / span;
   const showNow = now >= from && now <= to;
+  const block = (b: DayTimelineBlock) => {
+    const place = stretchOf(at(Math.max(b.start, from)), at(Math.min(b.end, to)));
+    const body = <><span className="day-tl-name">{b.label}</span>{b.sub ? <span className="day-tl-sub">{b.sub}</span> : null}</>;
+    return (
+      <span key={b.key} role="listitem" className="contents">
+        {onSelect
+          ? <Button type="button" variant="ghost" className={`day-tl-block ${place}`} data-kind={b.kind} aria-label={b.ariaLabel}
+              aria-haspopup="dialog" aria-expanded={selected === b.key} onClick={() => onSelect(b.key)}>{body}</Button>
+          : b.href
+          ? <Link href={b.href} className={`day-tl-block ${place}`} data-kind={b.kind} aria-label={b.ariaLabel}>{body}</Link>
+          : <span className={`day-tl-block ${place}`} data-kind={b.kind} aria-label={b.ariaLabel} role="img">{body}</span>}
+      </span>
+    );
+  };
   return (
     <div role="group" aria-label={label} className="day-tl">
       <span aria-hidden="true" className="day-tl-corner" />
@@ -54,31 +70,28 @@ export function DayTimeline({ from, to, now, nowLabel, hours, lanes, blocks, lab
         ))}
         {showNow ? <span className={`day-tl-pill ${leftOf(at(now))}`}>{nowLabel}</span> : null}
       </div>
-      <div aria-hidden="true" className="day-tl-labels">
-        {lanes.map((lane) => <span key={lane.key} className="day-tl-label">{lane.label}</span>)}
-      </div>
-      <div className="day-tl-lanes">
-        {hours.slice(1, -1).map((hour) => <span key={hour.at} aria-hidden="true" className={`day-tl-line ${leftOf(at(hour.at))}`} />)}
-        {lanes.map((lane) => (
-          <div key={lane.key} role="list" aria-label={lane.label} className="day-tl-lane">
-            {blocks.filter((block) => block.lane === lane.key).map((block) => {
-              const place = stretchOf(at(Math.max(block.start, from)), at(Math.min(block.end, to)));
-              const body = <>{block.label}{block.sub ? <span>{block.sub}</span> : null}</>;
-              return (
-                <span key={block.key} role="listitem" className="contents">
-                  {onSelect
-                    ? <Button type="button" variant="ghost" className={`day-tl-block ${place}`} data-kind={block.kind} aria-label={block.ariaLabel}
-                        aria-haspopup="dialog" aria-expanded={selected === block.key} onClick={() => onSelect(block.key)}>{body}</Button>
-                    : block.href
-                    ? <Link href={block.href} className={`day-tl-block ${place}`} data-kind={block.kind} aria-label={block.ariaLabel}>{body}</Link>
-                    : <span className={`day-tl-block ${place}`} data-kind={block.kind} aria-label={block.ariaLabel} role="img">{body}</span>}
-                </span>
-              );
-            })}
+      {lanes.map((lane) => (
+        <Fragment key={lane.key}>
+          <span aria-hidden="true" className="day-tl-label">{lane.label}</span>
+          <div role="list" aria-label={lane.label} className="day-tl-lane">
+            {hours.slice(1, -1).map((hour) => <span key={hour.at} aria-hidden="true" className={`day-tl-line ${leftOf(at(hour.at))}`} />)}
+            {rowsOf(blocks.filter((b) => b.lane === lane.key)).map((row, index) => <div key={index} className="day-tl-row">{row.map(block)}</div>)}
+            {showNow ? <span aria-hidden="true" className={`day-tl-now ${leftOf(at(now))}`} /> : null}
           </div>
-        ))}
-        {showNow ? <span aria-hidden="true" className={`day-tl-now ${leftOf(at(now))}`} /> : null}
-      </div>
+        </Fragment>
+      ))}
     </div>
   );
+}
+
+/** A lane's blocks on as few rows as hold them without overlap: each goes on the first row that is
+ *  free by its start. An empty lane keeps one row. */
+export function rowsOf(blocks: DayTimelineBlock[]): DayTimelineBlock[][] {
+  const rows: DayTimelineBlock[][] = [];
+  for (const b of [...blocks].sort((x, y) => x.start - y.start || x.end - y.end)) {
+    const row = rows.find((r) => r[r.length - 1].end <= b.start);
+    if (row) row.push(b);
+    else rows.push([b]);
+  }
+  return rows.length ? rows : [[]];
 }

@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.14.1 · 26 October 2026 · Classes side by side, and easier to read
+
+- On **Home** and the **swim school**'s day, classes at the same time sit on rows of their own instead of on top of each other, and a thin line parts one pool from the next.
+- In dark mode, links and the blue words on grey buttons (**Find cover**, **Next**, **More filters**) are a little lighter, so they read clearly on the dark cards.
+- The red, orange and green words on tags such as **overdue** and **due within a day** are a touch darker in light mode, so they read clearly on the grey page too.
+- A figure of nothing, such as **0 refunded**, is a readable grey instead of a faint one.
+- In **Analytics**, the chosen view, the date range and the busiest squares of the heat map read clearly in dark mode.
+
 ## 2.14.0 · 26 October 2026 · Stock in the new look
 
 - **Stock counts** has its open and submitted counts under their own titles, with how many beside each. A count's square is orange while it is still being counted and green once submitted.
