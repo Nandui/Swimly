@@ -310,8 +310,6 @@ body.turnfin-app { background: var(--bg); }
 .turnfin-app label.pc-row > :is([data-slot='checkbox'], [data-slot='radio-group-item']) { margin-top: 2px; }
 .turnfin-app label.pc-row:has(:focus-visible) { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
 .turnfin-app label.pc-row:has(:disabled) { cursor: not-allowed; color: var(--pc-ink-muted); }
-.turnfin-app .pc-tile-icon { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary); }
-.turnfin-app .pc-tile-icon > svg { width: 20px; height: 20px; }
 /* Figure tiles. Inside a panel: two per row, 16px tiles with a 1px line (V2System .stats). On the
    canvas: borderless white 24px tiles that fill the row (V2Refunds, TROverview, SSAnalytics).
    A tile that filters shows a soft fill on hover and a 2px blue edge when open (aria-current). */
