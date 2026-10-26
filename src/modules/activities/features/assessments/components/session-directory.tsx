@@ -30,7 +30,7 @@ export function SessionDirectory({ sessions, today, setup = false, manage, view,
       title={setup ? "Assessment setup" : view === "past" ? "Past assessments" : "Upcoming assessments"}
       description={setup ? "Create sessions and manage their dates, places, assessors and parent booking settings" : view === "past" ? "Look back at earlier sessions, their swimmers and outcomes" : "See what is running at this site, open the swimmer list and record assessment outcomes"}
       actions={setup ? createAction : manage ? <Button asChild variant="outline"><Link href="/assessments/setup"><Settings2 aria-hidden="true" />Assessment setup</Link></Button> : undefined} />}>
-    <section className="pc-panel" aria-label="Assessment sessions">
+    <section className="flex min-w-0 flex-col gap-(--space-5)" aria-label="Assessment sessions">
       <div className="min-w-0 flex flex-wrap items-center justify-between gap-3">
         <SegmentedLinks label="Session dates" items={(["upcoming", "past", ...(setup ? ["cancelled"] : [])] as SessionView[]).map(item => ({
           href: item === "upcoming" ? base : `${base}?view=${item}`, label: item === "upcoming" ? "Today and upcoming" : item === "past" ? "Past sessions" : "Cancelled", current: view === item }))} />

@@ -1,5 +1,5 @@
-/* shadcn Item provides the interaction and poolside.css draws each row (line, radius, 16px
-   inset, hover); this grid only keeps every record's columns aligned with the header. */
+/* shadcn Item provides the interaction and the kit draws the list as one card of rows; this grid
+   only keeps every record's columns aligned with the header. */
 .directory {
   display: flex;
   flex-direction: column;
@@ -13,17 +13,17 @@
   column-gap: calc(var(--spacing) * 5);
   align-items: center;
 }
-/* The rows' 1px line plus their 16px inset, so headers sit over their cells. */
+/* The list's 10px inset plus each row's 10px, so headers sit over their cells. */
 .columns {
-  padding: 4px 17px 0;
-  color: var(--pc-ink-muted);
-  font-size: var(--pc-text-caption);
-  line-height: var(--pc-leading-caption);
+  padding: 4px 20px 0;
+  color: var(--label-2);
+  font-size: 12px;
+  line-height: 16px;
   font-weight: 600;
 }
 .row {
   text-decoration: none;
-  color: var(--pc-ink);
+  color: var(--label);
 }
 .person {
   display: flex;
@@ -39,8 +39,8 @@
 }
 .name {
   width: auto;
-  font-size: var(--pc-text-body);
-  line-height: var(--pc-leading-body);
+  font-size: inherit;
+  line-height: inherit;
   font-weight: 600;
 }
 .placement + .placement {
@@ -48,12 +48,12 @@
 }
 .programme {
   display: block;
-  color: var(--pc-ink-muted);
-  font-size: var(--pc-text-caption);
-  line-height: var(--pc-leading-caption);
+  color: var(--label-2);
+  font-size: 12px;
+  line-height: 16px;
 }
 .muted {
-  color: var(--pc-ink-muted);
+  color: var(--label-2);
 }
 .site {
   display: none;
@@ -61,7 +61,7 @@
 .arrow {
   width: calc(var(--spacing) * 4);
   height: calc(var(--spacing) * 4);
-  color: var(--pc-ink-muted);
+  color: var(--label-2);
 }
 /* The site column needs room beside the avatar and name: from 1024px. */
 @media (min-width: 64rem) {

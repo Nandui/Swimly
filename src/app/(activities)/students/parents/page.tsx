@@ -10,8 +10,9 @@ export default async function ParentAccountsPage() {
   await screenPage("students", "parents.manage");
   return <PageShell className="tf-content" header={<PageHeader back={{ href: "/students", label: "Swimmers" }} title="Parent accounts" description="Review family requests and manage access to the parent app" />}>
     <ParentAccessRequests />
-    <section className="pc-panel" aria-labelledby="find-parent-heading">
-      <div className="min-w-0"><h2 id="find-parent-heading">Find a parent account</h2><p className="pc-row-hint">Enter the full address the parent uses to sign in to the parent app.</p></div>
+    <section className="flex min-w-0 flex-col" aria-labelledby="find-parent-heading">
+      <div className="pc-section-head"><h2 id="find-parent-heading">Find a parent account</h2></div>
+      <p className="pc-section-note">Enter the full address the parent uses to sign in to the parent app.</p>
       <ParentAccounts />
     </section>
   </PageShell>;

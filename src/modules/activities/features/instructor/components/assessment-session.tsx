@@ -33,13 +33,13 @@ export function InstructorAssessmentSession({ session, backHref }: { session: Se
           <span><span className="sr-only">Session notes: </span>{session.notes}</span>
         </p>
       ) : null}
-      <section aria-labelledby="assessment-booked" className="pc-panel">
-        <div className="pc-panel-head"><h2 id="assessment-booked">Booked swimmers</h2></div>
-        {booked.length ? <AssessmentBookings bookings={booked} session={session} /> : <EmptyState compact title="No swimmers booked" hint="Nobody is booked on this assessment yet." />}
+      <section aria-labelledby="assessment-booked" className="flex min-w-0 flex-col">
+        <div className="pc-section-head"><h2 id="assessment-booked">Booked swimmers</h2><p>{booked.length}</p></div>
+        {booked.length ? <AssessmentBookings bookings={booked} session={session} /> : <EmptyState title="No swimmers booked" hint="Nobody is booked on this assessment yet." />}
       </section>
       {notComing.length ? (
-        <section aria-labelledby="assessment-not-coming" className="pc-panel">
-          <div className="pc-panel-head"><h2 id="assessment-not-coming">Not coming</h2></div>
+        <section aria-labelledby="assessment-not-coming" className="flex min-w-0 flex-col">
+          <div className="pc-section-head"><h2 id="assessment-not-coming">Not coming</h2><p>{notComing.length}</p></div>
           <AssessmentBookings bookings={notComing} session={session} />
         </section>
       ) : null}
@@ -48,7 +48,7 @@ export function InstructorAssessmentSession({ session, backHref }: { session: Se
 }
 
 function AssessmentBookings({ bookings, session }: { bookings: BookingRow[]; session: SessionDetail }) {
-  return <ul className="pc-rows">{bookings.map(booking => {
+  return <ul className="pc-list">{bookings.map(booking => {
     const meta = BOOKING_STATUS_META[booking.status];
     const about = [
       booking.student.dateOfBirth ? `Age ${ageLabel(booking.student.dateOfBirth)}` : "Age not recorded",

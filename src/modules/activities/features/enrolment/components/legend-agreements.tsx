@@ -49,7 +49,7 @@ export function LegendAgreements({ result, canConfirm, profiles, classes }: {
     };
   });
   return <PageShell spacing="roomy" header={<PageHeader title="Legend agreements" description={`${siteName} · Update the billing agreement in Legend, then confirm it here.`} actions={matchList} />}>
-    <section className="pc-panel" aria-label="Agreements">
+    <section className="flex min-w-0 flex-col gap-(--space-5)" aria-label="Agreements">
       <div className="min-w-0 flex flex-wrap items-end gap-3">
         <Form action="/legend-agreements" className="min-w-0 grow basis-field md:max-w-md" role="search" aria-label="Legend agreements">
           {view === "done" ? <input type="hidden" name="view" value="done" /> : null}
@@ -79,12 +79,12 @@ export function LegendAgreements({ result, canConfirm, profiles, classes }: {
           </TableRow>)}</TableBody>
         </Table>
         {/* Phones: closed rows with the action at the end. */}
-        <ul className="pc-rows pc-only-narrow" aria-label={`${view === "done" ? "Confirmed" : "Outstanding"} Legend agreements at ${siteName}`}>
+        <div className="pc-only-narrow flex-col"><ul className="pc-list" aria-label={`${view === "done" ? "Confirmed" : "Outstanding"} Legend agreements at ${siteName}`}>
           {rows.map(({ row, who, classInfo, status, action }) => <li key={row.id} className="pc-row">
             <div className="pc-row-body">{who}{classInfo}<div className="mt-2">{status}</div></div>
             {action ? <div className="pc-row-trail">{action}</div> : null}
           </li>)}
-        </ul>
+        </ul></div>
       </> : <EmptyState icon="clipboardCheck" title={q ? "No matching agreements" : view === "done" ? "No agreements confirmed yet" : "No outstanding agreements"}
         hint={q ? "Try another name or member number." : view === "done" ? "Confirm an agreement after updating it in Legend." : "All recorded active class places at this site have been confirmed."} />}
       <p className="text-xs text-ui-muted-foreground">Active enrolments only, one check per class place. “Needs checking” means no confirmation has been recorded yet.</p>

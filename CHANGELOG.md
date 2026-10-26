@@ -4,6 +4,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.16.0 · 26 October 2026 · The swim school in the new look
+
+- **Swimmers**, **Classes**, **Duty manager**, **Cancelled classes**, **Assessments**, **Awaiting enrolment**, **Legend agreements** and **Programmes** have their search, filters and views on the page, with the list as one card under them.
+- **A swimmer's profile** has every section's title above its card: at a glance, their journey, competencies, attendance, assessments, details and parent access. Their details read as label and value rows, and each chapter of their journey is a plain card that opens in place.
+- **A class** shows its details as label and value rows, then the enrolled swimmers and the waitlist under their own titles with how many are in each.
+- **Duty manager**, **Cancelled classes** and the **pool deck** show a class's time at the start of its row, with **On now** or **Finished** beside its name instead of a coloured block.
+- **Schedule** shows the week like Rota: the chosen day dark and today's date in red. The booking sheet is one card; the slot running now is soft blue and says **On now**, and classes are drawn like the day on Home.
+- **Swimming together**, **parent access requests**, **parent updates** and **assessment setup** take their titles above their cards too.
+
 ## 2.15.0 · 26 October 2026 · Training in the new look
 
 - **Training** opens with its figures (overdue, awaiting sign-off, qualifications expiring, completed), each naming what it counts above the number. A figure that needs someone has an orange line under it, and a figure of nothing is grey.

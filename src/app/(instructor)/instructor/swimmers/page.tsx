@@ -25,7 +25,7 @@ export default async function DeckSwimmersPage({ searchParams }: { searchParams:
         title="Swimmers at this site"
         description="Find a swimmer by name to see their level and class. Medical notes show for swimmers in classes you teach or are covering today"
       />}>
-      <section className="pc-panel" aria-label="Find a swimmer">
+      <section className="flex min-w-0 flex-col gap-(--space-5)" aria-label="Find a swimmer">
         {/* An exact lookup by name (DeckSwimmers), so it keeps its visible Find button. */}
         <form className="flex flex-wrap items-end gap-3" role="search" action="/instructor/swimmers">
           <SearchField id="deck-swimmer-search" label="Find a swimmer" defaultValue={q} placeholder="First or last name" className="max-w-md flex-1 basis-64" />
@@ -38,7 +38,7 @@ export default async function DeckSwimmersPage({ searchParams }: { searchParams:
         ) : (
           <>
             <p className="pc-row-hint">{plural(results.length, "swimmer")} {results.length === 1 ? "matches" : "match"} “{query}”</p>
-            <ul className="pc-rows" aria-label="Matching swimmers">
+            <ul className="pc-list" aria-label="Matching swimmers">
               {results.map((s) => (
                 <li key={s.id} className="pc-row">
                   <Avatar size="lg" aria-hidden="true"><AvatarFallback>{nameInitials(s.name)}</AvatarFallback></Avatar>

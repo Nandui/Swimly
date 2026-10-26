@@ -1,14 +1,9 @@
-/* Column headings over separate rows, inside the list panel. */
+/* Column headings over the grouped list of classes (the kit draws the list as one card). */
 .directory {
   display: flex;
   flex-direction: column;
   gap: 8px;
   min-width: 0;
-}
-.directory [data-slot='item-group'] {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 .columns,
 .row {
@@ -20,23 +15,18 @@
   gap: calc(var(--spacing) * 4);
   padding: 12px 16px;
 }
+/* The list's 10px inset plus each row's 10px, so the headings sit over their cells. */
 .columns {
-  padding-block: 4px 0;
-  color: var(--pc-ink-muted);
-  font-size: var(--pc-text-caption);
-  line-height: var(--pc-leading-caption);
+  padding: 4px 20px 0;
+  color: var(--label-2);
+  font-size: 12px;
+  line-height: 16px;
   font-weight: 600;
 }
 .row {
   min-height: 64px;
-  border: 1px solid var(--pc-line);
-  border-radius: var(--pc-radius-card);
-  background: var(--pc-surface);
-  color: var(--pc-ink);
+  color: var(--label);
   text-decoration: none;
-}
-.row:hover {
-  background: var(--pc-surface-sunken);
 }
 .identity,
 .site,
@@ -47,14 +37,14 @@
 }
 .name {
   width: auto;
-  font-size: var(--pc-text-body);
-  line-height: var(--pc-leading-body);
+  font-size: inherit;
+  line-height: inherit;
   font-weight: 600;
 }
 .secondary {
-  color: var(--pc-ink-muted);
-  font-size: var(--pc-text-caption);
-  line-height: var(--pc-leading-caption);
+  color: var(--label-2);
+  font-size: 12px;
+  line-height: 16px;
 }
 .site {
   display: none;
@@ -62,7 +52,7 @@
 .arrow {
   width: calc(var(--spacing) * 4);
   height: calc(var(--spacing) * 4);
-  color: var(--ui-muted-foreground);
+  color: var(--label-2);
 }
 @media (min-width: 64rem) {
   .columns,
