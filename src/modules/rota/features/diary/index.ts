@@ -2,6 +2,7 @@
  *  Entry for the module and its routes. */
 export { Diary } from "@/modules/rota/features/diary/components/diary";
 export { CopyWeek, ShareWeekDialog } from "@/modules/rota/features/diary/components/day-forms";
+export { DepartmentMenu } from "@/modules/rota/features/diary/components/department-menu";
 export { EVERY_DEPARTMENT, diaryWeek } from "@/modules/rota/features/diary/server/load";
 export { diaryExport } from "@/modules/rota/features/diary/server/export";
 export { addDaysIso, mondayOf } from "@/modules/rota/shared/constants";

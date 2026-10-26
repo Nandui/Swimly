@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.5.0 · 25 October 2026 · The rota's Plan in the new look
+
+- The Plan's title is now just **Plan**. The department sits in blue in the line underneath: choose it to switch to another department, or every department. The day follows it.
+- Under the title, three figures say how the day stands: places still to fill (in orange while any are left), people on and hours.
+- The week is a strip of days. The day you are on is dark, today's date is red and each day says how many places are left to fill. Use the arrows either side to move a week.
+- On the day, each person's row has their initials. Their blocks show where they are in the day: finished ones are pale, the one on now is blue, and the ones still to come are grey. Anything not covered is orange, and a red line marks the time now.
+- The button beside something not covered is now **Find cover**, the same as on Home.
+
 ## 2.4.0 · 25 October 2026 · A new Home
 
 - Home greets you by name, with the date, your job and your site underneath.
