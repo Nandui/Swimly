@@ -98,7 +98,6 @@
 @source inline("{w,h}-{0..100}/100");
 @source inline("{left,right,top}-{0..500}/500");
 /* Timeline grid places (TimelineGrid): 5-minute columns over a day and its lanes. */
-@source inline("tl-cols-{1..300}");
 @source inline("{col-start,col-end,row-start,row-end}-{1..300}");
 @source inline("row-span-{1..20}");
 
@@ -127,7 +126,6 @@
 @utility basis-column { flex-basis: min(100%, var(--pc-column-min)); }
 @utility max-w-deck { max-width: var(--pc-deck-width); }
 /* A heading that takes its container's type size, such as an empty state's title. */
-@utility tl-cols-* { --tl-cols: --value(integer); }
 @utility text-inherit { font-size: inherit; line-height: inherit; }
 
 @layer base {

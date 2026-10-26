@@ -284,6 +284,39 @@
   .turnfin-app .live-dot::after { animation: none; }
 }
 
+/* A block that opens an Inspector is the kit's Button (DayTimeline `onSelect`): the button's own
+   size, capsule and fill give way to the block's, and the open one is ringed in fin blue. */
+.turnfin-app [data-slot='button'].day-tl-block { align-items: flex-start; justify-content: center; gap: 0; min-height: 0; height: auto; padding: 0 8px 0 11px; border-radius: var(--radius-sm); font-size: 12px; line-height: 15px; text-align: left; cursor: pointer; }
+.turnfin-app [data-slot='button'].day-tl-block:hover { filter: brightness(0.97); }
+.turnfin-app [data-slot='button'].day-tl-block:active { scale: 0.96; }
+.turnfin-app [data-slot='button'].day-tl-block[aria-expanded='true'] { box-shadow: 0 0 0 2px var(--bg-2), 0 0 0 4px var(--accent); }
+.turnfin-app [data-slot='button'].day-tl-block:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 767px) {
+  .turnfin-app [data-slot='button'].day-tl-block { padding: 0; font-size: 0; }
+}
+
+/* The Inspector (DESIGN.md): glass, from the right on desktop, inset 10px with radius-inspector
+   corners and no dimming behind; on tablets and phones a glass sheet from the bottom with
+   radius-sheet corners, up to two thirds of the height. */
+.turnfin-app [data-slot='sheet-content'].inspector { position: fixed; box-shadow: inset 0 1px 1px var(--glass-spec), inset 0 -1px 1px var(--glass-spec-2), inset 0 0 18px var(--glass-glow), inset 0 0 0 0.5px var(--glass-edge), var(--shadow-glass); gap: var(--space-1); padding: var(--space-4) var(--space-5) var(--space-5); background: var(--glass-fill); color: var(--label); }
+.turnfin-app [data-slot='sheet-content'].inspector[data-side='right'] { inset: 10px 10px 10px auto; width: 380px; max-width: calc(100vw - 20px); height: auto; border-radius: var(--radius-inspector); transition-timing-function: var(--spring); }
+@media (min-width: 1100px) {
+  .turnfin-app .inspector-portal [data-slot='sheet-overlay'] { background: transparent; }
+}
+@media (max-width: 1099px) {
+  .turnfin-app [data-slot='sheet-content'].inspector[data-side='right'] { inset: auto 8px 8px; width: auto; max-width: none; max-height: 66vh; padding-top: var(--space-6); border-radius: var(--radius-sheet); --tw-enter-translate-x: 0; --tw-enter-translate-y: 100%; --tw-exit-translate-x: 0; --tw-exit-translate-y: 100%; }
+  .turnfin-app [data-slot='sheet-content'].inspector::before { content: ""; position: absolute; top: 8px; left: 50%; width: 36px; height: 5px; border-radius: var(--radius-capsule); background: var(--label-3); translate: -50% 0; }
+}
+.turnfin-app .inspector-status { display: flex; align-items: center; gap: var(--space-2); min-height: 32px; padding-right: 48px; }
+.turnfin-app .inspector [data-slot='sheet-title'].inspector-title { margin: var(--space-1) 0 0; font-family: var(--font-display); font-size: 28px; line-height: 34px; font-weight: 700; letter-spacing: -0.02em; overflow-wrap: anywhere; }
+.turnfin-app .inspector-description { margin: 0; color: var(--label-2); font-size: 15px; line-height: 20px; }
+.turnfin-app .inspector-body { display: flex; flex: 1; flex-direction: column; gap: var(--space-3); min-height: 0; margin-top: var(--space-4); overflow: auto; }
+.turnfin-app .inspector-actions { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-5); }
+.turnfin-app .inspector-actions > [data-slot='button'] { width: 100%; }
+@media (prefers-reduced-transparency: reduce) {
+  .turnfin-app [data-slot='sheet-content'].inspector { background: var(--bg-2); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+
 /* Figure tiles (Figure): big tabular numbers. On the ground, bg-2 tiles with radius-panel; inside a
    card, the quiet fill with radius-lg. A tile that filters shows the soft fin blue when open. */
 .turnfin-app .pc-stat { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); min-width: 0; padding: 16px 18px; border: 0; border-radius: var(--radius-lg); background: var(--fill-2); color: var(--label); text-decoration: none; }

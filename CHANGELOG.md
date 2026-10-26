@@ -4,6 +4,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.7.0 · 25 October 2026 · Swim school and every app's first page in the new look
+
+- The first page of every app now has your site and today's date under its name.
+- Today's figures sit in tiles across the top. When the app has things waiting for you, the last tile says how many, and how many lists need you.
+- In Swim school, today's classes show as a row for each pool, with a red line at the time now. Above them it says how many classes are done, on now and still to come.
+- Choose a class on that timeline to see it in a panel at the side (from the bottom on a tablet or phone): its time, pool and instructor, and a button that opens the class.
+- On a phone, the classes on now and next are listed under the timeline.
+- What waits for you and every page in the app sit side by side underneath, each page with a line on what it is for.
+
 ## 2.6.0 · 25 October 2026 · Incidents in the new look
 
 - The reports page is now called **Incidents**. If you triage reports, one list shows at a time: choose **To triage**, **Investigating**, **Yours** or **Closed** above it. Each says how many it holds, and the page opens on To triage.

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Button } from "@/components/shadcn/button";
 import { leftOf, stretchOf } from "@/components/ui-kit/scale";
 
 /** A block's look (DESIGN.md, DayTimeline): done in the quiet fill, on now in the fin blue, next in
@@ -16,7 +17,7 @@ export type DayTimelineBlock = {
   label: string;
   /** A second line, such as "6 booked". */
   sub?: string;
-  /** Where the block opens; without one it is plain. */
+  /** Where the block opens; without one (and without `onSelect`) it is plain. */
   href?: string;
   /** The whole sentence a screen reader reads: "Starfish, 16:00 to 16:30, finished". */
   ariaLabel: string;
@@ -24,8 +25,10 @@ export type DayTimelineBlock = {
 
 /** The day as Calendar-style lanes of blocks with the red now line (DESIGN.md, DayTimeline). The
  *  caller places it in a card with its title and decides every word; the kit only draws. Times are
- *  minutes after midnight, `from` to `to`; `now` outside that range draws no line. */
-export function DayTimeline({ from, to, now, nowLabel, hours, lanes, blocks, label }: {
+ *  minutes after midnight, `from` to `to`; `now` outside that range draws no line. With
+ *  `onSelect` (a client caller) every block is a button that hands back its key, for an
+ *  Inspector; `selected` rings the one that is open. */
+export function DayTimeline({ from, to, now, nowLabel, hours, lanes, blocks, label, onSelect, selected = null }: {
   from: number;
   to: number;
   now: number;
@@ -36,6 +39,8 @@ export function DayTimeline({ from, to, now, nowLabel, hours, lanes, blocks, lab
   blocks: DayTimelineBlock[];
   /** Names the timeline for screen readers: "Riverside today". */
   label: string;
+  onSelect?: (key: string) => void;
+  selected?: string | null;
 }) {
   const span = Math.max(1, to - from);
   const at = (minutes: number) => (minutes - from) / span;
@@ -61,7 +66,10 @@ export function DayTimeline({ from, to, now, nowLabel, hours, lanes, blocks, lab
               const body = <>{block.label}{block.sub ? <span>{block.sub}</span> : null}</>;
               return (
                 <span key={block.key} role="listitem" className="contents">
-                  {block.href
+                  {onSelect
+                    ? <Button type="button" variant="ghost" className={`day-tl-block ${place}`} data-kind={block.kind} aria-label={block.ariaLabel}
+                        aria-haspopup="dialog" aria-expanded={selected === block.key} onClick={() => onSelect(block.key)}>{body}</Button>
+                    : block.href
                     ? <Link href={block.href} className={`day-tl-block ${place}`} data-kind={block.kind} aria-label={block.ariaLabel}>{body}</Link>
                     : <span className={`day-tl-block ${place}`} data-kind={block.kind} aria-label={block.ariaLabel} role="img">{body}</span>}
                 </span>

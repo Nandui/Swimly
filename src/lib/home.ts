@@ -56,7 +56,8 @@ function viewerOf(user: Session["user"]): HomeViewer {
 }
 
 /** One module's overview page: the same items it gives the home page, for the
- *  person looking, and the working site's name for "Today". */
+ *  person looking, the working site's name, today's date for the line under the title and the
+ *  time now at the centre for the day's timeline. */
 export async function loadModuleOverview(moduleId: string) {
   const session = await pageSession();
   const [all, siteName] = await Promise.all([
@@ -65,5 +66,5 @@ export async function loadModuleOverview(moduleId: string) {
   ]);
   /** True when the module's figures failed to load, so the overview says so. */
   const failed = (all.failed ?? []).includes(moduleId);
-  return { items: all.get(moduleId) ?? [], siteName, failed };
+  return { items: all.get(moduleId) ?? [], siteName, failed, today: formatDay(today()), now: minutesNow() };
 }
