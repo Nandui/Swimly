@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.14.0 · 26 October 2026 · Stock in the new look
+
+- **Stock counts** has its open and submitted counts under their own titles, with how many beside each. A count's square is orange while it is still being counted and green once submitted.
+- **The count sheet** shows how many are counted at the top, with **Submit count** beside it and the hint underneath. Each category's tag sits above its products, with how many of them are counted.
+- **Compare counts** lists each category under its tag with the number of products, and the ones not counted on one of the counts sit in their own section with a line on why they are left out.
+- **Products** and **Categories** are plain lists without the extra frame around them.
+
 ## 2.13.0 · 26 October 2026 · Tasks in the new look
 
 - **Today in Tasks** is titled just **Today**, with the site and date underneath. The figures name what they count over the number, and a figure of nothing is grey.
