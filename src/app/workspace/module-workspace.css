@@ -89,7 +89,7 @@
 
 /* Purchasing: a purchase order prints as the document the supplier gets, without the workspace around it. */
 @media print {
-  body:has(.turnfin-purchasing) :is(.tf-side, .tf-top, .tf-bottom, [data-print="hide"]) { display: none !important; }
+  body:has(.turnfin-purchasing) :is(.tf-side, .tf-top, .tf-bottom, .rec-next, [data-print="hide"]) { display: none !important; }
   .turnfin-purchasing :is(.tf-frame, .pc-panel) { box-shadow: none !important; background: var(--pc-surface) !important; color: var(--pc-ink) !important; }
 }
 

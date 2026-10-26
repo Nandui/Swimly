@@ -11,7 +11,7 @@ export default async function NewOrderPage({ searchParams }: { searchParams: Pro
   const data = await orderForm();
   if (!data.who.request) notFound();
   return (
-    <PageShell className="po-desk" header={<PageHeader title="New purchase order" description="Only approved products from approved suppliers, at their agreed prices." />}>
+    <PageShell spacing="roomy" header={<PageHeader title="New purchase order" description="Only approved products from approved suppliers, at their agreed prices." />}>
       <OrderForm sites={data.sites} suppliers={data.suppliers} rules={data.rules} roleNames={data.roleNames} existing={null} initialSupplier={(await searchParams).supplier} />
     </PageShell>
   );

@@ -4,6 +4,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.21.0 · 26 October 2026 · Purchasing in the new look
+
+- **Purchase orders** opens with its figures, then the orders waiting for you, your orders and the latest at your sites as plain lists. Each order's symbol is orange while it waits, green once approved and red if rejected.
+- **A purchase order** shows what happens next and your buttons on the right, with where it has got to underneath, and the supplier, where it goes and what is ordered as their own sections. Its emails are listed under it.
+- **New order** and **Change** lose the numbered steps and heavy frames: where it goes, the products, and the date and note each have a title, and the total sits in a card beside them.
+- **Suppliers** are a plain list with each supplier's picture, and a supplier's products show their price at the end of each row.
+- **Email to supplier** shows the email inside a soft card, without the pretend window around it.
+- On **refunds**, **coinage** and **incidents**, the small words beside the status at the top are a little darker, so they read clearly.
+
 ## 2.20.0 · 26 October 2026 · Docs in the new look
 
 - **Docs** opens with the search on the page, **Emergency plans** as a row with a red symbol, then **Your required reading** and **Your work** side by side, the collections as figures and **Recently published**, each under its own title.
