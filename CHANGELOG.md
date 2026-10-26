@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.25.0 · 26 October 2026 · CCTV log and Site Monitoring in the new look
+
+- **A CCTV viewing** shows who checked it, why and what was seen as label and value rows in cards under their titles, and notes added later as a timeline.
+- **Record a viewing** has the same three titled cards to fill in.
+- **CCTV viewings** and **Site Monitoring** list their entries under titles that show how many there are.
+- **On a tablet**, the row of app symbols down the left now scrolls when it is taller than the screen, so Admin and Help can always be reached; each symbol still names itself when you point at it.
+
 ## 2.24.0 · 26 October 2026 · Short courses in the new look
 
 - **A course** and **an Academy course** show what the course is as label and value rows in one card, then who is booked, the waiting list and the sessions as plain lists under their titles, with the button to add at the end of each title.

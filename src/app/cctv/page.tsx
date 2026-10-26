@@ -17,8 +17,8 @@ export default async function CctvViewingsPage() {
     <PageShell spacing="roomy" header={<PageHeader title="CCTV viewings"
         description="Every time CCTV footage is checked, write down who checked it, why, what they were looking for and what they saw."
         actions={<Button asChild className="min-h-11"><Link href="/cctv/new"><FilePlus2 aria-hidden="true" />Record a viewing</Link></Button>} />}>
-      {who.review ? <ViewingPanel id="cctv-everyone" title={`Recorded by others · ${others.length}`} rows={others} empty={{ title: "Nobody else has recorded a viewing at your sites yet" }} /> : null}
-      <ViewingPanel id="cctv-mine" title={`Recorded by you · ${mine.length}`} rows={mine}
+      {who.review ? <ViewingPanel id="cctv-everyone" title="Recorded by others" rows={others} empty={{ title: "Nobody else has recorded a viewing at your sites yet" }} /> : null}
+      <ViewingPanel id="cctv-mine" title="Recorded by you" rows={mine}
         empty={{ title: "You have not recorded a viewing yet", hint: "Record one each time you check footage, even if nothing was seen." }} />
     </PageShell>
   );
