@@ -12,7 +12,7 @@ export function DepartmentMenu({ current, items }: { current: string; items: { h
       <DropdownMenuTrigger className="rota-dept-menu" aria-label={`Department: ${current}. Change department`}>
         {current}<ChevronDown aria-hidden="true" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-64 max-w-(--pc-overlay-max-width)">
+      <DropdownMenuContent align="start" className="w-64 max-w-(--overlay-max-width)">
         <DropdownMenuLabel className="text-xs font-semibold text-ui-muted-foreground">Department</DropdownMenuLabel>
         {items.map((item) => (
           <DropdownMenuItem key={item.href} asChild>

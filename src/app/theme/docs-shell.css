@@ -15,10 +15,10 @@
 :where(.turnfin-docs) :scope {
   margin: 0;
   background: var(--bg);
-  color: var(--text);
+  color: var(--label);
   font-family: var(--font-sans);
-  font-size: var(--pc-text-body);
-  line-height: var(--pc-leading-body);
+  font-size: var(--type-body);
+  line-height: var(--type-body-leading);
   -webkit-font-smoothing: antialiased;
 }
 :where(.turnfin-docs) h1,
@@ -32,7 +32,7 @@
 :where(.turnfin-docs) h2,
 :where(.turnfin-docs) h3,
 :where(.turnfin-docs) h4 {
-  color: var(--ink);
+  color: var(--label);
   font-family: var(--font-sans);
 }
 :where(.turnfin-docs) h1 {
@@ -45,7 +45,7 @@
   font-weight: 600;
 }
 :where(.turnfin-docs) h3 {
-  font-size: var(--pc-text-body);
+  font-size: var(--type-body);
   font-weight: 600;
 }
 :where(.turnfin-docs) a {
@@ -78,10 +78,10 @@
 :where(.turnfin-docs) input,
 :where(.turnfin-docs) select,
 :where(.turnfin-docs) textarea {
-  background: var(--paper);
-  border: 1px solid var(--line);
+  background: var(--bg-2);
+  border: 1px solid var(--sep);
   border-radius: var(--radius-lg);
-  color: var(--ink);
+  color: var(--label);
   padding: 10px 12px;
   min-width: 0;
   max-width: 100%;
@@ -92,13 +92,13 @@
 :where(.turnfin-docs) input:focus,
 :where(.turnfin-docs) select:focus,
 :where(.turnfin-docs) textarea:focus {
-  outline: 2px solid var(--focus);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-color: var(--primary);
+  border-color: var(--accent);
 }
 :where(.turnfin-docs) input::placeholder,
 :where(.turnfin-docs) textarea::placeholder {
-  color: var(--muted);
+  color: var(--label-2);
 }
 :where(.turnfin-docs) textarea {
   resize: vertical;
@@ -106,14 +106,14 @@
 }
 :where(.turnfin-docs) input[type='checkbox'],
 :where(.turnfin-docs) input[type='radio'] {
-  accent-color: var(--primary);
+  accent-color: var(--accent);
   width: 16px;
   height: 16px;
   flex-shrink: 0;
   padding: 0;
 }
 :where(.turnfin-docs) input[readonly] {
-  background: var(--surface-subtle);
+  background: var(--fill-2);
 }
 :where(.turnfin-docs) select {
   cursor: pointer;
@@ -127,11 +127,11 @@
   gap: 7px;
   font-size: 12px;
   font-weight: 600;
-  color: var(--text);
+  color: var(--label);
 }
 :where(.turnfin-docs) label small {
   font-weight: 400;
-  color: var(--muted);
+  color: var(--label-2);
 }
 :where(.turnfin-docs) fieldset {
   border: 0;
@@ -142,12 +142,12 @@
   font-size: 12px;
   font-weight: 600;
   margin-bottom: 10px;
-  color: var(--text);
+  color: var(--label);
 }
 :where(.turnfin-docs) button:focus-visible,
 :where(.turnfin-docs) a:focus-visible,
 :where(.turnfin-docs) summary:focus-visible {
-  outline: 3px solid var(--focus);
+  outline: 3px solid var(--accent);
   outline-offset: 3px;
 }
 :where(.turnfin-docs) svg {
@@ -168,7 +168,7 @@
   border: 0;
 }
 :where(.turnfin-docs) .muted {
-  color: var(--muted);
+  color: var(--label-2);
 }
 :where(.turnfin-docs) .icon-button {
   border: 0;
@@ -179,12 +179,12 @@
   min-width: 33px;
   min-height: 33px;
   border-radius: var(--radius-capsule);
-  color: var(--muted);
+  color: var(--label-2);
   padding: 7px;
 }
 :where(.turnfin-docs) .icon-button:hover:not(:disabled) {
-  background: var(--surface-tint);
-  color: var(--ink);
+  background: var(--fill-2);
+  color: var(--label);
 }
 :where(.turnfin-docs) .page-content {
   padding: 37px 40px 30px;
@@ -201,12 +201,12 @@
   display: block;
   font-size: 12px;
   font-weight: 600;
-  color: var(--text);
+  color: var(--label);
   line-height: 16px;
 }
 :where(.turnfin-docs) .reading-title span {
   font-size: 12px;
-  color: var(--muted);
+  color: var(--label-2);
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -224,7 +224,7 @@
 :where(.turnfin-docs) .document-prose {
   font-size: var(--reading-size);
   line-height: 1.8;
-  color: var(--text);
+  color: var(--label);
   max-width: 70ch;
   overflow-wrap: anywhere;
 }
@@ -241,7 +241,7 @@
   margin: 0.5em 0;
 }
 :where(.turnfin-docs) .document-prose li::marker {
-  color: var(--muted);
+  color: var(--label-2);
   font-weight: 600;
 }
 :where(.turnfin-docs) .document-prose li > p {
@@ -249,28 +249,28 @@
 }
 :where(.turnfin-docs) .document-prose a {
   text-decoration: underline;
-  color: var(--primary);
+  color: var(--accent);
   text-underline-offset: 3px;
 }
 :where(.turnfin-docs) .document-prose strong {
-  color: var(--ink);
+  color: var(--label);
   font-weight: 600;
 }
 :where(.turnfin-docs) .document-prose blockquote {
   border-left: 3px solid var(--ui-border);
   margin: 1.2em 0;
   padding: 0.25em 1em;
-  color: var(--muted);
-  background: var(--surface-subtle);
+  color: var(--label-2);
+  background: var(--fill-2);
 }
 :where(.turnfin-docs) .document-callout {
   display: flex;
   align-items: flex-start;
   gap: 11px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--sep);
   border-radius: var(--radius-lg);
-  background: var(--surface-tint);
-  color: var(--muted);
+  background: var(--fill-2);
+  color: var(--label-2);
   padding: 13px 16px;
   margin: 1.2em 0;
   font-size: 0.85em;
@@ -285,7 +285,7 @@
 :where(.turnfin-docs) .document-callout.warning {
   background: var(--ui-status-yellow-bg);
   border-color: var(--ui-status-yellow-bg);
-  color: var(--muted);
+  color: var(--label-2);
 }
 :where(.turnfin-docs) .document-prose img {
   display: block;
@@ -298,13 +298,13 @@
 }
 :where(.turnfin-docs) .document-prose figcaption {
   font-size: 0.8em;
-  color: var(--muted);
+  color: var(--label-2);
   text-align: center;
   margin-top: 0.5em;
 }
 :where(.turnfin-docs) .document-prose hr {
   border: 0;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--sep);
   margin: 1.5em 0;
 }
 :where(.turnfin-docs) .document-prose table {
@@ -316,13 +316,13 @@
 }
 :where(.turnfin-docs) .document-prose th,
 :where(.turnfin-docs) .document-prose td {
-  border: 1px solid var(--line);
+  border: 1px solid var(--sep);
   padding: 8px 12px;
   vertical-align: top;
   position: relative;
 }
 :where(.turnfin-docs) .document-prose th {
-  background: var(--surface-tint);
+  background: var(--fill-2);
   text-align: left;
   font-weight: 600;
 }
@@ -361,8 +361,8 @@
   margin: 20px 0;
 }
 :where(.turnfin-docs) .risk-rating {
-  background: var(--surface-subtle);
-  border: 1px solid var(--line);
+  background: var(--fill-2);
+  border: 1px solid var(--sep);
   border-radius: var(--radius-lg);
   padding: 14px;
 }
@@ -386,7 +386,7 @@
   margin-top: 15px;
 }
 :where(.turnfin-docs) .risk-read {
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--sep);
   margin-top: 28px;
   padding-top: 25px;
   scroll-margin-top: 25px;
@@ -400,7 +400,7 @@
   line-height: 16px;
 }
 :where(.turnfin-docs) .risk-read-card {
-  border: 1px solid var(--line);
+  border: 1px solid var(--sep);
   border-radius: var(--radius-lg);
   margin-top: 20px;
   padding: 20px;
@@ -409,19 +409,19 @@
   display: flex;
   gap: 11px;
   align-items: center;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--sep);
   padding-bottom: 16px;
 }
 :where(.turnfin-docs) .risk-number {
   font-size: 12px;
-  border: 1px solid var(--line);
-  background: var(--surface-tint);
-  color: var(--muted);
+  border: 1px solid var(--sep);
+  background: var(--fill-2);
+  color: var(--label-2);
   padding: 5px 7px;
   border-radius: var(--radius-capsule);
 }
 :where(.turnfin-docs) .risk-read-header h3 {
-  font-size: var(--pc-text-body);
+  font-size: var(--type-body);
 }
 :where(.turnfin-docs) .risk-read-card dl {
   margin: 16px 0 0;
@@ -432,28 +432,28 @@
 :where(.turnfin-docs) .risk-read-card dt {
   font-size: 12px;
   font-weight: 600;
-  color: var(--muted);
+  color: var(--label-2);
   margin-bottom: 5px;
 }
 :where(.turnfin-docs) .risk-read-card dd {
   margin: 0;
-  font-size: var(--pc-text-body);
-  line-height: var(--pc-leading-body);
-  color: var(--muted);
+  font-size: var(--type-body);
+  line-height: var(--type-body-leading);
+  color: var(--label-2);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 :where(.turnfin-docs) .risk-read-card dd small {
   display: block;
   font-size: 12px;
-  color: var(--muted);
+  color: var(--label-2);
   margin-top: 5px;
 }
 :where(.turnfin-docs) .risk-scores {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 15px;
-  background: var(--surface-subtle);
+  background: var(--fill-2);
   padding: 15px;
   border-radius: var(--radius-lg);
 }
@@ -463,7 +463,7 @@
 }
 :where(.turnfin-docs) .matrix-details summary {
   cursor: pointer;
-  color: var(--muted);
+  color: var(--label-2);
   font-weight: 600;
   padding: 10px 0;
 }
@@ -472,7 +472,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 20px;
   padding: 20px;
-  background: var(--surface-subtle);
+  background: var(--fill-2);
   border-radius: var(--radius-lg);
 }
 :where(.turnfin-docs) .matrix-definitions h3 {
@@ -481,7 +481,7 @@
 :where(.turnfin-docs) .matrix-definitions p {
   font-size: 12px;
   margin-bottom: 13px;
-  color: var(--muted);
+  color: var(--label-2);
 }
 :where(.turnfin-docs) .risk-band-key {
   display: flex;
@@ -504,15 +504,15 @@
   display: flex;
   gap: 15px;
   font-size: 12px;
-  color: var(--muted);
+  color: var(--label-2);
   margin-bottom: 13px;
 }
 :where(.turnfin-docs) .text-diff {
   padding: 20px;
   font-size: 12px;
   line-height: 16px;
-  background: var(--surface-subtle);
-  border: 1px solid var(--line);
+  background: var(--fill-2);
+  border: 1px solid var(--sep);
   border-radius: var(--radius-lg);
   max-height: 240px;
   overflow: auto;
@@ -535,7 +535,7 @@
 }
 :where(.turnfin-docs) .side-by-side > article {
   padding: 20px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--sep);
   border-radius: var(--radius-lg);
   --reading-size: 13px;
   min-width: 0;
@@ -552,7 +552,7 @@
 }
 :where(.turnfin-docs) .compare-metadata {
   font-size: 12px;
-  color: var(--muted);
+  color: var(--label-2);
   margin-bottom: 24px;
 }
 :where(.turnfin-docs) .matrix-admin {
@@ -565,7 +565,7 @@
   margin: 22px 0 32px;
 }
 :where(.turnfin-docs) .matrix-edit-grid h3 {
-  font-size: var(--pc-text-body);
+  font-size: var(--type-body);
   margin-bottom: 18px;
 }
 :where(.turnfin-docs) .matrix-level {
@@ -596,7 +596,7 @@
 :where(.turnfin-docs) .muted,
 :where(.turnfin-docs) .reading-title span,
 :where(.turnfin-docs) .document-prose {
-  color: var(--muted);
+  color: var(--label-2);
 }
 @media (min-width: 1500px) {
   :where(.turnfin-docs) .page-content {
@@ -691,7 +691,7 @@
     padding: 17px;
   }
   :where(.turnfin-docs) .risk-read-header h3 {
-    font-size: var(--pc-text-body);
+    font-size: var(--type-body);
   }
   :where(.turnfin-docs) .risk-read-card dd {
     font-size: 12px;
@@ -729,7 +729,7 @@
   color: var(--ui-status-yellow);
 }
 :where(.turnfin-docs) .document-prose {
-  color: var(--text);
+  color: var(--label);
 }
 @media (prefers-reduced-motion: reduce) {
   :where(.turnfin-docs) * {
@@ -841,8 +841,8 @@
     scroll-behavior: auto;
   }
   :where(.turnfin-docs) :scope {
-    font-size: var(--pc-text-body);
-    line-height: var(--pc-leading-body);
+    font-size: var(--type-body);
+    line-height: var(--type-body-leading);
   }
   :where(.turnfin-docs) h1,
   :where(.turnfin-docs) h2,
@@ -862,30 +862,30 @@
     text-wrap: balance;
   }
   :where(.turnfin-docs) h3 {
-    font-size: var(--pc-text-body);
+    font-size: var(--type-body);
   }
   :where(.turnfin-docs) input,
   :where(.turnfin-docs) select,
   :where(.turnfin-docs) textarea {
     border-color: var(--ui-input);
     background: var(--ui-background);
-    color: var(--ink);
+    color: var(--label);
     border-radius: var(--radius-lg);
   }
   :where(.turnfin-docs) input:focus,
   :where(.turnfin-docs) textarea:focus,
   :where(.turnfin-docs) select:focus {
-    outline: 2px solid var(--focus);
+    outline: 2px solid var(--accent);
     outline-offset: 3px;
   }
   :where(.turnfin-docs) label,
   :where(.turnfin-docs) legend {
-    font-size: var(--pc-text-body);
+    font-size: var(--type-body);
     font-weight: 600;
   }
   :where(.turnfin-docs) .muted,
   :where(.turnfin-docs) label small {
-    color: var(--muted);
+    color: var(--label-2);
   }
   :where(.turnfin-docs) .icon-button {
     border-radius: var(--radius-capsule);
@@ -901,7 +901,7 @@
     border: 1px solid var(--ui-input);
     border-radius: var(--radius-capsule);
     background: transparent;
-    color: var(--muted);
+    color: var(--label-2);
   }
   :where(.turnfin-docs) .workspace-search input {
     width: 100%;
@@ -914,7 +914,7 @@
     box-shadow: none;
   }
   :where(.turnfin-docs) .workspace-search:focus-within {
-    outline: 2px solid var(--focus);
+    outline: 2px solid var(--accent);
     outline-offset: 3px;
   }
   :where(.turnfin-docs) .workspace-search input:focus {
@@ -934,7 +934,7 @@
     margin-right: auto;
   }
   :where(.turnfin-docs) .reading-title > strong {
-    font-size: var(--pc-text-body);
+    font-size: var(--type-body);
   }
   :where(.turnfin-docs) .reading-title > span {
     font-size: 12px;
@@ -942,11 +942,11 @@
 
   :where(.turnfin-docs) .document-prose {
     font-size: var(--reading-size);
-    color: var(--text);
+    color: var(--label);
   }
   :where(.turnfin-docs) .document-prose li::marker,
   :where(.turnfin-docs) .document-prose strong {
-    color: var(--ink);
+    color: var(--label);
   }
   :where(.turnfin-docs) .document-prose ol {
     list-style: decimal;
@@ -960,7 +960,7 @@
   :where(.turnfin-docs) .document-callout {
     background: var(--ui-status-blue-bg);
     color: var(--ui-status-blue);
-    border-color: var(--line);
+    border-color: var(--sep);
   }
   :where(.turnfin-docs) .document-callout.warning {
     background: var(--ui-status-yellow-bg);
@@ -992,7 +992,7 @@
     :where(.turnfin-docs) input:not([type='checkbox'], [type='radio'], [type='hidden']),
     :where(.turnfin-docs) textarea {
       min-height: 44px;
-      font-size: var(--pc-text-body);
+      font-size: var(--type-body);
     }
   }
   @media print {
@@ -1055,18 +1055,18 @@
     margin-bottom: 16px;
   }
   :where(.turnfin-docs) .report-filter-heading h2 {
-    font-size: var(--pc-text-body);
+    font-size: var(--type-body);
   }
   :where(.turnfin-docs) .report-records-heading {
     padding: 22px;
-    border-bottom: 1px solid var(--line);
+    border-bottom: 1px solid var(--sep);
   }
   :where(.turnfin-docs) .report-records-heading h2 {
     font-size: 20px;
   }
   :where(.turnfin-docs) .report-records-heading p {
     font-size: 12px;
-    color: var(--muted);
+    color: var(--label-2);
     margin-top: 7px;
   }
   @media (max-width: 800px) {

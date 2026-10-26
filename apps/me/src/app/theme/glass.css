@@ -2,8 +2,7 @@
    dark. This file holds the values; DESIGN.md says what each one is for. Colours use light-dark(),
    so they follow `color-scheme` (the device, or the person's choice in `data-theme` on <html>,
    globals.css). Shadows cannot, so their dark values sit under the dark selectors at the end.
-   The older names (--ui-* in shadcn.css, --pc-* in poolside.css) point here until the screens that
-   use them are rebuilt in the 2.0 kit. Copied byte for byte into Turnfin Me and the Academy site
+   shadcn's --ui-* names (shadcn.css) point here. Copied byte for byte into Turnfin Me and the Academy site
    (scripts/lint/ui-rules.mjs). */
 :root {
   /* Colour. Neutrals carry the interface; the fin blue means selected or the primary action;
@@ -36,6 +35,25 @@
   --red-soft: light-dark(rgba(255, 59, 48, 0.11), rgba(255, 69, 58, 0.16));
   --scrim: light-dark(rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.42));
   --stage: #000000;
+  /* Text on the filled accent button. */
+  --on-accent: #ffffff;
+  /* The Docs content palette: text colours a writer picks (lighter in dark) and highlights, with
+     the dark ink that sits on a highlight in both themes. They belong to the document, not the
+     interface, so they keep their own values. */
+  --docs-blue: light-dark(#2563eb, #93c5fd);
+  --docs-teal: light-dark(#0f766e, #5eead4);
+  --docs-green: light-dark(#15803d, #86efac);
+  --docs-purple: light-dark(#9333ea, #d8b4fe);
+  --docs-red: light-dark(#dc2626, #fca5a5);
+  --docs-orange: light-dark(#c2410c, #fdba74);
+  --docs-mark-yellow: #fef08a;
+  --docs-mark-green: #bbf7d0;
+  --docs-mark-blue: #bfdbfe;
+  --docs-mark-pink: #fbcfe8;
+  --docs-mark-purple: #e9d5ff;
+  --docs-mark-orange: #fed7aa;
+  --on-pastel: #172033;
+
 
   /* The material: Liquid Glass, for the functional layer only (the kit's Glass). */
   --glass-fill: light-dark(rgba(255, 255, 255, 0.5), rgba(42, 42, 46, 0.52));
@@ -58,11 +76,27 @@
   --shadow-glass: 0 12px 32px -14px rgba(0, 0, 0, 0.28), 0 2px 8px -2px rgba(0, 0, 0, 0.07);
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.03);
   --shadow-prominent: 0 10px 22px -10px rgba(29, 95, 209, 0.75);
+  /* Menus, toasts and the save bar: the glass shadow with a hairline edge. */
+  --shadow-overlay: var(--shadow-glass), 0 0 0 0.5px var(--sep);
+  /* The soft ring around a focused field. */
+  --focus-halo: 0 0 0 4px var(--accent-soft);
 
   /* Type: the Apple system font, then Inter with optical sizes (--font-inter, set by the root
      layout) on Windows and Android. The scale is the text-* utilities below. */
   --font-text: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-inter, Inter), system-ui, sans-serif;
   --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", var(--font-inter, Inter), system-ui, sans-serif;
+  /* The running sizes the kit's rules use (DESIGN.md, Type): caption; body-desk, which becomes
+     body on phones and tablets (below); title-3 for section titles; large-title; figure. */
+  --type-caption: 12px;
+  --type-caption-leading: 16px;
+  --type-body: 15px;
+  --type-body-leading: 20px;
+  --type-title: 20px;
+  --type-title-leading: 25px;
+  --type-large-title: 34px;
+  --type-large-title-leading: 41px;
+  --type-figure: 34px;
+  --type-figure-leading: 40px;
 
   /* Space, size and radius. */
   --space-hair: 2px;
@@ -88,6 +122,17 @@
   --radius-card: 26px;
   --radius-sheet: 50px;
   --radius-capsule: 999px;
+  /* Layout limits (owner decision, 10 October 2026): overlays keep a 16px gutter; the narrowest
+     column of a tile, card or wide-column grid; a side rail; a search field before it wraps; the
+     pool deck's frame. */
+  --overlay-max-width: calc(100vw - 2rem);
+  --overlay-max-height: calc(100dvh - 2rem);
+  --tile-min: 10rem;
+  --card-min: 14rem;
+  --column-min: 22rem;
+  --rail-width: 20rem;
+  --field-min: 18rem;
+  --deck-width: 1180px;
 
   /* Motion: damped springs sampled at 49 points (the design system's bundle.css). */
   --spring: linear(0, 0.0196, 0.0708, 0.1434, 0.2292, 0.3216, 0.4153, 0.5066, 0.5927, 0.6717, 0.7425, 0.8045, 0.8578, 0.9026, 0.9394, 0.9689, 0.992, 1.0094, 1.0219, 1.0303, 1.0355, 1.0379, 1.0384, 1.0372, 1.035, 1.032, 1.0287, 1.0251, 1.0215, 1.018, 1.0148, 1.0118, 1.0092, 1.0069, 1.005, 1.0033, 1.002, 1.0009, 1.0001, 0.9995, 0.9991, 0.9988, 0.9986, 0.9985, 0.9985, 0.9986, 0.9987, 0.9988, 1);
@@ -100,6 +145,11 @@
   --duration-spring: 600ms;
   --duration-island: 700ms;
   --duration-banner: 3200ms;
+}
+
+/* Phones and tablets read rows and text at body size, 17px (DESIGN.md, Type). */
+@media (max-width: 1099px) {
+  :root { --type-body: 17px; --type-body-leading: 22px; }
 }
 
 /* Dark shadows: deeper, one layer, the prominent glow in the night blue. */

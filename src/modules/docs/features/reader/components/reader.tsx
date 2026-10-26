@@ -355,7 +355,7 @@ export function Reader({
             {formatDate(new Date().toISOString())}
           </div>
         </article>
-        <aside className="reader-rail flex min-w-0 grow basis-(--pc-rail-width) flex-col gap-4">
+        <aside className="reader-rail flex min-w-0 grow basis-(--rail-width) flex-col gap-4">
           {/* Below 768px the contents would sit after the whole document, so it is left out (V2PhoneDocument). */}
           {contents.length > 0 && (
             <nav className="flex min-w-0 flex-col max-md:hidden!" aria-labelledby="contents-title">

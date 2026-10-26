@@ -4,6 +4,10 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.28.1 · 26 October 2026 · Easier to read in Tasks
+
+- **Tasks**: the "of 5" beside how many of today's tasks are done is darker, so it is easier to read.
+
 ## 2.28.0 · 26 October 2026 · Docs activity as a timeline
 
 - **Docs**: a document's activity log and the workspace activity in Administration show as a quiet timeline, with what changed in a soft box under each entry.

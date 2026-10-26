@@ -249,7 +249,7 @@ function PeopleTable({
                   <PersonActions person={person} roles={roles} google={google} />
                 </div>
               </TableCell>
-              {/* max-md:hidden too, so the phone row card closes on the person cell (poolside.css). */}
+              {/* max-md:hidden too, so the phone row card closes on the person cell (kit.css). */}
               <TableCell className="max-md:hidden max-lg:hidden">
                 <span className="flex flex-col items-start gap-1">
                   <Tag meta={reach} label={person.staffRole?.name ?? "No role"} />

@@ -52,7 +52,7 @@
 @media (max-width: 380px) { .turnfin-app .ins-switch-item svg { display: none; } }
 
 /* The period menu (portalled, so styled from the app root). */
-.turnfin-app .ins-range-pop { display: flex; flex-direction: column; gap: 14px; width: min(24rem, var(--pc-overlay-max-width)); padding: 18px; border: 0; border-radius: var(--radius-card); background: var(--bg-2); box-shadow: var(--pc-shadow-overlay); }
+.turnfin-app .ins-range-pop { display: flex; flex-direction: column; gap: 14px; width: min(24rem, var(--overlay-max-width)); padding: 18px; border: 0; border-radius: var(--radius-card); background: var(--bg-2); box-shadow: var(--shadow-overlay); }
 .turnfin-app .ins-range-title { margin: 0; color: var(--label-2); font-size: 13px; font-weight: 600; }
 .turnfin-app .ins-range-quick { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .turnfin-app .ins-range-chip { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 999px; background: var(--fill-2); color: var(--label); font-size: 14px; font-weight: 600; text-decoration: none; transition: background-color 180ms ease; }
@@ -293,7 +293,7 @@ a.ins-kpi:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px;
 .turnfin-app .ins .ins-heat td span { display: block; font-size: 11px; opacity: 0.8; }
 .turnfin-app .ins :is(.ins-heat td, .ins-heat-scale span)[data-band='1'] { background: var(--accent-soft); }
 .turnfin-app .ins :is(.ins-heat td, .ins-heat-scale span)[data-band='2'] { background: var(--fill); }
-.turnfin-app .ins :is(.ins-heat td, .ins-heat-scale span)[data-band='3'] { background: var(--accent-btn); color: var(--pc-on-primary); }
+.turnfin-app .ins :is(.ins-heat td, .ins-heat-scale span)[data-band='3'] { background: var(--accent-btn); color: var(--on-accent); }
 .turnfin-app .ins :is(.ins-heat td, .ins-heat-scale span)[data-band='4'] { background: var(--accent-ink); color: var(--bg-2); }
 .turnfin-app .ins .ins-heat .ins-heat-dot { position: absolute; top: 6px; right: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--ins-b); box-shadow: 0 0 0 2px var(--bg-2); }
 .turnfin-app .ins .ins-heat tr, .turnfin-app .ins .ins-heat tr:hover { border: 0; background: none; }

@@ -75,7 +75,7 @@ export function CourseDialog({ course, qualificationTypes, categories = [], cour
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-1 text-sm font-semibold">Finish these first <span className="font-normal text-ui-muted-foreground">(optional, up to 5)</span></legend>
           <p className="text-sm text-ui-muted-foreground">Learners can open this course once they have completed each of these. Until then Turnfin Me tells them which to do first.</p>
-          <div className="flex max-h-(--pc-overlay-max-height) flex-col gap-1 overflow-y-auto">
+          <div className="flex max-h-(--overlay-max-height) flex-col gap-1 overflow-y-auto">
             {others.map((c) => <ChoiceRow key={c.id} type="checkbox" name="prerequisiteIds" value={c.id} id={`prereq-${c.id}`} title={c.title} defaultChecked={course?.prerequisiteIds?.includes(c.id)} />)}
           </div>
         </fieldset>

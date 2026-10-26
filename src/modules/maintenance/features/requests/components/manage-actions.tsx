@@ -88,7 +88,7 @@ export function ManageActions({ request, candidates, areas }: { request: Mainten
       </div>
 
       <Dialog open={!!move} onOpenChange={(o) => { if (!o && !pending) setMove(null); }}>
-        <DialogContent onCloseAutoFocus={back} className="max-h-(--pc-overlay-max-height) overflow-y-auto" showCloseButton={false}>
+        <DialogContent onCloseAutoFocus={back} className="max-h-(--overlay-max-height) overflow-y-auto" showCloseButton={false}>
           <DialogHeader><DialogTitle>{move ? LABEL[move] : ""}</DialogTitle><DialogDescription>{move ? SAYS[move] : ""}</DialogDescription></DialogHeader>
           <form method="post" onSubmit={(e) => { e.preventDefault(); sendMove(e.currentTarget); }} className="space-y-4">
             <fieldset disabled={pending} className="space-y-4">
@@ -127,7 +127,7 @@ export function ManageActions({ request, candidates, areas }: { request: Mainten
       </Dialog>
 
       <Dialog open={correcting} onOpenChange={(o) => { if (!o && !pending) setCorrecting(false); }}>
-        <DialogContent onCloseAutoFocus={back} className="max-h-(--pc-overlay-max-height) overflow-y-auto" showCloseButton={false}>
+        <DialogContent onCloseAutoFocus={back} className="max-h-(--overlay-max-height) overflow-y-auto" showCloseButton={false}>
           <DialogHeader><DialogTitle>Correct details</DialogTitle><DialogDescription>Fix what was reported. The history keeps what changed and who changed it.</DialogDescription></DialogHeader>
           <CorrectForm request={request} areas={areas} pending={pending} error={error} onCancel={() => setCorrecting(false)} onSend={sendCorrection} />
         </DialogContent>

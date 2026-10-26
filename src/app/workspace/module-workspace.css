@@ -55,9 +55,9 @@
 .turnfin-module .diary-panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
 .turnfin-module .diary-panel-title { display: inline-flex; align-items: center; gap: 8px; margin: 0; color: var(--label); font-family: var(--font-display); font-size: 20px; line-height: 25px; font-weight: 650; letter-spacing: -0.015em; }
 .turnfin-module .diary-count { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 8px; border-radius: var(--radius-capsule); background: var(--orange-soft); color: var(--orange-ink); font-family: var(--font-text); font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0; }
-.turnfin-module .diary-muted { margin: 0; color: var(--label-2); font-size: var(--pc-text-body); line-height: var(--pc-leading-body); }
+.turnfin-module .diary-muted { margin: 0; color: var(--label-2); font-size: var(--type-body); line-height: var(--type-body-leading); }
 .turnfin-module .diary-caption { color: var(--label-2); font-size: 13px; line-height: 18px; }
-.turnfin-module .diary-label { padding: 0; color: var(--label); font-size: var(--pc-text-body); font-weight: 600; }
+.turnfin-module .diary-label { padding: 0; color: var(--label); font-size: var(--type-body); font-weight: 600; }
 .turnfin-module .diary-inline-icon { display: inline; width: 16px; height: 16px; margin-inline-end: 6px; vertical-align: -3px; }
 .turnfin-module .diary-tools { display: flex; flex-wrap: wrap; gap: 8px; }
 
@@ -117,7 +117,7 @@
 .turnfin-module .diary-where-need { display: flex; flex-direction: column; min-width: 0; color: var(--label); font-weight: 600; }
 .turnfin-module .diary-where-need > .diary-muted { font-weight: 400; font-size: 13px; line-height: 18px; }
 .turnfin-module .diary-where-names { color: var(--label); }
-.turnfin-module .diary-short { grid-column: 2; display: inline-flex; align-items: center; gap: 6px; color: var(--orange-ink); font-size: var(--pc-text-body); font-weight: 600; }
+.turnfin-module .diary-short { grid-column: 2; display: inline-flex; align-items: center; gap: 6px; color: var(--orange-ink); font-size: var(--type-body); font-weight: 600; }
 .turnfin-module .diary-short > svg { width: 16px; height: 16px; }
 .turnfin-module .diary-next { margin: 0; padding: 10px 14px; border-radius: var(--radius-lg); background: var(--fill-2); color: var(--label); }
 
@@ -203,7 +203,7 @@
 .turnfin-module .diary-times > legend { grid-column: 1 / -1; margin-bottom: 4px; }
 .turnfin-module .diary-break-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0 0 12px; padding: 0; border: 0; }
 .turnfin-module .diary-group { display: flex; flex-direction: column; gap: 8px; }
-.turnfin-module .diary-group-title { margin: 0; color: var(--label); font-size: var(--pc-text-body); font-weight: 700; }
+.turnfin-module .diary-group-title { margin: 0; color: var(--label); font-size: var(--type-body); font-weight: 700; }
 .turnfin-module .diary-picks { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
 .turnfin-module .diary-pick { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 10px 0; border-bottom: 1px solid var(--sep); }
 .turnfin-module .diary-pick:last-child { border-bottom: 0; }
@@ -226,11 +226,11 @@
 .turnfin-module .diary-step-title > svg { width: 16px; height: 16px; color: var(--label-2); }
 .turnfin-module .diary-step-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 .turnfin-module .diary-subs { display: block; color: var(--label-2); font-size: 12px; line-height: 16px; }
-.turnfin-module .diary-subs-list { display: flex; flex-direction: column; gap: 2px; margin: 4px 0 0; padding: 0; list-style: none; color: var(--label); font-size: var(--pc-text-body); }
+.turnfin-module .diary-subs-list { display: flex; flex-direction: column; gap: 2px; margin: 4px 0 0; padding: 0; list-style: none; color: var(--label); font-size: var(--type-body); }
 .turnfin-module .diary-subs-list > li { display: grid; grid-template-columns: 72px minmax(0, 1fr); align-items: center; gap: 8px; }
 .turnfin-module .diary-subs-list > li > span:first-child { color: var(--label-2); font-size: 12px; }
 /* One placed on the Plan (done any time): its name opens moving it. */
-.turnfin-module .diary-subs-list .diary-sub-placed { justify-content: flex-start; gap: 8px; min-height: 44px; height: auto; padding: 0 8px; margin-inline-start: -8px; color: var(--label); font-size: var(--pc-text-body); font-weight: 400; flex-wrap: wrap; justify-self: start; max-width: 100%; white-space: normal; text-align: start; column-gap: 8px; row-gap: 0; }
+.turnfin-module .diary-subs-list .diary-sub-placed { justify-content: flex-start; gap: 8px; min-height: 44px; height: auto; padding: 0 8px; margin-inline-start: -8px; color: var(--label); font-size: var(--type-body); font-weight: 400; flex-wrap: wrap; justify-self: start; max-width: 100%; white-space: normal; text-align: start; column-gap: 8px; row-gap: 0; }
 .turnfin-module .diary-subs-list .diary-sub-placed > .diary-caption { color: var(--accent); font-weight: 600; }
 .turnfin-module .diary-to-place { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; }
 .turnfin-module .diary-quick-times { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; border: 0; }

@@ -70,7 +70,7 @@ export function CoinageAccountsActions({ row, who, deliveryCount }: { row: Coina
     {deliveryCount > 0 && accounts && <Notice tone="warning" title="We couldn’t confirm the email alert" description="The request is saved. Send it again if they haven’t seen it." actions={<Button onClick={retry} disabled={pending} variant="outline">Send again</Button>} />}
     {notice && <p role="status" className="text-sm">{notice}</p>}
     <Dialog open={!!action} onOpenChange={openState => { if (!openState && !pending) setAction(null); }}>
-      <DialogContent onCloseAutoFocus={event => { event.preventDefault(); trigger.current?.focus(); }} className="max-h-(--pc-overlay-max-height) overflow-y-auto" showCloseButton={false}>
+      <DialogContent onCloseAutoFocus={event => { event.preventDefault(); trigger.current?.focus(); }} className="max-h-(--overlay-max-height) overflow-y-auto" showCloseButton={false}>
         <DialogHeader><DialogTitle>{action ? actionLabels[action] : ""}</DialogTitle><DialogDescription>{action ? descriptions[action] : ""}</DialogDescription></DialogHeader>
         <form method="post" onSubmit={event => { event.preventDefault(); void apply(event.currentTarget); }} className="space-y-4"><fieldset disabled={pending} className="space-y-4">
           {action === "order" && <>

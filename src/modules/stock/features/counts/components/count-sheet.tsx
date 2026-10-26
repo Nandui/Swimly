@@ -104,7 +104,7 @@ export function CountSheet({ takeId, products, lines, canCount }: {
         </div>
         <p className="pc-section-note">{canCount ? "An empty box is not counted. None means counted, none on the shelf. Numbers save as you type." : "An empty line was not counted."}</p>
         <div className="flex flex-wrap items-end gap-4">
-          <SearchField label="Find a product" value={query} onValueChange={setQuery} placeholder="Goggles" className="grow basis-(--pc-field-min)" />
+          <SearchField label="Find a product" value={query} onValueChange={setQuery} placeholder="Goggles" className="grow basis-(--field-min)" />
           <SegmentedChoice aria-label="Show" value={filter} onValueChange={(v) => setFilter(v as Filter)} fill="phone"
             options={[{ value: "all", label: "All", count: total }, { value: "todo", label: "Not counted", count: total - counted }, { value: "done", label: "Counted", count: counted }]} />
         </div>

@@ -15,7 +15,7 @@ export function HomeNew({ actions }: { actions: { key: string; label: string; hr
       <DropdownMenuTrigger asChild>
         <Button><Plus aria-hidden="true" />New</Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-72 max-w-(--pc-overlay-max-width)">
+      <DropdownMenuContent align="end" className="w-72 max-w-(--overlay-max-width)">
         <DropdownMenuLabel className="text-xs font-semibold text-ui-muted-foreground">New</DropdownMenuLabel>
         {actions.map((action) => {
           const Icon = action.icon ? ACTION_ICONS[action.icon] : Plus;

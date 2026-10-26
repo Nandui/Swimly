@@ -35,7 +35,7 @@ export function SaveBar({
   status: string;
   children: React.ReactNode;
 }) {
-  // A panel of its own after the main one; poolside.css (.pc-save-bar) holds it above the
+  // A panel of its own after the main one; kit.css (.pc-save-bar) holds it above the
   // viewport's edge, or above the bottom bar where the frame shows one.
   return (
     <div className="pc-panel pc-save-bar">

@@ -41,7 +41,7 @@ export default async function HoursPage() {
                     <Link href={`/training/people/${r.userId}`} className="pc-row-title -my-3 inline-flex min-h-11 items-center self-start underline-offset-4 hover:underline">{r.name}{r.jobTitle ? ` · ${r.jobTitle}` : ""}</Link>
                     <p className="pc-row-hint tabular-nums">{hoursInWords(r.minutes)} of {t.hours} h since {formatDate(r.since)}{r.met ? " · done" : ` · ${hoursInWords(r.needed - r.minutes)} to go`}</p>
                   </div>
-                  <div className="pc-row-trail w-full sm:w-auto sm:min-w-(--pc-field-min)">
+                  <div className="pc-row-trail w-full sm:w-auto sm:min-w-(--field-min)">
                     <Progress value={r.percent} aria-label={`${r.name}: ${r.percent}% of the hours`} />
                   </div>
                 </li>

@@ -5,10 +5,10 @@
 //      A page that only redirects or 404s renders nothing and is skipped.
 //   2. No new colours in stylesheets: colour literals (hex, rgb(), hsl(), oklch(), color-mix())
 //      live only in the theme files: src/app/theme/glass.css (the 2.0 tokens), kit.css (the 2.0
-//      kit's exact values from the design system), and poolside.css and src/app/shadcn.css
-//      (which point at the tokens); every other stylesheet uses their tokens.
+//      kit's exact values from the design system), src/app/shadcn.css (which points at the tokens)
+//      and the Academy site's own poolside.css (until it is rebuilt); every other stylesheet uses their tokens.
 //   3. Turnfin Me (apps/me) and the Academy site (apps/academy) follow the same rules, with exact
-//      copies of Turnfin's theme (glass.css, poolside.css, shadcn.css, globals.css, motion.css), so the three apps
+//      copies of Turnfin's theme (glass.css, shadcn.css, globals.css, motion.css), so the three apps
 //      share one set of colours. The Academy site adds one brand file, theme/leisureworld.css: the
 //      parents app's LeisureWorld colours, copied from it, so the two public sites look alike
 //      (owner request, 21 October 2026).
@@ -92,7 +92,7 @@ for (const app of APPS) checkApp(app);
 
 // ── 3. The connected products' theme is Turnfin's, byte for byte.
 for (const app of APPS.slice(1)) {
-  for (const file of ["src/app/theme/glass.css", "src/app/theme/poolside.css", "src/app/shadcn.css", "src/app/globals.css", "src/app/motion.css"]) {
+  for (const file of ["src/app/theme/glass.css", "src/app/shadcn.css", "src/app/globals.css", "src/app/motion.css"]) {
     const copy = join(root, app, file);
     if (!existsSync(copy) || read(copy) !== read(join(root, file))) problems.push(`${app}/${file}: must be an exact copy of Turnfin's ${file} (copy it across when Turnfin's changes)`);
   }

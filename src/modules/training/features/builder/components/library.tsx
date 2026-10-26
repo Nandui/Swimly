@@ -144,7 +144,7 @@ export function CopyIntoSection({ courseId, sectionId, sectionTitle, courses }: 
       {loading || !source ? <p className="text-sm text-ui-muted-foreground" role="status">Getting its lessons…</p> : !source.sections.length ? (
         <Notice title="That course has no lessons yet" />
       ) : (
-        <div className="flex max-h-(--pc-overlay-max-height) flex-col gap-4 overflow-y-auto">
+        <div className="flex max-h-(--overlay-max-height) flex-col gap-4 overflow-y-auto">
           {source.sections.map((s) => (
             <fieldset key={s.id} className="flex flex-col gap-2">
               <legend className="mb-1 text-xs font-semibold text-ui-muted-foreground">{s.title}</legend>

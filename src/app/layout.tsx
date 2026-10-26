@@ -12,11 +12,9 @@ import { DevelopmentRolePreview } from "@/components/staff/development-role-prev
 import { YourModulesProvider } from "@/components/workspace/your-modules";
 import { modulesFor } from "@/modules/context";
 import { getCurrentClub } from "@/lib/clubs/current";
-// Turnfin Glass (DESIGN.md): its tokens come in through globals.css (theme/glass.css); the
-// pre-2.0 rules, pointed at those tokens, stay in poolside.css until the 2.0 kit (theme/kit.css,
-// loaded after it) replaces them part by part.
+// Turnfin Glass (DESIGN.md): its tokens come in through globals.css (theme/glass.css), its kit
+// and frame through theme/kit.css.
 import "./globals.css";
-import "./theme/poolside.css";
 import "./theme/kit.css";
 import { GlassRoot } from "@/components/ui-kit/glass";
 import { inter } from "./fonts";

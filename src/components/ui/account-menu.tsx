@@ -52,7 +52,7 @@ export function AccountMenu({ name, showManageAccount = true, layout = "bar" }: 
           ) : <ChevronDown aria-hidden="true" />}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent side={layout === "sidebar" ? "top" : "bottom"} align={layout === "sidebar" ? "start" : "end"} className="tf-account-menu w-80 max-w-(--pc-overlay-max-width)">
+      <DropdownMenuContent side={layout === "sidebar" ? "top" : "bottom"} align={layout === "sidebar" ? "start" : "end"} className="tf-account-menu w-80 max-w-(--overlay-max-width)">
         <DropdownMenuLabel className="flex items-center gap-3 p-0 text-sm font-normal text-ui-foreground">
           <Avatar size="lg" self aria-hidden="true">{photo}<AvatarFallback>{initials(name)}</AvatarFallback></Avatar>
           <span className="min-w-0 break-words">
