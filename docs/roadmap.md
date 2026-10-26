@@ -26,7 +26,7 @@ Today a merge to `main` deploys and migrates production, and nothing checks it a
 
 - A GitHub check on every pull request: typecheck, lint (boundary and UI rules), tests and a build against the development database.
 - `main` protected: it accepts only pull requests that pass the check.
-- A test floor for every app: its rules, every front-door function and every event it emits or handles. Refunds, Coinage, Stock, the CCTV log, Site Monitoring, Tasks and HR meet it; the other apps are next.
+- A test floor for every app: its rules, every front-door function and every event it emits or handles. Every app meets it.
 - `npm run lint` runs on Windows as well as Linux.
 
 **Done when** no change can reach `main` without passing the checks, and every app meets the test floor.
@@ -65,9 +65,10 @@ Comments are not unified: task comments, course reviews, incident addenda and st
 
 ## 5. The 2.0 design
 
-The design is approved: **Turnfin Glass**, written in [../DESIGN.md](../DESIGN.md) (D13, 25 October 2026). The build order is in its "How it is built".
+The process is in [../DESIGN.md](../DESIGN.md).
 
-- The theme and UI kit are rebuilt first (tokens, the glass material, springs, frame, page shell, states), then Home and the app frame, then each app's screens, one app per pull request.
+- The owner approves the direction from screenshot-checked mockups, then the written design contract replaces the placeholder in DESIGN.md.
+- The theme and UI kit are rebuilt first (tokens, frame, page shell, states), then Home and the app frame, then each app's screens, one app per pull request.
 - The old look is removed as each part is replaced: no two designs in one screen, and none left at the end. Turnfin Me and the Academy booking site follow with their own pull requests.
 - The help centre's guides and screenshots are redone for the new screens.
 

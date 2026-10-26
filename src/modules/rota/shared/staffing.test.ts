@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { hoursOn, lineLabel, roleFor, staffingWords } from "@/lib/setup/area-staffing";
 import { ANY_DEPARTMENT, areaNeedOf, buildDay, dayGaps, isAreaNeed, type DayAreaAssignment, type DayType } from "@/modules/rota/shared/day";
 import { needRows } from "@/modules/rota/shared/plan-rows";
-import { shortOf, staffingSpans, type AreaMinimum } from "@/modules/rota/shared/staffing";
+import { shortOf, shortWeight, staffingSpans, without, type AreaMinimum } from "@/modules/rota/shared/staffing";
 
 /** Invented site and people. 23 October 2026 is a Friday, the 24th a Saturday. */
 const h = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3));
@@ -113,4 +113,18 @@ test("an area asks for a role; its qualification only says who can fill it", () 
   const g = d.groups.find((x) => isAreaNeed(x.typeId))!;
   assert.equal(g.name, "Lifeguard on duty");
   assert.equal(g.requiredName, "NPLQ", "the qualification still decides who can be put on it");
+});
+
+test("how short an area is weighs the square of the places short, so two breaks at once count more than two apart", () => {
+  const one = [{ count: 2, typeId: null, typeName: null }];
+  const anyone = () => true;
+  const open = [{ start: h("09:00"), end: h("11:00") }];
+  const both = [{ userId: "aoife", start: h("09:00"), end: h("11:00") }, { userId: "eoin", start: h("09:00"), end: h("11:00") }];
+  assert.equal(shortWeight(one, open, both, anyone, open[0]), 0, "fully staffed");
+  const apart = without(without(both, "aoife", { start: h("09:00"), end: h("09:30") }), "eoin", { start: h("10:00"), end: h("10:30") });
+  const together = without(without(both, "aoife", { start: h("09:00"), end: h("09:30") }), "eoin", { start: h("09:00"), end: h("09:30") });
+  assert.equal(shortWeight(one, open, apart, anyone, open[0]), 30 + 30, "one short for half an hour, twice");
+  assert.equal(shortWeight(one, open, together, anyone, open[0]), 4 * 30, "two short for half an hour");
+  assert.equal(shortWeight(one, open, together, anyone, { start: h("10:00"), end: h("11:00") }), 0, "only the stretch asked about counts");
+  assert.deepEqual(without(both, "aoife", { start: h("09:00"), end: h("09:30") }).filter((p) => p.userId === "aoife"), [{ userId: "aoife", start: h("09:30"), end: h("11:00") }]);
 });
