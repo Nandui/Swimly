@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.13.0 · 26 October 2026 · Tasks in the new look
+
+- **Today in Tasks** is titled just **Today**, with the site and date underneath. The figures name what they count over the number, and a figure of nothing is grey.
+- The day picker, search and filters sit above the tasks, and each group (needs attention, still to do, completed, exceptions) has its own title and a line on what it holds. A task's square is orange when it needs someone, green when done and red for an exception.
+- **A task** opens with its status, priority, time and site above its name. The details, checklist, records, comments and follow-up actions each have their title above them, with **Add** and **Raise one** beside the title. Each record in a log sits in a soft grey well.
+- **Follow-up actions**, **Activity**, **Reports**, the **task library** and the **template editor** have their section titles above their cards too.
+
 ## 2.12.0 · 26 October 2026 · Coinage in the new look
 
 - **Coinage requests** look like Refund requests now: the queue tiles name each queue over its count, search and the filters sit above the list, and each request has a coloured square, orange while it waits and green once ordered.
