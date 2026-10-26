@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { Send } from "lucide-react";
 import { Frame } from "@/components/frame";
+import { useLiveBanner } from "@/components/ui-kit/live-banner";
 import { EmptyRows, LoadError, Loading, Notice, Tag, useLoad } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
 import { date } from "@/lib/format";
@@ -35,6 +36,7 @@ export default function QualificationsPage() {
   const { data, error, reload } = useLoad<Data>("qualifications");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ tone?: "error"; text: string } | null>(null);
+  const banner = useLiveBanner();
   // null: not chosen yet, so the first qualification type is selected.
   const [pickedType, setPickedType] = useState<string | null>(null);
   const typeId = pickedType ?? data?.types[0]?.id ?? "";
@@ -56,7 +58,7 @@ export default function QualificationsPage() {
       } });
       form.reset();
       setPickedType(null);
-      setMessage({ text: "Sent. Your manager will check it and add it to your record." });
+      banner("Certificate sent", "Your manager will check it and add it to your record");
       await reload();
     } catch (caught) { setMessage({ tone: "error", text: caught instanceof ApiError ? caught.message : "That didn't send. Try again." }); }
     finally { setBusy(false); }

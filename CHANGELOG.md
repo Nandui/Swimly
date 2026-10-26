@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.9.0 · 26 October 2026 · Turnfin Me in the new look
+
+- **Turnfin Me** on your phone opens each page with a large title. As you scroll, the title moves into a small glass bar at the top.
+- The bar at the bottom now has four tabs: Home, Training, Shifts and More. Required reading is in More, and anything due shows on Home. While you scroll down, the bar shrinks to the tab you are on, and it comes back when you scroll up.
+- Home lists everything that needs you in one place: the course you were part-way through, today's refresher, a review to acknowledge, training and reading that are due, and certificates that are running out. Your next shifts follow.
+- Sign out is at the bottom of More.
+- When you send changes to your details, send a certificate or mark a document as read, a black banner at the top confirms it, then shrinks to a tick and the time. Tap it to read it again.
+
 ## 2.8.0 · 25 October 2026 · The register in the new look
 
 - The register opens with a green ring that fills as swimmers arrive, and shows how many are here.

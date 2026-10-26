@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { Send } from "lucide-react";
 import { Frame } from "@/components/frame";
+import { useLiveBanner } from "@/components/ui-kit/live-banner";
 import { LoadError, Loading, Notice, useLoad } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
 import { date } from "@/lib/format";
@@ -38,6 +39,7 @@ export default function DetailsPage() {
   const { data, error, reload } = useLoad<Profile>("me");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ tone?: "error"; text: string } | null>(null);
+  const banner = useLiveBanner();
 
   async function send(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -48,7 +50,7 @@ export default function DetailsPage() {
     setBusy(true); setMessage(null);
     try {
       await api("me", { method: "PATCH", body: { ...changed, message: String(values.get("message") ?? "") } });
-      setMessage({ text: "Sent. The office will check it and update your record." });
+      banner("Changes sent", "The office will check them and update your record");
       await reload();
     } catch (caught) { setMessage({ tone: "error", text: caught instanceof ApiError ? caught.message : "That didn't send. Try again." }); }
     finally { setBusy(false); }
