@@ -4,6 +4,7 @@ import { coinageModule } from "@/modules/coinage/manifest";
 import { docsModule } from "@/modules/docs/manifest";
 import { hrModule } from "@/modules/hr/manifest";
 import { incidentsModule } from "@/modules/incidents/manifest";
+import { maintenanceModule } from "@/modules/maintenance/manifest";
 import { purchasingModule } from "@/modules/purchasing/manifest";
 import { refundsModule } from "@/modules/refunds/manifest";
 import { rotaModule } from "@/modules/rota/manifest";
@@ -32,6 +33,7 @@ export const modules = [
   hrModule,
   cctvModule,
   siteMonitoringModule,
+  maintenanceModule,
   analyticsModule,
   purchasingModule,
   stockModule,

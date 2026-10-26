@@ -22,6 +22,7 @@ export async function seed(ctx: Ctx) {
   await seedShortCourses(ctx.prisma);
   await seedStock(ctx.prisma);
   await seedCctv(ctx.prisma);
+  await seedMaintenance(ctx.prisma);
   await seedSwimHistory(ctx.prisma, ctx.roles.Instructor);
   await seedDeskHistory(ctx.prisma, ctx.roles.Receptionist);
 }
@@ -395,4 +396,37 @@ async function seedStock(db: PrismaClient) {
   // The hand towels were missed last week: they are not counted, not none.
   await db.stockTakeLine.createMany({ data: products.slice(0, -1).map((p, i) => ({ stockTakeId: week.id, productId: p.id, quantity: list[i][4], countedByName: "Maya Example" })) });
   await db.stockTakeLine.createMany({ data: products.slice(0, 4).map((p, i) => ({ stockTakeId: open.id, productId: p.id, quantity: Math.max(0, list[i][4] - 2), countedByName: "Maya Example" })) });
+}
+
+/** Maintenance requests at both sites, in every status: some waiting to go in Trackplan (one
+ *  urgent, could hurt someone), some already there, one fixed and one closed as reported twice.
+ *  Noah reports at Riverside's desk; Maya and Orla manage; Owen covers both sites. */
+async function seedMaintenance(db: PrismaClient) {
+  const ORG = "org_leisureworld", RIVERSIDE = "club_bishopstown", HILLVIEW = "club_churchfield";
+  const ago = (hours: number) => new Date(Date.now() - hours * 3600_000);
+  type Seed = { site: string; area: string; place: string; title: string; details?: string; urgency: string; risk: string; trackplan: string; ref?: string; status: string; by: [string, string]; hours: number; outcome?: string; closedBy?: [string, string] };
+  const list: Seed[] = [
+    { site: RIVERSIDE, area: "Main pool", place: "Steps at the shallow end", title: "Loose handrail on the pool steps", details: "Synthetic: the rail moves when you lean on it.", urgency: "urgent", risk: "could_hurt", trackplan: "unsure", status: "reported", by: ["sbx_noah", "Noah Example"], hours: 3 },
+    { site: RIVERSIDE, area: "Front desk", place: "Till 2", title: "Card reader keeps restarting", urgency: "normal", risk: "none", trackplan: "no", status: "reported", by: ["sbx_noah", "Noah Example"], hours: 26 },
+    { site: RIVERSIDE, area: "Gym", place: "Third treadmill from the window", title: "Treadmill belt slipping", urgency: "normal", risk: "out_of_use", trackplan: "yes", ref: "TP-20481", status: "in_trackplan", by: ["sbx_riley", "Riley Example"], hours: 50 },
+    { site: HILLVIEW, area: "Learner pool", place: "Changing village, shower 3", title: "Shower will not turn off", urgency: "normal", risk: "none", trackplan: "yes", status: "in_trackplan", by: ["sbx_ciara", "Ciara Example"], hours: 72 },
+    { site: HILLVIEW, area: "Main pool", place: "Deep end, lane 6", title: "Lane rope ratchet broken", urgency: "low", risk: "none", trackplan: "yes", ref: "TP-20302", status: "fixed", by: ["sbx_sam", "Sam Example"], hours: 140, outcome: "Synthetic: new ratchet fitted by the maintenance team.", closedBy: ["sbx_orla", "Orla Example"] },
+    { site: HILLVIEW, area: "Learner pool", place: "Changing village, shower 3", title: "Shower 3 running all the time", urgency: "normal", risk: "none", trackplan: "unsure", status: "closed", by: ["sbx_conor", "Conor Example"], hours: 70, outcome: "Reported twice", closedBy: ["sbx_maya", "Maya Example"] },
+  ];
+  const ids: string[] = [];
+  for (const r of list) {
+    const id = randomUUID();
+    ids.push(id);
+    const closed = r.status === "fixed" || r.status === "closed";
+    await db.maintenanceRequest.create({ data: {
+      id, orgId: ORG, siteId: r.site, area: r.area, place: r.place, title: r.title, details: r.details ?? "", urgency: r.urgency, risk: r.risk,
+      trackplan: r.trackplan, trackplanRef: r.ref ?? "", status: r.status, outcome: r.outcome ?? "", duplicateOfId: r.status === "closed" ? ids[3] : null,
+      reportedById: r.by[0], reportedByName: r.by[1], createdAt: ago(r.hours),
+      ...(closed ? { closedAt: ago(r.hours - 20), closedById: r.closedBy![0], closedByName: r.closedBy![1] } : {}),
+    } });
+    const step = (action: string, actor: [string, string], hours: number, note = "") => db.maintenanceEvent.create({ data: { orgId: ORG, requestId: id, operationId: randomUUID(), actorId: actor[0], actorName: actor[1], action, note, createdAt: ago(hours) } });
+    await step("report", r.by, r.hours);
+    if (r.ref && r.trackplan === "yes" && r.site === HILLVIEW) await step("trackplan", ["sbx_orla", "Orla Example"], r.hours - 4, `Reference ${r.ref}`);
+    if (closed) await step(r.status === "fixed" ? "fix" : "close", r.closedBy!, r.hours - 20, r.outcome);
+  }
 }

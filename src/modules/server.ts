@@ -15,6 +15,7 @@ import "@/modules/short-courses/module";
 import "@/modules/stock/module";
 import "@/modules/cctv/module";
 import "@/modules/site-monitoring/module";
+import "@/modules/maintenance/module";
 import "@/lib/people/home";
 import "@/modules/hr/module";
 
