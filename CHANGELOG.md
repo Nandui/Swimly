@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.23.0 · 26 October 2026 · HR in the new look
+
+- **A person's HR file** has every part under its own title: profile, employment and contact as label and value rows, then notes, performance reviews, qualifications and what other apps add (training, rota, absences, incidents) as plain lists with how many each holds.
+- **HR** shows the restricted reminder as a quiet message, with the search and people below it.
+- **Who read what** lists reads and changes as quiet timelines side by side.
+- **Details changes**, **a review** and **the review draft** are cards with their titles above them.
+
 ## 2.22.0 · 26 October 2026 · Rota's Today, Bookings and Absences in the new look
 
 - **Today** opens with its five figures, each naming what it counts above the number; gaps left and changes still to put in Timepoint are marked in orange when there are some.

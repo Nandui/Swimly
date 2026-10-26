@@ -56,9 +56,10 @@ export function ReviewEditor({ review, name, isReviewer }: { review: Draft; name
   }
   return (
     // The form wraps both panels, so Save draft in the footer still submits the fields.
-    <form method="post" className="flex flex-col gap-4" onSubmit={(event) => { event.preventDefault(); save(event.currentTarget); }}>
-      <section className="pc-panel" aria-labelledby="review-editor">
-        <div className="pc-panel-head"><h2 id="review-editor">Draft</h2></div>
+    <form method="post" className="flex flex-col gap-(--space-6)" onSubmit={(event) => { event.preventDefault(); save(event.currentTarget); }}>
+      <section className="flex min-w-0 flex-col" aria-labelledby="review-editor">
+        <div className="pc-section-head"><h2 id="review-editor">Draft</h2></div>
+        <div className="rec-card">
         <div className="space-y-2"><Label htmlFor="rv-period" className="block">Review period</Label><Input id="rv-period" name="period" defaultValue={review.period} required minLength={2} maxLength={80} className="min-h-11" /></div>
         <div className="space-y-2"><Label htmlFor="rv-summary" className="block">Summary</Label><Textarea id="rv-summary" name="summary" defaultValue={review.summary} rows={5} maxLength={5000} /></div>
         <div className="space-y-2"><Label htmlFor="rv-strengths" className="block">Strengths</Label><Textarea id="rv-strengths" name="strengths" defaultValue={review.strengths} rows={4} maxLength={5000} /></div>
@@ -69,10 +70,11 @@ export function ReviewEditor({ review, name, isReviewer }: { review: Draft; name
             {Object.entries(REVIEW_OVERALL_LABELS).map(([value, label]) => <NativeSelectOption key={value} value={value}>{label}</NativeSelectOption>)}
           </NativeSelect>
         </Field>
+        </div>
       </section>
       {error ? <Notice tone="error" live="alert" title={error} /> : null}
-      <div className="pc-panel">
-        <div className="pc-panel-head">
+      <div className="rec-card">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <p role="status" className="text-sm font-semibold">
             {pending ? "Saving…" : `Draft saved ${formatDateTime(new Date(review.updatedAt))}`}
             <span className="font-normal text-ui-muted-foreground">
