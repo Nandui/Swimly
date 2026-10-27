@@ -8,6 +8,7 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 - **On a computer**, the top of the list of apps shows a larger fin with the name Turnfin beside it. Choose either to go Home.
 - **Everywhere else the fin shows** (a tablet's row of app symbols, the pool deck, Help and the sign-in page) it is larger too.
+- **The fin sits centred** in its space, in the app, on the sign-in page and as the icon on your browser tab and home screen. It used to lean right and low.
 
 ## 2.28.1 · 26 October 2026 · Easier to read in Tasks
 

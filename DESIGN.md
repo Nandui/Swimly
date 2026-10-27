@@ -145,7 +145,7 @@ Turnfin is one frame holding apps ([PRODUCT.md](PRODUCT.md)). The frame changes 
 ### Desktop (1100px and wider)
 
 - **Sidebar.** Floating glass (`panel`), inset 10px from the window, `sidebar-width` wide, with `radius-panel` corners.
-  - At the top, the fin and the Turnfin name (`title-3`, `label`) link to Home as one 44px-high target. The fin art fills the middle half of its square, so it is drawn past its 44px box to read at about 31px, there and wherever the fin shows (phone toolbar, pool deck, Help, sign-in). The tablet rail shows the fin alone, centred.
+  - At the top, the fin and the Turnfin name (`title-3`, `label`) link to Home as one 44px-high target. The fin art is optically centred in its square (its tip is thin, its body and curl heavy, so it sits midway between its box and its weight) and fills the middle half of it, so it is drawn past its 44px box to read at about 31px, there and wherever the fin shows (phone toolbar, pool deck, Help, sign-in). The tablet rail shows the fin alone, centred.
   - Then Home, an "Apps" heading, and the person's apps in the module bar's order. Symbols are `accent`, labels `subheadline` at 14px.
   - Each app may show a plain `label-2` count of what needs the person. No red badges in the sidebar.
   - The open app has a `glass-sel` fill, and a hover droplet glides between rows.
