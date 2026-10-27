@@ -31,7 +31,7 @@ export function CompetencyHistory({ studentId, id, name }: { studentId: string; 
 }
 
 function HistoryRows({ events, studentId, showCompetencyLinks = true, brief = false }: { events: HistoryEvent[]; studentId: string; showCompetencyLinks?: boolean; brief?: boolean }) {
-  return <ol className={brief ? "flex flex-col" : "pc-rows"} aria-label="Swimmer activity">{events.map(event => {
+  return <ol className={brief ? "flex flex-col" : "pc-list"} aria-label="Swimmer activity">{events.map(event => {
     const Icon = ICONS[event.kind], changes = event.evidence?.changes;
     const title = changes?.length ? `${changes.length} competency ${changes.length === 1 ? "mark" : "marks"} updated` : event.title;
     if (brief) {

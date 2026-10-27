@@ -8,6 +8,7 @@ import { CalendarDays, ChevronRight, Flag, Phone, TriangleAlert, Waves } from "l
 import { Button } from "@/components/shadcn/button";
 import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { Progress } from "@/components/shadcn/progress";
+import { RecordFact, RecordFacts, RecordSection } from "@/components/ui-kit/record";
 import { Tag } from "@/components/ui-kit/tag";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
@@ -69,9 +70,9 @@ export function SwimmerProfile({ student, enrolments, programmes, assessments, t
       <TabsList aria-label="Swimmer profile sections"><TabsTrigger value="journey">Journey</TabsTrigger><TabsTrigger value="competencies">Competencies</TabsTrigger><TabsTrigger value="attendance">Attendance</TabsTrigger><TabsTrigger value="assessments">Assessments</TabsTrigger><TabsTrigger value="details">Details</TabsTrigger>{access.parents ? <TabsTrigger value="parents">Parent access</TabsTrigger> : null}</TabsList>
       <div className={styles.body}>
         {/* First in reading order, so phones see it before the chapters; wide screens place it on the right. */}
-        <aside className={`pc-panel ${styles.glance}`} aria-labelledby="glance-heading">
-          <h2 id="glance-heading">Swimmer at a glance</h2>
-          <ul className="pc-rows">
+        <aside className={`flex flex-col ${styles.glance}`} aria-labelledby="glance-heading">
+          <div className="pc-section-head"><h2 id="glance-heading">At a glance</h2></div>
+          <ul className="pc-list">
             {(current.length ? current : [null]).map(e => <li key={e?.id ?? "none"} className="pc-row"><span className="pc-tile-icon"><Waves aria-hidden="true" /></span><div className="pc-row-body"><p className="pc-row-title">{e ? e.level.name : "Not in a class"}</p><p className="pc-row-hint">{e ? ["Current class", formatSlotShort(e.course)].join(" · ") : "Current class"}</p></div></li>)}
             <li className="pc-row"><span className="pc-tile-icon"><CalendarDays aria-hidden="true" /></span><div className="pc-row-body"><p className="pc-row-title tabular-nums">{next ? `${formatDate(parseDateOnly(next.date))}, ${formatTime(next.enrolment.course.startMinutes)}` : "No upcoming class"}</p><p className="pc-row-hint">{next ? `Next lesson · ${next.enrolment.course.club.name}` : "Next lesson"}</p></div></li>
             <li><a href={swimmerProfileHref(student.id, returnTo, "details")} className="pc-row" onClick={event => { event.preventDefault(); navigate("details"); }}><span className="pc-tile-icon"><Phone aria-hidden="true" /></span><span className="pc-row-body"><span className="pc-row-title">{student.contactName ?? "No contact recorded"}</span><span className="pc-row-hint tabular-nums">{student.contactPhone ? `Contact · ${student.contactPhone}` : "Contact details"}</span></span><ChevronRight className="pc-row-chevron" aria-hidden="true" /></a></li>
@@ -79,10 +80,9 @@ export function SwimmerProfile({ student, enrolments, programmes, assessments, t
         </aside>
         <div className={styles.main}>
           <TabsContent value="journey" className="m-0">
-            <section className="pc-panel" aria-labelledby="journey-heading">
-              <div className="pc-panel-head"><h2 id="journey-heading">Every chapter, from their first swim</h2>
-                <div className="flex flex-wrap items-center gap-2"><SegmentedChoice aria-label="Journey display" value={mode} onValueChange={setMode} options={JOURNEY_MODES} />{programmeOptions.length > 1 ? <Select value={programme} onValueChange={setProgramme}><SelectTrigger aria-label="Filter by programme"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All programmes</SelectItem>{programmeOptions.map(([id, label]) => <SelectItem value={id} key={id}>{label}</SelectItem>)}</SelectContent></Select> : null}</div>
-              </div>
+            <section className="flex min-w-0 flex-col" aria-labelledby="journey-heading">
+              <div className="pc-section-head"><h2 id="journey-heading">Every chapter, from their first swim</h2></div>
+                <div className="mb-(--space-3) flex flex-wrap items-center gap-2"><SegmentedChoice aria-label="Journey display" value={mode} onValueChange={setMode} options={JOURNEY_MODES} />{programmeOptions.length > 1 ? <Select value={programme} onValueChange={setProgramme}><SelectTrigger aria-label="Filter by programme"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All programmes</SelectItem>{programmeOptions.map(([id, label]) => <SelectItem value={id} key={id}>{label}</SelectItem>)}</SelectContent></Select> : null}</div>
               {mode === "milestones" ? <ol className={styles.chapters} aria-label="Chapters">
                 {chapters.map(e => {
                   const progress = programmes.find(p => p.programmeId === e.programmeId)?.levels.find(l => l.id === e.levelId);
@@ -126,15 +126,15 @@ export function SwimmerProfile({ student, enrolments, programmes, assessments, t
             </section>
           </TabsContent>
           <TabsContent value="competencies" forceMount hidden={tab !== "competencies"} className="m-0"><ProfileCompetencies studentId={student.id} programmes={programmes} access={access} selectedLevel={level} /></TabsContent>
-          <TabsContent value="attendance" className="m-0"><section className="pc-panel" aria-labelledby="attendance-heading"><div><h2 id="attendance-heading">Attendance history</h2><p className="pc-row-hint">Lesson dates, saved marks and corrections across every site.</p></div><HistoryFeed studentId={student.id} query={{ kind: "attendance" }} /></section></TabsContent>
-          <TabsContent value="assessments" className="m-0"><section className="pc-panel" aria-labelledby="assessments-heading"><h2 id="assessments-heading">Assessments and placements</h2>
+          <TabsContent value="attendance" className="m-0"><section className="flex min-w-0 flex-col" aria-labelledby="attendance-heading"><div className="pc-section-head"><h2 id="attendance-heading">Attendance history</h2></div><p className="pc-section-note">Lesson dates, saved marks and corrections across every site.</p><HistoryFeed studentId={student.id} query={{ kind: "attendance" }} /></section></TabsContent>
+          <TabsContent value="assessments" className="m-0"><section className="flex min-w-0 flex-col gap-(--space-4)" aria-labelledby="assessments-heading"><div className="pc-section-head mb-0"><h2 id="assessments-heading">Assessments and placements</h2>{assessments.length ? <p>{assessments.length}</p> : null}</div>
             {assessments.length ? <>
-              <ul className="pc-rows">{assessments.map(a => <li key={a.id} className="pc-row"><div className="pc-row-body"><h3 className="pc-row-title">{a.session.type?.name ?? "Assessment session"}</h3><p className="pc-row-hint tabular-nums">{formatDate(a.session.date)} · {formatTime(a.session.startMinutes)} · {a.session.club.name}</p><p className="text-sm">{a.session.programme.name}{a.outcomeLevel ? ` · Placed at ${a.outcomeLevel.name}` : ""}</p>{a.assessedByName ? <p className="pc-row-hint">{a.assessedByName}{a.assessedOn ? ` · ${formatDate(a.assessedOn)}` : ""}</p> : null}{a.outcomeNote ? <p className="text-sm">{a.outcomeNote}</p> : null}{a.session.cancelledAt ? <p className="text-sm">Session cancelled</p> : null}</div><div className="pc-row-trail"><Tag meta={BOOKING_STATUS_META[a.status]} />{access.assessments ? <Button variant="ghost" asChild><a href={`/assessments/${a.session.id}`}>Open assessment</a></Button> : null}</div></li>)}</ul>
+              <ul className="pc-list">{assessments.map(a => <li key={a.id} className="pc-row"><div className="pc-row-body"><h3 className="pc-row-title">{a.session.type?.name ?? "Assessment session"}</h3><p className="pc-row-hint tabular-nums">{formatDate(a.session.date)} · {formatTime(a.session.startMinutes)} · {a.session.club.name}</p><p className="text-sm">{a.session.programme.name}{a.outcomeLevel ? ` · Placed at ${a.outcomeLevel.name}` : ""}</p>{a.assessedByName ? <p className="pc-row-hint">{a.assessedByName}{a.assessedOn ? ` · ${formatDate(a.assessedOn)}` : ""}</p> : null}{a.outcomeNote ? <p className="text-sm">{a.outcomeNote}</p> : null}{a.session.cancelledAt ? <p className="text-sm">Session cancelled</p> : null}</div><div className="pc-row-trail"><Tag meta={BOOKING_STATUS_META[a.status]} />{access.assessments ? <Button variant="ghost" asChild><a href={`/assessments/${a.session.id}`}>Open assessment</a></Button> : null}</div></li>)}</ul>
               <HistoryFeed studentId={student.id} query={{ kind: "assessment" }} emptyTitle="No other assessment activity" />
             </> : <HistoryFeed studentId={student.id} query={{ kind: "assessment" }} emptyTitle="No assessments yet" />}
           </section></TabsContent>
-          <TabsContent value="details" className="m-0"><div className="flex flex-col gap-6"><ProfileDetails student={student} /><OtherCourses entries={otherCourses} /></div></TabsContent>
-          {access.parents ? <TabsContent value="parents" className="m-0"><div className="pc-panel"><GuardianAccessPanel studentId={student.id} swimmerName={name} /></div></TabsContent> : null}
+          <TabsContent value="details" className="m-0"><div className="flex flex-col gap-(--space-7)"><ProfileDetails student={student} /><OtherCourses entries={otherCourses} /></div></TabsContent>
+          {access.parents ? <TabsContent value="parents" className="m-0"><GuardianAccessPanel studentId={student.id} swimmerName={name} /></TabsContent> : null}
         </div>
       </div>
     </Tabs>
@@ -143,9 +143,9 @@ export function SwimmerProfile({ student, enrolments, programmes, assessments, t
 
 /** Short courses and Academy courses they have been booked on, from those modules. */
 function OtherCourses({ entries }: { entries: MemberHistoryEntry[] }) {
-  return <section className="pc-panel" aria-labelledby="other-courses-heading"><div><h2 id="other-courses-heading">Other courses</h2><p className="pc-row-hint">Short courses and Academy courses they have been booked on.</p></div>
-    {entries.length ? <ul className="pc-rows">{entries.map(e => <li key={e.id} className="pc-row"><div className="pc-row-body"><h3 className="pc-row-title">{e.title}</h3><p className="pc-row-hint">{e.detail}</p></div><div className="pc-row-trail"><span className="pc-row-hint">{e.module}</span></div></li>)}</ul>
-      : <EmptyState compact icon="calendarDays" title="No other courses" />}</section>;
+  return <section className="flex min-w-0 flex-col" aria-labelledby="other-courses-heading"><div className="pc-section-head"><h2 id="other-courses-heading">Other courses</h2>{entries.length ? <p>{entries.length}</p> : null}</div><p className="pc-section-note">Short courses and Academy courses they have been booked on.</p>
+    {entries.length ? <ul className="pc-list">{entries.map(e => <li key={e.id} className="pc-row"><div className="pc-row-body"><h3 className="pc-row-title">{e.title}</h3><p className="pc-row-hint">{e.detail}</p></div><div className="pc-row-trail"><span className="pc-row-hint">{e.module}</span></div></li>)}</ul>
+      : <div className="pc-list"><EmptyState compact icon="calendarDays" title="No other courses" /></div>}</section>;
 }
 
 function ProfileDetails({ student }: { student: StudentDetail }) {
@@ -154,5 +154,5 @@ function ProfileDetails({ student }: { student: StudentDetail }) {
   const tel = (value: string) => <a className={`${link} tabular-nums`} href={`tel:${value.replace(/\s/g, "")}`}>{value}</a>;
   const medical = student.medicalNotes || (student.hasMedicalNotes ? "On file. Reception, swim school managers and this swimmer's instructors can read them." : null);
   const fields: [string, React.ReactNode][] = [["Member number", student.memberNumber], ["Date of birth", student.dateOfBirth ? formatDate(student.dateOfBirth) : null], ["Joined", formatDate(student.joinedOn)], ["Home site", student.club.name], ["Contact", student.contactName], ["Phone", student.contactPhone ? tel(student.contactPhone) : null], ["Email", student.contactEmail ? <a key="email" href={`mailto:${student.contactEmail}`} className={`${link} break-all`}>{student.contactEmail}</a> : null], ["Emergency contact", [student.emergencyName, student.emergencyRelationship].filter(Boolean).join(" · ")], ["Emergency phone", student.emergencyPhone ? tel(student.emergencyPhone) : null], ["Medical notes", medical], ["Other notes", student.notes], ["Photo consent", student.photoConsent ? `Given${student.photoConsentOn ? ` on ${formatDate(student.photoConsentOn)}` : ""}` : "Not given"]];
-  return <section className="pc-panel" aria-labelledby="details-heading"><h2 id="details-heading">Details and contacts</h2><dl className={`pc-rows ${styles.details}`}>{fields.map(([label, value]) => <div key={label} className="pc-row"><dt className="pc-row-hint">{label}</dt><dd className="whitespace-pre-wrap">{value || "Not recorded"}</dd></div>)}</dl></section>;
+  return <RecordSection id="details-heading" title="Details and contacts"><div className="rec-card"><RecordFacts>{fields.map(([label, value]) => <RecordFact key={label} label={label}><span className="whitespace-pre-wrap">{value || "Not recorded"}</span></RecordFact>)}</RecordFacts></div></RecordSection>;
 }

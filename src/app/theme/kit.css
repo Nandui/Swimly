@@ -298,6 +298,46 @@
 .turnfin-app [data-slot='button'].day-tl-block:active { scale: 0.96; }
 .turnfin-app [data-slot='button'].day-tl-block[aria-expanded='true'] { box-shadow: 0 0 0 2px var(--bg-2), 0 0 0 4px var(--accent); }
 .turnfin-app [data-slot='button'].day-tl-block:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Time blocks (.pc-block): a class or session as a Calendar-style block, as DayTimeline draws
+   them: the 9px corner, a 3px leading bar and the timeline's tones. On now in the soft blue, next
+   in the quiet fill, a gap orange, done grey, off or open hatched, absent red. `data-block` (or
+   `data-state` on older callers) names the state; a block with none is the quiet fill. */
+.turnfin-app .pc-block { position: relative; display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 56px; padding: 8px 10px 8px 14px; border-radius: var(--radius-sm); background: var(--fill); color: var(--label); text-decoration: none; overflow: hidden; }
+.turnfin-app .pc-block::before { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 3px; background: var(--pc-block-bar, transparent); }
+.turnfin-app .pc-block-body { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.turnfin-app .pc-block-body > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.turnfin-app .pc-block-title { font-weight: 600; }
+.turnfin-app .pc-block-hint { font-size: 12px; line-height: 16px; }
+.turnfin-app .pc-block-time { flex: none; font-weight: 600; font-variant-numeric: tabular-nums; }
+.turnfin-app .pc-block-time small { display: block; font-size: 12px; line-height: 16px; font-weight: 400; }
+.turnfin-app .pc-block-tag { display: inline-flex; flex: none; align-items: center; gap: 4px; min-height: 24px; padding: 0 8px; border-radius: var(--radius-capsule); background: var(--bg-2); color: var(--label); font-size: 12px; line-height: 16px; font-weight: 600; }
+.turnfin-app .pc-block-tag > svg { width: 14px; height: 14px; }
+.turnfin-app .pc-block > svg { flex: none; width: 18px; height: 18px; }
+.turnfin-app .pc-block:is([data-block='now'], [data-state='now']) { --pc-block-bar: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
+.turnfin-app .pc-block:is([data-block='next'], [data-state='next']) { --pc-block-bar: var(--label-3); background: var(--fill); color: var(--label); }
+.turnfin-app .pc-block:is([data-block='cover'], [data-state='cover']) { --pc-block-bar: var(--orange); background: var(--orange-soft); color: var(--orange-ink); }
+.turnfin-app .pc-block:is([data-block='assessment'], [data-state='assessment']) { --pc-block-bar: var(--label-3); background: var(--fill-2); color: var(--label); }
+.turnfin-app .pc-block:is([data-block='done'], [data-state='done']) { background: var(--fill-2); color: var(--label-2); }
+.turnfin-app .pc-block:is([data-block='off'], [data-state='off'], [data-block='open'], [data-state='open']) { background: repeating-linear-gradient(135deg, var(--fill) 0 6px, var(--fill-2) 6px 12px); color: var(--label-2); }
+.turnfin-app .pc-block:is([data-block='off'], [data-state='off']) .pc-block-title { text-decoration: line-through; }
+.turnfin-app .pc-block:is([data-block='absent'], [data-state='absent']) { --pc-block-bar: var(--red); background: var(--red-soft); color: var(--red-ink); }
+.turnfin-app .pc-block[data-layout='stack'] { flex-direction: column; align-items: stretch; gap: 0; }
+.turnfin-app .pc-block[data-layout='stack'] .pc-block-body > * { white-space: normal; }
+.turnfin-app :is(a, button).pc-block:hover { filter: brightness(0.97); }
+.turnfin-app :is(a, button).pc-block:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* A week strip (Schedule): seven days on a card, the chosen one on the dark droplet and today's
+   date red, as Rota's week draws them. `.pc-days` holds the `.pc-day` buttons. */
+.turnfin-app .pc-days { padding: 6px; border-radius: 24px; background: var(--bg-2); box-shadow: var(--shadow-card); }
+.turnfin-app .ui-motion-press.pc-day { flex-direction: column; gap: 1px; height: auto; min-width: 0; min-height: 56px; padding: 8px 0 9px; border: 0; border-radius: 18px; background: transparent; box-shadow: none; color: var(--label-2); font-size: 12px; line-height: 16px; font-weight: 600; }
+.turnfin-app .ui-motion-press.pc-day:hover { background: var(--fill-2); color: var(--label-2); }
+.turnfin-app .pc-day > small { color: var(--label); font-family: var(--font-display); font-size: 22px; line-height: 28px; font-weight: 650; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.turnfin-app .pc-day[aria-current='date'] > small { color: var(--red-ink); }
+.turnfin-app .ui-motion-press.pc-day[aria-pressed='true'], .turnfin-app .ui-motion-press.pc-day[aria-pressed='true']:hover { background: var(--label); color: var(--bg); }
+.turnfin-app .pc-day[aria-pressed='true'] > small { color: var(--bg); }
+@media (min-width: 1024px) { .turnfin-app .ui-motion-press.pc-day { min-width: 56px; } }
+@media (max-width: 767px) { .turnfin-app .pc-day > small { font-size: 18px; line-height: 24px; } }
 @media (max-width: 767px) {
   .turnfin-app [data-slot='button'].day-tl-block { padding: 0; font-size: 0; }
 }

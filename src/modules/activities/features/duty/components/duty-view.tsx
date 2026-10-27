@@ -47,25 +47,25 @@ export function DutyView({ courses, iso, clubName, initialNow, canCancel, canBil
       {canBilling ? <Button asChild variant="outline"><Link href="/cancellations" aria-label={pendingBilling > 0 ? `Cancelled classes, ${pendingBilling} awaiting billing` : undefined}><CalendarX2 aria-hidden="true" />Cancelled classes{pendingBilling > 0 ? ` (${pendingBilling})` : ""}</Link></Button> : null}
     </>} />}>
     {staleDate ? <Notice tone="warning" title="A new day has started. Refresh before cancelling a session." /> : null}
-    <section className="pc-panel" aria-label="Today’s classes">
-      <Tabs value={tab} onValueChange={setTab} className="gap-4">
+    <section className="flex min-w-0 flex-col" aria-label="Today’s classes">
+      <Tabs value={tab} onValueChange={setTab} className="gap-(--space-5)">
         <div className="flex flex-wrap items-end gap-3">
           <TabsList aria-label="Filter today’s classes">
-            <TabsTrigger value="all">All <span className="pc-seg-count tabular-nums">{courses.length}</span></TabsTrigger>
-            <TabsTrigger value="running">{HOME_SESSION_META.now.label} <span className="pc-seg-count tabular-nums">{running}</span></TabsTrigger>
-            <TabsTrigger value="later">{HOME_SESSION_META.next.label} <span className="pc-seg-count tabular-nums">{upcoming}</span></TabsTrigger>
-            <TabsTrigger value="cancelled">Cancelled <span className="pc-seg-count tabular-nums">{cancelled}</span></TabsTrigger>
+            <TabsTrigger value="all">All <span className="font-normal tabular-nums">{courses.length}</span></TabsTrigger>
+            <TabsTrigger value="running">{HOME_SESSION_META.now.label} <span className="font-normal tabular-nums">{running}</span></TabsTrigger>
+            <TabsTrigger value="later">{HOME_SESSION_META.next.label} <span className="font-normal tabular-nums">{upcoming}</span></TabsTrigger>
+            <TabsTrigger value="cancelled">Cancelled <span className="font-normal tabular-nums">{cancelled}</span></TabsTrigger>
           </TabsList>
           <SearchField label="Find a class" value={query} onValueChange={setQuery} placeholder="Class, instructor, pool or time" className="grow basis-72 sm:max-w-md" />
         </div>
-        <TabsContent value={tab} className="m-0 flex flex-col gap-3"><p className="text-xs text-ui-muted-foreground" role="status">{plural(shown.length, "class", "classes")}</p>
-          {shown.length ? <ul className="pc-rows">{shown.map(course => {
+        <TabsContent value={tab} className="m-0 flex flex-col"><div className="pc-section-head"><h2>{tab === "all" ? "Today" : tab === "cancelled" ? "Cancelled" : tab === "running" ? HOME_SESSION_META.now.label : HOME_SESSION_META.next.label}</h2><p role="status">{plural(shown.length, "class", "classes")}</p></div>
+          {shown.length ? <ul className="pc-list">{shown.map(course => {
             const state = sessionState(course, now), meta = HOME_SESSION_META[state], time = formatTime(course.startMinutes);
             const count = course.capacity === null ? plural(course.swimmers.length, "swimmer") : `${course.swimmers.length}/${course.capacity} swimmers`;
             const hint = [`${course.programme}${course.name !== course.level ? ` · ${course.level}` : ""}`, course.instructor ?? "No instructor assigned", course.location || "Pool area not set", course.cancellation ? course.cancellation.reason : count];
             return <li key={course.id} className="pc-row">
-              <span className="pc-block shrink-0" data-state={state}><span className="pc-block-time">{time}<small>to {formatTime(course.startMinutes + course.durationMinutes)}</small></span></span>
-              <div className="pc-row-body"><div className="flex flex-wrap items-center gap-x-2 gap-y-1"><h2 className="text-sm font-semibold">{course.name}</h2><Tag meta={meta} /></div><p className="pc-row-hint break-words">{hint.join(" · ")}</p></div>
+              <span className="w-14 shrink-0 font-semibold tabular-nums">{time}<span className="block text-xs font-normal text-ui-muted-foreground">to {formatTime(course.startMinutes + course.durationMinutes)}</span></span>
+              <div className="pc-row-body"><div className="flex flex-wrap items-center gap-x-2 gap-y-1"><h3 className="font-semibold">{course.name}</h3><Tag meta={meta} /></div><p className="pc-row-hint break-words">{hint.join(" · ")}</p></div>
               <div className="pc-row-trail"><QuickView course={course} iso={iso} />{canCancel && !course.cancellation ? <CancelSession course={course} date={iso} disabled={staleDate} /> : null}</div>
             </li>;
           })}</ul> : <EmptyState title={courses.length ? "No classes match" : "No classes scheduled today"} hint={courses.length ? "Try another search or show the full day." : "The next day’s classes will appear when the day starts."} action={courses.length ? <Button variant="outline" onClick={() => { setQuery(""); setTab("all"); }}>Show all classes</Button> : undefined} />}

@@ -198,15 +198,6 @@ body.turnfin-app { background: var(--bg); }
 
 /* The quick-switch PIN pad (AUSwitch): 56px keys with title-size digits for touch. */
 .turnfin-app .pc-keypad > [data-slot='button'] { min-height: 56px; font-size: var(--pc-text-title); }
-/* A day tile in a week strip (Schedule): the weekday over the date caption, a 56px card-radius
-   tile; the chosen day is the default (blue) button, the rest outline. */
-.turnfin-app .ui-motion-press.pc-day { flex-direction: column; gap: 0; height: auto; min-width: 0; min-height: 56px; padding: 4px 0; border-radius: var(--pc-radius-card); }
-.turnfin-app .pc-day > small { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 400; color: var(--pc-ink-muted); }
-.turnfin-app .pc-day[aria-pressed='true'] > small { color: inherit; }
-@media (min-width: 1024px) { .turnfin-app .ui-motion-press.pc-day { min-width: 56px; } }
-/* Phones: the seven days touch (no gap), so each stays 44px wide inside a panel at 375; the
-   unchosen days drop their edge so the strip reads as one row, not seven boxes. */
-@media (max-width: 767px) { .turnfin-app .ui-motion-press.pc-day[data-variant='outline'] { border-color: transparent; } }
 /* Focus: one 2px ring with a 2px gap on everything focusable. :where() keeps the specificity at
    (0,3,0), so the inset rings on rail, segmented, module and refund rows still win. Fields draw
    their own edge, ring and halo instead (below). */
@@ -358,62 +349,6 @@ body.turnfin-app { background: var(--bg); }
 .turnfin-app a.pc-note { color: inherit; text-decoration: none; }
 .turnfin-app a.pc-note:hover { box-shadow: inset 0 0 0 1px var(--pc-line); }
 
-/* Time blocks: one pattern for the home timeline, schedule cells, the duty list and shifts. */
-.turnfin-app .pc-block { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 56px; padding: 8px 10px 8px 12px; border-radius: var(--pc-radius-card); color: var(--pc-ink); text-decoration: none; overflow: hidden; }
-.turnfin-app .pc-block-body { display: flex; flex: 1; flex-direction: column; min-width: 0; }
-.turnfin-app .pc-block-body > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.turnfin-app .pc-block-title { font-weight: 600; }
-.turnfin-app .pc-block-hint { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
-.turnfin-app .pc-block-time { flex: none; font-weight: 600; font-variant-numeric: tabular-nums; line-height: var(--pc-leading-body); }
-.turnfin-app .pc-block-time small { display: block; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 400; }
-.turnfin-app .pc-block-tag { display: inline-flex; flex: none; align-items: center; gap: 4px; min-height: 24px; padding: 0 8px; border-radius: 999px; background: var(--pc-surface); color: var(--pc-ink); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
-.turnfin-app .pc-block-tag > svg { width: 14px; height: 14px; }
-/* A block's state: `data-block` on the shared TimelineGrid (a dialog trigger's own `data-state`
-   belongs to Radix), `data-state` on older callers. */
-.turnfin-app .pc-block:is([data-block='now'], [data-state='now']) { background: var(--pc-block-now); color: var(--pc-on-block-now); }
-.turnfin-app .pc-block:is([data-block='next'], [data-state='next']) { background: var(--pc-block-next); color: var(--pc-on-block-next); }
-.turnfin-app .pc-block:is([data-block='cover'], [data-state='cover']) { background: var(--pc-block-cover); color: var(--pc-on-block-cover); }
-.turnfin-app .pc-block:is([data-block='assessment'], [data-state='assessment']) { background: var(--pc-block-assess); color: var(--pc-on-block-assess); }
-.turnfin-app .pc-block:is([data-block='done'], [data-state='done']) { background: var(--pc-surface-sunken); color: var(--pc-ink-muted); }
-.turnfin-app .pc-block:is([data-block='off'], [data-state='off'], [data-block='open'], [data-state='open']) { background: repeating-linear-gradient(135deg, var(--pc-hatch) 0 6px, transparent 6px 12px); box-shadow: inset 0 0 0 1px var(--pc-line); color: var(--pc-ink-muted); }
-.turnfin-app .pc-block:is([data-block='off'], [data-state='off']) .pc-block-title { text-decoration: line-through; }
-/* Week plan (V2Rota): a planned shift whose person is absent keeps its time, in danger ink on
-   the danger wash; a stacked block puts the time over words that wrap (a narrow day column). */
-.turnfin-app .pc-block:is([data-block='absent'], [data-state='absent']), .turnfin-app .pc-block.ui-motion-press[data-block='absent']:hover { background: var(--pc-danger-soft); color: var(--pc-danger); }
-.turnfin-app .pc-block[data-layout='stack'] { flex-direction: column; align-items: stretch; gap: 0; }
-.turnfin-app .pc-block[data-layout='stack'] .pc-block-body > * { white-space: normal; }
-.turnfin-app .pc-block:is(a, button):focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
-/* A block that is a dialog trigger (a shadcn Button): the block's shape and colours, not the
-   control's. */
-.turnfin-app .pc-block.ui-motion-press { justify-content: flex-start; height: auto; padding: 8px 10px 8px 12px; text-align: start; white-space: normal; font-weight: 400; text-decoration: none; }
-.turnfin-app .pc-block.ui-motion-press:hover { filter: brightness(0.97); }
-.turnfin-app .pc-block.ui-motion-press:is([data-block='now']):hover { background: var(--pc-block-now); color: var(--pc-on-block-now); }
-.turnfin-app .pc-block.ui-motion-press:is([data-block='next']):hover { background: var(--pc-block-next); color: var(--pc-on-block-next); }
-.turnfin-app .pc-block.ui-motion-press:is([data-block='cover']):hover { background: var(--pc-block-cover); color: var(--pc-on-block-cover); }
-.turnfin-app .pc-block.ui-motion-press:is([data-block='assessment']):hover { background: var(--pc-block-assess); color: var(--pc-on-block-assess); }
-.turnfin-app .pc-block.ui-motion-press:is([data-block='done']):hover { background: var(--pc-surface-sunken); color: var(--pc-ink-muted); }
-.turnfin-app .pc-block.ui-motion-press:is([data-block='off'], [data-block='open']):hover { background: repeating-linear-gradient(135deg, var(--pc-hatch) 0 6px, transparent 6px 12px); color: var(--pc-ink-muted); }
-.turnfin-app a.pc-block:hover { filter: brightness(0.97); }
-.turnfin-app .pc-block > svg { flex: none; width: 18px; height: 18px; }
-.turnfin-app .pc-block[data-density='icon'] { justify-content: center; padding: 0; }
-.turnfin-app .pc-block[data-density='compact'] { gap: 6px; padding-inline: 8px 4px; }
-.turnfin-app .pc-block[data-density='mark'] { padding: 0; }
-/* A person's shift on the planner: the frame their duties sit in. Its free time is a soft blue
-   with a dashed edge, to drag across and plan; what they do sits inside it as blocks. */
-.turnfin-app .rota-free { position: relative; z-index: 2; min-width: 0; height: auto; margin: 2px 1px; padding: 0; border: 1px dashed color-mix(in srgb, var(--pc-primary) 45%, transparent); border-radius: 18px; background: color-mix(in srgb, var(--pc-primary-soft) 70%, var(--pc-surface)); color: var(--pc-ink-muted); cursor: crosshair; touch-action: none; user-select: none; }
-.turnfin-app .rota-free:hover { background: var(--pc-primary-soft); border-color: var(--pc-primary); }
-.turnfin-app .rota-free:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
-.turnfin-app .rota-drag-range { position: absolute; inset-block: 4px; display: flex; align-items: center; justify-content: center; min-width: 0; overflow: hidden; border-radius: 12px; background: var(--accent-btn); color: var(--pc-on-primary); white-space: nowrap; }
-/* The day's summary in the planner's head: gaps to fill (amber) or all covered (quiet). */
-.turnfin-app .rota-summary { display: inline-flex; align-items: center; min-height: 28px; padding-inline: 12px; border-radius: var(--pc-radius-control); background: var(--pc-surface-sunken); color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
-.turnfin-app .rota-summary[data-tone='gap'] { background: var(--pc-warning-soft); color: var(--pc-warning); }
-/* The key's last item: a shift is the dashed box around what a person does. */
-.turnfin-app .rota-key-shift { display: inline-flex; align-items: center; min-height: 24px; padding-inline: 8px; border: 1px dashed color-mix(in srgb, var(--pc-primary) 45%, transparent); border-radius: var(--pc-radius-control); color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; }
-/* The Week plan's day tabs: what still needs sorting out, as a small amber count. */
-.turnfin-app .rota-tab-count { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding-inline: 6px; border-radius: var(--pc-radius-control); background: var(--pc-warning-soft); color: var(--pc-warning); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 700; }
-/* A free day on the week sheet: an empty, quiet cell; for managers a + appears on hover or focus. */
-.turnfin-app .rota-empty-day { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 56px; border-radius: var(--pc-radius-card); color: var(--pc-ink-muted); }
-.turnfin-app .rota-empty-day.ui-motion-press:hover { background: var(--pc-primary-soft); color: var(--pc-primary-ink); }
 .turnfin-app .pc-only-narrow { display: none; }
 @media (max-width: 767px) {
   .turnfin-app .pc-only-wide { display: none; }
@@ -422,8 +357,6 @@ body.turnfin-app { background: var(--bg); }
   /* A row action whose words sit in .pc-only-wide becomes a 44px icon button on phones; its
      aria-label still names it. */
   .turnfin-app .ui-motion-press:has(> .pc-only-wide) { width: var(--pc-control-height); min-width: var(--pc-control-height); padding: 0; }
-  /* Seven day tiles share a phone's width, so the weekday ("Today" included) steps down to caption size. */
-  .turnfin-app .ui-motion-press.pc-day { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
 }
 
 /* v2 primitives */

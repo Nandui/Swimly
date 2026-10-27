@@ -35,7 +35,7 @@ export default async function CancellationsPage({ searchParams }: { searchParams
         <Button asChild variant="outline"><Link href="/cancellations/prices"><Euro aria-hidden="true" />Billing prices</Link></Button>
         {canSee(session, "duty") ? <Button asChild variant="outline"><Link href="/duty"><ClipboardList aria-hidden="true" />Today&rsquo;s classes</Link></Button> : null}
       </>} />}>
-    <section className="pc-panel" aria-label="Billing follow-up">
+    <section className="flex min-w-0 flex-col gap-(--space-5)" aria-label="Billing follow-up">
       <SegmentedLinks label="Billing follow-up status" items={[
         { href: "/cancellations", label: "Awaiting billing", count: data.pending, current: view === "awaiting" },
         { href: "/cancellations?view=restore", label: "To restore", count: data.restore, current: view === "restore" },

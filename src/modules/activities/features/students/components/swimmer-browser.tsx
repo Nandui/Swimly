@@ -36,8 +36,8 @@ export function SwimmerBrowser({ students, total, page, pageSize, counts, q, sta
     ? status === "ALL" ? "Try a different spelling, a member number or a contact name." : "Try a different spelling, or search every status."
     : "There are no swimmers with this status.";
   return (
-    <PageShell className="tf-content" data-swimmer-browser header={<PageHeader title="Swimmers" description="Every swimmer across your sites, sorted by surname" actions={<>{parentAction}{addAction}</>} />}>
-      <section className="pc-panel" aria-label="Swimmer directory">
+    <PageShell spacing="roomy" data-swimmer-browser header={<PageHeader title="Swimmers" description="Every swimmer across your sites, sorted by surname" actions={<>{parentAction}{addAction}</>} />}>
+      <section className="flex min-w-0 flex-col gap-(--space-5)" aria-label="Swimmer directory">
         <div className="flex flex-wrap items-end gap-3">
           <Form action="/students" className="min-w-0 grow basis-field max-w-md" role="search" aria-label="Swimmers">
             {status !== "ALL" ? <input type="hidden" name="status" value={status} /> : null}

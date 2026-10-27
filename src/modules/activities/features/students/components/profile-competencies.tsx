@@ -23,8 +23,8 @@ import styles from "@/modules/activities/features/students/components/swimmer-pr
 
 type Access = { assess: boolean; complete: boolean; override: boolean };
 export function ProfileCompetencies({ studentId, programmes, access, selectedLevel }: { studentId: string; programmes: ProgrammeProgress[]; access: Access; selectedLevel: string | null }) {
-  if (!programmes.length) return <section className="pc-panel"><EmptyState compact title="No progress recorded yet" hint="Competencies appear when the swimmer is enrolled or has a recorded placement." /></section>;
-  return <div className="flex flex-col gap-4">{programmes.map(programme => <section key={programme.programmeId} className="pc-panel" aria-labelledby={`programme-${programme.programmeId}`}><h2 id={`programme-${programme.programmeId}`}>{programme.programmeName}</h2>
+  if (!programmes.length) return <section><EmptyState title="No progress recorded yet" hint="Competencies appear when the swimmer is enrolled or has a recorded placement." /></section>;
+  return <div className="flex flex-col gap-(--space-7)">{programmes.map(programme => <section key={programme.programmeId} className="flex min-w-0 flex-col" aria-labelledby={`programme-${programme.programmeId}`}><div className="pc-section-head"><h2 id={`programme-${programme.programmeId}`}>{programme.programmeName}</h2><p>{programme.levels.length} {programme.levels.length === 1 ? "level" : "levels"}</p></div>
     <div className="flex flex-col gap-2">{programme.levels.map(level => <LevelChapter key={level.id} level={level} selectedLevel={selectedLevel}>
       <CollapsibleTrigger className={`${styles.chapterTrigger} group`}><span className="min-w-0 flex-1"><span className="block font-semibold">{level.name}</span><span className="pc-row-hint block">{level.completedOn ? `Completed ${formatDate(level.completedOn)}` : level.total ? `${level.achieved} of ${level.total} achieved` : "No competencies set"}</span></span><ChevronDown aria-hidden="true" className="mt-1 size-4 shrink-0 text-ui-muted-foreground group-data-[state=open]:rotate-180" /></CollapsibleTrigger>
       <div className={styles.levelContent}>

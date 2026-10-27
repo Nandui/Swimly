@@ -1,44 +1,41 @@
-/* The Schedule booking sheet inside its panel (Poolside Clear v2, V2Schedule). Every cell is its
-   own rounded block with 8px between; time columns are a fixed 144px beside a 136px level column,
-   and the table is only as wide as its columns. The time headers and level labels stay in view
-   while the sheet scrolls across times; the frame owns vertical scrolling. The column running now
-   has the blue header, a finished one is hatched. Classes are the shared .pc-block time blocks
-   (poolside.css), stacked here so their labels wrap rather than truncate; empty slots are dashed. */
-.calendar { display:flex; flex-direction:column; gap:24px; min-width:0; }
-/* The negative margin takes back the table's outer 8px spacing, so the sheet lines up with the
-   rest of the panel. */
-.calendar .sheet-scroll { position:relative; margin:-8px; overflow-x:auto; scrollbar-width:thin; }
-.calendar table { width:max-content; border-collapse:separate; border-spacing:8px; table-layout:fixed; font-size:var(--pc-text-body); line-height:var(--pc-leading-body); }
+/* The Schedule booking sheet: one bg-2 card on the ground, each level a row of time slots. Time
+   columns are a fixed 144px beside a 136px level column, and the table is only as wide as its
+   columns. The time headers and level labels stay in view while the sheet scrolls across times;
+   the frame owns vertical scrolling. The column running now is the soft blue the timeline uses
+   for on now, and says so in words; a finished one is quiet. Classes are the kit's time blocks
+   (kit.css), stacked here so their labels wrap rather than truncate. */
+.calendar { display:flex; flex-direction:column; gap:var(--space-6); min-width:0; }
+.calendar .sheet-card { padding:var(--space-2); border-radius:var(--radius-card); background:var(--bg-2); box-shadow:var(--shadow-card); }
+.calendar .sheet-scroll { position:relative; overflow-x:auto; scrollbar-width:thin; }
+.calendar table { width:max-content; border-collapse:separate; border-spacing:6px; table-layout:fixed; }
 .calendar .level-col { width:136px; }
 .calendar .time-col { width:144px; }
 .calendar th, .calendar td { white-space:normal; }
 .calendar thead { position:sticky; top:0; z-index:3; }
-.calendar thead th { height:auto; padding:8px 12px; text-align:left; vertical-align:middle; border:1px solid var(--pc-line); border-radius:var(--pc-radius-card); background:var(--pc-surface); }
-.calendar thead th:first-child { position:sticky; left:0; z-index:4; padding-inline:4px; border-color:transparent; color:var(--pc-ink-muted); font-size:var(--pc-text-caption); line-height:var(--pc-leading-caption); font-weight:600; }
-.calendar thead th[data-phase=finished] { border-color:transparent; background:var(--pc-hatch); }
-.calendar thead th[data-phase=running] { border-color:var(--pc-primary); background:var(--pc-primary); }
-.calendar thead th[data-phase=running] :is(h2, .sheet-time-count) { color:var(--pc-on-primary); }
+.calendar thead th { height:auto; padding:8px 12px; text-align:left; vertical-align:middle; border:0; border-radius:var(--radius-lg); background:var(--bg-2); }
+.calendar thead th:first-child { position:sticky; left:0; z-index:4; padding-inline:4px; color:var(--label-2); font-size:12px; line-height:16px; font-weight:600; }
+.calendar thead th[data-phase=finished] :is(h2, .sheet-time-count) { color:var(--label-2); }
+.calendar thead th[data-phase=running] { background:var(--accent-soft); }
+.calendar thead th[data-phase=running] :is(h2, .sheet-time-count) { color:var(--accent-ink); }
 .calendar .sheet-time { display:flex; flex-direction:column; }
-.calendar .sheet-time h2 { font-size:var(--pc-text-body); line-height:var(--pc-leading-body); font-weight:600; font-variant-numeric:tabular-nums; }
-.calendar .sheet-time-count { display:block; font-size:var(--pc-text-caption); line-height:var(--pc-leading-caption); font-weight:400; color:var(--pc-ink-muted); }
-.calendar tbody .programme th { padding:8px 4px 0; text-align:left; border:0; background:transparent; }
+.calendar .sheet-time h2 { font-size:inherit; line-height:inherit; font-weight:600; font-variant-numeric:tabular-nums; }
+.calendar .sheet-time-count { display:block; font-size:12px; line-height:16px; font-weight:400; color:var(--label-2); }
+.calendar tbody .programme th { padding:12px 4px 0; text-align:left; border:0; background:transparent; }
 .calendar .programme-title { position:sticky; left:4px; display:inline-flex; align-items:baseline; gap:8px; }
-.calendar .programme-title h2 { font-size:var(--pc-text-body); line-height:var(--pc-leading-body); font-weight:600; }
-.calendar .programme-title small { color:var(--pc-ink-muted); font-size:var(--pc-text-caption); line-height:var(--pc-leading-caption); font-weight:400; }
-.calendar tbody th[scope=row] { position:sticky; left:0; z-index:2; padding:12px 16px; text-align:left; vertical-align:middle; border:1px solid var(--pc-line); border-radius:var(--pc-radius-card); background:var(--pc-surface); }
+.calendar .programme-title h2 { font-size:inherit; line-height:inherit; font-weight:600; }
+.calendar .programme-title small { color:var(--label-2); font-size:12px; line-height:16px; font-weight:400; }
+.calendar tbody th[scope=row] { position:sticky; left:0; z-index:2; padding:12px 14px; text-align:left; vertical-align:middle; border:0; border-radius:var(--radius-lg); background:var(--bg-2); box-shadow:inset 0 0 0 100vmax var(--fill-2); }
 .calendar .level-name { display:block; font-weight:600; overflow-wrap:anywhere; }
-.calendar .level-count { display:block; color:var(--pc-ink-muted); font-size:var(--pc-text-caption); line-height:var(--pc-leading-caption); font-weight:400; }
+.calendar .level-count { display:block; color:var(--label-2); font-size:12px; line-height:16px; font-weight:400; }
 .calendar tbody td { padding:0; vertical-align:top; border:0; background:transparent; }
-.calendar tbody td[data-empty=true] { vertical-align:middle; text-align:center; color:var(--pc-ink-muted); border:1px dashed var(--pc-line); border-radius:var(--pc-radius-card); user-select:none; }
-.calendar .booking-list { display:flex; flex-direction:column; gap:8px; list-style:none; margin:0; padding:0; }
+.calendar tbody td[data-empty=true] { vertical-align:middle; text-align:center; color:var(--label-3); user-select:none; }
+.calendar .booking-list { display:flex; flex-direction:column; gap:6px; list-style:none; margin:0; padding:0; }
 .calendar .sheet-scroll :global(.pc-block) { flex-direction:column; align-items:flex-start; gap:4px; }
 .calendar :global(.pc-block-body) > * { white-space:normal; overflow-wrap:anywhere; }
-/* A class on a day with no clock yet (a future day) is a neutral block with an edge. */
-.calendar :global(.pc-block):not([data-state]) { box-shadow:inset 0 0 0 1px var(--pc-line); }
 .calendar .block-tags { display:flex; flex-wrap:wrap; gap:4px; }
 /* Agenda (and every view below 600px): one group per start time, its sessions as wrapping
    blocks with the body and tags side by side. */
-.calendar .agenda { display:flex; flex-direction:column; gap:24px; }
-.calendar .agenda-time { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:12px; }
-.calendar .agenda-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,18rem),1fr)); gap:12px; margin:0; padding:0; list-style:none; }
+.calendar .agenda { display:flex; flex-direction:column; gap:var(--space-6); }
+.calendar .agenda-time { display:flex; align-items:center; justify-content:space-between; gap:16px; margin:0 var(--space-1) var(--space-2); }
+.calendar .agenda-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,18rem),1fr)); gap:var(--space-2); margin:0; padding:0; list-style:none; }
 .calendar .agenda :global(.pc-block) { flex-wrap:wrap; align-items:flex-start; height:100%; padding:12px 16px; }

@@ -16,17 +16,17 @@ export function GuardianAccessPanel({ studentId, swimmerName }: { studentId: str
     resource.reload();
     requestAnimationFrame(() => document.getElementById("parent-access-heading")?.focus());
   }
-  return <section className="flex flex-col gap-4" aria-labelledby="parent-access-heading">
-    <div className="flex flex-wrap items-start justify-between gap-4">
-      <div className="min-w-0 max-w-prose">
+  return <section className="flex flex-col gap-(--space-3)" aria-labelledby="parent-access-heading">
+    <div>
+      <div className="pc-section-head">
         <h2 id="parent-access-heading" tabIndex={-1}>Parent access</h2>
-        <p className="pc-row-hint">Approve the email a parent or guardian uses to sign in to the parent app. Access follows {swimmerName} across every site.</p>
+        {resource.data ? <AccessForm path={path} swimmerName={swimmerName} onSaved={saved} /> : null}
       </div>
-      {resource.data ? <AccessForm path={path} swimmerName={swimmerName} onSaved={saved} /> : null}
+      <p className="pc-section-note mb-0">Approve the email a parent or guardian uses to sign in to the parent app. Access follows {swimmerName} across every site.</p>
     </div>
     <ParentLoadState {...resource} />
     {resource.data ? <>
-      {resource.data.items.length ? <ul className="pc-rows">
+      {resource.data.items.length ? <ul className="pc-list">
         {resource.data.items.map(item => {
           const meta = PARENT_ACCESS_META[item.revokedAt ? "revoked" : "approved"];
           return <li key={item.id} className="pc-row">
@@ -37,7 +37,7 @@ export function GuardianAccessPanel({ studentId, swimmerName }: { studentId: str
             <div className="pc-row-trail"><Tag meta={meta} /><AccessForm path={path} swimmerName={swimmerName} entry={item} onSaved={saved} /></div>
           </li>;
         })}
-      </ul> : <EmptyState compact title="No parent access approved" hint="Contact details alone do not grant access. Approve each guardian’s email after checking it belongs to the right person." />}
+      </ul> : <div className="pc-list"><EmptyState compact title="No parent access approved" hint="Contact details alone do not grant access. Approve each guardian’s email after checking it belongs to the right person." /></div>}
       <div className="max-w-prose space-y-2 text-sm text-ui-muted-foreground">
         <p>Parents see released progress and bookings. Competency changes appear the next day. Internal and medical notes stay private.</p>
         <p>Approval does not send an email. The guardian signs in to the parent app with the approved address.</p>

@@ -91,8 +91,8 @@ export function ScheduleCalendar({ courses, assessments, iso, todayIso, initialN
       {target && isToday ? <Button onClick={jump}><Clock aria-hidden="true" />{running ? "Jump to now" : "Jump to next"}</Button> : null}
     </>} />}>
     <span className="sr-only" role="status">{refreshing ? "Loading schedule" : `Showing ${formatDay(iso)}`}</span>
-    <div className="pc-panel">
-    <Tabs value={agenda ? 'agenda' : 'sheet'} onValueChange={next => setView(next as 'sheet' | 'agenda')} className="gap-4">
+    <div>
+    <Tabs value={agenda ? 'agenda' : 'sheet'} onValueChange={next => setView(next as 'sheet' | 'agenda')} className="gap-(--space-5)">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <ScheduleDayNavigation iso={iso} todayIso={clock.date} pending={refreshing} onSelect={date => startRefresh(() => router.push(scheduleHref(date), { scroll: false }))} />
       <TabsList aria-label="Calendar display" className={width < 600 ? "hidden" : undefined}>
@@ -114,7 +114,7 @@ export function ScheduleCalendar({ courses, assessments, iso, todayIso, initialN
     {!agenda && assessments.length > 0 ? <Notice title={`${plural(assessments.length, "assessment")} ${assessments.length === 1 ? "is" : "are"} also scheduled on this day.`}
       actions={<Button variant="outline" onClick={() => { setView('agenda'); agendaTrigger.current?.focus(); }}>View in agenda</Button>} /> : null}
 
-    <TabsContent value={agenda ? 'agenda' : 'sheet'} className="m-0 min-w-0" tabIndex={-1}>
+    <TabsContent value={agenda ? 'agenda' : 'sheet'} className={cn("m-0 min-w-0", courses.length + assessments.length > 0 && styles["sheet-card"])} tabIndex={-1}>
     {courses.length === 0 && assessments.length === 0 ? <CalendarEmpty />
         : agenda ? <section className={styles["agenda"]} aria-label="Schedule agenda">
           {agendaSlots.map(slot => <section key={slot.start} aria-labelledby={`time-${slot.start}`}>

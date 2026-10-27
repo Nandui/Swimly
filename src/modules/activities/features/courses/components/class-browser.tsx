@@ -45,7 +45,7 @@ export function ClassBrowser({ courses, params, todayDay, levels, canManage, wor
   const resetHref = state === "archived" ? "/courses?state=archived" : "/courses";
   return <PageShell spacing="roomy" data-class-browser header={<PageHeader title="Classes" description="Find a weekly class across all sites and see where there’s room"
       actions={canManage ? <AddClass levels={levels} workingSite={workingSite} /> : undefined} />}>
-    <section className="pc-panel" aria-label="Classes">
+    <section className="flex min-w-0 flex-col gap-(--space-5)" aria-label="Classes">
       <CourseFilters dimensions={courseFilterDimensions(collection, filters)} q={filters.q} active={active} state={state} todayDay={todayDay}
         showing={{ first: (page - 1) * CLASS_PAGE_SIZE + 1, last: Math.min(page * CLASS_PAGE_SIZE, matches.length), total: matches.length }}
         views={lenses} selectedView={selected} />
