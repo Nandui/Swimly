@@ -1,7 +1,7 @@
 "use server";
 
 import type { Prisma } from "@/generated/prisma/client";
-import { requireSession } from "@/lib/authz";
+import { requirePermission } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 
 /** A read, in the actions folder, on purpose.
@@ -15,7 +15,13 @@ import { prisma } from "@/lib/prisma";
  *  It exists because the alternative was shipping every swimmer to the browser
  *  so a person could find one. That was 1,156 rows on the course page and again
  *  on Together — the same weight `/students` was carrying before it was paged.
- *  Twenty rows for the letters typed so far is the whole answer. */
+ *  Twenty rows for the letters typed so far is the whole answer.
+ *
+ *  The browser can call it directly, so it asks for the desk permission every
+ *  picker that uses it already needs. Without it, any signed-in account (the
+ *  pool deck included, whose only lookup is `/instructor/swimmers`) could list
+ *  swimmers' dates of birth. Swimmers are shared, so the search still covers
+ *  every site (docs/shared-sites.md). */
 
 export type StudentHit = {
   id: string;
@@ -29,7 +35,7 @@ export type StudentHit = {
 const LIMIT = 20;
 
 export async function searchStudents(q: string, exclude: string[] = [], includeInactive = false): Promise<StudentHit[]> {
-  await requireSession();
+  await requirePermission("swimschool.desk");
 
   // Each word has to land somewhere, so "ava by" finds Ava Byrne and neither
   // Ava Lynch nor Tom Byrne. A member number is one word and matches itself.
