@@ -24,7 +24,7 @@ function Facts({ rows }: { rows: [string, ReactNode][] }) {
     <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
       {rows.map(([label, value]) => (
         <div key={label} className="min-w-0 space-y-1">
-          <dt className="text-xs font-semibold tracking-wide text-ui-muted-foreground uppercase">{label}</dt>
+          <dt className="text-xs font-semibold text-ui-muted-foreground">{label}</dt>
           <dd className="text-sm break-words whitespace-pre-line">{value || "None"}</dd>
         </div>
       ))}

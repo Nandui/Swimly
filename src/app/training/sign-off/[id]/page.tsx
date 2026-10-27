@@ -17,7 +17,7 @@ export default async function ObservePage({ params }: { params: Promise<{ id: st
   const { person, own, assignment, course, checklist, last, evidence } = data;
   const waiting = assignment.status === "SUBMITTED";
   return (
-    <PageShell header={<PageHeader back={{ href: "/training/sign-off", label: "Sign-off" }} title={`${course.title}: ${person.name}`}
+    <PageShell spacing="roomy" header={<PageHeader back={{ href: "/training/sign-off", label: "Sign-off" }} title={`${course.title}: ${person.name}`}
         description={waiting ? `Ready since ${assignment.submittedAt ? formatDateTime(assignment.submittedAt) : "—"}. Watch them do each step, then sign off or send it back.` : "This practical is not waiting for sign-off."} />}>
       {assignment.learnerNote ? <Notice tone="info" title={`${person.name}'s note`}>{assignment.learnerNote}</Notice> : null}
       {own ? (

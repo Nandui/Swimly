@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { toast } from "@/components/ui/toast";
 import { EmptyState } from "@/components/ui-kit/empty-state";
+import { Figure, Figures } from "@/components/ui-kit/figure";
 import { Notice } from "@/components/ui-kit/notice";
 import { cn } from "@/lib/utils";
 import { THEME } from "@/modules/training/shared/components/dialog-kit";
@@ -135,11 +136,12 @@ function OutlinePanel({ courseId, hasOldText, draft, selected, canEdit, comments
   const router = useRouter();
   const lessonCount = draft.sections.reduce((n, s) => n + s.lessons.length, 0);
   return (
-    <nav aria-label="Course outline" className="pc-panel flex flex-col gap-4 lg:sticky lg:top-6">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg">Outline</h2>
-        <span className="text-sm text-ui-muted-foreground tabular-nums">{lessonCount} {lessonCount === 1 ? "lesson" : "lessons"}</span>
+    <nav aria-labelledby="outline-heading" className="flex min-w-0 flex-col lg:sticky lg:top-6">
+      <div className="pc-section-head">
+        <h2 id="outline-heading">Outline</h2>
+        <p>{lessonCount} {lessonCount === 1 ? "lesson" : "lessons"}</p>
       </div>
+      <div className="rec-card">
       <Link href={hrefFor(courseId)} aria-current={selected ? undefined : "page"} className={cn("tf-outline-row", !selected && "is-current")}>
         <CircleCheck aria-hidden="true" />Course overview
       </Link>
@@ -150,7 +152,7 @@ function OutlinePanel({ courseId, hasOldText, draft, selected, canEdit, comments
         {draft.sections.map((section, si) => (
           <li key={section.id} className="flex flex-col gap-1">
             <div className="flex items-center gap-1">
-              <h3 className="min-w-0 flex-1 text-xs font-semibold uppercase tracking-wide text-ui-muted-foreground">
+              <h3 className="min-w-0 flex-1 text-xs font-semibold text-ui-muted-foreground">
                 <span className="tabular-nums">{si + 1}.</span> {section.title}
               </h3>
               {canEdit ? (
@@ -211,6 +213,7 @@ function OutlinePanel({ courseId, hasOldText, draft, selected, canEdit, comments
           ) : null}
         </div>
       ) : null}
+      </div>
     </nav>
   );
 }
@@ -286,23 +289,20 @@ function StartPanel({ courseId, title, draft, canEdit, changed, comments }: { co
   const minutes = lessons.reduce((n, l) => n + (lessonMinutes(l) ?? 0), 0);
   if (!lessons.length) {
     return (
-      <section className="pc-panel" aria-label="Get started">
+      <section aria-label="Get started">
         <EmptyState as="h2" icon="book" title="Build the first lesson"
           hint={canEdit ? "Add a section in the outline, then a lesson inside it. Each lesson is one screen on the learner's phone." : "Nobody has added lessons to this course yet."} />
       </section>
     );
   }
   return (
-    <section className="pc-panel flex flex-col gap-4" aria-labelledby="overview-title">
-      <h2 id="overview-title" className="text-lg">{title}</h2>
-      <dl className="grid grid-cols-tiles gap-3">
-        {[["Sections", draft.sections.length], ["Lessons", lessons.length], ["Questions", draft.questions.length], ["Final exam", draft.exam ? `Pass ${draft.exam.passMark}%` : "Off"], ["About", `${minutes} min`]].map(([label, value]) => (
-          <div key={label} className="rounded-card bg-ui-muted p-4">
-            <dt className="text-xs font-semibold uppercase tracking-wide text-ui-muted-foreground">{label}</dt>
-            <dd className="text-lg font-semibold tabular-nums">{value}</dd>
-          </div>
+    <section className="flex min-w-0 flex-col gap-(--space-4)" aria-labelledby="overview-title">
+      <div className="pc-section-head mb-0"><h2 id="overview-title">Course overview</h2></div>
+      <Figures label={`${title} at a glance`} compact>
+        {([["Sections", draft.sections.length], ["Lessons", lessons.length], ["Questions", draft.questions.length], ["Final exam", draft.exam ? `Pass ${draft.exam.passMark}%` : "Off"], ["About", `${minutes} min`]] as const).map(([label, value]) => (
+          <Figure key={label} label={label} value={value} />
         ))}
-      </dl>
+      </Figures>
       {problems.length ? (
         <Notice tone="warning" title="Before you can publish">
           <ul className="list-disc pl-5">{problems.map((p) => <li key={p}>{p}</li>)}</ul>
@@ -313,7 +313,7 @@ function StartPanel({ courseId, title, draft, canEdit, changed, comments }: { co
         <Notice tone="success" title="Ready to publish">Preview it as a learner first, then publish from the top of the page.</Notice>
       )}
       {tips.length ? (
-        <Collapsible className="flex flex-col gap-2 rounded-card bg-ui-muted p-4">
+        <Collapsible className="rec-card gap-2">
           <CollapsibleTrigger asChild>
             <Button type="button" variant="ghost" className="min-h-11 justify-between self-stretch">
               <span className="flex items-center gap-2"><Sparkles aria-hidden="true" />Make it better: {tips.length} {tips.length === 1 ? "suggestion" : "suggestions"}</span>
@@ -354,9 +354,9 @@ const BODY_LABEL: Record<LessonKind, string> = {
 
 function VersionHistory({ versions }: { versions: VersionNote[] }) {
   return (
-    <section className="pc-panel flex flex-col gap-3" aria-labelledby="versions-heading">
-      <h2 id="versions-heading" className="text-lg">Versions</h2>
-      <ol className="pc-rows">
+    <section className="flex min-w-0 flex-col" aria-labelledby="versions-heading">
+      <div className="pc-section-head"><h2 id="versions-heading">Versions</h2><p>{versions.length}</p></div>
+      <ol className="pc-list">
         {versions.map((v) => (
           <li key={v.id} className="pc-row items-start">
             <span className="pc-row-body">
@@ -418,20 +418,18 @@ function LessonEditor({ courseId, lesson, files, onUploaded, canEdit, position, 
     }
   }
   return (
-    <section className="pc-panel flex flex-col gap-5" aria-labelledby="lesson-heading">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="pc-tile-icon"><Icon aria-hidden="true" /></span>
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-ui-muted-foreground">{meta.label} · lesson {position.index + 1} of {position.total}</p>
-          <h2 id="lesson-heading" className="truncate text-lg">{title || "Untitled lesson"}</h2>
-        </div>
+    <section className="flex min-w-0 flex-col" aria-labelledby="lesson-heading">
+      <div className="pc-section-head">
+        <h2 id="lesson-heading" className="flex min-w-0 items-center gap-2"><Icon aria-hidden="true" className="size-5 shrink-0 text-ui-primary" /><span className="truncate">{title || "Untitled lesson"}</span></h2>
         {canEdit ? (
-          <div className="flex gap-1">
+          <div className="flex shrink-0 gap-1">
             <Button type="button" variant="ghost" size="icon" className="size-11" aria-label="Move lesson up" disabled={pending || position.index === 0} onClick={() => act(() => moveLesson(lesson.id, "up"))}><ArrowUp aria-hidden="true" /></Button>
             <Button type="button" variant="ghost" size="icon" className="size-11" aria-label="Move lesson down" disabled={pending || position.index === position.total - 1} onClick={() => act(() => moveLesson(lesson.id, "down"))}><ArrowDown aria-hidden="true" /></Button>
           </div>
         ) : null}
       </div>
+      <p className="pc-section-note">{meta.label} · lesson {position.index + 1} of {position.total}</p>
+      <div className="rec-card gap-5">
 
       <Input id="lesson-title" label="Lesson name" value={title} onChange={change(setTitle)} required maxLength={120} disabled={!canEdit} />
 
@@ -533,6 +531,7 @@ function LessonEditor({ courseId, lesson, files, onUploaded, canEdit, position, 
           </div>
         </div>
       ) : null}
+      </div>
     </section>
   );
 }

@@ -39,7 +39,7 @@
 .tf-outline-row > svg { width: 16px; height: 16px; flex: none; color: var(--pc-ink-muted); }
 .tf-outline-row:hover { background: var(--pc-surface-sunken); }
 .tf-outline-row:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
-.tf-outline-row.is-current { background: var(--accent-btn); color: var(--pc-on-primary); font-weight: 600; }
+.tf-outline-row.is-current { background: var(--accent-soft); color: var(--accent-ink); font-weight: 600; }
 .tf-outline-row.is-current > svg, .tf-outline-row.is-current span { color: inherit; }
 
 /* A video plays at 16:9 at any width. */
@@ -49,7 +49,7 @@
 /* Interactive blocks (phase 3). The builder and Preview show them open and labelled;
    Turnfin Me makes them interactive (apps/me/src/app/globals.css). */
 .tf-callout { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 32px 16px 12px; border-radius: var(--pc-radius-card); background: var(--pc-primary-soft); color: var(--pc-ink); }
-.tf-callout::before { content: attr(data-label); position: absolute; top: 8px; left: 16px; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--pc-primary-ink); }
+.tf-callout::before { content: attr(data-label); position: absolute; top: 8px; left: 16px; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 700; color: var(--pc-primary-ink); }
 .tf-callout[data-tone="tip"] { background: var(--pc-success-soft); }
 .tf-callout[data-tone="tip"]::before { color: var(--pc-success); }
 .tf-callout[data-tone="warning"] { background: var(--pc-warning-soft); }
@@ -64,7 +64,7 @@
 .tf-flip-card { display: grid; grid-template-rows: auto auto; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); overflow: hidden; }
 .tf-flip-front, .tf-flip-back { display: flex; flex-direction: column; gap: 6px; padding: 28px 12px 12px; position: relative; }
 .tf-flip-front { background: var(--pc-surface-sunken); font-weight: 600; }
-.tf-flip-front::before, .tf-flip-back::before { position: absolute; top: 6px; left: 12px; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; color: var(--pc-ink-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.tf-flip-front::before, .tf-flip-back::before { position: absolute; top: 6px; left: 12px; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; color: var(--pc-ink-muted); }
 .tf-flip-front::before { content: "Front"; }
 .tf-flip-back::before { content: "Back"; }
 .tf-flip-front img { max-height: 8rem; width: auto; }
@@ -97,7 +97,7 @@
 
 /* Tabs, a video in the text and a file button (phase 8), shown open for the author. */
 .tf-tabs { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); }
-.tf-tabs::before { content: "Tabs"; font-size: var(--pc-text-caption); font-weight: 600; color: var(--pc-ink-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.tf-tabs::before { content: "Tabs"; font-size: var(--pc-text-caption); font-weight: 600; color: var(--pc-ink-muted); }
 .tf-tab { display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; background: var(--pc-surface-sunken); border-radius: var(--pc-radius-card); }
 .tf-tab-title { font-weight: 700; margin: 0; color: var(--pc-primary); }
 .tf-media-block { display: flex; align-items: center; gap: 8px; padding: 12px; border: 1px dashed var(--pc-line-strong); border-radius: var(--pc-radius-card); color: var(--pc-ink-muted); }

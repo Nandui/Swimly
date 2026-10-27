@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
+import { RecordFact, RecordFacts, RecordSection } from "@/components/ui-kit/record";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDate } from "@/lib/format";
 import { hoursInWords } from "@/modules/training/features/hours";
@@ -31,7 +32,7 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
     ["Hours", `${hoursInWords(s.minutes)} towards ${s.typeName ?? "general training hours"}`],
   ];
   return (
-    <PageShell header={<PageHeader back={{ href: "/training/sessions", label: "Sessions" }} title={s.title}
+    <PageShell spacing="roomy" header={<PageHeader back={{ href: "/training/sessions", label: "Sessions" }} title={s.title}
         description={s.note || undefined}
         status={<Tag meta={SESSION_STATUS_META[state]} />}
         actions={s.open ? (
@@ -41,34 +42,29 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
             {who.assign ? <AddToSession id={s.id} title={s.title} people={assignable} left={left} /> : null}
           </>
         ) : null} />}>
-      <section className="pc-panel" aria-labelledby="facts-heading">
-        <h2 id="facts-heading" className="sr-only">About this session</h2>
-        <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
-          {facts.map(([term, value]) => (
-            <div key={term} className="flex flex-col gap-1">
-              <dt className="text-sm text-ui-muted-foreground">{term}</dt>
-              <dd className="font-medium">{term === "Completes" && s.courseId ? <Link href={`/training/courses/${s.courseId}`} className="underline-offset-4 hover:underline">{value}</Link> : value}</dd>
-            </div>
-          ))}
-        </dl>
-      </section>
+      <RecordSection id="facts-heading" title="Details">
+        <div className="rec-card">
+          <RecordFacts>
+            {facts.map(([term, value]) => (
+              <RecordFact key={term} label={term}>{term === "Completes" && s.courseId ? <Link href={`/training/courses/${s.courseId}`} className="text-ui-primary underline-offset-4 hover:underline">{value}</Link> : value}</RecordFact>
+            ))}
+          </RecordFacts>
+        </div>
+      </RecordSection>
       {s.closedAt ? <Notice tone="success" title="Register closed">{s.closedByName ?? "Someone"} closed it on {formatDate(s.closedAt)}: {attended} attended, {absent} absent.</Notice> : null}
       {s.cancelled ? <Notice tone="info" title="Cancelled">Nobody got hours or the course for this session.</Notice> : null}
       {places.length === 0 ? (
         <EmptyState as="h2" icon="calendarDays" title={hidden ? "Nobody you cover is booked" : "Nobody booked yet"} hint={who.assign && s.open ? "Book people on it. They see it in Turnfin Me." : undefined} />
       ) : (
-        <section className="pc-panel" aria-labelledby="people-heading">
-          <div className="pc-panel-head">
-            <h2 id="people-heading">{s.registerOpen ? "Register" : "Booked"}</h2>
-            <span className="text-sm text-ui-muted-foreground tabular-nums">{booked} booked{attended ? ` · ${attended} attended` : ""}{absent ? ` · ${absent} absent` : ""}{hidden ? ` · ${hidden} you don't cover` : ""}</span>
-          </div>
+        <RecordSection id="people-heading" title={s.registerOpen ? "Register" : "Booked"} aside={<p>{booked}</p>}
+          note={[`${booked} booked`, attended ? `${attended} attended` : null, absent ? `${absent} absent` : null, hidden ? `${hidden} you don't cover` : null].filter(Boolean).join(" · ")}>
           {s.registerOpen ? (
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="mb-(--space-3) flex flex-wrap items-center gap-3">
               <MarkEveryoneAttended placeIds={places.filter((p) => p.canMark && p.status === "BOOKED").map((p) => p.id)} />
               {canClose ? (closeBlock ? <p className="text-sm text-ui-muted-foreground">{closeBlock}</p> : <CloseRegister id={s.id} title={s.title} attended={attended} absent={absent} course={s.course} />) : null}
             </div>
           ) : null}
-          <ul className="pc-rows">
+          <ul className="pc-list">
             {places.map((p) => (
               <li key={p.id} className="pc-row flex-wrap">
                 <div className="pc-row-body">
@@ -82,7 +78,7 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
               </li>
             ))}
           </ul>
-        </section>
+        </RecordSection>
       )}
     </PageShell>
   );

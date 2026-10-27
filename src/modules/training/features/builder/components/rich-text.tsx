@@ -85,7 +85,7 @@ function Toolbar({ editor, disabled, openLink, openImage, openCheck, openVideo, 
       <Tool label="Redo" icon={Redo2} disabled={off || !state?.redo} onClick={run((e) => e.chain().focus().redo().run())} />
       {state?.block ? (
         <div className="tf-editor-context" role="group" aria-label="This block">
-          <span className="text-xs font-semibold uppercase tracking-wide text-ui-muted-foreground">{state.block in ATOM_LABEL ? ATOM_LABEL[state.block as keyof typeof ATOM_LABEL] : BLOCK_META[state.block as keyof typeof BLOCK_META].label}</span>
+          <span className="text-xs font-semibold text-ui-muted-foreground">{state.block in ATOM_LABEL ? ATOM_LABEL[state.block as keyof typeof ATOM_LABEL] : BLOCK_META[state.block as keyof typeof BLOCK_META].label}</span>
           {state.block === "callout" ? (
             <NativeSelect aria-label="Kind of callout" value={state.tone ?? "note"} disabled={off} onChange={(event) => editor && setTone(editor, event.target.value as CalloutTone)} className="min-h-11">
               {CALLOUT_TONES.map((t) => <NativeSelectOption key={t} value={t}>{CALLOUT_META[t].label}</NativeSelectOption>)}

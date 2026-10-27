@@ -7,7 +7,8 @@ import { formatDate } from "@/lib/format";
 import type { StatusMeta } from "@/lib/status";
 import { TRAINING_STATUS_META } from "@/modules/training/shared/constants";
 import type { CourseInsight } from "@/modules/training/features/insight/server/data";
-import { Bars, days, Figure, pct } from "@/modules/training/features/insight/components/parts";
+import { Figure, Figures } from "@/components/ui-kit/figure";
+import { Bars, days, pct } from "@/modules/training/features/insight/components/parts";
 
 const MAX_LEARNERS = 300;
 
@@ -34,31 +35,28 @@ export function CourseInsightView({ data }: { data: CourseInsight }) {
   ];
   const worst = d.lessons.find((l) => l.lessonId === d.mostStopped);
   return (
-    <div className="flex flex-col gap-6">
-      <div className="pc-stats pc-stats-fill">
+    <div className="flex flex-col gap-(--space-7)">
+      <Figures label="The course at a glance">
         <Figure value={pct(Math.round((f.completed / f.assigned) * 100))} label="Completed" hint={`${f.completed} of ${f.assigned} people${data.cancelled ? ` · ${data.cancelled} cancelled not counted` : ""}`} />
-        <Figure value={data.overdue} label="Overdue now" hint={data.overdue ? "Past their due date and not handed in" : "Nobody is late"} />
+        <Figure value={data.overdue} label="Overdue now" hint={data.overdue ? "Past their due date and not handed in" : "Nobody is late"} tone={data.overdue ? "orange" : undefined} />
         <Figure value={days(t.daysToFinish)} label="To finish" hint={t.daysLearning === null ? "The middle time from being given it" : `The middle time from being given it; ${days(t.daysLearning)} from the first lesson`} />
         <Figure value={pct(t.onTime)} label="On time" hint={t.dated ? `Of ${t.dated} completed with a due date` : "None completed with a due date yet"} />
         {data.hasExam ? <Figure value={pct(e.firstTime)} label="Passed the exam first time" hint={e.sat ? `${e.sat} sat it · middle best score ${e.medianBest === null ? "–" : `${e.medianBest}%`}` : "Nobody has sat it yet"} /> : null}
         <Figure value={data.rating.average === null ? "–" : `${data.rating.average} of 5`} label="Rating" hint={data.rating.count ? `From ${data.rating.count} ${data.rating.count === 1 ? "learner" : "learners"}, everyone who rated it` : "Nobody has rated it yet"} />
-      </div>
+      </Figures>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <section aria-labelledby="insight-funnel" className="pc-panel">
-          <div className="space-y-1">
-            <h2 id="insight-funnel">How far people get</h2>
-            <p className="text-sm text-ui-muted-foreground">Of everyone given it{data.filters.period && data.filters.period !== "all" ? " in this period" : ""}.</p>
-          </div>
-          <Bars of={f.assigned} items={steps.map((s) => ({ ...s, text: s.label }))} />
+      <div className="grid gap-(--space-7) lg:grid-cols-2">
+        <section aria-labelledby="insight-funnel" className="flex min-w-0 flex-col">
+          <div className="pc-section-head"><h2 id="insight-funnel">How far people get</h2></div>
+          <p className="pc-section-note">Of everyone given it{data.filters.period && data.filters.period !== "all" ? " in this period" : ""}.</p>
+          <div className="rec-card"><Bars of={f.assigned} items={steps.map((s) => ({ ...s, text: s.label }))} /></div>
         </section>
 
         {data.hasExam ? (
-          <section aria-labelledby="insight-exam" className="pc-panel">
-            <div className="space-y-1">
-              <h2 id="insight-exam">Final exam</h2>
-              <p className="text-sm text-ui-muted-foreground">Of the {e.sat} {e.sat === 1 ? "person" : "people"} who sat it at least once.</p>
-            </div>
+          <section aria-labelledby="insight-exam" className="flex min-w-0 flex-col">
+            <div className="pc-section-head"><h2 id="insight-exam">Final exam</h2></div>
+          <p className="pc-section-note">Of the {e.sat} {e.sat === 1 ? "person" : "people"} who sat it at least once.</p>
+            <div className="rec-card">
             {e.sat ? (
               <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
                 {([
@@ -74,39 +72,36 @@ export function CourseInsightView({ data }: { data: CourseInsight }) {
                 ))}
               </dl>
             ) : <p className="text-sm text-ui-muted-foreground">Nobody has sat it yet.</p>}
-            <Link href={`/training/courses/${data.course.id}?exam=1`} className="text-sm font-medium underline-offset-4 hover:underline">See the questions people miss most</Link>
+            <Link href={`/training/courses/${data.course.id}?exam=1`} className="text-sm font-medium text-ui-primary underline-offset-4 hover:underline">See the questions people miss most</Link>
+            </div>
           </section>
         ) : null}
       </div>
 
       {d.lessons.length ? (
-        <section aria-labelledby="insight-stops" className="pc-panel">
-          <div className="space-y-1">
-            <h2 id="insight-stops">Where people stop</h2>
-            <p className="text-sm text-ui-muted-foreground">
+        <section aria-labelledby="insight-stops" className="flex min-w-0 flex-col">
+          <div className="pc-section-head"><h2 id="insight-stops">Where people stop</h2></div>
+          <p className="pc-section-note">
               {d.inProgress || d.notStarted
                 ? `${d.inProgress} ${d.inProgress === 1 ? "person is" : "people are"} part way through and ${d.notStarted} ${d.notStarted === 1 ? "hasn't" : "haven't"} opened it.${worst ? ` Most stopped before “${worst.title}”: check it reads clearly and isn't too long.` : ""}`
                 : "Nobody is part way through."}
               {data.minutes ? ` The lessons take about ${data.minutes} minutes in all.` : ""}
             </p>
-          </div>
-          <Bars of={f.assigned} items={d.lessons.map((l, i) => ({
+          <div className="rec-card"><Bars of={f.assigned} items={d.lessons.map((l, i) => ({
             key: l.lessonId, text: l.title,
             label: <><span className="text-ui-muted-foreground tabular-nums">{i + 1}. </span>{l.title}<span className="text-ui-muted-foreground"> · {l.section}</span></>,
             count: l.reached,
             note: l.stoppedHere ? <Tag meta={STOP_META[l.lessonId === d.mostStopped ? "most" : "some"]} label={`${l.stoppedHere} stopped here`} /> : undefined,
-          }))} />
+          }))} /></div>
         </section>
       ) : (
         <p className="text-sm text-ui-muted-foreground">{data.course.published ? "This course has no lessons." : "This course isn't published, so there are no lessons to follow yet."}</p>
       )}
 
       {data.bySite.length > 1 ? (
-        <section aria-labelledby="insight-sites" className="pc-panel">
-          <div className="space-y-1">
-            <h2 id="insight-sites">By site</h2>
-            <p className="text-sm text-ui-muted-foreground">Someone who works at two sites counts at both.</p>
-          </div>
+        <section aria-labelledby="insight-sites" className="flex min-w-0 flex-col">
+          <div className="pc-section-head"><h2 id="insight-sites">By site</h2></div>
+          <p className="pc-section-note">Someone who works at two sites counts at both.</p>
           <Table>
             <TableCaption className="sr-only">How each site is doing on this course</TableCaption>
             <TableHeader>
@@ -135,11 +130,9 @@ export function CourseInsightView({ data }: { data: CourseInsight }) {
         </section>
       ) : null}
 
-      <section aria-labelledby="insight-people" className="pc-panel">
-        <div className="space-y-1">
-          <h2 id="insight-people">People</h2>
-          <p className="text-sm text-ui-muted-foreground">Overdue first.{data.learners.length > MAX_LEARNERS ? ` The first ${MAX_LEARNERS} of ${data.learners.length}; the download has everyone.` : ""}</p>
-        </div>
+      <section aria-labelledby="insight-people" className="flex min-w-0 flex-col">
+        <div className="pc-section-head"><h2 id="insight-people">People</h2></div>
+          <p className="pc-section-note">Overdue first.{data.learners.length > MAX_LEARNERS ? ` The first ${MAX_LEARNERS} of ${data.learners.length}; the download has everyone.` : ""}</p>
         <Table>
           <TableCaption className="sr-only">Each person given this course and where they are</TableCaption>
           <TableHeader>

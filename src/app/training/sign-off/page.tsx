@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
+import { RecordSection } from "@/components/ui-kit/record";
 import { formatDate, formatDateTime, nameInitials } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Sign-off" };
@@ -19,13 +20,12 @@ export default async function TrainingSignoffPage() {
   const [{ who, rows }, handIns] = await Promise.all([signoffQueue(), handInQueue()]);
   if (!who.signoff) notFound();
   return (
-    <PageShell header={<PageHeader title="Sign-off" description="People who say they are ready, and work handed in to check. Watch them do it, then sign it off or send it back with what to practise." />}>
-      <div className="flex flex-col gap-6">
+    <PageShell spacing="roomy" header={<PageHeader title="Sign-off" description="People who say they are ready, and work handed in to check. Watch them do it, then sign it off or send it back with what to practise." />}>
       {rows.length === 0 ? (
         <EmptyState as="h2" icon="clipboardCheck" title="Nobody is waiting" hint="Practical training appears here when someone you cover asks for sign-off." />
       ) : (
-        <section className="pc-panel" aria-label="Waiting for sign-off">
-          <ul className="pc-rows">
+        <RecordSection id="signoff-heading" title="Waiting for sign-off" aside={<p>{rows.length}</p>}>
+          <ul className="pc-list">
             {rows.map((row) => (
               <li key={row.id} className="pc-row">
                 <Avatar size="lg" aria-hidden="true"><AvatarFallback>{nameInitials(row.user.name)}</AvatarFallback></Avatar>
@@ -48,10 +48,9 @@ export default async function TrainingSignoffPage() {
               </li>
             ))}
           </ul>
-        </section>
+        </RecordSection>
       )}
       <HandInQueue rows={handIns} />
-      </div>
     </PageShell>
   );
 }

@@ -18,7 +18,7 @@ function QuestionsPreview({ questions }: { questions: Question[] }) {
       {questions.map((q, i) => (
         <li key={q.id} className="pc-row items-start">
           <span className="pc-row-body gap-2">
-            <span className="text-xs font-semibold uppercase tracking-wide text-ui-muted-foreground">{i + 1} · {QUESTION_KIND_META[q.kind].label}</span>
+            <span className="text-xs font-semibold text-ui-muted-foreground">{i + 1} · {QUESTION_KIND_META[q.kind].label}</span>
             <span className="pc-row-title">{q.kind === "FILL_BLANK" ? blankedPrompt(q.prompt) : q.prompt}</span>
             {q.kind === "HOTSPOT" && q.imageId ? (
               <span className="tf-spot-frame is-static">
@@ -56,7 +56,7 @@ function DataPreview({ kind, data, fileId }: { kind: string; data: LessonData | 
         <ol className="flex flex-col gap-3">
           {steps.map((step, i) => (
             <li key={step.id} className="rounded-card bg-ui-muted p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-ui-muted-foreground">Scene {i + 1}{i === 0 ? " · start" : ""}</p>
+              <p className="text-xs font-semibold text-ui-muted-foreground">Scene {i + 1}{i === 0 ? " · start" : ""}</p>
               <p className="whitespace-pre-line">{step.text}</p>
               {/* eslint-disable-next-line @next/next/no-img-element -- a private file served by this app */}
               {step.imageId ? <img src={fileSrc(step.imageId)} alt="" loading="lazy" className="mt-2 max-h-48 w-fit rounded-card" /> : null}
@@ -155,11 +155,11 @@ export function CoursePreview({ courseId, outline, lessonId, requiresSignoff }: 
   const minutes = lessonMinutes(lesson);
   return (
     <div className="grid gap-6 lg:grid-cols-main-rail items-start">
-      <article className="pc-panel flex flex-col gap-5" aria-labelledby="preview-lesson">
+      <article className="rec-card gap-5" aria-labelledby="preview-lesson">
         <div className="flex flex-col gap-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-ui-muted-foreground">{section.title} · lesson {index + 1} of {total}{minutes ? ` · ${minutes} min` : ""}</p>
+          <p className="text-xs font-semibold text-ui-muted-foreground">{section.title} · lesson {index + 1} of {total}{minutes ? ` · ${minutes} min` : ""}</p>
           <Progress value={Math.round((index / total) * 100)} aria-label="Through the course" />
-          <h2 id="preview-lesson" className="text-2xl">{lesson.title}</h2>
+          <h2 id="preview-lesson" className="text-title-2">{lesson.title}</h2>
         </div>
         {video?.embed ? (
           <div className="tf-video"><iframe src={video.embed} title={`Video: ${lesson.title}`} allow="encrypted-media; picture-in-picture; fullscreen" loading="lazy" referrerPolicy="strict-origin-when-cross-origin" /></div>
@@ -192,10 +192,12 @@ export function CoursePreview({ courseId, outline, lessonId, requiresSignoff }: 
           )}
         </div>
       </article>
-      <nav aria-label="Course outline" className="pc-panel flex flex-col gap-4">
+      <nav aria-labelledby="preview-outline" className="flex min-w-0 flex-col">
+        <div className="pc-section-head"><h2 id="preview-outline">Outline</h2></div>
+        <div className="rec-card">
         {outline.sections.map((s) => (
           <div key={s.id} className="flex flex-col gap-1">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-ui-muted-foreground">{s.title}</h3>
+            <h3 className="text-xs font-semibold text-ui-muted-foreground">{s.title}</h3>
             <ol className="flex flex-col gap-1">
               {s.lessons.map((l) => {
                 const Icon = l.id === lesson.id ? CircleCheck : LESSON_KIND_META[l.kind].icon;
@@ -208,6 +210,7 @@ export function CoursePreview({ courseId, outline, lessonId, requiresSignoff }: 
             </ol>
           </div>
         ))}
+        </div>
       </nav>
     </div>
   );
