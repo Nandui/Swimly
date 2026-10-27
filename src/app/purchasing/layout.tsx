@@ -5,7 +5,6 @@ import { purchasingAccess, PurchasingShell } from "@/modules/purchasing/features
 import { pageSession } from "@/lib/page-guards";
 import { TITLE_TEMPLATE } from "@/lib/app";
 import '../workspace/module-workspace.css';
-import './purchasing.css';
 
 export const metadata: Metadata = { title: { default: "Purchasing", template: TITLE_TEMPLATE } };
 

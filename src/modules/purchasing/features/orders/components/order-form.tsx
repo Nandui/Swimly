@@ -2,7 +2,7 @@
 
 import { Fragment, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, Send, Save, TriangleAlert, UserCheck, X } from "lucide-react";
+import { Plus, Send, Save, TriangleAlert, UserCheck, X } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
 import { Label } from "@/components/shadcn/label";
@@ -10,6 +10,8 @@ import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-sel
 import { Textarea } from "@/components/shadcn/textarea";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { Notice } from "@/components/ui-kit/notice";
+import { RecordFacts } from "@/components/ui-kit/record";
+import { SearchField } from "@/components/ui-kit/search-field";
 import { saveOrder } from "@/modules/purchasing/features/orders/server/actions";
 import { approverRoles, euro, lineDetails, rulesFor, type ApprovalRule } from "@/modules/purchasing/shared/rules";
 import { SupplierPicture } from "@/modules/purchasing/shared/supplier-picture";
@@ -85,12 +87,12 @@ export function OrderForm({ sites, suppliers, rules, roleNames, existing, initia
   if (!suppliers.length) return <Notice tone="warning" title="No approved suppliers with products yet." description="Whoever manages Purchasing approves suppliers and their products first." />;
 
   return (
-    <div className="po-form">
-      <div className="po-form-main">
+    <div className="grid min-w-0 items-start gap-(--space-7) lg:grid-cols-main-rail">
+      <div className="flex min-w-0 flex-col gap-(--space-7)">
         {existing?.status === "rejected" && existing.decisionNote ? <Notice tone="warning" title="It was rejected" description={existing.decisionNote} /> : null}
-        <section aria-labelledby="po-where" className="po-card">
-          <div className="po-step-head"><span className="po-step-n" aria-hidden="true">1</span><h2 id="po-where">Where it goes and who from</h2></div>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <section aria-labelledby="po-where" className="flex min-w-0 flex-col">
+          <div className="pc-section-head"><h2 id="po-where">Where it goes and who from</h2></div>
+        <div className="rec-card grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="po-site">For site</Label>
             <NativeSelect id="po-site" value={siteId} onChange={(e) => setSiteId(e.target.value)} required>
@@ -100,9 +102,9 @@ export function OrderForm({ sites, suppliers, rules, roleNames, existing, initia
           </div>
           <div className="space-y-2">
             <Label htmlFor="po-supplier">Supplier</Label>
-            <div className="flex items-center gap-3">
+            <div className="flex min-w-0 items-center gap-3">
               {supplier ? <SupplierPicture id={supplier.id} name={supplier.name} version={supplier.pictureVersion} /> : null}
-              <NativeSelect id="po-supplier" value={supplierId} onChange={(e) => { setSupplierId(e.target.value); setQty({}); setPick({}); }} required>
+              <NativeSelect id="po-supplier" className="min-w-0 flex-1" value={supplierId} onChange={(e) => { setSupplierId(e.target.value); setQty({}); setPick({}); }} required>
                 <NativeSelectOption value="" disabled>Choose an approved supplier</NativeSelectOption>
                 {suppliers.map((s) => <NativeSelectOption key={s.id} value={s.id}>{s.name}</NativeSelectOption>)}
               </NativeSelect>
@@ -112,15 +114,9 @@ export function OrderForm({ sites, suppliers, rules, roleNames, existing, initia
         </section>
 
         {supplier ? (
-          <section aria-labelledby="po-products" className="po-card">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="po-step-head"><span className="po-step-n" aria-hidden="true">2</span><h2 id="po-products">Approved products</h2></div>
-              <div className="po-find">
-                <Search aria-hidden="true" />
-                <Input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Find a product" aria-label="Find a product" />
-              </div>
-            </div>
-            <div className="po-lines">
+          <section aria-labelledby="po-products" className="flex min-w-0 flex-col gap-(--space-3)">
+            <div className="pc-section-head mb-0"><h2 id="po-products">Approved products</h2><p>{supplier.products.length}</p></div>
+            <SearchField label="Find a product" labelHidden value={query} onValueChange={setQuery} placeholder="Find a product" className="sm:max-w-sm" />
             <Table>
               <TableHeader>
                 <TableRow>
@@ -210,42 +206,38 @@ export function OrderForm({ sites, suppliers, rules, roleNames, existing, initia
                 </TableRow>
               </TableFooter>
             </Table>
-            </div>
           </section>
         ) : null}
 
-        <section aria-labelledby="po-delivery" className="po-card">
-          <div className="po-step-head"><span className="po-step-n" aria-hidden="true">{supplier ? 3 : 2}</span><h2 id="po-delivery">When and anything to add</h2></div>
-        <div className="grid gap-4 sm:grid-cols-auto-fill">
+        <section aria-labelledby="po-delivery" className="flex min-w-0 flex-col">
+          <div className="pc-section-head"><h2 id="po-delivery">When and anything to add</h2></div>
+        <div className="rec-card grid gap-4 sm:grid-cols-auto-fill">
           <div className="space-y-2 sm:w-48"><Label htmlFor="po-needed">Needed by (optional)</Label><Input id="po-needed" type="date" value={neededBy} onChange={(e) => setNeededBy(e.target.value)} /></div>
           <div className="space-y-2"><Label htmlFor="po-note">Note (optional)</Label><Textarea id="po-note" value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} rows={2} placeholder="For the approver or the supplier, for example the delivery entrance." /></div>
         </div>
         </section>
       </div>
 
-      <aside className="min-w-0">
-        <section className="po-card po-summary" aria-labelledby="po-summary">
-          <span className="po-eyebrow">Summary</span>
-          <h2 id="po-summary" className="po-label">Total before VAT</h2>
-          <p className="po-summary-total" aria-live="polite">{euro(total)}</p>
-          <dl className="po-summary-lines">
-            <dt>Lines</dt><dd>{lines.length}</dd>
-          </dl>
+      <aside className="min-w-0 lg:sticky lg:top-6">
+        <section className="flex min-w-0 flex-col" aria-labelledby="po-summary">
+          <div className="pc-section-head"><h2 id="po-summary">Total before VAT</h2></div>
+          <div className="rec-card">
+          <p className="text-figure" aria-live="polite">{euro(total)}</p>
+          <RecordFacts items={[["Lines", String(lines.length)]]} />
           {supplier ? (
             approvers.length ? (
-              <p className="po-callout"><UserCheck aria-hidden="true" />
-                <span>Approved by {approvers.map((id) => { const r = limits.find((l) => l.roleId === id); return `${roleNames[id] ?? "a role"}${r?.limitCents == null ? "" : ` (up to ${euro(r.limitCents)})`}`; }).join(" or ")}.</span></p>
+              <Notice icon={UserCheck} title={`Approved by ${approvers.map((id) => { const r = limits.find((l) => l.roleId === id); return `${roleNames[id] ?? "a role"}${r?.limitCents == null ? "" : ` (up to ${euro(r.limitCents)})`}`; }).join(" or ")}.`} />
             ) : (
-              <p className="po-callout" data-tone="warning"><TriangleAlert aria-hidden="true" />
-                <span>{limits.length ? `Nobody may approve ${euro(total)} from ${supplier.name}.` : `${supplier.name} has no approvers yet.`} Ask whoever manages Purchasing.</span></p>
+              <Notice tone="warning" icon={TriangleAlert} title={`${limits.length ? `Nobody may approve ${euro(total)} from ${supplier.name}.` : `${supplier.name} has no approvers yet.`} Ask whoever manages Purchasing.`} />
             )
           ) : null}
-          {error ? <p className="po-callout" data-tone="danger" role="alert">{error}</p> : null}
-          <div className="po-islands">
+          {error ? <Notice tone="error" live="alert" title={error} /> : null}
+          <div className="flex flex-col gap-2">
             <Button type="button" className="min-h-11" disabled={pending || !siteId || !supplierId || lines.length === 0 || approvers.length === 0} onClick={() => save(true)}><Send aria-hidden="true" />Send for approval</Button>
             <Button type="button" variant="outline" className="min-h-11" disabled={pending || !siteId || !supplierId} onClick={() => save(false)}><Save aria-hidden="true" />Save draft</Button>
           </div>
-          <p className="po-fine">It gets its number (for example BT-OCT-0042) once it is approved.</p>
+          <p className="text-xs text-ui-muted-foreground">It gets its number (for example BT-OCT-0042) once it is approved.</p>
+          </div>
         </section>
       </aside>
     </div>

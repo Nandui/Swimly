@@ -32,7 +32,7 @@ export function SupplierPictureControls({ id, name, hasPicture }: { id: string; 
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-2">
-        <Input ref={input} type="file" accept={PICTURE_ACCEPT} tabIndex={-1} aria-hidden="true" className="sr-only" onChange={(e) => choose(e.target.files?.[0])} />
+        <Input ref={input} type="file" accept={PICTURE_ACCEPT} tabIndex={-1} aria-hidden="true" className="sr-only h-px w-px min-w-0" onChange={(e) => choose(e.target.files?.[0])} />
         <Button type="button" variant="outline" className="min-h-11" aria-busy={pending || undefined} disabled={pending} onClick={() => input.current?.click()}>
           {pending ? <Loader2 className="animate-spin" aria-hidden="true" /> : <ImagePlus aria-hidden="true" />}
           {pending ? "Saving picture…" : hasPicture ? "Change picture" : "Add a picture"}
@@ -49,7 +49,7 @@ export function SupplierPictureControls({ id, name, hasPicture }: { id: string; 
           />
         ) : null}
       </div>
-      <p className="po-fine">Its logo or a photo: JPG, PNG or WebP, up to 2 MB. It shows wherever the supplier is listed or picked.</p>
+      <p className="text-xs text-ui-muted-foreground">Its logo or a photo: JPG, PNG or WebP, up to 2 MB. It shows wherever the supplier is listed or picked.</p>
     </div>
   );
 }

@@ -12,9 +12,9 @@ export function SupplierPicture({ id, name, version, size }: { id: string; name:
   const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
   const src = supplierPictureUrl(id, version);
   return (
-    <Avatar size={size ?? "default"} className="po-monogram" aria-hidden="true">
-      {src ? <AvatarImage src={src} alt="" className="po-picture" /> : null}
-      <AvatarFallback className="po-initials">{initials}</AvatarFallback>
+    <Avatar size={size ?? "default"} aria-hidden="true">
+      {src ? <AvatarImage src={src} alt="" className="object-cover" /> : null}
+      <AvatarFallback>{initials}</AvatarFallback>
     </Avatar>
   );
 }

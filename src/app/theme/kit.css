@@ -672,7 +672,7 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
    record's name; what happens next with its steps beside the record, tinted blue while the move is
    this person's; the record as opaque cards of label and value rows; the history down the side.
    One column on phones, the next action first. */
-.turnfin-app .rec-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-1); color: var(--label-3); }
+.turnfin-app .rec-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-1); color: var(--label-2); }
 .turnfin-app .rec-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-6); align-items: start; }
 .turnfin-app :is(.rec-main, .rec-side) { display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; }
 @media (min-width: 1024px) {

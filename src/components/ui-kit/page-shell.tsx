@@ -6,7 +6,7 @@ import type { PageHeader } from "@/components/ui-kit/page-header";
  *  The page's PageHeader first, with the page's one H1, then its blocks in one column, 16px
  *  apart (24px when `spacing="roomy"`). It sits inside the frame (ModuleShell, the pool deck,
  *  Help, the sign-in card), which owns the main landmark and the page inset, so it adds neither.
- *  A page's own layout class (`po-desk`, `rota-plan`) and data attributes go on it as well.
+ *  A page's own layout class (`rota-plan`) and data attributes go on it as well.
  *  `scripts/lint/ui-rules.mjs` and `turnfin/page-header-in-shell` check that every page has
  *  one, with its header here. */
 export function PageShell({ header, children, spacing, className, ...rest }: {
