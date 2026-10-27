@@ -92,22 +92,24 @@ export function OrderForm({ sites, suppliers, rules, roleNames, existing, initia
         {existing?.status === "rejected" && existing.decisionNote ? <Notice tone="warning" title="It was rejected" description={existing.decisionNote} /> : null}
         <section aria-labelledby="po-where" className="flex min-w-0 flex-col">
           <div className="pc-section-head"><h2 id="po-where">Where it goes and who from</h2></div>
-        <div className="rec-card grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="po-site">For site</Label>
-            <NativeSelect id="po-site" value={siteId} onChange={(e) => setSiteId(e.target.value)} required>
-              <NativeSelectOption value="" disabled>Choose a site</NativeSelectOption>
-              {sites.map((s) => <NativeSelectOption key={s.id} value={s.id}>{s.name}{s.code ? ` (${s.code})` : ""}</NativeSelectOption>)}
-            </NativeSelect>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="po-supplier">Supplier</Label>
-            <div className="flex min-w-0 items-center gap-3">
-              {supplier ? <SupplierPicture id={supplier.id} name={supplier.name} version={supplier.pictureVersion} /> : null}
-              <NativeSelect id="po-supplier" className="min-w-0 flex-1" value={supplierId} onChange={(e) => { setSupplierId(e.target.value); setQty({}); setPick({}); }} required>
-                <NativeSelectOption value="" disabled>Choose an approved supplier</NativeSelectOption>
-                {suppliers.map((s) => <NativeSelectOption key={s.id} value={s.id}>{s.name}</NativeSelectOption>)}
+        <div className="rec-card">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="po-site">For site</Label>
+              <NativeSelect id="po-site" value={siteId} onChange={(e) => setSiteId(e.target.value)} required>
+                <NativeSelectOption value="" disabled>Choose a site</NativeSelectOption>
+                {sites.map((s) => <NativeSelectOption key={s.id} value={s.id}>{s.name}{s.code ? ` (${s.code})` : ""}</NativeSelectOption>)}
               </NativeSelect>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="po-supplier">Supplier</Label>
+              <div className="flex min-w-0 items-center gap-3">
+                {supplier ? <SupplierPicture id={supplier.id} name={supplier.name} version={supplier.pictureVersion} /> : null}
+                <NativeSelect id="po-supplier" className="min-w-0 flex-1" value={supplierId} onChange={(e) => { setSupplierId(e.target.value); setQty({}); setPick({}); }} required>
+                  <NativeSelectOption value="" disabled>Choose an approved supplier</NativeSelectOption>
+                  {suppliers.map((s) => <NativeSelectOption key={s.id} value={s.id}>{s.name}</NativeSelectOption>)}
+                </NativeSelect>
+              </div>
             </div>
           </div>
         </div>
@@ -211,9 +213,11 @@ export function OrderForm({ sites, suppliers, rules, roleNames, existing, initia
 
         <section aria-labelledby="po-delivery" className="flex min-w-0 flex-col">
           <div className="pc-section-head"><h2 id="po-delivery">When and anything to add</h2></div>
-        <div className="rec-card grid gap-4 sm:grid-cols-auto-fill">
-          <div className="space-y-2 sm:w-48"><Label htmlFor="po-needed">Needed by (optional)</Label><Input id="po-needed" type="date" value={neededBy} onChange={(e) => setNeededBy(e.target.value)} /></div>
-          <div className="space-y-2"><Label htmlFor="po-note">Note (optional)</Label><Textarea id="po-note" value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} rows={2} placeholder="For the approver or the supplier, for example the delivery entrance." /></div>
+        <div className="rec-card">
+          <div className="grid gap-4 sm:grid-cols-auto-fill">
+            <div className="space-y-2 sm:w-48"><Label htmlFor="po-needed">Needed by (optional)</Label><Input id="po-needed" type="date" value={neededBy} onChange={(e) => setNeededBy(e.target.value)} /></div>
+            <div className="space-y-2"><Label htmlFor="po-note">Note (optional)</Label><Textarea id="po-note" value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} rows={2} placeholder="For the approver or the supplier, for example the delivery entrance." /></div>
+          </div>
         </div>
         </section>
       </div>

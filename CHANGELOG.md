@@ -4,6 +4,11 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.26.0 · 26 October 2026 · Forms side by side on wider screens
+
+- **Report a problem** in Maintenance puts the site and the area side by side on a tablet or computer, with Exactly where across the whole card below them.
+- **Request coinage** and **a new purchase order** put their first fields side by side too, as they were always meant to.
+
 ## 2.25.0 · 26 October 2026 · CCTV log and Site Monitoring in the new look
 
 - **A CCTV viewing** shows who checked it, why and what was seen as label and value rows in cards under their titles, and notes added later as a timeline.
