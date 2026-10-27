@@ -1129,15 +1129,15 @@
   }
 }
 
-/* The reader (V2Document): the contents rail's 44px row links, the open section's soft fill. */
+/* The reader (V2Document): the contents rail's 44px row links inside their card, no box of their own. */
 @layer components {
   :where(.turnfin-docs) .reader-contents-link {
     display: flex;
     align-items: center;
-    min-height: var(--pc-control-height);
-    padding: 10px 16px;
-    border: 1px solid var(--pc-line);
-    border-radius: var(--pc-radius-card);
+    min-height: var(--control-height);
+    padding: 10px 12px;
+    border: 0;
+    border-radius: var(--radius-lg);
     color: var(--pc-ink);
     font-weight: 600;
     text-decoration: none;
@@ -1147,8 +1147,7 @@
     font-weight: 400;
   }
   :where(.turnfin-docs) .reader-contents-link:hover {
-    background: var(--pc-primary-soft);
-    color: var(--pc-primary-ink);
+    background: var(--fill-2);
   }
   :where(.turnfin-docs) .document-prose {
     line-height: 1.625;

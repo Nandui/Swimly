@@ -4,6 +4,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.20.0 · 26 October 2026 · Docs in the new look
+
+- **Docs** opens with the search on the page, **Emergency plans** as a row with a red symbol, then **Your required reading** and **Your work** side by side, the collections as figures and **Recently published**, each under its own title.
+- **The document library**, **My work** and **Reading reports** put their search and filters on the page; reading reports start with their figures, and the filters sit in a card under their title.
+- **A document** shows its reference and review date in soft grey wells instead of boxes, and **On this page** lists the sections without a box around each one.
+- **Administration**, **history**, **the editor** and **New document** take their titles above their cards.
+- A button inside a red, orange or green message is white with the message's colour, so it reads clearly.
+- In **Analytics**, the class filters on **Registers** no longer spill over the line below them when they wrap.
+
 ## 2.19.0 · 26 October 2026 · Admin in the new look
 
 - **Staff**, **Roles**, **Sites**, **Areas**, **Apps**, **Positions**, **Departments**, **Qualifications**, **Activities**, **Activity** and **Work devices** show their lists as one card each, with the titles and the line on what they hold above them instead of inside a frame.
