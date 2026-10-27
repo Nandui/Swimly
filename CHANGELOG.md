@@ -4,6 +4,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.24.0 · 26 October 2026 · Short courses in the new look
+
+- **A course** and **an Academy course** show what the course is as label and value rows in one card, then who is booked, the waiting list and the sessions as plain lists under their titles, with the button to add at the end of each title.
+- **Short courses**, **Academy**, **To call** and both course lists use the same titles and lists.
+- **Change buttons** on a course's sessions and people no longer show as an empty blue button now and then; the same fix stops Rota's Add activity button changing look as the page loads.
+
 ## 2.23.0 · 26 October 2026 · HR in the new look
 
 - **A person's HR file** has every part under its own title: profile, employment and contact as label and value rows, then notes, performance reviews, qualifications and what other apps add (training, rota, absences, incidents) as plain lists with how many each holds.

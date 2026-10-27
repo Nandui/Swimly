@@ -344,9 +344,14 @@ export function Trigger({
   children: React.ReactNode;
   onOpen: (element?: HTMLElement) => void;
 }) {
-  if (React.isValidElement<{ onClick?: React.MouseEventHandler; "aria-label"?: string; size?: string }>(children)) {
-    const inner = children.props.onClick;
-    const trigger = React.cloneElement(children, {
+  // A trigger handed down from a server page can arrive as a lazy element, which
+  // isValidElement refuses; Children.toArray resolves it, so the server and the
+  // browser draw the same single button.
+  const parts = React.Children.toArray(children);
+  const child = parts.length === 1 ? parts[0] : children;
+  if (React.isValidElement<{ onClick?: React.MouseEventHandler; "aria-label"?: string; size?: string }>(child)) {
+    const inner = child.props.onClick;
+    const trigger = React.cloneElement(child, {
       ...{ "aria-haspopup": "dialog" as const },
       onClick: (event: React.MouseEvent) => {
         inner?.(event);
@@ -356,8 +361,8 @@ export function Trigger({
         }
       },
     });
-    return children.props.size?.startsWith("icon") && children.props["aria-label"]
-      ? <Tooltip><TooltipTrigger asChild>{trigger}</TooltipTrigger><TooltipContent>{children.props["aria-label"]}</TooltipContent></Tooltip>
+    return child.props.size?.startsWith("icon") && child.props["aria-label"]
+      ? <Tooltip><TooltipTrigger asChild>{trigger}</TooltipTrigger><TooltipContent>{child.props["aria-label"]}</TooltipContent></Tooltip>
       : trigger;
   }
   return (

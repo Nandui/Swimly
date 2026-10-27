@@ -31,10 +31,10 @@ export default async function AcademyPage() {
 
 function Panel({ id, title, courses, empty }: { id: string; title: string; courses: CourseRow[]; empty?: { title: string; hint?: string } }) {
   return (
-    <section aria-labelledby={`${id}-h`} id={id} className="pc-panel">
-      <div className="pc-panel-head"><h2 id={`${id}-h`}>{title}</h2></div>
+    <section aria-labelledby={`${id}-h`} id={id} className="flex min-w-0 flex-col">
+      <div className="pc-section-head"><h2 id={`${id}-h`}>{title}</h2></div>
       {courses.length === 0 ? <EmptyState compact icon="award" title={empty?.title ?? "None"} hint={empty?.hint} /> : (
-        <ul className="pc-rows">
+        <ul className="pc-list">
           {courses.map((c) => {
             const kind = ACADEMY_KIND_META[c.kind as AcademyKind] ?? ACADEMY_KIND_META.other;
             const Icon = kind.icon;
