@@ -97,7 +97,7 @@ function FilterPicker({ picker, selected, onPick, disabled }: {
           <ChevronDown className="shrink-0" aria-hidden="true" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" aria-label={`${picker.label} filter`} className="w-80 max-w-(--pc-overlay-max-width) p-0">
+      <PopoverContent align="start" aria-label={`${picker.label} filter`} className="w-80 max-w-(--overlay-max-width) p-0">
         <Command>
           <CommandInput placeholder={`Search ${picker.label.toLowerCase()}`} aria-label={`Search ${picker.label.toLowerCase()}`} />
           <CommandList id={`${id}-options`}>

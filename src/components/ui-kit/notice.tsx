@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/shadcn/alert";
 
-/** The only notice in Turnfin: each tone has its colour (poolside.css) and an icon. */
+/** The only notice in Turnfin: each tone has its colour (kit.css) and an icon. */
 const NOTICE_ICON = {
   info: Info,
   warning: TriangleAlert,

@@ -55,7 +55,7 @@ export default async function TasksTodayPage({ searchParams }: { searchParams: P
         <ul className="pc-stats" data-compact aria-label="The day at a glance">
           <li className="flex"><div className="pc-stat w-full">
             <span className="pc-stat-label"><CircleCheck aria-hidden="true" />Completed</span>
-            <span className="pc-stat-figure">{figures.done}<span className="text-(--label-3)"> of {figures.total}</span></span>
+            <span className="pc-stat-figure">{figures.done}<span className="text-(--label-2)"> of {figures.total}</span></span>
             <Progress value={figures.total ? (figures.done / figures.total) * 100 : 0} aria-label={`${figures.done} of ${figures.total} completed`} className="w-full" />
           </div></li>
           <li className="flex"><div className="pc-stat w-full">

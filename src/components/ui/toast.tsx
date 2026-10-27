@@ -16,6 +16,6 @@ export function ToastBridge() {
   // The deck's save/continue controls occupy the bottom edge. Never cover
   // them with the notification confirming the save they just made. Only the
   // top is offset on phones: a number would inset all four sides and squeeze
-  // the toast. Desk toasts clear the bottom bar through poolside.css.
+  // the toast. Desk toasts clear the bottom bar through kit.css.
   return <Toaster position={onDeck ? "top-center" : "bottom-right"} offset={onDeck ? "calc(var(--spacing) * 20)" : undefined} mobileOffset={onDeck ? { top: "calc(var(--spacing) * 36)" } : undefined} closeButton />;
 }

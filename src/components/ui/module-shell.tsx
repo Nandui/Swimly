@@ -149,7 +149,7 @@ function useLargeTitle(mainId: string, top: RefObject<HTMLElement | null>, pathn
 /** As many page links as fit the bar, measured, so a link never scrolls out of sight; the rest go
  *  under "More". Until measured (the server render) the links that do not fit wrap out of
  *  sight below the 44px bar, and the open page's link goes first so it is never one of them
- *  (poolside.css), so it never scrolls. */
+ *  (kit.css), so it never scrolls. */
 function useBarFit(nav: RefObject<HTMLElement | null>, measure: RefObject<HTMLDivElement | null>, count: number) {
   const [fit, setFit] = useState(count);
   const [measured, setMeasured] = useState(false);
@@ -182,7 +182,7 @@ function PagesMore({ groups, currentFor }: { groups: ModuleLinkGroup[]; currentF
       <DropdownMenuTrigger className="tf-bar-item" aria-current={active ? 'true' : undefined} aria-label={active ? `More pages, including ${active.label}, the current page` : undefined}>
         More<ChevronDown aria-hidden="true" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-64 max-w-(--pc-overlay-max-width)">
+      <DropdownMenuContent align="start" className="w-64 max-w-(--overlay-max-width)">
         {groups.map((group) => (
           <DropdownMenuGroup key={group.label || group.links[0].href}>
             {group.label && <DropdownMenuLabel className="text-xs font-semibold text-ui-muted-foreground">{group.label}</DropdownMenuLabel>}
@@ -244,7 +244,7 @@ function TabBar({ current }: { current: string }) {
       {open ? item(open.id, open.href, open.name, open.icon) : null}
       <DropdownMenu>
         <DropdownMenuTrigger className="tf-bottom-item"><span className="tf-bottom-icon"><LayoutGrid aria-hidden="true" /></span><span>Apps</span></DropdownMenuTrigger>
-        <DropdownMenuContent side="top" align="end" className="w-64 max-w-(--pc-overlay-max-width)">
+        <DropdownMenuContent side="top" align="end" className="w-64 max-w-(--overlay-max-width)">
           {groupFrameModules(modules, groups).map((group) => (
             <DropdownMenuGroup key={group.key}>
               <DropdownMenuLabel className="text-xs font-semibold text-ui-muted-foreground">{group.label}</DropdownMenuLabel>

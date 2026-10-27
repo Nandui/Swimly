@@ -85,7 +85,7 @@
   --radius-ui-lg: var(--ui-radius);
   --radius-ui-xl: calc(var(--ui-radius) * 1.4);
   --radius-ui-2xl: calc(var(--ui-radius) * 1.8);
-  /* Corners on the 2.0 radii (poolside.css points them at glass.css): rounded-control (capsules),
+  /* Corners on the 2.0 radii (kit.css points them at glass.css): rounded-control (capsules),
      rounded-card (radius-lg, 14px, inside a card) and rounded-panel (radius-card, 26px). */
   --radius-control: var(--radius-capsule);
   --radius-card: var(--radius-lg);
@@ -107,11 +107,11 @@
 /* Layout utilities from the Poolside layout sizes (owner decision, 10 October 2026), so pages
    never need an arbitrary value (owner rule, 20 October 2026). Auto-fit grids of tiles, cards
    and wide columns; a side rail beside the main column; search fields and the page title. */
-@utility grid-cols-tiles { grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--pc-tile-min)), 1fr)); }
-@utility grid-cols-cards { grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--pc-card-min)), 1fr)); }
-@utility grid-cols-columns { grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--pc-column-min)), 1fr)); }
-@utility grid-cols-main-rail { grid-template-columns: minmax(0, 1fr) min(100%, var(--pc-rail-width)); }
-@utility grid-cols-rail-main { grid-template-columns: min(100%, var(--pc-rail-width)) minmax(0, 1fr); }
+@utility grid-cols-tiles { grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--tile-min)), 1fr)); }
+@utility grid-cols-cards { grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--card-min)), 1fr)); }
+@utility grid-cols-columns { grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--column-min)), 1fr)); }
+@utility grid-cols-main-rail { grid-template-columns: minmax(0, 1fr) min(100%, var(--rail-width)); }
+@utility grid-cols-rail-main { grid-template-columns: min(100%, var(--rail-width)) minmax(0, 1fr); }
 /* One growing column and one sized to its content (a row's text and its actions), and back. */
 @utility grid-cols-fill-auto { grid-template-columns: minmax(0, 1fr) auto; }
 @utility grid-cols-auto-fill { grid-template-columns: auto minmax(0, 1fr); }
@@ -124,10 +124,10 @@
 /* Alerts: an icon column (none without an icon) beside the text. */
 @utility grid-cols-alert { grid-template-columns: 0 minmax(0, 1fr); }
 @utility grid-cols-alert-icon { grid-template-columns: calc(var(--spacing) * 4) minmax(0, 1fr); }
-@utility basis-field { flex-basis: min(100%, var(--pc-field-min)); }
-@utility min-w-field { min-width: min(100%, var(--pc-field-min)); }
-@utility basis-column { flex-basis: min(100%, var(--pc-column-min)); }
-@utility max-w-deck { max-width: var(--pc-deck-width); }
+@utility basis-field { flex-basis: min(100%, var(--field-min)); }
+@utility min-w-field { min-width: min(100%, var(--field-min)); }
+@utility basis-column { flex-basis: min(100%, var(--column-min)); }
+@utility max-w-deck { max-width: var(--deck-width); }
 /* A heading that takes its container's type size, such as an empty state's title. */
 @utility text-inherit { font-size: inherit; line-height: inherit; }
 
@@ -202,7 +202,7 @@
   [data-slot="textarea"] {
     min-height: 2.75rem;
     /* Deliberate off-scale 16px: below it iOS zooms on focus. The only 16px rule for
-       command-input (swimmer and instructor search); poolside.css restores 14px on desktops. */
+       command-input (swimmer and instructor search); kit.css restores 14px on desktops. */
     font-size: 1rem;
   }
   [data-slot="command-input-wrapper"] {

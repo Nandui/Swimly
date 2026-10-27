@@ -107,7 +107,7 @@ export default async function TrainingPersonPage({ params }: { params: Promise<{
                     <Link href={`/training/paths/${p.pathId}`} className="pc-row-title -my-3 inline-flex min-h-11 items-center self-start underline-offset-4 hover:underline">{p.title}</Link>
                     <p className="pc-row-hint tabular-nums">Started {formatDate(p.startsOn)} · {p.done} of {p.total} done{p.finishedOn ? ` · finished ${formatDate(p.finishedOn)}` : p.overdue ? " · behind" : ""}</p>
                   </div>
-                  <div className="pc-row-trail min-w-(--pc-tile-min)"><Progress value={p.total ? Math.round((p.done / p.total) * 100) : 0} aria-label={`${p.done} of ${p.total} courses done`} /></div>
+                  <div className="pc-row-trail min-w-(--tile-min)"><Progress value={p.total ? Math.round((p.done / p.total) * 100) : 0} aria-label={`${p.done} of ${p.total} courses done`} /></div>
                 </li>
               ))}
             </ul>
@@ -155,7 +155,7 @@ export default async function TrainingPersonPage({ params }: { params: Promise<{
                       <span className="pc-row-title">{h.typeName}</span>
                       <p className="pc-row-hint tabular-nums">{hoursInWords(h.minutes)} of {h.hours} h since {formatDate(h.since)}{h.met ? " · done" : ` · ${hoursInWords(h.needed - h.minutes)} to go`}</p>
                     </div>
-                    <div className="pc-row-trail min-w-(--pc-tile-min)"><Progress value={h.percent} aria-label={`${h.percent}% of the hours for ${h.typeName}`} /></div>
+                    <div className="pc-row-trail min-w-(--tile-min)"><Progress value={h.percent} aria-label={`${h.percent}% of the hours for ${h.typeName}`} /></div>
                   </li>
                 ))}
               </ul>

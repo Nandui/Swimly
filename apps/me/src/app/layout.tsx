@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
-import "./theme/poolside.css";
 import "./theme/kit.css";
 import "./me.css";
 import { inter } from "./fonts";

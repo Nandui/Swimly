@@ -11,8 +11,8 @@ export function HomeLoading() {
           <div className="pc-row">
             <span aria-hidden="true" className="pc-tile-icon" />
             <span className="flex min-w-0 flex-1 flex-col gap-2">
-              <Skeleton className="h-(--pc-leading-body) w-40 max-w-full" />
-              <Skeleton className="h-(--pc-leading-caption) w-56 max-w-full" />
+              <Skeleton className="h-(--type-body-leading) w-40 max-w-full" />
+              <Skeleton className="h-(--type-caption-leading) w-56 max-w-full" />
             </span>
           </div>
         </li>
@@ -23,13 +23,13 @@ export function HomeLoading() {
     <div role="status" aria-busy="true" aria-live="polite" className="flex min-w-0 flex-col gap-6">
       <span className="sr-only">Loading Home</span>
       <div className="flex min-w-0 flex-col gap-2">
-        <Skeleton className="h-(--pc-leading-page) w-72 max-w-full" />
-        <Skeleton className="h-(--pc-leading-body) w-80 max-w-full" />
+        <Skeleton className="h-(--type-large-title-leading) w-72 max-w-full" />
+        <Skeleton className="h-(--type-body-leading) w-80 max-w-full" />
       </div>
-      <div className="pc-panel"><Skeleton className="h-(--pc-leading-title) w-40 max-w-full" /><Skeleton className="h-32 w-full" /></div>
+      <div className="pc-panel"><Skeleton className="h-(--type-title-leading) w-40 max-w-full" /><Skeleton className="h-32 w-full" /></div>
       <div className="grid min-w-0 items-start gap-(--space-7) lg:grid-cols-2">
-        <div className="flex min-w-0 flex-col gap-2"><Skeleton className="h-(--pc-leading-title) w-28" />{rows(4)}</div>
-        <div className="flex min-w-0 flex-col gap-2"><Skeleton className="h-(--pc-leading-title) w-28" />{rows(3)}</div>
+        <div className="flex min-w-0 flex-col gap-2"><Skeleton className="h-(--type-title-leading) w-28" />{rows(4)}</div>
+        <div className="flex min-w-0 flex-col gap-2"><Skeleton className="h-(--type-title-leading) w-28" />{rows(3)}</div>
       </div>
     </div>
   );

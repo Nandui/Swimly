@@ -1,7 +1,7 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
-// Turnfin: colour comes from data-tone (poolside.css), and there is no default role, so a
+// Turnfin: colour comes from data-tone (kit.css), and there is no default role, so a
 // static notice does not interrupt a screen reader. Use Notice from ui-kit, not this directly.
 type AlertTone = "info" | "warning" | "error" | "success"
 

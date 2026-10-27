@@ -48,7 +48,7 @@ function NextContact({ on }: { on: string }) {
 
 export function QueueRow({ name, description, status, nextContactOn, contactSummary, identity, placement, followUp }: { name: string; description: string; status: ReactNode; nextContactOn?: string; contactSummary?: FollowUpSummary; identity: ReactNode; placement: ReactNode; followUp: ReactNode }) {
   const latest = contactSummary?.latest;
-  // The row is a white bordered row from the list theme (poolside.css); the open one takes the
+  // The row is a white bordered row from the list theme (kit.css); the open one takes the
   // primary edge there too.
   return <Item role="listitem" aria-label={name} className="block min-w-0 overflow-hidden p-0">
     <QueueDisclosure>

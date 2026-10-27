@@ -198,7 +198,7 @@ export function FormDialog({
           <DialogContent
             portalClassName={portalClassName}
             className={cn(
-              "flex max-h-(--pc-overlay-max-height) flex-col gap-0 p-0",
+              "flex max-h-(--overlay-max-height) flex-col gap-0 p-0",
               width,
               change && "sm:max-w-2xl",
             )}

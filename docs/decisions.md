@@ -6,6 +6,12 @@ The decisions Turnfin 2.0 stands on, newest first. Each says what was decided, w
 
 ---
 
+### D15 · 26 October 2026 · The last Poolside sizes become Glass tokens, and poolside.css goes
+
+The sizes the pre-2.0 `poolside.css` still held become Turnfin Glass tokens in `glass.css`, under the names DESIGN.md gives them: the running type (`type-caption`, `type-body`, `type-title`, `type-large-title`, `type-figure` and their leadings), the layout limits (`overlay-max-width`, `overlay-max-height`, `tile-min`, `card-min`, `column-min`, `rail-width`, `field-min`, `deck-width`), the overlay shadow and focus halo, text on the accent, and the Docs content palette. Its surviving rules move to the top of `kit.css`, and the file is deleted from Turnfin and Turnfin Me.
+**Why:** one theme, one set of names: nothing on screen keeps the old system alive, and a new screen cannot reach for it.
+**Follows:** [../DESIGN.md](../DESIGN.md) (Space, size and radius). The Academy site keeps its own copy until it is rebuilt.
+
 ### D14 · 26 October 2026 · Maintenance, a new app, and the platform's one file check
 
 **Maintenance** is a new app in the Managers group. Staff report what is broken at a site, and the site's managers follow it until it is fixed. It is not part of Incidents, which is for accidents and near misses, with triage and sign-off. It is not part of Tasks, which gets each site's checks done on time. The maintenance team keeps working in **Trackplan**. Turnfin asks "Is it already in Trackplan?" (Yes, No or Not sure, with an optional reference) and never connects to Trackplan. The owner decided each of these points in turn: two levels (Report, Manage); a separate urgency (Low, Normal or Urgent); and "Could hurt someone" always being Urgent. Reporters see the open requests in the area before sending. Manage notes come only with status moves, with no comments thread. There is no email until the platform outbox lands, and the app goes live at one site first.

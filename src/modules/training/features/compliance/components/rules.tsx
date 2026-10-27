@@ -48,7 +48,7 @@ function Choices({ group, options, picked, onChange }: { group: (typeof GROUPS)[
       </CollapsibleTrigger>
       <CollapsibleContent className="px-2 pb-2">
         <p className="px-2 pb-2 text-xs text-ui-muted-foreground">{group.hint}. Choose none for anyone.</p>
-        <div className="grid max-h-(--pc-overlay-max-height) gap-1 overflow-y-auto sm:grid-cols-2">
+        <div className="grid max-h-(--overlay-max-height) gap-1 overflow-y-auto sm:grid-cols-2">
           {options.map((o) => (
             <ChoiceRow key={o.id} type="checkbox" id={`rule-${group.key}-${o.id}`} title={o.name} checked={picked.includes(o.id)}
               onCheckedChange={(on) => onChange(on ? [...picked, o.id] : picked.filter((id) => id !== o.id))} />

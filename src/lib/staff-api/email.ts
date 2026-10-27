@@ -33,8 +33,8 @@ function finSrc(): string {
 }
 
 /* The emails in Poolside Clear v2. Mail clients cannot read CSS variables, so the light and dark
-   hex values are copied from src/app/theme/poolside.css (canvas, surface, ink, ink-muted, primary,
-   on-primary); keep them in step. Sizes stay on the v2 scale: 12, 14, 18 and 28px. */
+   hex values are copied from src/app/theme/glass.css (bg, bg-2, label, label-2, accent,
+   on-accent); keep them in step. Sizes stay on the v2 scale: 12, 14, 18 and 28px. */
 const INK = "color:#0f1b2d";
 const MUTED = "color:#56627a";
 const BODY = "font-size:14px;line-height:20px";

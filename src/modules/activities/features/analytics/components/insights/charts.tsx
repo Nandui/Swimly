@@ -17,7 +17,7 @@ const count: Format = n => new Intl.NumberFormat("en-GB", { maximumFractionDigit
 export type ChartKind = "count" | "percent";
 const FORMATS: Record<ChartKind, Format> = { count, percent: n => `${Math.round(n)}%` };
 
-/** The theme's colours for each series (poolside.css): the fin's blue for the figure, the warning
+/** The theme's colours for each series (glass.css): the fin's blue for the figure, the warning
  *  amber for the second series, and quiet greys for the comparison and the period before. */
 const SERIES = {
   a: "var(--accent)",
