@@ -4,6 +4,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.29.0 · 27 October 2026 · The Turnfin name is back
+
+- **On a computer**, the top of the list of apps shows a larger fin with the name Turnfin beside it. Choose either to go Home.
+- **Everywhere else the fin shows** (a tablet's row of app symbols, the pool deck, Help and the sign-in page) it is larger too.
+- **The fin sits centred** in its space, in the app, on the sign-in page and as the icon on your browser tab and home screen. It used to lean right and low.
+
 ## 2.28.1 · 26 October 2026 · Easier to read in Tasks
 
 - **Tasks**: the "of 5" beside how many of today's tasks are done is darker, so it is easier to read.
