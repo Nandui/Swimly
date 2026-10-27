@@ -618,6 +618,13 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
   .turnfin-app .tf-side-list { align-items: center; margin: 0; padding: 0; overflow: visible; }
   .turnfin-app .tf-side-item { justify-content: center; width: var(--control-height); height: var(--control-height); padding: 0; }
   .turnfin-app .tf-side-item:is(:hover, :focus-visible) .tf-side-tip { display: block; }
+  /* A rail taller than the window scrolls. Its tips are then pinned to their symbol, so the
+     scrolling list does not clip them; a browser without anchor positioning keeps the list whole. */
+  @supports (anchor-name: --a) and (anchor-scope: all) {
+    .turnfin-app .tf-side-list { overflow-y: auto; }
+    .turnfin-app .tf-side-item { anchor-name: --tf-side-item; anchor-scope: --tf-side-item; }
+    .turnfin-app .tf-side-tip { position: fixed; position-anchor: --tf-side-item; top: anchor(center); left: calc(anchor(right) + 12px); }
+  }
   .turnfin-app .tf-side-brand { align-self: center; }
   .turnfin-app .tf-shell:has(> .tf-side) > .tf-frame { padding-left: 96px; }
   .turnfin-app .tf-shell:has(> .tf-side) .tf-top > .tf-brand { display: none; }
