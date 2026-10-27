@@ -1,96 +1,25 @@
-/* Layouts shared by the people-scoped Turnfin workspaces (Training, HR, Rota) in
-   ModuleShell. The Poolside Clear theme (tokens, shell, controls, fields) is shared with
-   Docs and Refunds in src/app/theme/poolside.css; this file only arranges the screens. */
+/* Layouts shared by the apps in ModuleShell (Rota's diary, Today and bookings, Purchasing's
+   printout, the Academy call list). Tokens only: the values are Turnfin Glass's (glass.css),
+   and the kit (kit.css) draws the controls and lists; this file only arranges the screens. */
 .turnfin-module .workspace-page-content > * { max-width: 1200px; }
 
 .turnfin-module .module-content { min-width: 0; }
 
-/* Rota (owner decisions, 6 October 2026). Only layout lives here:
-   the blocks are the shared `.pc-block` fills (`data-block="next"` someone on it, `"cover"` a gap).
-   The week strip: one tile per day with its gap count, the open day outlined in blue. */
-/* The day: a zoom bar, the hours, then one group per activity and place, its label beside its
-   stacked lanes (one per place). Nothing scrolls sideways: the day fits the width. */
-.turnfin-module .rota-tl { display: flex; flex-direction: column; gap: 8px; }
-.turnfin-module .rota-tl-zoom { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
-.turnfin-module .rota-tl-zoom-buttons { display: inline-flex; align-items: center; gap: 4px; }
-.turnfin-module .rota-tl-row { display: grid; grid-template-columns: 184px minmax(0, 1fr); gap: 12px; }
-.turnfin-module .rota-tl-hours { position: relative; height: 16px; }
-.turnfin-module .rota-tl-hours > span { position: absolute; top: 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.turnfin-module .rota-tl-label { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-width: 0; padding: 8px 12px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); background: var(--pc-surface); color: var(--pc-ink); text-align: start; }
-/* A label that opens its activity is the shared Button, kept as the card it sits beside. */
-.turnfin-module .rota-tl-label.ui-motion-press { flex-direction: column; align-items: stretch; justify-content: center; padding: 8px 12px; border-radius: var(--pc-radius-card); text-align: start; }
-.turnfin-module .rota-tl-label > .rota-tl-name { display: flex; align-items: center; gap: 6px; min-width: 0; font-weight: 600; }
-.turnfin-module .rota-tl-label > .rota-tl-name > svg { flex: none; width: 16px; height: 16px; }
-.turnfin-module .rota-tl-label > .rota-tl-name > span, .turnfin-module .rota-tl-label > small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.turnfin-module .rota-tl-label > small { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
-.turnfin-module .rota-tl-label > [data-slot='badge'] { align-self: flex-start; margin-top: 4px; }
-.turnfin-module .rota-tl-act-head { display: flex; align-items: center; gap: 6px; min-width: 0; min-height: 24px; padding: 0 4px; color: var(--pc-ink); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
-.turnfin-module .rota-tl-act-head.ui-motion-press { justify-content: flex-start; align-self: flex-start; min-height: 32px; height: auto; padding: 4px 10px 4px 6px; margin: -4px 0 -4px -2px; color: var(--pc-ink); font-weight: 400; }
-.turnfin-module .rota-tl-act-head > svg { flex: none; width: 14px; height: 14px; }
-.turnfin-module .rota-tl-act-name { font-weight: 600; }
-.turnfin-module .rota-tl-act-meta { color: var(--pc-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.turnfin-module .rota-tl-track { position: relative; min-height: 52px; border: 1px solid var(--pc-line); border-radius: var(--pc-radius-card); overflow: hidden;
-  /* A vertical swipe still scrolls the page on touch; a sideways drag moves the view. */
-  touch-action: pan-y; }
-/* The hour lines, on the labels' step; blocks sit 2px in from their start and end. */
-.turnfin-module .rota-tl-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--pc-line); pointer-events: none; }
-.turnfin-module .rota-tl-track > :is(.pc-block, .rota-people-shift, .rota-split-gap) { margin-inline: 2px; }
-/* Zoomed in: the hours and lanes can be dragged to move the day. */
-.turnfin-module .rota-tl[data-zoomed] :is(.rota-tl-hours, .rota-tl-track) { cursor: grab; }
-.turnfin-module .rota-tl[data-dragging] :is(.rota-tl-hours, .rota-tl-track, .rota-tl-track .pc-block) { cursor: grabbing; user-select: none; }
-.turnfin-module .rota-tl-hours { touch-action: pan-y; }
-.turnfin-module .rota-tl-track > .pc-block { position: absolute; top: 4px; bottom: 4px; min-height: 0; padding: 0 8px; border: 0; border-radius: 12px; font: inherit; text-align: start; cursor: pointer; }
-.turnfin-module .rota-tl-track > .pc-block[data-density='icon'] { padding: 0; justify-content: center; }
-.turnfin-module .rota-tl-track > .pc-block[aria-pressed='true'] { box-shadow: 0 0 0 2px var(--pc-surface), 0 0 0 4px var(--pc-primary); }
-.turnfin-module .rota-tl-track > .pc-block .pc-block-title { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
-.turnfin-module .rota-tl-track > .pc-block .pc-block-hint { font-variant-numeric: tabular-nums; }
-.turnfin-module .rota-tl-track > .pc-block > svg { width: 14px; height: 14px; }
-/* One timeline (owner request, 13 October 2026: "zones top, staff left"): a heading over each
-   part, each area's rows together (a pool: a row across it, then a slim row per lane), then the
-   gaps row and a row per person. Zone rows are slimmer than staff rows. */
-.turnfin-module .rota-tl-sec { display: flex; align-items: center; gap: 12px; margin: 12px 0 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
-.turnfin-module .rota-tl-sec::after { content: ""; flex: 1; height: 1px; background: var(--pc-line); }
-.turnfin-module .rota-tl-band { display: flex; flex-direction: column; gap: 4px; }
-.turnfin-module .rota-tl-sticky { position: sticky; top: 0; z-index: 3; padding: 4px 0; background: var(--pc-surface); }
-.turnfin-module .rota-tl-label.rota-tl-area { position: relative; padding-inline-end: 44px; background: var(--pc-surface-sunken); }
-.turnfin-module .rota-tl-area-add { position: absolute; top: 50%; right: 4px; translate: 0 -50%; }
-.turnfin-module .rota-tl-label.rota-tl-lane { margin-inline-start: 16px; padding-block: 4px; border-style: dashed; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
-.turnfin-module .rota-tl-track:is([data-row='area'], [data-row='lane']) { min-height: 44px; }
-.turnfin-module .rota-tl-track[data-row='lane'] { border-style: dashed; }
-.turnfin-module .rota-tl-track > .pc-block[data-block='absent'] { box-shadow: inset 0 0 0 1px var(--pc-danger); }
-.turnfin-module .rota-tl-label.rota-tl-person { min-height: 52px; }
-.turnfin-module .rota-tl-label > .rota-tl-name > svg { flex: none; }
-.turnfin-module .rota-tl-staff > .pc-block { z-index: 1; }
 @media (min-width: 1024px) { .turnfin-module .rota-narrow-only { display: none; } }
 @media (max-width: 1023px) { .turnfin-module .rota-wide-only { display: none; } }
-/* Below 1024px the same day is an agenda: each activity's people and gaps in time order. */
-.turnfin-module .rota-agenda { display: none; flex-direction: column; gap: 16px; }
-/* A person's row: the shift's outline under what they are on, and their breaks. */
-.turnfin-module .rota-people-shift { position: absolute; top: 2px; bottom: 2px; border: 1px dashed var(--pc-line-strong, var(--pc-ink-muted)); border-radius: 14px; }
-.turnfin-module .rota-people-shift[data-planned] { border-style: solid; border-color: var(--pc-primary); background: var(--pc-primary-soft); }
-.turnfin-module .rota-split-gap { position: absolute; top: 50%; z-index: 1; display: flex; align-items: center; justify-content: center; height: 0; border-top: 2px dotted var(--pc-ink-muted); color: var(--pc-ink-muted); font-size: var(--pc-text-caption); pointer-events: none; }
-.turnfin-module .rota-split-gap > span { padding: 0 8px; border-radius: 999px; background: var(--pc-surface); line-height: var(--pc-leading-caption); white-space: nowrap; translate: 0 -1px; }
-.turnfin-module .rota-split-gap[data-density="icon"] > span { display: none; }
-.turnfin-module .rota-people-warn { display: inline-flex; align-items: center; gap: 4px; color: var(--pc-warning, var(--pc-ink)); }
-.turnfin-module .rota-people-warn > svg { width: 12px; height: 12px; }
-.turnfin-module .rota-agenda-head { display: flex; align-items: center; gap: 8px; }
-@media (max-width: 1023px) {
-  .turnfin-module .rota-tl { display: none; }
-  .turnfin-module .rota-agenda { display: flex; }
-}
 /* Who can fill it: candidates in the sheet. */
-.turnfin-module .rota-gap-card { display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; border-radius: var(--pc-radius-card); background: var(--pc-block-cover); color: var(--pc-on-block-cover); }
-.turnfin-module .rota-gap-card small { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-variant-numeric: tabular-nums; }
+.turnfin-module .rota-gap-card { display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; border-radius: var(--radius-lg); background: var(--orange-soft); color: var(--orange-ink); }
+.turnfin-module .rota-gap-card small { font-size: 12px; line-height: 16px; font-variant-numeric: tabular-nums; }
 .turnfin-module .rota-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 /* Today: each gap with its best fits beside it. */
 .turnfin-module .rota-fits { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; width: 100%; }
-.turnfin-module .rota-fits > .pc-row { flex-wrap: nowrap; min-height: 0; padding: 10px 12px; color: var(--pc-ink); background: var(--pc-surface); }
+.turnfin-module .rota-fits > .pc-row { flex-wrap: nowrap; min-height: 0; margin: 0; padding: 10px 12px; border-radius: var(--radius-lg); color: var(--label); background: var(--fill-2); }
 @media (max-width: 1023px) { .turnfin-module .rota-fits { grid-template-columns: minmax(0, 1fr); } }
 
 /* Purchasing: a purchase order prints as the document the supplier gets, without the workspace around it. */
 @media print {
   body:has(.turnfin-purchasing) :is(.tf-side, .tf-top, .tf-bottom, .rec-next, [data-print="hide"]) { display: none !important; }
-  .turnfin-purchasing :is(.tf-frame, .pc-panel) { box-shadow: none !important; background: var(--pc-surface) !important; color: var(--pc-ink) !important; }
+  .turnfin-purchasing :is(.tf-frame, .pc-panel) { box-shadow: none !important; background: var(--bg-2) !important; color: var(--label) !important; }
 }
 
 /* Academy: the list to call for payment lines its columns up from 1024px (who, course, calls,
@@ -99,175 +28,19 @@
   .turnfin-module .academy-call { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1.2fr) 21rem; }
 }
 
-/* Shift-first Plan (owner, 13 October 2026): what needs people, then each person's shift. */
-.turnfin-module .rota-tl-label > .rota-tl-kind { color: var(--pc-ink-muted); }
-.turnfin-module .rota-tl-label > .rota-tl-together { color: var(--pc-primary-ink); font-weight: 600; white-space: normal; }
-.turnfin-module .rota-tl-track[data-row='need'] { min-height: 48px; }
-.turnfin-module .rota-tl-track > .pc-block.rota-cover[data-ok], .turnfin-module .rota-key i.rota-cover[data-ok] { background: var(--pc-success-soft); color: var(--pc-success); }
-.turnfin-module .rota-tl-track > .pc-block.rota-cover[data-ok].ui-motion-press:hover { background: var(--pc-success-soft); color: var(--pc-success); }
-.turnfin-module .rota-tl-track > .pc-block.rota-free-time { top: 8px; bottom: 8px; background: var(--pc-surface-sunken); box-shadow: inset 0 0 0 1px var(--pc-line); color: var(--pc-ink-muted); }
-.turnfin-module .rota-tl-track > .pc-block.rota-free-time .pc-block-title { font-weight: 500; }
-.turnfin-module .rota-tl-track > .pc-block[data-lent] { box-shadow: inset 0 0 0 1px var(--pc-ink-muted); }
-.turnfin-module .rota-tl-totals { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 0; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
-.turnfin-module .rota-tl-totals > span { padding: 6px 12px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); }
-.turnfin-module .rota-tl-totals > span[data-gaps] { background: var(--pc-block-cover); color: var(--pc-on-block-cover); font-weight: 600; }
-
 /* ── Plan, rebuilt (20 October 2026; references: 7shifts' day view, Deputy's open shifts row,
    Square's workday, Remote's phone day) ──────────────────────────────────────────────────────────
    One white surface: a slim week bar, the open day's figures and its two to-do lists, one toolbar,
    then the board. Rows sit on hairlines, not in boxes, so the eye follows time across. */
 .turnfin-module .rota-plan { --rota-label: 216px; }
-.turnfin-module .rota-plan .rota-departments { margin-bottom: 4px; }
-.turnfin-module .rota-surface { display: flex; flex-direction: column; gap: 20px; min-width: 0; padding: 24px; border-radius: var(--pc-radius-panel); background: var(--pc-surface); box-shadow: 0 0 0 1px var(--pc-line); }
-.turnfin-module .rota-board { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 
-/* The week bar: arrows and the range, then seven day tabs, each with what is still to fill. */
-.turnfin-module .rota-weekbar { display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px; border-bottom: 1px solid var(--pc-line); }
-.turnfin-module .rota-weekbar-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.turnfin-module .rota-weekbar-range { padding-inline: 4px; font-size: var(--pc-text-title, 1.125rem); font-weight: 700; letter-spacing: -0.01em; }
-.turnfin-module .rota-weekbar-total { margin-inline-start: auto; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
 .turnfin-module .rota-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; margin: 0; padding: 0; list-style: none; }
-.turnfin-module .rota-day-tab { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; align-items: baseline; column-gap: 8px; width: 100%; height: auto; min-height: 64px; padding: 10px 12px; border-radius: var(--pc-radius-card); box-shadow: inset 0 0 0 1px var(--pc-line); text-align: start; white-space: nowrap; }
-.turnfin-module .rota-day-dow { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
 .turnfin-module .rota-day-num { font-size: 1.375rem; line-height: 1.1; font-weight: 750; letter-spacing: -0.02em; }
-.turnfin-module .rota-day-state { grid-column: 1 / -1; display: inline-flex; align-items: center; gap: 6px; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
-.turnfin-module .rota-day-state::before { content: ""; flex: none; width: 6px; height: 6px; border-radius: 999px; background: var(--pc-line); }
-.turnfin-module .rota-day-tab[data-state='gaps'] .rota-day-state { color: var(--pc-warning); }
-.turnfin-module .rota-day-tab[data-state='gaps'] .rota-day-state::before { background: var(--pc-warning); }
-.turnfin-module .rota-day-tab[data-state='covered'] .rota-day-state { color: var(--pc-success); }
-.turnfin-module .rota-day-tab[data-state='covered'] .rota-day-state::before { background: var(--pc-success); }
-.turnfin-module .rota-day-tab[data-today] .rota-day-dow { color: var(--pc-primary); }
-.turnfin-module .rota-day-tab[aria-current] { background: var(--pc-primary); box-shadow: none; color: var(--pc-on-primary); }
-.turnfin-module .rota-day-tab[aria-current]:hover { background: var(--pc-primary-hover); color: var(--pc-on-primary); }
-.turnfin-module .rota-day-tab[aria-current] :is(.rota-day-dow, .rota-day-state) { color: var(--pc-on-primary); }
-.turnfin-module .rota-day-tab[aria-current] .rota-day-state::before { background: var(--pc-on-primary); }
 
-/* The open day: its name and figures, then the places to fill, the people to check and adding. */
-.turnfin-module .rota-day-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
-.turnfin-module .rota-day-title { margin: 0; font-size: var(--pc-text-title, 1.25rem); font-weight: 750; letter-spacing: -0.015em; }
-.turnfin-module .rota-day-stats { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
-.turnfin-module .rota-day-stats > div { display: flex; gap: 6px; }
-.turnfin-module .rota-day-stats dt::after { content: ":"; }
-.turnfin-module .rota-day-stats dd { margin: 0; color: var(--pc-ink); font-weight: 650; }
-.turnfin-module .rota-day-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.turnfin-module .rota-day-actions [data-tone='warning'] { border-color: var(--pc-warning-soft); background: var(--pc-warning-soft); color: var(--pc-warning); font-weight: 650; }
-.turnfin-module .rota-day-actions [data-tone='success'] { border-color: var(--pc-success-soft); background: var(--pc-success-soft); color: var(--pc-success); font-weight: 650; }
-.turnfin-module .rota-day-note { flex-basis: 100%; margin: 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
-
-/* One toolbar: the board, the area, the time of day and zoom, other departments and the key. */
-.turnfin-module .rota-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
-.turnfin-module .rota-toolbar-time { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.turnfin-module .rota-select[data-slot='select-trigger'] { min-height: 44px; border-radius: 999px; padding-inline: 14px; }
-.turnfin-module .rota-tl-hint { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
-
-/* The board: rows on hairlines under a sticky clock. */
-.turnfin-module .rota-plan .rota-tl { gap: 0; }
-.turnfin-module .rota-plan .rota-tl-row { grid-template-columns: var(--rota-label) minmax(0, 1fr); gap: 12px; }
-.turnfin-module .rota-plan .rota-tl-head { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 8px 0 6px; border-bottom: 1px solid var(--pc-line); background: var(--pc-surface); }
-.turnfin-module .rota-plan .rota-tl-hours > span { font-size: var(--pc-text-caption); font-weight: 600; }
-.turnfin-module .rota-plan .rota-tl-band { gap: 0; }
-.turnfin-module .rota-plan .rota-tl-band > .rota-tl-row, .turnfin-module .rota-plan .rota-tl-area-band > .rota-tl-row { padding-block: 4px; border-bottom: 1px solid var(--pc-line); }
-.turnfin-module .rota-plan .rota-tl-band > .rota-tl-row:not(:last-child) { border-bottom-style: dashed; }
-.turnfin-module .rota-plan .rota-tl-track { min-height: 52px; border: 0; border-radius: 0; background: none; }
-.turnfin-module .rota-plan .rota-tl-track[data-row='need'] { min-height: 48px; }
-.turnfin-module .rota-plan .rota-tl-track > .pc-block { border-radius: 12px; }
-.turnfin-module .rota-plan .rota-tl-label { gap: 2px; padding: 6px 10px; border: 0; border-radius: var(--pc-radius-card); background: transparent; }
-.turnfin-module .rota-plan .rota-tl-label.ui-motion-press:hover { background: var(--pc-surface-sunken); }
-.turnfin-module .rota-plan .rota-tl-label { color: var(--pc-ink); }
-.turnfin-module .rota-plan .rota-tl-label > .rota-tl-name > svg { color: var(--pc-primary); }
-.turnfin-module .rota-plan .rota-tl-person { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; align-content: center; }
-.turnfin-module .rota-plan .rota-tl-person > [data-slot='avatar'] { grid-row: 1 / span 3; align-self: center; }
-.turnfin-module .rota-plan .rota-tl-person > :not([data-slot='avatar']) { grid-column: 2; }
-.turnfin-module .rota-plan .rota-tl-person .rota-warn-icon { color: var(--pc-warning); }
-.turnfin-module .rota-week-bar[data-slot='progress'] { height: 4px; margin-top: 4px; }
-.turnfin-module .rota-week-bar[data-over] [data-slot='progress-indicator'] { background: var(--pc-warning); }
-.turnfin-module .rota-plan .rota-tl-area-band { display: flex; flex-direction: column; }
-.turnfin-module .rota-plan .rota-tl-area { display: flex; align-items: center; gap: 10px; min-height: 44px; margin: 12px 0 0; padding: 0 4px 0 12px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); font-size: var(--pc-text-body); font-weight: 750; }
-.turnfin-module .rota-plan .rota-count { display: inline-flex; align-items: center; min-height: 20px; padding: 0 8px; border-radius: 999px; background: var(--pc-surface-sunken); color: var(--pc-ink-muted); font-size: var(--pc-text-caption); font-weight: 650; font-variant-numeric: tabular-nums; }
-.turnfin-module .rota-plan .rota-tl-area .rota-count { background: var(--pc-surface); }
-.turnfin-module .rota-plan .rota-count[data-gaps] { background: var(--pc-warning-soft); color: var(--pc-warning); }
-/* Open needs: the first row of the People board, tinted so gaps read before people. */
-.turnfin-module .rota-open > .rota-tl-row { background: var(--pc-warning-soft); border-radius: var(--pc-radius-card); border-bottom: 0 !important; margin-block: 8px 4px; padding: 4px; }
-.turnfin-module .rota-open-label > .rota-tl-name > svg { color: var(--pc-warning) !important; }
-.turnfin-module .rota-open .rota-tl-track { min-height: 44px; }
-.turnfin-module .rota-plan .rota-tl-track > .pc-block.rota-free-time { box-shadow: inset 0 0 0 1px var(--pc-line); background: var(--pc-surface); color: var(--pc-ink-muted); }
-.turnfin-module .rota-plan .rota-tl-track > .pc-block.rota-free-time > svg { color: var(--pc-primary); }
-.turnfin-module .rota-plan .rota-tl-track > .pc-block.rota-free-time:hover { box-shadow: inset 0 0 0 1px var(--pc-primary); color: var(--pc-primary); }
-.turnfin-module .rota-plan .rota-tl-track > .pc-block[data-lent] { box-shadow: inset 0 0 0 1.5px var(--pc-ink-muted); }
-.turnfin-module .rota-plan .rota-people-shift { border-radius: 14px; }
-.turnfin-module .rota-tl-empty { margin: 12px 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
-/* The key, in its popover. */
-.turnfin-module .rota-fill-cta { display: inline-flex; align-items: center; gap: 2px; color: var(--pc-primary); font-weight: 650; }
-.turnfin-module .rota-fill-cta > svg { width: 16px; height: 16px; }
-/* Phones and tablets: the board is a list per view. */
-.turnfin-module .rota-agenda-title { display: flex; align-items: center; gap: 8px; margin: 0; font-size: var(--pc-text-body); font-weight: 750; }
 @media (max-width: 1023px) {
-  .turnfin-module .rota-surface { padding: 16px; }
-  .turnfin-module .rota-days { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: -4px; padding: 2px 4px 6px; }
+    .turnfin-module .rota-days { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: -4px; padding: 2px 4px 6px; }
   .turnfin-module .rota-days > li { flex: 0 0 96px; scroll-snap-align: start; }
-  .turnfin-module .rota-weekbar-total { flex-basis: 100%; margin-inline-start: 0; }
-}
-@media (max-width: 639px) {
-  .turnfin-module .rota-surface { margin-inline: -8px; padding: 12px; }
-  .turnfin-module .rota-day-head { align-items: flex-start; }
-}
-
-/* The Plan as the day's diary (owner, 20 October 2026): what is not covered yet and who's where
-   at the top, then one line per person in plain words, with breaks and a now line. */
-.turnfin-module .rota-glance { display: grid; gap: 16px; }
-@media (min-width: 1024px) { .turnfin-module .rota-glance { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); align-items: start; } }
-.turnfin-module .rota-glance-panel { display: flex; flex-direction: column; gap: 12px; min-width: 0; padding: 20px; border-radius: var(--pc-radius-card); background: var(--pc-surface); box-shadow: 0 0 0 1px var(--pc-line); }
-.turnfin-module .rota-glance-title { display: flex; align-items: center; gap: 8px; margin: 0; font-size: var(--pc-text-body); font-weight: 750; }
-.turnfin-module .rota-glance-title > svg { width: 20px; height: 20px; }
-.turnfin-module .rota-glance-note { margin: 0; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
-.turnfin-module .rota-where { display: flex; flex-direction: column; margin: 0; }
-.turnfin-module .rota-where > div { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; padding: 10px 0; border-top: 1px solid var(--pc-line); }
-.turnfin-module .rota-where dt { font-weight: 650; }
-.turnfin-module .rota-where dt > small { margin-inline-start: 6px; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); font-weight: 500; }
-.turnfin-module .rota-where dd { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 10px; margin: 0; text-align: end; }
-.turnfin-module .rota-where-short { color: var(--pc-warning); font-weight: 650; }
-.turnfin-module .rota-where-next { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; margin: 0; padding: 12px 14px; border-radius: var(--pc-radius-card); background: var(--pc-surface-sunken); font-size: var(--pc-text-caption); }
-.turnfin-module .rota-sheet-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding-top: 16px; border-top: 1px solid var(--pc-line); }
-.turnfin-module .rota-key { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; padding: 0; list-style: none; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
-.turnfin-module .rota-key > li { display: inline-flex; align-items: center; gap: 6px; }
-.turnfin-module .rota-key i { position: static !important; flex: none; display: inline-block; width: 18px; height: 12px; min-height: 0 !important; padding: 0 !important; margin: 0 !important; border-radius: 4px; }
-.turnfin-module .rota-key i.rota-break { border: 1px dashed var(--pc-ink-muted); background: var(--pc-surface); }
-.turnfin-module .rota-key i.rota-free-time { background: var(--pc-surface); box-shadow: inset 0 0 0 1px var(--pc-line); }
-.turnfin-module .rota-plan .rota-tl-track > .pc-block.rota-break { z-index: 2; top: 6px; bottom: 6px; justify-content: center; padding: 0 6px; border: 1px dashed var(--pc-ink-muted); border-radius: 10px; background: var(--pc-surface); box-shadow: none; color: var(--pc-ink-muted); }
-.turnfin-module .rota-plan .rota-tl-track > .pc-block.rota-break[data-pinned] { border-style: solid; color: var(--pc-ink); }
-.turnfin-module .rota-plan .rota-tl-track > .pc-block.rota-break:hover { border-color: var(--pc-primary); color: var(--pc-primary); }
-.turnfin-module .rota-plan .rota-open .rota-tl-track > .pc-block[data-block='cover']:not(:focus-visible) { outline: 2px dashed var(--pc-warning); outline-offset: -2px; }
-.turnfin-module .rota-now-line { position: absolute; top: 0; bottom: 0; z-index: 4; width: 2px; margin-inline-start: -1px; border-radius: 2px; background: var(--pc-ink); pointer-events: none; }
-.turnfin-module .rota-tl-hours > .rota-now-tag { z-index: 1; padding: 0 6px; border-radius: 999px; background: var(--pc-ink); color: var(--pc-surface); font-weight: 700; }
-.turnfin-module .rota-steps { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.turnfin-module .rota-steps > li { display: grid; grid-template-columns: 52px minmax(0, 1fr); align-items: start; gap: 12px; }
-.turnfin-module .rota-step-time { padding-top: 11px; font-weight: 700; }
-.turnfin-module .rota-step-card { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 10px 14px; border-radius: var(--pc-radius-card); background: var(--pc-surface); box-shadow: inset 0 0 0 1px var(--pc-line); }
-.turnfin-module .rota-step-title { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-weight: 700; }
-.turnfin-module .rota-step-hint { font-size: var(--pc-text-caption); }
-.turnfin-module .rota-step-now { padding: 0 8px; border-radius: 999px; background: var(--pc-ink); color: var(--pc-surface); font-size: var(--pc-text-caption); }
-.turnfin-module .rota-steps > [data-tone='area'] .rota-step-card { background: var(--pc-block-next); box-shadow: none; color: var(--pc-on-block-next); }
-.turnfin-module .rota-steps > [data-tone='activity'] .rota-step-card { background: var(--pc-block-now); box-shadow: none; color: var(--pc-on-block-now); }
-.turnfin-module .rota-steps > [data-tone='booking'] .rota-step-card { background: var(--pc-block-assess); box-shadow: none; color: var(--pc-on-block-assess); }
-.turnfin-module .rota-steps > [data-tone='break'] .rota-step-card { box-shadow: none; border: 1px dashed var(--pc-ink-muted); color: var(--pc-ink-muted); }
-.turnfin-module .rota-steps > [data-tone='free'] .rota-step-card { background: var(--pc-surface-sunken); box-shadow: none; color: var(--pc-ink-muted); }
-.turnfin-module .rota-steps > :is([data-tone='off'], [data-tone='finish']) .rota-step-card { color: var(--pc-ink-muted); }
-.turnfin-module .rota-steps > [data-now] .rota-step-card { outline: 2px solid var(--pc-primary); outline-offset: 2px; }
-
-/* Today (laid out again 20 October 2026): five figures, then what to do beside what to know. */
-.turnfin-module .rota-kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 0; }
-.turnfin-module .rota-kpis > div { display: flex; flex-direction: column-reverse; gap: 2px; padding: 16px 18px; border-radius: var(--pc-radius-panel); background: var(--pc-surface); box-shadow: 0 0 0 1px var(--pc-line); }
-.turnfin-module .rota-kpis dt { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
-.turnfin-module .rota-kpis dd { margin: 0; font-size: 1.75rem; line-height: 1.15; font-weight: 750; letter-spacing: -0.02em; }
-.turnfin-module .rota-kpis > [data-tone='warning'] { background: var(--pc-warning-soft); box-shadow: none; }
-.turnfin-module .rota-kpis > [data-tone='warning'] dd { color: var(--pc-warning); }
-.turnfin-module .rota-kpis > [data-tone='success'] dd { color: var(--pc-success); }
-.turnfin-module .rota-today { display: grid; gap: 16px; align-items: start; }
-.turnfin-module :is(.rota-today-main, .rota-today-side) { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-@media (min-width: 1100px) { .turnfin-module .rota-today { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); } }
-@media (max-width: 1023px) { .turnfin-module .rota-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.turnfin-module .rota-kpis-three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-@media (max-width: 639px) { .turnfin-module .rota-kpis-three { grid-template-columns: minmax(0, 1fr); } }
+  }
 
 /* ---------- The day's diary: the Plan (owner, 20 October 2026), on the Turnfin Glass canvas ----------
    The title with the department as a menu and the day under it, the day's figures, the week as a
@@ -399,11 +172,11 @@
    as it lasts; one at a moment is a short mark. */
 .turnfin-module .diary-track[data-subs] { min-height: 76px; }
 .turnfin-module .diary-block[data-subs] { flex-direction: row; justify-content: flex-start; align-items: flex-start; gap: 6px; padding-top: 4px; }
-.turnfin-module .diary-sub-block { container-type: inline-size; z-index: 1; display: flex; align-items: center; justify-content: flex-start; min-width: 0; height: 24px; min-height: 0; margin-inline: 4px; padding: 0 6px; overflow: hidden; border: 1px solid var(--pc-line-strong); border-radius: 6px; background: var(--pc-surface); color: var(--pc-ink); font: inherit; font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); white-space: nowrap; }
+.turnfin-module .diary-sub-block { container-type: inline-size; z-index: 1; display: flex; align-items: center; justify-content: flex-start; min-width: 0; height: 24px; min-height: 0; margin-inline: 4px; padding: 0 6px; overflow: hidden; border: 1px solid var(--label-2); border-radius: 6px; background: var(--bg-2); color: var(--label); font: inherit; font-size: 12px; line-height: 16px; white-space: nowrap; }
 .turnfin-module .diary-sub-block[data-moment] { margin-inline: 2px; padding: 0 3px; }
-.turnfin-module .diary-track button.diary-sub-block { padding: 0 6px; color: var(--pc-ink); cursor: pointer; }
+.turnfin-module .diary-track button.diary-sub-block { padding: 0 6px; color: var(--label); cursor: pointer; }
 .turnfin-module .diary-track button.diary-sub-block[data-moment] { padding: 0 3px; }
-.turnfin-module button.diary-sub-block:hover { background: var(--pc-surface); border-color: var(--pc-primary); }
+.turnfin-module button.diary-sub-block:hover { background: var(--bg-2); border-color: var(--accent); }
 
 /* On a phone and tablet: each person's day as a short list */
 .turnfin-module .diary-cards { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; grid-template-columns: minmax(0, 1fr); }
@@ -430,13 +203,13 @@
 .turnfin-module .diary-times > legend { grid-column: 1 / -1; margin-bottom: 4px; }
 .turnfin-module .diary-break-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0 0 12px; padding: 0; border: 0; }
 .turnfin-module .diary-group { display: flex; flex-direction: column; gap: 8px; }
-.turnfin-module .diary-group-title { margin: 0; color: var(--pc-ink); font-size: var(--pc-text-body); font-weight: 700; }
+.turnfin-module .diary-group-title { margin: 0; color: var(--label); font-size: var(--pc-text-body); font-weight: 700; }
 .turnfin-module .diary-picks { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
-.turnfin-module .diary-pick { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 10px 0; border-bottom: 1px solid var(--pc-line); }
+.turnfin-module .diary-pick { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 10px 0; border-bottom: 1px solid var(--sep); }
 .turnfin-module .diary-pick:last-child { border-bottom: 0; }
 .turnfin-module .diary-pick[data-off] { justify-content: flex-start; }
 .turnfin-module .diary-pick-text { display: flex; flex: 1 1 200px; flex-direction: column; min-width: 0; }
-.turnfin-module .diary-pick-name { color: var(--pc-ink); font-weight: 600; }
+.turnfin-module .diary-pick-name { color: var(--label); font-weight: 600; }
 .turnfin-module .diary-cannot-toggle { gap: 6px; padding-inline: 0; }
 .turnfin-module .diary-cannot [data-state="open"] > svg { rotate: 180deg; }
 .turnfin-module .diary-warnings { margin: 0; padding-inline-start: 18px; list-style: disc; }
@@ -447,21 +220,21 @@
 .turnfin-module .diary-step[data-tone="booking"]::before { background: transparent; box-shadow: inset 0 0 0 1.5px var(--label-3); }
 .turnfin-module .diary-step:is([data-tone="break"], [data-tone="off"])::before { background: transparent; box-shadow: inset 0 0 0 1px var(--sep); }
 .turnfin-module .diary-step[data-tone="free"]::before { background: transparent; box-shadow: inset 0 0 0 1.5px var(--accent); }
-.turnfin-module .diary-step-time { color: var(--pc-ink-muted); font-weight: 600; }
+.turnfin-module .diary-step-time { color: var(--label-2); font-weight: 600; }
 .turnfin-module .diary-step-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.turnfin-module .diary-step-title { display: inline-flex; align-items: center; gap: 6px; color: var(--pc-ink); font-weight: 600; }
-.turnfin-module .diary-step-title > svg { width: 16px; height: 16px; color: var(--pc-ink-muted); }
+.turnfin-module .diary-step-title { display: inline-flex; align-items: center; gap: 6px; color: var(--label); font-weight: 600; }
+.turnfin-module .diary-step-title > svg { width: 16px; height: 16px; color: var(--label-2); }
 .turnfin-module .diary-step-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
-.turnfin-module .diary-subs { display: block; color: var(--pc-ink-muted); font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); }
-.turnfin-module .diary-subs-list { display: flex; flex-direction: column; gap: 2px; margin: 4px 0 0; padding: 0; list-style: none; color: var(--pc-ink); font-size: var(--pc-text-body); }
+.turnfin-module .diary-subs { display: block; color: var(--label-2); font-size: 12px; line-height: 16px; }
+.turnfin-module .diary-subs-list { display: flex; flex-direction: column; gap: 2px; margin: 4px 0 0; padding: 0; list-style: none; color: var(--label); font-size: var(--pc-text-body); }
 .turnfin-module .diary-subs-list > li { display: grid; grid-template-columns: 72px minmax(0, 1fr); align-items: center; gap: 8px; }
-.turnfin-module .diary-subs-list > li > span:first-child { color: var(--pc-ink-muted); font-size: var(--pc-text-caption); }
+.turnfin-module .diary-subs-list > li > span:first-child { color: var(--label-2); font-size: 12px; }
 /* One placed on the Plan (done any time): its name opens moving it. */
-.turnfin-module .diary-subs-list .diary-sub-placed { justify-content: flex-start; gap: 8px; min-height: 44px; height: auto; padding: 0 8px; margin-inline-start: -8px; color: var(--pc-ink); font-size: var(--pc-text-body); font-weight: 400; flex-wrap: wrap; justify-self: start; max-width: 100%; white-space: normal; text-align: start; column-gap: 8px; row-gap: 0; }
-.turnfin-module .diary-subs-list .diary-sub-placed > .diary-caption { color: var(--pc-primary); font-weight: 600; }
+.turnfin-module .diary-subs-list .diary-sub-placed { justify-content: flex-start; gap: 8px; min-height: 44px; height: auto; padding: 0 8px; margin-inline-start: -8px; color: var(--label); font-size: var(--pc-text-body); font-weight: 400; flex-wrap: wrap; justify-self: start; max-width: 100%; white-space: normal; text-align: start; column-gap: 8px; row-gap: 0; }
+.turnfin-module .diary-subs-list .diary-sub-placed > .diary-caption { color: var(--accent); font-weight: 600; }
 .turnfin-module .diary-to-place { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; }
 .turnfin-module .diary-quick-times { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; border: 0; }
-.turnfin-module .diary-around { margin: 0; color: var(--pc-ink); }
+.turnfin-module .diary-around { margin: 0; color: var(--label); }
 .turnfin-module .diary-around > ul { margin: 4px 0 0; padding: 0; list-style: none; }
 .turnfin-module .diary-around li { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 8px; }
 .turnfin-module .diary-sub-choices { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
