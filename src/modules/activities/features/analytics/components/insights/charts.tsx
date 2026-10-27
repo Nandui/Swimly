@@ -20,10 +20,10 @@ const FORMATS: Record<ChartKind, Format> = { count, percent: n => `${Math.round(
 /** The theme's colours for each series (poolside.css): the fin's blue for the figure, the warning
  *  amber for the second series, and quiet greys for the comparison and the period before. */
 const SERIES = {
-  a: "var(--pc-chart-1)",
-  b: "var(--pc-warning)",
-  compare: "var(--pc-line-strong)",
-  previous: "var(--pc-line)",
+  a: "var(--accent)",
+  b: "var(--orange-ink)",
+  compare: "var(--label-2)",
+  previous: "var(--sep)",
 } as const;
 type Series = keyof typeof SERIES;
 const SWATCH: Record<Series, string> = { a: "bg-(--color-a)", b: "bg-(--color-b)", compare: "bg-(--color-compare)", previous: "bg-(--color-previous)" };
@@ -173,7 +173,7 @@ export function Sparkline({ values, tone }: { values: (number | null)[]; tone?: 
   const scored = data.filter(p => p.v !== null);
   if (scored.length < 2) return null;
   const last = scored.at(-1)!.i;
-  const colour = tone === "good" ? "var(--pc-success)" : tone === "bad" ? "var(--pc-danger)" : SERIES.a;
+  const colour = tone === "good" ? "var(--green-ink)" : tone === "bad" ? "var(--red-ink)" : SERIES.a;
   return <div aria-hidden="true" className="ins-spark">
     <ChartContainer config={{ v: { color: colour } }} className="aspect-auto h-7 w-full">
       <LineChart data={data} margin={{ top: 3, right: 3, bottom: 3, left: 3 }} accessibilityLayer={false}>

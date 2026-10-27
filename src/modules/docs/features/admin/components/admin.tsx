@@ -38,6 +38,7 @@ import { PageHeader } from '@/components/ui-kit/page-header';
 import { PageShell } from '@/components/ui-kit/page-shell';
 import { SegmentedLinks } from '@/components/ui-kit/segmented-links';
 import { SearchField } from '@/components/ui-kit/search-field';
+import { RecordHistory } from '@/components/ui-kit/record';
 import { EmptyState } from '@/components/ui-kit/empty-state';
 import { IconButton } from '@/components/ui/icon-button';
 import { FormDialog } from '@/components/form-dialog';
@@ -548,27 +549,13 @@ export function AdminView({
           {tab === 'activity' && (
             <section className="flex min-w-0 flex-col" aria-labelledby="activity-heading">
               <div className="pc-section-head"><h2 id="activity-heading">Workspace activity</h2></div>
-              <div className="rec-card">
               {events.length ? (
-                <ul className="pc-feed">
-                  {events.map((e) => (
-                    <li key={e.id}>
-                      <span className="pc-feed-dot" aria-hidden="true" />
-                      <div className="min-w-0">
-                        <p className="font-semibold">{docEventLabel(e.action)}</p>
-                        {e.detail ? <p className="text-sm break-words">{e.detail}</p> : null}
-                        <p className="pc-row-hint">
-                          {w.members.find((m) => m.id === e.actorId)?.name} · {formatDate(e.createdAt)}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                <RecordHistory items={events.map((e) => ({ key: e.id, title: docEventLabel(e.action), note: e.detail,
+                  meta: [w.members.find((m) => m.id === e.actorId)?.name, formatDate(e.createdAt)].filter(Boolean).join(" · ") }))} />
               ) : (
                 <EmptyState as="h3" icon="book" title="No activity yet" hint="Changes to documents, groups and settings appear here" />
               )}
-            </div>
-          </section>
+            </section>
           )}
           {tab === 'hr' && hrProcedures}
           {tab === 'mail' && (

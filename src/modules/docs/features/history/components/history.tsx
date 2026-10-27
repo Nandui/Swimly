@@ -18,6 +18,7 @@ import {
   type AuditEvent,
 } from '@/modules/docs/shared/types';
 import { Tag } from '@/components/ui-kit/tag';
+import { RecordHistory } from '@/components/ui-kit/record';
 import { EmptyState } from '@/components/ui-kit/empty-state';
 import { PageHeader } from '@/components/ui-kit/page-header';
 import { PageShell } from '@/components/ui-kit/page-shell';
@@ -208,23 +209,9 @@ export function HistoryView({
         {events.length > 0 && (
           <section className="flex min-w-0 flex-col" aria-labelledby="activity-heading">
             <div className="pc-section-head"><h2 id="activity-heading">Activity log</h2></div>
-            <div className="rec-card">
-            <ul className="pc-feed">
-              {events.map((event) => (
-                <li key={event.id}>
-                  <span className="pc-feed-dot" aria-hidden="true" />
-                  <div className="min-w-0">
-                    <p className="font-semibold">{docEventLabel(event.action)}</p>
-                    {event.detail ? <p className="text-sm break-words">{event.detail}</p> : null}
-                    <p className="pc-row-hint">
-                      {name(event.actorId)} · {formatDate(event.createdAt)}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
+            <RecordHistory items={events.map((event) => ({ key: event.id, title: docEventLabel(event.action), note: event.detail,
+              meta: [name(event.actorId), formatDate(event.createdAt)].filter(Boolean).join(" · ") }))} />
+          </section>
         )}
       </div>
     </PageShell>

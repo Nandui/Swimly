@@ -36,12 +36,12 @@
   font-family: var(--font-sans);
 }
 :where(.turnfin-docs) h1 {
-  font-size: var(--pc-text-page);
+  font-size: 34px;
   font-weight: 600;
-  line-height: var(--pc-leading-page);
+  line-height: 41px;
 }
 :where(.turnfin-docs) h2 {
-  font-size: var(--pc-text-title);
+  font-size: 20px;
   font-weight: 600;
 }
 :where(.turnfin-docs) h3 {
@@ -80,7 +80,7 @@
 :where(.turnfin-docs) textarea {
   background: var(--paper);
   border: 1px solid var(--line);
-  border-radius: var(--pc-radius-card);
+  border-radius: var(--radius-lg);
   color: var(--ink);
   padding: 10px 12px;
   min-width: 0;
@@ -125,7 +125,7 @@
   display: flex;
   flex-direction: column;
   gap: 7px;
-  font-size: var(--pc-text-caption);
+  font-size: 12px;
   font-weight: 600;
   color: var(--text);
 }
@@ -139,7 +139,7 @@
   padding: 0;
 }
 :where(.turnfin-docs) legend {
-  font-size: var(--pc-text-caption);
+  font-size: 12px;
   font-weight: 600;
   margin-bottom: 10px;
   color: var(--text);
@@ -178,7 +178,7 @@
   justify-content: center;
   min-width: 33px;
   min-height: 33px;
-  border-radius: var(--pc-radius-control);
+  border-radius: var(--radius-capsule);
   color: var(--muted);
   padding: 7px;
 }
@@ -199,13 +199,13 @@
 }
 :where(.turnfin-docs) .reading-title strong {
   display: block;
-  font-size: var(--pc-text-caption);
+  font-size: 12px;
   font-weight: 600;
   color: var(--text);
-  line-height: var(--pc-leading-caption);
+  line-height: 16px;
 }
 :where(.turnfin-docs) .reading-title span {
-  font-size: var(--pc-text-caption);
+  font-size: 12px;
   color: var(--muted);
   display: flex;
   align-items: center;
@@ -216,7 +216,7 @@
 :where(.turnfin-docs) .reading-title i {
   width: 2px;
   height: 2px;
-  border-radius: var(--pc-radius-control);
+  border-radius: var(--radius-capsule);
   display: inline-block;
   background: var(--ui-border);
 }
@@ -268,7 +268,7 @@
   align-items: flex-start;
   gap: 11px;
   border: 1px solid var(--line);
-  border-radius: var(--pc-radius-card);
+  border-radius: var(--radius-lg);
   background: var(--surface-tint);
   color: var(--muted);
   padding: 13px 16px;
@@ -291,7 +291,7 @@
   display: block;
   max-width: 100%;
   height: auto;
-  border-radius: var(--pc-radius-card);
+  border-radius: var(--radius-lg);
 }
 :where(.turnfin-docs) .document-prose figure {
   margin: 1.2em 0;
@@ -351,7 +351,7 @@
   position: absolute;
   content: '';
   inset: 0;
-  background: var(--pc-primary-soft-hover);
+  background: var(--accent-soft);
   pointer-events: none;
 }
 :where(.turnfin-docs) .risk-rating-grid {
@@ -363,11 +363,11 @@
 :where(.turnfin-docs) .risk-rating {
   background: var(--surface-subtle);
   border: 1px solid var(--line);
-  border-radius: var(--pc-radius-card);
+  border-radius: var(--radius-lg);
   padding: 14px;
 }
 :where(.turnfin-docs) .risk-rating h3 {
-  font-size: var(--pc-text-caption);
+  font-size: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -379,7 +379,7 @@
   margin-top: 12px;
 }
 :where(.turnfin-docs) .risk-rating select {
-  font-size: var(--pc-text-caption);
+  font-size: 12px;
   width: 100%;
 }
 :where(.turnfin-docs) .risk-edit-row .form-grid {
@@ -392,16 +392,16 @@
   scroll-margin-top: 25px;
 }
 :where(.turnfin-docs) .risk-read > h2 {
-  font-size: var(--pc-text-title);
+  font-size: 20px;
   margin-bottom: 8px;
 }
 :where(.turnfin-docs) .risk-read > .muted {
-  font-size: var(--pc-text-caption);
-  line-height: var(--pc-leading-caption);
+  font-size: 12px;
+  line-height: 16px;
 }
 :where(.turnfin-docs) .risk-read-card {
   border: 1px solid var(--line);
-  border-radius: var(--pc-radius-card);
+  border-radius: var(--radius-lg);
   margin-top: 20px;
   padding: 20px;
 }
@@ -413,12 +413,12 @@
   padding-bottom: 16px;
 }
 :where(.turnfin-docs) .risk-number {
-  font-size: var(--pc-text-caption);
+  font-size: 12px;
   border: 1px solid var(--line);
   background: var(--surface-tint);
   color: var(--muted);
   padding: 5px 7px;
-  border-radius: var(--pc-radius-control);
+  border-radius: var(--radius-capsule);
 }
 :where(.turnfin-docs) .risk-read-header h3 {
   font-size: var(--pc-text-body);
@@ -430,7 +430,7 @@
   margin: 14px 0;
 }
 :where(.turnfin-docs) .risk-read-card dt {
-  font-size: var(--pc-text-caption);
+  font-size: 12px;
   font-weight: 600;
   color: var(--muted);
   margin-bottom: 5px;
@@ -445,7 +445,7 @@
 }
 :where(.turnfin-docs) .risk-read-card dd small {
   display: block;
-  font-size: var(--pc-text-caption);
+  font-size: 12px;
   color: var(--muted);
   margin-top: 5px;
 }
@@ -455,11 +455,11 @@
   gap: 15px;
   background: var(--surface-subtle);
   padding: 15px;
-  border-radius: var(--pc-radius-card);
+  border-radius: var(--radius-lg);
 }
 :where(.turnfin-docs) .matrix-details {
   margin-top: 23px;
-  font-size: var(--pc-text-caption);
+  font-size: 12px;
 }
 :where(.turnfin-docs) .matrix-details summary {
   cursor: pointer;
@@ -473,13 +473,13 @@
   gap: 20px;
   padding: 20px;
   background: var(--surface-subtle);
-  border-radius: var(--pc-radius-card);
+  border-radius: var(--radius-lg);
 }
 :where(.turnfin-docs) .matrix-definitions h3 {
   margin-bottom: 12px;
 }
 :where(.turnfin-docs) .matrix-definitions p {
-  font-size: var(--pc-text-caption);
+  font-size: 12px;
   margin-bottom: 13px;
   color: var(--muted);
 }
@@ -503,17 +503,17 @@
 :where(.turnfin-docs) .diff-key {
   display: flex;
   gap: 15px;
-  font-size: var(--pc-text-caption);
+  font-size: 12px;
   color: var(--muted);
   margin-bottom: 13px;
 }
 :where(.turnfin-docs) .text-diff {
   padding: 20px;
-  font-size: var(--pc-text-caption);
-  line-height: var(--pc-leading-caption);
+  font-size: 12px;
+  line-height: 16px;
   background: var(--surface-subtle);
   border: 1px solid var(--line);
-  border-radius: var(--pc-radius-card);
+  border-radius: var(--radius-lg);
   max-height: 240px;
   overflow: auto;
   white-space: pre-wrap;
@@ -536,12 +536,12 @@
 :where(.turnfin-docs) .side-by-side > article {
   padding: 20px;
   border: 1px solid var(--line);
-  border-radius: var(--pc-radius-card);
+  border-radius: var(--radius-lg);
   --reading-size: 13px;
   min-width: 0;
 }
 :where(.turnfin-docs) .side-by-side > article > h2 {
-  font-size: var(--pc-text-title);
+  font-size: 20px;
   margin: 15px 0;
 }
 :where(.turnfin-docs) .side-by-side .risk-read-card {
@@ -551,7 +551,7 @@
   grid-template-columns: 1fr;
 }
 :where(.turnfin-docs) .compare-metadata {
-  font-size: var(--pc-text-caption);
+  font-size: 12px;
   color: var(--muted);
   margin-bottom: 24px;
 }
@@ -578,19 +578,19 @@
   min-width: 0;
 }
 :where(.turnfin-docs) .matrix-level input {
-  font-size: var(--pc-text-caption);
+  font-size: 12px;
   margin-bottom: 7px;
 }
 :where(.turnfin-docs) .matrix-level textarea {
-  font-size: var(--pc-text-caption);
+  font-size: 12px;
   min-height: 62px;
-  line-height: var(--pc-leading-caption);
+  line-height: 16px;
 }
 :where(.turnfin-docs) .matrix-admin > h3 {
   margin-bottom: 8px;
 }
 :where(.turnfin-docs) .matrix-admin > .muted {
-  font-size: var(--pc-text-caption);
+  font-size: 12px;
 }
 /* Keep small interface labels muted, but maintain readable contrast. */
 :where(.turnfin-docs) .muted,
@@ -603,7 +603,7 @@
     padding: 45px 50px;
   }
   :where(.turnfin-docs) .reading-title strong {
-    font-size: var(--pc-text-caption);
+    font-size: 12px;
   }
 }
 @media (max-width: 1200px) {
@@ -634,10 +634,10 @@
     padding: 27px 19px;
   }
   :where(.turnfin-docs) .reading-title strong {
-    font-size: var(--pc-text-caption);
+    font-size: 12px;
   }
   :where(.turnfin-docs) .reading-title span {
-    font-size: var(--pc-text-caption);
+    font-size: 12px;
     gap: 4px;
   }
   :where(.turnfin-docs) .document-prose {
@@ -681,10 +681,10 @@
     padding: 11px;
   }
   :where(.turnfin-docs) .risk-rating h3 {
-    font-size: var(--pc-text-caption);
+    font-size: 12px;
   }
   :where(.turnfin-docs) .risk-rating select {
-    font-size: var(--pc-text-caption);
+    font-size: 12px;
     padding: 8px;
   }
   :where(.turnfin-docs) .risk-read-card {
@@ -694,7 +694,7 @@
     font-size: var(--pc-text-body);
   }
   :where(.turnfin-docs) .risk-read-card dd {
-    font-size: var(--pc-text-caption);
+    font-size: 12px;
   }
   :where(.turnfin-docs) .matrix-definitions {
     grid-template-columns: 1fr;
@@ -704,7 +704,7 @@
     padding: 19px;
   }
   :where(.turnfin-docs) .diff-key {
-    font-size: var(--pc-text-caption);
+    font-size: 12px;
     flex-wrap: wrap;
     gap: 5px;
   }
@@ -713,7 +713,7 @@
   }
   :where(.turnfin-docs) .text-diff {
     padding: 15px;
-    font-size: var(--pc-text-caption);
+    font-size: 12px;
   }
   :where(.turnfin-docs) .side-by-side > article {
     padding: 17px;
@@ -740,8 +740,8 @@
 }
 @media print {
   :where(.turnfin-docs) :scope {
-    background: var(--pc-surface);
-    color: var(--pc-ink);
+    background: var(--bg-2);
+    color: var(--label);
     font-size: 11pt;
   }
   :where(.turnfin-docs) [data-slot='alert'],
@@ -755,7 +755,7 @@
   :where(.turnfin-docs) .document-prose {
     max-width: none;
     font-size: 11pt;
-    color: var(--pc-ink);
+    color: var(--label);
   }
   :where(.turnfin-docs) .document-prose h2 {
     font-size: 14pt;
@@ -766,9 +766,9 @@
     break-after: avoid;
   }
   :where(.turnfin-docs) .document-callout {
-    background: var(--pc-surface-sunken) !important;
-    border: 1px solid var(--pc-line-strong);
-    color: var(--pc-ink);
+    background: var(--fill-2) !important;
+    border: 1px solid var(--label-2);
+    color: var(--label);
     break-inside: avoid;
   }
   :where(.turnfin-docs) .document-prose img {
@@ -788,42 +788,42 @@
     break-inside: avoid;
   }
   :where(.turnfin-docs) .document-prose th {
-    background: var(--pc-surface-sunken) !important;
-    color: var(--pc-ink);
+    background: var(--fill-2) !important;
+    color: var(--label);
   }
   :where(.turnfin-docs) .document-prose td,
   :where(.turnfin-docs) .document-prose th {
-    border-color: var(--pc-line-strong);
+    border-color: var(--label-2);
   }
   :where(.turnfin-docs) .risk-read-card {
     break-inside: avoid;
-    border-color: var(--pc-line-strong);
+    border-color: var(--label-2);
   }
   :where(.turnfin-docs) .risk-read-card dt,
   :where(.turnfin-docs) .risk-read-card dd {
-    color: var(--pc-ink);
+    color: var(--label);
   }
   :where(.turnfin-docs) [data-slot='badge'] {
-    border: 1px solid var(--pc-line-strong) !important;
-    background: var(--pc-surface) !important;
-    color: var(--pc-ink) !important;
+    border: 1px solid var(--label-2) !important;
+    background: var(--bg-2) !important;
+    color: var(--label) !important;
   }
   :where(.turnfin-docs) .risk-scores {
-    background: var(--pc-surface);
+    background: var(--bg-2);
   }
   :where(.turnfin-docs) .matrix-details {
     display: none;
   }
   :where(.turnfin-docs) .print-footer {
     display: block;
-    border-top: 1px solid var(--pc-line-strong);
+    border-top: 1px solid var(--label-2);
     padding-top: 10px;
     margin-top: 25px;
-    color: var(--pc-ink-muted);
+    color: var(--label-2);
     font-size: 9pt;
   }
   :where(.turnfin-docs) a {
-    color: var(--pc-ink);
+    color: var(--label);
   }
   :where(.turnfin-docs) .document-prose a {
     text-decoration: underline;
@@ -852,13 +852,13 @@
     font-weight: 600;
   }
   :where(.turnfin-docs) h1 {
-    font-size: var(--pc-text-page);
-    line-height: var(--pc-leading-page);
+    font-size: 34px;
+    line-height: 41px;
     text-wrap: balance;
   }
   :where(.turnfin-docs) h2 {
-    font-size: var(--pc-text-title);
-    line-height: var(--pc-leading-title);
+    font-size: 20px;
+    line-height: 25px;
     text-wrap: balance;
   }
   :where(.turnfin-docs) h3 {
@@ -870,7 +870,7 @@
     border-color: var(--ui-input);
     background: var(--ui-background);
     color: var(--ink);
-    border-radius: var(--pc-radius-card);
+    border-radius: var(--radius-lg);
   }
   :where(.turnfin-docs) input:focus,
   :where(.turnfin-docs) textarea:focus,
@@ -888,7 +888,7 @@
     color: var(--muted);
   }
   :where(.turnfin-docs) .icon-button {
-    border-radius: var(--pc-radius-control);
+    border-radius: var(--radius-capsule);
     min-width: 36px;
     min-height: 36px;
   }
@@ -899,7 +899,7 @@
     padding: 0 10px;
     min-height: 40px;
     border: 1px solid var(--ui-input);
-    border-radius: var(--pc-radius-control);
+    border-radius: var(--radius-capsule);
     background: transparent;
     color: var(--muted);
   }
@@ -907,7 +907,7 @@
     width: 100%;
     min-width: 0;
     padding: 8px 0;
-    font-size: var(--pc-text-caption);
+    font-size: 12px;
     background: transparent;
     border: 0;
     outline: none;
@@ -937,7 +937,7 @@
     font-size: var(--pc-text-body);
   }
   :where(.turnfin-docs) .reading-title > span {
-    font-size: var(--pc-text-caption);
+    font-size: 12px;
   }
 
   :where(.turnfin-docs) .document-prose {
@@ -1007,15 +1007,15 @@
       border: 0;
       border-radius: 0;
       box-shadow: none;
-      background: var(--pc-surface);
+      background: var(--bg-2);
     }
     :where(.turnfin-docs) .document-prose {
-      color: var(--pc-ink);
+      color: var(--label);
       font-size: 11pt;
     }
     :where(.turnfin-docs) .document-callout {
-      background: var(--pc-surface-sunken) !important;
-      color: var(--pc-ink);
+      background: var(--fill-2) !important;
+      color: var(--label);
     }
   }
 }
@@ -1062,10 +1062,10 @@
     border-bottom: 1px solid var(--line);
   }
   :where(.turnfin-docs) .report-records-heading h2 {
-    font-size: var(--pc-text-title);
+    font-size: 20px;
   }
   :where(.turnfin-docs) .report-records-heading p {
-    font-size: var(--pc-text-caption);
+    font-size: 12px;
     color: var(--muted);
     margin-top: 7px;
   }
@@ -1138,7 +1138,7 @@
     padding: 10px 12px;
     border: 0;
     border-radius: var(--radius-lg);
-    color: var(--pc-ink);
+    color: var(--label);
     font-weight: 600;
     text-decoration: none;
   }
@@ -1180,22 +1180,22 @@
     align-items: center;
     gap: 4px;
     padding: 24px 16px;
-    border: 1px dashed var(--pc-line-strong);
-    border-radius: var(--pc-radius-card);
+    border: 1px dashed var(--label-2);
+    border-radius: var(--radius-lg);
     text-align: center;
     cursor: pointer;
   }
   :where(.turnfin-docs) .editor-drop-zone:hover {
-    background: var(--pc-surface-sunken);
+    background: var(--fill-2);
   }
   :where(.turnfin-docs) .editor-drop-zone:focus-within {
-    outline: 2px solid var(--pc-focus);
+    outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
   :where(.turnfin-docs) .editor-drop-zone:has(input:disabled) {
-    border-color: var(--pc-line);
-    background: var(--pc-surface-sunken);
-    color: var(--pc-ink-muted);
+    border-color: var(--sep);
+    background: var(--fill-2);
+    color: var(--label-2);
     cursor: not-allowed;
   }
   :where(.turnfin-docs) .risk-edit-row {
@@ -1205,8 +1205,8 @@
     min-width: 0;
     margin: 0;
     padding: 16px;
-    border: 1px solid var(--pc-line);
-    border-radius: var(--pc-radius-card);
+    border: 1px solid var(--sep);
+    border-radius: var(--radius-lg);
   }
   /* New document steps (DCNew): a static sunken pill row, the current step white with an edge.
      Not links, so no hover. On phones only the current step shows, as "Step 2 of 3 · …". */
@@ -1218,8 +1218,8 @@
     max-width: 100%;
     margin: 0;
     padding: 4px;
-    border-radius: var(--pc-radius-panel);
-    background: var(--pc-surface-sunken);
+    border-radius: var(--radius-card);
+    background: var(--fill-2);
     list-style: none;
   }
   :where(.turnfin-docs) .create-steps > li {
@@ -1227,14 +1227,14 @@
     align-items: center;
     min-height: 36px;
     padding: 0 16px;
-    border-radius: var(--pc-radius-control);
-    color: var(--pc-ink-muted);
+    border-radius: var(--radius-capsule);
+    color: var(--label-2);
     font-weight: 600;
   }
   :where(.turnfin-docs) .create-steps > li[aria-current] {
-    background: var(--pc-surface);
-    box-shadow: inset 0 0 0 1px var(--pc-line-strong);
-    color: var(--pc-ink);
+    background: var(--bg-2);
+    box-shadow: inset 0 0 0 1px var(--label-2);
+    color: var(--label);
   }
   :where(.turnfin-docs) .create-step-of {
     display: none;
@@ -1262,8 +1262,8 @@
     gap: 12px;
     align-items: end;
     padding: 12px 16px;
-    border: 1px solid var(--pc-line);
-    border-radius: var(--pc-radius-card);
+    border: 1px solid var(--sep);
+    border-radius: var(--radius-lg);
   }
   :where(.turnfin-docs) .risk-band-row > :first-child {
     grid-column: 1 / -1;
@@ -1289,9 +1289,9 @@
       display: grid;
       padding-block: 0;
       border: 0;
-      color: var(--pc-ink-muted);
-      font-size: var(--pc-text-caption);
-      line-height: var(--pc-leading-caption);
+      color: var(--label-2);
+      font-size: 12px;
+      line-height: 16px;
       font-weight: 600;
     }
     :where(.turnfin-docs) .risk-band-row .risk-band-label {
