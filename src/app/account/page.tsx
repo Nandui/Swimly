@@ -3,6 +3,7 @@ import { CircleCheck, ShieldCheck } from "lucide-react";
 
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
+import { RecordSection } from "@/components/ui-kit/record";
 import { Tag } from "@/components/ui-kit/tag";
 import { ChangePasswordForm } from "@/components/staff/change-password-form";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -46,7 +47,7 @@ export default async function AccountPage() {
   const proof = !google ? "password" : session.user.authMethod === "google" && recentlyConfirmed(await currentActor()) ? "google" : "google-again";
 
   return (
-    <PageShell header={<PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         title="Account"
         description={
           <>
@@ -56,41 +57,30 @@ export default async function AccountPage() {
         }
       />}>
 
-      <div className="grid gap-4 items-start grid-cols-columns">
+      <div className="grid min-w-0 items-start gap-(--space-7) grid-cols-columns">
         {showPassword ? (
-          <section className="pc-panel" aria-labelledby="password-heading">
-            <div className="pc-panel-head">
-              <h2 id="password-heading" className="text-lg font-semibold">Change your password</h2>
-            </div>
-            <ChangePasswordForm />
-          </section>
+          <RecordSection id="password-heading" title="Change your password">
+            <div className="rec-card"><ChangePasswordForm /></div>
+          </RecordSection>
         ) : null}
 
-        <section className="pc-panel" aria-labelledby="pin-heading">
-          <div className="pc-panel-head">
-            <h2 id="pin-heading" className="text-lg font-semibold">Quick-switch PIN</h2>
-          </div>
-          <p className="pc-row-hint">
+        <RecordSection id="pin-heading" title="Quick-switch PIN"
+          note={<>
             Use it to switch in quickly on a work device. It only works on work devices, and only after you have
             signed in there once {google ? "with Google" : "with your password"}. HR and other restricted records still ask you to
             {google ? " sign in with Google again" : " confirm your password"}.
-          </p>
-          <PinSettings hasPin={!!pin?.pinHash} locked={!!pin?.pinLockedAt} proof={proof} />
-        </section>
+          </>}>
+          <div className="rec-card"><PinSettings hasPin={!!pin?.pinHash} locked={!!pin?.pinLockedAt} proof={proof} /></div>
+        </RecordSection>
       </div>
 
-      <section className="pc-panel" aria-labelledby="appearance-heading">
-        <div className="pc-panel-head">
-          <h2 id="appearance-heading" className="text-lg font-semibold">Appearance</h2>
-        </div>
-        <ThemeToggle />
-      </section>
+      <RecordSection id="appearance-heading" title="Appearance">
+        <div className="rec-card"><ThemeToggle /></div>
+      </RecordSection>
 
-      <section className="pc-panel" aria-labelledby="can-do-heading">
-        <div className="pc-panel-head">
-          <h2 id="can-do-heading" className="text-lg font-semibold">What you can do</h2>
-        </div>
-        <ul className="pc-rows">
+      <RecordSection id="can-do-heading" title="What you can do"
+        note="Swim school, Training and Rota apply at the sites you work at. Only someone who can manage accounts can change your role or your email.">
+        <ul className="pc-list">
           {session.user.isSuperadmin ? (
             <li className="pc-row">
               <span className="pc-tile-icon" aria-hidden="true"><ShieldCheck /></span>
@@ -128,11 +118,7 @@ export default async function AccountPage() {
             </li>
           ) : null}
         </ul>
-        <p className="pc-row-hint">
-          Swim school, Training and Rota apply at the sites you work at. Only someone who can manage accounts can change
-          your role or your email.
-        </p>
-      </section>
+      </RecordSection>
     </PageShell>
   );
 }

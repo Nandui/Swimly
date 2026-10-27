@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.27.0 · 26 October 2026 · Account, Help and What's new in the new look
+
+- **Account** has each part under its own title: your password, your quick-switch PIN, appearance, and what you can do as a plain list.
+- **Help** keeps the search on the page itself, with topics, common tasks and guides as plain lists under their titles.
+- **A help guide** shows before you start, the steps, what happens next and what to do if something isn't right as cards under their titles.
+- **What's new** shows each release under its title, with its version and date beneath.
+- **Signing in on a work device** shows its switch-user message as a quiet note.
+
 ## 2.26.0 · 26 October 2026 · Forms side by side on wider screens
 
 - **Report a problem** in Maintenance puts the site and the area side by side on a tablet or computer, with Exactly where across the whole card below them.
