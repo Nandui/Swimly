@@ -736,7 +736,9 @@ body.turnfin-app { background: var(--bg); }
   pointer-events: none;
 }
 .turnfin-app .tf-brand { display: inline-flex; flex: none; align-items: center; justify-content: center; width: var(--control-height); height: var(--control-height); border-radius: var(--radius-lg); }
-.turnfin-app .tf-brand img { display: block; width: 40px; height: 40px; max-width: none; }
+/* The fin art fills the middle half of its square, so the picture is drawn past the 44px box on
+   every side: the fin itself reads at about 31px while the target stays 44px. */
+.turnfin-app .tf-brand img { display: block; width: 62px; height: 62px; max-width: none; margin: -9px; }
 
 /* A glass capsule of items: the app's pages (a segmented control) and the tools. */
 .turnfin-app .tf-bar { position: relative; display: inline-flex; flex: none; align-items: center; width: max-content; max-width: 100%; padding: var(--space-1); border-radius: var(--radius-capsule); }
@@ -797,11 +799,13 @@ body.turnfin-app { background: var(--bg); }
   .turnfin-app h1 { font-size: 38px; line-height: 44px; }
 }
 
-/* The sidebar of apps (desktop): floating glass, inset 10px. The fin links to Home; then Home,
-   one "Apps" heading and the person's apps; the account at the foot. A rail of symbols on tablet. */
+/* The sidebar of apps (desktop): floating glass, inset 10px. The fin and the Turnfin name link to
+   Home; then Home, one "Apps" heading and the person's apps; the account at the foot. A rail of
+   symbols on tablet, where the fin shows alone. */
 .turnfin-app .tf-side { position: fixed; top: 10px; bottom: 10px; left: 10px; z-index: 30; display: none; flex-direction: column; gap: var(--space-2); width: var(--sidebar-width); padding: 12px 10px; border-radius: var(--radius-panel); }
-.turnfin-app .tf-side-brand { display: inline-flex; align-items: center; justify-content: center; align-self: flex-start; width: var(--control-height); height: var(--control-height); border-radius: var(--radius-md); }
-.turnfin-app .tf-side-brand img { display: block; width: 36px; height: 36px; }
+.turnfin-app .tf-side-brand { display: inline-flex; align-items: center; gap: var(--space-1); align-self: flex-start; min-height: var(--control-height); padding-right: var(--space-3); border-radius: var(--radius-md); color: var(--label); text-decoration: none; }
+/* The name in title-3, beside the fin. */
+.turnfin-app .tf-side-brand-name { font-family: var(--font-display); font-size: 20px; line-height: 25px; font-weight: 650; letter-spacing: -0.015em; }
 .turnfin-app .tf-side-list { display: flex; flex: 1 1 auto; flex-direction: column; gap: var(--space-hair); min-height: 0; margin: 0 -4px; padding: 0 4px; overflow-y: auto; scrollbar-width: none; }
 .turnfin-app .tf-side-heading { margin: 14px 10px 4px; font-size: 11px; line-height: 13px; font-weight: 650; color: var(--label-2); }
 .turnfin-app .tf-side-item { position: relative; display: flex; flex: none; align-items: center; gap: 11px; height: 36px; padding: 0 10px; border-radius: var(--radius-md); color: var(--label); font-size: 14px; line-height: 18px; font-weight: 500; text-decoration: none; transition: background-color var(--duration-fade) var(--ease); }
@@ -861,7 +865,9 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
     .turnfin-app .tf-side-item { anchor-name: --tf-side-item; anchor-scope: --tf-side-item; }
     .turnfin-app .tf-side-tip { position: fixed; position-anchor: --tf-side-item; top: anchor(center); left: calc(anchor(right) + 12px); }
   }
-  .turnfin-app .tf-side-brand { align-self: center; }
+  /* The rail shows the fin alone, centred. */
+  .turnfin-app .tf-side-brand { align-self: center; padding-right: 0; }
+  .turnfin-app .tf-side-brand-name { display: none; }
   .turnfin-app .tf-shell:has(> .tf-side) > .tf-frame { padding-left: 96px; }
   .turnfin-app .tf-shell:has(> .tf-side) .tf-top > .tf-brand { display: none; }
   .turnfin-app .tf-shell .tf-top { flex-wrap: wrap; }

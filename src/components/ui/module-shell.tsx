@@ -213,7 +213,8 @@ function Sidebar({ current, name }: { current: string; name: string }) {
   return (
     <Glass as="nav" shape="panel" className="tf-side" aria-label="Apps">
       <Link href="/" className="tf-side-brand" aria-label="Turnfin home">
-        <Image src="/brand/turnfin.png" alt="" width={72} height={72} priority />
+        <span className="tf-brand"><Image src="/brand/turnfin.png" alt="" width={72} height={72} priority /></span>
+        <span className="tf-side-brand-name" aria-hidden="true">Turnfin</span>
       </Link>
       <div className="tf-side-list">
         {item('home', '/', 'Home', House)}
