@@ -27,21 +27,21 @@ export default async function DevicesPage() {
   ]);
   const siteName = new Map(sites.map((s) => [s.id, s.name]));
   return (
-    <PageShell header={<PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         back={{ href: "/staff", label: "Staff" }}
         title="Work devices"
         description="The centre's computers and tablets where staff do their work."
         actions={here ? <ForgetThisDevice /> : <RegisterThisDevice sites={sites} />}
       />}>
-      <section className="pc-panel" aria-label="Work devices">
-        <p className="text-sm text-ui-muted-foreground">
+      <section className="flex min-w-0 flex-col" aria-label="Work devices">
+        <p className="pc-section-note">
           On a work device, staff switch in with their PIN. It signs out after {SHARED_IDLE_MINUTES} idle minutes.
           {" "}{here ? `This browser is ${here.name}.` : "This browser is not a work device."}
         </p>
         {devices.length === 0 ? (
           <EmptyState icon="monitor" title="No work devices yet" hint="Open Turnfin on the reception computer or tablet, sign in, and register it here." />
         ) : (
-          <ul className="pc-rows">
+          <ul className="pc-list">
             {devices.map((device) => {
               const status = device.revokedAt ? DEVICE_STATUS_META.revoked : device.id === here?.id ? DEVICE_STATUS_META.this : null;
               return (

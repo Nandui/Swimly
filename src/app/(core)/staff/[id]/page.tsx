@@ -51,7 +51,7 @@ export default async function PersonPage({ params, searchParams }: PageProps<"/s
     : null;
 
   return (
-    <PageShell header={<PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         back={{ href: backHref, label: "Staff" }}
         title={person.name}
         description={
@@ -74,17 +74,17 @@ export default async function PersonPage({ params, searchParams }: PageProps<"/s
         }
       />}>
 
-      <section aria-labelledby="roles-heading" className="pc-panel">
-        <div className="pc-panel-head">
-          <h2 id="roles-heading" className="text-lg font-semibold">Role and sites</h2>
+      <section aria-labelledby="roles-heading" className="flex min-w-0 flex-col">
+        <div className="pc-section-head">
+          <h2 id="roles-heading">Role and sites</h2>
           {person.isActive ? (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 self-center">
               <EditPerson person={person} roles={roles} label="Change role" />
               <WorksAt userId={person.id} name={person.name} sites={sites} current={person.worksAt.map((s) => s.id)} />
             </div>
           ) : null}
         </div>
-        <ul className="pc-rows">
+        <ul className="pc-list">
           <li className="pc-row">
             <span className="pc-tile-icon" aria-hidden="true"><KeyRound /></span>
             <div className="pc-row-body">
@@ -108,7 +108,7 @@ export default async function PersonPage({ params, searchParams }: PageProps<"/s
             </div>
           </li>
         </ul>
-        <p className="pc-row-hint">Swim school, Training and Rota apply at the sites they work at; everything else applies everywhere.</p>
+        <p className="pc-section-note mt-(--space-2)">Swim school, Training and Rota apply at the sites they work at; everything else applies everywhere.</p>
       </section>
     </PageShell>
   );

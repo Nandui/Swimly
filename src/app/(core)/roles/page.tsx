@@ -21,7 +21,7 @@ export default async function RolesPage() {
   const assigned = roles.reduce((n, role) => n + role._count.users, 0);
 
   return (
-    <PageShell header={<PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         title="Roles"
         description="A role is a job, with one level for each app."
         actions={<AddRole canGiveRestricted={canGiveRestricted} />}
@@ -35,12 +35,12 @@ export default async function RolesPage() {
           action={<AddRole canGiveRestricted={canGiveRestricted} />}
         />
       ) : (
-        <section className="pc-panel" aria-label="Roles">
-          <p className="text-sm text-ui-muted-foreground">
+        <section className="flex min-w-0 flex-col" aria-label="Roles">
+          <p className="pc-section-note">
             {plural(roles.length, "role")}, held between them by {plural(assigned, "account")}. Each level includes the
             ones before it, and people on a role start on its home page.
           </p>
-          <ul className="pc-rows">
+          <ul className="pc-list">
             {roles.map((role) => (
               <RoleRowItem key={role.id} role={role} canGiveRestricted={canGiveRestricted} />
             ))}

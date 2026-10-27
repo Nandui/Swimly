@@ -25,15 +25,15 @@ export default async function AreasPage() {
         const parents = live.filter((a) => !a.parentId).map((a) => ({ id: a.id, name: a.name }));
         const departmentName = (id: string | null) => site.departments.find((d) => d.id === id)?.name ?? null;
         return (
-          <section key={site.id} className="pc-panel" aria-labelledby={`areas-${site.id}`}>
-            <div className="pc-panel-head">
+          <section key={site.id} className="flex min-w-0 flex-col" aria-labelledby={`areas-${site.id}`}>
+            <div className="pc-section-head">
               <h2 id={`areas-${site.id}`}>{site.name}{site.code ? <span className="font-normal text-ui-muted-foreground"> · {site.code}</span> : null}</h2>
               {canKeep ? <SaveArea siteId={site.id} siteName={site.name} departments={site.departments} parents={parents} /> : null}
             </div>
             {site.areas.length === 0 ? (
               <EmptyState compact icon="building" title="No areas yet" hint="Add its pools, gym, reception and any other place work is planned." />
             ) : (
-              <ul className="pc-rows">
+              <ul className="pc-list">
                 {site.areas.map((area) => {
                   const at = live.findIndex((a) => a.id === area.id);
                   const parent = area.parentId ? site.areas.find((a) => a.id === area.parentId) ?? null : null;

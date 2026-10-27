@@ -24,8 +24,8 @@ export default async function PositionsPage() {
       {positions.length === 0 ? (
         <EmptyState icon="users" title="No positions yet" hint="Add the jobs people do, such as Lifeguard, Swim teacher, Receptionist and Duty manager." />
       ) : (
-        <section aria-label="Positions" className="pc-panel">
-          <ul className="pc-rows">
+        <section aria-label="Positions" className="flex min-w-0 flex-col">
+          <ul className="pc-list">
             {positions.map((p) => (
               <li key={p.id} className="pc-row" {...(p.archived ? { "data-muted": "" } : {})}>
                 <span className="pc-tile-icon" aria-hidden="true"><BadgeCheck /></span>

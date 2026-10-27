@@ -17,16 +17,16 @@ export default async function AppsPage() {
   const { groups, sites } = await appSwitchList(session.user.orgId ?? null);
 
   return (
-    <PageShell header={<PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         title="Apps"
         description="Which apps are on, and at which sites. A new app can start at one site; an app that is off leaves the menus, Home and its pages there, and nothing in it is deleted."
       />}>
       {groups.map((group) => (
-        <section key={group.key} className="pc-panel" aria-labelledby={`apps-${group.key}`}>
-          <div className="pc-panel-head">
-            <h2 id={`apps-${group.key}`} className="text-lg font-semibold">{group.label}</h2>
+        <section key={group.key} className="flex min-w-0 flex-col" aria-labelledby={`apps-${group.key}`}>
+          <div className="pc-section-head">
+            <h2 id={`apps-${group.key}`}>{group.label}</h2>
           </div>
-          <ul className="pc-rows">
+          <ul className="pc-list">
             {group.apps.map((app) => (
               <li key={app.id} className="pc-row">
                 <span className="pc-tile-icon" aria-hidden="true"><app.icon /></span>

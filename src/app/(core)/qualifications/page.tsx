@@ -23,19 +23,19 @@ export default async function QualificationsPage() {
   const { qualificationTypes } = await getOrganisation();
 
   return (
-    <PageShell header={<PageHeader title="Qualifications" description="The certificates staff can hold, and how long each usually lasts. Recording who holds one is in Training." />}>
+    <PageShell spacing="roomy" header={<PageHeader title="Qualifications" description="The certificates staff can hold, and how long each usually lasts. Recording who holds one is in Training." />}>
 
-      <section className="pc-panel" aria-labelledby="qualifications-heading">
-        <div className="pc-panel-head">
-          <h2 id="qualifications-heading" className="text-lg font-semibold">Qualifications</h2>
+      <section className="flex min-w-0 flex-col" aria-labelledby="qualifications-heading">
+        <div className="pc-section-head">
+          <h2 id="qualifications-heading">Qualifications</h2>
           {canKeep ? <SaveQualificationType /> : null}
         </div>
         {qualificationTypes.length === 0 ? (
           <EmptyState compact icon="award" title="No qualifications yet" hint="Add the certificates staff can hold, such as a lifeguard or first aid qualification." />
         ) : (
           <>
-            <p className="text-sm text-ui-muted-foreground">The certificates staff can hold.</p>
-            <ul className="pc-rows">
+            <p className="pc-section-note">The certificates staff can hold.</p>
+            <ul className="pc-list">
               {qualificationTypes.map((type) => (
                 <li key={type.id} className="pc-row">
                   <span className="pc-tile-icon" aria-hidden="true"><GraduationCap /></span>

@@ -228,7 +228,7 @@
 .turnfin-app .pc-list > li > :is(a, button).pc-row:hover { background: var(--bg-3); }
 .turnfin-app .pc-list > :is(li, .pc-row) + :is(li, .pc-row) { border-top: 0.5px solid var(--sep); }
 /* A section title above grouped content, with a count or a quiet link at its end. */
-.turnfin-app .pc-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); margin: 0 var(--space-1) var(--space-2); }
+.turnfin-app .pc-section-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2) var(--space-3); margin: 0 var(--space-1) var(--space-2); }
 .turnfin-app .pc-section-head > p { margin: 0; color: var(--label-2); font-weight: 600; font-variant-numeric: tabular-nums; }
 /* A section title with an action at its end (Add, Raise one) centres it on the title. */
 .turnfin-app .pc-section-head:has(> :is([data-slot='button'], [data-slot='dialog-trigger'])) { align-items: center; }
