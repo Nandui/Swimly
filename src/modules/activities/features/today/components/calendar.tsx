@@ -17,13 +17,14 @@ import { HOME_SESSION_META } from "@/lib/home-meta";
 import { cn } from "@/lib/utils";
 import { SCHEDULE_SUMMARY_META, calendarAgendaSlots, calendarAssessmentHref, calendarClassHref, calendarProgrammes, calendarSlots, classPhase, sessionState, type CalendarAssessment, type CalendarClass } from "@/modules/activities/shared/today/calendar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
-import { ScheduleDayNavigation } from "@/modules/activities/features/today/components/day-navigation";
+import { ScheduleDayNavigation } from "@/modules/activities/shared/schedule/day-navigation";
 import { scheduleHref, scheduleNow } from "@/modules/activities/shared/schedule/dates";
+import { CancelClasses } from "@/modules/activities/shared/cancellations/components/cancel-classes";
 import styles from "@/modules/activities/features/today/components/calendar.module.css";
 
 // shadcn primitives compose the owner-approved booking sheet.
 
-type Access = { attendance: boolean; courses: boolean; assessments: boolean };
+type Access = { attendance: boolean; courses: boolean; assessments: boolean; cancel: boolean };
 type Slot = ReturnType<typeof calendarSlots>[number];
 
 export function ScheduleCalendar({ courses, assessments, iso, todayIso, initialNow, clubName, access }: {
@@ -73,6 +74,8 @@ export function ScheduleCalendar({ courses, assessments, iso, todayIso, initialN
   const running = visibleSessions.filter(session => classPhase(session, now) === "running").length;
   const later = visibleSessions.filter(session => classPhase(session, now) === "later").length;
   const target = visibleSlots.find(slot => slot.phase === "running") ?? visibleSlots.find(slot => slot.phase === "next");
+  const cancellable = [...courses].sort((a, b) => a.startMinutes - b.startMinutes)
+    .map(course => ({ id: course.id, name: courseName(course), startMinutes: course.startMinutes, durationMinutes: course.durationMinutes, cancelled: !!course.cancellation }));
   const refresh = () => {
     const instant = new Date();
     setClock({ date: today(instant), minutes: minutesNow(instant) });
@@ -89,6 +92,10 @@ export function ScheduleCalendar({ courses, assessments, iso, todayIso, initialN
     header={<PageHeader title="Schedule" description={`${formatDay(iso)} · ${clubName}`} actions={<>
       <LoadingButton variant="outline" pending={refreshing} pendingLabel="Refreshing…" onClick={refresh}><RefreshCw aria-hidden="true" />Refresh</LoadingButton>
       {target && isToday ? <Button onClick={jump}><Clock aria-hidden="true" />{running ? "Jump to now" : "Jump to next"}</Button> : null}
+      {access.cancel ? <>
+        <CancelClasses mode="pick" iso={iso} disabled={refreshing} classes={cancellable} />
+        <CancelClasses mode="day" iso={iso} disabled={refreshing} classes={cancellable} />
+      </> : null}
     </>} />}>
     <span className="sr-only" role="status">{refreshing ? "Loading schedule" : `Showing ${formatDay(iso)}`}</span>
     <div>

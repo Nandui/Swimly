@@ -12,7 +12,7 @@ It covers both menu entries Swim school (the desk, `src/app/(activities)`) and P
 - `assessments` — assessment sessions, their set-up and types (`/assessments`).
 - `curriculum` — programmes, levels, competencies and their images (`/programmes`).
 - `cancellations` — cancelled sessions to bill, their prices and the export (`/cancellations`).
-- `duty` — the duty manager's view of the day (`/duty`).
+- `duty` — the duty manager's view of a day, today or up to four weeks ahead (`/duty`): cancel a session, close the day, undo either before billing acts. Schedule offers the same cancelling (`shared/cancellations`).
 - `schedule` — the week's timetable (`/schedule`).
 - `today` — the swim school's day (`/today`).
 - `together` — swimmers who can be taught together (`/together`), at their levels now or at levels someone wants to try ("what if"; nothing is saved), and "Move them here" to make an option real (enrolment.manage; one transaction, audited).

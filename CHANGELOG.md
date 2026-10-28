@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.30.0 · 28 October 2026 · Cancel classes up to four weeks ahead
+
+- **Duty manager** can show any day from today to four weeks ahead. Pick the day at the top, then cancel a class there as you do today.
+- **Close day** cancels every class on the chosen day in one go, for a gala or a pool closure. Every class is ticked; untick any that still go ahead, and give one reason for them all.
+- **Schedule** has Cancel classes and Close day too, for today and the next four weeks, for anyone who can cancel classes.
+- **Undo a cancellation**: choose Undo cancellation on the class in Duty manager or Cancelled classes, or Reopen the day for a closed day. It works until billing has acted on it or the class has started.
+- **Cancelled classes**: a class cancelled ahead appears straight away under Awaiting billing. Until its day, swimmers who join or leave the class are added or removed for you.
+
 ## 2.29.0 · 27 October 2026 · The Turnfin name is back
 
 - **On a computer**, the top of the list of apps shows a larger fin with the name Turnfin beside it. Choose either to go Home.

@@ -42,7 +42,7 @@ function fixture() {
   };
   const prisma = { ...tx, $transaction: async (run: (db: typeof tx) => Promise<unknown>) => run(tx) };
   const actions = serverModule<Actions>("src/modules/activities/features/courses/server/actions/courses.ts", { "@/lib/directory": directoryDouble({ people: [{ id: "instructor", name: "Instructor" }] }),
-    "@/lib/prisma": { prisma },
+    "@/lib/prisma": { prisma }, "@/modules/activities/shared/cancellations/roster": { syncCancelledRosters: async () => {} },
     "@/lib/authz": { requirePermission: async () => ({ user: { id: "staff", name: "Test Staff" } }) },
     "@/lib/clubs/current": { currentClubId: async () => "club", currentClubIdIfAny: async () => "club",
       getCurrentClub: async () => ({ club: { id: "club", name: "Bishopstown" }, clubs: [{ id: "club", name: "Bishopstown" }, { id: "other", name: "Churchfield" }] }) },

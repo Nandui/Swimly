@@ -1,6 +1,7 @@
 import { AuthorizationError, canSee, requireSession } from "@/lib/authz";
 import { currentClubId } from "@/lib/clubs/current";
-import { parseDateOnly } from "@/lib/format";
+import { minutesNow, parseDateOnly, today } from "@/lib/format";
+import { undoBlocker } from "@/modules/activities/shared/cancellations/window";
 import { prisma } from "@/lib/prisma";
 
 /** Minimal status data only; no billing roster is exposed to schedule readers. */
@@ -57,7 +58,10 @@ export async function getBillingCancellations(viewInput: BillingView | boolean, 
     skip: (currentPage - 1) * pageSize, take: pageSize,
     include: { swimmers: { orderBy: [{ swimmerName: "asc" }, { id: "asc" }] } },
   });
-  return { view, rows, pending, restore, total, pages, page: currentPage, pageSize, ids: ids.map((r) => r.id) };
+  const todayIso = today(), now = minutesNow();
+  // Whether to offer undo; the action checks again (teacher, attendance) under the lock.
+  const withUndo = rows.map(row => ({ ...row, undoable: !undoBlocker(row, todayIso, now, false) }));
+  return { view, rows: withUndo, pending, restore, total, pages, page: currentPage, pageSize, ids: ids.map((r) => r.id) };
 }
 
 /** The swim school's price list: each Legend agreement price and its monthly price. */

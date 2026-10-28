@@ -3,4 +3,4 @@
 export { BillingBatch, LegendPriceDialog } from "@/modules/activities/features/duty/components/billing-batch";
 export { BillingList } from "@/modules/activities/features/duty/components/billing-list";
 export { DutyView } from "@/modules/activities/features/duty/components/duty-view";
-export { getDutyClasses } from "@/modules/activities/features/duty/server/data";
+export { dutyDate, getDutyClasses } from "@/modules/activities/features/duty/server/data";

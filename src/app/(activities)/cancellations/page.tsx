@@ -42,7 +42,7 @@ export default async function CancellationsPage({ searchParams }: { searchParams
         { href: "/cancellations?view=done", label: "Done", current: view === "done" },
       ]} />
       {view !== "done" && data.total ? <BillingBatch view={view} ids={data.ids} canMark={can(session, "billing.notify")} missing={view === "restore" ? missing : []} /> : null}
-      <BillingList canNotify={can(session, "billing.notify")} view={view} rows={data.rows.map(row => ({ ...row, date: row.date.toISOString().slice(0, 10), cancelledAt: row.cancelledAt.toISOString(),
+      <BillingList canNotify={can(session, "billing.notify")} canCancel={can(session, "classes.cancel")} view={view} rows={data.rows.map(row => ({ ...row, date: row.date.toISOString().slice(0, 10), cancelledAt: row.cancelledAt.toISOString(),
         billingNotifiedAt: row.billingNotifiedAt?.toISOString() ?? null, legendProcessedAt: row.legendProcessedAt?.toISOString() ?? null, restoredAt: row.restoredAt?.toISOString() ?? null }))} />
       {data.pages > 1 ? <LinkPagination label="Cancellation pages" page={data.page} totalItems={data.total} pageSize={data.pageSize} pathname="/cancellations" query={view === "awaiting" ? {} : { view }} /> : null}
     </section>

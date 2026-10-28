@@ -24,7 +24,7 @@ export const SCREENS = [
     key: "duty",
     label: "Duty manager",
     path: "/duty",
-    description: "Today’s classes and quick details. Cancelling a session requires its separate permission.",
+    description: "Today’s classes, and the next four weeks', with quick details. Cancelling a session requires its separate permission.",
     requires: "classes.cancel",
   },
   {

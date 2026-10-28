@@ -4,12 +4,19 @@ import { getCoursesOnDate } from "@/modules/activities/shared/courses/planned";
 import { getCoversForDay } from "@/modules/activities/shared/attendance/data/cover";
 import { getRegisterStateForDay } from "@/modules/activities/shared/attendance/data/register";
 import { courseName } from "@/modules/activities/shared/courses/constants";
-import { parseDateOnly } from "@/lib/format";
+import { isDateOnly, minutesNow, parseDateOnly, today } from "@/lib/format";
+import { inCancelWindow, undoBlocker } from "@/modules/activities/shared/cancellations/window";
+
+/** The day Duty manager shows: today, or a requested day up to four weeks ahead. */
+export function dutyDate(requested: unknown, todayIso: string) {
+  return isDateOnly(requested) && inCancelWindow(requested, todayIso) ? requested : todayIso;
+}
 import { weekdayOfIso } from "@/modules/activities/shared/attendance/dates";
 import { prisma } from "@/lib/prisma";
 import { fullName } from "@/modules/activities/shared/students/constants";
 
-export async function getDutyClasses(iso: string) {
+/** One day's classes at the selected site: today, or a day up to four weeks ahead. */
+export async function getDutyClasses(iso: string, instant = new Date()) {
   const session = await requireSession();
   if (!canSee(session, "duty")) throw new AuthorizationError("Duty manager access is required.");
   const date = parseDateOnly(iso), day = weekdayOfIso(iso), clubId = await currentClubId();
@@ -30,7 +37,9 @@ export async function getDutyClasses(iso: string) {
       startMinutes: course.startMinutes, durationMinutes: course.durationMinutes, capacity: course.capacity,
       location: course.location, instructor: covers.get(course.id)?.coverByName ?? course.instructor?.name ?? null,
       started: covers.has(course.id), attendanceRecorded: marked.get(course.id) ?? 0,
-      cancellation: cancellation ? { reason: cancellation.reason, id: cancellation.id } : null,
+      cancellation: cancellation ? { reason: cancellation.reason, id: cancellation.id, closureId: cancellation.closureId,
+        // The undo action checks again under the lock; this only decides whether to offer it.
+        undoable: !undoBlocker(cancellation, today(instant), minutesNow(instant), covers.has(course.id)) } : null,
       swimmers: [...new Map(roster.map(s => [s.id, s])).values()].sort((a, b) => a.name.localeCompare(b.name)),
     };
   }) };

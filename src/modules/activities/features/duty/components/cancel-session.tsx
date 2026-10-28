@@ -24,7 +24,7 @@ export function CancelSession({ course, date, disabled }: { course: DutyClass; d
     <DialogTrigger asChild><Button variant="outline" disabled={disabled} aria-label={`Cancel session: ${course.name}, ${formatTime(course.startMinutes)}`}><CalendarX2 aria-hidden="true" /><span className="pc-only-wide">Cancel session</span></Button></DialogTrigger>
     <DialogContent showCloseButton={false} className="max-h-(--overlay-max-height) overflow-y-auto">
       <DialogHeader><DialogTitle>Cancel this session?</DialogTitle><DialogDescription>{course.name} · {formatDate(parseDateOnly(date))} · {formatTimeRange(course.startMinutes, course.startMinutes + course.durationMinutes)}</DialogDescription></DialogHeader>
-      <p className="text-sm">This cancels today’s session only. The weekly class and enrolments stay in place. The affected swimmers will be added to the billing follow-up list.</p>
+      <p className="text-sm">This cancels the session on this day only. The weekly class and enrolments stay in place. The affected swimmers will be added to the billing follow-up list.</p>
       {course.started || course.attendanceRecorded > 0 ? <Notice tone="warning" title="This class has already been started or has attendance recorded." description="Those records will be kept, and further teaching saves will be blocked." /> : null}
       <FormFeedbackProvider feedback={feedback}><form ref={formRef} method="post" className="space-y-4" onSubmit={event => {
         event.preventDefault();

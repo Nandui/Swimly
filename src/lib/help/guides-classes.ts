@@ -39,7 +39,7 @@ export const CLASS_GUIDES: HelpArticle[] = [
       { title: "Archive a class that is no longer offered", text: "Use Archive and read the confirmation. Archived classes retain their records and are not available for new enrolments." },
       { title: "Restore when it is offered again", text: "Find the class under Archived and use its restore action. Check that its level, site and timetable are still appropriate." },
     ], result: "The weekly class configuration is updated while historical records remain available.",
-    troubleshooting: [{ question: "I only need to cancel today’s lesson.", answer: "Use Cancel session in Duty manager. Archiving changes the ongoing weekly class and is not the same as cancelling one dated occurrence." }],
+    troubleshooting: [{ question: "I only need to cancel one lesson.", answer: "Use Cancel session in Duty manager, or Cancel classes in Schedule, for today or a day up to four weeks ahead. Archiving changes the ongoing weekly class and is not the same as cancelling one dated occurrence." }],
     related: ["find-class", "cancel-class-session", "manage-curriculum"], action: "courses",
   },
   {

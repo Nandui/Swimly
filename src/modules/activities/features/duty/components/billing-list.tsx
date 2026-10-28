@@ -3,6 +3,7 @@ import { Tag } from "@/components/ui-kit/tag";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { CANCELLATION_META } from "@/modules/activities/shared/cancellations/constants";
 import { formatShortDay, formatTime, plural } from "@/lib/format";
+import { UndoCancellation } from "@/modules/activities/shared/cancellations/components/undo-cancellation";
 
 const EMPTY = {
   awaiting: { title: "No cancellations awaiting billing", hint: "Cancelled class sessions will appear here with their affected swimmers." },
@@ -10,7 +11,7 @@ const EMPTY = {
   done: { title: "Nothing done yet", hint: "Restored classes and earlier billing handoffs stay here for reference." },
 };
 
-export function BillingList({ rows, canNotify, view }: { rows: BillingCancellation[]; canNotify: boolean; view: "awaiting" | "restore" | "done" }) {
+export function BillingList({ rows, canNotify, canCancel, view }: { rows: BillingCancellation[]; canNotify: boolean; canCancel: boolean; view: "awaiting" | "restore" | "done" }) {
   if (!rows.length) return <EmptyState icon="calendarX" title={EMPTY[view].title} hint={EMPTY[view].hint} />;
   return <ul className="pc-list">{rows.map(row => {
     const meta = row.restoredAt ? CANCELLATION_META.restored : row.legendProcessedAt ? CANCELLATION_META.restore : row.billingNotifiedAt ? CANCELLATION_META.notified : CANCELLATION_META.pending;
@@ -21,7 +22,7 @@ export function BillingList({ rows, canNotify, view }: { rows: BillingCancellati
         <span className="pc-row-hint">{row.programmeName} · {row.location || "Pool area not set"} · {plural(row.swimmers.length, "affected swimmer")}</span>
         <span className="pc-row-hint line-clamp-2 break-words">{row.reason}</span>
       </div>
-      <div className="pc-row-trail"><BillingReview row={row} canNotify={canNotify} /></div>
+      <div className="pc-row-trail"><BillingReview row={row} canNotify={canNotify} />{canCancel && row.undoable ? <UndoCancellation cancellationId={row.id} className={row.className} date={row.date} startMinutes={row.startMinutes} /> : null}</div>
     </li>;
   })}</ul>;
 }

@@ -2,20 +2,20 @@ import type { HelpArticle } from "./types";
 
 export const MANAGEMENT_GUIDES: HelpArticle[] = [
   {
-    slug: "cancel-class-session", title: "Cancel today’s class session", category: "operations", scopes: ["desk"],
-    summary: "Record a cancellation for one date and keep the affected swimmers available for billing follow-up.",
-    keywords: ["duty manager", "closed pool", "cancel lesson", "teacher absent", "refund"],
-    before: ["You need access to Duty manager and permission to cancel class sessions."],
+    slug: "cancel-class-session", title: "Cancel a class or close a day", category: "operations", scopes: ["desk"],
+    summary: "Cancel one class, or every class on a day, today or up to four weeks ahead, and keep the affected swimmers available for billing follow-up.",
+    keywords: ["duty manager", "schedule", "closed pool", "close day", "gala", "cancel lesson", "cancel in advance", "teacher absent", "refund", "undo"],
+    before: ["You need permission to cancel class sessions, and access to Duty manager or Schedule."],
     steps: [
-      { title: "Check the site and date", text: "Open Duty manager. It shows today’s classes at the working site. Choose the correct site in the tools bar at the top right." },
-      { title: "Find the class", text: "Search by class, level, instructor, pool or time. Open its quick details to check the class and enrolled swimmers." },
-      { title: "Record the reason", text: "Choose Cancel session, enter why the class cannot run and review the date and affected class. Confirm the cancellation." },
-      { title: "Arrange the follow-up", text: "Open Cancelled classes to see the saved session and affected swimmers. Follow your organisation’s process for notifying billing." },
+      { title: "Check the site and date", text: "Open Duty manager or Schedule and choose the day: today or up to four weeks ahead. Check the working site in the tools bar at the top right." },
+      { title: "Cancel one class", text: "In Duty manager, find the class and choose Cancel session. In Schedule, choose Cancel classes and tick the classes. Enter why they cannot run and confirm." },
+      { title: "Or close the whole day", text: "Choose Close day. Every class still running that day is ticked; untick any that go ahead. Enter one reason for them all and confirm." },
+      { title: "Arrange the follow-up", text: "Open Cancelled classes to see the cancelled sessions and affected swimmers. Follow your organisation’s process for notifying billing." },
     ],
-    result: "Only this dated session is cancelled. The weekly class and its enrolments remain. Existing attendance is kept, and further teaching changes for the cancelled session are blocked.",
+    result: "Only those dated sessions are cancelled. The weekly classes and their enrolments remain. Until the day, swimmers who join or leave the class are added to or removed from the cancellation while it awaits billing. Existing attendance is kept, and further teaching changes for a cancelled session are blocked. Parents see the cancelled lesson in the parent app.",
     troubleshooting: [
       { question: "Does this refund or message anyone?", answer: "No. The cancellation records what happened. Staff must arrange messages, credits or refunds through your organisation’s usual process." },
-      { question: "I cancelled the wrong session. What now?", answer: "Tell your manager the class, site and date. There is no undo control on this screen. Do not create a replacement class or edit attendance to hide the cancellation." },
+      { question: "I cancelled the wrong session. What now?", answer: "Choose Undo cancellation on the class in Duty manager or Cancelled classes. For a closed day, choose Reopen the day in Duty manager. Undo works until billing has acted on it or the class has started; after that, tell your manager the class, site and date." },
     ], related: ["billing-follow-up", "daily-schedule", "manage-class"], action: "duty",
   },
   {
@@ -25,7 +25,7 @@ export const MANAGEMENT_GUIDES: HelpArticle[] = [
     before: ["You need access to Cancelled classes. Recording a billing notification needs its separate permission."],
     steps: [
       { title: "Open the queue", text: "Choose Cancelled classes and check the working site. Awaiting billing includes outstanding cancellations across dates, with the oldest first." },
-      { title: "Check the cancellation", text: "Open the session to read its date, class, reason, instructor and affected swimmers. This roster was saved when the session was cancelled." },
+      { title: "Check the cancellation", text: "Open the session to read its date, class, reason, instructor and affected swimmers. For a class still to come, the list follows the class until its day; once billing has acted it stays as it is." },
       { title: "Tell billing", text: "Contact billing using your organisation’s usual process. Give them the cancellation details and affected swimmers needed for their follow-up." },
       { title: "Record the handoff", text: "Once billing has been told, enter a handoff note and choose Mark billing notified. Check Billing notified for the saved history." },
     ],

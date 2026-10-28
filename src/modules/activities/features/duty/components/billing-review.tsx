@@ -21,6 +21,8 @@ export type BillingCancellation = {
   cancelledByName: string; cancelledAt: string; attendanceRecorded: number; billingNotifiedAt: string | null;
   billingNotifiedByName: string | null; billingNote: string | null;
   legendProcessedAt: string | null; restoredAt: string | null; restoredByName: string | null;
+  /** Billing has not acted on it and the class has not started, so it can still be put back. */
+  undoable: boolean;
   swimmers: { studentId: string; swimmerName: string; memberNumber: string | null }[];
 };
 
@@ -33,7 +35,7 @@ export function BillingReview({ row, canNotify }: { row: BillingCancellation; ca
     <DialogContent showCloseButton={false} className="max-h-(--overlay-max-height) overflow-y-auto sm:max-w-xl"><DialogHeader><DialogTitle>{row.className}</DialogTitle><DialogDescription>{formatDate(parseDateOnly(row.date))} · {formatTimeRange(row.startMinutes, row.startMinutes + row.durationMinutes)} · {row.location || "Pool area not set"}</DialogDescription></DialogHeader>
       <div className="space-y-3"><Tag meta={meta} /><p className="text-sm whitespace-pre-wrap break-words">{row.reason}</p><p className="text-xs text-ui-muted-foreground">Cancelled by {row.cancelledByName} · {formatDate(new Date(row.cancelledAt))}</p>{row.attendanceRecorded ? <Notice tone="warning" title={`${plural(row.attendanceRecorded, "attendance record")} already existed.`} description="Check these before deciding on a billing change." /> : null}</div>
       {row.billingNotifiedAt ? <section className="flex min-w-0 flex-col gap-1"><h3 className="text-sm font-semibold">Billing notified</h3><p className="text-xs text-ui-muted-foreground">{row.billingNotifiedByName ? `By ${row.billingNotifiedByName} · ` : ""}{formatDate(new Date(row.billingNotifiedAt))}</p>{row.billingNote ? <p className="text-sm whitespace-pre-wrap break-words">{row.billingNote}</p> : null}</section> : null}
-      <section className="flex flex-col gap-2"><h3 className="text-sm font-semibold">Affected swimmers · {row.swimmers.length}</h3><p className="text-xs text-ui-muted-foreground">Enrolled when the session was cancelled.</p>{row.swimmers.length ? <ul className="pc-rows">{row.swimmers.map(swimmer => <li key={swimmer.studentId} className="pc-row"><div className="pc-row-body"><span className="pc-row-title">{swimmer.swimmerName}</span>{swimmer.memberNumber ? <span className="pc-row-hint">#{swimmer.memberNumber}</span> : null}</div></li>)}</ul> : <p className="text-sm text-ui-muted-foreground">No swimmers were enrolled.</p>}</section>
+      <section className="flex flex-col gap-2"><h3 className="text-sm font-semibold">Affected swimmers · {row.swimmers.length}</h3><p className="text-xs text-ui-muted-foreground">{row.undoable ? "Kept up to date until the class day while it awaits billing: joiners are added and leavers removed." : "Enrolled for the cancelled session."}</p>{row.swimmers.length ? <ul className="pc-rows">{row.swimmers.map(swimmer => <li key={swimmer.studentId} className="pc-row"><div className="pc-row-body"><span className="pc-row-title">{swimmer.swimmerName}</span>{swimmer.memberNumber ? <span className="pc-row-hint">#{swimmer.memberNumber}</span> : null}</div></li>)}</ul> : <p className="text-sm text-ui-muted-foreground">No swimmers were enrolled.</p>}</section>
       <FormFeedbackProvider feedback={feedback}><form ref={formRef} method="post" className="space-y-4" onSubmit={event => {
         event.preventDefault(); if (pending) return;
         startTransition(async () => {

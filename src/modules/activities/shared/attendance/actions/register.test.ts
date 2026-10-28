@@ -74,7 +74,7 @@ function fixture() {
     },
   };
   const { markRegister } = serverModule<typeof import("@/modules/activities/shared/attendance/actions/register")>("src/modules/activities/shared/attendance/actions/register.ts", {
-    "@/lib/prisma": { prisma },
+    "@/lib/prisma": { prisma }, "@/modules/activities/shared/cancellations/roster": { syncCancelledRosters: async () => {} },
     "@/lib/authz": { canSee: (_s: unknown, screen: string) => screen === "instructor" || desk, can: () => true, requirePermission: async () => ({ user: { id: "instructor", name: "Test Instructor" } }) },
     "@/lib/clubs/current": { currentClubId: async () => "club" },
     "@/modules/activities/shared/attendance/access": { canMarkRegister: () => true },

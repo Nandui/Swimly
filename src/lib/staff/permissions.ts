@@ -36,8 +36,8 @@ export const PERMISSIONS = [
   {
     key: "classes.cancel",
     group: "Daily operations",
-    label: "Cancel today’s class sessions",
-    description: "Cancel a dated session from Duty manager and create its billing follow-up record. Does not archive the weekly class.",
+    label: "Cancel class sessions",
+    description: "Cancel a session, or close a whole day, today or up to four weeks ahead from Duty manager or Schedule, and undo it before billing acts. Creates the billing follow-up record. Does not archive the weekly class.",
   },
   {
     key: "billing.notify",

@@ -19,22 +19,30 @@ import { formatDate, formatDay, formatTime, formatTimeRange, minutesNow, parseDa
 import { classPhase, sessionState } from "@/modules/activities/shared/today/calendar";
 import type { DutyClass } from "@/modules/activities/features/duty/server/data";
 import { CancelSession } from "@/modules/activities/features/duty/components/cancel-session";
+import { CancelClasses } from "@/modules/activities/shared/cancellations/components/cancel-classes";
+import { ReopenDay, UndoCancellation } from "@/modules/activities/shared/cancellations/components/undo-cancellation";
+import { cancelWindow } from "@/modules/activities/shared/cancellations/window";
+import { ScheduleDayNavigation } from "@/modules/activities/shared/schedule/day-navigation";
+import { scheduleNow } from "@/modules/activities/shared/schedule/dates";
 
-export function DutyView({ courses, iso, clubName, initialNow, canCancel, canBilling, pendingBilling }: {
-  courses: DutyClass[]; iso: string; clubName: string; initialNow: number; canCancel: boolean; canBilling: boolean; pendingBilling: number;
+export function DutyView({ courses, iso, todayIso, clubName, initialNow, canCancel, canBilling, pendingBilling }: {
+  courses: DutyClass[]; iso: string; todayIso: string; clubName: string; initialNow: number; canCancel: boolean; canBilling: boolean; pendingBilling: number;
 }) {
-  const [query, setQuery] = useState(""), [tab, setTab] = useState("all"), [now, setNow] = useState(initialNow), [staleDate, setStaleDate] = useState(false);
+  const [query, setQuery] = useState(""), [tab, setTab] = useState("all"), [clock, setClock] = useState(initialNow), [staleDate, setStaleDate] = useState(false);
   const [refreshing, startRefresh] = useTransition(), router = useRouter();
+  // A later day has no clock yet: every class is still to come.
+  const now = scheduleNow(iso, todayIso, clock), isToday = iso === todayIso;
   useEffect(() => {
     const update = () => {
       if (document.visibilityState !== "visible") return;
-      const instant = new Date(); setNow(minutesNow(instant)); setStaleDate(today(instant) !== iso);
+      const instant = new Date(); setClock(minutesNow(instant)); setStaleDate(today(instant) !== todayIso);
       if (!document.querySelector('[role="dialog"]')) router.refresh();
     };
     const timer = window.setInterval(update, 60_000);
     window.addEventListener("focus", update); document.addEventListener("visibilitychange", update);
     return () => { clearInterval(timer); window.removeEventListener("focus", update); document.removeEventListener("visibilitychange", update); };
-  }, [iso, router]);
+  }, [todayIso, router]);
+  const closures = [...new Map(courses.filter(c => c.cancellation?.closureId).map(c => [c.cancellation!.closureId!, c])).values()];
   const running = courses.filter(c => !c.cancellation && classPhase(c, now) === "running").length;
   const upcoming = courses.filter(c => !c.cancellation && classPhase(c, now) === "later").length;
   const cancelled = courses.filter(c => c.cancellation).length;
@@ -42,15 +50,22 @@ export function DutyView({ courses, iso, clubName, initialNow, canCancel, canBil
     const search = [c.name, c.level, c.programme, c.location, c.instructor, formatTime(c.startMinutes)].join(" ").toLowerCase();
     return search.includes(query.trim().toLowerCase()) && (tab === "all" || (tab === "cancelled" ? !!c.cancellation : !c.cancellation && classPhase(c, now) === tab));
   });
-  return <PageShell spacing="roomy" header={<PageHeader title="Duty manager" description={`${formatDay(iso)} · ${clubName} · Today’s classes, at a glance`} actions={<>
+  const dayLabel = isToday ? "today’s" : "this day’s";
+  return <PageShell spacing="roomy" header={<PageHeader title="Duty manager" description={`${formatDay(iso)} · ${clubName} · ${isToday ? "Today’s classes, at a glance" : "Classes on this day"}`} actions={<>
       <LoadingButton variant="outline" pending={refreshing} pendingLabel="Refreshing…" onClick={() => startRefresh(() => router.refresh())}><RefreshCw aria-hidden="true" />Refresh</LoadingButton>
+      {canCancel ? <CancelClasses mode="day" iso={iso} disabled={staleDate} classes={courses.map(c => ({ id: c.id, name: c.name, startMinutes: c.startMinutes, durationMinutes: c.durationMinutes, cancelled: !!c.cancellation }))} /> : null}
       {canBilling ? <Button asChild variant="outline"><Link href="/cancellations" aria-label={pendingBilling > 0 ? `Cancelled classes, ${pendingBilling} awaiting billing` : undefined}><CalendarX2 aria-hidden="true" />Cancelled classes{pendingBilling > 0 ? ` (${pendingBilling})` : ""}</Link></Button> : null}
     </>} />}>
+    <ScheduleDayNavigation iso={iso} todayIso={todayIso} min={todayIso} max={cancelWindow(todayIso).to} pending={refreshing} label="Duty manager dates"
+      onSelect={date => startRefresh(() => router.push(date && date !== todayIso ? `/duty?date=${date}` : "/duty", { scroll: false }))} />
     {staleDate ? <Notice tone="warning" title="A new day has started. Refresh before cancelling a session." /> : null}
-    <section className="flex min-w-0 flex-col" aria-label="Today’s classes">
+    {closures.map(course => <Notice key={course.cancellation!.closureId} title="This day is closed." description={course.cancellation!.reason}
+      actions={canCancel && courses.some(c => c.cancellation?.closureId === course.cancellation!.closureId && c.cancellation.undoable)
+        ? <ReopenDay closureId={course.cancellation!.closureId!} date={iso} count={courses.filter(c => c.cancellation?.closureId === course.cancellation!.closureId).length} /> : undefined} />)}
+    <section className="flex min-w-0 flex-col" aria-label={isToday ? "Today’s classes" : "Classes on this day"}>
       <Tabs value={tab} onValueChange={setTab} className="gap-(--space-5)">
         <div className="flex flex-wrap items-end gap-3">
-          <TabsList aria-label="Filter today’s classes">
+          <TabsList aria-label={`Filter ${dayLabel} classes`}>
             <TabsTrigger value="all">All <span className="font-normal tabular-nums">{courses.length}</span></TabsTrigger>
             <TabsTrigger value="running">{HOME_SESSION_META.now.label} <span className="font-normal tabular-nums">{running}</span></TabsTrigger>
             <TabsTrigger value="later">{HOME_SESSION_META.next.label} <span className="font-normal tabular-nums">{upcoming}</span></TabsTrigger>
@@ -58,7 +73,7 @@ export function DutyView({ courses, iso, clubName, initialNow, canCancel, canBil
           </TabsList>
           <SearchField label="Find a class" value={query} onValueChange={setQuery} placeholder="Class, instructor, pool or time" className="grow basis-72 sm:max-w-md" />
         </div>
-        <TabsContent value={tab} className="m-0 flex flex-col"><div className="pc-section-head"><h2>{tab === "all" ? "Today" : tab === "cancelled" ? "Cancelled" : tab === "running" ? HOME_SESSION_META.now.label : HOME_SESSION_META.next.label}</h2><p role="status">{plural(shown.length, "class", "classes")}</p></div>
+        <TabsContent value={tab} className="m-0 flex flex-col"><div className="pc-section-head"><h2>{tab === "all" ? (isToday ? "Today" : formatDay(iso)) : tab === "cancelled" ? "Cancelled" : tab === "running" ? HOME_SESSION_META.now.label : HOME_SESSION_META.next.label}</h2><p role="status">{plural(shown.length, "class", "classes")}</p></div>
           {shown.length ? <ul className="pc-list">{shown.map(course => {
             const state = sessionState(course, now), meta = HOME_SESSION_META[state], time = formatTime(course.startMinutes);
             const count = course.capacity === null ? plural(course.swimmers.length, "swimmer") : `${course.swimmers.length}/${course.capacity} swimmers`;
@@ -66,9 +81,10 @@ export function DutyView({ courses, iso, clubName, initialNow, canCancel, canBil
             return <li key={course.id} className="pc-row">
               <span className="w-14 shrink-0 font-semibold tabular-nums">{time}<span className="block text-xs font-normal text-ui-muted-foreground">to {formatTime(course.startMinutes + course.durationMinutes)}</span></span>
               <div className="pc-row-body"><div className="flex flex-wrap items-center gap-x-2 gap-y-1"><h3 className="font-semibold">{course.name}</h3><Tag meta={meta} /></div><p className="pc-row-hint break-words">{hint.join(" · ")}</p></div>
-              <div className="pc-row-trail"><QuickView course={course} iso={iso} />{canCancel && !course.cancellation ? <CancelSession course={course} date={iso} disabled={staleDate} /> : null}</div>
+              <div className="pc-row-trail"><QuickView course={course} iso={iso} />{canCancel && !course.cancellation ? <CancelSession course={course} date={iso} disabled={staleDate} /> : null}
+                {canCancel && course.cancellation?.undoable ? <UndoCancellation cancellationId={course.cancellation.id} className={course.name} date={iso} startMinutes={course.startMinutes} /> : null}</div>
             </li>;
-          })}</ul> : <EmptyState title={courses.length ? "No classes match" : "No classes scheduled today"} hint={courses.length ? "Try another search or show the full day." : "The next day’s classes will appear when the day starts."} action={courses.length ? <Button variant="outline" onClick={() => { setQuery(""); setTab("all"); }}>Show all classes</Button> : undefined} />}
+          })}</ul> : <EmptyState title={courses.length ? "No classes match" : isToday ? "No classes scheduled today" : "No classes scheduled this day"} hint={courses.length ? "Try another search or show the full day." : isToday ? "The next day’s classes will appear when the day starts." : "Pick another day above."} action={courses.length ? <Button variant="outline" onClick={() => { setQuery(""); setTab("all"); }}>Show all classes</Button> : undefined} />}
         </TabsContent>
       </Tabs>
     </section>

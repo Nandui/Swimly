@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { getTodayAssessments } from "@/modules/activities/shared/today/assessments";
 import { getCancellationsForDay } from "@/modules/activities/shared/cancellations/data";
 import { scheduleDate } from "@/modules/activities/shared/schedule/dates";
+import { inCancelWindow } from "@/modules/activities/shared/cancellations/window";
 import { schedulePlacesQuery } from "@/modules/activities/features/schedule/server/queries";
 
 export async function getSchedule(requested?: unknown, instant = new Date()) {
@@ -25,7 +26,9 @@ export async function getSchedule(requested?: unknown, instant = new Date()) {
   return {
     iso, todayIso: today(instant), initialNow: minutesNow(instant), clubId: club.id, clubName: club.name, me: session.user.id,
     assessments,
-    access: { attendance: can(session, "attendance.mark"), courses: canSee(session, "courses"), assessments: canSee(session, "assessments") },
+    access: { attendance: can(session, "attendance.mark"), courses: canSee(session, "courses"), assessments: canSee(session, "assessments"),
+      // Cancelling needs only its permission here (owner decision, 28 October 2026), for today and the next four weeks.
+      cancel: can(session, "classes.cancel") && inCancelWindow(iso, today(instant)) },
     courses: courses.map(({ id, name, startMinutes, durationMinutes, capacity, location, level, instructor, instructorId }) => ({
       id, name, startMinutes, durationMinutes, capacity, location, level, instructor, instructorId,
       enrolled: byCourse.get(id) ?? 0, cover: covers.get(id) ?? null, attendanceTaken: marked.has(id),
