@@ -1,5 +1,6 @@
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import { syncCancelledRosters } from "@/modules/activities/shared/cancellations/roster";
 
 /** Every path that can occupy a place in a class goes through here, and
  *  nothing else creates an ACTIVE enrolment — not the actions, not an import
@@ -30,7 +31,10 @@ export async function withCourseSeat<T>(
       for (const id of courseIds) {
         await tx.$queryRaw`SELECT id FROM "Course" WHERE id = ${id} FOR UPDATE`;
       }
-      return run(tx);
+      const result = await run(tx);
+      // A place that changed under this lock also changes any upcoming cancellation's swimmers.
+      await syncCancelledRosters(tx, courseIds);
+      return result;
     },
     { timeout: 10_000 }
   );

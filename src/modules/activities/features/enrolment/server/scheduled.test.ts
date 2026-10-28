@@ -36,7 +36,7 @@ function fixture() {
     finally { locked = false; }
   } };
   const doubles = {
-    "@/lib/prisma": { prisma },
+    "@/lib/prisma": { prisma }, "@/modules/activities/shared/cancellations/roster": { syncCancelledRosters: async () => {} },
     "@/lib/authz": { requirePermission: async (permission: string) => { assert.equal(permission, "enrolment.manage"); return { user: { id: "staff", name: "Test Staff" } }; } },
     "@/lib/clubs/current": { currentClubId: async () => "club" },
     "@/lib/format": { ...serverModule<typeof import("@/lib/format")>("src/lib/format.ts", {}), today: () => day },

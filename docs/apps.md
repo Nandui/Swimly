@@ -15,7 +15,7 @@ Swimmers, classes and assessments at the desk, and the swim school's set-up.
 | --- | --- |
 | Desk | every swimmer, booking, move, waiting list and assessment booking |
 | Manage | also programmes, levels and classes |
-| *Extra:* Can cancel classes | cancel today's sessions on the duty manager page and pass them to billing |
+| *Extra:* Can cancel classes | cancel sessions, or close a whole day, today or up to four weeks ahead on the duty manager page or Schedule, pass them to billing, and undo them before billing acts |
 
 Connects: class commitments for Rota; the member directory and history for Short courses; site summaries; home items; the parent app's API.
 

@@ -443,12 +443,16 @@ model ClassCancellation {
   restoredAt            DateTime?
   restoredById          String?
   restoredByName        String?
+  /// Shared by the classes cancelled together when a whole day is closed (owner decision,
+  /// 28 October 2026), so the closure can be undone at once. Null for a single class.
+  closureId             String?
 
   course   Course                  @relation(fields: [courseId], references: [id], onDelete: Restrict)
   swimmers CancelledClassSwimmer[]
 
   @@unique([courseId, date])
   @@index([clubId, billingNotifiedAt, date])
+  @@index([closureId])
 }
 
 model CancelledClassSwimmer {

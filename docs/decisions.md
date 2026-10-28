@@ -6,6 +6,12 @@ The decisions Turnfin 2.0 stands on, newest first. Each says what was decided, w
 
 ---
 
+### D16 · 28 October 2026 · Cancelling classes ahead, and undo removes the cancellation
+
+Staff with **Can cancel classes** can cancel one class, or close a whole day (every class ticked, untick any that go ahead), today or up to four weeks ahead, from Duty manager or Schedule. A cancellation goes straight to billing follow-up; while it awaits billing its swimmer list follows the class until the day (joiners added, leavers removed), then it is fixed. It can be undone, one class or a closed day at once, until billing acts or the class starts. Undo **deletes** the cancellation and its swimmer list, an exception to "deactivate, never delete": the audit entry keeps the full record (reason, who cancelled it, when, the swimmers). Parents see upcoming cancellations as before; nothing new is sent.
+**Why:** pool closures and galas are known in advance, and billing can adjust before the direct debit run. Keeping undone rows would make every reader of cancellations (analytics, the parent app, the teaching guards, billing) skip them, for a record the audit already holds.
+**Follows:** `ClassCancellation.closureId` links a closed day's classes; the swimmer list is kept in step inside `withCourseSeat`.
+
 ### D15 · 26 October 2026 · The last Poolside sizes become Glass tokens, and poolside.css goes
 
 The sizes the pre-2.0 `poolside.css` still held become Turnfin Glass tokens in `glass.css`, under the names DESIGN.md gives them: the running type (`type-caption`, `type-body`, `type-title`, `type-large-title`, `type-figure` and their leadings), the layout limits (`overlay-max-width`, `overlay-max-height`, `tile-min`, `card-min`, `column-min`, `rail-width`, `field-min`, `deck-width`), the overlay shadow and focus halo, text on the accent, and the Docs content palette. Its surviving rules move to the top of `kit.css`, and the file is deleted from Turnfin and Turnfin Me.

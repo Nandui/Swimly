@@ -96,7 +96,7 @@ function fixture() {
     },
   };
   const actions = serverModule<Actions>("src/modules/activities/shared/enrolment/actions/enrolment.ts", { "@/lib/directory": directoryDouble({ sites }),
-    "@/lib/prisma": { prisma },
+    "@/lib/prisma": { prisma }, "@/modules/activities/shared/cancellations/roster": { syncCancelledRosters: async () => {} },
     "@/lib/authz": { requirePermission: async () => ({ user: { id: "staff", name: "Test Staff" } }) },
     "@/lib/clubs/current": { currentClubId: async () => "club", currentClubIdIfAny: async () => "club" },
     "next/cache": { revalidatePath: () => { } },
