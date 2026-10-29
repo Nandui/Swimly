@@ -105,5 +105,13 @@
 .tf-embed { position: relative; width: 100%; aspect-ratio: 16 / 10; border-radius: var(--radius-lg); overflow: hidden; background: var(--fill-2); }
 .tf-embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 
+/* Several things in one lesson (29 October 2026): recordings, slides, files and activities in the text. */
+.tf-setup-block { min-height: 64px; padding-block: 6px; }
+.tf-setup-block[data-activity] { border-style: solid; border-color: var(--accent); color: var(--label); }
+.tf-audio-block { display: flex; flex-direction: column; gap: 8px; }
+.tf-audio-block .tf-media-block { border: 0; padding: 0; margin: 0; }
+.tf-file-view { display: block; width: 100%; min-height: 360px; border: 0; border-radius: var(--radius-lg); background: var(--fill-2); }
+.tf-activity { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--accent); border-radius: var(--radius-lg); }
+
 /* Sort into groups, in the preview. */
 .tf-sort-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(var(--tile-min), 1fr)); gap: 12px; }

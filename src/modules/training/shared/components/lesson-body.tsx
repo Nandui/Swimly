@@ -1,15 +1,19 @@
 import type { ReactNode } from "react";
 import { Separator } from "@/components/shadcn/separator";
 import { Table, TableBody, TableCell, TableHead, TableRow } from "@/components/shadcn/table";
-import { FileDown, PlayCircle } from "lucide-react";
-import { CALLOUT_META, fileSrc, safeHref, videoFor, type CalloutTone, type DocNode } from "@/modules/training/shared/lessons";
+import { ChevronDown, FileDown, Headphones, PlayCircle } from "lucide-react";
+import { Button } from "@/components/shadcn/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
+import { CALLOUT_META, embedFor, fileSrc, safeHref, videoFor, type CalloutTone, type DocNode } from "@/modules/training/shared/lessons";
 import { blankedPrompt, type Question } from "@/modules/training/shared/questions";
 
 /** Draws a lesson's text (cleaned Tiptap JSON) as plain elements. Text is never
  *  injected as HTML, links must be http(s) or mailto, and images are this app's
  *  own files. Styled by `.tf-lesson` in src/app/training/lesson.css; Turnfin Me
  *  keeps the same renderer in apps/me. */
-function render(node: DocNode, key: string, questions: Question[]): ReactNode {
+type Activity = (node: DocNode, key: string) => ReactNode;
+
+function render(node: DocNode, key: string, questions: Question[], activity?: Activity): ReactNode {
   if (node.type === "text") {
     let out: ReactNode = node.text ?? "";
     for (const [i, mark] of (node.marks ?? []).entries()) {
@@ -23,7 +27,7 @@ function render(node: DocNode, key: string, questions: Question[]): ReactNode {
     }
     return <span key={key}>{out}</span>;
   }
-  const kids = (node.content ?? []).map((child, i) => render(child, `${key}-${i}`, questions));
+  const kids = (node.content ?? []).map((child, i) => render(child, `${key}-${i}`, questions, activity));
   switch (node.type) {
     case "doc": return <>{kids}</>;
     case "paragraph": return <p key={key}>{kids.length ? kids : <br />}</p>;
@@ -77,11 +81,37 @@ function render(node: DocNode, key: string, questions: Question[]): ReactNode {
         </div>
       );
     }
+    // Several things in one lesson (29 October 2026).
+    case "audioBlock": {
+      const transcript = String(node.attrs?.transcript ?? "").trim();
+      return (
+        <div key={key} className="tf-audio-block">
+          <p className="tf-media-block"><Headphones aria-hidden="true" />Recording</p>
+          <audio controls preload="metadata" src={fileSrc(String(node.attrs?.fileId ?? ""))} className="w-full"><track kind="captions" /></audio>
+          {transcript ? (
+            <Collapsible className="flex flex-col gap-2">
+              <CollapsibleTrigger asChild><Button type="button" variant="ghost" className="min-h-11 self-start">Show the transcript<ChevronDown aria-hidden="true" /></Button></CollapsibleTrigger>
+              <CollapsibleContent><p className="whitespace-pre-line">{transcript}</p></CollapsibleContent>
+            </Collapsible>
+          ) : null}
+        </div>
+      );
+    }
+    case "slidesBlock": {
+      const embed = embedFor(String(node.attrs?.url ?? ""));
+      return embed ? <div key={key} className="tf-embed"><iframe src={embed.src} title={embed.provider} loading="lazy" allow="fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" /></div> : null;
+    }
+    case "fileView": {
+      const src = fileSrc(String(node.attrs?.fileId ?? ""));
+      return <object key={key} data={src} className="tf-file-view" aria-label="File shown in the lesson"><a href={src} target="_blank" rel="noopener noreferrer">Open the file</a></object>;
+    }
+    case "activity": return activity ? <div key={key} className="tf-activity">{activity(node, key)}</div> : null;
     default: return null;
   }
 }
 
-/** `questions`: the course's questions, for the knowledge checks in the text. */
-export function LessonBody({ body, questions = [] }: { body: DocNode | null; questions?: Question[] }) {
-  return <div className="tf-lesson">{body ? render(body, "n", questions) : null}</div>;
+/** `questions`: the course's questions, for the knowledge checks in the text.
+ *  `activity`: draws an activity block; left out, activities aren't shown. */
+export function LessonBody({ body, questions = [], activity }: { body: DocNode | null; questions?: Question[]; activity?: Activity }) {
+  return <div className="tf-lesson">{body ? render(body, "n", questions, activity) : null}</div>;
 }
