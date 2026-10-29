@@ -4,6 +4,11 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.29.1 · 29 October 2026 · Which apps follow "Works at"
+
+- **Admin › Staff**: a person's page and the **Change sites** box now name every app that applies only at the sites they work at, Incidents included. They used to name only Swim school, Training and Rota, so a site missing from someone's ticks could hide it in Incidents without warning.
+- **Your account** page lists the same apps.
+
 ## 2.29.0 · 27 October 2026 · The Turnfin name is back
 
 - **On a computer**, the top of the list of apps shows a larger fin with the name Turnfin beside it. Choose either to go Home.

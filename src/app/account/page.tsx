@@ -15,7 +15,7 @@ import { googleSignInAvailable } from "@/lib/google-sign-in";
 import { recentlyConfirmed } from "@/lib/policy/engine";
 import { currentActor } from "@/lib/policy/session";
 import { roleReach } from "@/lib/staff/constants";
-import { WORK_ANYWHERE, cleanLevels, levelLines, levelsFromAccess } from "@/lib/staff/levels";
+import { WORK_ANYWHERE, cleanLevels, levelLines, levelsFromAccess, siteBoundAppNames } from "@/lib/staff/levels";
 import { allModules } from "@/modules/registry";
 
 export const metadata: Metadata = { title: "Account" };
@@ -79,7 +79,7 @@ export default async function AccountPage() {
       </RecordSection>
 
       <RecordSection id="can-do-heading" title="What you can do"
-        note="Swim school, Training and Rota apply at the sites you work at. Only someone who can manage accounts can change your role or your email.">
+        note={`${new Intl.ListFormat("en-IE", { type: "conjunction" }).format(siteBoundAppNames())} apply at the sites you work at. Only someone who can manage accounts can change your role or your email.`}>
         <ul className="pc-list">
           {session.user.isSuperadmin ? (
             <li className="pc-row">

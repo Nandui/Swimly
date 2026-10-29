@@ -102,6 +102,12 @@ export function accessByReach(role: RoleLevels): AccessByReach {
   return { everywhere: tidy(out.everywhere), sites: tidy(out.sites), team: tidy(out.team) };
 }
 
+/** The apps whose levels apply only at the sites a person works at (any level
+ *  with "sites" reach), by name, for the "Works at" wording on a person's page. */
+export function siteBoundAppNames(): string[] {
+  return allModules().filter((mod) => mod.access.levels.some((level) => (level.reach ?? mod.access.reach) === "sites")).map((mod) => mod.name);
+}
+
 /** What the role row stores in `permissions`: everything except HR "Their
  *  team", which reaches only the holder's reports. */
 export function storedPermissions(role: RoleLevels): PermissionKey[] {

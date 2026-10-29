@@ -3,7 +3,7 @@ import test from "node:test";
 import { allModules } from "@/modules/registry";
 import { ALL_PERMISSIONS, UNRESTRICTED_PERMISSIONS, expandPermissions } from "./permissions";
 import { ADMINISTRATOR_SCREENS, visibleScreens } from "./screens";
-import { SYSTEM_ROLES, WORK_ANYWHERE, accessByReach, cleanLevels, describeLevels, isRestrictedRole, levelLines, levelsFromAccess, roleColumns, storedPermissions } from "./levels";
+import { SYSTEM_ROLES, WORK_ANYWHERE, accessByReach, cleanLevels, describeLevels, isRestrictedRole, levelLines, levelsFromAccess, roleColumns, siteBoundAppNames, storedPermissions } from "./levels";
 
 const owners = (key: string) =>
   allModules().flatMap((m) => [...m.access.levels, ...(m.access.extras ?? [])]
@@ -129,4 +129,10 @@ test("an old screen never grants a permission its page already needed", () => {
   assert.ok(!viewer.gains.includes("staff.manage"));
   const duty = levelsFromAccess([], ["duty"]);
   assert.ok(duty.gains.includes("classes.cancel"), "the duty page now needs cancelling, so it is reported");
+});
+
+test("the Works at wording names every app that applies only at a person's sites", () => {
+  const names = siteBoundAppNames();
+  for (const name of ["Swim school", "Rota", "Training", "Incidents"]) assert.ok(names.includes(name), name);
+  for (const name of ["Refunds", "Docs"]) assert.ok(!names.includes(name), `${name} applies everywhere`);
 });
