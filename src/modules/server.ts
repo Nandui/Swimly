@@ -8,6 +8,7 @@ import "@/modules/coinage/module";
 import "@/modules/docs/module";
 import "@/modules/training/module";
 import "@/modules/rota/module";
+import "@/modules/plan/module";
 import "@/modules/purchasing/module";
 import "@/modules/incidents/module";
 import "@/modules/tasks/module";

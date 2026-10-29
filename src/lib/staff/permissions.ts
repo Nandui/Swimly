@@ -339,6 +339,24 @@ export const PERMISSIONS = [
     description: "Put requests in Trackplan, correct them, mark them fixed, close them not fixed and open them again, at the sites this role covers. Includes reporting.",
   },
   {
+    key: "plan.view",
+    group: "Plan (test)",
+    label: "See the plan",
+    description: "See who works when, on which duties, and the gaps, at the sites this role covers.",
+  },
+  {
+    key: "plan.plan",
+    group: "Plan (test)",
+    label: "Plan their departments",
+    description: "Plan shifts and duties, and mark people off, for the departments they belong to at the sites this role covers. Includes seeing the plan.",
+  },
+  {
+    key: "plan.manage",
+    group: "Plan (test)",
+    label: "Manage the plan",
+    description: "Plan every department, run today, and keep the duties, areas and what's on, at the sites this role covers. Includes planning.",
+  },
+  {
     key: "hr.records.read",
     group: "HR",
     label: "Read HR records",
@@ -479,6 +497,8 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "cctv.review": ["cctv.record"],
   "site-monitoring.act": ["site-monitoring.read"],
   "maintenance.manage": ["maintenance.report"],
+  "plan.manage": ["plan.plan"],
+  "plan.plan": ["plan.view"],
   "hr.notes.write": ["hr.records.read"],
   "hr.reviews.write": ["hr.records.read"],
   "hr.details.write": ["hr.records.read"],

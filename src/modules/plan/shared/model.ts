@@ -218,7 +218,7 @@ export function candidatesFor(span: Span, dutyId: string, input: {
 /** Last week copied to this one: each shift a week on, with its blocks (session fills only where
  *  that session runs on the new day), skipping people marked off and anyone who already has a shift
  *  on the plan that day. */
-export function copyWeek(last: readonly Shift[], input: { existing: readonly { userId: string; date: string }[]; offOn: (userId: string, date: string) => boolean; runsOn: (sessionId: string, date: string) => boolean }) {
+export function copyWeek<S extends Shift>(last: readonly S[], input: { existing: readonly { userId: string; date: string }[]; offOn: (userId: string, date: string) => boolean; runsOn: (sessionId: string, date: string) => boolean }) {
   const taken = new Set(input.existing.map((e) => `${e.userId}|${e.date}`));
   return last.flatMap((s) => {
     const date = shiftIso(s.date, 7);

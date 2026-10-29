@@ -31,6 +31,7 @@ const otherModules = {
   training: moduleArea("training", "src/app/api/cron/training/**"),
   hr: moduleArea("hr"),
   rota: moduleArea("rota"),
+  plan: moduleArea("plan"),
   purchasing: moduleArea("purchasing"),
   tasks: moduleArea("tasks", "src/app/api/cron/tasks/**"),
   "short-courses": moduleArea("short-courses", "src/app/api/academy/**"),
@@ -117,6 +118,7 @@ const coreThroughFunctions = {
   hr: [],
   training: ["grantsType", "organisation", "user"],
   rota: ["department", "organisation", "requiredType", "site", "type", "user"],
+  plan: [],
 };
 const coreJoins = (relations) => relations.length ? [{
   selector: `Property[key.name=/^(include|select|where|orderBy)$/] Property[key.name=/^(${relations.join("|")})$/][value.type=/^(ObjectExpression|Literal)$/]`,
