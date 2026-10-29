@@ -298,3 +298,16 @@ html[data-text] .turnfin-app [data-slot="input"] { font-size: max(16px, var(--ty
 .turnfin-app .explore-marker.ui-motion-press[data-seen] { background: var(--bg-2); color: var(--accent); border-color: var(--accent); }
 /* On paper the certificate and the record stand alone: their page headers drop away. */
 @media print { .certificate-page > [data-page-header], .no-print-back [data-page-header] [data-slot="button"] { display: none !important; } }
+
+/* Several things in one lesson (29 October 2026): a recording, a PDF and activities in the text. */
+.audio-block, .activity-block { padding: 16px; border: 1px solid var(--sep); border-radius: var(--radius-lg); background: var(--bg-2); }
+.activity-block { border-color: var(--accent); }
+.audio-block-label, .activity-block-label { display: flex; align-items: center; gap: 6px; margin: 0; font-weight: 600; }
+.audio-block-label svg, .activity-block-label svg { width: 16px; height: 16px; color: var(--accent); }
+.transcript { white-space: pre-line; margin: 0; }
+.file-view { display: block; width: 100%; height: 480px; border: 0; border-radius: var(--radius-lg); background: var(--fill-2); }
+@media (max-width: 767px) { .file-view { display: none; } }
+.audio-pinned { position: fixed; z-index: 40; left: max(20px, calc(50% - 352px)); right: max(20px, calc(50% - 352px)); bottom: calc(104px + env(safe-area-inset-bottom));
+  display: flex; align-items: center; gap: 8px; min-height: 56px; padding: 6px 6px 6px 16px; border-radius: var(--radius-capsule); background: var(--bg-2); color: var(--label); border: 1px solid var(--sep); }
+.audio-pinned > svg { flex: none; width: 20px; height: 20px; color: var(--accent); }
+.audio-pinned-text { flex: 1; min-width: 0; font-weight: 600; }

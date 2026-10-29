@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.30.0 · 29 October 2026 · Several things in one lesson
+
+- **Training › Courses**: a lesson can now hold several things together, such as audio with a slide deck. In any lesson's text, choose **Add** and pick from **Media** (Audio, Slides or interactive, a PDF or picture) or **Activities** (Checklist, Flashcards, Sort into groups, Scenario, Explore a picture). Each one opens in its own box to set up, and **Edit** changes it later.
+- **Activities in a lesson** must all be finished before learners can move on in Turnfin Me. A lesson can hold up to six.
+- **Audio keeps playing** while learners read or click through slides. Once the player scrolls out of view, a small bar at the bottom lets them pause it. A recording can have a transcript that learners open under it.
+- **Preview** now leaves out rows you left empty, as learners will see it.
+
 ## 2.29.1 · 29 October 2026 · Which apps follow "Works at"
 
 - **Admin › Staff**: a person's page and the **Change sites** box now name every app that applies only at the sites they work at, Incidents included. They used to name only Swim school, Training and Rota, so a site missing from someone's ticks could hide it in Incidents without warning.

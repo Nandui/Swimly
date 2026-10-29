@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { LessonBody } from "@/modules/training/shared/components/lesson-body";
 import { embedFor, fileSrc, LESSON_KIND_META, lessonMinutes, lessonPlace, outlineLessons, videoFor, type Outline } from "@/modules/training/shared/lessons";
 import { blankedPrompt, paperSize, QUESTION_KIND_META, type Question } from "@/modules/training/shared/questions";
-import type { LessonData } from "@/modules/training/shared/lessons";
+import type { LessonData, LessonKind } from "@/modules/training/shared/lessons";
 import { heightOf, leftOf, topOf, widthOf } from "@/components/ui-kit/scale";
 
 /** Every question with its right answer, for the author. Learners get one at a time and never the key. */
@@ -174,7 +174,12 @@ export function CoursePreview({ courseId, outline, lessonId, requiresSignoff }: 
         {lesson.kind === "FILE" && lesson.fileId ? (
           <Button asChild variant="outline" className="min-h-11 self-start"><a href={`/training/files/${lesson.fileId}`} target="_blank" rel="noopener noreferrer"><FileText aria-hidden="true" />Open the file</a></Button>
         ) : null}
-        <LessonBody body={lesson.body} questions={outline.questions} />
+        <LessonBody body={lesson.body} questions={outline.questions} activity={(node) => (
+          <>
+            <p className="text-xs font-semibold text-ui-muted-foreground">{LESSON_KIND_META[node.attrs?.kind as LessonKind]?.label ?? "Activity"} · learners finish it to move on</p>
+            <DataPreview kind={String(node.attrs?.kind ?? "")} data={(node.attrs?.data ?? null) as LessonData | null} fileId={(node.attrs?.fileId as string | null) ?? null} />
+          </>
+        )} />
         {lesson.kind === "QUIZ" ? (
           <div className="flex flex-col gap-3">
             <Notice title="Learners answer these one at a time">They see straight away whether they got each one right. Here you see every question with its answer.</Notice>

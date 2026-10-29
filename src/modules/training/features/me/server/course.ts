@@ -5,7 +5,7 @@ import { logAudit } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 import { FILE_SELECT } from "@/modules/training/shared/files";
 import { grantQualification } from "@/modules/training/shared/grant";
-import { docChecks, embedFor, learnerScenario, lessonFiles, lessonMinutes, lessonPlace, outlineLessons, readOutline, videoFor, type Outline } from "@/modules/training/shared/lessons";
+import { docChecks, embedFor, learnerDoc, learnerScenario, lessonFiles, lessonMinutes, lessonPlace, outlineLessons, readOutline, videoFor, type Outline } from "@/modules/training/shared/lessons";
 import { learnerQuestion, questionFiles, seeded } from "@/modules/training/shared/questions";
 import { offlineLabel, offlineTime } from "@/modules/training/features/me/server/offline";
 import { submissionFor } from "@/modules/training/features/me/server/hand-in";
@@ -128,7 +128,7 @@ export async function myLesson(userId: string, assignmentId: string, lessonId: s
   const random = seeded(`${assignmentId}:${lesson.id}:checks`);
   const checks = outline.questions.filter((q) => checkIds.includes(q.id)).map((q) => learnerQuestion(q, random));
   return {
-    id: lesson.id, kind: lesson.kind, title: lesson.title, body: lesson.body, minutes: lessonMinutes(lesson), checks,
+    id: lesson.id, kind: lesson.kind, title: lesson.title, body: learnerDoc(lesson.body), minutes: lessonMinutes(lesson), checks,
     steps: lesson.kind === "SCENARIO" ? learnerScenario(lesson.data?.steps ?? []) : null,
     cards: lesson.kind === "FLASHCARDS" ? lesson.data?.cards ?? [] : null,
     items: lesson.kind === "CHECKLIST" ? lesson.data?.items ?? [] : null,

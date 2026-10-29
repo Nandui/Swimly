@@ -1,10 +1,14 @@
 "use client";
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, useState } from "react";
 import { isNodeSelection, mergeAttributes, Node } from "@tiptap/core";
-import { NodeViewWrapper, ReactNodeViewRenderer, type Editor, type JSONContent } from "@tiptap/react";
-import { CircleHelp, FileDown, PlayCircle } from "lucide-react";
-import { CALLOUT_META, videoFor, type CalloutTone } from "@/modules/training/shared/lessons";
+import { NodeViewWrapper, ReactNodeViewRenderer, type Editor, type JSONContent, type NodeViewProps } from "@tiptap/react";
+import { CircleHelp, FileDown, Pencil, PlayCircle, Trash2 } from "lucide-react";
+import { Button } from "@/components/shadcn/button";
+import { CALLOUT_META, LESSON_KIND_META, videoFor, type CalloutTone } from "@/modules/training/shared/lessons";
+import {
+  BlockDialog, blockFromNode, blockLabel, BlockSetup, blockSummary, MEDIA_BLOCK_META, nodeAttrs, type BlockValue,
+} from "@/modules/training/features/builder/components/block-dialog";
 
 /** Interactive blocks for lesson text (e-learning phases 3
  *  and 8): a coloured callout, a tap-to-reveal, flip cards, a step-by-step, a
@@ -71,13 +75,39 @@ function FileView({ node }: { node: { attrs: Record<string, unknown> } }) {
   );
 }
 
-const atomBlock = (name: string, attrs: string[], view: Parameters<typeof ReactNodeViewRenderer>[0]) => Node.create({
-  name, group: "block", atom: true, selectable: true, draggable: true,
+const atomBlock = (name: string, attrs: string[], view: Parameters<typeof ReactNodeViewRenderer>[0], group = "block") => Node.create({
+  name, group, atom: true, selectable: true, draggable: true,
   addAttributes() { return Object.fromEntries(attrs.map((a) => [a, { default: null, parseHTML: (el: HTMLElement) => el.getAttribute(`data-${a}`), renderHTML: (v: Record<string, unknown>) => ({ [`data-${a}`]: v[a] }) }])); },
   parseHTML() { return [{ tag: `div[data-${name}]` }]; },
   renderHTML({ HTMLAttributes }) { return ["div", mergeAttributes(HTMLAttributes, { [`data-${name}`]: "" })]; },
   addNodeView() { return ReactNodeViewRenderer(view); },
 });
+
+/** A recording, slides, a file shown in place or an activity in the text: a card
+ *  saying what it holds, with Edit to set it up again in its dialog. */
+function SetupView({ node, editor, updateAttributes, deleteNode }: NodeViewProps) {
+  const { files } = useContext(BlockSetup);
+  const [editing, setEditing] = useState(false);
+  const value = blockFromNode(node.type.name, node.attrs);
+  if (!value) return <NodeViewWrapper />;
+  const Icon = value.type === "activity" ? LESSON_KIND_META[value.kind].icon : MEDIA_BLOCK_META[value.type].icon;
+  return (
+    <NodeViewWrapper className="tf-media-block tf-setup-block" data-drag-handle="" data-activity={value.type === "activity" || undefined}>
+      <Icon aria-hidden="true" />
+      <span className="min-w-0 flex-1"><strong>{blockLabel(value)}</strong>{value.type === "activity" ? " · activity" : ""}: {blockSummary(value, files)}</span>
+      {editor.isEditable ? (
+        <span className="flex shrink-0 gap-1" contentEditable={false}>
+          <Button type="button" variant="ghost" className="min-h-11" onClick={() => setEditing(true)}><Pencil aria-hidden="true" />Edit</Button>
+          <Button type="button" variant="ghost" size="icon" className="size-11" aria-label={`Remove ${blockLabel(value).toLowerCase()}`} onClick={deleteNode}><Trash2 aria-hidden="true" /></Button>
+        </span>
+      ) : null}
+      {editing ? <BlockDialog value={value} isNew={false} onClose={() => setEditing(false)} onSave={(next) => { updateAttributes(nodeAttrs(next)); setEditing(false); }} /> : null}
+    </NodeViewWrapper>
+  );
+}
+
+/** The text: blocks, and activities only at the top, never inside a tab or a reveal. */
+const LessonDoc = Node.create({ name: "doc", topNode: true, content: "(block | activity)+" });
 
 export const blockExtensions = () => [
   Callout,
@@ -98,7 +128,39 @@ export const blockExtensions = () => [
   block("tabContent", "block+", { class: "tf-tab-content" }),
   atomBlock("videoEmbed", ["url"], VideoView),
   atomBlock("fileButton", ["fileId", "label"], FileView),
+  // Several things in one lesson (29 October 2026).
+  LessonDoc,
+  atomBlock("audioBlock", ["fileId", "transcript"], SetupView),
+  atomBlock("slidesBlock", ["url"], SetupView),
+  atomBlock("fileView", ["fileId"], SetupView),
+  Node.create({
+    name: "activity", group: "activity", atom: true, selectable: true, draggable: true,
+    addAttributes() {
+      return {
+        id: { default: null }, kind: { default: null }, fileId: { default: null },
+        data: { default: null, parseHTML: (el) => { try { return JSON.parse(el.getAttribute("data-data") ?? "null"); } catch { return null; } }, renderHTML: (a) => ({ "data-data": JSON.stringify(a.data) }) },
+      };
+    },
+    parseHTML() { return [{ tag: "div[data-activity]" }]; },
+    renderHTML({ HTMLAttributes }) { return ["div", mergeAttributes(HTMLAttributes, { "data-activity": "" })]; },
+    addNodeView() { return ReactNodeViewRenderer(SetupView); },
+  }),
 ];
+
+/** Puts a new block into the text. An activity goes after the top-level block the cursor is in. */
+export function insertSetupBlock(editor: Editor, value: BlockValue) {
+  const content = { type: value.type, attrs: nodeAttrs(value) };
+  if (value.type !== "activity") { editor.chain().focus().insertContent(content).run(); return; }
+  const { $from, to } = editor.state.selection;
+  editor.chain().focus().insertContentAt($from.depth ? $from.after(1) : to, content).run();
+}
+
+/** How many activities the text holds, against MAX_ACTIVITY_BLOCKS. */
+export function activityCount(editor: Editor) {
+  let n = 0;
+  editor.state.doc.forEach((node) => { if (node.type.name === "activity") n++; });
+  return n;
+}
 
 const para = (text?: string): JSONContent => ({ type: "paragraph", ...(text ? { content: [{ type: "text", text }] } : {}) });
 const card = (): JSONContent => ({ type: "flipCard", content: [{ type: "flipFront", content: [para()] }, { type: "flipBack", content: [para()] }] });

@@ -106,5 +106,5 @@ export async function courseCategories(orgId: string | null) {
 export async function draftForPreview(courseId: string) {
   const who = await requireTrainingActor();
   const row = await prisma.trainingCourse.findFirst({ where: { id: courseId, orgId: who.orgId ?? undefined }, select: { id: true, title: true, summary: true, requiresSignoff: true, ...DRAFT_SELECT } });
-  return row ? { course: { id: row.id, title: row.title, summary: row.summary, requiresSignoff: row.requiresSignoff }, outline: draftOutline(row) } : null;
+  return row ? { course: { id: row.id, title: row.title, summary: row.summary, requiresSignoff: row.requiresSignoff }, outline: frozenOutline(draftOutline(row)) } : null;
 }

@@ -28,6 +28,17 @@ export const LESSON_KIND_META = {
 
 export const isLessonKind = (value: unknown): value is LessonKind => LESSON_KINDS.includes(value as LessonKind);
 
+/** Lesson kinds that also go inside any lesson's text as an activity block, so
+ *  one lesson can hold several things (owner decision, 29 October 2026). Hand in
+ *  work stays a lesson of its own; a Quiz is a knowledge check in the text. */
+export const ACTIVITY_BLOCK_KINDS = ["CHECKLIST", "FLASHCARDS", "SORTING", "SCENARIO", "EXPLORE"] as const;
+export type ActivityBlockKind = (typeof ACTIVITY_BLOCK_KINDS)[number];
+export const isActivityBlockKind = (value: unknown): value is ActivityBlockKind => ACTIVITY_BLOCK_KINDS.includes(value as ActivityBlockKind);
+/** Activities one lesson's text may hold, so a lesson can still be finished on a phone. */
+export const MAX_ACTIVITY_BLOCKS = 6;
+/** An activity block as the text keeps it: its own id, so the learner's progress points at it. */
+export type ActivityBlock = { id: string; kind: ActivityBlockKind; fileId: string | null; data: LessonData | null };
+
 /** A Tiptap document. Only the nodes and marks `cleanDoc` keeps reach learners. */
 export type DocNode = { type?: string; text?: string; attrs?: Record<string, unknown>; marks?: { type: string; attrs?: Record<string, unknown> }[]; content?: DocNode[] };
 
@@ -79,7 +90,11 @@ const BLOCKS = new Set(["doc", "paragraph", "heading", "bulletList", "orderedLis
   // cards, a step-by-step and a knowledge check on one of the course's questions.
   "callout", "reveal", "revealTitle", "revealContent", "flipCards", "flipCard", "flipFront", "flipBack", "stepper", "stepItem", "knowledgeCheck",
   // Phase 8: tabs, a video inside the text and a file to download.
-  "tabs", "tab", "tabTitle", "tabContent", "videoEmbed", "fileButton"]);
+  "tabs", "tab", "tabTitle", "tabContent", "videoEmbed", "fileButton",
+  // Several things in one lesson (29 October 2026): a recording, slides, a PDF
+  // or picture shown in place, and an activity (top level only).
+  "audioBlock", "slidesBlock", "fileView", "activity"]);
+const MAX_TRANSCRIPT = 20_000;
 
 export const CALLOUT_TONES = ["note", "tip", "warning", "danger"] as const;
 export type CalloutTone = (typeof CALLOUT_TONES)[number];
@@ -123,6 +138,24 @@ function cleanNode(node: DocNode, depth: number): DocNode | null {
     const id = typeof node.attrs?.fileId === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(node.attrs.fileId) ? node.attrs.fileId : null;
     return id ? { type: "fileButton", attrs: { fileId: id, label: String(node.attrs?.label ?? "").trim().slice(0, 120) } } : null;
   }
+  if (node.type === "audioBlock") {
+    const id = cleanFile(node.attrs?.fileId);
+    return id ? { type: "audioBlock", attrs: { fileId: id, transcript: clip(node.attrs?.transcript, MAX_TRANSCRIPT) } } : null;
+  }
+  if (node.type === "slidesBlock") {
+    const embed = typeof node.attrs?.url === "string" ? embedFor(node.attrs.url) : null;
+    return embed ? { type: "slidesBlock", attrs: { url: embed.href } } : null;
+  }
+  if (node.type === "fileView") {
+    const id = cleanFile(node.attrs?.fileId);
+    return id ? { type: "fileView", attrs: { fileId: id } } : null;
+  }
+  if (node.type === "activity") {
+    // Only straight under the text, never inside a tab or a reveal where a learner could miss it.
+    const kind = node.attrs?.kind, id = cleanId(node.attrs?.id);
+    if (depth !== 1 || !isActivityBlockKind(kind) || !id) return null;
+    return { type: "activity", attrs: { id, kind, fileId: kind === "EXPLORE" ? cleanFile(node.attrs?.fileId) : null, data: cleanLessonData(kind, node.attrs?.data, undefined, true) } };
+  }
   if (node.type === "image") {
     const id = fileIdFromSrc(node.attrs?.src);
     if (!id) return null;
@@ -141,7 +174,41 @@ export function cleanDoc(value: unknown): DocNode | null {
   if (!value || typeof value !== "object" || (value as DocNode).type !== "doc") return null;
   const doc = cleanNode(value as DocNode, 0);
   if (!doc || !doc.content?.length || JSON.stringify(doc).length > MAX_BODY_CHARS) return null;
-  return docText(doc).trim() || docImages(doc).length || docChecks(doc).length || docFiles(doc).length || docVideos(doc).length ? doc : null;
+  return docText(doc).trim() || docImages(doc).length || docChecks(doc).length || docFiles(doc).length || docVideos(doc).length || docBlocks(doc).length ? doc : null;
+}
+
+/** Recordings, slides, files shown in place and activities in the text. */
+export function docBlocks(node: DocNode | null | undefined): DocNode[] {
+  if (!node) return [];
+  const own = ["audioBlock", "slidesBlock", "fileView", "activity"].includes(String(node.type)) ? [node] : [];
+  return [...own, ...(node.content ?? []).flatMap(docBlocks)];
+}
+
+/** The activities in the text, in order: each must be finished before the lesson is. */
+export const docActivities = (doc: DocNode | null | undefined): ActivityBlock[] => (doc?.content ?? [])
+  .filter((n) => n.type === "activity" && isActivityBlockKind(n.attrs?.kind) && typeof n.attrs?.id === "string")
+  .map((n) => ({ id: String(n.attrs!.id), kind: n.attrs!.kind as ActivityBlockKind, fileId: typeof n.attrs!.fileId === "string" ? n.attrs!.fileId : null, data: (n.attrs!.data ?? null) as LessonData | null }));
+
+/** The text with every activity's settings passed through `fn`. */
+const mapActivities = (doc: DocNode | null, fn: (block: ActivityBlock) => LessonData | null): DocNode | null => doc && {
+  ...doc, content: (doc.content ?? []).map((n) => {
+    const [block] = docActivities({ type: "doc", content: [n] });
+    return block ? { ...n, attrs: { ...n.attrs, data: fn(block) } } : n;
+  }),
+};
+
+/** The text as Turnfin Me gets it: slides with the address they play from, and
+ *  scenarios that only show which ending is best once the learner reaches it. */
+export function learnerDoc(doc: DocNode | null): DocNode | null {
+  const walk = (node: DocNode): DocNode => {
+    if (node.type === "slidesBlock") {
+      const embed = embedFor(String(node.attrs?.url ?? ""));
+      return { ...node, attrs: { embed: embed && { src: embed.src, href: embed.href, provider: embed.provider } } };
+    }
+    return node.content ? { ...node, content: node.content.map(walk) } : node;
+  };
+  const scenes = mapActivities(doc, (b) => b.kind === "SCENARIO" ? { steps: learnerScenario(b.data?.steps ?? []) } : b.data);
+  return scenes && walk(scenes);
 }
 
 /** Files offered to download from the text (fileButton blocks). */
@@ -256,10 +323,14 @@ function reachableScenes(steps: readonly ScenarioStep[]) {
   return seen;
 }
 
-/** Every file a lesson shows: its own file, images in its text, and pictures in its scenes or cards. */
+const dataFiles = (data: LessonData | null) => [...(data?.steps ?? []).map((s) => s.imageId), ...(data?.cards ?? []).map((c) => c.imageId)];
+
+/** Every file a lesson shows: its own file, images, recordings and files in its
+ *  text, and pictures in its scenes, cards and activity blocks. */
 export const lessonFiles = (lesson: Pick<OutlineLesson, "fileId" | "body" | "data">) => [
-  ...(lesson.fileId ? [lesson.fileId] : []), ...docImages(lesson.body), ...docFiles(lesson.body),
-  ...(lesson.data?.steps ?? []).map((s) => s.imageId), ...(lesson.data?.cards ?? []).map((c) => c.imageId),
+  ...(lesson.fileId ? [lesson.fileId] : []), ...docImages(lesson.body), ...docFiles(lesson.body), ...dataFiles(lesson.data),
+  ...docBlocks(lesson.body).filter((n) => n.type !== "activity").map((n) => n.attrs?.fileId as string | undefined),
+  ...docActivities(lesson.body).flatMap((b) => [b.fileId, ...dataFiles(b.data)]),
 ].filter((id): id is string => !!id);
 
 /** Plain text, for word counts and "is it empty?". */
@@ -363,7 +434,9 @@ export function embedFor(raw: string): { src: string; href: string; provider: st
 
 /** The outline as a version keeps it: rows left empty in the draft dropped. */
 export const frozenOutline = (outline: Outline): Outline => ({
-  ...outline, sections: outline.sections.map((s) => ({ ...s, lessons: s.lessons.map((l) => ({ ...l, data: cleanLessonData(l.kind, l.data) })) })),
+  ...outline, sections: outline.sections.map((s) => ({ ...s, lessons: s.lessons.map((l) => ({
+    ...l, data: cleanLessonData(l.kind, l.data), body: mapActivities(l.body, (b) => cleanLessonData(b.kind, b.data)),
+  })) })),
 });
 
 /** What stops a draft being published, worded for its author. Empty when it can go. */
@@ -377,13 +450,14 @@ export function publishProblems(outline: Outline): string[] {
     if (lesson.kind === "VIDEO" && !videoFor(lesson.videoUrl)) problems.push(`“${lesson.title}” needs a video link starting https://.`);
     if (lesson.kind === "FILE" && !lesson.fileId) problems.push(`“${lesson.title}” needs a file.`);
     if (lesson.kind === "AUDIO" && !lesson.fileId) problems.push(`“${lesson.title}” needs a recording.`);
-    if (lesson.kind === "SCENARIO") problems.push(...scenarioProblems(lesson.title, lesson.data?.steps ?? []));
-    if (lesson.kind === "FLASHCARDS" && (lesson.data?.cards ?? []).filter((c) => (c.front || c.imageId) && c.back).length < 2) problems.push(`“${lesson.title}” needs at least two cards with a front and a back.`);
-    if (lesson.kind === "FLASHCARDS" && (lesson.data?.cards ?? []).some((c) => !(c.front || c.imageId) || !c.back)) problems.push(`A card in “${lesson.title}” is missing its front or back.`);
-    if (lesson.kind === "CHECKLIST" && !(lesson.data?.items ?? []).length) problems.push(`“${lesson.title}” needs at least one thing to tick off.`);
-    if (lesson.kind === "SORTING") problems.push(...sortingProblems(lesson.title, lesson.data));
-    if (lesson.kind === "EXPLORE" && !lesson.fileId) problems.push(`“${lesson.title}” needs the picture to explore.`);
-    if (lesson.kind === "EXPLORE" && !(lesson.data?.spots ?? []).length) problems.push(`“${lesson.title}” needs at least one spot on the picture.`);
+    problems.push(...activityProblems(lesson.kind, lesson.title, lesson.data, lesson.fileId));
+    const activities = docActivities(lesson.body);
+    if (activities.length > MAX_ACTIVITY_BLOCKS) problems.push(`“${lesson.title}” has ${activities.length} activities. A lesson can hold up to ${MAX_ACTIVITY_BLOCKS}: move some into another lesson.`);
+    for (const b of activities) {
+      const same = activities.filter((x) => x.kind === b.kind);
+      const name = `${LESSON_KIND_META[b.kind].label}${same.length > 1 ? ` ${same.indexOf(b) + 1}` : ""} in ${lesson.title}`;
+      problems.push(...activityProblems(b.kind, name, b.data, b.fileId));
+    }
     if (lesson.kind === "EMBED" && !embedFor(lesson.videoUrl)) problems.push(`“${lesson.title}” needs a link from ${EMBED_SOURCES}.`);
     if (lesson.kind === "ASSIGNMENT" && !lesson.body) problems.push(`“${lesson.title}” needs the task written out: what to do and what to hand in.`);
     if (lesson.kind === "ASSIGNMENT" && lesson.data?.handIn?.text === "off" && lesson.data.handIn.photo === "off") problems.push(`“${lesson.title}” must ask for a written answer, a photo or both.`);
@@ -404,15 +478,34 @@ export function publishProblems(outline: Outline): string[] {
   return problems;
 }
 
-/** All the words in a lesson: its text, scenes, choices, cards and checklist. */
+const dataText = (data: LessonData | null) => [
+  ...(data?.steps ?? []).flatMap((s) => [s.text, ...s.choices.flatMap((c) => [c.text, c.feedback])]),
+  ...(data?.cards ?? []).flatMap((c) => [c.front, c.back]),
+  ...(data?.items ?? []).map((i) => i.text),
+  ...(data?.groups ?? []).map((g) => g.name), ...(data?.sorts ?? []).map((i) => i.text),
+  ...(data?.spots ?? []).flatMap((sp) => [sp.title, sp.text]),
+];
+
+/** All the words in a lesson: its text, transcripts, scenes, choices, cards and
+ *  checklist, and the same in its activity blocks. */
 export const lessonText = (lesson: Pick<OutlineLesson, "body" | "data">) => [
-  docText(lesson.body),
-  ...(lesson.data?.steps ?? []).flatMap((s) => [s.text, ...s.choices.flatMap((c) => [c.text, c.feedback])]),
-  ...(lesson.data?.cards ?? []).flatMap((c) => [c.front, c.back]),
-  ...(lesson.data?.items ?? []).map((i) => i.text),
-  ...(lesson.data?.groups ?? []).map((g) => g.name), ...(lesson.data?.sorts ?? []).map((i) => i.text),
-  ...(lesson.data?.spots ?? []).flatMap((sp) => [sp.title, sp.text]),
+  docText(lesson.body), ...dataText(lesson.data),
+  ...docBlocks(lesson.body).map((n) => String(n.attrs?.transcript ?? "")),
+  ...docActivities(lesson.body).flatMap((b) => dataText(b.data)),
 ].join("\n");
+
+/** What stops an activity working, as a lesson or a block, worded for its author. */
+function activityProblems(kind: LessonKind, title: string, data: LessonData | null, fileId: string | null): string[] {
+  const problems: string[] = [];
+  if (kind === "SCENARIO") problems.push(...scenarioProblems(title, data?.steps ?? []));
+  if (kind === "FLASHCARDS" && (data?.cards ?? []).filter((c) => (c.front || c.imageId) && c.back).length < 2) problems.push(`“${title}” needs at least two cards with a front and a back.`);
+  if (kind === "FLASHCARDS" && (data?.cards ?? []).some((c) => !(c.front || c.imageId) || !c.back)) problems.push(`A card in “${title}” is missing its front or back.`);
+  if (kind === "CHECKLIST" && !(data?.items ?? []).length) problems.push(`“${title}” needs at least one thing to tick off.`);
+  if (kind === "SORTING") problems.push(...sortingProblems(title, data));
+  if (kind === "EXPLORE" && !fileId) problems.push(`“${title}” needs the picture to explore.`);
+  if (kind === "EXPLORE" && !(data?.spots ?? []).length) problems.push(`“${title}” needs at least one spot on the picture.`);
+  return problems;
+}
 
 /** What stops a Sort into groups lesson working, worded for its author. */
 export function sortingProblems(title: string, data: LessonData | null): string[] {

@@ -6,6 +6,17 @@ The decisions Turnfin 2.0 stands on, newest first. Each says what was decided, w
 
 ---
 
+### D16 · 29 October 2026 · Several things in one lesson
+
+A training lesson can hold several things together, such as audio with a slide deck. Authors use **Add** in any lesson's text to place **media** (Audio, Slides or interactive, a PDF or picture shown in place) or **activities** (Checklist, Flashcards, Sort into groups, Scenario, Explore a picture). The lesson types stay as they are, and these are blocks on top.
+- Activities must all be finished before the learner can move on, under the same rules as their lesson types.
+- A lesson holds at most six activities. They sit only in the main text, never inside tabs, reveals or steps. Media can go anywhere.
+- Audio and slides play independently. Audio keeps playing, with a small bar pinned at the bottom once the player scrolls out of view, and can carry an optional transcript.
+- Halfway progress is kept on the learner's phone, as checklist ticks already are; finishing the lesson goes on their record.
+- Hand in work stays a lesson of its own, because a trainer checks it. A quiz is a knowledge check in the text.
+**Why:** staff learn from a briefing while looking at its slides, or check a poster while ticking off a list. One thing per lesson split these across screens.
+**Follows:** no database change: the blocks live in the lesson text (`cleanDoc` in `src/modules/training/shared/lessons.ts`), and published versions freeze them like everything else.
+
 ### D15 · 26 October 2026 · The last Poolside sizes become Glass tokens, and poolside.css goes
 
 The sizes the pre-2.0 `poolside.css` still held become Turnfin Glass tokens in `glass.css`, under the names DESIGN.md gives them: the running type (`type-caption`, `type-body`, `type-title`, `type-large-title`, `type-figure` and their leadings), the layout limits (`overlay-max-width`, `overlay-max-height`, `tile-min`, `card-min`, `column-min`, `rail-width`, `field-min`, `deck-width`), the overlay shadow and focus halo, text on the accent, and the Docs content palette. Its surviving rules move to the top of `kit.css`, and the file is deleted from Turnfin and Turnfin Me.
