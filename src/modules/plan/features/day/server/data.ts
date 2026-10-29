@@ -37,9 +37,12 @@ export async function planDay(params: { site?: string; date?: string }) {
   const departmentOf = (userId: string) => people.find((p) => p.id === userId)?.departmentIds ?? [];
   const warnings = warningsOf({
     shifts, duties: dutyMap, qualificationNames: qNames, held: heldToday, off: new Set(offs.map((o) => o.userId)),
-    classes: classes.all, elsewhere,
+    classes: classes.all, elsewhere, classDutyId: classDuty?.id ?? null,
   });
   const mine = new Set(departments.mine.map((d) => d.id));
+  // For "free then", a class someone teaches counts as busy like a duty.
+  const busyShifts = shifts.map((s) => ({ ...s, blocks: [...s.blocks, ...classes.all.filter((c) => c.userId === s.userId)
+    .map((c) => ({ id: `class:${c.ref}`, shiftId: s.id, dutyId: classDuty?.id ?? "", sessionId: null, start: c.start, end: c.end }))] }));
   return {
     who, sites, site, date, today: today(), now: minutesNow(), manage, departments, duties, areas, people, offs,
     occurrences, needs, classDutyId: classDuty?.id ?? null,
@@ -52,7 +55,7 @@ export async function planDay(params: { site?: string; date?: string }) {
     })),
     /** Who could fill each gap, best first, for the fill sheet. */
     candidates: Object.fromEntries(needs.flatMap((n) => n.gaps.map((g, i) => [`${n.key}#${i}`,
-      candidatesFor(g, n.dutyId, { shifts, duties: dutyMap, held: heldToday, departmentOf })]))),
+      candidatesFor(g, n.dutyId, { shifts: busyShifts, duties: dutyMap, held: heldToday, departmentOf })]))),
   } as const;
 }
 export type PlanDayData = Extract<Awaited<ReturnType<typeof planDay>>, { date: string }>;

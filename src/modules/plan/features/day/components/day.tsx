@@ -107,10 +107,11 @@ export function DayView({ data }: { data: PlanDayData }) {
       const dutyName = duty(need.dutyId)?.name ?? "Duty";
       if (picked.kind === "gap") {
         const gap = need.gaps[picked.index];
-        const candidates = data.candidates[`${need.key}#${picked.index}`] ?? [];
+        // A class has one teacher for all of it; anything else can be filled in parts.
+        const candidates = (data.candidates[`${need.key}#${picked.index}`] ?? []).filter((c) => need.kind !== "class" || c.whole);
         if (!gap) return null;
         return { title: need.title, description: `${dutyName}, ${formatTimeRange(gap.start, gap.end)}: ${gap.short} short.`,
-          body: candidates.length === 0 ? <p className="text-sm text-ui-muted-foreground">Nobody on shift covers all of this time. Add a shift, or fill part of it from a person&apos;s free time.</p> : (
+          body: candidates.length === 0 ? <p className="text-sm text-ui-muted-foreground">Nobody is on shift then. Add a shift first.</p> : (
             <ul className="pc-list">
               {candidates.map((c) => {
                 const shift = shiftOf(c.shiftId);
@@ -119,12 +120,12 @@ export function DayView({ data }: { data: PlanDayData }) {
                   <li key={c.shiftId} className="pc-row">
                     <span className="pc-row-body">
                       <span className="pc-row-title">{nameOf(c.userId)}</span>
-                      <span className="pc-row-hint">{[c.qualified ? null : "Not qualified", c.free ? "Free then" : "Busy then", c.ownDepartment ? null : "Borrowed"].filter(Boolean).join(" · ")}</span>
+                      <span className="pc-row-hint">{[c.whole ? null : formatTimeRange(c.start, c.end), c.qualified ? null : "Not qualified", c.free ? "Free then" : "Busy then", c.ownDepartment ? null : "Borrowed"].filter(Boolean).join(" · ")}</span>
                     </span>
                     <Button className="min-h-11" variant={c.qualified && c.free ? "default" : "outline"} disabled={pending || !allowed}
                       onClick={() => run(() => need.kind === "class"
                         ? planClassTeacher({ source: need.source!, ref: need.classRef!, siteId: site.id, date, userId: c.userId })
-                        : saveBlock({ shiftId: c.shiftId, dutyId: need.dutyId, sessionId: need.sessionId, start: gap.start, end: gap.end }), `${nameOf(c.userId)} put on`)}>
+                        : saveBlock({ shiftId: c.shiftId, dutyId: need.dutyId, sessionId: need.sessionId, start: c.start, end: c.end }), `${nameOf(c.userId)} put on`)}>
                       Put on
                     </Button>
                   </li>

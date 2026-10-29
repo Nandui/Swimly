@@ -136,12 +136,12 @@ export function SessionDialog({ trigger, siteId, draft, areas, duties }: {
           <legend className="font-semibold">Lanes</legend>
           <p className="text-sm text-ui-muted-foreground">Leave them all clear for the whole {area.name}.</p>
           <div className="flex flex-wrap gap-x-4">{Array.from({ length: area.lanes }, (_, i) => i + 1).map((l) =>
-            <Tick key={l} id={`plan-s-lane-${l}`} label={`Lane ${l}`} checked={f.lanes.includes(l)} onChange={() => set("lanes", toggle(f.lanes, l))} />)}</div>
+            <Tick key={l} id={`plan-s-lane-${l}`} label={`Lane ${l}`} checked={f.lanes.includes(l)} onChange={() => setF((x) => ({ ...x, lanes: toggle(x.lanes, l) }))} />)}</div>
         </fieldset>
       ) : null}
       <fieldset className="flex flex-col gap-1">
         <legend className="font-semibold">Days of the week</legend>
-        <div className="flex flex-wrap gap-x-4">{WEEKDAYS.map((d, i) => <Tick key={d} id={`plan-s-day-${i}`} label={d.slice(0, 3)} checked={f.weekdays.includes(i)} onChange={() => set("weekdays", toggle(f.weekdays, i))} />)}</div>
+        <div className="flex flex-wrap gap-x-4">{WEEKDAYS.map((d, i) => <Tick key={d} id={`plan-s-day-${i}`} label={d.slice(0, 3)} checked={f.weekdays.includes(i)} onChange={() => setF((x) => ({ ...x, weekdays: toggle(x.weekdays, i) }))} />)}</div>
       </fieldset>
       <div className="grid grid-cols-2 gap-4">
         <Field label="First day" htmlFor="plan-s-first"><Input id="plan-s-first" type="date" required className="min-h-11" value={f.firstDay}

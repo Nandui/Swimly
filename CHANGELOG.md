@@ -4,6 +4,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.31.0 · 29 October 2026 · Plan (test): a simpler rota to try
+
+- **Plan (test)** is a new app beside **Rota**, on trial at one site. Rota carries on as it is.
+- **Week**: add each person's shift for the week, on their department's plan. You can borrow someone from another department, and **Copy last week** starts a new week from the one before.
+- **Day**: **What's on** shows what needs staff and every gap in orange. Pick a gap to see who is on shift then, best fit first, and choose **Put on**. Underneath, each person's day shows their duties, breaks, classes and free time. Pick free time to give them a duty or a break.
+- **To check** warns about missing qualifications, double bookings, people marked off, classes during other duties and breaks still owed. Warnings never stop you saving.
+- **Setup** keeps the duties people do (with tasks such as a 12:00 pool test), the areas and their lanes, and what's on with the staff it needs. Bookings on the same pool add their staff on top of the pool's own lifeguards.
+- **Off** marks someone off for a holiday or a sick day, so they show as off on the plan. Absences and returns to work stay in Rota.
+- Swim classes appear on the Day by themselves, and choosing a class's teacher here updates Swim school.
 ## 2.30.0 · 29 October 2026 · Several things in one lesson
 
 - **Training › Courses**: a lesson can now hold several things together, such as audio with a slide deck. In any lesson's text, choose **Add** and pick from **Media** (Audio, Slides or interactive, a PDF or picture) or **Activities** (Checklist, Flashcards, Sort into groups, Scenario, Explore a picture). Each one opens in its own box to set up, and **Edit** changes it later.

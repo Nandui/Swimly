@@ -96,6 +96,8 @@ test("warnings: off, overlap, outside the shift, qualification, class clash and 
   assert.deepEqual(kinds(warningsOf({ ...base, shifts: [busy], classes: [teaching] })), ["class"]);
   const ok = shift({ userId: "v", start: h(9), end: h(12), blocks: [block({ dutyId: "break", sessionId: null, start: h(10), end: h(10, 15) })] });
   assert.deepEqual(warningsOf({ ...base, shifts: [ok], classes: [teaching] }), []);
+  const unqualified = { ...base, duties: new Map([...duties, ["teacher", { ...duties.get("teacher")!, qualificationTypeId: "teach" }]]), held: (_: string, typeId: string) => typeId !== "teach" };
+  assert.deepEqual(kinds(warningsOf({ ...unqualified, shifts: [ok], classes: [teaching], classDutyId: "teacher" })), ["qualification"]);
 });
 
 test("lanes taken twice at once clash; the whole area open alongside lanes does not", () => {
@@ -109,6 +111,13 @@ test("a duty's tasks land at its start, end or set time, inside the block", () =
   const tasks = [{ name: "Close the till", when: "end", atMinutes: null }, { name: "Open the till", when: "start", atMinutes: null },
     { name: "Pool test", when: "at", atMinutes: h(12) }, { name: "Late check", when: "at", atMinutes: h(20) }];
   assert.deepEqual(tasksOf({ start: h(9), end: h(13) }, tasks), [{ name: "Open the till", at: h(9) }, { name: "Pool test", at: h(12) }, { name: "Close the till", at: h(13) }]);
+  assert.deepEqual(tasksOf({ start: h(7), end: h(12) }, tasks).map((t) => t.name), ["Open the till", "Close the till"], "12:00 belongs to the block from 12:00");
+});
+
+test("a long gap is offered to everyone on for part of it, for the part they are there", () => {
+  const shifts = [shift({ id: "early", userId: "early", start: h(7), end: h(15) }), shift({ id: "late", userId: "late", start: h(12), end: h(21) }), shift({ id: "gone", userId: "gone", start: h(5), end: h(7) })];
+  const found = candidatesFor({ start: h(7), end: h(21) }, "lifeguard", { shifts, duties, held: () => true, departmentOf: () => ["pool"] });
+  assert.deepEqual(found.map((c) => [c.userId, c.start, c.end, c.whole]), [["late", h(12), h(21), false], ["early", h(7), h(15), false]]);
 });
 
 test("who could fill a stretch: people on shift then, qualified first, then free, then the department's own", () => {

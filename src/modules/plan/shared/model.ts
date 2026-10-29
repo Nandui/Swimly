@@ -132,6 +132,9 @@ export function breakMinutesOwed(shiftMinutes: number): number {
   return h <= 4 ? 0 : h < 6 ? 15 : h < 8 ? 45 : h <= 10 ? 60 : 75;
 }
 
+/** Swim school's classes, the commitments the class duty's qualification is checked for. */
+export const SWIM_CLASSES = "activities.classes";
+
 export type Warning = { shiftId: string; kind: "qualification" | "overlap" | "outside" | "off" | "class" | "break"; text: string };
 
 const clock = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
@@ -148,7 +151,10 @@ export function warningsOf(input: {
   off: ReadonlySet<string>;
   classes: readonly ClassItem[];
   elsewhere: readonly Shift[];
+  /** The duty classes need, for its qualification. */
+  classDutyId?: string | null;
 }): Warning[] {
+  const classDuty = input.classDutyId ? input.duties.get(input.classDutyId) : undefined;
   const out: Warning[] = [];
   for (const s of input.shifts) {
     const say = (kind: Warning["kind"], text: string) => out.push({ shiftId: s.id, kind, text });
@@ -166,6 +172,9 @@ export function warningsOf(input: {
         say("qualification", `${name} needs ${input.qualificationNames.get(duty.qualificationTypeId) ?? "a qualification"}, not held on the day.`);
     }
     for (const c of input.classes.filter((x) => x.userId === s.userId)) {
+      // Only Swim school's own classes: an Academy course has its own trainers' rules.
+      if (c.source === SWIM_CLASSES && classDuty?.qualificationTypeId && overlaps(c, s) && !input.held(s.userId, classDuty.qualificationTypeId))
+        say("qualification", `Teaching ${c.title} needs ${input.qualificationNames.get(classDuty.qualificationTypeId) ?? "a qualification"}, not held on the day.`);
       if (blocks.some((b) => overlaps(b, c))) say("class", `Teaching ${c.title} ${clock(c.start)}–${clock(c.end)} during another duty.`);
       else if (overlaps(c, s) && (c.start < s.start || c.end > s.end)) say("class", `Teaching ${c.title} ${clock(c.start)}–${clock(c.end)}, past the shift's times.`);
     }
@@ -191,28 +200,36 @@ export function laneClashes(occurrences: readonly Occurrence[], laneCount: Reado
   return out;
 }
 
-/** The tasks a block brings, at their times. */
+/** The tasks a block brings, at their times. A task at a set time belongs to the block running
+ *  then, so one ending at 12:00 leaves a 12:00 task to the block starting at 12:00. */
 export function tasksOf(block: Span, tasks: readonly { name: string; when: string; atMinutes: number | null }[]): { name: string; at: number }[] {
   return tasks.flatMap((t) => {
-    const at = t.when === "start" ? block.start : t.when === "end" ? block.end : t.atMinutes;
-    return at !== null && at >= block.start && at <= block.end ? [{ name: t.name, at }] : [];
+    if (t.when === "start") return [{ name: t.name, at: block.start }];
+    if (t.when === "end") return [{ name: t.name, at: block.end }];
+    return t.atMinutes !== null && t.atMinutes >= block.start && t.atMinutes < block.end ? [{ name: t.name, at: t.atMinutes }] : [];
   }).sort((a, b) => a.at - b.at);
 }
 
-export type Candidate = { shiftId: string; userId: string; qualified: boolean; ownDepartment: boolean; free: boolean };
+export type Candidate = Span & { shiftId: string; userId: string; qualified: boolean; ownDepartment: boolean; free: boolean; whole: boolean };
 
-/** Who could fill a stretch: people whose shift covers it, best first (qualified, then the
- *  department's own, then free at that time). */
+/** Who could fill a stretch: everyone whose shift is on for some of it, offered for the part they
+ *  are there (a long gap is filled by several people). Best first: qualified, free then, there for
+ *  all of it, the department's own, then there longest. */
 export function candidatesFor(span: Span, dutyId: string, input: {
   shifts: readonly Shift[]; duties: ReadonlyMap<string, DutyRef>; held: (userId: string, typeId: string) => boolean; departmentOf: (userId: string) => string[];
 }): Candidate[] {
   const duty = input.duties.get(dutyId);
-  return input.shifts.filter((s) => s.start <= span.start && s.end >= span.end).map((s) => ({
-    shiftId: s.id, userId: s.userId,
-    qualified: !duty?.qualificationTypeId || input.held(s.userId, duty.qualificationTypeId),
-    ownDepartment: input.departmentOf(s.userId).includes(s.departmentId),
-    free: !s.blocks.some((b) => overlaps(b, span)),
-  })).sort((a, b) => Number(b.qualified) - Number(a.qualified) || Number(b.free) - Number(a.free) || Number(b.ownDepartment) - Number(a.ownDepartment));
+  return input.shifts.filter((s) => overlaps(s, span)).map((s) => {
+    const part = { start: Math.max(s.start, span.start), end: Math.min(s.end, span.end) };
+    return {
+      ...part, shiftId: s.id, userId: s.userId,
+      qualified: !duty?.qualificationTypeId || input.held(s.userId, duty.qualificationTypeId),
+      ownDepartment: input.departmentOf(s.userId).includes(s.departmentId),
+      free: !s.blocks.some((b) => overlaps(b, part)),
+      whole: part.start === span.start && part.end === span.end,
+    };
+  }).sort((a, b) => Number(b.qualified) - Number(a.qualified) || Number(b.free) - Number(a.free) || Number(b.whole) - Number(a.whole)
+    || Number(b.ownDepartment) - Number(a.ownDepartment) || (b.end - b.start) - (a.end - a.start));
 }
 
 /** Last week copied to this one: each shift a week on, with its blocks (session fills only where
