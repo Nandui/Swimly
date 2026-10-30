@@ -311,7 +311,9 @@ test("copy fills only days with nothing of that department; people come too unle
 
 test("sharing a week: staff see it in Turnfin Me and are told; until then they see nothing", async () => {
   as("maya", [at("rota.plan")]);
-  const monday = nextMonday();
+  // Two weeks on: the copy test above fills the pool's days from tomorrow to two weeks ahead, so on
+  // some weekdays the next Monday already has a copied Main pool with Ava on it (still in Me's 28 days).
+  const monday = addDaysIso(nextMonday(), 14);
   assert.equal((await actions.saveNeed(null, need(monday, { place: "Main pool", places: 1, start: "09:00", end: "14:30" }))).ok, true);
   const main = await needOn(monday);
   assert.equal((await actions.assign(null, { needId: main.id, place: 1, userId: "ava", start: "09:00", end: "11:30" })).ok, true);
