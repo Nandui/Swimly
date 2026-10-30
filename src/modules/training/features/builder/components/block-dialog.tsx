@@ -1,7 +1,8 @@
 "use client";
 
 import { createContext, useContext, useState } from "react";
-import { FileText, Headphones, MonitorPlay, type LucideIcon } from "lucide-react";
+import Link from "next/link";
+import { FileText, Headphones, ListChecks, MonitorPlay, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/shadcn/dialog";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
@@ -13,7 +14,7 @@ import { Notice } from "@/components/ui-kit/notice";
 import {
   EMBED_SOURCES, embedFor, fileSrc, LESSON_KIND_META, startingLessonData, type ActivityBlockKind, type LessonData,
 } from "@/modules/training/shared/lessons";
-import { CardsEditor, ChecklistEditor, ExploreEditor, id as newId, ScenarioEditor, SortingEditor } from "@/modules/training/features/builder/components/lesson-kinds";
+import { CardsEditor, ChecklistEditor, ExploreEditor, HandInEditor, id as newId, ScenarioEditor, SortingEditor } from "@/modules/training/features/builder/components/lesson-kinds";
 import { uploadCourseFile, type UploadedFile } from "@/modules/training/features/builder/components/upload";
 
 /** Several things in one lesson (owner decision, 29 October 2026): a recording,
@@ -35,7 +36,12 @@ export const MEDIA_BLOCK_META: Record<MediaBlockType, { label: string; help: str
 };
 
 /** The course, its files and where new uploads go, for the block editors in the text. */
-export const BlockSetup = createContext<{ courseId: string; files: UploadedFile[]; onUploaded?: (file: UploadedFile) => void }>({ courseId: "", files: [] });
+export type BlockSetupValue = {
+  courseId: string; files: UploadedFile[]; onUploaded?: (file: UploadedFile) => void;
+  /** The lesson's section, for a Practice quiz: how many questions, and where to edit them. */
+  section?: { id: string; count: number; href: string };
+};
+export const BlockSetup = createContext<BlockSetupValue>({ courseId: "", files: [] });
 
 export function newBlock(type: MediaBlockType | "activity", kind: ActivityBlockKind = "CHECKLIST"): BlockValue {
   if (type === "audioBlock") return { type, fileId: "", transcript: "" };
@@ -61,11 +67,12 @@ export function nodeAttrs(value: BlockValue): Record<string, unknown> {
   return "fileId" in attrs ? { ...attrs, fileId: attrs.fileId || null } : attrs;
 }
 
-export const blockLabel = (value: BlockValue) => value.type === "activity" ? LESSON_KIND_META[value.kind].label : MEDIA_BLOCK_META[value.type].label;
+export const blockLabel = (value: BlockValue) => value.type === "activity"
+  ? (value.kind === "QUIZ" ? "Practice quiz" : LESSON_KIND_META[value.kind].label) : MEDIA_BLOCK_META[value.type].label;
 
 const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 /** One line under the block in the editor: what it holds. */
-export function blockSummary(value: BlockValue, files: UploadedFile[]): string {
+export function blockSummary(value: BlockValue, { files, section }: Pick<BlockSetupValue, "files" | "section">): string {
   const name = (fid: string) => files.find((f) => f.id === fid)?.name ?? "";
   if (value.type === "audioBlock") return [name(value.fileId) || "No recording yet", value.transcript.trim() ? "with a transcript" : ""].filter(Boolean).join(", ");
   if (value.type === "slidesBlock") return embedFor(value.url)?.provider ?? "No link yet";
@@ -75,6 +82,11 @@ export function blockSummary(value: BlockValue, files: UploadedFile[]): string {
   if (value.kind === "FLASHCARDS") return count(d?.cards?.filter((c) => c.front || c.back).length ?? 0, "card", "cards");
   if (value.kind === "SORTING") return count(d?.sorts?.filter((s) => s.text).length ?? 0, "thing to sort", "things to sort");
   if (value.kind === "SCENARIO") return count(d?.steps?.length ?? 0, "scene", "scenes");
+  if (value.kind === "QUIZ") return section ? `practises the ${count(section.count, "question", "questions")} in this section` : "practises this section's questions";
+  if (value.kind === "ASSIGNMENT") {
+    const h = d?.handIn, parts = [h?.text !== "off" ? "a written answer" : "", h?.photo !== "off" ? "a photo or PDF" : ""].filter(Boolean).join(" or ");
+    return `learners hand in ${parts || "nothing yet"}${h?.review === false ? "" : ", checked by a trainer"}`;
+  }
   return count(d?.spots?.length ?? 0, "spot", "spots");
 }
 
@@ -84,7 +96,7 @@ const IMAGE_TYPES = "image/png,image/jpeg,image/webp";
 
 /** Sets up one block. `isNew`: it goes into the text when saved; otherwise the block is updated. */
 export function BlockDialog({ value, isNew, onSave, onClose }: { value: BlockValue; isNew: boolean; onSave: (value: BlockValue) => void; onClose: () => void }) {
-  const { courseId, files, onUploaded } = useContext(BlockSetup);
+  const { courseId, files, onUploaded, section } = useContext(BlockSetup);
   const [draft, setDraft] = useState<BlockValue>(value);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -118,7 +130,7 @@ export function BlockDialog({ value, isNew, onSave, onClose }: { value: BlockVal
       <DialogContent className="flex max-h-(--overlay-max-height) flex-col sm:max-w-2xl" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>{isNew ? `Add ${label.toLowerCase()}` : label}</DialogTitle>
-          <DialogDescription>{draft.type === "activity" ? "Learners finish it before they can move on from this lesson." : MEDIA_BLOCK_META[draft.type].help}</DialogDescription>
+          <DialogDescription>{draft.type === "activity" ? (draft.kind === "ASSIGNMENT" ? "The lesson is done once they hand it in, or once a trainer accepts it if you ask for a check." : "Learners finish it before they can move on from this lesson.") : MEDIA_BLOCK_META[draft.type].help}</DialogDescription>
         </DialogHeader>
         <div className="flex min-h-0 flex-col gap-4 overflow-y-auto">
           {draft.type === "audioBlock" ? (
@@ -169,6 +181,18 @@ export function BlockDialog({ value, isNew, onSave, onClose }: { value: BlockVal
               {draft.kind === "CHECKLIST" ? <ChecklistEditor data={draft.data} onChange={(data) => set({ data })} disabled={false} /> : null}
               {draft.kind === "FLASHCARDS" ? <CardsEditor data={draft.data} onChange={(data) => set({ data })} images={images} disabled={false} /> : null}
               {draft.kind === "SORTING" ? <SortingEditor title={label} data={draft.data} onChange={(data) => set({ data })} disabled={false} /> : null}
+              {draft.kind === "QUIZ" ? (
+                <Notice tone={section?.count ? "info" : "warning"} title={section?.count ? `Practises the ${count(section.count, "question", "questions")} in this section` : "This section has no questions yet"}
+                  actions={section ? <Button asChild variant="outline" className="min-h-11"><Link href={section.href}><ListChecks aria-hidden="true" />{section.count ? "Edit the questions" : "Add questions"}</Link></Button> : undefined}>
+                  Learners answer one question at a time and see straight away whether they got it right. It isn’t marked. A lesson holds one practice quiz.
+                </Notice>
+              ) : null}
+              {draft.kind === "ASSIGNMENT" ? (
+                <>
+                  <p className="text-sm text-ui-muted-foreground">It goes at the end of the lesson. Write the task in the lesson text above it: what to do and what to hand in.</p>
+                  <HandInEditor data={draft.data} onChange={(data) => set({ data })} disabled={false} />
+                </>
+              ) : null}
               {draft.kind === "SCENARIO" ? <ScenarioEditor title={label} data={draft.data} onChange={(data) => set({ data })} images={images} disabled={false} /> : null}
             </>
           )}

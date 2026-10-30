@@ -88,7 +88,9 @@ export default function LessonPage() {
     try { localStorage.setItem(storageKey, JSON.stringify([...ids])); } catch { /* private browsing: just not remembered */ }
     return { key: storageKey, ids };
   }), [storageKey]);
-  const progress = useMemo(() => ({ done: doneIds, finish: finishBlock, storageKey }), [doneIds, finishBlock, storageKey]);
+  const progress = useMemo(() => ({
+    done: doneIds, finish: finishBlock, storageKey, lessonId, questions: data?.questions ?? [], handIn: data?.handIn ?? null, open: !!data && data.open && !data.done, reload,
+  }), [doneIds, finishBlock, storageKey, lessonId, data, reload]);
   const blocksLeft = data ? bodyActivities(data.body).filter((b) => !doneIds.has(b)).length : 0;
   async function next() {
     if (!data) return;
@@ -109,13 +111,15 @@ export default function LessonPage() {
   // Hand in work: nothing handed in yet, or sent back, holds Next; work waiting
   // for a trainer lets them move on without finishing this lesson.
   const submission = data?.handIn?.submission ?? null;
-  const handInWaiting = !!data && data.kind === "ASSIGNMENT" && submission?.status === "SUBMITTED";
-  const handInNeeded = !!data && data.kind === "ASSIGNMENT" && data.open && !data.done && (!submission || submission.status === "RETURNED");
-  const kindWaiting = !!data && ((WORKED.has(data.kind) && hasWork && workedOut !== data.id) || data.kind === "ASSIGNMENT") && data.open && !data.done && (data.kind !== "ASSIGNMENT" || handInNeeded);
+  // A Hand in work lesson, or a page with Hand in work in it (D18).
+  const handIn = !!data?.handIn;
+  const handInWaiting = handIn && submission?.status === "SUBMITTED";
+  const handInNeeded = !!data && handIn && data.open && !data.done && (!submission || submission.status === "RETURNED");
+  const kindWaiting = !!data && data.open && !data.done && ((WORKED.has(data.kind) && hasWork && workedOut !== data.id) || handInNeeded);
   const waiting = kindWaiting || (!!data && data.open && !data.done && blocksLeft > 0);
-  const waitText = !data ? "" : !kindWaiting ? `Finish the ${blocksLeft === 1 ? "activity" : `${blocksLeft} activities`} in this lesson to carry on.` : data.kind === "SCENARIO" ? "Reach the best ending to carry on." : data.kind === "FLASHCARDS" ? "Get to know every card to carry on."
+  const waitText = !data ? "" : !kindWaiting || (data.kind === "READING" && blocksLeft > 0) ? `Finish the ${blocksLeft === 1 ? "activity" : `${blocksLeft} activities`} in this lesson to carry on.` : data.kind === "SCENARIO" ? "Reach the best ending to carry on." : data.kind === "FLASHCARDS" ? "Get to know every card to carry on."
     : data.kind === "CHECKLIST" ? "Tick off every item to carry on." : data.kind === "SORTING" ? "Get every one in the right group to carry on."
-    : data.kind === "EXPLORE" ? "Open every spot to carry on." : data.kind === "ASSIGNMENT" ? (submission?.status === "RETURNED" ? "Change your work and hand it in again to carry on." : "Hand in your work to carry on.")
+    : data.kind === "EXPLORE" ? "Open every spot to carry on." : handIn ? (submission?.status === "RETURNED" ? "Change your work and hand it in again to carry on." : "Hand in your work to carry on.")
     : "Work through the questions to carry on.";
   const label = !data ? "" : handInWaiting ? (data.next ? "Next lesson" : "Back to the course") : !data.open || data.done ? (data.next ? "Next lesson" : "Back to the course")
     : data.next ? (data.kind === "VIDEO" ? "Watched it, next" : data.kind === "AUDIO" ? "Listened, next" : "Done, next lesson") : "Done, finish up";

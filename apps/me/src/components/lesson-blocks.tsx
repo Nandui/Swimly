@@ -3,7 +3,9 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { ChevronDown, CircleCheck, FileText, Headphones, Pause, Play } from "lucide-react";
 import { CardDeck, Checklist, ScenarioPlayer, type Card, type Item, type Scene } from "@/components/lesson-kinds";
-import { EmbedFrame, ExplorePicture, SortBoard, type Embed, type Sorting, type Spot } from "@/components/lesson-kinds-more";
+import { EmbedFrame, ExplorePicture, HandInForm, SortBoard, type Embed, type HandInInfo, type Sorting, type Spot } from "@/components/lesson-kinds-more";
+import type { LearnerQuestion } from "@/components/question";
+import { QuizRunner } from "@/components/quiz";
 import { Button } from "@/components/shadcn/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
 import { Notice } from "@/components/ui";
@@ -14,12 +16,17 @@ import { apiFile } from "@/lib/api";
  *  reuse the lesson kinds' players; each tells the lesson page it is finished. */
 
 /** The lesson page's record of finished activities: which, and how to mark one. */
-export const ActivityProgress = createContext<{ done: ReadonlySet<string>; finish: (id: string) => void; storageKey: string } | null>(null);
+export const ActivityProgress = createContext<{
+  done: ReadonlySet<string>; finish: (id: string) => void; storageKey: string;
+  /** For a Practice quiz and Hand in work placed in the text (D18): the lesson's own. */
+  lessonId: string; questions: LearnerQuestion[]; handIn: HandInInfo | null; open: boolean; reload: () => void;
+} | null>(null);
 
 /** Activities in the text, in order: what must be finished before the lesson is. */
 export const bodyActivities = (body: unknown): string[] => {
-  const content = (body as { content?: { type?: string; attrs?: { id?: unknown } }[] } | null)?.content ?? [];
-  return content.filter((n) => n.type === "activity" && typeof n.attrs?.id === "string").map((n) => String(n.attrs!.id));
+  const content = (body as { content?: { type?: string; attrs?: { id?: unknown; kind?: unknown } }[] } | null)?.content ?? [];
+  // Hand in work holds Next through its own status, not here.
+  return content.filter((n) => n.type === "activity" && typeof n.attrs?.id === "string" && n.attrs.kind !== "ASSIGNMENT").map((n) => String(n.attrs!.id));
 };
 
 /** A course file fetched with the person's sign-in, as a local object URL. */
@@ -104,7 +111,7 @@ export function FileView({ assignmentId, fileId }: { assignmentId: string; fileI
 export const SlidesBlock = ({ embed }: { embed: Embed | null }) => embed ? <EmbedFrame embed={embed} title="Slides" /> : null;
 
 type ActivityData = { steps?: Scene[]; cards?: Card[]; items?: Item[]; groups?: Sorting["groups"]; sorts?: Sorting["sorts"]; spots?: Spot[] };
-const LABEL: Record<string, string> = { CHECKLIST: "Checklist", FLASHCARDS: "Flashcards", SORTING: "Sort into groups", SCENARIO: "Scenario", EXPLORE: "Explore a picture" };
+const LABEL: Record<string, string> = { CHECKLIST: "Checklist", FLASHCARDS: "Flashcards", SORTING: "Sort into groups", SCENARIO: "Scenario", EXPLORE: "Explore a picture", QUIZ: "Practice quiz", ASSIGNMENT: "Hand in work" };
 
 /** An activity in the text, played as its lesson kind is, marked done once finished. */
 export function ActivityBlock({ assignmentId, id, kind, fileId, data }: { assignmentId: string; id: string; kind: string; fileId: string | null; data: ActivityData | null }) {
@@ -121,6 +128,11 @@ export function ActivityBlock({ assignmentId, id, kind, fileId, data }: { assign
       {kind === "FLASHCARDS" ? <CardDeck assignmentId={assignmentId} cards={data?.cards ?? []} onFinished={finished} /> : null}
       {kind === "SORTING" ? <SortBoard sorting={{ groups: data?.groups ?? [], sorts: data?.sorts ?? [] }} onFinished={finished} /> : null}
       {kind === "SCENARIO" ? <ScenarioPlayer assignmentId={assignmentId} steps={data?.steps ?? []} onFinished={finished} /> : null}
+      {kind === "QUIZ" && progress ? <QuizRunner assignmentId={assignmentId} lessonId={progress.lessonId} questions={progress.questions} onFinished={finished} /> : null}
+      {kind === "ASSIGNMENT" && progress?.handIn ? (
+        <HandInForm key={`${progress.handIn.submission?.submittedAt ?? ""}-${progress.handIn.submission?.status ?? ""}`} assignmentId={assignmentId} lessonId={progress.lessonId}
+          info={progress.handIn} open={progress.open} onSaved={progress.reload} />
+      ) : null}
       {kind === "EXPLORE" && fileId ? <ExplorePicture assignmentId={assignmentId} fileId={fileId} title="Explore a picture" spots={data?.spots ?? []} onFinished={finished} /> : null}
     </section>
   );

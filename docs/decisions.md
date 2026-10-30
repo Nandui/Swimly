@@ -6,6 +6,17 @@ The decisions Turnfin 2.0 stands on, newest first. Each says what was decided, w
 
 ---
 
+### D18 · 30 October 2026 · One place to put content in a lesson
+
+A new lesson asks only for its name and opens as an empty page. **Add** is the only way to put anything in it: text, media (Video, Audio, Slides or interactive, a PDF or picture) and activities (Checklist, Flashcards, Sort into groups, Scenario, Explore a picture, Practice quiz, Hand in work). Authors no longer pick a lesson type.
+- An empty lesson shows these choices as tiles to start from. After that, they sit in the Add button.
+- The page is one flowing text, and Add places a block where the cursor is. Blocks move by dragging, or with Move up and Move down on each block.
+- **Practice quiz** (the section's questions) and **Hand in work** are blocks. A lesson holds at most one of each, and both count toward the six activities. Hand in work goes at the end, under the task written above it, and the lesson finishes when the trainer accepts the work, as before.
+- An older lesson becomes a page when it is opened in the builder: its main part (the video, recording, checklist and so on) becomes the first block, and the change sticks once the lesson is saved. Published versions stay exactly as learners have them.
+- Outlines in the builder and Turnfin Me show a lesson by its first activity, else its first media, else as reading.
+**Why:** after D16, authors had two places to put content in a lesson, the lesson-type picker and Add, for the same purpose.
+**Follows:** no database change: a page is a lesson of kind Reading whose text holds the blocks. Lesson types remain in the code so older lessons and published versions keep working. Replaces the D16 points marked below.
+
 ### D17 · 29 October 2026 · Plan (test): the rota started again, beside Rota
 
 **Plan (test)** is a new app in the Team group, on test at one site while **Rota** carries on unchanged. The owner felt Rota had grown too complicated and settled a smaller model, question by question: a **shift** (person, site, day, times, the department whose plan it is on) is built first; **duty blocks** fill it (Lifeguard, Swim teacher, Reception, Break), each from Plan's own list of duties with its department, qualification (warns, never blocks), colour, usual length and timed tasks. **What's on** is one list of **sessions** in Plan's own **areas** (one level of parts, lanes counted): each needs duties × count for its whole time, repeats on weekdays between two dates with skipped days, and can be changed or called off one day at a time. Sessions on the same area stack, so a booking lists only the staff it adds. A **gap** is a needed place nobody fills. Swim classes arrive from Swim school as sessions needing the one duty marked for classes, and Plan chooses their teachers through Swim school's record, superseding Rota for that. People can be marked **off** in Plan's own simple record; absences and returns to work stay in Rota. Warnings: qualification, overlap, off, class clash and breaks owed. Supervisors plan their own departments a week ahead and may borrow anyone at the site; Manage runs the day and keeps the setup. It is a floor guide: Timepoint stays the payroll record, with no import, change reasons or emails, and planners only see it (no Turnfin Me) while it is a test.
@@ -14,12 +25,12 @@ The decisions Turnfin 2.0 stands on, newest first. Each says what was decided, w
 
 ### D16 · 29 October 2026 · Several things in one lesson
 
-A training lesson can hold several things together, such as audio with a slide deck. Authors use **Add** in any lesson's text to place **media** (Audio, Slides or interactive, a PDF or picture shown in place) or **activities** (Checklist, Flashcards, Sort into groups, Scenario, Explore a picture). The lesson types stay as they are, and these are blocks on top.
+A training lesson can hold several things together, such as audio with a slide deck. Authors use **Add** in any lesson's text to place **media** (Audio, Slides or interactive, a PDF or picture shown in place) or **activities** (Checklist, Flashcards, Sort into groups, Scenario, Explore a picture). The lesson types stay as they are, and these are blocks on top. (Since D18 a new lesson is a page and Add is the only way in.)
 - Activities must all be finished before the learner can move on, under the same rules as their lesson types.
 - A lesson holds at most six activities. They sit only in the main text, never inside tabs, reveals or steps. Media can go anywhere.
 - Audio and slides play independently. Audio keeps playing, with a small bar pinned at the bottom once the player scrolls out of view, and can carry an optional transcript.
 - Halfway progress is kept on the learner's phone, as checklist ticks already are; finishing the lesson goes on their record.
-- Hand in work stays a lesson of its own, because a trainer checks it. A quiz is a knowledge check in the text.
+- Hand in work stays a lesson of its own, because a trainer checks it. A quiz is a knowledge check in the text. (Replaced by D18: both are blocks, one of each per lesson.)
 **Why:** staff learn from a briefing while looking at its slides, or check a poster while ticking off a list. One thing per lesson split these across screens.
 **Follows:** no database change: the blocks live in the lesson text (`cleanDoc` in `src/modules/training/shared/lessons.ts`), and published versions freeze them like everything else.
 

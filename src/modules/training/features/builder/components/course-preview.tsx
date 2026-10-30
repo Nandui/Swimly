@@ -5,7 +5,7 @@ import { Progress } from "@/components/shadcn/progress";
 import { Notice } from "@/components/ui-kit/notice";
 import { cn } from "@/lib/utils";
 import { LessonBody } from "@/modules/training/shared/components/lesson-body";
-import { embedFor, fileSrc, LESSON_KIND_META, lessonMinutes, lessonPlace, outlineLessons, videoFor, type Outline } from "@/modules/training/shared/lessons";
+import { embedFor, fileSrc, LESSON_KIND_META, lessonMinutes, lessonShows, lessonPlace, outlineLessons, videoFor, type Outline } from "@/modules/training/shared/lessons";
 import { blankedPrompt, paperSize, QUESTION_KIND_META, type Question } from "@/modules/training/shared/questions";
 import type { LessonData, LessonKind } from "@/modules/training/shared/lessons";
 import { heightOf, leftOf, topOf, widthOf } from "@/components/ui-kit/scale";
@@ -177,7 +177,9 @@ export function CoursePreview({ courseId, outline, lessonId, requiresSignoff }: 
         <LessonBody body={lesson.body} questions={outline.questions} activity={(node) => (
           <>
             <p className="text-xs font-semibold text-ui-muted-foreground">{LESSON_KIND_META[node.attrs?.kind as LessonKind]?.label ?? "Activity"} · learners finish it to move on</p>
-            <DataPreview kind={String(node.attrs?.kind ?? "")} data={(node.attrs?.data ?? null) as LessonData | null} fileId={(node.attrs?.fileId as string | null) ?? null} />
+            {node.attrs?.kind === "QUIZ"
+              ? <QuestionsPreview questions={outline.questions.filter((q) => q.sectionId === section.id)} />
+              : <DataPreview kind={String(node.attrs?.kind ?? "")} data={(node.attrs?.data ?? null) as LessonData | null} fileId={(node.attrs?.fileId as string | null) ?? null} />}
           </>
         )} />
         {lesson.kind === "QUIZ" ? (
@@ -205,7 +207,7 @@ export function CoursePreview({ courseId, outline, lessonId, requiresSignoff }: 
             <h3 className="text-xs font-semibold text-ui-muted-foreground">{s.title}</h3>
             <ol className="flex flex-col gap-1">
               {s.lessons.map((l) => {
-                const Icon = l.id === lesson.id ? CircleCheck : LESSON_KIND_META[l.kind].icon;
+                const Icon = l.id === lesson.id ? CircleCheck : LESSON_KIND_META[lessonShows(l)].icon;
                 return (
                   <li key={l.id}><Link href={href(l.id)} aria-current={l.id === lesson.id ? "page" : undefined} className={cn("tf-outline-row", l.id === lesson.id && "is-current")}>
                     <Icon aria-hidden="true" /><span className="min-w-0 flex-1 truncate">{l.title}</span>

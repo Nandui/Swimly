@@ -26,10 +26,10 @@ test("audio, slides, files and activities survive cleaning; unsafe ones don't", 
     { type: "fileView", attrs: { fileId: "pdf1" } },
     { type: "fileView", attrs: { fileId: "../etc" } },
     checklist("ck1", ["Lights on", "Doors open"]),
-    { type: "activity", attrs: { id: "bad", kind: "ASSIGNMENT", data: {} } },
+    { type: "activity", attrs: { id: "bad", kind: "READING", data: {} } },
   ));
   assert.ok(body);
-  assert.deepEqual(body.content?.map((n) => n.type), ["paragraph", "audioBlock", "slidesBlock", "fileView", "activity"], "unknown slides, a bad file id and Hand in work go");
+  assert.deepEqual(body.content?.map((n) => n.type), ["paragraph", "audioBlock", "slidesBlock", "fileView", "activity"], "unknown slides, a bad file id and a kind that is no activity go");
   assert.deepEqual(body.content?.[1].attrs, { fileId: "rec1", transcript: "Good morning team." });
   assert.deepEqual(docActivities(body).map((b) => [b.id, b.kind]), [["ck1", "CHECKLIST"]]);
   assert.ok(cleanDoc(doc({ type: "audioBlock", attrs: { fileId: "rec1", transcript: "" } })), "a recording on its own is not empty text");

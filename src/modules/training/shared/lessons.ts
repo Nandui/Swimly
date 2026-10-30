@@ -29,9 +29,12 @@ export const LESSON_KIND_META = {
 export const isLessonKind = (value: unknown): value is LessonKind => LESSON_KINDS.includes(value as LessonKind);
 
 /** Lesson kinds that also go inside any lesson's text as an activity block, so
- *  one lesson can hold several things (owner decision, 29 October 2026). Hand in
- *  work stays a lesson of its own; a Quiz is a knowledge check in the text. */
-export const ACTIVITY_BLOCK_KINDS = ["CHECKLIST", "FLASHCARDS", "SORTING", "SCENARIO", "EXPLORE"] as const;
+ *  one lesson can hold several things (owner decision D16, 29 October 2026).
+ *  Since D18 (30 October 2026) a new lesson is a page and Add is the only way
+ *  in: the Practice quiz and Hand in work are blocks too, one of each at most. */
+export const ACTIVITY_BLOCK_KINDS = ["CHECKLIST", "FLASHCARDS", "SORTING", "SCENARIO", "EXPLORE", "QUIZ", "ASSIGNMENT"] as const;
+/** Activities a lesson may hold only once: they belong to the lesson as a whole. */
+export const ONCE_PER_LESSON: readonly ActivityBlockKind[] = ["QUIZ", "ASSIGNMENT"];
 export type ActivityBlockKind = (typeof ACTIVITY_BLOCK_KINDS)[number];
 export const isActivityBlockKind = (value: unknown): value is ActivityBlockKind => ACTIVITY_BLOCK_KINDS.includes(value as ActivityBlockKind);
 /** Activities one lesson's text may hold, so a lesson can still be finished on a phone. */
@@ -446,7 +449,7 @@ export function publishProblems(outline: Outline): string[] {
   if (!lessons.length) problems.push("Add at least one lesson.");
   for (const section of outline.sections) if (!section.lessons.length) problems.push(`The section “${section.title}” has no lessons. Add one or remove the section.`);
   for (const lesson of lessons) {
-    if (lesson.kind === "READING" && !lesson.body) problems.push(`“${lesson.title}” has no text yet.`);
+    if (lesson.kind === "READING" && !lesson.body) problems.push(`“${lesson.title}” has nothing in it yet. Add text, media or an activity.`);
     if (lesson.kind === "VIDEO" && !videoFor(lesson.videoUrl)) problems.push(`“${lesson.title}” needs a video link starting https://.`);
     if (lesson.kind === "FILE" && !lesson.fileId) problems.push(`“${lesson.title}” needs a file.`);
     if (lesson.kind === "AUDIO" && !lesson.fileId) problems.push(`“${lesson.title}” needs a recording.`);
@@ -458,6 +461,12 @@ export function publishProblems(outline: Outline): string[] {
       const name = `${LESSON_KIND_META[b.kind].label}${same.length > 1 ? ` ${same.indexOf(b) + 1}` : ""} in ${lesson.title}`;
       problems.push(...activityProblems(b.kind, name, b.data, b.fileId));
     }
+    for (const kind of ONCE_PER_LESSON) {
+      if (activities.filter((b) => b.kind === kind).length > 1) problems.push(`“${lesson.title}” has more than one ${kind === "QUIZ" ? "practice quiz" : LESSON_KIND_META[kind].label.toLowerCase()}. A lesson can hold one: remove the others.`);
+    }
+    const handInBlock = activities.find((b) => b.kind === "ASSIGNMENT");
+    if (handInBlock && !docText(lesson.body).trim()) problems.push(`“${lesson.title}” needs the task written out above Hand in work: what to do and what to hand in.`);
+    if (handInBlock?.data?.handIn?.text === "off" && handInBlock.data.handIn.photo === "off") problems.push(`Hand in work in “${lesson.title}” must ask for a written answer, a photo or both.`);
     if (lesson.kind === "EMBED" && !embedFor(lesson.videoUrl)) problems.push(`“${lesson.title}” needs a link from ${EMBED_SOURCES}.`);
     if (lesson.kind === "ASSIGNMENT" && !lesson.body) problems.push(`“${lesson.title}” needs the task written out: what to do and what to hand in.`);
     if (lesson.kind === "ASSIGNMENT" && lesson.data?.handIn?.text === "off" && lesson.data.handIn.photo === "off") problems.push(`“${lesson.title}” must ask for a written answer, a photo or both.`);
@@ -467,7 +476,7 @@ export function publishProblems(outline: Outline): string[] {
     }
   }
   for (const section of outline.sections) {
-    const quiz = section.lessons.find((l) => l.kind === "QUIZ");
+    const quiz = section.lessons.find(lessonHasQuiz);
     if (quiz && !outline.questions.some((q) => q.sectionId === section.id)) problems.push(`The quiz “${quiz.title}” needs questions: add them to the section “${section.title}”.`);
   }
   outline.questions.forEach((q, i) => {
@@ -557,6 +566,46 @@ export function lessonPlace(outline: Outline, lessonId: string) {
   if (index < 0) return null;
   const section = outline.sections.find((s) => s.lessons.some((l) => l.id === lessonId))!;
   return { lesson: all[index], section, index, total: all.length, prev: all[index - 1]?.id ?? null, next: all[index + 1]?.id ?? null };
+}
+
+/** Whether a lesson practises its section's questions: a Quiz lesson, or a page with a Practice quiz. */
+export const lessonHasQuiz = (lesson: Pick<OutlineLesson, "kind" | "body">) => lesson.kind === "QUIZ" || docActivities(lesson.body).some((b) => b.kind === "QUIZ");
+
+/** What a learner hands in for this lesson: a Hand in work lesson or block. Null when there is none. */
+export function lessonHandIn(lesson: Pick<OutlineLesson, "kind" | "body" | "data">): HandInSettings | null {
+  const fallback: HandInSettings = { text: "required", photo: "optional", review: true };
+  if (lesson.kind === "ASSIGNMENT") return lesson.data?.handIn ?? fallback;
+  const block = docActivities(lesson.body).find((b) => b.kind === "ASSIGNMENT");
+  return block ? block.data?.handIn ?? fallback : null;
+}
+
+/** The kind a lesson shows as in outlines: its own, or for a page its first
+ *  activity, else its first media, else Reading. */
+export function lessonShows(lesson: Pick<OutlineLesson, "kind" | "body">): LessonKind {
+  if (lesson.kind !== "READING") return lesson.kind;
+  const [activity] = docActivities(lesson.body);
+  if (activity) return activity.kind;
+  const media = docBlocks(lesson.body).find((n) => n.type !== "activity")?.type;
+  if (media) return media === "audioBlock" ? "AUDIO" : media === "slidesBlock" ? "EMBED" : "FILE";
+  return docVideos(lesson.body).length ? "VIDEO" : "READING";
+}
+
+/** An older lesson's fixed main part as the first block of a page, so every
+ *  lesson can be built with Add (D18). Its text follows. Published versions
+ *  keep what they had; this only changes the draft the author opens. */
+export function pageFromLesson(lesson: Pick<OutlineLesson, "kind" | "body" | "videoUrl" | "fileId" | "data">, newId: () => string = () => crypto.randomUUID().replace(/-/g, "").slice(0, 8)): DocNode | null {
+  const rest = lesson.body?.content ?? [];
+  const page = (first: DocNode | null) => cleanDoc({ type: "doc", content: [...(first ? [first] : []), ...rest] });
+  switch (lesson.kind) {
+    case "READING": return lesson.body;
+    case "VIDEO": return page(videoFor(lesson.videoUrl) ? { type: "videoEmbed", attrs: { url: lesson.videoUrl } } : null);
+    case "FILE": return page(lesson.fileId ? { type: "fileView", attrs: { fileId: lesson.fileId } } : null);
+    case "AUDIO": return page(lesson.fileId ? { type: "audioBlock", attrs: { fileId: lesson.fileId, transcript: "" } } : null);
+    case "EMBED": return page(embedFor(lesson.videoUrl) ? { type: "slidesBlock", attrs: { url: lesson.videoUrl } } : null);
+    // The task is the text, so Hand in work goes after it.
+    case "ASSIGNMENT": return cleanDoc({ type: "doc", content: [...rest, { type: "activity", attrs: { id: newId(), kind: "ASSIGNMENT", data: lesson.data } }] });
+    default: return page({ type: "activity", attrs: { id: newId(), kind: lesson.kind, fileId: lesson.fileId, data: lesson.data } });
+  }
 }
 
 /** How long a lesson takes: the author's figure, or the text's reading time. */

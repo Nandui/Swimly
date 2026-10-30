@@ -5,7 +5,7 @@ import { logAudit } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 import { FILE_SELECT } from "@/modules/training/shared/files";
 import { grantQualification } from "@/modules/training/shared/grant";
-import { docChecks, embedFor, learnerDoc, learnerScenario, lessonFiles, lessonMinutes, lessonPlace, outlineLessons, readOutline, videoFor, type Outline } from "@/modules/training/shared/lessons";
+import { docChecks, embedFor, learnerDoc, learnerScenario, lessonFiles, lessonHandIn, lessonHasQuiz, lessonMinutes, lessonPlace, lessonShows, outlineLessons, readOutline, videoFor, type Outline } from "@/modules/training/shared/lessons";
 import { learnerQuestion, questionFiles, seeded } from "@/modules/training/shared/questions";
 import { offlineLabel, offlineTime } from "@/modules/training/features/me/server/offline";
 import { submissionFor } from "@/modules/training/features/me/server/hand-in";
@@ -100,7 +100,7 @@ export async function myCourse(userId: string, assignmentId: string) {
     whatsNew: version.number > 1 && version.changeNote ? { number: version.number, note: version.changeNote } : null,
     sections: version.outline.sections.map((s) => ({
       id: s.id, title: s.title,
-      lessons: s.lessons.map((l) => ({ id: l.id, kind: l.kind, title: l.title, minutes: lessonMinutes(l), done: done.has(l.id), locked: open && !!lockedBecause(found, l.id) })),
+      lessons: s.lessons.map((l) => ({ id: l.id, kind: lessonShows(l), title: l.title, minutes: lessonMinutes(l), done: done.has(l.id), locked: open && !!lockedBecause(found, l.id) })),
     })),
     ...progressOf(version.outline, done),
   };
@@ -136,10 +136,11 @@ export async function myLesson(userId: string, assignmentId: string, lessonId: s
     sorting: lesson.kind === "SORTING" ? { groups: lesson.data?.groups ?? [], sorts: lesson.data?.sorts ?? [] } : null,
     spots: lesson.kind === "EXPLORE" ? lesson.data?.spots ?? [] : null,
     embed: lesson.kind === "EMBED" ? embedFor(lesson.videoUrl) : null,
-    handIn: lesson.kind === "ASSIGNMENT" ? { settings: lesson.data?.handIn ?? null, submission: await submissionFor(prisma, assignmentId, lesson.id) } : null,
+    // Hand in work, as a lesson or a block (one per lesson).
+    handIn: lessonHandIn(lesson) ? { settings: lessonHandIn(lesson), submission: await submissionFor(prisma, assignmentId, lesson.id) } : null,
     locked: found.row.status === "ASSIGNED" ? lockedBecause(found, lesson.id) : null,
     video: video && { embed: video.embed, href: video.href, provider: video.provider }, file,
-    questions: lesson.kind === "QUIZ" ? quizQuestions(found.version!.outline, place.section.id, `${assignmentId}:${lesson.id}`) : null,
+    questions: lessonHasQuiz(lesson) ? quizQuestions(found.version!.outline, place.section.id, `${assignmentId}:${lesson.id}`) : null,
     section: place.section.title, index: place.index, total: place.total, prev: place.prev, next: place.next,
     done: found.done.has(lesson.id), open: found.row.status === "ASSIGNED",
   };
@@ -158,7 +159,7 @@ export async function completeLessonFor(me: { id: string; name: string }, assign
     if (found.done.has(lessonId)) return ok();
     const locked = lockedBecause(found, lessonId);
     if (locked) return fail(locked);
-    if (place.lesson.kind === "ASSIGNMENT") {
+    if (lessonHandIn(place.lesson)) {
       const sent = await submissionFor(tx, assignmentId, lessonId);
       if (!sent) return fail("Hand in your work first.");
       if (sent.status !== "ACCEPTED") return fail(sent.status === "RETURNED" ? "Your trainer sent this back. Change it and hand it in again." : "A trainer checks this first. The lesson is done once they accept it.");
