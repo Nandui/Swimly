@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.32.0 · 30 October 2026 · One place to put content in a lesson
+
+- **Training › Courses**: **Add a lesson** now asks only for its name. The lesson opens as an empty page with tiles to start from: Text, Video, Audio, Slides, a PDF or picture, or an activity. After that, everything goes in with **Add**, in any order.
+- **Practice quiz** and **Hand in work** are in Add too, one of each per lesson. Hand in work goes at the end, under the task you write above it.
+- **Move up** and **Move down** on each block put things in the order you want, as well as dragging.
+- **Lessons you made before** turn into a page when you open them: their video, recording, checklist or other main part becomes the first block. Save the lesson to keep it. Courses already published don't change for learners.
+- **The outline** shows each lesson by its main activity or media, in the builder and in Turnfin Me.
+
 ## 2.31.0 · 29 October 2026 · Plan (test): a simpler rota to try
 
 - **Plan (test)** is a new app beside **Rota**, on trial at one site. Rota carries on as it is.

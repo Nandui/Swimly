@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import {
   cleanAnswer, drawPaper, GRACE_SECONDS, isCorrect, learnerQuestion, markPaper, matchPartners, paperSize, rightAnswer, seeded, type Answer, type Question,
 } from "@/modules/training/shared/questions";
-import { docChecks, outlineLessons, readOutline } from "@/modules/training/shared/lessons";
+import { docChecks, lessonHasQuiz, outlineLessons, readOutline } from "@/modules/training/shared/lessons";
 import { finishAssignment, mine, type Db } from "@/modules/training/features/me/server/course";
 import { rememberExamMisses, rememberMiss } from "@/modules/training/features/me/server/refresher";
 
@@ -38,7 +38,7 @@ export async function checkQuizAnswer(userId: string, assignmentId: string, less
   // A Quiz lesson practises its own section's questions; any lesson may ask the
   // questions its knowledge checks name.
   const lesson = outline ? outlineLessons(outline).find((l) => l.id === lessonId) : null;
-  const section = lesson?.kind === "QUIZ" ? outline!.sections.find((s) => s.lessons.includes(lesson)) : null;
+  const section = lesson && lessonHasQuiz(lesson) ? outline!.sections.find((s) => s.lessons.includes(lesson)) : null;
   const question = lesson ? outline!.questions.find((q) => q.id === questionId && (q.sectionId === section?.id || docChecks(lesson.body).includes(q.id))) : null;
   if (!question) return null;
   const correct = isCorrect(question, cleanAnswer(question, raw));

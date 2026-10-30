@@ -5,31 +5,26 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import type { JSONContent } from "@tiptap/react";
-import { ArrowDown, ArrowUp, ChevronDown, CircleCheck, ClipboardCheck, Eye, FilePlus2, FileText, GraduationCap, Headphones, ListChecks, MessageSquare, Pencil, Plus, Sparkles, Trash2, Upload } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, CircleCheck, ClipboardCheck, Eye, FilePlus2, GraduationCap, ListChecks, MessageSquare, Pencil, Plus, Sparkles, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Skeleton } from "@/components/shadcn/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
-import { RadioGroup } from "@/components/shadcn/radio-group";
 import { ConfirmAction } from "@/components/confirm-action";
-import { Field, FormDialog } from "@/components/form-dialog";
-import { ChoiceRow } from "@/components/ui/choice-row";
-import { FileField } from "@/components/ui/file-field";
+import type { UploadedFile } from "@/modules/training/features/builder/components/upload";
+import { FormDialog } from "@/components/form-dialog";
 import { Input } from "@/components/ui/input";
-import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { toast } from "@/components/ui/toast";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Figure, Figures } from "@/components/ui-kit/figure";
 import { Notice } from "@/components/ui-kit/notice";
 import { cn } from "@/lib/utils";
 import { THEME } from "@/modules/training/shared/components/dialog-kit";
-import { EMBED_SOURCES, embedFor, frozenOutline, LESSON_KIND_META, LESSON_KINDS, lessonMinutes, publishProblems, videoFor, type LessonData, type LessonKind, type Outline, type OutlineLesson } from "@/modules/training/shared/lessons";
+import { frozenOutline, LESSON_KIND_META, lessonMinutes, lessonShows, pageFromLesson, publishProblems, type Outline, type OutlineLesson } from "@/modules/training/shared/lessons";
 import { blankedPrompt } from "@/modules/training/shared/questions";
 import {
   addLesson, addSection, moveLesson, moveSection, removeLesson, removeSection, renameSection, saveLesson, startFromOldText,
 } from "@/modules/training/features/builder/server/actions";
-import { uploadCourseFile, type UploadedFile } from "@/modules/training/features/builder/components/upload";
 import { ExamPanel, QuestionsPanel, type ExamReport } from "@/modules/training/features/builder/components/question-bank";
-import { CardsEditor, ChecklistEditor, ExploreEditor, HandInEditor, ScenarioEditor, SortingEditor } from "@/modules/training/features/builder/components/lesson-kinds";
 import { qualityTips } from "@/modules/training/shared/quality";
 import { PracticalPanel } from "@/modules/training/features/builder/components/practical";
 import type { ObservationStep } from "@/modules/training/shared/on-the-job";
@@ -91,7 +86,7 @@ export function CourseBuilder({ courseId, title, hasOldText, draft, files: initi
         <LessonEditor key={open.id} courseId={courseId} lesson={open} files={files} onUploaded={addFile} canEdit={canEdit}
           position={{ index: lessons.indexOf(open), total: lessons.length }}
           questions={draft.questions.map((q) => ({ id: q.id, prompt: q.kind === "FILL_BLANK" ? blankedPrompt(q.prompt) : q.prompt }))}
-          quiz={open.kind === "QUIZ" ? { sectionId: draft.sections.find((s) => s.lessons.includes(open))!.id, count: draft.questions.filter((q) => q.sectionId === draft.sections.find((s) => s.lessons.includes(open))!.id).length } : null} />
+          section={sectionOf(draft, open, courseId)} />
         <ReviewComments courseId={courseId} lessonId={open.id} comments={comments.filter((c) => c.lessonId === open.id)} canComment={canComment} />
         </div>
       ) : questionSection ? (
@@ -165,7 +160,7 @@ function OutlinePanel({ courseId, hasOldText, draft, selected, canEdit, comments
             </div>
             <ol className="flex flex-col gap-1">
               {section.lessons.map((lesson) => {
-                const Icon = LESSON_KIND_META[lesson.kind].icon;
+                const Icon = LESSON_KIND_META[lessonShows(lesson)].icon;
                 const current = lesson.id === selected;
                 return (
                   <li key={lesson.id}>
@@ -249,30 +244,23 @@ function SectionDialog({ courseId, section }: { courseId: string; section?: { id
   );
 }
 
+/** A lesson starts as an empty page with just its name; Add puts everything in (D18). */
 function AddLessonDialog({ sectionId, sectionTitle, onAdded }: { sectionId: string; sectionTitle: string; onAdded: (id: string) => void }) {
-  const [kind, setKind] = useState<LessonKind>("READING");
   return (
     <FormDialog
       portalClassName={THEME}
-      width="sm:max-w-3xl"
       trigger={<Button type="button" variant="ghost" className="min-h-11 justify-start text-ui-primary"><Plus aria-hidden="true" />Add a lesson</Button>}
       title={`Add a lesson to ${sectionTitle}`}
-      description="Each lesson is one screen in Turnfin Me. Keep it short: one idea, a few minutes."
+      description="Each lesson is one screen in Turnfin Me. Keep it short: one idea, a few minutes. You add text, media and activities once it opens."
       submitLabel="Add and open"
       successMessage="Lesson added"
       submit={async (formData) => {
-        const result = await addLesson(sectionId, kind, String(formData.get("title") ?? ""));
+        const result = await addLesson(sectionId, "READING", String(formData.get("title") ?? ""));
         if (result.ok) onAdded(result.id);
         return result.ok ? { ok: true } : result;
       }}
     >
       <Input id={`lesson-title-${sectionId}`} name="title" label="Lesson name" required minLength={2} maxLength={120} autoFocus />
-      <fieldset className="flex flex-col gap-2">
-        <legend className="mb-2 text-sm font-semibold">Kind of lesson</legend>
-        <RadioGroup value={kind} onValueChange={(value) => setKind(value as LessonKind)} className="grid gap-2 sm:grid-cols-2">
-          {LESSON_KINDS.map((k) => <ChoiceRow key={k} type="radio" value={k} id={`kind-${sectionId}-${k}`} title={LESSON_KIND_META[k].label} hint={LESSON_KIND_META[k].help} />)}
-        </RadioGroup>
-      </fieldset>
     </FormDialog>
   );
 }
@@ -346,11 +334,6 @@ function StartPanel({ courseId, title, draft, canEdit, changed, comments }: { co
 // One lesson
 // ---------------------------------------------------------------------------
 
-const BODY_LABEL: Record<LessonKind, string> = {
-  READING: "Lesson text", VIDEO: "Notes under it (optional)", FILE: "Notes under it (optional)", QUIZ: "Introduction (optional)",
-  SCENARIO: "Introduction (optional)", FLASHCARDS: "Introduction (optional)", CHECKLIST: "Introduction (optional)", AUDIO: "Transcript and notes",
-  SORTING: "Introduction (optional)", EXPLORE: "Introduction (optional)", ASSIGNMENT: "The task: what to do and what to hand in", EMBED: "Notes under it (optional)",
-};
 
 function VersionHistory({ versions }: { versions: VersionNote[] }) {
   return (
@@ -371,23 +354,27 @@ function VersionHistory({ versions }: { versions: VersionNote[] }) {
   );
 }
 
-function LessonEditor({ courseId, lesson, files, onUploaded, canEdit, position, quiz, questions }: {
+/** The open lesson's section, for its Practice quiz: how many questions, and where to edit them. */
+function sectionOf(draft: Outline, lesson: OutlineLesson, courseId: string) {
+  const id = draft.sections.find((s) => s.lessons.includes(lesson))!.id;
+  return { id, count: draft.questions.filter((q) => q.sectionId === id).length, href: questionsHref(courseId, id) };
+}
+
+function LessonEditor({ courseId, lesson, files, onUploaded, canEdit, position, section, questions }: {
   courseId: string; lesson: OutlineLesson; files: UploadedFile[]; onUploaded: (file: UploadedFile) => void; canEdit: boolean; position: { index: number; total: number };
   questions: { id: string; prompt: string }[];
-  /** A Quiz lesson: its section, and how many questions that section has. */
-  quiz: { sectionId: string; count: number } | null;
+  /** The lesson's section and how many questions it has, for a Practice quiz. */
+  section: { id: string; count: number; href: string };
 }) {
   const router = useRouter();
   const { act, pending } = useAct();
+  // Every lesson is a page built with Add (D18). An older lesson opens with its
+  // main part turned into the first block, and stays that way once saved.
+  const converted = lesson.kind !== "READING";
   const [title, setTitle] = useState(lesson.title);
-  const [body, setBody] = useState<JSONContent | null>(lesson.body as JSONContent | null);
-  const [videoUrl, setVideoUrl] = useState(lesson.videoUrl);
-  const [fileId, setFileId] = useState(lesson.fileId ?? "");
+  const [body, setBody] = useState<JSONContent | null>(() => pageFromLesson(lesson) as JSONContent | null);
   const [minutes, setMinutes] = useState(lesson.minutes ? String(lesson.minutes) : "");
-  const [data, setData] = useState<LessonData | null>(lesson.data);
-  const [dirty, setDirty] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [fileError, setFileError] = useState("");
+  const [dirty, setDirty] = useState(converted);
   const change = <T,>(set: (value: T) => void) => (value: T) => { set(value); setDirty(true); };
   useEffect(() => {
     if (!dirty) return;
@@ -395,28 +382,10 @@ function LessonEditor({ courseId, lesson, files, onUploaded, canEdit, position, 
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
   }, [dirty]);
-  const video = lesson.kind === "VIDEO" && videoUrl ? videoFor(videoUrl) : null;
-  const embed = lesson.kind === "EMBED" && videoUrl ? embedFor(videoUrl) : null;
-  const meta = LESSON_KIND_META[lesson.kind];
-  const Icon = meta.icon;
+  const Icon = LESSON_KIND_META[lessonShows({ kind: "READING", body: body as OutlineLesson["body"] })].icon;
   const save = () => act(() => saveLesson(lesson.id, {
-    title, body: body ? JSON.stringify(body) : null, videoUrl, fileId, minutes: minutes.trim() ? Number(minutes) : null, data: data ? JSON.stringify(data) : null,
+    title, body: body ? JSON.stringify(body) : null, videoUrl: "", fileId: "", minutes: minutes.trim() ? Number(minutes) : null, data: null, page: true,
   }), () => { setDirty(false); toast.success("Lesson saved"); });
-  const images = files.filter((f) => f.mime.startsWith("image/"));
-  const audio = lesson.kind === "AUDIO";
-  async function upload(file: File | undefined) {
-    if (!file) return;
-    setUploading(true); setFileError("");
-    try {
-      const added = await uploadCourseFile(courseId, file);
-      onUploaded(added);
-      setFileId(added.id); setDirty(true);
-    } catch (caught) {
-      setFileError((caught as Error).message);
-    } finally {
-      setUploading(false);
-    }
-  }
   return (
     <section className="flex min-w-0 flex-col" aria-labelledby="lesson-heading">
       <div className="pc-section-head">
@@ -428,91 +397,22 @@ function LessonEditor({ courseId, lesson, files, onUploaded, canEdit, position, 
           </div>
         ) : null}
       </div>
-      <p className="pc-section-note">{meta.label} · lesson {position.index + 1} of {position.total}</p>
+      <p className="pc-section-note">Lesson {position.index + 1} of {position.total}</p>
       <div className="rec-card gap-5">
 
       <Input id="lesson-title" label="Lesson name" value={title} onChange={change(setTitle)} required maxLength={120} disabled={!canEdit} />
 
-      {lesson.kind === "VIDEO" ? (
-        <div className="flex flex-col gap-3">
-          <Input id="lesson-video" label="Video link" type="url" value={videoUrl} onChange={change(setVideoUrl)} placeholder="https://www.youtube.com/watch?v=…" disabled={!canEdit}
-            description="YouTube and Vimeo play inside the lesson. Upload training videos to YouTube as Unlisted so only people with the link can find them." />
-          {video?.embed ? (
-            <div className="tf-video"><iframe src={video.embed} title={`Video: ${title}`} allow="encrypted-media; picture-in-picture; fullscreen" loading="lazy" referrerPolicy="strict-origin-when-cross-origin" /></div>
-          ) : video ? (
-            <Notice title={`Opens on ${video.provider}`}>This link opens in a new tab rather than playing inside the lesson.</Notice>
-          ) : videoUrl ? <Notice tone="warning" title="Use a link that starts https://" /> : null}
-        </div>
-      ) : null}
-
-      {lesson.kind === "EMBED" ? (
-        <div className="flex flex-col gap-3">
-          <Input id="lesson-embed" label="Link to the slides or activity" type="url" value={videoUrl} onChange={change(setVideoUrl)} placeholder="https://docs.google.com/presentation/d/…" disabled={!canEdit}
-            description={`Paste the share or publish link from ${EMBED_SOURCES}. Share it so anyone with the link can view it.`} />
-          {embed ? (
-            <div className="tf-embed"><iframe src={embed.src} title={`${embed.provider}: ${title}`} loading="lazy" allow="fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" /></div>
-          ) : videoUrl ? <Notice tone="warning" title="That link can’t be shown in a lesson">Use a link from {EMBED_SOURCES}.</Notice> : null}
-        </div>
-      ) : null}
-
-      {lesson.kind === "EXPLORE" ? (
-        <div className="flex flex-col gap-3">
-          <Field label="Picture" htmlFor="lesson-explore" hint="A clear photo or plan, such as the plant room or the first aid room.">
-            <NativeSelect id="lesson-explore" value={fileId} disabled={!canEdit} onChange={(event) => change(setFileId)(event.target.value)} className="min-h-11 w-full">
-              <NativeSelectOption value="">Choose a picture</NativeSelectOption>
-              {images.map((f) => <NativeSelectOption key={f.id} value={f.id}>{f.name}</NativeSelectOption>)}
-            </NativeSelect>
-          </Field>
-          {canEdit ? <FileField label="Or add a new picture" description="JPEG, PNG or WebP, up to 4 MB." accept="image/png,image/jpeg,image/webp" pending={uploading} onChange={(event) => upload(event.target.files?.[0])} error={fileError || undefined} /> : null}
-          <ExploreEditor imageId={fileId || null} data={data} onChange={change(setData)} disabled={!canEdit} />
-        </div>
-      ) : null}
-      {lesson.kind === "SORTING" ? <SortingEditor title={title} data={data} onChange={change(setData)} disabled={!canEdit} /> : null}
-      {lesson.kind === "ASSIGNMENT" ? <HandInEditor data={data} onChange={change(setData)} disabled={!canEdit} /> : null}
-
-      {lesson.kind === "FILE" ? (
-        <div className="flex flex-col gap-3">
-          <Field label="File" htmlFor="lesson-file" hint="The PDF or image learners open in this lesson.">
-            <NativeSelect id="lesson-file" value={fileId} disabled={!canEdit} onChange={(event) => change(setFileId)(event.target.value)} className="min-h-11 w-full">
-              <NativeSelectOption value="">Choose a file</NativeSelectOption>
-              {files.filter((f) => !f.mime.startsWith("audio/")).map((f) => <NativeSelectOption key={f.id} value={f.id}>{f.name}</NativeSelectOption>)}
-            </NativeSelect>
-          </Field>
-          {canEdit ? <FileField label="Or add a new file" description="PDF, JPEG, PNG or WebP, up to 4 MB." accept="application/pdf,image/png,image/jpeg,image/webp" pending={uploading} onChange={(event) => upload(event.target.files?.[0])} error={fileError || undefined} /> : null}
-          {fileId ? <Button asChild variant="outline" className="min-h-11 self-start"><a href={`/training/files/${fileId}`} target="_blank" rel="noopener noreferrer"><FileText aria-hidden="true" />Open the file</a></Button> : null}
-        </div>
-      ) : null}
-
-      {audio ? (
-        <div className="flex flex-col gap-3">
-          <Field label="Recording" htmlFor="lesson-audio" hint="What learners listen to, such as a briefing, a radio call or an alarm.">
-            <NativeSelect id="lesson-audio" value={fileId} disabled={!canEdit} onChange={(event) => change(setFileId)(event.target.value)} className="min-h-11 w-full">
-              <NativeSelectOption value="">Choose a recording</NativeSelectOption>
-              {files.filter((f) => f.mime.startsWith("audio/")).map((f) => <NativeSelectOption key={f.id} value={f.id}>{f.name}</NativeSelectOption>)}
-            </NativeSelect>
-          </Field>
-          {canEdit ? <FileField label="Or add a recording" description="MP3, M4A, OGG or WAV, up to 4 MB: about four minutes of speech." accept="audio/mpeg,audio/mp4,audio/x-m4a,audio/ogg,audio/wav,.mp3,.m4a,.ogg,.wav" pending={uploading} onChange={(event) => upload(event.target.files?.[0])} error={fileError || undefined} /> : null}
-          {fileId ? <audio controls preload="metadata" src={`/training/files/${fileId}`} className="w-full"><track kind="captions" /></audio> : null}
-          <p className="flex items-center gap-2 text-sm text-ui-muted-foreground"><Headphones aria-hidden="true" className="size-4" />Write what is said in the transcript below, for anyone who can&apos;t listen.</p>
-        </div>
-      ) : null}
-
-      {lesson.kind === "SCENARIO" ? <ScenarioEditor title={title} data={data} onChange={change(setData)} images={images} disabled={!canEdit} /> : null}
-      {lesson.kind === "FLASHCARDS" ? <CardsEditor data={data} onChange={change(setData)} images={images} disabled={!canEdit} /> : null}
-      {lesson.kind === "CHECKLIST" ? <ChecklistEditor data={data} onChange={change(setData)} disabled={!canEdit} /> : null}
-
-      {quiz ? (
-        <Notice tone={quiz.count ? "info" : "warning"} title={quiz.count ? `Practises the ${quiz.count} ${quiz.count === 1 ? "question" : "questions"} in this section` : "This section has no questions yet"}
-          actions={<Button asChild variant="outline" className="min-h-11"><Link href={questionsHref(courseId, quiz.sectionId)}><ListChecks aria-hidden="true" />{quiz.count ? "Edit the questions" : "Add questions"}</Link></Button>}>
-          Learners answer one question at a time and see straight away whether they got it right. It isn’t marked.
+      {converted && canEdit ? (
+        <Notice title={`The ${LESSON_KIND_META[lesson.kind].label.toLowerCase()} is now a block in this lesson`}>
+          Lessons are built with Add now. Move it, change it or add more around it, then save. Courses already published stay as they are.
         </Notice>
       ) : null}
 
-      <RichText id="lesson-body" label={BODY_LABEL[lesson.kind]} value={body} onChange={change(setBody)} courseId={courseId} disabled={!canEdit} onUploaded={onUploaded} files={files}
-        questions={lesson.kind === "READING" ? questions : undefined} />
+      <RichText id="lesson-body" label="What's in this lesson" value={body} onChange={change(setBody)} courseId={courseId} disabled={!canEdit} onUploaded={onUploaded} files={files}
+        questions={questions} section={section} />
 
       <Input id="lesson-minutes" label="Minutes it takes" type="number" inputMode="numeric" min={1} max={240} value={minutes} onChange={change(setMinutes)} optional disabled={!canEdit}
-        description={lesson.kind === "READING" ? "Leave it empty to use the reading time of the text." : "Shown to learners beside the lesson."} className="max-w-xs" />
+        description="Leave it empty to use the reading time of the text. Add time for recordings, videos and activities." className="max-w-xs" />
 
       {canEdit ? (
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-ui-border pt-4">

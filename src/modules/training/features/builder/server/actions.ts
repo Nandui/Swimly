@@ -10,7 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { filterAllows } from "@/lib/policy/engine";
 import { subjectsFor } from "@/lib/policy/session";
 import { requireTrainingActor, type TrainingActor } from "@/modules/training/shared/access";
-import { cleanDoc, cleanLessonData, EMBED_SOURCES, embedFor, isLessonKind, LESSON_KIND_META, lessonFiles, MAX_LESSONS, MAX_SECTIONS, frozenOutline, plainTextDoc, publishProblems, startingLessonData, videoFor, type LessonKind } from "@/modules/training/shared/lessons";
+import { cleanDoc, cleanLessonData, docActivities, docBlocks, EMBED_SOURCES, embedFor, isLessonKind, LESSON_KIND_META, lessonFiles, MAX_LESSONS, MAX_SECTIONS, frozenOutline, plainTextDoc, publishProblems, startingLessonData, videoFor, type LessonKind } from "@/modules/training/shared/lessons";
 import { refresh } from "@/modules/training/shared/writes";
 import { MAX_QUESTIONS, QUESTION_KINDS, normaliseQuestion, questionFiles, questionProblem, QUESTION_KIND_META, readExam, type ExamSettings, type QuestionOption } from "@/modules/training/shared/questions";
 import { loadDraft } from "@/modules/training/features/builder/server/draft";
@@ -168,6 +168,9 @@ const lessonSchema = z.object({
   minutes: z.number().int().min(1, "Minutes start at 1.").max(240, "Keep a lesson under 4 hours.").nullable(),
   /** A Scenario, Flashcards or Checklist lesson's own settings, as JSON text. */
   data: z.string().max(200_000, "This lesson is too long. Split it into two.").nullable().default(null),
+  /** Saved as a page: everything is in the text, put there with Add (D18). An
+   *  older lesson becomes a page the first time it is saved from the builder. */
+  page: z.boolean().default(false),
 });
 export type LessonInput = z.input<typeof lessonSchema>;
 
@@ -190,7 +193,7 @@ export async function saveLesson(lessonId: string, input: LessonInput): Promise<
     courseId = lesson.section.courseId;
     if (lesson.kind === "VIDEO" && videoUrl && !videoFor(videoUrl)) return fail("Use a video link that starts https://.");
     if (lesson.kind === "EMBED" && videoUrl && !embedFor(videoUrl)) return fail(`Use a link from ${EMBED_SOURCES}.`);
-    const kind = isLessonKind(lesson.kind) ? lesson.kind : "READING";
+    const kind = parsed.data.page ? "READING" : isLessonKind(lesson.kind) ? lesson.kind : "READING";
     const data = cleanLessonData(kind, rawData, undefined, true);
     const ownFile = kind === "FILE" || kind === "AUDIO" || kind === "EXPLORE" ? fileId : null;
     const files = lessonFiles({ fileId: ownFile, body, data });
@@ -204,8 +207,17 @@ export async function saveLesson(lessonId: string, input: LessonInput): Promise<
     if (kind === "EXPLORE" && ownFile && !(await tx.trainingFile.findFirst({ where: { id: ownFile, courseId, mime: { startsWith: "image/" } }, select: { id: true } }))) {
       return fail("Choose a picture (JPEG, PNG or WebP) to explore.");
     }
+    // Recordings and pictures to explore placed with Add must be the right kind of file too.
+    const recordings = docBlocks(body).filter((n) => n.type === "audioBlock").map((n) => String(n.attrs?.fileId));
+    const pictures = docActivities(body).filter((b) => b.kind === "EXPLORE" && b.fileId).map((b) => b.fileId!);
+    if (recordings.length && await tx.trainingFile.count({ where: { id: { in: [...new Set(recordings)] }, courseId, mime: { startsWith: "audio/" } } }) !== new Set(recordings).size) {
+      return fail("Choose a recording (MP3, M4A, OGG or WAV) for each Audio block.");
+    }
+    if (pictures.length && await tx.trainingFile.count({ where: { id: { in: [...new Set(pictures)] }, courseId, mime: { startsWith: "image/" } } }) !== new Set(pictures).size) {
+      return fail("Choose a picture (JPEG, PNG or WebP) for each Explore a picture.");
+    }
     await tx.trainingLesson.update({ where: { id: lessonId }, data: {
-      title, body: body ? (body as Prisma.InputJsonValue) : Prisma.DbNull,
+      kind, title, body: body ? (body as Prisma.InputJsonValue) : Prisma.DbNull,
       videoUrl: kind === "VIDEO" || kind === "EMBED" ? videoUrl : "", fileId: ownFile, minutes, data: data ? (data as unknown as Prisma.InputJsonValue) : Prisma.DbNull,
     } });
     await audit(who, tx, "update", courseId, `Saved the lesson ${title} in ${lesson.section.course.title}`);

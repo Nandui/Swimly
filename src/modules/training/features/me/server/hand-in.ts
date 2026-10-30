@@ -3,7 +3,7 @@ import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 import { fileProblem, safeFileName, storedMime } from "@/modules/training/shared/files";
-import { lessonPlace } from "@/modules/training/shared/lessons";
+import { lessonHandIn, lessonPlace } from "@/modules/training/shared/lessons";
 import { offlineLabel, offlineTime } from "@/modules/training/features/me/server/offline";
 import { lockedBecause, mine, type Db } from "@/modules/training/features/me/server/course";
 
@@ -39,10 +39,10 @@ export async function handInWork(me: { id: string; name: string }, assignmentId:
     if (!found) return fail("That training is not assigned to you.");
     if (found.row.status !== "ASSIGNED") return fail("This training is already finished.");
     const place = found.version ? lessonPlace(found.version.outline, lessonId) : null;
-    if (!found.version || !place || place.lesson.kind !== "ASSIGNMENT") return fail("That lesson is not in your course.");
+    const settings = place ? lessonHandIn(place.lesson) : null;
+    if (!found.version || !place || !settings) return fail("That lesson is not in your course.");
     const locked = lockedBecause(found, lessonId);
     if (locked) return fail(locked);
-    const settings = place.lesson.data?.handIn ?? { text: "required", photo: "optional", review: true };
     const before = await submissionFor(tx, assignmentId, lessonId);
     if (before?.status === "ACCEPTED") return fail("Your trainer has already accepted this.");
     const keep = work.keepFile && !work.file && !!before?.fileName;
