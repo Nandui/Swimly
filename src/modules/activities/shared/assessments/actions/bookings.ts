@@ -7,6 +7,7 @@ import type { Session } from "next-auth";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { HOLDS_A_PLACE, sessionLabel } from "@/modules/activities/shared/assessments/constants";
 import { ageRangeError } from "@/modules/activities/shared/assessments/age";
+import { currentProgrammeIds, programmeRuleError } from "@/modules/activities/shared/assessments/programme-rule";
 import { withAssessmentSeat } from "@/modules/activities/shared/assessments/seat";
 import { sendAssessmentConfirmation } from "@/modules/activities/shared/assessments/confirmation-email";
 import { logAudit } from "@/lib/audit";
@@ -58,6 +59,8 @@ export async function bookStudent(input: BookInput): Promise<ActionResult> {
     if (session.cancelledAt) return fail("That session was cancelled.");
     const tooYoungOrOld = ageRangeError(session, { name: fullName(student), dateOfBirth: student.dateOfBirth }, session.date);
     if (tooYoungOrOld) return fail(tooYoungOrOld);
+    const earlierProgramme = programmeRuleError(await readSharedCurriculum(tx), await currentProgrammeIds(tx, studentId), session.programmeId, fullName(student));
+    if (earlierProgramme) return fail(earlierProgramme);
 
     const existing = await tx.assessmentBooking.findUnique({
       where: { sessionId_studentId: { sessionId, studentId } }, select: { id: true, status: true },

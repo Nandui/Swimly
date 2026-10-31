@@ -240,6 +240,30 @@ test("a session's age range refuses a child outside it before registering them",
   assert.equal(await fixture.prisma.student.count(), initialChildren);
 });
 
+test("a child in a class cannot book an assessment for an earlier programme", async () => {
+  const source = await fixture.prisma.assessmentSession.findUniqueOrThrow({ where: { id: sessionId } });
+  const later = await fixture.prisma.programme.create({ data: { name: "Synthetic Later", clubId: "club_bishopstown", sortOrder: 5 } });
+  const level = await fixture.prisma.level.create({ data: { programmeId: later.id, name: "Synthetic Later Level" } });
+  const course = await fixture.prisma.course.create({ data: { clubId: "club_bishopstown", levelId: level.id, dayOfWeek: "MONDAY", startMinutes: 910, durationMinutes: 30 } });
+  const place = await fixture.prisma.enrolment.create({ data: { studentId: childId, courseId: course.id, levelId: level.id, programmeId: later.id, startedOn: new Date("2026-01-05T00:00:00Z") } });
+  const open = async (programmeId: string, startMinutes: number) => fixture.prisma.assessmentSession.create({ data: { programmeId, clubId: source.clubId,
+    date: source.date, startMinutes, capacity: 5, parentPublication: { create: { enabled: true } } } });
+  const earlier = await open(source.programmeId, 700), same = await open(later.id, 710);
+  const refusedFor = await (await call(`assessment-sessions/${earlier.id}/children`)).json();
+  assert.deepEqual(refusedFor.items.map((c: { childId: string; canBook: boolean }) => [c.childId, c.canBook]), [[childId, false]]);
+  assert.match(refusedFor.items[0].reason, /already in Synthetic Later, so they can only book an assessment for Synthetic Later/);
+  assert.equal((await call(`assessment-sessions/${earlier.id}/children`, "GET", undefined, "")).status, 401);
+  const refused = await call("assessment-bookings", "POST", { sessionId: earlier.id, childId }, parentToken, { "Idempotency-Key": "earlier-programme-001" });
+  assert.equal(refused.status, 409);
+  assert.equal((await refused.json()).error.code, "EARLIER_PROGRAMME");
+  assert.equal(await fixture.prisma.assessmentBooking.count({ where: { sessionId: earlier.id } }), 0);
+  assert.equal((await (await call(`assessment-sessions/${same.id}/children`)).json()).items[0].canBook, true);
+  const booked = await call("assessment-bookings", "POST", { sessionId: same.id, childId }, parentToken, { "Idempotency-Key": "same-programme-001" });
+  assert.equal(booked.status, 201, await booked.clone().text());
+  await fixture.prisma.enrolment.update({ where: { id: place.id }, data: { status: "WITHDRAWN", endedOn: new Date("2026-01-12T00:00:00Z") } });
+  assert.equal((await (await call(`assessment-sessions/${earlier.id}/children`)).json()).items[0].canBook, true);
+});
+
 test("competing final-seat requests yield one booking and transaction failure rolls back new child and access", async () => {
   const source = await fixture.prisma.assessmentSession.findUniqueOrThrow({ where: { id: sessionId } });
   const session = await fixture.prisma.assessmentSession.create({ data: { programmeId: source.programmeId, clubId: source.clubId, date: source.date, startMinutes: 600, capacity: 1,

@@ -1,6 +1,6 @@
 import { authenticateParent, logout, parentProfile, requestCode, requireFamily, updateProfile, verifyCode, withParent } from "@/modules/activities/shared/parents/auth";
 import { adultSwimmer, getCourse, holdCoursePlace, listCourseBookings, listCourses } from "@/modules/activities/features/parents/server/courses";
-import { bookAssessment, getPublicSession, listBookings, listSessions, listSites } from "@/modules/activities/features/parents/server/assessments";
+import { bookAssessment, getPublicSession, listBookings, listSessions, listSites, sessionChildren } from "@/modules/activities/features/parents/server/assessments";
 import { childDto, listChildren, requireChild } from "@/modules/activities/shared/parents/children";
 import { childProgress } from "@/modules/activities/features/parents/server/progress";
 import { childLessons } from "@/modules/activities/features/parents/server/lessons";
@@ -15,8 +15,9 @@ export async function handleParentRequest(request: Request, path: string[]) {
     const route = path.join("/"), method = request.method;
     const childRoute = /^children\/([A-Za-z0-9_-]+)(\/(?:progress|lessons|change-requests))?$/.exec(route);
     const sessionRoute = /^assessment-sessions\/([A-Za-z0-9_-]+)$/.exec(route);
+    const sessionChildrenRoute = /^assessment-sessions\/([A-Za-z0-9_-]+)\/children$/.exec(route);
     const courseRoute = /^courses\/([A-Za-z0-9_-]+)$/.exec(route);
-    const methods = childRoute?.[2] === "/change-requests" ? ["GET", "POST"] : childRoute || sessionRoute || courseRoute ? ["GET"] : ({ "auth/request-code": ["POST"], "auth/verify-code": ["POST"], "auth/logout": ["POST"],
+    const methods = childRoute?.[2] === "/change-requests" ? ["GET", "POST"] : childRoute || sessionRoute || sessionChildrenRoute || courseRoute ? ["GET"] : ({ "auth/request-code": ["POST"], "auth/verify-code": ["POST"], "auth/logout": ["POST"],
       me: ["GET", "PATCH"], children: ["GET"], sites: ["GET"], "access-requests": ["GET", "POST"], "assessment-sessions": ["GET"], "assessment-bookings": ["GET", "POST"],
       courses: ["GET"], "course-holds": ["POST"], "course-bookings": ["GET"] } as Record<string, string[]>)[route];
     if (!methods) notFound();
@@ -34,7 +35,7 @@ export async function handleParentRequest(request: Request, path: string[]) {
     if (route === "course-holds") return json(await holdCoursePlace(request, identity), 201);
     if (route === "course-bookings") return json(await listCourseBookings(identity));
     // Children, link requests, assessments and corrections are for family accounts only.
-    if (route === "access-requests" || route === "children" || route === "assessment-bookings" || childRoute) requireFamily(identity.account);
+    if (route === "access-requests" || route === "children" || route === "assessment-bookings" || childRoute || sessionChildrenRoute) requireFamily(identity.account);
     if (route === "access-requests" && method === "POST") {
       const result = await createAccessRequest(request, identity);
       return json(result, result.replayed ? 200 : 201);
@@ -52,6 +53,7 @@ export async function handleParentRequest(request: Request, path: string[]) {
       if (route === "access-requests") return json(await listAccessRequests(request, tx, account));
       if (route === "children") return json(await listChildren(tx, account));
       if (route === "assessment-bookings") return json(await listBookings(request, tx, account));
+      if (sessionChildrenRoute) return json(await sessionChildren(tx, account, parseInput(idSchema, sessionChildrenRoute[1])));
       if (childRoute) {
         const childId = parseInput(idSchema, childRoute[1]);
         if (childRoute[2] === "/change-requests") return json(await listChangeRequests(request, tx, account, childId));

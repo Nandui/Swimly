@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.32.1 · 31 October 2026 · Assessments only for the right programme
+
+- **Assessments** can no longer be booked for a programme a swimmer has already moved past. A swimmer in a Water Safety and Fun class can book Water Safety and Fun, Swimming Skills or Rookie Lifesaving. A swimmer in Swimming Skills can book Swimming Skills or Rookie Lifesaving. A swimmer in Rookie Lifesaving can book Rookie Lifesaving.
+- **Rookie Lifesaving** still needs the swimmer to fit the session's ages.
+- **At the desk**, Turnfin says why when it refuses a booking. **In the parents app**, a child who can't book that assessment is greyed out, with the reason beside their name.
+- **The order** follows the order of programmes on the Programmes page.
+
 ## 2.32.0 · 30 October 2026 · One place to put content in a lesson
 
 - **Training › Courses**: **Add a lesson** now asks only for its name. The lesson opens as an empty page with tiles to start from: Text, Video, Audio, Slides, a PDF or picture, or an activity. After that, everything goes in with **Add**, in any order.
