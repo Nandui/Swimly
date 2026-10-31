@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "LeisureWorld Aquatics Parent API",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "description": "Parent backend hosted by Swimly. No direct database or staff API access. Monday progress writes are released Tuesday 00:00 Europe/Dublin. All responses use Cache-Control: no-store. Bearer sessions last seven days. Class transfers and parent booking cancellation are outside v1."
   },
   "servers": [
@@ -991,6 +991,81 @@
                   "required": [
                     "items"
                   ]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error; see code. Responses are never cacheable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/assessment-sessions/{sessionId}/children": {
+      "get": {
+        "operationId": "listAssessmentSessionChildren",
+        "summary": "For one open assessment, which of this parent's linked children can book it, and why not. Booking checks the same rules again (age range, active swimmer, and no assessment for a programme earlier than the one the child is in now).",
+        "tags": [
+          "Assessments"
+        ],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]+$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "childId": {
+                            "type": "string"
+                          },
+                          "canBook": {
+                            "type": "boolean"
+                          },
+                          "reason": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "description": "Plain words to show the parent when canBook is false."
+                          }
+                        },
+                        "required": [
+                          "childId",
+                          "canBook",
+                          "reason"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
                 }
               }
             }

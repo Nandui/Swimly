@@ -20,8 +20,13 @@ function fixture() {
   let locked = false;
   let beforeTransaction: (() => void) | undefined;
   const curriculum = curriculumProgramme("programme", ["level"]);
+  const later = { ...curriculumProgramme("later", ["later-level"]), name: "Swimming Skills", sortOrder: 1 };
+  const enrolments: { programmeId: string }[] = [];
   const tx = {
-    programme: { findMany: async () => [curriculum] },
+    programme: { findMany: async () => [curriculum, later] },
+    enrolment: { findMany: async ({ where }: { where: { studentId: string; status: string } }) => {
+      assert.deepEqual(where, { studentId: "swimmer", status: "ACTIVE" }); return enrolments;
+    } },
     $queryRaw: async () => { locked = true; return []; },
     student: { findUnique: async ({ where }: { where: { id: string; clubId?: string } }) => where.id === student.id && (!where.clubId || where.clubId === student.clubId) ? student : null },
     assessmentSession: { findUnique: async ({ where }: { where: { clubId: string } }) => {
@@ -51,7 +56,7 @@ function fixture() {
     "@/lib/clubs/current": { currentClubId: async () => "club", currentClubIdIfAny: async () => "club" },
     "next/cache": { revalidatePath: () => {} },
   });
-  return { actions, session, student, booking, writes, audits,
+  return { actions, session, student, booking, writes, audits, enrolments,
     beforeTransaction: (run: () => void) => { beforeTransaction = run; },
   };
 }
@@ -111,4 +116,16 @@ test("a session with ages needs the swimmer's date of birth", async () => {
   const f = fixture(); f.session.maxAge = 8; f.student.dateOfBirth = null;
   assert.equal((await f.actions.bookStudent({ sessionId: "session", studentId: "swimmer" })).ok, false);
   assert.equal(f.writes.length, 0);
+});
+
+test("a swimmer in a class can be booked for their own or a later programme, never an earlier one", async () => {
+  const f = fixture(); f.enrolments.push({ programmeId: "later" });
+  const refused = await f.actions.bookStudent({ sessionId: "session", studentId: "swimmer" });
+  assert.equal(refused.ok, false);
+  assert.equal(refused.ok ? "" : refused.error, "Test Swimmer is already in Swimming Skills, so they can only book an assessment for Swimming Skills.");
+  assert.equal(f.writes.length, 0);
+  f.session.programmeId = "later";
+  assert.equal((await f.actions.bookStudent({ sessionId: "session", studentId: "swimmer" })).ok, true);
+  f.writes.length = 0; f.session.programmeId = "programme"; f.enrolments[0].programmeId = "programme";
+  assert.equal((await f.actions.bookStudent({ sessionId: "session", studentId: "swimmer" })).ok, true);
 });
