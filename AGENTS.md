@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 This is the one rulebook for anyone changing Turnfin: people and coding agents alike (Claude, ChatGPT, Codex or any other). `CLAUDE.md` only points here. If a request would break a rule here, stop and explain the conflict; the owner (Fernando) may approve an exception, recorded in [docs/decisions.md](docs/decisions.md).
 
-Turnfin is the staff product for LeisureWorld's leisure centres. Version 2.0 is a **platform of apps** with a **new design**, Turnfin Glass ([DESIGN.md](DESIGN.md)), evolved from the live app step by step. The repository is named Swimly; that is a working name only.
+Turnfin is the staff product for LeisureWorld's leisure centres. Version 2.0 is a **platform of apps** with a **new design**, Turnfin Sheet ([DESIGN.md](DESIGN.md)), evolved from the live app step by step. The repository is named Swimly; that is a working name only.
 
 ## Read first
 
@@ -155,7 +155,7 @@ Move code down a layer only when a second user actually exists. The platform kno
 
 ## Screens
 
-The look is set by [DESIGN.md](DESIGN.md): **Turnfin Glass**, approved on 25 October 2026 ([D13](docs/decisions.md)). Roadmap step 5 builds it part by part; until a part is built, the live app keeps the pre-2.0 theme, so add no new visual ideas, tokens or restyled components to old screens and never start the new look piecemeal. These rules hold for any design (owner rules, 20 October 2026):
+The look is set by [DESIGN.md](DESIGN.md): **Turnfin Sheet**, approved on 1 November 2026 ([D13](docs/decisions.md)). Roadmap step 5 builds it part by part; until a part is built, the live app keeps the pre-2.0 theme, so add no new visual ideas, tokens or restyled components to old screens and never start the new look piecemeal. These rules hold for any design (owner rules, 20 October 2026):
 
 - **Components from the kit.** Controls come from the shadcn components in `src/components/shadcn`; frame pieces in `src/components/ui-kit` and `src/components/ui` are built from them. Charts use the kit's chart (recharts), never hand-drawn `<svg>`. Icons are lucide-react.
 - **No arbitrary values.** Use the Tailwind scale, the named theme utilities in `src/app/shadcn.css` or a theme variable as `(--name)`. Variants such as `data-[state=open]:` are selectors and allowed.

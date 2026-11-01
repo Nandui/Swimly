@@ -66,9 +66,9 @@ Comments are not unified: task comments, course reviews, incident addenda and st
 
 ## 5. The 2.0 design
 
-The design is approved: **Turnfin Glass**, written in [../DESIGN.md](../DESIGN.md) (D13, 25 October 2026). The build order is in its "How it is built".
+The design is approved: **Turnfin Sheet**, written in [../DESIGN.md](../DESIGN.md) (D13, 1 November 2026). The build order is in its "How it is built".
 
-- The theme and UI kit are rebuilt first (tokens, the glass material, springs, frame, page shell, states), then Home and the app frame, then each app's screens, one app per pull request.
+- The theme and UI kit are rebuilt first (tokens, the ground and fin, the page sheet, frame, page shell, states), then Home and the app frame, then each app's screens, one app per pull request.
 - The frame is the one worked out from the job (D14, [architecture.md](architecture.md#the-frame)): Home as one list of work, a sidebar that drills in, no top tabs, one shell. Each app's pull request brings its `pages.ts` to five work pages plus Set up (Training and Tasks have the most to fold into filters).
 - The old look is removed as each part is replaced: no two designs in one screen, and none left at the end. Turnfin Me and the Academy booking site follow with their own pull requests.
 - The help centre's guides and screenshots are redone for the new screens.

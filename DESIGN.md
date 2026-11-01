@@ -1,141 +1,93 @@
 # Turnfin 2.0: the design
 
-**Status: approved.** The owner approved **Turnfin Glass** on 25 October 2026 ([decision D13](docs/decisions.md)). It is the one design for every screen in Turnfin, Turnfin Me and the Academy booking site. This file is its contract. Building it is roadmap step 5 ([docs/roadmap.md](docs/roadmap.md)); until each part is built, the live app keeps the pre-2.0 theme (see "Until it is built").
+**Status: approved.** The owner approved **Turnfin Sheet** on 1 November 2026 ([decision D13](docs/decisions.md)), replacing Turnfin Glass. It is the one design for every screen in Turnfin, Turnfin Me and the Academy booking site. This file is its contract. Building it is roadmap step 5 ([docs/roadmap.md](docs/roadmap.md)); until each part is built, the live app keeps the pre-2.0 theme (see "Until it is built").
 
-- **The approved screens:** the Turnfin Glass canvas, a clickable prototype of Home, Rota, Incidents and Swim school on desktop and phone (https://claude.ai/artifact/WZWn3yZv7Q7J6bg2wiaYDd).
-- **The design system:** every token, component (with live previews), pattern and accessibility pair, for people and coding agents to browse (https://claude.ai/artifact/6Ex4VcQGtPRBheTqVtgWWM).
-- When this file and either of those disagree, this file wins. Once step 5 moves the tokens into the theme file, the theme file holds the values and this file links to it.
+- **The approved screens:** row D of the design canvas: Home, Refunds with an open refund, the pool deck register, and Home on phone in light and dark (https://claude.ai/artifact/QmVi8aMcECQzQxNNrgEKe5). Row G holds the fin texture options; "Fin XL, white" was chosen.
+- When this file and the canvas disagree, this file wins. Once step 5 moves the tokens into the theme file, the theme file holds the values and this file links to it.
 
 ## The idea
 
-Turnfin Glass is Apple's Liquid Glass (iOS 26 and 27, macOS 26), done to Apple's Human Interface Guidelines and brought to a web app for leisure-centre staff. It should feel like Apple made it: calm, premium and alive.
+Turnfin sits on its own colour. The logo's blue is the ground, the work sits on one white page that floats on it, and the logo's fin, drawn oversized, gives the blue its texture. It should feel premium, calm enough for a whole shift, and unmistakably Turnfin.
 
-1. **Three layers.** A plain ground (`bg`), opaque content on it (`bg-2`: lists, cards, timelines), and a functional layer of Liquid Glass floating above (sidebar, toolbars, tab bar, sheets, menus, inspectors, banners). Glass never goes on content, and never on glass.
-2. **Colour means something.** Neutrals carry the interface. The fin blue (`accent`) means selected or the primary action. Orange means needs action, green means done or covered, red means now or serious. Nothing else is coloured.
-3. **The job first.** Each page leads with what needs the person, and lets them act on it in place, without leaving the page.
-4. **Show the change where it happens.** A resolved row ticks, a count rolls, the gap on the timeline turns green, a confirmation arrives with Undo.
-5. **Alive, not busy.** Everything moves on springs and settles like an object. The day moves with the clock. Nothing moves without a reason, and *Reduce motion* turns it all off.
-6. **Accessible always.** WCAG 2.2 AA in light and dark, 44px targets, a whole row as the target on the pool deck, and fallbacks for reduced transparency, increased contrast and forced colours.
+1. **Two layers.** The blue `ground` holds the frame: the sidebar, the greeting on phones and the tab bar. The white `sheet` holds the work. Content never sits on the ground, and the frame never sits on the sheet.
+2. **One colour, the logo's.** The ground and every primary action are `brand`. Nothing else is decorative colour.
+3. **Colour means something on the sheet.** Orange means needs action now, green means done, red means serious, the cyan dot means live. Everything else is neutral, with a word beside every colour.
+4. **The job first.** Each page leads with what needs the person, and lets them act on it in place.
+5. **Show the change where it happens.** A row ticks, a count changes, a tag turns green, and a confirmation offers Undo.
+6. **Accessible always.** WCAG 2.2 AA in light and dark, 44px targets, a whole row or tile as the target on the pool deck.
 
 ## Tokens
 
-The values below are the contract. Names are the CSS custom properties the theme will define (`--bg`, `--accent` and so on).
+The values below are the contract. Names are the CSS custom properties the theme will define (`--ground`, `--brand` and so on).
 
 ### Colour
 
 | Token | Light | Dark | Use |
 | --- | --- | --- | --- |
-| `bg` | #f2f2f7 | #000000 | The page ground. No wallpaper, gradient or pattern. |
-| `bg-2` | #ffffff | #1c1c1e | Content: grouped lists, cards, timelines, figure tiles. |
-| `bg-3` | #f5f5f8 | #242427 | Hover on a row or card that opens something. |
-| `fill` | rgba(120,120,128,.12) | rgba(120,120,128,.26) | Tinted buttons, switch track off, solid segmented controls. |
-| `fill-2` | rgba(120,120,128,.07) | rgba(120,120,128,.16) | Icon tiles, pressed rows, done blocks, loading placeholders. |
-| `label` | #000000 | #ffffff | Primary text, on any ground or glass. |
-| `label-2` | rgba(60,60,67,.76) | rgba(235,235,245,.64) | Secondary text (5.3:1 on white). Apple's 60% misses AA. |
-| `label-3` | rgba(60,60,67,.4) | rgba(235,235,245,.36) | Chevrons, disabled, decorative marks. Never text. |
-| `sep` | rgba(60,60,67,.14) | rgba(84,84,88,.55) | Row hairlines (inset to the text), timeline grid. |
-| `accent` | #1d5fd1 | #4f8fff | The fin blue: selection, links, text buttons, sidebar symbols. |
-| `accent-btn` | #1d5fd1 | #2a68e0 | The one prominent action and filled buttons; white text on it. |
-| `accent-hi` | #2a6be2 | #3a76ee | Hover of `accent-btn`. |
-| `accent-soft` | rgba(29,95,209,.11) | rgba(79,143,255,.18) | Selected list item, best suggestion, avatars, on-now blocks. |
-| `accent-ink` | #1747a3 | #a8c7ff | Text on `accent-soft`. |
-| `green` | #34c759 | #30d158 | Done as a large fill: switch on, rings, covered bar. Not text. |
-| `green-ink` | #1d7a3a | #5ce383 | Text that says done or covered. |
-| `green-mark` | #1d7a3a | #30d158 | Small done marks (ticks) and the Saved button. |
-| `on-green` | #ffffff | #000000 | Tick or text on `green-mark`. |
-| `green-soft` | rgba(52,199,89,.15) | rgba(48,209,88,.17) | Ground of done tags, covered blocks, resolved tiles. |
-| `orange` | #ff9500 | #ff9f0a | Needs action, as a bar or mark. Not text. |
-| `orange-ink` | #b05000 | #ffb340 | Text that says something needs action. |
-| `orange-soft` | rgba(255,149,0,.14) | rgba(255,159,10,.16) | Ground of needs-action tags, gaps, tiles. |
-| `red` | #ff3b30 | #ff453a | Now: the live dot and the now line. Not behind text. |
-| `red-ink` | #c9241a | #ff6b62 | Text for serious. |
-| `red-badge` | #d70015 | #d70015 | App badges and the now pill, behind white text. |
-| `red-soft` | rgba(255,59,48,.11) | rgba(255,69,58,.16) | Ground of serious tags and warnings. |
-| `scrim` | rgba(0,0,0,.18) | rgba(0,0,0,.42) | Behind a dialog. Sheets push the stage back instead. |
-| `stage` | #000000 | #000000 | Around the screen when a sheet pushes it back. |
+| `ground` | #0062b1 | #0062b1 | The logo's deep blue, behind the frame, at every width and in both themes. |
+| `on-ground` | #ffffff | #ffffff | Text, titles and symbols on the ground (6.2:1; 5.1:1 over the fin). |
+| `on-ground-2` | #ebf3fa | #ebf3fa | Secondary text on the ground: the date, "Apps", counts, the person's job (5.5:1; 4.5:1 over the fin). Never translucent white, which fails over the fin. |
+| `ground-fill` | rgba(255,255,255,.14) | rgba(255,255,255,.14) | The search field and hover on the ground. |
+| `sheet` | #ffffff | #0d151e | The page the work sits on. |
+| `surface` | #f4f7fa | #16202b | Figure tiles, the refund amount, empty register tiles. |
+| `label` | #101b27 | #eef3f8 | Primary text on the sheet. |
+| `label-2` | #52657a | #93a4b6 | Secondary text and a row's second line (6.0:1; 7.2:1). |
+| `label-3` | #9aa9b8 | #5d6e80 | Chevrons and decorative marks. Never text. |
+| `sep` | #e8eef4 | #1f2a36 | Hairlines between panes and rows. |
+| `brand` | #0062b1 | #0062b1 | The one prominent action per view, and selected counts. White text on it. |
+| `brand-ink` | #0062b1 | #7cc0ff | Links, text buttons, the date line, symbols on the sheet. |
+| `brand-soft` | #e8f1fa | #16273a | Icon tiles, avatars, the selected row, a marked register tile. `brand-ink` on it (5.4:1; 7.8:1). |
+| `neutral-soft` / `neutral-ink` | #eef3f8 / #3b5068 | #1a2532 / #c3cfdb | Tags that only say when: "Due 14:00", "Today" (7.4:1). |
+| `urgent-soft` / `urgent-ink` | #fff0e6 / #a8380a | #3a1d0e / #ffab78 | Needs action now: tags, the "Needs you" badge, a medical note (5.8:1; 8.3:1). |
+| `done-soft` / `done-ink` | #e6f4ea / #1d6b3a | #12301d / #6fd08f | Done, approved, covered (5.8:1). |
+| `serious-soft` / `serious-ink` | #fde8e7 / #b42318 | #3a1514 / #ff8a80 | Serious incidents, failures (5.6:1). |
+| `live` | #08819a | #3fd0e6 | The live dot beside a reading ("Live · in range"). A mark with a word, never alone (4.6:1). |
+| `scrim` | rgba(0,20,40,.32) | rgba(0,0,0,.5) | Behind a dialog. |
 
-### The material
+### The fin
 
-| Token | Light | Dark |
-| --- | --- | --- |
-| `glass-fill` (body) | rgba(255,255,255,.5) | rgba(42,42,46,.52) |
-| `glass-fill-hi` (pressed) | rgba(255,255,255,.72) | rgba(66,66,72,.7) |
-| `glass-spec` (top inner edge) | rgba(255,255,255,.96) | rgba(255,255,255,.36) |
-| `glass-spec-2` (bottom inner edge) | rgba(255,255,255,.5) | rgba(255,255,255,.1) |
-| `glass-glow` (inner light) | rgba(255,255,255,.42) | rgba(255,255,255,.05) |
-| `glass-shade` (inner lower shade) | rgba(0,0,0,.06) | rgba(0,0,0,.4) |
-| `glass-edge` (hairline) | rgba(0,0,0,.06) | rgba(255,255,255,.09) |
-| `glass-rim-a` / `glass-rim-b` (rim light) | #ffffff / rgba(255,255,255,.28) | rgba(255,255,255,.5) / rgba(255,255,255,.06) |
-| `glass-hi` (pointer light) | rgba(255,255,255,.7) | rgba(255,255,255,.16) |
-| `glass-sel` (selection droplet) | rgba(120,120,128,.16) | rgba(255,255,255,.13) |
-
-Glass is `glass-fill` over a backdrop blurred by 10px (`glass-blur`), saturated to 190% (`glass-saturate`) and lifted to 1.04 (`glass-brightness`). It also has:
-- inset light from `glass-spec`, `glass-spec-2`, `glass-glow` and `glass-shade`
-- a 1px rim gradient from `glass-rim-a` to `glass-rim-b`
-- `shadow-glass` beneath
-- a 220px radial `glass-hi` light that follows the pointer on desktop
-- lensing at its edges in Chromium: an SVG displacement map through `backdrop-filter: url()`, with three maps for bars, circles and panels.
-
-In Safari and Firefox lensing is left out by an `@supports` guard, and everything else stays.
+The ground carries one texture: the logo's fin, drawn as a white silhouette of the real logo file (`public/brand/turnfin.png`, used at full resolution so its edges stay sharp).
+- **Fin XL, white:** white at **10%**, masked by the logo's shape, oversized on purpose, with its tip pointing up into the blue.
+- **Desk and tablet:** about 1100px, its tip at the sidebar's right edge about halfway down, sweeping down and off the left edge behind the app list.
+- **Phone:** about 700px, its tip near the top right, sweeping behind the greeting.
+- One fin per screen, only on the ground, never on the sheet, never moving, and never coloured. Under *Increase contrast* it goes.
 
 ### Shadows
 
 | Token | Light | Dark |
 | --- | --- | --- |
-| `shadow-glass` | 0 12px 32px -14px rgba(0,0,0,.28), 0 2px 8px -2px rgba(0,0,0,.07) | 0 16px 36px -12px rgba(0,0,0,.75) |
-| `shadow-card` | 0 1px 2px rgba(0,0,0,.03) | none |
-| `shadow-prominent` | 0 10px 22px -10px rgba(29,95,209,.75) | 0 10px 22px -10px rgba(79,143,255,.75) |
+| `shadow-sheet` | 0 1px 2px rgba(0,30,60,.18), 0 18px 50px rgba(0,30,60,.28) | 0 18px 50px rgba(0,0,0,.45) |
+| `shadow-selected` | 0 2px 10px rgba(0,0,0,.15) | same |
+| `shadow-prominent` | 0 6px 16px rgba(0,98,177,.3) | same |
+| `shadow-float` | 0 2px 6px rgba(0,30,60,.1), 0 12px 32px rgba(0,30,60,.18) | 0 12px 32px rgba(0,0,0,.5) |
 
 ### Type
 
-One family, the Apple system font: `-apple-system, BlinkMacSystemFont, "SF Pro Text"` (SF Pro Display for titles), then **Inter** with optical sizes on Windows and Android, then `system-ui`. Numbers that line up or change are tabular.
+One family, **Manrope** (400 to 800), then `system-ui`. Numbers that line up or change are tabular. Titles are tight and heavy; body text is medium.
 
 | Style | Size / line | Weight | Use |
 | --- | --- | --- | --- |
-| `window-title` | 38 / 44, −0.022em | 700 | The H1 of a desktop page. |
-| `large-title` | 34 / 41, −0.022em | 700 | The H1 on phone and tablet; collapses into the bar on scroll. |
-| `title-1` | 28 / 34, −0.02em | 700 | A record's title in a detail pane or inspector. |
-| `title-2` | 22 / 28, −0.018em | 700 | Sheet and dialog titles. |
-| `title-3` | 20 / 25, −0.015em | 650 | Section headings. |
-| `headline` | 17 / 22 | 600 | The row that needs you; bar titles. |
-| `body` | 17 / 22 | 400 | Rows and text on phone and tablet. |
-| `body-desk` | 15 / 20 | 400 | Rows and text on desktop. |
-| `subheadline` | 15 / 20 | 500 | Subtitles; sidebar items at 14. |
-| `footnote` | 13 / 18 | 400 | A row's second line, hints, notifications. |
-| `caption` | 12 / 16 | 600 | Tags, menu section labels (tab bar labels at 10). |
-| `caption-2` | 11 / 13 | 550 | Timeline hours, the now pill. |
-| `figure` | 34 / 40, −0.03em | 700 | Figure tiles. |
+| `greeting` | 42 / 44, −0.035em | 800 | Home's "Good morning, Niamh" on desktop; 32 on phones. |
+| `title` | 34 / 38, −0.03em | 800 | A page's H1 on desktop and tablet; 30 in a list pane. |
+| `title-2` | 24 / 30, −0.025em | 800 | The app's name in the sidebar; a record's name in a detail pane. |
+| `section` | 18 / 24, −0.01em | 800 | Section headings ("Needs you"). |
+| `row` | 16 / 22, −0.01em | 700 | A row's first line. 17 on the pool deck. |
+| `body` | 15 / 22 | 500 | Text and details. |
+| `meta` | 13.5 / 18 | 500 | A row's second line, subtitles, hints. |
+| `nav` | 14.5 / 20 | 600 | Sidebar items; 800 when selected. |
+| `tag` | 12.5 / 16 | 800 | Tags and counts. |
+| `figure` | 34 / 38, −0.03em | 800 | Figure tiles; 44 for an amount being decided. |
+| `eyebrow` | 14 / 18 | 700 | The date and site line above a title, in `brand-ink`. |
 
 ### Space, size and radius
 
-- **Spacing:** `space-hair` 2, `space-1` 4, `space-2` 8, `space-3` 10, `space-4` 14, `space-5` 18, `space-6` 22, `space-7` 26, `space-8` 28 (px).
-- **Sizes:** `control-height` 44 (every target, at every width), `row-height` 58 (64 on the pool deck and in registers), `tabbar-height` 62, `sidebar-width` 250.
-- **Radii:** `radius-xs` 6 (now pill), `radius-sm` 9 (icon tiles, timeline blocks), `radius-md` 10 (sidebar items), `radius-lg` 14 (menu items, results), `radius-panel` 22 (sidebar, figure tiles; inspectors 24), `radius-card` 26 (content cards, glass menus and popovers), `radius-sheet` 50 (phone sheets, concentric with the 58px screen corner at an 8px inset), `radius-capsule` 999 (every glass bar, button, tag, segmented control and tab bar).
+- **Spacing:** 2, 4, 8, 10, 12, 16, 22, 26, 40, 48 (px). The sheet's padding is 40/48 on desktop, 28/30 on tablet, 22/16 on phones.
+- **Sizes:** `control-height` 44 (every target, at every width); rows 64 on desktop lists; register tiles at least 92 on the tablet; `sidebar-width` 248 (220 on tablet); the sheet is inset 10px from the window's top, right and bottom.
+- **Radii:** `radius-item` 11 (sidebar items, search), `radius-control` 12 (buttons; 15 on the pool deck), `radius-tile` 13 (icon tiles), `radius-row` 16 (rows and register tiles), `radius-card` 18 (figure tiles, the amount panel), `radius-sheet` 22 (the desktop sheet; 28 on the phone sheet's top corners), `radius-pill` 999 (tags, counts, the tab bar).
 
 ### Motion
 
-Everything that moves rides a spring, written as CSS `linear()` curves sampled from a damped spring:
-
-| Curve | Damping | Overshoot | Use |
-| --- | --- | --- | --- |
-| `--spring` | 0.72 | about 4% | sheets, inspectors, morphs, rings, number rolls |
-| `--bounce` | 0.5 | about 16% | droplets, presses, ticks, switches, the live banner |
-| `--smooth` | 1 | none | anything that must not overshoot |
-
-The exact `linear()` values (a damped spring sampled at 49 points, settling within the duration) are in the design system's `components/bundle.css`; step 5 copies them into the theme.
-
-Durations: `duration-press` 120ms, `duration-fade` 250ms, `duration-spring` 600ms, `duration-island` 700ms. `duration-banner` is 3200ms, how long a live banner stays expanded.
-
-The micro-interactions every screen uses:
-- **Press.** Glass controls grow to 1.08 and brighten to `glass-fill-hi`. Content buttons and rows dip to 0.94 or darken. Release springs back.
-- **Select.** The `glass-sel` droplet slides to the chosen tab or segment on `--bounce` and squishes as it lands (`scale` 1.16 by 0.84, then settle).
-- **Morph.** A menu or popover grows out of the button that opened it: width, height and radius on `--spring`, with the contents cross-fading through a 6px blur.
-- **Present.** Sheets rise on `--spring`, and the screen behind scales to 0.93, rounds to 40px and dims to 82%. Inspectors slide in from the right.
-- **Resolve.** A tick draws itself, a tile turns green, a count rolls in from above, a new block pops in, and a gap turns green.
-- **Live.** The now dot breathes, the now line and pill move with the clock, and "starts in 20 min" counts down.
-- **Scroll.** The large title collapses into the bar, the phone tab bar minimises beside its accessory, and a soft blur sits under every glass bar.
-
-Under *Reduce motion* every transition completes at once, and the state still changes.
+Calm and quick. Hover and press take 150ms (`ease-out`); a row eases 2px to the right on hover. Sheets, menus and the drill-in of the sidebar move on a gentle spring (about 4% overshoot, 450ms). A changed count rolls, a tick draws itself, a tag fades to its new colour. Nothing moves on its own except the live dot. Under *Reduce motion* every transition completes at once, and the state still changes.
 
 ## The frame and navigation
 
@@ -148,136 +100,100 @@ Turnfin is one frame holding apps ([PRODUCT.md](PRODUCT.md)). What it shows is w
 
 ### Desktop (1100px and wider)
 
-- **Sidebar.** Floating glass (`panel`), inset 10px from the window, `sidebar-width` wide, with `radius-panel` corners. It drills in:
-  - On Home: the fin (to Home), search, Home, an "Apps" heading, and the person's apps in group order. Symbols are `accent`, labels `subheadline` at 14px.
-  - In an app, the list slides across to "‹ Home", the app's name, and its pages. Set up sits last, after a separator.
-  - Each app or page may show a plain `label-2` count of what needs the person. No red badges in the sidebar.
-  - The open item has a `glass-sel` fill, and a hover droplet glides between rows.
-  - The person's initials, name and "job · site ⌄" sit at the foot and open the account menu.
-- **Toolbar.** Sticky and transparent, with glass controls floating in it:
-  - at most three glass groups of monochrome symbols, or a short label such as the site ("Riverside ⌄")
-  - the one prominent action, trailing. It may be the **+** `MorphMenu` that grows into "New".
-
-  A scroll-edge blur sits beneath the toolbar.
-- **Page.** The content column starts at 290px, with 28px on the right.
-  - The H1 (`window-title`) and a subtitle line that may hold an `accent` text menu ("Pool department ⌄"; "Riverside ⌄ · Friday 24 October").
+- **Sidebar,** on the ground, `sidebar-width` wide, with the fin behind it. It drills in:
+  - On Home: the logo in a white app-icon tile (34px, `radius-item`) with "Turnfin" beside it (to Home), the search field ("Search · Ctrl K"), Home, "Apps", and the person's apps in group order.
+  - In an app, the list slides across to "‹ Home", the app's name in `title-2`, and its pages. Set up sits last, after a hairline.
+  - The open item is a white pill with `brand-ink` text and `shadow-selected`. Its count sits in a `brand` pill. Other counts are plain `on-ground-2` numbers. No red badges.
+  - The person's initials in a white circle, their name and "job · site ▾" sit at the foot and open the account menu.
+- **Sheet,** the page: `sheet`, `radius-sheet`, `shadow-sheet`, inset 10px from the window.
+  - The header: the `eyebrow` line (date and site menu, "Saturday 1 November · Riverside ▾"), the H1, and a `meta` line that says what matters ("6 things need you today, 2 of them urgent"). The one prominent action sits at the trailing end of the header.
   - Then the page's content.
-- **Detail and quick actions** open in a glass `Inspector` from the right, or a morphing popover from the button.
-- **Confirmations** arrive as a glass notification at the top right, with Undo.
-- **Spotlight** opens from the sidebar's search field or Ctrl K. It finds pages, people and members the person may open.
+- **Detail** opens beside the list in the same sheet: a list pane (400px) and a detail pane, split by a hairline. Quick actions sit at the foot of the detail pane.
+- **Confirmations** happen in place (the tag turns, a line says what happens next, with Undo), and a notification at the top right when the result is elsewhere.
+- **Search** opens from the sidebar's field or Ctrl K, as a white panel over a `scrim`. It finds pages, people and members the person may open.
 
 ### Tablet and the pool deck (768px to 1099px)
 
-- The same sidebar, drilling in, with its labels always shown (no hover-only labels on touch). An instructor who holds only the pool deck sees its pages and nothing else.
-- Rows are 64px, and the whole row is the target. Every control takes a wet hand: no small controls, no hover-only actions, no swipe-only actions.
+- The same ground, fin and sidebar (220px), drilling in, with labels always shown. An instructor who holds only the pool deck sees its pages and nothing else.
+- Targets grow: sidebar items 52px, rows and tiles at least 64px (register tiles 92px), buttons 56px. No hover-only, swipe-only or small controls.
 - Detail opens in a sheet that rises to two thirds of the height.
 
 ### Phone (under 768px), including Turnfin Me
 
-- **Large title** (`large-title`) at the top of each page. On scroll it collapses into a glass navigation bar with the inline title centred. The bar has glass circles: back on the leading side; the site, account or a page's actions on the trailing side.
-- **Tab bar.** A glass capsule floats 20px from the sides and 24px above the bottom, clear of the home indicator. It holds up to four destinations (for Turnfin: Home, the open app, Apps; for a person with one app, its pages), plus search as a separate glass circle. Apps and an app's pages are lists that drill in, the same as the sidebar.
-  - The selected tab shows a filled symbol in `accent` on a droplet.
-  - Scrolling down minimises it to the current tab, and the accessory grows into a live strip ("Starfish, 17:00 · Up next"). Scrolling up restores it.
-- **Sheets.** Choices and small forms open in a glass `Sheet`, inset 8px, with `radius-sheet` corners and a grab handle. The page behind pushes back. Long forms use a full-height sheet with an opaque `bg`.
-- **Live banner.** Confirmations grow as a black `LiveBanner` at the top centre, then settle to a compact tick and time. Tapping it expands it again.
-- **Safe areas.** Content clears `env(safe-area-inset-*)`, and the page scrolls under the bars.
+- **The ground holds the top:** the logo tile and the person's avatar, then the `eyebrow` line, the greeting or title, and a `meta` line, all on the blue with the fin behind.
+- **The sheet rises** from below the header with `radius-sheet` 28 top corners, and scrolls under the tab bar. On scroll the header collapses to a slim bar on the ground with the title centred.
+- **Tab bar.** A white capsule (`shadow-float`) 18px from the sides and 28px above the bottom, clear of the home indicator. It holds Home, the open app and Apps (for a person with one app, its pages), and search as a separate white circle. The selected tab is a `brand` pill with white text. In dark, the capsule is #1a2532 with a #273546 edge.
+- **Choices and small forms** open in a bottom sheet on `sheet`, with a grab handle. Long forms are full-height.
+- **Safe areas.** Content clears `env(safe-area-inset-*)`.
 
 ## The page shell
 
-- Every page is one `PageShell` with one `PageHeader` holding its one H1, as now (AGENTS.md, "Screens"). Step 5 rebuilds both in this design: the header gains the subtitle menu, the large-title collapse on phones and the sticky glass toolbar on desktop.
+- Every page is one `PageShell` with one `PageHeader` holding its one H1, as now (AGENTS.md, "Screens"). Step 5 rebuilds both in this design: the header gains the eyebrow line, the meta line and the trailing action; on phones it moves onto the ground.
 - A page leads with what needs the person: a "Needs you" list, or the "Not covered yet" lane. Then what is happening now (figures, the day). Then the rest.
-- Sections are `title-3` headings above opaque grouped content, 26px apart. Cards and lists are `bg-2` with `radius-card` corners. Separators are inset hairlines; never boxes inside boxes.
-- A page that shows the day uses `DayTimeline`: Calendar-style blocks with a 3px leading bar, and the red now line and pill.
+- Lists are rows on the sheet itself, not boxed cards: each row is an icon tile (or avatar), two lines of text, a tag, and a chevron, with `radius-row` hover. Figures sit in `surface` tiles. Never boxes inside boxes.
+- A page that shows the day uses `DayTimeline`: blocks on the sheet, with the now line in `serious-ink`.
 
 ## Components
 
-These are the 2.0 kit, all shown live in the design system. Each rebuilds or replaces a piece of today's kit (`src/components/shadcn`, `src/components/ui-kit`). Radix behaviour stays where shadcn has it; the look changes. This contract approves the new components marked **new**.
+The 2.0 kit. Each rebuilds or replaces a piece of today's kit (`src/components/shadcn`, `src/components/ui-kit`). Radix behaviour stays where shadcn has it; the look changes. This contract approves the new components marked **new**.
 
 | Component | Replaces or restyles | Notes |
 | --- | --- | --- |
-| `GlassRoot`, `Glass` | **new** | The material and the lens filters; `GlassRoot` sets the pointer light. Kit only: pages never style glass themselves. |
-| `Button` (prominent, glass, bar, filled, tinted, plain, done) | `shadcn/button` | One prominent action per view. `bar` sits inside a glass group. |
-| `MorphMenu` | `shadcn/dropdown-menu`, `popover` | The menu grows out of its button. |
-| `SegmentedControl` (glass, solid) | `ui-kit/segmented-links`, `shadcn/tabs` | Two to five items; droplet. |
-| `Switch` | `shadcn/switch` | Green when on; the knob turns to glass while held. |
-| `Sidebar` | the module rail in `ModuleShell` | Desktop sidebar of apps; a symbol rail on tablet. |
-| `TabBar` | the phone bottom bar in `ModuleShell` | Minimises on scroll; accessory. |
-| `Toolbar`, `ToolbarGroup` | the frame's top row | Sticky; glass groups. |
-| `Spotlight` | `shadcn/command` and the search tool | Actions, apps, people. |
-| `List`, `ListRow` | `shadcn/item`, `ui-kit` rows | Inset grouped; tone, value, action, done. |
-| `Tag` | `ui-kit/tag` | Same `StatusMeta` map; the tones become orange, blue, green, red and grey. |
-| `Figure` | the `.pc-stats` tiles | Big tabular numbers. |
-| `DayTimeline` | `TimelineGrid` | Lanes, blocks, the now line. |
-| `ProgressRing`, `DoneMark` | `shadcn/progress` for sets of things | Registers, checks. |
-| `Avatar` | `shadcn/avatar` | Initials only. |
-| `Sheet` (with `Stage`) | `shadcn/sheet` | Glass, pushes the page back. |
-| `Inspector` | **new** | Desktop side panel. |
-| `Suggestion` | **new** | One person offered for a job, best first. |
-| `LiveBanner` | **new**, beside `shadcn/sonner` | Phone confirmations. Desktop notifications restyle Sonner as glass with Undo. |
-| Dialog, alert dialog, inputs, select, checkbox, radio, table, empty, skeleton, tooltip | the shadcn originals | Restyled to these tokens: opaque `bg-2` dialogs with `radius-card` corners, `fill` inputs at 44px, `radius-capsule` chips. |
+| `Ground` | **new** | The blue frame with the fin. Kit only: pages never draw the ground or the fin themselves. |
+| `PageSheet` | the page frame in `ModuleShell` | The white page on the ground. |
+| `Sidebar` | the module rail in `ModuleShell` | Drills in; white selected pill. |
+| `TabBar` | the phone bottom bar in `ModuleShell` | White capsule plus search circle. |
+| `Button` (prominent, soft, plain) | `shadcn/button` | One prominent `brand` action per view. Soft is `neutral-soft` with `brand-ink` text; plain is `brand-ink` text. |
+| `List`, `ListRow` | `shadcn/item`, `ui-kit` rows | Icon tile or avatar, two lines, tag, chevron. |
+| `IconTile` | **new** | 42px `brand-soft` tile with a Lucide symbol in `brand-ink`. |
+| `Tag` | `ui-kit/tag` | Same `StatusMeta` map; tones become neutral, urgent, done and serious. |
+| `Figure` | the `.pc-stats` tiles | Label, big number, one context line. |
+| `DetailPane` | **new** | The record beside its list on desktop. |
+| `RegisterTile`, `ProgressRing` | `shadcn/progress` for sets of things | Pool deck registers and checks. |
+| `Avatar` | `shadcn/avatar` | Initials only, `brand-soft` or white on the ground. |
+| `Search` | `shadcn/command` and the search tool | Pages, people, members. |
+| `Sheet` | `shadcn/sheet` | The phone bottom sheet and the tablet detail sheet. |
+| Dialog, alert dialog, inputs, select, checkbox, radio, switch, table, empty, skeleton, tooltip | the shadcn originals | Restyled to these tokens: `sheet` dialogs with `radius-card` corners, `surface` inputs at 44px, `radius-pill` chips, a `done-ink` switch when on. |
 
-Icons stay **Lucide** (lucide-react) at 1.9 stroke: 20px in rows, 24px in the tab bar, 18px in the sidebar. The selected tab uses a filled variant. No emoji.
+Icons stay **Lucide** (lucide-react) at 1.9 stroke: 20px in rows and tiles, 15 to 16px in the sidebar and search. No emoji.
 
 ## States
 
-- **Loading.** The frame, title and section headings show at once. Content areas show `fill-2` placeholder shapes the size of what is coming, with a gentle fade. No full-page spinners. A button that saves keeps its width and shows its pending label.
-- **Empty.** A symbol in a `fill-2` tile, one sentence saying what will appear here, and the action that adds the first item. An empty list of problems is good news: "Everything is covered" in green.
+- **Loading.** The ground, sidebar, title and section headings show at once. Content areas show `surface` placeholder shapes the size of what is coming, with a gentle fade. No full-page spinners. A button that saves keeps its width and shows its pending label.
+- **Empty.** An icon tile, one sentence saying what will appear here, and the action that adds the first item. An empty list of problems is good news: "Everything is covered", in `done-ink`.
 - **Error.** Say what failed and what to do, where it failed, with Try again; keep everything the person typed. A failed save keeps the change on screen, marked, until it is saved or undone.
-- **Saved.** The change shows where it happened first (tick, roll, colour), then the confirmation: a notification on desktop, a live banner on phones. Undo is offered in the row that changed for a few minutes. Messages are past tense and plain: "Morgan is covering Main Pool, 17:00 to 17:30".
+- **Saved.** The change shows where it happened first (the tag turns, the count changes, a tick), with a past-tense sentence and Undo ("Approved. Finance will pay it on Monday."). Undo stays for a few minutes.
 
 ## Forms and confirmation
 
-- Forms are inset grouped rows on `bg-2`.
-  - Labels sit above groups in `footnote` `label-2`. Fields are 44px or more, with 16px text on touch.
-  - Choices of two to five are a solid `SegmentedControl` or chips; longer lists open a menu.
-  - Switches apply at once. Time defaults to now.
-- On phones a form is a full-height sheet: a glass ✕ (Cancel) on the leading side, the title in the middle, and a prominent ✓ on the trailing side. The ✓ stays plain glass until the form can be sent. On desktop the same form is a page, or an inspector with Save at the foot.
-- Sending ends on a moment: the form fades behind a drawn tick, with the result and who has it ("Report sent · I-0414 · The duty manager has it"), plus a confirmation.
-- **Prefer undo to "Are you sure?".** Confirm only what cannot be undone (delete for good, send to a family, close a serious report). Use an alert dialog that names the thing and the consequence, with the destructive button in `red-ink`, worded as the action ("Delete report"), never "Yes".
-- A choice that alerts other people says so before sending, in a `red-soft` note: "Serious report. Sending it alerts the duty manager and the centre manager straight away".
+- Forms are rows on the sheet. Labels sit above fields in `meta` `label-2`. Fields are 44px or more on `surface`, with 16px text on touch. Choices of two to five are chips; longer lists open a menu. Switches apply at once. Time defaults to now.
+- On phones a form is a full-height sheet with Cancel leading, the title centred and a `brand` Done trailing, which stays disabled until the form can be sent. On desktop the same form is a page, or a detail pane with Save at the foot.
+- **Prefer undo to "Are you sure?".** Confirm only what cannot be undone (delete for good, send to a family, close a serious report). Use an alert dialog that names the thing and the consequence, with the destructive button in `serious-ink`, worded as the action ("Delete report"), never "Yes".
+- A choice that alerts other people says so before sending, in a `serious-soft` note: "Serious report. Sending it alerts the duty manager and the centre manager straight away".
 
 ## The pool deck
 
 The pool deck is used poolside on tablets, in wet hands, in bright light.
-- Tablet frame (above). Rows and registers are 64px, and the whole row is the target.
+- Tablet frame (above). The register is a two-column grid of tiles at least 92px tall, and the whole tile is the target.
 - The register pattern:
-  - a `ProgressRing`, the class and a live "On now · 20 min left"
-  - one tap marks a swimmer here, a second marks them away, with a word as well as a mark
-  - "All here" in the navigation bar
-  - the save button reads "4 still to mark" until everyone is marked, then "Save register", then "Saved" with a live banner.
-- Nothing depends on hover or fine pointing. Text is at least `body` (17px).
-- Keep medical notes off the register list; a swimmer's notes open on their own record for those whose job needs them ([docs/apps.md](docs/apps.md)).
+  - the class time as the eyebrow, "Stage 3 register" as the title, and a `ProgressRing` with "5 of 8 here"
+  - one tap marks a swimmer here (`brand` circle with a tick on a `brand-soft` tile), a second tap unmarks; an unmarked swimmer shows their initials in a dashed circle on `surface`, with a word as well as a mark
+  - "Everyone's here" (soft) and "Finish register" (prominent) at the foot.
+- Nothing depends on hover or fine pointing. Text is at least 16.5px.
+- Medical notes stay off the register list beyond a one-line flag that a note exists; the note itself opens on the swimmer's record for those whose job needs it ([docs/apps.md](docs/apps.md)).
 
 ## Turnfin Me
 
-Turnfin Me is the person's own app on their own phone, so it uses the phone frame only:
-- large titles and a glass tab bar
-- sheets for choices and forms
-- live banners for confirmations
-- the same tokens, its own copy of the kit (AGENTS.md, "Screens").
-
-If Turnfin Me becomes a native iPhone app, its confirmations become real Live Activities, and the design does not change.
+Turnfin Me is the person's own app on their own phone, so it uses the phone frame only: the greeting on the ground with the fin, the rising sheet, the white tab bar, bottom sheets for choices and forms, and the same tokens with its own copy of the kit (AGENTS.md, "Screens").
 
 ## Accessibility
 
-- **WCAG 2.2 AA in both themes.**
-  - Text 4.5:1, or 3:1 at 24px+ or bold 19px+. Marks and focus 3:1.
-  - The checked pairs are in the design system's Accessibility section.
-  - Apple's own secondary label, white on system green and white on system red miss AA; that is why `label-2` is 76%, and why `green-mark`, `on-green` and `red-badge` exist.
+- **WCAG 2.2 AA in both themes.** Text 4.5:1, or 3:1 at 24px+ or bold 19px+. Marks and focus 3:1. The ratios are beside each colour token above. On the ground, text is only `on-ground` or `on-ground-2`, which pass over the fin too.
 - **Not by colour alone:** every status has a word or symbol.
-- **Targets:** 44px at every width; whole rows on the pool deck.
-- **Focus:** a 2px `accent` ring with a 2px offset. Overlays trap focus, close with Esc and return focus to the control that opened them. Spotlight and lists work with the arrow keys and Enter.
-- **Roles:**
-  - switches are `role="switch"`
-  - segments are `aria-pressed` buttons
-  - the current page or tab has `aria-current`
-  - live banners and notifications are `role="status"` and read the whole sentence
-  - icon-only buttons are named.
-- **System settings:**
-  - *Reduce motion* ends animations at once.
-  - *Reduce transparency* makes glass opaque `bg-2`.
-  - *Increase contrast* outlines glass.
-  - *Forced colours* use system colours.
+- **Targets:** 44px at every width; whole tiles on the pool deck.
+- **Focus:** a 2px ring with a 2px offset, `brand` on the sheet and white on the ground. Overlays trap focus, close with Esc and return focus to the control that opened them. Search and lists work with the arrow keys and Enter.
+- **Roles:** the current page or tab has `aria-current`; register tiles are `aria-pressed` buttons; switches are `role="switch"`; notifications are `role="status"` and read the whole sentence; icon-only buttons are named; the fin and icon tiles are `aria-hidden`.
+- **System settings:** *Reduce motion* ends animations at once. *Increase contrast* removes the fin and adds a 1px edge to the sheet. *Forced colours* use system colours.
 
 ## Until it is built
 
@@ -289,25 +205,23 @@ If Turnfin Me becomes a native iPhone app, its confirmations become real Live Ac
 Roadmap step 5, in this order. Each part removes the old look it replaces.
 
 1. **The theme.**
-   - These tokens go into one theme file in `src/app/theme`, mapped into `src/app/shadcn.css`, in light and dark.
-   - The springs, the glass material and the lens filters go into the kit.
+   - These tokens go into one theme file in `src/app/theme`, mapped into `src/app/shadcn.css`, in light and dark. Manrope is loaded with `next/font`.
+   - The fin's mask uses the logo from `public/brand/turnfin.png`.
    - `poolside.css` and the `--pc-*` tokens go when nothing uses them.
-2. **The kit.**
-   - The components above, in `src/components/ui-kit`, built on the shadcn primitives.
-   - The lint rules (AGENTS.md, "Enforcement") follow the new kit: the pointer light is set on a ref by `GlassRoot`, not by a `style` attribute.
-3. **The frame.** `ModuleShell` becomes the sidebar, toolbar and tab bar frame. `PageShell` and `PageHeader` are rebuilt in this design.
+2. **The kit.** The components above, in `src/components/ui-kit`, built on the shadcn primitives. The lint rules (AGENTS.md, "Enforcement") follow the new kit.
+3. **The frame.** `ModuleShell` becomes `Ground`, `Sidebar`, `PageSheet` and `TabBar`. `PageShell` and `PageHeader` are rebuilt in this design.
 4. **Home and the app frame,** then each app, one pull request each, checked in the running app at phone, tablet and desktop widths in light and dark.
 5. **Turnfin Me and the Academy booking site,** with their own copies of the theme and kit.
 
 ## Screen checklist
 
 - [ ] One job, for one kind of person; what needs them comes first, with its action in place.
-- [ ] Ground `bg`, content `bg-2`, glass only on floating controls; no glass on glass.
-- [ ] One prominent action at most; other buttons are glass, tinted or plain.
-- [ ] Colour only for selected, needs action, done, now or serious, always with a word or symbol.
-- [ ] Type from the scale; numbers tabular; staff words, sentence case, no codes.
-- [ ] 44px targets (64px rows on the pool deck); focus visible; overlays trap and return focus.
-- [ ] Every change shows where it happens and is confirmed, with Undo where it can be undone.
+- [ ] The frame on the ground with the fin; the work on the sheet; nothing of either on the other.
+- [ ] One prominent `brand` action at most; other buttons soft or plain.
+- [ ] Colour only for needs action, done, serious and live, always with a word or symbol.
+- [ ] Type from the scale in Manrope; numbers tabular; staff words, sentence case, no codes.
+- [ ] 44px targets (whole tiles on the pool deck); focus visible; overlays trap and return focus.
+- [ ] Every change shows where it happens, with Undo where it can be undone.
 - [ ] Loading, empty, error and saved states designed.
-- [ ] Springs, not eases; nothing moves without a reason; *Reduce motion*, *Reduce transparency*, *Increase contrast* and forced colours checked.
+- [ ] *Reduce motion*, *Increase contrast* and forced colours checked.
 - [ ] Seen in the running app at phone, tablet and desktop widths, in light and dark, with synthetic data only.

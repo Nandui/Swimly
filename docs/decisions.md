@@ -12,11 +12,11 @@ Turnfin has one frame, and what it shows is worked out from the person's levels,
 **Why:** staff were lost between two levels of navigation, long app lists, apps that each behaved differently, and work hidden inside apps. Layouts per role would break "roles are data" and add a concept; working the frame out from levels adds none.
 **Follows:** PRODUCT sentence 3, "The frame" in [architecture.md](architecture.md#the-frame), "The frame and navigation" in [../DESIGN.md](../DESIGN.md), search in roadmap step 4, and the frame in step 5. The swim school's own nav, the instructor shell and the CCTV shell go.
 
-### D13 · 25 October 2026 · Turnfin Glass is the 2.0 design
+### D13 · 1 November 2026 · Turnfin Sheet is the 2.0 design
 
-The 2.0 design is **Turnfin Glass**: Apple's Liquid Glass and Human Interface Guidelines, brought to Turnfin's web app. A plain ground, opaque content, and glass only on the controls that float; colour only for selected, needs action, done, now and serious; springs and in-place feedback throughout. It was chosen from screenshot-checked, clickable mockups, after Poolside Clear refinements, editorial, colourful glass, Material 3 Expressive and Turnfin Live were tried.
-**Why:** staff need calm, legible screens that let them act where they are looking; it looks and feels premium enough to stand beside the apps people use every day.
-**Follows:** [../DESIGN.md](../DESIGN.md) is the contract (it replaces D9's placeholder). The design system (https://claude.ai/artifact/6Ex4VcQGtPRBheTqVtgWWM) shows it live; roadmap step 5 builds it.
+The 2.0 design is **Turnfin Sheet**: the logo's blue (#0062B1) as the ground, the work on one white page that floats on it, the logo's fin drawn oversized in white on the blue as its only texture, Manrope type, and colour on the page only for needs action, done, serious and live. It replaces Turnfin Glass, approved on 25 October 2026 and dropped on 28 October as confusing, not uniform, too like Apple, too grey and not a leisure centre. It was chosen from screenshot-checked mockups on the new frame (D14), after Depth, Pool tile, Pace clock and Night were tried (https://claude.ai/artifact/QmVi8aMcECQzQxNNrgEKe5).
+**Why:** a premium, modern look that is unmistakably Turnfin, with one colour that belongs to the brand, one consistent page for every app, and controls that are clearly controls.
+**Follows:** [../DESIGN.md](../DESIGN.md) is the contract; the canvas's row D shows the approved screens. Roadmap step 5 builds it. The Turnfin Glass design system artifact no longer describes the design.
 
 ### D12 · 24 October 2026 · Turnfin 2.0 begins
 
