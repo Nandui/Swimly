@@ -62,9 +62,25 @@ Every app has the same six parts, whatever its size.
 | **Own data** | `prisma/schema/<id>.prisma`, or its own database (Docs, HR) | its tables; other apps keep only its ids |
 | **Own tests** | beside the code | its rules, front door and events, with other apps faked |
 
-Each module folder also has a `README.md` for coders (features, front door, data, events, permissions, dependencies). Its page list, `features/workspace/pages.ts`, builds both its page bar and its starter page (`ModuleStart`).
+Each module folder also has a `README.md` for coders (features, front door, data, events, permissions, dependencies). Its page list, `features/workspace/pages.ts`, builds both its pages in the frame and its starter page (`ModuleStart`).
 
 **Groups** order Home, the app bar and the role editor, and never give access: Front of house, Poolside, Team, Managers, Back office (`MODULE_GROUPS` in `src/modules/registry.ts`). The app catalogue, with each app's levels, is in [apps.md](apps.md).
+
+## The frame
+
+**Planned (D14; search in roadmap step 4, the frame in step 5).** One frame for everyone, worked out on each request from the session: the person's levels at the working site, and the screen width. Nothing is stored per role or per person, and nothing names a role.
+
+| What | Worked out from |
+| --- | --- |
+| Home | the person's home items across their apps (`registerHomeCard`), oldest or most urgent first, each naming its app; then today's figures. Tapping an item opens its page in its app |
+| The app list | `modulesFor`: the apps the person holds a level in, in group and manifest order. Never ranked by use |
+| An app's pages | its `pages.ts`: at most five work pages, plus one **Set up** page shown only at Manage. Each page still opens with `screenPage(...)` |
+| Landing | exactly one app: the person lands on its first page, with no app list |
+| Width | desk and tablet: a sidebar that drills in (Home and the apps, or "‹ Home" and one app's pages). Phone: a tab bar (Home, the open app, Apps) and search |
+
+There is one shell: the swim school's own nav, the instructor shell and the CCTV shell are replaced by it. A test checks every `pages.ts` against the page limit.
+
+**Search** is a plug, `registerSearch`: each app says what it can be searched for (its pages, and records such as members), and answers only with what the person may open, showing the least that names the result. People come from the platform's directory. Results link to the record in its app, which checks permission again.
 
 ## How apps talk
 
@@ -89,6 +105,7 @@ An app must keep working when any other app is switched off: a missing front doo
 | `registerMemberDirectory`, `registerMemberHistory` | the swim school's member records, for Short courses to book people from |
 | `registerAreaRename` | renaming a site's area updates every app that stores area names |
 | `registerAppCourses` | the short courses the parent app offers |
+| `registerSearch` (planned, step 4) | what an app can be searched for, for the one search ([The frame](#the-frame)) |
 
 Every registration names its `app` (the manifest id), so a switched-off app's plugs answer "not available". A plug that fails is named on the page, never fatal. Other seams: **session hooks** (`src/modules/session-hooks.ts`, per-request work such as applying due scheduled unenrolments) and **links** by URL.
 

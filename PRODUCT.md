@@ -31,7 +31,7 @@ Turnfin Me, the parent app and the Academy booking site are **connected products
 
 1. **Apps.** Turnfin is a set of apps on one platform. Each app is one area of the business and keeps its own information to itself.
 2. **Jobs.** A person holds one or more jobs; a job is a role at the sites it covers. For each app a role has a level, such as None, Use or Manage, and each level includes the ones before it.
-3. **Home.** When you sign in you see Home for the job you are doing at your site: your apps, and everything waiting for you across them.
+3. **Home.** When you sign in you see Home for the job you are doing at your site: everything waiting for you across your apps. The frame around it shows only your apps, one at a time, worked out from your job and your screen.
 4. **Aimed at roles.** Inside an app, things can be aimed at roles: this document is for receptionists, that course is for instructors.
 5. **Connected products.** Your own records are in Turnfin Me on your phone; parents and the public use their own products; all of them reach Turnfin only through its APIs.
 

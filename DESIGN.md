@@ -139,18 +139,22 @@ Under *Reduce motion* every transition completes at once, and the state still ch
 
 ## The frame and navigation
 
-Turnfin is one frame holding apps ([PRODUCT.md](PRODUCT.md)). The frame changes with the width.
+Turnfin is one frame holding apps ([PRODUCT.md](PRODUCT.md)). What it shows is worked out from the person's levels and the width, never from a layout kept for each role ([D14](docs/decisions.md), [architecture.md](docs/architecture.md#the-frame)). These rules hold whatever the look:
+- **One level of navigation on screen.** The sidebar (or, on phones, the tab bar) is the only navigation. There are no top tabs and no page bars.
+- **Home is the work.** One "Needs you" list across apps, each item naming its app, then today. There is no separate "Today" entry.
+- **Only your apps, in a fixed order.** Never ranked by use, so shared desks and training screenshots stay right.
+- **Five pages and Set up.** An app shows at most five work pages, then Set up after a separator, at Manage only.
+- **One app, no list.** A person with exactly one app lands straight in it, and its pages are the navigation.
 
 ### Desktop (1100px and wider)
 
-- **Sidebar.** Floating glass (`panel`), inset 10px from the window, `sidebar-width` wide, with `radius-panel` corners.
-  - At the top, the fin links to Home.
-  - Then Home, an "Apps" heading, and the person's apps in the module bar's order. Symbols are `accent`, labels `subheadline` at 14px.
-  - Each app may show a plain `label-2` count of what needs the person. No red badges in the sidebar.
-  - The open app has a `glass-sel` fill, and a hover droplet glides between rows.
-  - The person's initials, name and "role · site" sit at the foot and open the account menu.
+- **Sidebar.** Floating glass (`panel`), inset 10px from the window, `sidebar-width` wide, with `radius-panel` corners. It drills in:
+  - On Home: the fin (to Home), search, Home, an "Apps" heading, and the person's apps in group order. Symbols are `accent`, labels `subheadline` at 14px.
+  - In an app, the list slides across to "‹ Home", the app's name, and its pages. Set up sits last, after a separator.
+  - Each app or page may show a plain `label-2` count of what needs the person. No red badges in the sidebar.
+  - The open item has a `glass-sel` fill, and a hover droplet glides between rows.
+  - The person's initials, name and "job · site ⌄" sit at the foot and open the account menu.
 - **Toolbar.** Sticky and transparent, with glass controls floating in it:
-  - the app's pages as a glass `SegmentedControl`, leading
   - at most three glass groups of monochrome symbols, or a short label such as the site ("Riverside ⌄")
   - the one prominent action, trailing. It may be the **+** `MorphMenu` that grows into "New".
 
@@ -160,18 +164,18 @@ Turnfin is one frame holding apps ([PRODUCT.md](PRODUCT.md)). The frame changes 
   - Then the page's content.
 - **Detail and quick actions** open in a glass `Inspector` from the right, or a morphing popover from the button.
 - **Confirmations** arrive as a glass notification at the top right, with Undo.
-- **Spotlight** opens from the toolbar's search button.
+- **Spotlight** opens from the sidebar's search field or Ctrl K. It finds pages, people and members the person may open.
 
 ### Tablet and the pool deck (768px to 1099px)
 
-- The sidebar becomes a glass rail of symbols, and its labels show on hover and focus. The app's pages sit in a glass segmented control at the top, centred.
+- The same sidebar, drilling in, with its labels always shown (no hover-only labels on touch). An instructor who holds only the pool deck sees its pages and nothing else.
 - Rows are 64px, and the whole row is the target. Every control takes a wet hand: no small controls, no hover-only actions, no swipe-only actions.
 - Detail opens in a sheet that rises to two thirds of the height.
 
 ### Phone (under 768px), including Turnfin Me
 
 - **Large title** (`large-title`) at the top of each page. On scroll it collapses into a glass navigation bar with the inline title centred. The bar has glass circles: back on the leading side; the site, account or a page's actions on the trailing side.
-- **Tab bar.** A glass capsule floats 20px from the sides and 24px above the bottom, clear of the home indicator. It holds up to four destinations (for Turnfin: Home, the open app or Today, Apps), plus search as a separate glass circle.
+- **Tab bar.** A glass capsule floats 20px from the sides and 24px above the bottom, clear of the home indicator. It holds up to four destinations (for Turnfin: Home, the open app, Apps; for a person with one app, its pages), plus search as a separate glass circle. Apps and an app's pages are lists that drill in, the same as the sidebar.
   - The selected tab shows a filled symbol in `accent` on a droplet.
   - Scrolling down minimises it to the current tab, and the accessory grows into a live strip ("Starfish, 17:00 · Up next"). Scrolling up restores it.
 - **Sheets.** Choices and small forms open in a glass `Sheet`, inset 8px, with `radius-sheet` corners and a grab handle. The page behind pushes back. Long forms use a full-height sheet with an opaque `bg`.

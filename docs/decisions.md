@@ -6,6 +6,12 @@ The decisions Turnfin 2.0 stands on, newest first. Each says what was decided, w
 
 ---
 
+### D14 · 1 November 2026 · The frame is worked out from the job
+
+Turnfin has one frame, and what it shows is worked out from the person's levels, working site and screen width, never from a layout kept for each role. Home is one list of the person's work across apps. The sidebar lists only the apps they hold a level in, in the same fixed order for everyone, and drills into one app's pages at a time; there are no top tabs. An app lists at most five work pages plus one **Set up** page, which only Manage sees. A person with exactly one app lands straight in it. One search finds pages, people and members. The decision was checked with a clickable wireframe (https://claude.ai/artifact/PqMC2ft4uxAh1siiMxsV9v).
+**Why:** staff were lost between two levels of navigation, long app lists, apps that each behaved differently, and work hidden inside apps. Layouts per role would break "roles are data" and add a concept; working the frame out from levels adds none.
+**Follows:** PRODUCT sentence 3, "The frame" in [architecture.md](architecture.md#the-frame), "The frame and navigation" in [../DESIGN.md](../DESIGN.md), search in roadmap step 4, and the frame in step 5. The swim school's own nav, the instructor shell and the CCTV shell go.
+
 ### D13 · 25 October 2026 · Turnfin Glass is the 2.0 design
 
 The 2.0 design is **Turnfin Glass**: Apple's Liquid Glass and Human Interface Guidelines, brought to Turnfin's web app. A plain ground, opaque content, and glass only on the controls that float; colour only for selected, needs action, done, now and serious; springs and in-place feedback throughout. It was chosen from screenshot-checked, clickable mockups, after Poolside Clear refinements, editorial, colourful glass, Material 3 Expressive and Turnfin Live were tried.

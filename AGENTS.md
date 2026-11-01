@@ -162,6 +162,7 @@ The look is set by [DESIGN.md](DESIGN.md): **Turnfin Glass**, approved on 25 Oct
 - **No inline styles.** No `style` attribute in any page or component (vendored shadcn source excepted). A size from data uses the scale helpers in `src/components/ui-kit/scale.ts`, a data attribute styled in CSS, or a kit component.
 - **No new colours.** Colours are defined only in the theme files (`src/app/theme`, `src/app/shadcn.css`); everything else uses their tokens.
 - **One page frame.** Every page's body is `<PageShell header={<PageHeader … />}>`, with its one H1 in the PageHeader.
+- **Pages fit the frame** ([D14](docs/decisions.md)). An app's `pages.ts` holds at most five work pages plus one Set up page, which only Manage opens. Never add top tabs, an app's own shell, or a layout for one role; the frame is worked out from levels and width ([architecture.md](docs/architecture.md#the-frame)).
 - A token or component that does not exist yet is the owner's call; ask, never invent one to get past lint.
 - Plain staff words on screen (PRODUCT.md), and every screen covers loading, empty, error and saved states.
 - Turnfin Me and the Academy booking site follow the same rules with their own copies of the kit and theme.
