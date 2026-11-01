@@ -6,6 +6,18 @@ The decisions Turnfin 2.0 stands on, newest first. Each says what was decided, w
 
 ---
 
+### D20 · 1 November 2026 · Turnfin Sheet replaces Turnfin Glass
+
+The 2.0 design is **Turnfin Sheet**: the logo's blue (#0062B1) as the ground, the work on one white page that floats on it, the logo's fin drawn oversized in white on the blue as its only texture, Manrope type, and colour on the page only for needs action, done, serious and live. It replaces Turnfin Glass (D13), which the owner found confusing, not uniform, too like Apple, too grey and not a leisure centre. It was chosen from screenshot-checked mockups on the new frame (D19), after Depth, Pool tile, Pace clock and Night were tried (https://claude.ai/artifact/QmVi8aMcECQzQxNNrgEKe5).
+**Why:** a premium, modern look that is unmistakably Turnfin, with one colour that belongs to the brand, one consistent page for every app, and controls that are clearly controls.
+**Follows:** [../DESIGN.md](../DESIGN.md) is the contract; the canvas's row D shows the approved screens. Roadmap step 5 re-themes the built Glass theme and kit to Sheet; the type and layout tokens of D15 keep their names. The Turnfin Glass design system artifact no longer describes the design.
+
+### D19 · 1 November 2026 · The frame is worked out from the job
+
+Turnfin has one frame, and what it shows is worked out from the person's levels, working site and screen width, never from a layout kept for each role. Home is one list of the person's work across apps. The sidebar lists only the apps they hold a level in, in the same fixed order for everyone, and drills into one app's pages at a time; there are no top tabs. An app lists at most five work pages plus one **Set up** page, which only Manage sees. A person with exactly one app lands straight in it. One search finds pages, people and members. The decision was checked with a clickable wireframe (https://claude.ai/artifact/PqMC2ft4uxAh1siiMxsV9v).
+**Why:** staff were lost between two levels of navigation, long app lists, apps that each behaved differently, and work hidden inside apps. Layouts per role would break "roles are data" and add a concept; working the frame out from levels adds none.
+**Follows:** PRODUCT sentence 3, "The frame" in [architecture.md](architecture.md#the-frame), "The frame and navigation" in [../DESIGN.md](../DESIGN.md), search in roadmap step 4, and the frame in step 5. The swim school's own nav, the instructor shell and the CCTV shell go.
+
 ### D18 · 30 October 2026 · One place to put content in a lesson
 
 A new lesson asks only for its name and opens as an empty page. **Add** is the only way to put anything in it: text, media (Video, Audio, Slides or interactive, a PDF or picture) and activities (Checklist, Flashcards, Sort into groups, Scenario, Explore a picture, Practice quiz, Hand in work). Authors no longer pick a lesson type.
@@ -47,7 +59,7 @@ The platform's **one file check** (`src/lib/files`, roadmap step 4) starts here.
 **Why:** a broken light or locker belongs neither in an incident's triage queue nor in a site's checks. Staff need one place to say what is broken, and managers need to see what still has to reach Trackplan. A copy of every app's file check would have been a seventh.
 **Follows:** [apps.md](apps.md#maintenance) and `src/modules/maintenance/README.md`. Later: urgent requests email the site's managers through the outbox, and an Incidents report of kind "Equipment or building" links to its maintenance request.
 
-### D13 · 25 October 2026 · Turnfin Glass is the 2.0 design
+### D13 · 25 October 2026 · Turnfin Glass was the 2.0 design (replaced by D20)
 
 The 2.0 design is **Turnfin Glass**: Apple's Liquid Glass and Human Interface Guidelines, brought to Turnfin's web app. A plain ground, opaque content, and glass only on the controls that float; colour only for selected, needs action, done, now and serious; springs and in-place feedback throughout. It was chosen from screenshot-checked, clickable mockups, after Poolside Clear refinements, editorial, colourful glass, Material 3 Expressive and Turnfin Live were tried.
 **Why:** staff need calm, legible screens that let them act where they are looking; it looks and feels premium enough to stand beside the apps people use every day.
