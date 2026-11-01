@@ -1,39 +1,53 @@
-/* Turnfin Glass, the 2.0 theme (DESIGN.md, decision D13): every token of the design, in light and
-   dark. This file holds the values; DESIGN.md says what each one is for. Colours use light-dark(),
-   so they follow `color-scheme` (the device, or the person's choice in `data-theme` on <html>,
-   globals.css). Shadows cannot, so their dark values sit under the dark selectors at the end.
-   shadcn's --ui-* names (shadcn.css) point here. Copied byte for byte into Turnfin Me and the Academy site
-   (scripts/lint/ui-rules.mjs). */
+/* Turnfin Sheet, the 2.0 theme (DESIGN.md, decision D20): every token of the design, in light and
+   dark. This file holds the values; DESIGN.md says what each one is for. The file keeps the name and
+   the token names it had under Turnfin Glass (D13) while step 5 re-themes the kit, so every screen
+   follows at once. Colours use light-dark(), so they follow `color-scheme` (the device, or the
+   person's choice in `data-theme` on <html>, globals.css). Shadows cannot, so their dark values sit
+   under the dark selectors at the end. shadcn's --ui-* names (shadcn.css) point here. Copied byte
+   for byte into Turnfin Me and the Academy site (scripts/lint/ui-rules.mjs). */
 :root {
-  /* Colour. Neutrals carry the interface; the fin blue means selected or the primary action;
-     orange needs action, green is done or covered, red is now or serious. */
-  --bg: light-dark(#f2f2f7, #000000);
-  --bg-2: light-dark(#ffffff, #1c1c1e);
-  --bg-3: light-dark(#f5f5f8, #242427);
-  --fill: light-dark(rgba(120, 120, 128, 0.12), rgba(120, 120, 128, 0.26));
-  --fill-2: light-dark(rgba(120, 120, 128, 0.07), rgba(120, 120, 128, 0.16));
-  --label: light-dark(#000000, #ffffff);
-  --label-2: light-dark(rgba(60, 60, 67, 0.76), rgba(235, 235, 245, 0.64));
-  --label-3: light-dark(rgba(60, 60, 67, 0.4), rgba(235, 235, 245, 0.36));
-  --sep: light-dark(rgba(60, 60, 67, 0.14), rgba(84, 84, 88, 0.55));
-  --accent: light-dark(#1d5fd1, #6aa4ff);
-  --accent-btn: light-dark(#1d5fd1, #2a68e0);
-  --accent-hi: light-dark(#2a6be2, #3a76ee);
-  --accent-soft: light-dark(rgba(29, 95, 209, 0.11), rgba(79, 143, 255, 0.18));
-  --accent-ink: light-dark(#1747a3, #a8c7ff);
-  --green: light-dark(#34c759, #30d158);
-  --green-ink: light-dark(#1b7537, #5ce383);
-  --green-mark: light-dark(#1d7a3a, #30d158);
+  /* The ground: the logo's deep blue behind the frame (sidebar, phone header, tab bar), the same in
+     both themes, with the fin as its only texture. Text on it is only on-ground or on-ground-2, which
+     keep 4.5:1 over the fin too. */
+  --ground: #0062b1;
+  --on-ground: #ffffff;
+  --on-ground-2: #ebf3fa;
+  --ground-fill: rgba(255, 255, 255, 0.14);
+  --fin-opacity: 0.1;
+  /* The sheet: the white page the work sits on, and the pale surface of tiles and cards on it. */
+  --sheet: light-dark(#ffffff, #0d151e);
+  --surface: light-dark(#f4f7fa, #16202b);
+
+  /* Colour on the sheet. Neutrals carry the interface; the logo blue means selected or the primary
+     action; orange needs action, green is done, red is serious, the cyan dot is live. */
+  --bg: var(--sheet);
+  --bg-2: var(--surface);
+  --bg-3: light-dark(#eef3f8, #1a2532);
+  --fill: light-dark(#e1e9f1, #243244);
+  --fill-2: light-dark(#e8eef4, #1f2a36);
+  --label: light-dark(#101b27, #eef3f8);
+  --label-2: light-dark(#52657a, #93a4b6);
+  --label-3: light-dark(#9aa9b8, #5d6e80);
+  --sep: light-dark(#e1e8ef, #1f2a36);
+  --accent: light-dark(#0062b1, #7cc0ff);
+  --accent-btn: #0062b1;
+  --accent-hi: light-dark(#00559a, #0a6fc4);
+  --accent-soft: light-dark(#e8f1fa, #16273a);
+  --accent-ink: light-dark(#0062b1, #7cc0ff);
+  --green: light-dark(#2fae5a, #30d158);
+  --green-ink: light-dark(#1d6b3a, #6fd08f);
+  --green-mark: light-dark(#1d6b3a, #30d158);
   --on-green: light-dark(#ffffff, #000000);
-  --green-soft: light-dark(rgba(52, 199, 89, 0.15), rgba(48, 209, 88, 0.17));
-  --orange: light-dark(#ff9500, #ff9f0a);
-  --orange-ink: light-dark(#a84c00, #ffb340);
-  --orange-soft: light-dark(rgba(255, 149, 0, 0.14), rgba(255, 159, 10, 0.16));
-  --red: light-dark(#ff3b30, #ff453a);
-  --red-ink: light-dark(#c22219, #ff6b62);
-  --red-badge: #d70015;
-  --red-soft: light-dark(rgba(255, 59, 48, 0.11), rgba(255, 69, 58, 0.16));
-  --scrim: light-dark(rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.42));
+  --green-soft: light-dark(#e6f4ea, #12301d);
+  --orange: light-dark(#e35a1c, #ff8a4c);
+  --orange-ink: light-dark(#a8380a, #ffab78);
+  --orange-soft: light-dark(#fff0e6, #3a1d0e);
+  --red: light-dark(#d92d20, #ff6b62);
+  --red-ink: light-dark(#b42318, #ff8a80);
+  --red-badge: #c41c14;
+  --red-soft: light-dark(#fde8e7, #3a1514);
+  --live: light-dark(#08819a, #3fd0e6);
+  --scrim: light-dark(rgba(0, 20, 40, 0.32), rgba(0, 0, 0, 0.5));
   --stage: #000000;
   /* Text on the filled accent button. */
   --on-accent: #ffffff;
@@ -54,39 +68,41 @@
   --docs-mark-orange: #fed7aa;
   --on-pastel: #172033;
 
+  /* The kit's floating controls (the toolbar's groups, segmented controls, menus) keep the glass
+     names but are opaque soft fills now: no blur, rim light or lens (Sheet has no glass). */
+  --glass-fill: light-dark(#eef3f8, #1a2532);
+  --glass-fill-hi: light-dark(#e1e9f1, #243244);
+  --glass-spec: transparent;
+  --glass-spec-2: transparent;
+  --glass-glow: transparent;
+  --glass-shade: transparent;
+  --glass-edge: light-dark(rgba(16, 27, 39, 0.06), rgba(255, 255, 255, 0.06));
+  --glass-rim-a: transparent;
+  --glass-rim-b: transparent;
+  --glass-hi: transparent;
+  --glass-sel: light-dark(#ffffff, #2a3a4d);
+  --glass-blur: 0px;
+  --glass-saturate: 100%;
+  --glass-brightness: 1;
+  --glass-press-scale: 1.02;
 
-  /* The material: Liquid Glass, for the functional layer only (the kit's Glass). */
-  --glass-fill: light-dark(rgba(255, 255, 255, 0.5), rgba(42, 42, 46, 0.52));
-  --glass-fill-hi: light-dark(rgba(255, 255, 255, 0.72), rgba(66, 66, 72, 0.7));
-  --glass-spec: light-dark(rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.36));
-  --glass-spec-2: light-dark(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.1));
-  --glass-glow: light-dark(rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.05));
-  --glass-shade: light-dark(rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.4));
-  --glass-edge: light-dark(rgba(0, 0, 0, 0.06), rgba(255, 255, 255, 0.09));
-  --glass-rim-a: light-dark(#ffffff, rgba(255, 255, 255, 0.5));
-  --glass-rim-b: light-dark(rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.06));
-  --glass-hi: light-dark(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.16));
-  --glass-sel: light-dark(rgba(120, 120, 128, 0.16), rgba(255, 255, 255, 0.13));
-  --glass-blur: 10px;
-  --glass-saturate: 190%;
-  --glass-brightness: 1.04;
-  --glass-press-scale: 1.08;
-
-  /* Shadows (light; dark at the end). Only glass casts a real shadow. */
-  --shadow-glass: 0 12px 32px -14px rgba(0, 0, 0, 0.28), 0 2px 8px -2px rgba(0, 0, 0, 0.07);
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.03);
-  --shadow-prominent: 0 10px 22px -10px rgba(29, 95, 209, 0.75);
-  /* Menus, toasts and the save bar: the glass shadow with a hairline edge. */
-  --shadow-overlay: var(--shadow-glass), 0 0 0 0.5px var(--sep);
+  /* Shadows (light; dark at the end). */
+  --shadow-sheet: 0 1px 2px rgba(0, 30, 60, 0.18), 0 18px 50px rgba(0, 30, 60, 0.28);
+  --shadow-selected: 0 2px 10px rgba(0, 0, 0, 0.15);
+  --shadow-float: 0 2px 6px rgba(0, 30, 60, 0.1), 0 12px 32px rgba(0, 30, 60, 0.18);
+  --shadow-glass: 0 1px 2px rgba(0, 30, 60, 0.06);
+  --shadow-card: none;
+  --shadow-prominent: 0 6px 16px rgba(0, 98, 177, 0.3);
+  /* Menus, toasts and the save bar: a floating shadow with a hairline edge. */
+  --shadow-overlay: var(--shadow-float), 0 0 0 0.5px var(--sep);
   /* The soft ring around a focused field. */
   --focus-halo: 0 0 0 4px var(--accent-soft);
 
-  /* Type: the Apple system font, then Inter with optical sizes (--font-inter, set by the root
-     layout) on Windows and Android. The scale is the text-* utilities below. */
-  --font-text: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-inter, Inter), system-ui, sans-serif;
-  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", var(--font-inter, Inter), system-ui, sans-serif;
-  /* The running sizes the kit's rules use (DESIGN.md, Type): caption; body-desk, which becomes
-     body on phones and tablets (below); title-3 for section titles; large-title; figure. */
+  /* Type: Manrope (--font-manrope, set by the root layout), then the system font. The scale is the
+     text-* utilities below. */
+  --font-text: var(--font-manrope, Manrope), system-ui, sans-serif;
+  --font-display: var(--font-manrope, Manrope), system-ui, sans-serif;
+  /* The running sizes the kit's rules use (DESIGN.md, Space, size and radius; D15). */
   --type-caption: 12px;
   --type-caption-leading: 16px;
   --type-body: 15px;
@@ -112,15 +128,15 @@
   --row-height: 58px;
   --row-height-deck: 64px;
   --tabbar-height: 62px;
-  --sidebar-width: 250px;
+  --sidebar-width: 248px;
   --radius-xs: 6px;
   --radius-sm: 9px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
+  --radius-md: 11px;
+  --radius-lg: 12px;
   --radius-panel: 22px;
-  --radius-inspector: 24px;
-  --radius-card: 26px;
-  --radius-sheet: 50px;
+  --radius-inspector: 22px;
+  --radius-card: 18px;
+  --radius-sheet: 28px;
   --radius-capsule: 999px;
   /* Layout limits (owner decision, 10 October 2026): overlays keep a 16px gutter; the narrowest
      column of a tile, card or wide-column grid; a side rail; a search field before it wraps; the
@@ -152,32 +168,32 @@
   :root { --type-body: 17px; --type-body-leading: 22px; }
 }
 
-/* Dark shadows: deeper, one layer, the prominent glow in the night blue. */
+/* Dark shadows: deeper, one layer. */
 html[data-theme="dark"] {
-  --shadow-glass: 0 16px 36px -12px rgba(0, 0, 0, 0.75);
-  --shadow-card: none;
-  --shadow-prominent: 0 10px 22px -10px rgba(79, 143, 255, 0.75);
+  --shadow-sheet: 0 18px 50px rgba(0, 0, 0, 0.45);
+  --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.5);
+  --shadow-glass: none;
 }
 @media (prefers-color-scheme: dark) {
   html:not([data-theme="light"]) {
-    --shadow-glass: 0 16px 36px -12px rgba(0, 0, 0, 0.75);
-    --shadow-card: none;
-    --shadow-prominent: 0 10px 22px -10px rgba(79, 143, 255, 0.75);
+    --shadow-sheet: 0 18px 50px rgba(0, 0, 0, 0.45);
+    --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.5);
+    --shadow-glass: none;
   }
 }
 
 /* The type scale (DESIGN.md, Type). Numbers that line up or change add tabular-nums. */
-@utility text-window-title { font-family: var(--font-display); font-size: 38px; line-height: 44px; font-weight: 700; letter-spacing: -0.022em; }
-@utility text-large-title { font-family: var(--font-display); font-size: 34px; line-height: 41px; font-weight: 700; letter-spacing: -0.022em; }
-@utility text-title-1 { font-family: var(--font-display); font-size: 28px; line-height: 34px; font-weight: 700; letter-spacing: -0.02em; }
-@utility text-title-2 { font-family: var(--font-display); font-size: 22px; line-height: 28px; font-weight: 700; letter-spacing: -0.018em; }
-@utility text-title-3 { font-family: var(--font-display); font-size: 20px; line-height: 25px; font-weight: 650; letter-spacing: -0.015em; }
-@utility text-headline { font-size: 17px; line-height: 22px; font-weight: 600; letter-spacing: -0.01em; }
+@utility text-window-title { font-family: var(--font-display); font-size: 38px; line-height: 44px; font-weight: 800; letter-spacing: -0.03em; }
+@utility text-large-title { font-family: var(--font-display); font-size: 34px; line-height: 41px; font-weight: 800; letter-spacing: -0.03em; }
+@utility text-title-1 { font-family: var(--font-display); font-size: 28px; line-height: 34px; font-weight: 800; letter-spacing: -0.025em; }
+@utility text-title-2 { font-family: var(--font-display); font-size: 22px; line-height: 28px; font-weight: 800; letter-spacing: -0.02em; }
+@utility text-title-3 { font-family: var(--font-display); font-size: 20px; line-height: 25px; font-weight: 800; letter-spacing: -0.015em; }
+@utility text-headline { font-size: 17px; line-height: 22px; font-weight: 700; letter-spacing: -0.01em; }
 @utility text-body { font-size: 17px; line-height: 22px; font-weight: 400; letter-spacing: -0.01em; }
 @utility text-body-desk { font-size: 15px; line-height: 20px; font-weight: 400; letter-spacing: -0.01em; }
 @utility text-subheadline { font-size: 15px; line-height: 20px; font-weight: 500; letter-spacing: -0.01em; }
 @utility text-footnote { font-size: 13px; line-height: 18px; font-weight: 400; letter-spacing: 0; }
 @utility text-caption { font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0; }
 @utility text-caption-2 { font-size: 11px; line-height: 13px; font-weight: 550; letter-spacing: 0; }
-@utility text-figure { font-family: var(--font-display); font-size: 34px; line-height: 40px; font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
-@utility text-figure-ring { font-family: var(--font-display); font-size: 30px; line-height: 34px; font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+@utility text-figure { font-family: var(--font-display); font-size: 34px; line-height: 40px; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+@utility text-figure-ring { font-family: var(--font-display); font-size: 30px; line-height: 34px; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }

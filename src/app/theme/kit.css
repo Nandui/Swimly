@@ -1,5 +1,5 @@
-/* Turnfin Glass, the 2.0 kit and frame (DESIGN.md): the material and the frame every app opens
-   in. Tokens only (the values are in glass.css), so this file holds no colour of its own. */
+/* The 2.0 kit and frame (DESIGN.md): Turnfin Sheet, re-theming the kit built for Turnfin Glass.
+   Tokens only (the values are in glass.css), so this file holds no colour of its own. */
 
 /* ── The ground rules: type, focus, fields, notices, toasts, rows, figure tiles, segments and the
    responsive helpers every screen relies on (moved here from the retired poolside.css). Kept first,
@@ -714,11 +714,35 @@ body.turnfin-app { background: var(--bg); }
 .turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-head'] { height: auto; text-align: left; color: var(--label); font-size: var(--type-body); line-height: var(--type-body-leading); font-weight: 400; }
 
 /* ── The frame (DESIGN.md, The frame and navigation): ModuleShell, and the pool deck's and Help's
-   own top bars. One ground, no rounded canvas: content sits on --bg and the functional layer
-   floats above it. Desktop (1100px and wider) has the floating glass sidebar of apps; tablet
-   (768px to 1099px) a glass rail of symbols; phones the glass tab bar. */
-.turnfin-app .tf-shell { min-height: 100dvh; background: var(--bg); }
-.turnfin-app .tf-frame { display: flex; flex-direction: column; min-width: 0; min-height: 100dvh; margin: 0 auto; padding: 0 var(--space-8) 48px; }
+   own top bars. The ground is the logo's blue with the fin behind the frame; the work sits on the
+   white sheet (the frame), inset 10px from the window on desktop and tablet and rising below the
+   toolbar on phones. Desktop (1100px and wider) has the sidebar of apps on the ground; tablet
+   (768px to 1099px) a rail of symbols; phones the white tab bar. */
+/* flow-root keeps the sheet's 10px margin inside the ground rather than collapsing through it. */
+.turnfin-app .tf-shell { position: relative; isolation: isolate; display: flow-root; min-height: 100dvh; background: var(--ground); }
+body.turnfin-app:has(> .tf-shell, > * > .tf-shell) { background: var(--ground); }
+/* The fin: the logo, white at --fin-opacity, oversized on purpose with its tip pointing up into the
+   blue, fixed so it stays behind the sidebar as the page scrolls. Never on the sheet. */
+.turnfin-app .tf-shell::before {
+  content: "";
+  position: fixed;
+  top: 120px;
+  left: -660px;
+  z-index: 0;
+  width: 1100px;
+  height: 1100px;
+  background: var(--on-ground);
+  opacity: var(--fin-opacity);
+  -webkit-mask: url("/brand/turnfin.png") center / contain no-repeat;
+  mask: url("/brand/turnfin.png") center / contain no-repeat;
+  rotate: -4deg;
+  pointer-events: none;
+}
+.turnfin-app .tf-frame { position: relative; z-index: 1; display: flex; flex-direction: column; min-width: 0; min-height: calc(100dvh - 20px); margin: 10px; padding: 0 var(--space-8) 48px; border-radius: var(--radius-panel); background: var(--sheet); box-shadow: var(--shadow-sheet); }
+@media (prefers-contrast: more) {
+  .turnfin-app .tf-shell::before { display: none; }
+  .turnfin-app .tf-frame { box-shadow: 0 0 0 1px var(--label-2); }
+}
 .turnfin-app .tf-main { flex: 1 1 auto; min-width: 0; outline: none; }
 
 /* The toolbar: sticky and transparent, glass controls floating in it, a soft blur beneath. */
@@ -726,9 +750,9 @@ body.turnfin-app { background: var(--bg); }
 .turnfin-app .tf-top::before {
   content: "";
   position: absolute;
-  inset: 0 calc(-1 * var(--space-8)) calc(-1 * var(--space-4));
+  inset: 0 calc(-1 * var(--tf-sheet-pad, var(--space-8))) calc(-1 * var(--space-4));
   z-index: -1;
-  background: linear-gradient(var(--bg) 40%, transparent);
+  background: linear-gradient(var(--sheet) 40%, transparent);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
   -webkit-mask: linear-gradient(black 55%, transparent);
@@ -793,31 +817,40 @@ body.turnfin-app { background: var(--bg); }
 
 /* The page header (DESIGN.md, The page shell): one H1 per page, large-title on phones and tablets
    and window-title on desktop, with a 17px secondary line beneath (PageHeader's description). */
-.turnfin-app h1 { font-family: var(--font-display); font-size: 34px; line-height: 41px; font-weight: 700; letter-spacing: -0.022em; }
+.turnfin-app h1 { font-family: var(--font-display); font-size: 34px; line-height: 41px; font-weight: 800; letter-spacing: -0.03em; }
 .turnfin-app [data-page-header] h1 + p { font-size: 17px; line-height: 22px; color: var(--label-2); }
 @media (min-width: 1100px) {
   .turnfin-app h1 { font-size: 38px; line-height: 44px; }
 }
 
-/* The sidebar of apps (desktop): floating glass, inset 10px. The fin and the Turnfin name link to
-   Home; then Home, one "Apps" heading and the person's apps; the account at the foot. A rail of
-   symbols on tablet, where the fin shows alone. */
-.turnfin-app .tf-side { position: fixed; top: 10px; bottom: 10px; left: 10px; z-index: 30; display: none; flex-direction: column; gap: var(--space-2); width: var(--sidebar-width); padding: 12px 10px; border-radius: var(--radius-panel); }
-.turnfin-app .tf-side-brand { display: inline-flex; align-items: center; gap: var(--space-1); align-self: flex-start; min-height: var(--control-height); padding-right: var(--space-3); border-radius: var(--radius-md); color: var(--label); text-decoration: none; }
-/* The name in title-3, beside the fin. */
-.turnfin-app .tf-side-brand-name { font-family: var(--font-display); font-size: 20px; line-height: 25px; font-weight: 650; letter-spacing: -0.015em; }
+/* The sidebar of apps (desktop), on the ground beside the sheet: no glass, white text. The logo in
+   a white tile and the Turnfin name link to Home; then Home, one "Apps" heading and the person's
+   apps; the account at the foot. The open item is a white pill. A rail of symbols on tablet,
+   where the logo shows alone. */
+.turnfin-app .tf-side { position: fixed; top: 10px; bottom: 10px; left: 0; z-index: 30; display: none; flex-direction: column; gap: var(--space-2); width: var(--sidebar-width); padding: 12px 14px; color: var(--on-ground); }
+.turnfin-app .tf-side.glass { background: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.turnfin-app .tf-side.glass::before, .turnfin-app .tf-side.glass::after { display: none; }
+.turnfin-app .tf-side-brand { display: inline-flex; align-items: center; gap: var(--space-3); align-self: flex-start; min-height: var(--control-height); padding: 0 var(--space-3) 0 var(--space-1); border-radius: var(--radius-md); color: var(--on-ground); text-decoration: none; }
+/* The logo in a white app-icon tile (34px), its art drawn past the tile as in the toolbar. */
+.turnfin-app .tf-side-brand .tf-brand { width: 34px; height: 34px; overflow: hidden; border-radius: var(--radius-md); background: var(--on-ground); box-shadow: var(--shadow-selected); }
+.turnfin-app .tf-side-brand .tf-brand img { width: 48px; height: 48px; margin: -7px; }
+/* The name, beside the logo. */
+.turnfin-app .tf-side-brand-name { font-family: var(--font-display); font-size: 18px; line-height: 24px; font-weight: 800; letter-spacing: -0.015em; }
 .turnfin-app .tf-side-list { display: flex; flex: 1 1 auto; flex-direction: column; gap: var(--space-hair); min-height: 0; margin: 0 -4px; padding: 0 4px; overflow-y: auto; scrollbar-width: none; }
-.turnfin-app .tf-side-heading { margin: 14px 10px 4px; font-size: 11px; line-height: 13px; font-weight: 650; color: var(--label-2); }
-.turnfin-app .tf-side-item { position: relative; display: flex; flex: none; align-items: center; gap: 11px; height: 36px; padding: 0 10px; border-radius: var(--radius-md); color: var(--label); font-size: 14px; line-height: 18px; font-weight: 500; text-decoration: none; transition: background-color var(--duration-fade) var(--ease); }
+.turnfin-app .tf-side-heading { margin: 14px 10px 4px; font-size: 12px; line-height: 16px; font-weight: 700; color: var(--on-ground-2); }
+.turnfin-app .tf-side-item { position: relative; display: flex; flex: none; align-items: center; gap: 11px; height: 38px; padding: 0 10px; border-radius: var(--radius-md); color: var(--on-ground); font-size: 14.5px; line-height: 18px; font-weight: 600; text-decoration: none; transition: background-color var(--duration-fade) var(--ease); }
 .turnfin-app .tf-side-item::after { content: ""; position: absolute; inset: -4px 0; }
-.turnfin-app .tf-side-item > svg { flex: none; width: 18px; height: 18px; color: var(--accent); }
-.turnfin-app .tf-side-item:hover { background: var(--glass-sel); }
-.turnfin-app .tf-side-item[aria-current] { background: var(--glass-sel); font-weight: 650; }
-.turnfin-app .tf-side-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.turnfin-app .tf-side-item > svg { flex: none; width: 18px; height: 18px; color: var(--on-ground-2); }
+.turnfin-app .tf-side-item:hover { background: var(--ground-fill); }
+/* The open item: a white pill, its words and symbol in the ground's blue in both themes. */
+.turnfin-app .tf-side-item[aria-current] { background: var(--on-ground); color: var(--ground); font-weight: 800; box-shadow: var(--shadow-selected); }
+.turnfin-app .tf-side-item[aria-current] > svg { color: var(--ground); }
+.turnfin-app .tf-side-item:focus-visible { outline: 2px solid var(--on-ground); outline-offset: 2px; }
 .turnfin-app .tf-side-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.turnfin-app .tf-side-foot { display: flex; flex: none; flex-direction: column; padding-top: var(--space-2); border-top: 0.5px solid var(--sep); }
-.turnfin-app .tf-side-foot .tf-who { justify-content: flex-start; width: 100%; height: 48px; min-height: 48px; padding: 0 var(--space-2); gap: 10px; border-radius: var(--radius-md); }
-.turnfin-app .tf-side-foot .tf-who:hover { background: var(--glass-sel); }
+.turnfin-app .tf-side-foot { display: flex; flex: none; flex-direction: column; padding-top: var(--space-2); border-top: 1px solid var(--ground-fill); }
+.turnfin-app .tf-side-foot .tf-who { justify-content: flex-start; width: 100%; height: 48px; min-height: 48px; padding: 0 var(--space-2); gap: 10px; border-radius: var(--radius-md); color: var(--on-ground); }
+.turnfin-app .tf-side-foot .tf-who:hover { background: var(--ground-fill); }
+.turnfin-app .tf-side-foot .tf-who-text > span:last-child { color: var(--on-ground-2); }
 .turnfin-app .tf-who-text { display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0; text-align: left; }
 .turnfin-app .tf-who-text > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .turnfin-app .tf-who-text > span:last-child { font-size: 13px; line-height: 18px; font-weight: 400; color: var(--label-2); }
@@ -831,7 +864,8 @@ body.turnfin-app { background: var(--bg); }
 .turnfin-app .tf-bottom-item > span:last-child { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-inline: 2px; }
 .turnfin-app .tf-bottom-icon { display: flex; align-items: center; justify-content: center; }
 .turnfin-app .tf-bottom-icon > svg { width: 24px; height: 24px; }
-.turnfin-app .tf-bottom-item[aria-current] { background: var(--glass-sel); color: var(--accent); }
+.turnfin-app .tf-bottom.glass { background: var(--sheet); box-shadow: var(--shadow-float), 0 0 0 0.5px var(--sep); }
+.turnfin-app .tf-bottom-item[aria-current] { background: var(--ground); color: var(--on-ground); }
 .turnfin-app .tf-bottom-item:active { scale: var(--glass-press-scale); }
 .turnfin-app .tf-bottom-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 html:has(.tf-shell) { scroll-padding-bottom: 112px; }
@@ -843,7 +877,9 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 /* Desktop: the sidebar, and the page column beside it from 290px with 28px on the right. */
 @media (min-width: 1100px) {
   .turnfin-app .tf-side { display: flex; }
-  .turnfin-app .tf-shell:has(> .tf-side) > .tf-frame { padding-left: calc(var(--sidebar-width) + 40px); }
+  .turnfin-app .tf-shell { --tf-sheet-pad: 40px; }
+  .turnfin-app .tf-frame { padding-inline: 40px; }
+  .turnfin-app .tf-shell:has(> .tf-side) > .tf-frame { margin-left: var(--sidebar-width); }
   .turnfin-app .tf-shell:has(> .tf-side) .tf-top > .tf-brand,
   .turnfin-app .tf-shell:has(> .tf-side) .tf-tools > .tf-who { display: none; }
   /* With the account in the sidebar, an app without tools shows no empty glass group. */
@@ -852,6 +888,7 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 /* Tablet and the pool deck: a rail of symbols, the app's pages centred at the top. */
 @media (min-width: 768px) and (max-width: 1099px) {
   .turnfin-app .tf-side { display: flex; width: 64px; padding: 10px; align-items: center; }
+  .turnfin-app .tf-side-brand { padding: 0; }
   .turnfin-app .tf-side :is(.tf-side-heading, .tf-side-foot) { display: none; }
   /* Symbols only: the name stays for screen readers, and shows as a tip on hover and focus. */
   .turnfin-app .tf-side-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -868,7 +905,7 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
   /* The rail shows the fin alone, centred. */
   .turnfin-app .tf-side-brand { align-self: center; padding-right: 0; }
   .turnfin-app .tf-side-brand-name { display: none; }
-  .turnfin-app .tf-shell:has(> .tf-side) > .tf-frame { padding-left: 96px; }
+  .turnfin-app .tf-shell:has(> .tf-side) > .tf-frame { margin-left: 64px; }
   .turnfin-app .tf-shell:has(> .tf-side) .tf-top > .tf-brand { display: none; }
   .turnfin-app .tf-shell .tf-top { flex-wrap: wrap; }
   .turnfin-app .tf-shell .tf-pages { order: 3; flex: 1 1 100%; justify-content: center; }
@@ -876,8 +913,11 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 /* Phones: the tab bar replaces the sidebar; the page runs under it with room to clear it. */
 @media (max-width: 767px) {
   .turnfin-app .tf-bottom { display: flex; }
-  .turnfin-app .tf-frame { padding: 0 var(--space-5) var(--space-5); }
-  .turnfin-app .tf-shell:has(> .tf-bottom) > .tf-frame { padding-bottom: calc(var(--tf-bottom-space) + env(safe-area-inset-bottom)); }
+  .turnfin-app .tf-shell { --tf-sheet-pad: var(--space-5); }
+  .turnfin-app .tf-shell::before { top: -120px; left: -210px; width: 700px; height: 700px; }
+  .turnfin-app .tf-frame { min-height: 100dvh; margin: 0; padding: 0 var(--space-5); border-radius: 0; background: transparent; box-shadow: none; }
+  .turnfin-app .tf-main { margin-inline: calc(-1 * var(--space-5)); padding: var(--space-6) var(--space-5) var(--space-5); border-radius: var(--radius-sheet) var(--radius-sheet) 0 0; background: var(--sheet); }
+  .turnfin-app .tf-shell:has(> .tf-bottom) > .tf-frame > .tf-main { padding-bottom: calc(var(--tf-bottom-space) + env(safe-area-inset-bottom)); }
   .turnfin-app .tf-shell:has(> .tf-bottom) .pc-save-bar { bottom: calc(var(--tf-bottom-space) + env(safe-area-inset-bottom)); }
   .turnfin-app .tf-top { flex-wrap: wrap; row-gap: var(--space-2); }
   .turnfin-app .tf-top::before { inset-inline: calc(-1 * var(--space-5)); }
@@ -901,7 +941,7 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
   .turnfin-app .tf-shell:has(> .tf-bottom):has(.tf-pages) { --tf-top-space: 120px; }
   .turnfin-app .tf-shell:has(> .tf-bottom) > .tf-frame { padding-top: calc(var(--tf-top-space) + env(safe-area-inset-top)); }
   .turnfin-app .tf-shell:has(> .tf-bottom) .tf-top { position: fixed; top: 0; right: 0; left: 0; margin: 0; padding: calc(var(--space-2) + env(safe-area-inset-top)) var(--space-5) var(--space-2); }
-  .turnfin-app .tf-shell:has(> .tf-bottom) .tf-top::before { inset: 0 0 calc(-1 * var(--space-4)); }
+  .turnfin-app .tf-shell:has(> .tf-bottom) .tf-top::before { inset: 0; background: var(--ground); -webkit-mask: none; mask: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
   .turnfin-app .tf-top[data-titled] > .tf-pages { display: none; }
   /* Whatever the page scrolls to (an anchor, a focused field, an error) stops below the bar. */
   html:has(.tf-shell > .tf-bottom) { scroll-padding-top: calc(76px + env(safe-area-inset-top)); }
@@ -986,8 +1026,9 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 @media print {
   .turnfin-app :is(.tf-top, .tf-side, .tf-bottom) { display: none; }
   .turnfin-app .tf-shell { background: none; }
-  .turnfin-app .tf-frame { min-height: 0; padding: 0; }
-  .turnfin-app .tf-shell:has(> .tf-side) > .tf-frame { padding-left: 0; }
+  .turnfin-app .tf-shell::before { display: none; }
+  .turnfin-app .tf-frame { min-height: 0; margin: 0; padding: 0; border-radius: 0; box-shadow: none; }
+  .turnfin-app .tf-shell:has(> .tf-side) > .tf-frame { margin-left: 0; }
   /* A printed guide keeps its words, not its links back or its tools. */
   .turnfin-app .tf-help .tf-main a[data-slot='button'] { display: none; }
 }
