@@ -1,5 +1,6 @@
 import { Star } from "lucide-react";
 import { Progress } from "@/components/shadcn/progress";
+import { EmptyState } from "@/components/ui-kit/empty-state";
 import { formatDate } from "@/lib/format";
 import type { FeedbackReport } from "@/modules/training/features/builder/server/data";
 
@@ -7,18 +8,14 @@ import type { FeedbackReport } from "@/modules/training/features/builder/server/
  *  rating, how many gave each, and what they found unclear. Never names. */
 export function CourseFeedback({ report }: { report: FeedbackReport }) {
   return (
-    <section className="pc-panel" aria-labelledby="feedback-heading">
-      <div className="pc-panel-head">
-        <div className="flex flex-col gap-1">
-          <h2 id="feedback-heading">What learners said</h2>
-          <p className="text-sm text-ui-muted-foreground">Asked when someone finishes the course in Turnfin Me. Shown without names.</p>
-        </div>
-      </div>
-      {report.count === 0 ? <p className="text-sm text-ui-muted-foreground">No ratings yet.</p> : (
-        <div className="flex flex-col gap-6">
+    <section className="flex min-w-0 flex-col" aria-labelledby="feedback-heading">
+      <div className="pc-section-head"><h2 id="feedback-heading">What learners said</h2>{report.count ? <p>{report.count}</p> : null}</div>
+      <p className="pc-section-note">Asked when someone finishes the course in Turnfin Me. Shown without names.</p>
+      {report.count === 0 ? <div className="pc-list"><EmptyState compact icon="award" title="No ratings yet" /></div> : (
+        <div className="rec-card gap-6">
           <div className="grid gap-6 md:grid-cols-auto-fill md:items-center">
             <div className="flex flex-col gap-1">
-              <p className="text-(length:--pc-text-figure) leading-(--pc-leading-figure) font-semibold tabular-nums">{report.average} <span className="text-sm font-normal text-ui-muted-foreground">out of 5</span></p>
+              <p className="text-figure">{report.average} <span className="text-sm font-normal text-ui-muted-foreground">out of 5</span></p>
               <p className="text-sm text-ui-muted-foreground">{report.count} {report.count === 1 ? "rating" : "ratings"}</p>
             </div>
             <ul className="flex flex-col gap-2" aria-label="Ratings by stars">

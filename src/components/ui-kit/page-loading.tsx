@@ -16,15 +16,15 @@ export function PageLoading({ tiles = false }: { tiles?: boolean }) {
     <div role="status" aria-busy="true" aria-live="polite" className="min-w-0 flex flex-col gap-6">
       <span className="sr-only">Loading</span>
       <div className="min-w-0 flex flex-col gap-2">
-        <Skeleton className="h-(--pc-leading-page) w-44 max-w-full" />
-        <Skeleton className="h-(--pc-leading-caption) w-80 max-w-full" />
+        <Skeleton className="h-(--type-large-title-leading) w-44 max-w-full" />
+        <Skeleton className="h-(--type-caption-leading) w-80 max-w-full" />
       </div>
       {tiles ? (
         <div className="pc-stats">
           {Array.from({ length: 4 }, (_, i) => (
             <div key={i} className="pc-stat">
-              <Skeleton className="h-(--pc-leading-caption) w-24 max-w-full" />
-              <Skeleton className="h-(--pc-leading-figure) w-16 max-w-full" />
+              <Skeleton className="h-(--type-caption-leading) w-24 max-w-full" />
+              <Skeleton className="h-(--type-figure-leading) w-16 max-w-full" />
             </div>
           ))}
         </div>
@@ -33,8 +33,8 @@ export function PageLoading({ tiles = false }: { tiles?: boolean }) {
         <ul className="pc-rows">
           {Array.from({ length: 6 }, (_, i) => (
             <li key={i} className="pc-row">
-              <Skeleton className="h-(--pc-leading-caption) w-40 max-w-3/5" />
-              <Skeleton className="h-(--pc-leading-caption) w-16 ml-auto" />
+              <Skeleton className="h-(--type-caption-leading) w-40 max-w-3/5" />
+              <Skeleton className="h-(--type-caption-leading) w-16 ml-auto" />
             </li>
           ))}
         </ul>

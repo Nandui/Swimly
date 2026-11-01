@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
+import { RecordFacts } from "@/components/ui-kit/record";
 import { Tag } from "@/components/ui-kit/tag";
 import { CallDialog } from "@/modules/short-courses/features/academy-calls";
 import {
@@ -44,10 +45,10 @@ export default async function AcademyCoursePage({ params }: { params: Promise<{ 
           {!open ? <CourseStatusButton id={course.id} to="planned" label="Reopen" title="Reopen this course?" description="It goes back to planned, and its sessions to the Rota." /> : null}
         </> : undefined} />}>
 
-      <section className="pc-panel" aria-labelledby="ac-facts">
-        <div className="pc-panel-head"><h2 id="ac-facts">About the course</h2></div>
-        <dl className="grid gap-4 grid-cols-tiles">
-          {[
+      <section className="flex min-w-0 flex-col" aria-labelledby="ac-facts">
+        <div className="pc-section-head"><h2 id="ac-facts">About the course</h2></div>
+        <div className="rec-card">
+          <RecordFacts items={[
             ["Tutor", course.tutor.name],
             ["Assessor", course.assessor?.name ?? "The tutor"],
             ["Places", `${course.taken} of ${course.capacity} taken`],
@@ -57,21 +58,17 @@ export default async function AcademyCoursePage({ params }: { params: Promise<{ 
             ["Staff who pass get", grants ?? "Nothing on their record"],
             ["Still to pay", owed ? euro(owed) : "Nothing"],
             ["Online booking", course.bookOnline ? (open && course.state === "planned" ? "Open until it starts" : "Closed") : "Not online"],
-          ].map(([label, value]) => (
-            <div key={label} className="min-w-0"><dt className="text-xs font-semibold text-ui-muted-foreground">{label}</dt><dd className="mt-1 wrap-anywhere">{value}</dd></div>
-          ))}
-        </dl>
-        {course.note ? <p className="text-sm">{course.note}</p> : null}
+          ] as [string, React.ReactNode][]} />
+          {course.note ? <p className="text-sm">{course.note}</p> : null}
+        </div>
         {course.type.minHours && course.hours < course.type.minHours * 60 ? <Notice tone="warning" title="Not enough hours planned">{`The sessions add up to ${hoursLabel(course.hours)}; candidates need ${course.type.minHours} hours.`}</Notice> : null}
       </section>
 
-      <section className="pc-panel" aria-labelledby="ac-sessions">
-        <div className="pc-panel-head">
-          <div className="flex flex-col gap-1"><h2 id="ac-sessions">Sessions</h2><p className="pc-row-hint">Each shows on the Rota in its area for the tutor and assessor.</p></div>
-          {canManage && open ? <SessionDialog courseId={course.id} areas={areas} suggestDate={course.last ?? today} /> : null}
-        </div>
+      <section className="flex min-w-0 flex-col" aria-labelledby="ac-sessions">
+        <div className="pc-section-head"><h2 id="ac-sessions">Sessions</h2>{canManage && open ? <SessionDialog courseId={course.id} areas={areas} suggestDate={course.last ?? today} /> : null}</div>
+        <p className="pc-section-note">Each shows on the Rota in its area for the tutor and assessor.</p>
         {course.sessions.length === 0 ? <EmptyState compact icon="calendarDays" title="No sessions yet" hint={canManage ? "Add each day of the course with its times and area." : undefined} /> : (
-          <ul className="pc-rows">
+          <ul className="pc-list">
             {course.sessions.map((s) => {
               const there = s.attendance.filter((a) => a.minutes > 0).length;
               const marks = Object.fromEntries(s.attendance.map((a) => [a.candidateId, a.minutes]));
@@ -94,14 +91,11 @@ export default async function AcademyCoursePage({ params }: { params: Promise<{ 
         )}
       </section>
 
-      <section className="pc-panel" aria-labelledby="ac-candidates">
-        <div className="pc-panel-head">
-          <div className="flex flex-col gap-1"><h2 id="ac-candidates">Candidates · {course.taken} of {course.capacity}</h2>
-            <p className="pc-row-hint">Staff and members of the public. Payment is taken elsewhere and recorded here.</p></div>
-          {canRun && open && course.taken < course.capacity ? <CandidateDialog courseId={course.id} staff={staff} priceCents={course.priceCents} swimmerRecords={swimmerRecords} canOpenSwimmers={canOpenSwimmers} /> : null}
-        </div>
+      <section className="flex min-w-0 flex-col" aria-labelledby="ac-candidates">
+        <div className="pc-section-head"><h2 id="ac-candidates">Candidates · {course.taken} of {course.capacity}</h2>{canRun && open && course.taken < course.capacity ? <CandidateDialog courseId={course.id} staff={staff} priceCents={course.priceCents} swimmerRecords={swimmerRecords} canOpenSwimmers={canOpenSwimmers} /> : null}</div>
+        <p className="pc-section-note">Staff and members of the public. Payment is taken elsewhere and recorded here.</p>
         {candidates.length === 0 ? <EmptyState compact icon="users" title="Nobody on the course yet" hint={canRun ? "Add each candidate with their payment." : undefined} /> : (
-          <ul className="pc-rows">
+          <ul className="pc-list">
             {candidates.map((c) => {
               const r = c.readiness;
               const checksDone = r.checks.filter((x) => x.done).length;
@@ -147,7 +141,7 @@ export default async function AcademyCoursePage({ params }: { params: Promise<{ 
             })}
           </ul>
         )}
-        {active.length ? <p className="text-xs text-ui-muted-foreground">{plural(active.filter((c) => c.readiness.ready && c.status === "booked").length, "candidate")} ready for assessment. A staff member who passes gets {grants ?? "nothing"} on their record.</p> : null}
+        {active.length ? <p className="px-(--space-1) pt-(--space-3) text-xs text-ui-muted-foreground">{plural(active.filter((c) => c.readiness.ready && c.status === "booked").length, "candidate")} ready for assessment. A staff member who passes gets {grants ?? "nothing"} on their record.</p> : null}
       </section>
     </PageShell>
   );

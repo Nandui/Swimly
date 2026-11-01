@@ -1,7 +1,6 @@
 import { Fragment } from "react";
 import { Separator } from "@/components/shadcn/separator";
 import { EmptyState } from "@/components/ui-kit/empty-state";
-import { Lead } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
 import { CombinationList } from "@/modules/activities/features/together/components/combination-list";
 import type { GroupMember } from "@/modules/activities/features/together/components/move-dialog";
@@ -47,20 +46,21 @@ export function TogetherResults({
   const slots = withTogether.flatMap((day) => day.together.map((slot) => ({ day: day.day, slot })));
 
   return (
-    <div className="min-w-0 flex flex-col gap-6">
+    <div className="min-w-0 flex flex-col gap-(--space-7)">
       {slots.length > 0 ? (
-        <section className="pc-panel" aria-labelledby="together-same-time">
-          <div className="pc-panel-head">
-            <h2 id="together-same-time" className="text-lg font-semibold">
+        <section className="flex min-w-0 flex-col" aria-labelledby="together-same-time">
+          <div className="pc-section-head">
+            <h2 id="together-same-time">
               {count === 1 ? "Where they can swim" : `All ${count} starting at the same time`}
             </h2>
             {whatIf ? <Tag meta={WHAT_IF_META} /> : null}
           </div>
           {count > 1 ? (
-            <Lead>
+            <p className="pc-section-note">
               Each option has a place for everyone. Check the class times before choosing.
-            </Lead>
+            </p>
           ) : null}
+          <div className="rec-card">
           {slots.map(({ day, slot }, index) => (
             <Fragment key={`${day}-${slot.startMinutes}`}>
               {index > 0 ? <Separator /> : null}
@@ -72,21 +72,23 @@ export function TogetherResults({
               />
             </Fragment>
           ))}
+          </div>
         </section>
       ) : null}
 
       {withSpread.length > 0 ? (
-        <section className="pc-panel" aria-labelledby="together-same-day">
-          <div className="pc-panel-head">
-            <h2 id="together-same-day" className="text-lg font-semibold">
+        <section className="flex min-w-0 flex-col" aria-labelledby="together-same-day">
+          <div className="pc-section-head">
+            <h2 id="together-same-day">
               Same day, different times
             </h2>
             {whatIf ? <Tag meta={WHAT_IF_META} /> : null}
           </div>
-          <Lead>
+          <p className="pc-section-note">
             Every option where they start at different times, including days with a same-time
             option.
-          </Lead>
+          </p>
+          <div className="rec-card">
           {withSpread.map((day, index) => (
             <Fragment key={day.day}>
               {index > 0 ? <Separator /> : null}
@@ -99,6 +101,7 @@ export function TogetherResults({
               />
             </Fragment>
           ))}
+          </div>
         </section>
       ) : null}
     </div>

@@ -36,7 +36,7 @@ export function TeacherTable({ teachers, school, query }: { teachers: Teacher[];
     .sort((a, b) => by(a) - by(b) || a.name.localeCompare(b.name));
   return <div className="flex min-w-0 flex-col gap-3">
     <div className="flex flex-wrap items-end gap-3">
-      <SearchField label="Find a teacher" placeholder="Name" value={search} onValueChange={setSearch} className="grow basis-(--pc-field-min)" />
+      <SearchField label="Find a teacher" placeholder="Name" value={search} onValueChange={setSearch} className="grow basis-(--field-min)" />
       <SegmentedChoice aria-label="Sort teachers by" value={sort} onValueChange={setSort} options={sorts.map(s => ({ value: s.value, label: s.label }))} />
     </div>
     <div className="ins-table-wrap"><Table>

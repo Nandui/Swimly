@@ -3,6 +3,7 @@ import { FileText } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
+import { RecordSection } from "@/components/ui-kit/record";
 import { formatDate, formatDateTime, nameInitials } from "@/lib/format";
 import type { HandInRow } from "@/modules/training/features/hand-ins/server/data";
 import { AcceptHandIn, ReturnHandIn } from "@/modules/training/features/hand-ins/components/hand-in-actions";
@@ -10,15 +11,11 @@ import { AcceptHandIn, ReturnHandIn } from "@/modules/training/features/hand-ins
 /** Work handed in that waits for a trainer, on the Sign-off page (phase 8). */
 export function HandInQueue({ rows }: { rows: HandInRow[] }) {
   return (
-    <section className="pc-panel flex flex-col gap-3" aria-labelledby="hand-ins-heading">
-      <div className="space-y-1">
-        <h2 id="hand-ins-heading">Work handed in · {rows.length}</h2>
-        <p className="text-sm text-ui-muted-foreground">Answers and photos from Hand in work lessons. Accepting one finishes that lesson; sending it back asks them to change it.</p>
-      </div>
+    <RecordSection id="hand-ins-heading" title="Work handed in" aside={<p>{rows.length}</p>} note="Answers and photos from Hand in work lessons. Accepting one finishes that lesson; sending it back asks them to change it.">
       {rows.length === 0 ? (
-        <EmptyState compact icon="clipboardCheck" title="Nothing to check" hint="Work appears here when someone you cover hands it in on a lesson that asks for a trainer." />
+        <div className="pc-list"><EmptyState compact icon="clipboardCheck" title="Nothing to check" hint="Work appears here when someone you cover hands it in on a lesson that asks for a trainer." /></div>
       ) : (
-        <ul className="pc-rows">
+        <ul className="pc-list">
           {rows.map((row) => (
             <li key={row.id} className="pc-row items-start">
               <Avatar size="lg" aria-hidden="true"><AvatarFallback>{nameInitials(row.user.name)}</AvatarFallback></Avatar>
@@ -26,7 +23,7 @@ export function HandInQueue({ rows }: { rows: HandInRow[] }) {
                 <Link href={`/training/people/${row.user.id}`} className="pc-row-title -my-3 inline-flex min-h-11 items-center self-start underline-offset-4 hover:underline">{row.user.name}{row.user.jobTitle ? ` · ${row.user.jobTitle}` : ""}</Link>
                 <p className="pc-row-hint">{row.course} · {row.lesson}</p>
                 <p className="pc-row-hint">Handed in {formatDateTime(row.submittedAt)}{row.dueOn ? ` · due ${formatDate(row.dueOn)}` : ""}</p>
-                {row.text ? <blockquote className="rounded-card bg-ui-muted p-3 text-sm whitespace-pre-line">{row.text}</blockquote> : null}
+                {row.text ? <blockquote className="rounded-card bg-(--fill-2) p-3 text-sm whitespace-pre-line">{row.text}</blockquote> : null}
                 {row.fileName ? (
                   row.isImage ? (
                     <a href={`/training/hand-ins/${row.id}/file`} target="_blank" rel="noopener noreferrer" className="self-start">
@@ -44,6 +41,6 @@ export function HandInQueue({ rows }: { rows: HandInRow[] }) {
           ))}
         </ul>
       )}
-    </section>
+    </RecordSection>
   );
 }

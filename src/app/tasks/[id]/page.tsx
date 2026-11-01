@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
+import { RecordFacts, RecordSection } from "@/components/ui-kit/record";
 import {
   ACTION_STATUS_META, AddComment, ApproveTask, CantComplete, clockOf, dayIn, NotApplicable, PRIORITY_META, ReopenTask, taskDetail, TaskStateTag, TaskWork,
 } from "@/modules/tasks/features/day";
@@ -28,20 +29,18 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
   const back = `/tasks?${new URLSearchParams({ site: task.siteId, ...(isToday ? {} : { date: task.date }) })}`;
   const closed = task.status !== "open";
   const facts: [string, React.ReactNode][] = [
-    ["Site", task.siteName],
     ["Day", `${formatWeekday(task.date)} ${formatDayMonth(task.date)}`],
-    ["Time", `${clockOf(task.startsAt, task.timezone)} to ${clockOf(task.dueAt, task.timezone)}`],
     ["For", roles.length ? `${roles.join(", ")}${def.restricted === false ? " (anyone may complete it)" : ""}` : "Everyone at the site"],
     ...(task.addedByName ? [["Added by", task.addedByName] as [string, string]] : []),
     ...(task.completedByName ? [[task.status === "done" ? "Completed by" : "Closed by", task.completedByName] as [string, string]] : []),
     ...(task.approvedByName ? [["Approved by", task.approvedByName] as [string, string]] : []),
   ];
   return (
-    <PageShell header={<PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         back={{ href: back, label: isToday ? "Today" : formatDayMonth(task.date) }}
+        eyebrow={<p className="rec-head"><TaskStateTag state={task.state} />{def.priority ? <Tag meta={PRIORITY_META} /> : null}<span className="tabular-nums">{clockOf(task.startsAt, task.timezone)} to {clockOf(task.dueAt, task.timezone)} · {task.siteName}</span></p>}
         title={def.title}
         description={def.description || undefined}
-        status={<><TaskStateTag state={task.state} />{def.priority ? <Tag meta={PRIORITY_META} /> : null}</>}
         actions={<>
           {can.work && !closed ? <CantComplete id={task.id} version={task.version} /> : null}
           {can.review && !closed ? <NotApplicable id={task.id} version={task.version} /> : null}
@@ -50,18 +49,9 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
         </>}
       />}>
 
-      <section className="pc-panel" aria-labelledby="task-details">
-        <div className="pc-panel-head"><h2 id="task-details">Details</h2></div>
-        <dl className="grid gap-4 grid-cols-tiles">
-          {facts.map(([label, value]) => (
-            <div key={label} className="min-w-0">
-              <dt className="text-xs font-semibold text-ui-muted-foreground">{label}</dt>
-              <dd className="mt-1 wrap-anywhere">{value}</dd>
-            </div>
-          ))}
-        </dl>
-        {def.tags.length ? <p className="pc-row-hint">{def.tags.join(" · ")}</p> : null}
-      </section>
+      <RecordSection id="task-details" title="Details">
+        <div className="rec-card"><RecordFacts items={[...facts, ...(def.tags.length ? [["Tags", def.tags.join(" · ")] as [string, string]] : [])]} /></div>
+      </RecordSection>
 
       {task.reason ? <Notice tone={task.status === "cant_complete" ? "warning" : "info"} title={task.status === "cant_complete" ? "It couldn’t be completed" : "Not applicable"} description={task.reason} /> : null}
       {!task.mine && !closed ? <Notice tone="info" title="This task is restricted to its roles" description={`${roles.join(", ")} complete it. You can read it, comment and raise follow-up actions.`} /> : null}
@@ -72,13 +62,9 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
       <TaskWork id={task.id} version={task.version} definition={def} checks={task.checks} records={task.records} files={task.files} editable={can.work} />
 
       <div className="pc-grid">
-        <section className="pc-panel" aria-labelledby="task-comments">
-          <div className="pc-panel-head">
-            <div className="flex flex-col gap-1"><h2 id="task-comments">Comments</h2>{def.requiresComment ? <p className="pc-row-hint">This task needs a comment before it is completed.</p> : null}</div>
-            <AddComment id={task.id} />
-          </div>
-          {task.comments.length === 0 ? <EmptyState compact icon="scrollText" title="No comments yet" /> : (
-            <ul className="pc-rows">
+        <RecordSection id="task-comments" title="Comments" aside={<AddComment id={task.id} />} note={def.requiresComment ? "This task needs a comment before it is completed." : undefined}>
+          {task.comments.length === 0 ? <div className="pc-list"><EmptyState compact icon="scrollText" title="No comments yet" /></div> : (
+            <ul className="pc-list">
               {task.comments.map((c) => (
                 <li key={c.id} className="pc-row">
                   <div className="pc-row-body min-w-field!">
@@ -89,14 +75,10 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
               ))}
             </ul>
           )}
-        </section>
-        <section className="pc-panel" aria-labelledby="task-actions">
-          <div className="pc-panel-head">
-            <div className="flex flex-col gap-1"><h2 id="task-actions">Follow-up actions</h2><p className="pc-row-hint">Something to put right because of this task.</p></div>
-            <RaiseAction siteId={task.siteId} taskId={task.id} label="Raise one" templates={actionTemplates} />
-          </div>
-          {task.actions.length === 0 ? <EmptyState compact icon="clipboardList" title="None raised" /> : (
-            <ul className="pc-rows">
+        </RecordSection>
+        <RecordSection id="task-actions" title="Follow-up actions" aside={<RaiseAction siteId={task.siteId} taskId={task.id} label="Raise one" templates={actionTemplates} />} note="Something to put right because of this task.">
+          {task.actions.length === 0 ? <div className="pc-list"><EmptyState compact icon="clipboardList" title="None raised" /></div> : (
+            <ul className="pc-list">
               {task.actions.map((a) => (
                 <li key={a.id} className="pc-row">
                   <span className="pc-row-body">
@@ -113,7 +95,7 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
               ))}
             </ul>
           )}
-        </section>
+        </RecordSection>
       </div>
     </PageShell>
   );

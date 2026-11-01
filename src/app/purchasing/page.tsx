@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowUpRight, ChevronRight, FilePlus2, Hourglass, ReceiptText, Truck } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { ChevronRight, FilePlus2, Hourglass, ReceiptText, Truck } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
+import { Figure, Figures } from "@/components/ui-kit/figure";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
 import { euro, type OrderRow, PO_STATUS_META, type PoStatus, PoStatusTag, purchasingHome } from "@/modules/purchasing/features/orders";
@@ -20,22 +20,22 @@ export default async function PurchasingPage() {
   const toChange = mine.filter((o) => o.status === "draft" || o.status === "rejected").length;
   const showMine = who.request || mine.length > 0;
   return (
-    <PageShell className="po-desk" header={<PageHeader title="Purchase orders"
+    <PageShell spacing="roomy" header={<PageHeader title="Purchase orders"
         description="Orders from approved suppliers, approved by role and amount, then numbered for the supplier."
         actions={<>
           <Button asChild variant="outline"><Link href="/purchasing/suppliers"><Truck aria-hidden="true" />Suppliers</Link></Button>
           {who.request ? <Button asChild><Link href="/purchasing/new"><FilePlus2 aria-hidden="true" />New order</Link></Button> : null}
         </>} />}>
 
-      <div className="po-stats">
-        <Stat href={waiting.length ? "#po-waiting" : undefined} tone={waiting.length ? "act" : undefined} icon={Hourglass} n={waiting.length}
-          label="Waiting for your approval" hint={waiting.length ? `${euro(waiting.reduce((t, o) => t + o.totalCents, 0))} before VAT in all` : "Nothing waits for you"} />
+      <Figures label="Purchasing at a glance">
+        <Figure href={waiting.length ? "#po-waiting" : undefined} icon={Hourglass} value={waiting.length} label="Waiting for your approval"
+          hint={waiting.length ? `${euro(waiting.reduce((t, o) => t + o.totalCents, 0))} before VAT in all` : "Nothing waits for you"} tone={waiting.length ? "orange" : undefined} />
         {showMine ? (
-          <Stat href="#po-mine" icon={ReceiptText} n={open.length} label="Your open orders"
-            hint={toChange ? `${plural(toChange, "draft or rejected order")} to finish` : open.length ? "All sent for approval" : "None open"} />
+          <Figure href="#po-mine" icon={ReceiptText} value={open.length} label="Your open orders"
+            hint={toChange ? `${plural(toChange, "draft or rejected order")} to finish` : open.length ? "All sent for approval" : "None open"} tone={toChange ? "orange" : undefined} />
         ) : null}
-        <Stat href="/purchasing/suppliers" icon={Truck} n={suppliers} label="Approved suppliers" hint="Orders can only be raised with these" />
-      </div>
+        <Figure href="/purchasing/suppliers" icon={Truck} value={suppliers} label="Approved suppliers" hint="Orders can only be raised with these" />
+      </Figures>
 
       {waiting.length ? <Panel id="po-waiting" title="Waiting for your approval" orders={waiting} /> : null}
       {showMine ? (
@@ -48,47 +48,32 @@ export default async function PurchasingPage() {
   );
 }
 
-/** One figure in its own card; a link when there is somewhere to go. */
-function Stat({ href, tone, icon: Icon, n, label, hint }: { href?: string; tone?: "act"; icon: LucideIcon; n: number; label: string; hint: string }) {
-  const body = (
-    <>
-      <span className="po-stat-top">
-        <span className="po-stat-icon"><Icon aria-hidden="true" /></span>
-        {href ? <ArrowUpRight aria-hidden="true" className="size-4 text-ui-muted-foreground" /> : null}
-      </span>
-      <span>
-        <span className="po-stat-n block">{n}</span>
-        <span className="po-stat-label block">{label}</span>
-        <span className="po-stat-hint block">{hint}</span>
-      </span>
-    </>
-  );
-  return href ? <Link href={href} className="po-card po-stat" data-tone={tone}>{body}</Link> : <div className="po-card po-stat" data-tone={tone}>{body}</div>;
-}
+/** An order's tile takes its status: orange while it waits, green once approved, red when rejected. */
+const TONE: Partial<Record<PoStatus, "orange" | "green" | "red">> = { pending: "orange", approved: "green", rejected: "red" };
 
 function Panel({ id, title, orders, empty }: { id: string; title: string; orders: OrderRow[]; empty?: { title: string; hint?: string } }) {
   return (
-    <section aria-labelledby={`${id}-h`} id={id} className="po-card">
-      <div className="po-card-head"><h2 id={`${id}-h`}>{title}{orders.length ? <span className="po-count">{orders.length}</span> : null}</h2></div>
+    <section aria-labelledby={`${id}-h`} id={id} className="flex min-w-0 scroll-mt-6 flex-col">
+      <div className="pc-section-head"><h2 id={`${id}-h`}>{title}</h2>{orders.length ? <p>{orders.length}</p> : null}</div>
       {orders.length === 0 ? (
-        <EmptyState compact icon="receipt" title={empty?.title ?? "None"} hint={empty?.hint} />
+        <EmptyState icon="receipt" title={empty?.title ?? "None"} hint={empty?.hint} />
       ) : (
-        <ul className="pc-rows">
+        <ul className="pc-list">
           {orders.map((o) => {
             const status = o.status as PoStatus;
             const Icon = PO_STATUS_META[status]?.icon ?? ReceiptText;
             return (
               <li key={o.id}>
-                <Link href={`/purchasing/${o.id}`} className="pc-row" data-status={status}>
-                  <span className="po-mark"><Icon aria-hidden="true" /></span>
+                <Link href={`/purchasing/${o.id}`} className="pc-row">
+                  <span className="pc-tile-icon" data-tone={TONE[status]} aria-hidden="true"><Icon /></span>
                   <span className="pc-row-body">
-                    <span className={o.number ? "po-row-number" : "pc-row-title"}>{o.number ?? o.supplier.name}</span>
+                    <span className="pc-row-title tabular-nums">{o.number ?? o.supplier.name}</span>
                     <span className="pc-row-hint">
                       {[o.number ? o.supplier.name : null, o.site.name, plural(o._count.lines, "line"), `by ${o.requestedByName}`, formatDate(o.submittedAt ?? o.createdAt)].filter(Boolean).join(" · ")}
                     </span>
                   </span>
                   <span className="pc-row-trail">
-                    <span className="po-amount">{euro(o.totalCents)}</span>
+                    <span className="pc-row-value">{euro(o.totalCents)}</span>
                     <PoStatusTag status={status} />
                     <ChevronRight aria-hidden="true" className="pc-row-chevron" />
                   </span>

@@ -1,7 +1,7 @@
 // The UI rules (AGENTS.md, Screens, owner rules of 10 and 20 October 2026): screens
 // compose shadcn/ui and the app's theme. No literal colours (hex, rgb(), hsl(), oklch()…), no
 // one-off lengths, no Tailwind arbitrary values such as p-[13px], text-[#333] or
-// rounded-[var(--pc-radius-card)] (use the scale, a named theme utility, or a theme variable as
+// rounded-[var(--radius-lg)] (use the scale, a named theme utility, or a theme variable as
 // rounded-(--name)), no inline styles, and every page's PageHeader inside its PageShell.
 // Variants such as data-[state=open]: are selectors, not values, and stay allowed.
 

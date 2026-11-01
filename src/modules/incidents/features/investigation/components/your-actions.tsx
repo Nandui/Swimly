@@ -11,10 +11,10 @@ const day = (iso: string) => formatDate(new Date(`${iso}T12:00:00Z`));
  *  being able to open the report itself. */
 export function YourActionsPanel({ data }: { data: YourActions }) {
   return (
-    <section aria-labelledby="your-actions-h" id="your-actions" className="pc-panel">
-      <div className="pc-panel-head"><h2 id="your-actions-h">{`Your actions · ${data.rows.length}`}</h2></div>
-      {data.rows.length === 0 ? <EmptyState compact icon="clipboardCheck" title="No actions for you" /> : (
-        <ul className="pc-rows">
+    <section aria-labelledby="your-actions-h" id="your-actions">
+      <div className="pc-section-head"><h2 id="your-actions-h">Your actions</h2>{data.rows.length ? <p>{data.rows.length}</p> : null}</div>
+      {data.rows.length === 0 ? <div className="pc-list"><EmptyState compact icon="clipboardCheck" title="No actions for you" /></div> : (
+        <ul className="pc-list">
           {data.rows.map((a) => (
             <li key={a.id} className="pc-row flex-wrap">
               <span className="pc-row-body">

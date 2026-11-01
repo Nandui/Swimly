@@ -6,17 +6,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-sel
 import { Progress } from "@/components/shadcn/progress";
 import { PERIODS, type InsightFilters } from "@/modules/training/features/insight/server/data";
 
-/** Pieces the insight pages share: a figure, a list of bars and the filter form. */
-
-export function Figure({ value, label, hint }: { value: ReactNode; label: string; hint?: ReactNode }) {
-  return (
-    <div className="pc-stat">
-      <span className="pc-stat-figure tabular-nums">{value}</span>
-      <span className="font-semibold">{label}</span>
-      {hint ? <span className="text-sm text-ui-muted-foreground">{hint}</span> : null}
-    </div>
-  );
-}
+/** Pieces the insight pages share: a list of bars and the filter form. */
 
 /** A number as a percentage, or a dash when there is nothing to divide. */
 export const pct = (value: number | null) => (value === null ? "–" : `${value}%`);
@@ -50,7 +40,7 @@ export function InsightFilterForm({ action, label, filters, sites, departments, 
   const filtered = !!(filters.site || filters.department || (filters.period && filters.period !== "all"));
   const field = "min-w-0 grow basis-40 space-y-2 sm:grow-0 sm:basis-auto sm:min-w-52";
   return (
-    <form method="get" action={action} className="pc-panel print:hidden" role="search" aria-label={label}>
+    <form method="get" action={action} className="print:hidden" role="search" aria-label={label}>
       <div className="flex flex-wrap items-end gap-4">
         {sites.length > 1 ? (
           <div className={field}><Label htmlFor="insight-site" className="block">Site</Label>
@@ -76,7 +66,7 @@ export function InsightFilterForm({ action, label, filters, sites, departments, 
           </div>
         ) : null}
         <div className="flex gap-2">
-          <Button type="submit" className="min-h-11">Apply filters</Button>
+          <Button type="submit" variant="outline" className="min-h-11">Apply filters</Button>
           {filtered ? <Button asChild variant="ghost" className="min-h-11"><Link href={action}>Reset</Link></Button> : null}
         </div>
       </div>

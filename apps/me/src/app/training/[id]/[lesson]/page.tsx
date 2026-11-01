@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, ExternalLink, FileText, Lock } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { NeedsSignal } from "@/components/offline";
 import { BookmarkButton, LessonNote, ReadAloud } from "@/components/learner";
 import { LessonBody } from "@/components/lesson-body";
+import { ActivityProgress, bodyActivities } from "@/components/lesson-blocks";
 import type { LearnerQuestion } from "@/components/question";
 import { AudioPlayer, CardDeck, Checklist, ScenarioPlayer, type Card, type Item, type Scene } from "@/components/lesson-kinds";
 import { EmbedFrame, ExplorePicture, HandInForm, SortBoard, type Embed, type HandInInfo, type Sorting, type Spot } from "@/components/lesson-kinds-more";
@@ -35,6 +36,11 @@ type Lesson = {
 
 /** Lessons the learner has to work through before Next opens. */
 const WORKED = new Set<Lesson["kind"]>(["QUIZ", "SCENARIO", "FLASHCARDS", "CHECKLIST", "SORTING", "EXPLORE"]);
+
+/** Activities in a lesson's text already finished on this phone. */
+function savedBlocks(key: string): ReadonlySet<string> {
+  try { return new Set(JSON.parse(localStorage.getItem(key) ?? "[]") as string[]); } catch { return new Set(); }
+}
 
 /** A lesson's file, fetched with the person's sign-in: images show in place,
  *  PDFs open in a new tab from a local copy. */
@@ -71,6 +77,21 @@ export default function LessonPage() {
   // What Read aloud reads: the lesson's title and text.
   const readable = useRef<HTMLDivElement>(null);
   const finished = useCallback(() => { if (data) setWorkedOut(data.id); }, [data]);
+  // Activities in the text: each must be finished first. Remembered on this phone, like checklist ticks.
+  const storageKey = `me-blocks-${id}-${lessonId}`;
+  const [blocksDone, setBlocksDone] = useState(() => ({ key: storageKey, ids: savedBlocks(storageKey) }));
+  const doneIds = useMemo(() => blocksDone.key === storageKey ? blocksDone.ids : savedBlocks(storageKey), [blocksDone, storageKey]);
+  const finishBlock = useCallback((blockId: string) => setBlocksDone((prev) => {
+    const before = prev.key === storageKey ? prev.ids : savedBlocks(storageKey);
+    if (before.has(blockId)) return prev.key === storageKey ? prev : { key: storageKey, ids: before };
+    const ids = new Set(before).add(blockId);
+    try { localStorage.setItem(storageKey, JSON.stringify([...ids])); } catch { /* private browsing: just not remembered */ }
+    return { key: storageKey, ids };
+  }), [storageKey]);
+  const progress = useMemo(() => ({
+    done: doneIds, finish: finishBlock, storageKey, lessonId, questions: data?.questions ?? [], handIn: data?.handIn ?? null, open: !!data && data.open && !data.done, reload,
+  }), [doneIds, finishBlock, storageKey, lessonId, data, reload]);
+  const blocksLeft = data ? bodyActivities(data.body).filter((b) => !doneIds.has(b)).length : 0;
   async function next() {
     if (!data) return;
     setFailure(null);
@@ -90,17 +111,20 @@ export default function LessonPage() {
   // Hand in work: nothing handed in yet, or sent back, holds Next; work waiting
   // for a trainer lets them move on without finishing this lesson.
   const submission = data?.handIn?.submission ?? null;
-  const handInWaiting = !!data && data.kind === "ASSIGNMENT" && submission?.status === "SUBMITTED";
-  const handInNeeded = !!data && data.kind === "ASSIGNMENT" && data.open && !data.done && (!submission || submission.status === "RETURNED");
-  const waiting = !!data && ((WORKED.has(data.kind) && hasWork && workedOut !== data.id) || data.kind === "ASSIGNMENT") && data.open && !data.done && (data.kind !== "ASSIGNMENT" || handInNeeded);
-  const waitText = !data ? "" : data.kind === "SCENARIO" ? "Reach the best ending to carry on." : data.kind === "FLASHCARDS" ? "Get to know every card to carry on."
+  // A Hand in work lesson, or a page with Hand in work in it (D18).
+  const handIn = !!data?.handIn;
+  const handInWaiting = handIn && submission?.status === "SUBMITTED";
+  const handInNeeded = !!data && handIn && data.open && !data.done && (!submission || submission.status === "RETURNED");
+  const kindWaiting = !!data && data.open && !data.done && ((WORKED.has(data.kind) && hasWork && workedOut !== data.id) || handInNeeded);
+  const waiting = kindWaiting || (!!data && data.open && !data.done && blocksLeft > 0);
+  const waitText = !data ? "" : !kindWaiting || (data.kind === "READING" && blocksLeft > 0) ? `Finish the ${blocksLeft === 1 ? "activity" : `${blocksLeft} activities`} in this lesson to carry on.` : data.kind === "SCENARIO" ? "Reach the best ending to carry on." : data.kind === "FLASHCARDS" ? "Get to know every card to carry on."
     : data.kind === "CHECKLIST" ? "Tick off every item to carry on." : data.kind === "SORTING" ? "Get every one in the right group to carry on."
-    : data.kind === "EXPLORE" ? "Open every spot to carry on." : data.kind === "ASSIGNMENT" ? (submission?.status === "RETURNED" ? "Change your work and hand it in again to carry on." : "Hand in your work to carry on.")
+    : data.kind === "EXPLORE" ? "Open every spot to carry on." : handIn ? (submission?.status === "RETURNED" ? "Change your work and hand it in again to carry on." : "Hand in your work to carry on.")
     : "Work through the questions to carry on.";
   const label = !data ? "" : handInWaiting ? (data.next ? "Next lesson" : "Back to the course") : !data.open || data.done ? (data.next ? "Next lesson" : "Back to the course")
     : data.next ? (data.kind === "VIDEO" ? "Watched it, next" : data.kind === "AUDIO" ? "Listened, next" : "Done, next lesson") : "Done, finish up";
   return (
-    <Frame title="My training">
+    <Frame title={data?.title ?? "My training"}>
       <PageShell header={<PageHeader back={{ href: `/training/${id}`, label: "Course" }} title={data?.title ?? "Lesson"}
         eyebrow={data ? <span className="tabular">{data.section} · Lesson {data.index + 1} of {data.total}{data.minutes ? ` · ${data.minutes} min` : ""}</span> : undefined} />}>
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : (
@@ -126,7 +150,7 @@ export default function LessonPage() {
               : data.kind === "EXPLORE" ? null : data.file ? <LessonFile assignmentId={id} file={data.file} /> : null}
             {data.kind === "EMBED" && data.embed ? <EmbedFrame embed={data.embed} title={data.title} /> : null}
             <div ref={readable} className="stack">
-            {data.body ? <section className="pc-panel"><LessonBody body={data.body} assignmentId={id} checks={{ lessonId: data.id, questions: data.checks ?? [] }} /></section> : null}
+            {data.body ? <ActivityProgress.Provider value={progress}><section className="pc-panel"><LessonBody body={data.body} assignmentId={id} checks={{ lessonId: data.id, questions: data.checks ?? [] }} /></section></ActivityProgress.Provider> : null}
             {data.kind === "QUIZ" ? <QuizRunner assignmentId={id} lessonId={data.id} questions={data.questions ?? []} key={data.id} onFinished={finished} /> : null}
             {data.kind === "SCENARIO" ? <ScenarioPlayer assignmentId={id} steps={data.steps ?? []} key={data.id} onFinished={finished} /> : null}
             {data.kind === "FLASHCARDS" ? <CardDeck assignmentId={id} cards={data.cards ?? []} key={data.id} onFinished={finished} /> : null}

@@ -311,7 +311,9 @@ test("copy fills only days with nothing of that department; people come too unle
 
 test("sharing a week: staff see it in Turnfin Me and are told; until then they see nothing", async () => {
   as("maya", [at("rota.plan")]);
-  const monday = nextMonday();
+  // Two weeks on: the copy test above fills the pool's days from tomorrow to two weeks ahead, so on
+  // some weekdays the next Monday already has a copied Main pool with Ava on it (still in Me's 28 days).
+  const monday = addDaysIso(nextMonday(), 14);
   assert.equal((await actions.saveNeed(null, need(monday, { place: "Main pool", places: 1, start: "09:00", end: "14:30" }))).ok, true);
   const main = await needOn(monday);
   assert.equal((await actions.assign(null, { needId: main.id, place: 1, userId: "ava", start: "09:00", end: "11:30" })).ok, true);
@@ -464,4 +466,25 @@ test("the personal file lists what they are planned on for two weeks, and their 
   assert.match(absences.entries[0].detail, /Reported by sam · Synthetic note · Return to work not recorded yet/);
   assert.equal(absences.summary, "1 absence in the last 12 months, 3 calendar days off.");
   assert.equal((await file.absenceFile("lee", "org_other")).entries.length, 0, "another organisation's file is empty");
+});
+
+test("who opens the Rota and how far they go: View sees, Plan plans the days ahead of their own departments, Run changes any day", () => {
+  const access = serverModule<typeof import("@/modules/rota/shared/access")>("src/modules/rota/shared/access.ts", doubles());
+  as("ava");
+  assert.equal(access.rotaAccess(session() as never), null, "nothing at any site: no Rota");
+  as("ava", [at("rota.view")]);
+  assert.deepEqual(access.rotaAccess(session() as never), { id: "ava", name: "ava", orgId: ORG, plan: false, run: false });
+  as("maya", [at("rota.plan", bishopstown)]);
+  assert.equal(access.rotaAccess(session() as never)?.plan, true, "a level at any one site opens it; each page asks again at its site");
+
+  const day = "2026-10-23", now = "2026-10-22", pool = new Set(["d-pool"]);
+  const blocked = (at: { plan: boolean; run: boolean }, date = day, dept = "d-pool") => access.changeBlocked(at, date, now, dept, pool);
+  assert.equal(blocked({ plan: false, run: true }, now, "d-desk"), null, "Run changes any day of any department");
+  assert.equal(blocked({ plan: false, run: false }), "level");
+  assert.equal(blocked({ plan: true, run: false }, now), "come", "today is the duty manager's");
+  assert.equal(blocked({ plan: true, run: false }, "2026-10-21"), "come");
+  assert.equal(blocked({ plan: true, run: false }, day, "d-desk"), "member", "only the departments they belong to");
+  assert.equal(blocked({ plan: true, run: false }), null);
+  assert.equal(access.canChange({ plan: true, run: false }, day, now, "d-pool", pool), true);
+  assert.equal(access.canChange({ plan: true, run: false }, day, now, "d-desk", pool), false);
 });

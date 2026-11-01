@@ -6,17 +6,64 @@ The decisions Turnfin 2.0 stands on, newest first. Each says what was decided, w
 
 ---
 
-### D14 · 1 November 2026 · The frame is worked out from the job
+### D20 · 1 November 2026 · Turnfin Sheet replaces Turnfin Glass
+
+The 2.0 design is **Turnfin Sheet**: the logo's blue (#0062B1) as the ground, the work on one white page that floats on it, the logo's fin drawn oversized in white on the blue as its only texture, Manrope type, and colour on the page only for needs action, done, serious and live. It replaces Turnfin Glass (D13), which the owner found confusing, not uniform, too like Apple, too grey and not a leisure centre. It was chosen from screenshot-checked mockups on the new frame (D19), after Depth, Pool tile, Pace clock and Night were tried (https://claude.ai/artifact/QmVi8aMcECQzQxNNrgEKe5).
+**Why:** a premium, modern look that is unmistakably Turnfin, with one colour that belongs to the brand, one consistent page for every app, and controls that are clearly controls.
+**Follows:** [../DESIGN.md](../DESIGN.md) is the contract; the canvas's row D shows the approved screens. Roadmap step 5 re-themes the built Glass theme and kit to Sheet; the type and layout tokens of D15 keep their names. The Turnfin Glass design system artifact no longer describes the design.
+
+### D19 · 1 November 2026 · The frame is worked out from the job
 
 Turnfin has one frame, and what it shows is worked out from the person's levels, working site and screen width, never from a layout kept for each role. Home is one list of the person's work across apps. The sidebar lists only the apps they hold a level in, in the same fixed order for everyone, and drills into one app's pages at a time; there are no top tabs. An app lists at most five work pages plus one **Set up** page, which only Manage sees. A person with exactly one app lands straight in it. One search finds pages, people and members. The decision was checked with a clickable wireframe (https://claude.ai/artifact/PqMC2ft4uxAh1siiMxsV9v).
 **Why:** staff were lost between two levels of navigation, long app lists, apps that each behaved differently, and work hidden inside apps. Layouts per role would break "roles are data" and add a concept; working the frame out from levels adds none.
 **Follows:** PRODUCT sentence 3, "The frame" in [architecture.md](architecture.md#the-frame), "The frame and navigation" in [../DESIGN.md](../DESIGN.md), search in roadmap step 4, and the frame in step 5. The swim school's own nav, the instructor shell and the CCTV shell go.
 
-### D13 · 1 November 2026 · Turnfin Sheet is the 2.0 design
+### D18 · 30 October 2026 · One place to put content in a lesson
 
-The 2.0 design is **Turnfin Sheet**: the logo's blue (#0062B1) as the ground, the work on one white page that floats on it, the logo's fin drawn oversized in white on the blue as its only texture, Manrope type, and colour on the page only for needs action, done, serious and live. It replaces Turnfin Glass, approved on 25 October 2026 and dropped on 28 October as confusing, not uniform, too like Apple, too grey and not a leisure centre. It was chosen from screenshot-checked mockups on the new frame (D14), after Depth, Pool tile, Pace clock and Night were tried (https://claude.ai/artifact/QmVi8aMcECQzQxNNrgEKe5).
-**Why:** a premium, modern look that is unmistakably Turnfin, with one colour that belongs to the brand, one consistent page for every app, and controls that are clearly controls.
-**Follows:** [../DESIGN.md](../DESIGN.md) is the contract; the canvas's row D shows the approved screens. Roadmap step 5 builds it. The Turnfin Glass design system artifact no longer describes the design.
+A new lesson asks only for its name and opens as an empty page. **Add** is the only way to put anything in it: text, media (Video, Audio, Slides or interactive, a PDF or picture) and activities (Checklist, Flashcards, Sort into groups, Scenario, Explore a picture, Practice quiz, Hand in work). Authors no longer pick a lesson type.
+- An empty lesson shows these choices as tiles to start from. After that, they sit in the Add button.
+- The page is one flowing text, and Add places a block where the cursor is. Blocks move by dragging, or with Move up and Move down on each block.
+- **Practice quiz** (the section's questions) and **Hand in work** are blocks. A lesson holds at most one of each, and both count toward the six activities. Hand in work goes at the end, under the task written above it, and the lesson finishes when the trainer accepts the work, as before.
+- An older lesson becomes a page when it is opened in the builder: its main part (the video, recording, checklist and so on) becomes the first block, and the change sticks once the lesson is saved. Published versions stay exactly as learners have them.
+- Outlines in the builder and Turnfin Me show a lesson by its first activity, else its first media, else as reading.
+**Why:** after D16, authors had two places to put content in a lesson, the lesson-type picker and Add, for the same purpose.
+**Follows:** no database change: a page is a lesson of kind Reading whose text holds the blocks. Lesson types remain in the code so older lessons and published versions keep working. Replaces the D16 points marked below.
+
+### D17 · 29 October 2026 · Plan (test): the rota started again, beside Rota
+
+**Plan (test)** is a new app in the Team group, on test at one site while **Rota** carries on unchanged. The owner felt Rota had grown too complicated and settled a smaller model, question by question: a **shift** (person, site, day, times, the department whose plan it is on) is built first; **duty blocks** fill it (Lifeguard, Swim teacher, Reception, Break), each from Plan's own list of duties with its department, qualification (warns, never blocks), colour, usual length and timed tasks. **What's on** is one list of **sessions** in Plan's own **areas** (one level of parts, lanes counted): each needs duties × count for its whole time, repeats on weekdays between two dates with skipped days, and can be changed or called off one day at a time. Sessions on the same area stack, so a booking lists only the staff it adds. A **gap** is a needed place nobody fills. Swim classes arrive from Swim school as sessions needing the one duty marked for classes, and Plan chooses their teachers through Swim school's record, superseding Rota for that. People can be marked **off** in Plan's own simple record; absences and returns to work stay in Rota. Warnings: qualification, overlap, off, class clash and breaks owed. Supervisors plan their own departments a week ahead and may borrow anyone at the site; Manage runs the day and keeps the setup. It is a floor guide: Timepoint stays the payroll record, with no import, change reasons or emails, and planners only see it (no Turnfin Me) while it is a test.
+**Why:** Rota's four kinds of need (area needs, activities, bookings, classes), timed sub-activities, automatic breaks, week sharing and the Timepoint log made it hard to use and to change. Starting again beside it lets the site compare the two without risk.
+**Follows:** [apps.md](apps.md#plan-test) and `src/modules/plan/README.md`. Its tables are new (`plan_*`, additive); nothing is read from or copied out of Rota. If the test succeeds, a later decision says what replaces Rota and when; if not, Plan (test) is switched off and its tables removed with the owner's yes.
+
+### D16 · 29 October 2026 · Several things in one lesson
+
+A training lesson can hold several things together, such as audio with a slide deck. Authors use **Add** in any lesson's text to place **media** (Audio, Slides or interactive, a PDF or picture shown in place) or **activities** (Checklist, Flashcards, Sort into groups, Scenario, Explore a picture). The lesson types stay as they are, and these are blocks on top. (Since D18 a new lesson is a page and Add is the only way in.)
+- Activities must all be finished before the learner can move on, under the same rules as their lesson types.
+- A lesson holds at most six activities. They sit only in the main text, never inside tabs, reveals or steps. Media can go anywhere.
+- Audio and slides play independently. Audio keeps playing, with a small bar pinned at the bottom once the player scrolls out of view, and can carry an optional transcript.
+- Halfway progress is kept on the learner's phone, as checklist ticks already are; finishing the lesson goes on their record.
+- Hand in work stays a lesson of its own, because a trainer checks it. A quiz is a knowledge check in the text. (Replaced by D18: both are blocks, one of each per lesson.)
+**Why:** staff learn from a briefing while looking at its slides, or check a poster while ticking off a list. One thing per lesson split these across screens.
+**Follows:** no database change: the blocks live in the lesson text (`cleanDoc` in `src/modules/training/shared/lessons.ts`), and published versions freeze them like everything else.
+
+### D15 · 26 October 2026 · The last Poolside sizes become Glass tokens, and poolside.css goes
+
+The sizes the pre-2.0 `poolside.css` still held become Turnfin Glass tokens in `glass.css`, under the names DESIGN.md gives them: the running type (`type-caption`, `type-body`, `type-title`, `type-large-title`, `type-figure` and their leadings), the layout limits (`overlay-max-width`, `overlay-max-height`, `tile-min`, `card-min`, `column-min`, `rail-width`, `field-min`, `deck-width`), the overlay shadow and focus halo, text on the accent, and the Docs content palette. Its surviving rules move to the top of `kit.css`, and the file is deleted from Turnfin and Turnfin Me.
+**Why:** one theme, one set of names: nothing on screen keeps the old system alive, and a new screen cannot reach for it.
+**Follows:** [../DESIGN.md](../DESIGN.md) (Space, size and radius). The Academy site keeps its own copy until it is rebuilt.
+
+### D14 · 26 October 2026 · Maintenance, a new app, and the platform's one file check
+
+**Maintenance** is a new app in the Managers group. Staff report what is broken at a site, and the site's managers follow it until it is fixed. It is not part of Incidents, which is for accidents and near misses, with triage and sign-off. It is not part of Tasks, which gets each site's checks done on time. The maintenance team keeps working in **Trackplan**. Turnfin asks "Is it already in Trackplan?" (Yes, No or Not sure, with an optional reference) and never connects to Trackplan. The owner decided each of these points in turn: two levels (Report, Manage); a separate urgency (Low, Normal or Urgent); and "Could hurt someone" always being Urgent. Reporters see the open requests in the area before sending. Manage notes come only with status moves, with no comments thread. There is no email until the platform outbox lands, and the app goes live at one site first.
+The platform's **one file check** (`src/lib/files`, roadmap step 4) starts here. Maintenance's photos use it first, and the other apps move onto it in step 4.
+**Why:** a broken light or locker belongs neither in an incident's triage queue nor in a site's checks. Staff need one place to say what is broken, and managers need to see what still has to reach Trackplan. A copy of every app's file check would have been a seventh.
+**Follows:** [apps.md](apps.md#maintenance) and `src/modules/maintenance/README.md`. Later: urgent requests email the site's managers through the outbox, and an Incidents report of kind "Equipment or building" links to its maintenance request.
+
+### D13 · 25 October 2026 · Turnfin Glass was the 2.0 design (replaced by D20)
+
+The 2.0 design is **Turnfin Glass**: Apple's Liquid Glass and Human Interface Guidelines, brought to Turnfin's web app. A plain ground, opaque content, and glass only on the controls that float; colour only for selected, needs action, done, now and serious; springs and in-place feedback throughout. It was chosen from screenshot-checked, clickable mockups, after Poolside Clear refinements, editorial, colourful glass, Material 3 Expressive and Turnfin Live were tried.
+**Why:** staff need calm, legible screens that let them act where they are looking; it looks and feels premium enough to stand beside the apps people use every day.
+**Follows:** [../DESIGN.md](../DESIGN.md) is the contract (it replaces D9's placeholder). The design system (https://claude.ai/artifact/6Ex4VcQGtPRBheTqVtgWWM) shows it live; roadmap step 5 builds it.
 
 ### D12 · 24 October 2026 · Turnfin 2.0 begins
 

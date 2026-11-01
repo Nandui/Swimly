@@ -20,9 +20,9 @@ export default async function StockProductsPage() {
           {sheetMissing ? <AddSheetProducts missing={sheetMissing} /> : null}
           <ProductDialog categories={categories} />
         </> : undefined} />}>
-      <section className="pc-panel" aria-label="Products">
-        {products.length === 0 ? <EmptyState compact icon="layers" title="No products yet" hint={who.manage ? "Add what you sell or use, and it is ready to count." : "Whoever manages Stock adds them."} /> : (
-          <ul className="pc-rows">
+      <section className="flex min-w-0 flex-col" aria-label="Products">
+        {products.length === 0 ? <EmptyState icon="layers" title="No products yet" hint={who.manage ? "Add what you sell or use, and it is ready to count." : "Whoever manages Stock adds them."} /> : (
+          <ul className="pc-list">
             {products.map((p) => (
               <li key={p.id} className="pc-row" {...(p.archivedAt ? { "data-muted": "" } : {})}>
                 <span className="pc-row-body">

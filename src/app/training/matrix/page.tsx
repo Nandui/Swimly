@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Download } from "lucide-react";
+import { CircleCheck, Download, GraduationCap, Users } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { EmptyState } from "@/components/ui-kit/empty-state";
+import { Figure, Figures } from "@/components/ui-kit/figure";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
@@ -34,9 +35,9 @@ export default async function TrainingMatrixPage({ searchParams }: { searchParam
   const filtered = !!(filters.site || filters.department || filters.course);
   const query = new URLSearchParams(Object.entries(filters).filter((e): e is [string, string] => !!e[1])).toString();
   return (
-    <PageShell header={<PageHeader title="Training matrix" description="Everyone you cover against the courses training rules say they need."
+    <PageShell spacing="roomy" header={<PageHeader title="Training matrix" description="Everyone you cover against the courses training rules say they need."
         actions={rows.length ? <Button asChild variant="outline" className="min-h-11"><a href={`/training/matrix/export${query ? `?${query}` : ""}`} download><Download aria-hidden="true" />Download for Excel</a></Button> : null} />}>
-      <form method="get" className="pc-panel" role="search" aria-label="Filter the training matrix">
+      <form method="get" role="search" aria-label="Filter the training matrix">
         <div className="flex flex-wrap items-end gap-4">
         <div className="min-w-0 grow basis-40 space-y-2 sm:grow-0 sm:basis-auto sm:min-w-52"><Label htmlFor="matrix-site" className="block">Site</Label>
           <NativeSelect id="matrix-site" name="site" defaultValue={input.site ?? ""} className="min-h-11 w-full">
@@ -57,7 +58,7 @@ export default async function TrainingMatrixPage({ searchParams }: { searchParam
           </NativeSelect>
         </div>
         <div className="flex gap-2">
-          <Button type="submit" className="min-h-11">Apply filters</Button>
+          <Button type="submit" variant="outline" className="min-h-11">Apply filters</Button>
           {filtered ? <Button asChild variant="ghost" className="min-h-11"><Link href="/training/matrix">Reset</Link></Button> : null}
         </div>
         </div>
@@ -69,12 +70,12 @@ export default async function TrainingMatrixPage({ searchParams }: { searchParam
         <EmptyState as="h2" icon="graduation" title="Nobody here" hint={filtered ? "No one you cover matches these filters and needs these courses." : "The training rules cover nobody you cover."} />
       ) : (
         <>
-          <section className="grid gap-4 sm:grid-cols-3" aria-label="How many are in date">
-            <div className="pc-panel"><p className="text-sm text-ui-muted-foreground">In date</p><p className="text-3xl font-semibold tabular-nums">{summary.percent}%</p></div>
-            <div className="pc-panel"><p className="text-sm text-ui-muted-foreground">Courses done and in date</p><p className="text-3xl font-semibold tabular-nums">{summary.compliant} of {summary.needed}</p></div>
-            <div className="pc-panel"><p className="text-sm text-ui-muted-foreground">People</p><p className="text-3xl font-semibold tabular-nums">{rows.length}</p></div>
-          </section>
-          <section className="pc-panel p-0" aria-label="Training matrix">
+          <Figures label="How many are in date">
+            <Figure icon={CircleCheck} label="In date" value={`${summary.percent}%`} quiet={summary.needed === 0} />
+            <Figure icon={GraduationCap} label="Courses done and in date" value={`${summary.compliant} of ${summary.needed}`} quiet={summary.compliant === 0} />
+            <Figure icon={Users} label="People" value={rows.length} />
+          </Figures>
+          <section className="flex min-w-0 flex-col" aria-label="Training matrix">
             <Table>
               <TableCaption className="sr-only">Each person, and where they stand on each course a rule says they need</TableCaption>
               <TableHeader>

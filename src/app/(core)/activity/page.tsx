@@ -29,9 +29,9 @@ export default async function ActivityPage(props: PageProps<"/activity">) {
   const last = first + entries.length - 1;
 
   return (
-    <PageShell header={<PageHeader title="Activity" description="Who changed what, and when." />}>
+    <PageShell spacing="roomy" header={<PageHeader title="Activity" description="Who changed what, and when." />}>
 
-      <section className="pc-panel" aria-label="Activity">
+      <section className="flex min-w-0 flex-col gap-(--space-4)" aria-label="Activity">
         <SegmentedLinks label="Filter by app" items={[undefined, ...modules].map((name) => ({ href: name ? `/activity?module=${encodeURIComponent(name)}` : "/activity", label: name ?? "Every app", current: name === moduleName }))} />
 
         {total === 0 ? (

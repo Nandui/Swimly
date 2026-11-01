@@ -1,8 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { actionProblem, actionSchema, addWorkingDays, keepUntil, monthsEnding, summarise, cleanWhys, closeDecision, fileProblem, isSerious, IncidentError, needsSignoff, reopenDecision, reportProblem, reportSchema, statementProblem, statementSchema, triageDecision, triageSchema } from "./rules";
-import { triageAnswerRows } from "./triage-guides";
-import { actionStatus } from "./types";
+import { incidentStatuses, seriousMeta, SEVERITY_META } from "@/modules/incidents";
+import {
+  actionOutcomeSchema, actionProblem, actionSchema, addendumSchema, addWorkingDays, closeSchema, investigable, investigationSchema, keepUntil, KEEP_YEARS, MAX_FILE_BYTES, MAX_FILES,
+  monthsEnding, needsParent, needsRootCause, reopenSchema, safeFileName, summarise, cleanWhys, closeDecision, fileProblem, isSerious, IncidentError, needsSignoff, reopenDecision,
+  reportProblem, reportSchema, statementProblem, statementSchema, triageDecision, triageSchema,
+} from "./rules";
+import { cleanTriageAnswers, injuryGuide, staffSupportCheck, triageAnswerRows, triageChecks, triageGuide } from "./triage-guides";
+import { actionStatus, incidentCategories, incidentNumber, levelOf, MAX_WHYS, severities } from "./types";
 
 const who = { id: "dan", name: "Dan", orgId: null, superadmin: false, review: true, signoff: false };
 const row = { status: "reported", reporterId: "mia", occurredOn: "2026-10-09", serious: false, severityActual: null, severityPotential: null, hsaReportable: null, category: "slip_trip_fall", hasChild: false, hasStaff: false };
@@ -124,4 +129,118 @@ test("insights count by month, kind, hour and level, and the near misses for eac
   assert.equal(i.areas.find((a) => a.key === "Not given")?.count, 1);
   assert.deepEqual([i.levels.find((l) => l.key === "2")?.count, i.untriaged, i.serious], [2, 1, 1]);
   assert.equal(summarise([row], months).nearMissRatio, null, "no accidents, no ratio");
+});
+
+test("the front door's tags: each status its own icon, and each severity its number and word, never green from moderate up", () => {
+  const statuses = Object.values(incidentStatuses);
+  assert.equal(new Set(statuses.map((s) => s.icon)).size, statuses.length, "colour is never the only signal");
+  const reached = [
+    triageDecision(row, who, triage()).status,
+    triageDecision(row, who, triage({ outcome: "investigate" })).status,
+    reopenDecision({ status: "closed", reporterId: "mia" }, { id: "dan", signoff: true }).status,
+  ];
+  for (const status of reached) assert.ok(Object.hasOwn(incidentStatuses, status), `${status} has a tag`);
+  assert.equal(seriousMeta.label, "Serious");
+  for (const [level, s] of Object.entries(severities)) {
+    const tag = SEVERITY_META[Number(level) as keyof typeof SEVERITY_META];
+    assert.equal(tag.label, `${level} ${s.label}`);
+    if (Number(level) >= 3) assert.notEqual(tag.color, "green", `${s.label} needs a manager, so it does not look fine`);
+  }
+  assert.equal(levelOf(1, 4), 4, "a report is handled at the worse of what happened and what could have");
+  assert.equal(incidentNumber(42), "INC-00042");
+});
+
+test("a report is from the last year; older ones go to a manager", () => {
+  const now = new Date("2026-10-11T12:00:00Z");
+  assert.equal(reportProblem(report({ occurredOn: "2025-10-11" }), now), null, "a year ago today is still in");
+  assert.match(reportProblem(report({ occurredOn: "2025-10-10" }), now)!, /last year/);
+  assert.throws(() => report({ occurredAt: "24:00" }), /time it happened/);
+  assert.throws(() => report({ people: Array(11).fill(person) }), /Up to 10 people/);
+});
+
+test("the parent must be told when a child is named or missing; a root cause is needed wherever a manager signs off", () => {
+  assert.equal(needsParent({ category: "slip_trip_fall", hasChild: false }), false);
+  assert.equal(needsParent({ category: "slip_trip_fall", hasChild: true }), true);
+  assert.equal(needsParent({ category: "lost_child", hasChild: false }), true);
+  for (const r of [{ serious: true, severityActual: 1, severityPotential: 1 }, { serious: false, severityActual: 1, severityPotential: 3 }, { serious: false, severityActual: 2, severityPotential: 2 }])
+    assert.equal(needsRootCause(r), needsSignoff(r));
+  assert.equal(needsSignoff({ serious: false, severityActual: 2, severityPotential: 2 }), false, "minor: whoever triages may close");
+  assert.equal(needsSignoff({ serious: false, severityActual: null, severityPotential: null }), false, "not yet rated");
+});
+
+test("an investigation is worked on only while open, and never by the person who reported it", () => {
+  assert.doesNotThrow(() => investigable({ status: "investigating", reporterId: "mia" }, { id: "dan" }));
+  assert.throws(() => investigable({ status: "investigating", reporterId: "dan" }, { id: "dan" }), /your own report/);
+  assert.throws(() => investigable({ status: "closed", reporterId: "mia" }, { id: "dan" }), /under investigation/);
+  assert.throws(() => investigable({ status: "reported", reporterId: "mia" }, { id: "dan" }), /under investigation/, "triage comes first");
+  const close = { note: "Step edge replaced and checked.", hsaReference: "" };
+  assert.throws(() => closeDecision({ ...row, rootCause: "x" }, who, close, 0), /under investigation/);
+  assert.throws(() => closeDecision({ ...row, status: "investigating", reporterId: "dan", rootCause: "" }, who, close, 0), /your own report/);
+  assert.throws(() => closeDecision({ ...row, status: "investigating", rootCause: "" }, who, close, 1), /One action is still open/);
+});
+
+test("each form asks for enough to be useful: a reason to reopen, words in an addendum, at most five whys, an action done or dropped", () => {
+  assert.throws(() => reopenSchema.parse({ reason: "New facts" }), /Say why/);
+  assert.equal(reopenSchema.parse({ reason: "  The parent sent a GP letter.  " }).reason, "The parent sent a GP letter.");
+  assert.throws(() => addendumSchema.parse({ note: "  " }), /Write the addendum/);
+  assert.throws(() => closeSchema.parse({ note: "Done.", hsaReference: "" }), /what was found/);
+  assert.equal(investigationSchema.parse({ whys: Array(MAX_WHYS).fill("Why"), rootCause: "" }).whys.length, 5);
+  assert.throws(() => investigationSchema.parse({ whys: Array(MAX_WHYS + 1).fill("Why"), rootCause: "" }), /Up to 5/);
+  assert.equal(actionOutcomeSchema.parse({ outcome: "cancelled", note: "Not needed" }).outcome, "cancelled");
+  assert.throws(() => actionOutcomeSchema.parse({ outcome: "open", note: "Again" }));
+  const now = new Date("2026-10-11T12:00:00Z");
+  const action = actionSchema.parse({ title: "Replace the step edge", ownerId: "sam", dueOn: "2027-10-12" });
+  assert.equal(actionProblem(action, now), null, "366 days ahead is still allowed");
+  assert.match(actionProblem({ ...action, dueOn: "2027-10-13" }, now)!, /within the next year/);
+});
+
+test("every category triages with a guide that rates 1 to 5, and the HSA's dangerous-occurrence question only where it can apply", () => {
+  for (const category of Object.keys(incidentCategories)) {
+    const guide = triageGuide(category);
+    assert.deepEqual(Object.keys(guide.scale), ["1", "2", "3", "4", "5"], category);
+    assert.ok(guide.intro.length > 10, category);
+  }
+  assert.equal(triageGuide("slip_trip_fall"), injuryGuide);
+  assert.equal(triageGuide("not-a-category").label, "Something else", "an unknown category asks the general questions");
+  assert.equal(triageGuide("chemical").dangerous, true);
+  assert.equal(triageGuide("lost_child").dangerous, false);
+  assert.equal(injuryGuide.scale[4], severities[4].help, "an injury uses the one severity scale's words");
+});
+
+test("triage asks a follow-on question only once its answer makes it relevant, and about support whenever a staff member is involved", () => {
+  const keys = (category: string, answers = {}, hasStaff = false) => triageChecks({ category, hasStaff }, answers).map((c) => c.key);
+  assert.deepEqual(keys("contamination"), ["contaminant", "poolClosed", "waterTested"]);
+  assert.deepEqual(keys("contamination", { poolClosed: true }), ["contaminant", "poolClosed", "closedFor", "waterTested"]);
+  assert.ok(keys("security", { whose: "centre" }).includes("insurerTold"));
+  assert.ok(!keys("security", { whose: "staff" }).includes("insurerTold"));
+  assert.deepEqual(keys("slip_trip_fall", {}, true), [staffSupportCheck.key]);
+  assert.deepEqual(keys("behaviour", { aimedAt: "staff" }).filter((k) => k === "staffSupport"), ["staffSupport"]);
+  assert.deepEqual(keys("staff", {}, true).filter((k) => k === "staffSupport"), ["staffSupport"], "asked once, even when the guide asks too");
+
+  const context = { category: "contamination", hasStaff: false };
+  assert.deepEqual(cleanTriageAnswers(context, { contaminant: "glitter", poolClosed: "yes", closedFor: "14:10 to 15:05", waterTested: true }),
+    { poolClosed: false, waterTested: true }, "an unknown choice is dropped, a tick is only true when ticked, and a follow-on needs its answer");
+  assert.equal(cleanTriageAnswers(context, { poolClosed: true, closedFor: `  ${"x".repeat(400)} ` }).closedFor, "x".repeat(300), "text is trimmed and kept short");
+  assert.equal("closedFor" in cleanTriageAnswers(context, { poolClosed: true, closedFor: "   " }), false, "blank text is not an answer");
+  assert.deepEqual(triageAnswerRows(context, null), [], "nothing stored, nothing shown");
+});
+
+test("files: a photo or a PDF up to 4 MB, its name made safe to store", () => {
+  const jpeg = Buffer.from([255, 216, 255, 224]);
+  const pdf = Buffer.from("%PDF-1.7");
+  const webp = Buffer.from("RIFF0000WEBPVP8 ");
+  assert.equal(fileProblem({ name: "Step.JPG", type: "image/jpeg", size: jpeg.length }, jpeg), null);
+  assert.equal(fileProblem({ name: "letter.pdf", type: "application/pdf", size: pdf.length }, pdf), null);
+  assert.equal(fileProblem({ name: "step.webp", type: "image/webp", size: webp.length }, webp), null);
+  assert.ok(fileProblem({ name: "letter.png", type: "application/pdf", size: pdf.length }, pdf), "the name must match the kind");
+  assert.ok(fileProblem({ name: "letter.pdf", type: "application/pdf", size: 99 }, pdf), "the size given must be the size sent");
+  assert.ok(fileProblem({ name: "empty.pdf", type: "application/pdf", size: 0 }, Buffer.alloc(0)));
+  const full = Buffer.concat([pdf, Buffer.alloc(MAX_FILE_BYTES - pdf.length)]);
+  assert.equal(fileProblem({ name: "full.pdf", type: "application/pdf", size: full.length }, full), null, "4 MB exactly is allowed");
+  const over = Buffer.concat([full, Buffer.alloc(1)]);
+  assert.ok(fileProblem({ name: "over.pdf", type: "application/pdf", size: over.length }, over), "one byte over is not");
+  assert.equal(MAX_FILES, 10);
+  assert.equal(safeFileName("../poolside\\photo\n1.jpg"), ".._poolside_photo_1.jpg");
+  assert.equal(safeFileName("x".repeat(250)).length, 200);
+  assert.equal(KEEP_YEARS, 10);
 });

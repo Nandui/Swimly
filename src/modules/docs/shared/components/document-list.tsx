@@ -4,7 +4,7 @@ import { DOC_STATUS_META, documentTypeLabels, formatDate, overdue, type Group, t
 import { Tag } from '@/components/ui-kit/tag';
 import { DocIcon } from '@/modules/docs/shared/components/ui';
 
-/** Documents as a list of separate rounded rows (V2Docs, DCOverview): the type tile, the
+/** Documents as one grouped list (DESIGN.md, List): the type tile, the
  *  title over "reference · type · version · published · facilities", the status, a chevron. */
 export function DocumentList({
   documents,
@@ -14,7 +14,7 @@ export function DocumentList({
   facilities: Group[];
 }) {
   return (
-    <ul className="pc-rows">
+    <ul className="pc-list">
       {documents.map((document) => {
         const c = document.content;
         const places = c.facilityIds

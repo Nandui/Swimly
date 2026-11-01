@@ -34,6 +34,9 @@ const TILES = [
     hint: { NEEDS_INFORMATION: "Sent back to the desk", APPROVED: "Approved, not ordered yet", ORDERED: "Order recorded" }[status],
   })),
 ];
+/** A row's tile takes the tone of what it needs: orange while it waits for accounts or the desk,
+ *  green once ordered, the quiet fill otherwise. The tag beside it says it in words. */
+const TONE: Partial<Record<CoinageStatus, "orange" | "green">> = { SUBMITTED: "orange", IN_REVIEW: "orange", NEEDS_INFORMATION: "orange", APPROVED: "orange", ORDERED: "green" };
 const EMPTY: Record<string, string> = {
   review: "Nothing is waiting for review", SUBMITTED: "Nothing is waiting for review", IN_REVIEW: "Nothing is in review",
   actionable: "Nothing is waiting for your team", NEEDS_INFORMATION: "Nothing needs more information",
@@ -68,20 +71,20 @@ export function CoinageQueue({ data }: { data: Data }) {
   const site = data.sites.find(item => item.id === f.site)?.name ?? "All sites";
   const title = view === "mine" ? "My requests" : view === "drafts" ? "My drafts" : "Coinage requests";
   const create = who.request ? <Button asChild><Link href="/coinage/new"><Coins aria-hidden="true" />Request coinage</Link></Button> : null;
-  return <PageShell header={<PageHeader title={title} description={`${what} · ${site}`} actions={create} />}>
-    <ul className="pc-stats" aria-label="Follow-up queues">
+  return <PageShell spacing="roomy" header={<PageHeader title={title} description={`${what} · ${site}`} actions={create} />}>
+    <ul className="pc-stats" data-compact aria-label="Follow-up queues">
       {TILES.map(tile => {
         const value = count(tile.counts), Icon = tile.icon;
         return <li key={tile.status} className="flex">
           <Link href={href({ status: tile.status })} className="pc-stat w-full" aria-current={f.status === tile.status ? "true" : undefined}>
-            <span className="pc-tile-icon"><Icon aria-hidden="true" /></span>
-            <span><span className={cn("pc-stat-figure block", !value && "text-ui-muted-foreground")}>{value}</span><span className="block font-semibold">{tile.label}</span></span>
-            <span className="text-xs text-ui-muted-foreground max-sm:hidden">{tile.hint}</span>
+            <span className="pc-stat-label"><Icon aria-hidden="true" />{tile.label}</span>
+            <span className="pc-stat-figure" data-zero={value ? undefined : ""}>{value}</span>
+            <span className="pc-stat-hint">{tile.hint}</span>
           </Link>
         </li>;
       })}
     </ul>
-    <section className="pc-panel" aria-label="Requests" aria-busy={pending}>
+    <div className="flex min-w-0 flex-col gap-(--space-3)">
       <Form action="/coinage" role="search" aria-label="Find a coinage request" className="min-w-0">
         {KEPT.map(key => key !== "q" && f[key] ? <input key={key} type="hidden" name={key} value={f[key]} /> : null)}
         <SearchField id="coinage-search" label="Find a request" defaultValue={f.q ?? ""} placeholder="Till, name, order reference or CO number" maxLength={200} clearHref={href({ q: null })} />
@@ -96,17 +99,20 @@ export function CoinageQueue({ data }: { data: Data }) {
         </div>
         {filtering ? <Button asChild variant="ghost"><Link href={viewHref}>Clear filters</Link></Button> : null}
       </div>
-      {data.total ? <p className="text-xs text-ui-muted-foreground tabular-nums" aria-live="polite" aria-atomic="true">{plural(data.total, filtering ? "matching request" : "request", filtering ? "matching requests" : "requests")}</p> : null}
+    </div>
+    <section className="flex min-w-0 flex-col" aria-labelledby="coinage-list-h" aria-busy={pending}>
+      <div className="pc-section-head"><h2 id="coinage-list-h">{what}</h2>{data.total ? <p aria-live="polite" aria-atomic="true">{plural(data.total, filtering ? "match" : "request", filtering ? "matches" : "requests")}</p> : null}</div>
       {data.rows.length === 0
-        ? <EmptyState as="h2" role="status" icon="receipt" title={EMPTY[f.status] ?? (view === "mine" ? "You haven’t requested coinage yet" : "No requests to show")} hint={filtering ? "Try changing the filters." : undefined} action={!filtering && (view !== "requests" || f.status === "open") ? create : undefined} />
-        : <ul className="pc-rows">{data.rows.map(row => <li key={row.id}>
+        ? <EmptyState as="h3" role="status" icon="receipt" title={EMPTY[f.status] ?? (view === "mine" ? "You haven’t requested coinage yet" : "No requests to show")} hint={filtering ? "Try changing the filters." : undefined} action={!filtering && (view !== "requests" || f.status === "open") ? create : undefined} />
+        : <ul className="pc-list">{data.rows.map(row => <li key={row.id}>
           <Link href={`/coinage/${row.id}`} className="pc-row">
+            <span className="pc-tile-icon" data-tone={TONE[row.status]}><Coins aria-hidden="true" /></span>
             <span className="pc-row-body"><span className="pc-row-title break-words">{row.forWhom || "Unnamed draft"}</span><span className="pc-row-hint">{coinageNumber(row.number)} · {row.clubName} · {row.neededBy ? `Needed by ${formatDate(parseDateOnly(row.neededBy))}` : formatDate(new Date(row.submittedAt || row.createdAt))}</span></span>
             <span className="pc-row-trail"><span className="font-semibold tabular-nums">{euros(row.totalCents)}</span><Tag meta={coinageStatuses[row.status]} /><ChevronRight aria-hidden="true" className="pc-row-chevron" /></span>
           </Link>
         </li>)}</ul>}
-      <LinkPagination label="Request pages" page={data.page} pageCount={data.pages} pathname="/coinage" query={query()} />
     </section>
+    <LinkPagination label="Request pages" page={data.page} pageCount={data.pages} pathname="/coinage" query={query()} />
   </PageShell>;
 }
 

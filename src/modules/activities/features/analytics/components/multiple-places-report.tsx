@@ -50,13 +50,14 @@ export function MultiplePlacesReport({ data }: { data: MultiplePlacesAnalyticsDa
       <StatTile icon={Users} value={formatCount(data.swimmers.length)} label="More than one enrolment" caption={`Swimmers ${where}`} />
       <StatTile icon={Clock3} value={formatCount(waitlisted)} label="Including a waitlist place" caption="Of those swimmers" />
     </ul>
-    <section className="pc-panel ins-panel" aria-labelledby="multiple-enrolments-list">
-      <div className="pc-panel-head">
+    <section className="ins-panel-wrap" aria-labelledby="multiple-enrolments-list">
+      <div className="pc-section-head">
         <h2 id="multiple-enrolments-list">Swimmers</h2>
         <Button variant="outline" disabled={swimmers.length === 0} onClick={() => download(`multiple-enrolments-${slug}-${data.date}.csv`, multiplePlacesCsv(swimmers))}>
           <Download aria-hidden="true" />Export CSV<span className="sr-only">: {plural(swimmers.length, "swimmer")}</span>
         </Button>
       </div>
+      <div className="rec-card ins-panel">
       <SearchField label="Find a swimmer" placeholder="Name or member ID" value={search} onValueChange={setSearch} className="sm:max-w-md" />
       <p role="status" className="text-xs text-ui-muted-foreground">{plural(swimmers.length, "swimmer")}. Export saves this list.</p>
       <div className="min-w-0">
@@ -83,6 +84,7 @@ export function MultiplePlacesReport({ data }: { data: MultiplePlacesAnalyticsDa
           })}</TableBody>
         </Table>
         {swimmers.length === 0 ? <EmptyState role="status" compact title={query ? "No swimmers match your search." : `No swimmers ${where} have more than one enrolment.`} /> : null}
+      </div>
       </div>
     </section>
     <footer className="ins-footnote">

@@ -2,7 +2,7 @@
 import '@fontsource/plus-jakarta-sans/400.css';
 import '@fontsource/plus-jakarta-sans/600.css';
 import '@fontsource/plus-jakarta-sans/700.css';
-import '@/app/theme/poolside.css';
+import '@/app/theme/kit.css';
 import { createRoot } from 'react-dom/client';
 import Link from 'next/link';
 import { ThemeProvider } from '@/components/theme-provider';

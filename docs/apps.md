@@ -19,6 +19,8 @@ Swimmers, classes and assessments at the desk, and the swim school's set-up.
 
 Connects: class commitments for Rota; the member directory and history for Short courses; site summaries; home items; the parent app's API.
 
+Who can book an assessment: programmes run in the order set on the Programmes page (Water Safety and Fun, Swimming Skills, Rookie Lifesaving). A swimmer with a place in a class can be booked only for an assessment of that programme or a later one, never an earlier one; with places in two programmes, the later counts. The session's age range must fit too. The desk and the parent app's API refuse the booking, and the API's `assessment-sessions/{id}/children` tells the app which children can book and why not (`shared/assessments/programme-rule.ts`).
+
 After every assessment booking, the family gets an "Assessment booked" email: the parent who booked in the parent app or, for a desk booking, the swimmer's contact email (else the linked parent accounts). It gives the child's first name, the assessment, day, time, site and the site's reception phone. It is sent after the booking commits, from Production only (previews run on real records), and never for bookings by a system account.
 
 ### Short courses
@@ -107,6 +109,19 @@ Who is on which activity at the sites you cover, with every gap in cover counted
 
 Connects: reads commitments and qualifications; person file; shift-change emails through Turnfin Me.
 
+### Plan (test)
+*Module `plan` · `/plan/overview` · reach: sites · data: `plan.prisma`*
+
+The rota started again, on test at one site beside Rota ([D17](decisions.md)): shifts first, the duties in them, what's on and the gaps.
+
+| Level | Gives |
+| --- | --- |
+| View | see the plan at their sites |
+| Plan | plan shifts and duties for the departments they belong to, and mark people off |
+| Manage | plan every department, run today, and keep the duties, areas and what's on |
+
+Connects: reads people, departments and qualifications; reads swim classes and plans their teachers through Swim school's commitments. No Turnfin Me, home card or person file while it is on test.
+
 ### Training
 *Module `training` · `/training/overview` · reach: sites · data: `training.prisma`*
 
@@ -167,6 +182,20 @@ What managers need to act on at their sites, raised automatically.
 | Act | also close an action by saying what was done, or open it again |
 
 Listens to `tasks.reading.out_of_range`.
+
+### Maintenance
+*Module `maintenance` · `/maintenance/overview` · reach: sites · data: `maintenance.prisma`*
+
+What is broken at each site, from the first report until it is fixed. The maintenance team works in Trackplan, their own tool. Turnfin asks whether a problem is already in Trackplan, and keeps a Trackplan reference if one is given. It never connects to Trackplan ([D14](decisions.md)).
+
+| Level | Gives |
+| --- | --- |
+| Report | report a problem at their sites, and see every request there, so nothing is reported twice |
+| Manage | also put requests in Trackplan, correct them, mark them fixed, close them not fixed, and open them again |
+
+A request is **Reported**, **In Trackplan**, **Fixed** or **Closed, not fixed**. It starts In Trackplan when the reporter answers that it is already there. "Could hurt someone" always makes it Urgent.
+
+Connects: subject records; area renames.
 
 ### Analytics
 *Module `activities` · `/analytics` · reach: sites · data: reads the swim school's and desk measures*

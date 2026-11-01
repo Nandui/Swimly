@@ -193,3 +193,47 @@ test("reading your own HR record in Turnfin Me is logged like every HR read, aga
   assert.equal((await hr.db.query("SELECT 1 FROM access_events")).length, before + 1);
   assert.deepEqual(rows[0], { actor_id: "ava", subject_user_ids: ["ava"], entity: "HrRecord", purpose: "own HR record (Turnfin Me)" });
 });
+
+test("HR's front door gives Turnfin Me only the person's own shared records, in their own organisation, and audits acknowledging", async () => {
+  const front = serverModule<typeof import("@/modules/hr")>("src/modules/hr/index.ts", doubles());
+  // The same person id in another organisation is another person's record.
+  await hr.db.query("INSERT INTO notes (id, org_id, subject_user_id, author_id, author_name, visibility, body) VALUES ('n-elsewhere', 'org_elsewhere', 'ava', 'x', 'x', 'subject', 'Synthetic note elsewhere')");
+  await hr.db.query("INSERT INTO reviews (id, org_id, subject_user_id, reviewer_id, reviewer_name, period, status, shared_at) VALUES ('r-elsewhere', 'org_elsewhere', 'ava', 'x', 'x', 'Elsewhere 2026', 'shared', now())");
+  const own = await front.mySharedHr("ava", ORG);
+  assert.deepEqual(own.notes.map((n) => n.id), [sharedNote]);
+  assert.deepEqual(own.reviews.map((r) => r.id), [draft]);
+  assert.deepEqual((await front.mySharedHr("ava", "org_elsewhere")).reviews.map((r) => r.id), ["r-elsewhere"]);
+  assert.deepEqual(await front.mySharedHr("noah", ORG), { notes: [], reviews: [] }, "nothing shared, nothing shown");
+
+  assert.equal((await front.acknowledgeReviewFor({ id: "ava", name: "ava", orgId: ORG }, "r-elsewhere", "")).ok, false, "another organisation's review");
+  const audit = await hr.db.query<{ actor_id: string; entity: string; subject_user_id: string; summary: string }>("SELECT actor_id, entity, subject_user_id, summary FROM audit_events WHERE action='acknowledge' AND entity_id=$1", [draft]);
+  assert.deepEqual(audit, [{ actor_id: "ava", entity: "HrReview", subject_user_id: "ava", summary: "Acknowledged the review 2026 annual review" }], "acknowledged once, audited once");
+  assert.equal((await front.acknowledgeReviewFor({ id: "ava", name: "ava", orgId: "org_elsewhere" }, "r-elsewhere", `  ${"x".repeat(2100)}  `)).ok, true);
+  const [elsewhere] = await front.mySharedHr("ava", "org_elsewhere").then((r) => r.reviews);
+  assert.equal(elsewhere.subjectComment.length, 2000, "the comment is trimmed and kept to 2000 letters");
+
+  as("liam", { grants: [HR_LEAD] });
+  assert.equal((await actions.withdrawNote(sharedNote, "Synthetic: shared in error")).ok, true);
+  assert.deepEqual((await front.mySharedHr("ava", ORG)).notes, [], "a withdrawn note leaves Turnfin Me");
+
+  const reads = (await hr.db.query("SELECT 1 FROM access_events WHERE actor_id='ava'")).length;
+  await front.logOwnHrRead({ id: "ava", name: "ava", orgId: ORG });
+  assert.equal((await hr.db.query("SELECT 1 FROM access_events WHERE actor_id='ava'")).length, reads + 1);
+});
+
+test("HR is on only when its own database is set, and refuses one shared with Turnfin", () => {
+  const { hrConfigured } = serverModule<typeof import("@/modules/hr")>("src/modules/hr/shared/database.ts", { "server-only": {} });
+  const keys = ["HR_DATABASE_URL", "HR_DIRECT_URL", "HR_DB_DATABASE_URL", "HR_DB_DATABASE_URL_UNPOOLED", "DATABASE_URL", "DIRECT_URL", "DATABASE_URL_UNPOOLED", "DOCS_DATABASE_URL", "DOCS_DIRECT_URL"] as const;
+  const saved = Object.fromEntries(keys.map((k) => [k, process.env[k]]));
+  try {
+    for (const k of keys) delete process.env[k];
+    assert.equal(hrConfigured(), false, "unset: HR says it is not set up, and nothing else is affected");
+    process.env.DATABASE_URL = "postgres://synthetic@main.example.invalid/turnfin";
+    process.env.HR_DATABASE_URL = "postgres://synthetic@hr.example.invalid/hr";
+    assert.equal(hrConfigured(), true);
+    process.env.HR_DATABASE_URL = "postgres://synthetic@main.example.invalid/turnfin";
+    assert.throws(() => hrConfigured(), /own database/);
+  } finally {
+    for (const k of keys) if (saved[k] === undefined) delete process.env[k]; else process.env[k] = saved[k];
+  }
+});

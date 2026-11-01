@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { approverRoles, centsOf, euro, lineDetails, mayApprove, optionsOf, orderTotal, poNumber, rulesFor, variantProblem } from "./rules";
+import {
+  APPROVAL_LIST_META, approverRoles, centsOf, copyList, EDITABLE, euro, lineDetails, MAX_COPY_TO, mayApprove, MONTHS, optionsOf, orderTotal, PO_EMAIL_META, PO_STATUS_META, poNumber, rulesFor,
+  SUPPLIER_EMAILS_META, variantProblem,
+} from "./rules";
 
 test("numbers read <site>-<month>-<running number>", () => {
   assert.equal(poNumber("BT", new Date("2026-10-15T12:00:00Z"), 42), "BT-OCT-0042");
@@ -53,4 +56,37 @@ test("an order line picks one of the product's sizes and colours, or none when i
   const chlorine = { name: "Chlorine", sizes: [], colours: [] };
   assert.equal(variantProblem(chlorine, { size: "", colour: "" }), null);
   assert.equal(variantProblem(chlorine, { size: "M", colour: "" }), "Chlorine has no sizes.");
+});
+
+test("the requester changes an order only while it is a draft or after it is rejected", () => {
+  assert.deepEqual([...EDITABLE], ["draft", "rejected"]);
+  for (const status of EDITABLE) assert.ok(Object.hasOwn(PO_STATUS_META, status));
+  assert.equal(EDITABLE.includes("pending"), false, "waiting for approval, it is the approver's");
+  assert.equal(EDITABLE.includes("approved"), false, "approved is final");
+});
+
+test("every tag has its own icon, so colour is never the only signal", () => {
+  for (const meta of [PO_STATUS_META, APPROVAL_LIST_META, PO_EMAIL_META, SUPPLIER_EMAILS_META]) {
+    const tags = Object.values(meta);
+    assert.equal(new Set(tags.map((t) => t.icon)).size, tags.length);
+    for (const t of tags) assert.ok(t.label.length > 1);
+  }
+  assert.equal(MONTHS.length, 12);
+  assert.equal(new Set(MONTHS).size, 12);
+});
+
+test("amounts typed with spaces or nothing at all", () => {
+  assert.equal(centsOf(" 12 "), 1200);
+  assert.equal(centsOf("0"), 0);
+  assert.equal(centsOf(""), null);
+  assert.equal(centsOf("12."), null);
+  assert.equal(centsOf("twelve"), null);
+  assert.equal(orderTotal([]), 0);
+});
+
+test("Copy to: addresses split by commas, semicolons or spaces, each once whatever its case, in the order given", () => {
+  assert.deepEqual(copyList(" gina@example.invalid; accounts@example.invalid,GINA@example.invalid  ops@example.invalid\n"), ["gina@example.invalid", "accounts@example.invalid", "ops@example.invalid"]);
+  assert.deepEqual(copyList(""), []);
+  assert.deepEqual(copyList(" , ; "), []);
+  assert.equal(MAX_COPY_TO, 5, "a few, not a mailing list");
 });

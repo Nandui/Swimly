@@ -34,7 +34,7 @@ Local adaptations:
 - Chart (20 October 2026) is shadcn's chart, taken from its registry source
   because the CLI could not reach ui.shadcn.com from the build sandbox. It
   depends on recharts 3. Its colours use `ui-` utilities and the theme's
-  `--pc-chart-*` and other tokens through the chart config; it keeps the
+  `--pc-chart-*` and other tokens (now pointing at `src/app/theme/glass.css`) through the chart config; it keeps the
   registry's own `style` for series colours, which is why `src/components/shadcn`
   is the one folder the inline-style lint skips.
 - Progress is the one way to draw a bar for a share (analytics, meters).

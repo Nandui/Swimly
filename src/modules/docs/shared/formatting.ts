@@ -4,7 +4,7 @@ import type { JSONContent } from '@tiptap/react';
 export const headingLevels = [1, 2, 3, 4, 5, 6] as const;
 export const textAlignments = ['left', 'center', 'right', 'justify'] as const;
 export const fontSizes = [12, 14, 16, 18, 20, 24, 30, 36, 48];
-/** The stored values; each is drawn through its `--pc-docs-*` token (poolside.css), lighter in dark mode. */
+/** The stored values; each is drawn through its `--docs-*` token (glass.css), lighter in dark mode. */
 export const textColours = [
   { name: 'Blue', value: '#2563eb' }, { name: 'Teal', value: '#0f766e' },
   { name: 'Green', value: '#15803d' }, { name: 'Purple', value: '#9333ea' },
@@ -53,7 +53,7 @@ const nearest = (value: string, palette: { name: string; value: string }[]) => {
   return best.name.toLowerCase();
 };
 /** A stored colour drawn as the nearest colour of the Docs palette (`data-colour`, themed in
- *  poolside.css), since pages never carry inline styles; the stored value itself is kept. */
+ *  kit.css), since pages never carry inline styles; the stored value itself is kept. */
 export const textColourKey = (value: unknown) => safeColour(value) ? nearest(value, textColours) : undefined;
 export const highlightKey = (value: unknown) => safeColour(value) ? nearest(value, highlightColours) : undefined;
 /** A stored size drawn as the nearest size of the editor's list (`data-size`, editor.css). */

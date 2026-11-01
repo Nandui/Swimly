@@ -4,4 +4,4 @@ export { ReportPanel } from "@/modules/incidents/features/reports/components/rep
 export { ReportView } from "@/modules/incidents/features/reports/components/report-view";
 export { incidentCounts, incidentLists, incidentReport, reportFormData, reportIdByNumber } from "@/modules/incidents/features/reports/server/data";
 export { incidentHomeItems } from "@/modules/incidents/features/reports/server/home";
-export { incidentNumber, incidentStatuses, seriousMeta } from "@/modules/incidents/shared/types";
+export { incidentCategories, incidentKinds, incidentNumber, incidentStatuses, seriousMeta } from "@/modules/incidents/shared/types";

@@ -24,14 +24,14 @@ function mark(value: string | null | undefined) {
 
 export function CompetencyHistory({ studentId, id, name }: { studentId: string; id: string; name: string }) {
   return <Dialog><DialogTrigger asChild><Button variant="ghost" aria-label={`History of ${name}`}><History aria-hidden="true" />History</Button></DialogTrigger>
-    <DialogContent className="max-h-(--pc-overlay-max-height) overflow-y-auto sm:max-w-2xl"><DialogHeader><DialogTitle>{name}</DialogTitle><DialogDescription>Recorded competency history. Older records may show only the latest saved mark.</DialogDescription></DialogHeader>
+    <DialogContent className="max-h-(--overlay-max-height) overflow-y-auto sm:max-w-2xl"><DialogHeader><DialogTitle>{name}</DialogTitle><DialogDescription>Recorded competency history. Older records may show only the latest saved mark.</DialogDescription></DialogHeader>
       <HistoryFeed studentId={studentId} query={{ competencyId: id, kind: "competencies" }} />
     </DialogContent>
   </Dialog>;
 }
 
 function HistoryRows({ events, studentId, showCompetencyLinks = true, brief = false }: { events: HistoryEvent[]; studentId: string; showCompetencyLinks?: boolean; brief?: boolean }) {
-  return <ol className={brief ? "flex flex-col" : "pc-rows"} aria-label="Swimmer activity">{events.map(event => {
+  return <ol className={brief ? "flex flex-col" : "pc-list"} aria-label="Swimmer activity">{events.map(event => {
     const Icon = ICONS[event.kind], changes = event.evidence?.changes;
     const title = changes?.length ? `${changes.length} competency ${changes.length === 1 ? "mark" : "marks"} updated` : event.title;
     if (brief) {

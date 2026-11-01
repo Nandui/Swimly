@@ -1,9 +1,9 @@
 # Turnfin 2.0: the design
 
-**Status: approved.** The owner approved **Turnfin Sheet** on 1 November 2026 ([decision D13](docs/decisions.md)), replacing Turnfin Glass. It is the one design for every screen in Turnfin, Turnfin Me and the Academy booking site. This file is its contract. Building it is roadmap step 5 ([docs/roadmap.md](docs/roadmap.md)); until each part is built, the live app keeps the pre-2.0 theme (see "Until it is built").
+**Status: approved.** The owner approved **Turnfin Sheet** on 1 November 2026 ([decision D20](docs/decisions.md)), replacing Turnfin Glass (D13). It is the one design for every screen in Turnfin, Turnfin Me and the Academy booking site. This file is its contract. Building it is roadmap step 5 ([docs/roadmap.md](docs/roadmap.md)); until each part is built, the live app keeps Turnfin Glass, which is built and live (see "Until it is built").
 
 - **The approved screens:** row D of the design canvas: Home, Refunds with an open refund, the pool deck register, and Home on phone in light and dark (https://claude.ai/artifact/QmVi8aMcECQzQxNNrgEKe5). Row G holds the fin texture options; "Fin XL, white" was chosen.
-- When this file and the canvas disagree, this file wins. Once step 5 moves the tokens into the theme file, the theme file holds the values and this file links to it.
+- When this file and the canvas disagree, this file wins. The tokens live in one theme file, [`src/app/theme/glass.css`](src/app/theme/glass.css), which holds the Glass values until step 5 swaps in these; from then the theme file holds the values and the tables below say what each one is for.
 
 ## The idea
 
@@ -83,6 +83,7 @@ One family, **Manrope** (400 to 800), then `system-ui`. Numbers that line up or 
 
 - **Spacing:** 2, 4, 8, 10, 12, 16, 22, 26, 40, 48 (px). The sheet's padding is 40/48 on desktop, 28/30 on tablet, 22/16 on phones.
 - **Sizes:** `control-height` 44 (every target, at every width); rows 64 on desktop lists; register tiles at least 92 on the tablet; `sidebar-width` 248 (220 on tablet); the sheet is inset 10px from the window's top, right and bottom.
+- **Running type and layout limits** keep the names D15 gave them: the kit reads the type scale through `type-caption`, `type-body`, `type-title`, `type-large-title` and `type-figure`, each with its `-leading` (so Turnfin Me's text size can step them up); overlays keep a 16px gutter (`overlay-max-width`, `overlay-max-height`); grids and fields take `tile-min` 10rem, `card-min` 14rem, `column-min` 22rem, `rail-width` 20rem, `field-min` 18rem and `deck-width` 1180px.
 - **Radii:** `radius-item` 11 (sidebar items, search), `radius-control` 12 (buttons; 15 on the pool deck), `radius-tile` 13 (icon tiles), `radius-row` 16 (rows and register tiles), `radius-card` 18 (figure tiles, the amount panel), `radius-sheet` 22 (the desktop sheet; 28 on the phone sheet's top corners), `radius-pill` 999 (tags, counts, the tab bar).
 
 ### Motion
@@ -91,7 +92,7 @@ Calm and quick. Hover and press take 150ms (`ease-out`); a row eases 2px to the 
 
 ## The frame and navigation
 
-Turnfin is one frame holding apps ([PRODUCT.md](PRODUCT.md)). What it shows is worked out from the person's levels and the width, never from a layout kept for each role ([D14](docs/decisions.md), [architecture.md](docs/architecture.md#the-frame)). These rules hold whatever the look:
+Turnfin is one frame holding apps ([PRODUCT.md](PRODUCT.md)). What it shows is worked out from the person's levels and the width, never from a layout kept for each role ([D19](docs/decisions.md), [architecture.md](docs/architecture.md#the-frame)). These rules hold whatever the look:
 - **One level of navigation on screen.** The sidebar (or, on phones, the tab bar) is the only navigation. There are no top tabs and no page bars.
 - **Home is the work.** One "Needs you" list across apps, each item naming its app, then today. There is no separate "Today" entry.
 - **Only your apps, in a fixed order.** Never ranked by use, so shared desks and training screenshots stay right.
@@ -131,15 +132,15 @@ Turnfin is one frame holding apps ([PRODUCT.md](PRODUCT.md)). What it shows is w
 - Every page is one `PageShell` with one `PageHeader` holding its one H1, as now (AGENTS.md, "Screens"). Step 5 rebuilds both in this design: the header gains the eyebrow line, the meta line and the trailing action; on phones it moves onto the ground.
 - A page leads with what needs the person: a "Needs you" list, or the "Not covered yet" lane. Then what is happening now (figures, the day). Then the rest.
 - Lists are rows on the sheet itself, not boxed cards: each row is an icon tile (or avatar), two lines of text, a tag, and a chevron, with `radius-row` hover. Figures sit in `surface` tiles. Never boxes inside boxes.
-- A page that shows the day uses `DayTimeline`: blocks on the sheet, with the now line in `serious-ink`.
+- A page that shows the day uses `DayTimeline`: blocks on the sheet, with the now line in `serious-ink`. Blocks that overlap in time take rows of their own within their lane, as Calendar stacks them; a hairline parts one lane from the next.
 
 ## Components
 
-The 2.0 kit. Each rebuilds or replaces a piece of today's kit (`src/components/shadcn`, `src/components/ui-kit`). Radix behaviour stays where shadcn has it; the look changes. This contract approves the new components marked **new**.
+The 2.0 kit. Each restyles or replaces a piece of today's Glass kit (`src/components/shadcn`, `src/components/ui-kit`, `ui-kit/glass.tsx`). Radix behaviour stays where shadcn has it; the look changes. This contract approves the new components marked **new**.
 
 | Component | Replaces or restyles | Notes |
 | --- | --- | --- |
-| `Ground` | **new** | The blue frame with the fin. Kit only: pages never draw the ground or the fin themselves. |
+| `Ground` | `GlassRoot`, `Glass` | The blue frame with the fin. Kit only: pages never draw the ground or the fin themselves. The glass material and lens filters go. |
 | `PageSheet` | the page frame in `ModuleShell` | The white page on the ground. |
 | `Sidebar` | the module rail in `ModuleShell` | Drills in; white selected pill. |
 | `TabBar` | the phone bottom bar in `ModuleShell` | White capsule plus search circle. |
@@ -148,7 +149,7 @@ The 2.0 kit. Each rebuilds or replaces a piece of today's kit (`src/components/s
 | `IconTile` | **new** | 42px `brand-soft` tile with a Lucide symbol in `brand-ink`. |
 | `Tag` | `ui-kit/tag` | Same `StatusMeta` map; tones become neutral, urgent, done and serious. |
 | `Figure` | the `.pc-stats` tiles | Label, big number, one context line. |
-| `DetailPane` | **new** | The record beside its list on desktop. |
+| `DetailPane` | `Inspector`, `ui-kit/record.tsx` | The record beside its list on desktop. |
 | `RegisterTile`, `ProgressRing` | `shadcn/progress` for sets of things | Pool deck registers and checks. |
 | `Avatar` | `shadcn/avatar` | Initials only, `brand-soft` or white on the ground. |
 | `Search` | `shadcn/command` and the search tool | Pages, people, members. |
@@ -197,19 +198,17 @@ Turnfin Me is the person's own app on their own phone, so it uses the phone fram
 
 ## Until it is built
 
-- The live app keeps the pre-2.0 theme (`src/app/theme`, `src/app/shadcn.css`) until step 5 replaces each part. No two designs in one screen. Do not add the new look piecemeal to the old screens, or old-look ideas to new ones.
+- The live app runs on **Turnfin Glass**, built 25 to 27 October 2026: the tokens in `src/app/theme/glass.css` (with copies in `apps/me` and `apps/academy`), the material and frame in `src/app/theme/kit.css` and `src/components/ui-kit/glass.tsx`, and every screen inside the frame. Its contract is the previous version of this file in git history, and D13.
+- Until step 5 replaces a part, that part stays Glass. No two designs in one screen: do not add Sheet piecemeal to Glass screens, or Glass ideas to Sheet ones.
 - The screen rules in [AGENTS.md](AGENTS.md) ("Screens") hold throughout.
 
 ## How it is built
 
-Roadmap step 5, in this order. Each part removes the old look it replaces.
+Roadmap step 5, in this order. It re-themes the built Glass work rather than starting again; each part removes the Glass look it replaces.
 
-1. **The theme.**
-   - These tokens go into one theme file in `src/app/theme`, mapped into `src/app/shadcn.css`, in light and dark. Manrope is loaded with `next/font`.
-   - The fin's mask uses the logo from `public/brand/turnfin.png`.
-   - `poolside.css` and the `--pc-*` tokens go when nothing uses them.
-2. **The kit.** The components above, in `src/components/ui-kit`, built on the shadcn primitives. The lint rules (AGENTS.md, "Enforcement") follow the new kit.
-3. **The frame.** `ModuleShell` becomes `Ground`, `Sidebar`, `PageSheet` and `TabBar`. `PageShell` and `PageHeader` are rebuilt in this design.
+1. **The theme.** These tokens replace the Glass values in the theme file, in light and dark, mapped into `src/app/shadcn.css`; the `type-*` and layout tokens keep their names. Manrope is loaded with `next/font`. The fin's mask uses the logo from `public/brand/turnfin.png`. The glass material, lens filters and unused springs go. The file takes a plain name once nothing names `glass.css`.
+2. **The kit.** The components above, restyled in `src/components/ui-kit` on the shadcn primitives: `GlassRoot` and `Glass` become `Ground`, `Inspector` becomes `DetailPane`. The lint rules (AGENTS.md, "Enforcement") follow.
+3. **The frame.** `ModuleShell` becomes `Ground`, `Sidebar`, `PageSheet` and `TabBar`, with the drill-in frame of D19: the app's pages move from the toolbar's segmented control into the sidebar. `PageShell` and `PageHeader` are rebuilt in this design.
 4. **Home and the app frame,** then each app, one pull request each, checked in the running app at phone, tablet and desktop widths in light and dark.
 5. **Turnfin Me and the Academy booking site,** with their own copies of the theme and kit.
 

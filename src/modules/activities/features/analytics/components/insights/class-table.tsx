@@ -36,7 +36,7 @@ export function ClassTable({ rows, showSite, query }: { rows: ClassRow[]; showSi
   const shown = rows.filter(r => matches(r, view) && (!term || `${r.name} ${r.levelName} ${r.programmeName} ${r.teachers.map(t => t.key).join(" ")}`.toLowerCase().includes(term)));
   return <div className="flex min-w-0 flex-col gap-3">
     <div className="flex flex-wrap items-end gap-3">
-      <SearchField label="Find a class" placeholder="Level, class or teacher" value={search} onValueChange={setSearch} className="grow basis-(--pc-field-min)" />
+      <SearchField label="Find a class" placeholder="Level, class or teacher" value={search} onValueChange={setSearch} className="grow basis-(--field-min)" />
       <SegmentedChoice aria-label="Show classes" value={view} onValueChange={setView} options={views.map(v => ({ value: v.value, label: v.label, count: rows.filter(r => matches(r, v.value)).length }))} />
     </div>
     <p role="status" className="ins-muted">{plural(shown.length, "class", "classes")}</p>

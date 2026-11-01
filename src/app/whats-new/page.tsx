@@ -3,6 +3,7 @@ import { Sparkles } from "lucide-react";
 
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
+import { RecordSection } from "@/components/ui-kit/record";
 import { Tag, type TagMeta } from "@/components/ui-kit/tag";
 import { boldRuns, releaseNotes, type ReleaseBlock } from "@/lib/whats-new";
 
@@ -29,35 +30,30 @@ export default async function WhatsNewPage() {
   const { intro, releases } = await releaseNotes();
   const latest = releases[0];
   return (
-    <PageShell header={<PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         title="What's new"
         description={latest ? <>Turnfin is on version {latest.version}, updated {latest.date}. The newest changes come first.</> : "Changes to Turnfin, newest first."}
       />}>
 
       {releases.map((release, index) => (
-        <section key={release.version} className="pc-panel" aria-labelledby={`release-${release.version}`}>
-          <div className="pc-panel-head">
-            <div className="min-w-0 flex flex-col gap-1">
-              <h2 id={`release-${release.version}`} className="text-lg font-semibold">{release.title}</h2>
-              <p className="pc-row-hint">Version {release.version} · {release.date}</p>
+        <RecordSection key={release.version} id={`release-${release.version}`} title={release.title}
+          aside={index === 0 ? <Tag meta={LATEST} /> : null} note={`Version ${release.version} · ${release.date}`}>
+          <div className="rec-card">
+            <div className="flex max-w-3xl flex-col gap-3 text-sm">
+              {release.blocks.map((block, i) => <Block key={i} block={block} />)}
             </div>
-            {index === 0 ? <Tag meta={LATEST} /> : null}
           </div>
-          <div className="flex flex-col gap-3 text-sm max-w-3xl">
-            {release.blocks.map((block, i) => <Block key={i} block={block} />)}
-          </div>
-        </section>
+        </RecordSection>
       ))}
 
       {intro.length ? (
-        <section className="pc-panel" aria-labelledby="about-heading">
-          <div className="pc-panel-head">
-            <h2 id="about-heading" className="text-lg font-semibold">About these notes</h2>
+        <RecordSection id="about-heading" title="About these notes">
+          <div className="rec-card">
+            <div className="flex max-w-3xl flex-col gap-3 text-sm">
+              {intro.map((line, i) => <p key={i}><Rich text={line} /></p>)}
+            </div>
           </div>
-          <div className="flex flex-col gap-3 text-sm max-w-3xl">
-            {intro.map((line, i) => <p key={i}><Rich text={line} /></p>)}
-          </div>
-        </section>
+        </RecordSection>
       ) : null}
     </PageShell>
   );

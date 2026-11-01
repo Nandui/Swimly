@@ -9,7 +9,7 @@ type Option = { id: string; site: string; stockDate: string; counted: number };
 export function ComparePicker({ options, from, to }: { options: Option[]; from?: string; to?: string }) {
   const sites = [...new Set(options.map((o) => o.site))];
   const list = (id: string, name: string, label: string, value?: string) => (
-    <div className="flex grow basis-(--pc-field-min) flex-col gap-2">
+    <div className="flex grow basis-(--field-min) flex-col gap-2">
       <Label htmlFor={id}>{label}</Label>
       <NativeSelect id={id} name={name} defaultValue={value ?? ""} required className="min-h-11 w-full">
         <NativeSelectOption value="">Choose a count</NativeSelectOption>

@@ -12,6 +12,7 @@ import { StartReview } from "@/modules/hr/features/reviews";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
+import { RecordFacts, RecordSection } from "@/components/ui-kit/record";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { requireFreshSession } from "@/lib/policy/session";
@@ -46,7 +47,7 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
   const personLink = (p: { id: string; name: string }) => <Link className="-my-3 inline-flex min-h-11 items-center underline underline-offset-4" href={`/hr/people/${p.id}`}>{p.name}</Link>;
   const quals = await qualificationFile(person.id, who.orgId ?? "");
   return (
-    <PageShell header={<PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         back={{ href: "/hr", label: "People" }}
         title={person.name}
         description={person.jobTitle || "HR record"}
@@ -58,11 +59,9 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
           </>
         }
       />}>
-      <section className="pc-panel" aria-labelledby="hr-profile">
-        <div className="pc-panel-head">
-          <h2 id="hr-profile">Profile</h2>
-          {options ? <EditProfile person={{ ...d, id: person.id, name: person.name }} sites={options.sites} departments={options.departments} people={options.people} positions={options.positions} /> : null}
-        </div>
+      <RecordSection id="hr-profile" title="Profile"
+        aside={options ? <EditProfile person={{ ...d, id: person.id, name: person.name }} sites={options.sites} departments={options.departments} people={options.people} positions={options.positions} /> : null}>
+        <div className="rec-card">
         <Facts items={[
           ["Position", d.position ? `${d.position.name}${d.position.archivedAt ? " (archived)" : ""}` : d.jobTitle ? `${d.jobTitle} (not on the list)` : "Not set"],
           ["Started", d.startedOn ? day(d.startedOn) : "Not set"],
@@ -74,36 +73,33 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
         {d.reports.length ? (
           <p className="text-sm text-ui-muted-foreground">Manages {d.reports.map((r, i) => <span key={r.id}>{i ? ", " : ""}{personLink(r)}</span>)}</p>
         ) : null}
-      </section>
-      <div className="pc-grid">
-        <section className="pc-panel" aria-labelledby="hr-employment">
-          <div className="pc-panel-head">
-            <h2 id="hr-employment">Employment</h2>
-            {options ? <EditEmployment person={{ ...d, id: person.id, name: person.name }} /> : null}
-          </div>
+        </div>
+      </RecordSection>
+      <div className="grid min-w-0 items-start gap-(--space-7) lg:grid-cols-2">
+        <RecordSection id="hr-employment" title="Employment" aside={options ? <EditEmployment person={{ ...d, id: person.id, name: person.name }} /> : null}>
+          <div className="rec-card">
           <Facts items={[
             ["Contract", d.contractType ? CONTRACT_META[d.contractType as ContractType]?.label ?? d.contractType : "Not set"],
             ["Hours a week", d.contractMinutes != null ? hoursOf(d.contractMinutes) : "Not set"],
             ["Payroll number", d.payrollNumber || "Not set"],
             ["Last day", d.endedOn ? day(d.endedOn) : "Still here"],
           ]} />
-        </section>
-        <section className="pc-panel" aria-labelledby="hr-contact">
-          <div className="pc-panel-head">
-            <div className="flex flex-col gap-1"><h2 id="hr-contact">Contact</h2><p className="pc-row-hint">Kept by them in Turnfin Me; their changes come to Details changes.</p></div>
           </div>
+        </RecordSection>
+        <RecordSection id="hr-contact" title="Contact" note="Kept by them in Turnfin Me; their changes come to Details changes.">
+          <div className="rec-card">
           <Facts items={[
             ["Phone", d.phone || "Not given"],
             ["Home address", d.homeAddress || "Not given"],
             ["Emergency contact", d.emergencyName ? [d.emergencyName, d.emergencyRelationship, d.emergencyPhone].filter(Boolean).join(" · ") : "Not given"],
           ]} />
-        </section>
+          </div>
+        </RecordSection>
       </div>
-      <div className="pc-grid">
-        <section className="pc-panel" aria-labelledby="hr-notes">
-          <div className="pc-panel-head"><h2 id="hr-notes">Notes</h2></div>
+      <div className="grid min-w-0 items-start gap-(--space-7) lg:grid-cols-2">
+        <RecordSection id="hr-notes" title="Notes" aside={notes.length ? <p>{notes.length}</p> : null}>
           {notes.length === 0 ? <EmptyState compact icon="scrollText" title="No notes you can read" /> : (
-            <ul className="pc-rows">
+            <ul className="pc-list">
               {notes.map((n) => (
                 <li key={n.id} className="pc-row">
                   {/* A note is prose: it keeps a readable width, and the tag and Withdraw wrap under it. */}
@@ -119,11 +115,11 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
               ))}
             </ul>
           )}
-        </section>
-        <section className="pc-panel" aria-labelledby="hr-reviews">
-          <div className="pc-panel-head"><h2 id="hr-reviews">Performance reviews</h2></div>
+        </RecordSection>
+        <section className="flex min-w-0 flex-col" aria-labelledby="hr-reviews">
+          <div className="pc-section-head"><h2 id="hr-reviews">Performance reviews</h2></div>
           {reviews.length === 0 ? <EmptyState compact icon="clipboardList" title="No reviews yet" /> : (
-            <ul className="pc-rows">
+            <ul className="pc-list">
               {reviews.map((r) => (
                 <li key={r.id}>
                   <Link href={`/hr/reviews/${r.id}`} className="pc-row">
@@ -142,16 +138,16 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
           )}
         </section>
       </div>
-      <section className="pc-panel" aria-labelledby="hr-qualifications">
-        <div className="pc-panel-head">
-          <div className="flex flex-col gap-1">
+      <section className="flex min-w-0 flex-col gap-(--space-3)" aria-labelledby="hr-qualifications">
+        <div>
+          <div className="pc-section-head">
             <h2 id="hr-qualifications">Qualifications</h2>
-            <p className="pc-row-hint">{quals.position ? `${quals.position}: ${requirementSummary(quals.requirements)}.` : "No position set: their profile sets it, and it decides what they need."}</p>
+            {quals.canRecord && quals.types.length ? <RecordQualification userId={person.id} name={person.name} types={quals.types} /> : null}
           </div>
-          {quals.canRecord && quals.types.length ? <RecordQualification userId={person.id} name={person.name} types={quals.types} /> : null}
+          <p className="pc-section-note mb-0">{quals.position ? `${quals.position}: ${requirementSummary(quals.requirements)}.` : "No position set: their profile sets it, and it decides what they need."}</p>
         </div>
         {quals.requirements.length ? (
-          <ul className="pc-rows" aria-label="What their position needs">
+          <ul className="pc-list" aria-label="What their position needs">
             {quals.requirements.map((r) => (
               <li key={r.typeId} className="pc-row">
                 <span className="pc-tile-icon" aria-hidden="true"><Award /></span>
@@ -162,7 +158,7 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
           </ul>
         ) : null}
         {quals.records.length === 0 ? <EmptyState compact icon="award" title="No qualifications recorded" /> : (
-          <ul className="pc-rows" aria-label="Every qualification recorded">
+          <ul className="pc-list" aria-label="Every qualification recorded">
             {quals.records.map((q) => (
               <li key={q.id} className="pc-row">
                 <span className="pc-row-body">
@@ -182,11 +178,11 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
       {data.file.map((section) => {
         const Icon = FILE_ICONS[section.id] ?? FileText;
         return (
-        <section key={section.id} className="pc-panel" aria-labelledby={`file-${section.id}`}>
-          <div className="pc-panel-head"><h2 id={`file-${section.id}`}>{section.heading}</h2></div>
-          <p className="text-sm text-ui-muted-foreground">{section.summary}</p>
+        <section key={section.id} className="flex min-w-0 flex-col" aria-labelledby={`file-${section.id}`}>
+          <div className="pc-section-head"><h2 id={`file-${section.id}`}>{section.heading}</h2>{section.entries.length ? <p>{section.entries.length}</p> : null}</div>
+          <p className="pc-section-note">{section.summary}</p>
           {section.entries.length ? (
-            <ul className="pc-rows">
+            <ul className="pc-list">
               {section.entries.map((e) => (
                 <li key={e.id} className="pc-row">
                   <span className="pc-tile-icon" aria-hidden="true"><Icon /></span>
@@ -206,14 +202,5 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
 }
 
 function Facts({ items }: { items: [string, React.ReactNode][] }) {
-  return (
-    <dl className="grid gap-4 grid-cols-tiles">
-      {items.map(([label, value]) => (
-        <div key={label} className="min-w-0">
-          <dt className="text-xs font-semibold text-ui-muted-foreground">{label}</dt>
-          <dd className="mt-1 wrap-anywhere">{value}</dd>
-        </div>
-      ))}
-    </dl>
-  );
+  return <RecordFacts items={items} />;
 }

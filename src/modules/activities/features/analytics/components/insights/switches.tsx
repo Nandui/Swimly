@@ -53,8 +53,8 @@ export function PillSwitch({ label, options, panels, initial }: {
 }) {
   const [current, setCurrent] = React.useState(initial ?? options[0]?.key ?? "");
   return <div className="ins-pills-wrap">
-    <div role="group" aria-label={label} className="ins-pills">
-      {options.map(o => <Button key={o.key} type="button" variant="ghost" className="ins-pill" aria-pressed={current === o.key} onClick={() => setCurrent(o.key)}>{o.label}</Button>)}
+    <div role="group" aria-label={label} className="pc-seg ins-pills">
+      {options.map(o => <Button key={o.key} type="button" variant="ghost" className="pc-seg-item" aria-pressed={current === o.key} onClick={() => setCurrent(o.key)}>{o.label}</Button>)}
     </div>
     <div aria-live="polite">{panels[current]}</div>
   </div>;

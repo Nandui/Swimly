@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ClipboardList } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
+import { RecordSection } from "@/components/ui-kit/record";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDateTime, formatShortDay, plural } from "@/lib/format";
 import { StartCountDialog, STOCK_TAKE_META, stockCounts, type StockCountRow } from "@/modules/stock/features/counts";
@@ -27,15 +28,17 @@ export default async function StockCountsPage() {
   );
 }
 
+/** Open or submitted counts: the title and how many above a grouped list. An open count's tile is
+ *  orange (it is still being counted), a submitted one green. */
 function Panel({ id, title, takes, live, empty }: { id: string; title: string; takes: StockCountRow[]; live: number; empty?: { title: string; hint: string } }) {
   return (
-    <section aria-labelledby={`${id}-h`} className="pc-panel">
-      <div className="pc-panel-head"><h2 id={`${id}-h`}>{title}</h2></div>
-      {takes.length === 0 ? <EmptyState compact icon="clipboardList" title={empty?.title ?? "None"} hint={empty?.hint} /> : (
-        <ul className="pc-rows">
+    <RecordSection id={`${id}-h`} title={title} aside={takes.length ? <p>{takes.length}</p> : null}>
+      {takes.length === 0 ? <div className="pc-list"><EmptyState compact icon="clipboardList" title={empty?.title ?? "None"} hint={empty?.hint} /></div> : (
+        <ul className="pc-list">
           {takes.map((t) => (
             <li key={t.id}>
               <Link href={`/stock/${t.id}`} className="pc-row">
+                <span className="pc-tile-icon" data-tone={t.state === "open" ? "orange" : "green"} aria-hidden="true"><ClipboardList /></span>
                 <span className="pc-row-body">
                   <span className="pc-row-title">{t.site}, {formatShortDay(t.stockDate)}</span>
                   <span className="pc-row-hint">{[`started by ${t.startedByName}, ${formatDateTime(t.startedAt)}`,
@@ -51,6 +54,6 @@ function Panel({ id, title, takes, live, empty }: { id: string; title: string; t
           ))}
         </ul>
       )}
-    </section>
+    </RecordSection>
   );
 }

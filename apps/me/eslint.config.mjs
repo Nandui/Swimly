@@ -30,5 +30,12 @@ export default defineConfig([
       "no-restricted-imports": ["error", uiImports],
     },
   },
+  // The glass material's lens filters are SVG filter primitives, neither a chart nor an icon: the
+  // one place outside the library that draws <svg> (DESIGN.md, How it is built: the lint rules
+  // follow the new kit). Every other UI rule still applies.
+  {
+    files: ["src/components/ui-kit/glass.tsx"],
+    rules: { "no-restricted-syntax": ["error", ...uiSyntax.filter((rule) => !rule.selector.includes("'svg'"))] },
+  },
   globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
 ]);

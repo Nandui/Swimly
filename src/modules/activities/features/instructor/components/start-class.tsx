@@ -74,7 +74,7 @@ export function StartClass({
       </DialogTrigger>
       <DialogContent
         showCloseButton={false}
-        className="max-h-(--pc-overlay-max-height) overflow-y-auto"
+        className="max-h-(--overlay-max-height) overflow-y-auto"
       >
         <DialogHeader>
           <DialogTitle>Start {name}?</DialogTitle>

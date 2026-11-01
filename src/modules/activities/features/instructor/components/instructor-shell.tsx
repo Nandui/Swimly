@@ -53,12 +53,12 @@ export function InstructorShell({
             <Image src="/brand/turnfin.png" alt="" width={72} height={72} priority />
           </Link>
           <nav className="tf-pages" aria-label="Pool deck">
-            <div className="tf-bar">
+            <div className="tf-bar glass">
               <Link href={home} className="tf-bar-item" aria-current={pathname !== "/instructor/swimmers" ? "page" : undefined}>Classes</Link>
               <Link href="/instructor/swimmers" className="tf-bar-item" aria-current={pathname === "/instructor/swimmers" ? "page" : undefined}>Swimmers</Link>
             </div>
           </nav>
-          <div className="tf-bar tf-tools" role="group" aria-label="Site, help and account">
+          <div className="tf-bar tf-tools glass" role="group" aria-label="Site, help and account">
             <ClubSwitcher club={club} clubs={clubs} touchTargets />
             <Button asChild variant="ghost" size="icon" className="tf-bar-item tf-icon">
               <Link href="/help/instructor" target="_blank" rel="noopener noreferrer" aria-label="Help (opens in a new tab)"><CircleHelp aria-hidden="true" /></Link>

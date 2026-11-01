@@ -3,6 +3,7 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
+import { RecordSection } from "@/components/ui-kit/record";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDay, formatShortDay, plural } from "@/lib/format";
 import { CategoryTag, ComparePicker, groupByCategory, STOCK_CHANGE_META, stockComparison, type CompareRow } from "@/modules/stock/features/compare";
@@ -34,17 +35,15 @@ export default async function StockComparePage({ searchParams }: { searchParams:
             {totals.uncounted ? <> <strong className="text-ui-foreground">{totals.uncounted}</strong> {totals.uncounted === 1 ? "was" : "were"} not counted on one of them and {totals.uncounted === 1 ? "is" : "are"} left out.</> : null}
           </p>
           {groupByCategory(counted).map((g) => (
-            <section key={g.id} className="pc-panel" aria-labelledby={`stk-cmp-${g.id}`}>
-              <div className="pc-panel-head"><h2 id={`stk-cmp-${g.id}`} className="sr-only">{g.name}</h2><CategoryTag name={g.name} tone={g.tone} /></div>
-              <ul className="pc-rows">{g.products.map((r) => <Row key={r.id} row={r} from={from.stockDate} to={to.stockDate} />)}</ul>
+            <section key={g.id} className="flex min-w-0 flex-col" aria-labelledby={`stk-cmp-${g.id}`}>
+              <div className="pc-section-head"><h2 id={`stk-cmp-${g.id}`} className="sr-only">{g.name}</h2><CategoryTag name={g.name} tone={g.tone} /><p>{g.products.length}</p></div>
+              <ul className="pc-list">{g.products.map((r) => <Row key={r.id} row={r} from={from.stockDate} to={to.stockDate} />)}</ul>
             </section>
           ))}
           {missed.length ? (
-            <section className="pc-panel" aria-labelledby="stk-cmp-missed">
-              <div className="pc-panel-head"><div className="flex flex-col gap-1"><h2 id="stk-cmp-missed">Not counted on one of them · {missed.length}</h2>
-                <p className="pc-row-hint">A shelf nobody counted is not an empty shelf, so these are left out of the totals.</p></div></div>
-              <ul className="pc-rows">{missed.map((r) => <Row key={r.id} row={r} from={from.stockDate} to={to.stockDate} />)}</ul>
-            </section>
+            <RecordSection id="stk-cmp-missed" title="Not counted on one of them" aside={<p>{missed.length}</p>} note="A shelf nobody counted is not an empty shelf, so these are left out of the totals.">
+              <ul className="pc-list">{missed.map((r) => <Row key={r.id} row={r} from={from.stockDate} to={to.stockDate} />)}</ul>
+            </RecordSection>
           ) : null}
         </> : null}
       </>}

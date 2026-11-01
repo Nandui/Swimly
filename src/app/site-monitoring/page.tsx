@@ -3,6 +3,7 @@ import Link from "next/link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
+import { RecordSection } from "@/components/ui-kit/record";
 import { Tag } from "@/components/ui-kit/tag";
 import { CloseAction, MONITORING_STATUS_META, monitoringActions, readingLine, ReopenAction } from "@/modules/site-monitoring/features/actions";
 import { formatDateTime } from "@/lib/format";
@@ -14,14 +15,13 @@ export const metadata: Metadata = { title: "Actions" };
 export default async function SiteMonitoringPage() {
   const { open, closed } = await monitoringActions();
   return (
-    <PageShell header={<PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
       title="Site Monitoring"
       description="When a task is completed with a reading out of range, it lands here for the site's managers. Check it was put right, then close it by saying what was done."
     />}>
-      <section className="pc-panel" aria-labelledby="monitoring-open">
-        <div className="pc-panel-head"><h2 id="monitoring-open">Needs action <span className="text-ui-muted-foreground tabular-nums">· {open.length}</span></h2></div>
+      <RecordSection id="monitoring-open" title="Needs action" aside={open.length ? <p>{open.length}</p> : null}>
         {open.length === 0 ? <EmptyState compact icon="clipboardCheck" title="Nothing to act on" hint="Readings out of range show here as soon as a task is completed." /> : (
-          <ul className="pc-rows">
+          <ul className="pc-list">
             {open.map((a) => (
               <li key={a.id} className="pc-row">
                 <span className="pc-row-body">
@@ -38,11 +38,10 @@ export default async function SiteMonitoringPage() {
             ))}
           </ul>
         )}
-      </section>
-      <section className="pc-panel" aria-labelledby="monitoring-closed">
-        <div className="pc-panel-head"><div className="flex flex-col gap-1"><h2 id="monitoring-closed">Closed</h2><p className="pc-row-hint">The latest 30.</p></div></div>
+      </RecordSection>
+      <RecordSection id="monitoring-closed" title="Closed" note="The latest 30.">
         {closed.length === 0 ? <EmptyState compact icon="clipboardList" title="None closed yet" /> : (
-          <ul className="pc-rows">
+          <ul className="pc-list">
             {closed.map((a) => (
               <li key={a.id} className="pc-row">
                 <span className="pc-row-body">
@@ -57,7 +56,7 @@ export default async function SiteMonitoringPage() {
             ))}
           </ul>
         )}
-      </section>
+      </RecordSection>
     </PageShell>
   );
 }

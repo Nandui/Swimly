@@ -5,18 +5,20 @@ import { EditorContent, useEditor, useEditorState, type Editor, type JSONContent
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import { Table, TableCell, TableHeader, TableRow } from "@tiptap/extension-table";
-import { Bold, CircleHelp, FileDown, Footprints, GalleryHorizontal, PanelsTopLeft, PlayCircle, Heading2, Heading3, ImagePlus, Italic, Link as LinkIcon, List, ListOrdered, ListPlus, Megaphone, Minus, PanelTopOpen, Quote, Redo2, Table2, Trash2, Undo2, type LucideIcon } from "lucide-react";
+import { Bold, CirclePlus, CircleHelp, FileDown, Footprints, GalleryHorizontal, PanelsTopLeft, PlayCircle, Heading2, Heading3, ImagePlus, Italic, Link as LinkIcon, List, ListOrdered, ListPlus, Megaphone, Minus, PanelTopOpen, Quote, Redo2, Table2, Trash2, Type, Undo2, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/shadcn/tooltip";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/shadcn/dropdown-menu";
 import { FileField } from "@/components/ui/file-field";
 import { Input } from "@/components/ui/input";
 import { Notice } from "@/components/ui-kit/notice";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { Field } from "@/components/form-dialog";
-import { CALLOUT_META, CALLOUT_TONES, fileSrc, safeHref, videoFor, type CalloutTone } from "@/modules/training/shared/lessons";
+import { ACTIVITY_BLOCK_KINDS, CALLOUT_META, CALLOUT_TONES, fileSrc, LESSON_KIND_META, MAX_ACTIVITY_BLOCKS, ONCE_PER_LESSON, safeHref, videoFor, type ActivityBlockKind, type CalloutTone } from "@/modules/training/shared/lessons";
 import {
-  addToBlock, BLOCK_META, blockAt, blockExtensions, CheckQuestions, CourseFiles, insertBlock, insertCheck, insertFileButton, insertVideo, removeBlock, setTone,
+  activityKinds, addToBlock, BLOCK_META, blockAt, blockExtensions, CheckQuestions, CourseFiles, insertBlock, insertCheck, insertFileButton, insertSetupBlock, insertVideo, removeBlock, setTone,
 } from "@/modules/training/features/builder/components/blocks";
+import { BlockDialog, BlockSetup, MEDIA_BLOCK_META, newBlock, type BlockValue, type MediaBlockType } from "@/modules/training/features/builder/components/block-dialog";
 import { uploadCourseFile, type UploadedFile } from "@/modules/training/features/builder/components/upload";
 
 /** The lesson text editor: what a creator needs and nothing more. Headings,
@@ -25,7 +27,7 @@ import { uploadCourseFile, type UploadedFile } from "@/modules/training/features
 
 function extensions() {
   return [
-    StarterKit.configure({ heading: { levels: [2, 3] }, code: false, codeBlock: false, link: { openOnClick: false, protocols: ["http", "https", "mailto"] } }),
+    StarterKit.configure({ document: false, heading: { levels: [2, 3] }, code: false, codeBlock: false, link: { openOnClick: false, protocols: ["http", "https", "mailto"] } }),
     Image, Table.configure({ resizable: false }), TableRow, TableHeader, TableCell,
     ...blockExtensions(),
   ];
@@ -45,14 +47,15 @@ function Tool({ label, icon: Icon, onClick, active, disabled }: { label: string;
 
 const ATOM_LABEL = { knowledgeCheck: "Knowledge check", videoEmbed: "Video", fileButton: "File to download" } as const;
 
-function Toolbar({ editor, disabled, openLink, openImage, openCheck, openVideo, openFile }: {
+function Toolbar({ editor, disabled, openLink, openImage, openCheck, openVideo, openFile, openBlock }: {
   editor: Editor | null; disabled: boolean; openLink: () => void; openImage: () => void; openCheck: (() => void) | null; openVideo: () => void; openFile: () => void;
+  openBlock: (block: BlockValue) => void;
 }) {
   const state = useEditorState({ editor, selector: ({ editor: e }) => ({
     h2: e?.isActive("heading", { level: 2 }), h3: e?.isActive("heading", { level: 3 }), bold: e?.isActive("bold"), italic: e?.isActive("italic"),
     bullets: e?.isActive("bulletList"), numbers: e?.isActive("orderedList"), quote: e?.isActive("blockquote"), link: e?.isActive("link"),
     table: e?.isActive("table"), undo: e?.can().undo(), redo: e?.can().redo(),
-    block: e ? blockAt(e)?.kind ?? null : null, tone: e ? (blockAt(e)?.node.attrs.tone as CalloutTone | undefined) ?? null : null,
+    block: e ? blockAt(e)?.kind ?? null : null, kinds: e ? activityKinds(e).join(",") : "", tone: e ? (blockAt(e)?.node.attrs.tone as CalloutTone | undefined) ?? null : null,
   }) });
   const off = disabled || !editor;
   const run = (fn: (e: Editor) => void) => () => { if (editor && !off) fn(editor); };
@@ -80,12 +83,13 @@ function Toolbar({ editor, disabled, openLink, openImage, openCheck, openVideo, 
       <Tool label="Video: a YouTube or Vimeo video played right here in the text" icon={PlayCircle} disabled={off || !!state?.block} onClick={openVideo} />
       <Tool label="File to download: a button to open a PDF or picture, such as a form or a poster" icon={FileDown} disabled={off || !!state?.block} onClick={openFile} />
       {openCheck ? <Tool label="Knowledge check: one of this course's questions, answered right here" icon={CircleHelp} disabled={off || !!state?.block} onClick={openCheck} /> : null}
+      <AddMenu disabled={off} choices={addChoices(state?.kinds ? state.kinds.split(",") : [])} pick={(choice) => choice.video ? openVideo() : choice.make && openBlock(choice.make())} />
       <span className="tf-editor-divider" aria-hidden="true" />
       <Tool label="Undo" icon={Undo2} disabled={off || !state?.undo} onClick={run((e) => e.chain().focus().undo().run())} />
       <Tool label="Redo" icon={Redo2} disabled={off || !state?.redo} onClick={run((e) => e.chain().focus().redo().run())} />
       {state?.block ? (
         <div className="tf-editor-context" role="group" aria-label="This block">
-          <span className="text-xs font-semibold uppercase tracking-wide text-ui-muted-foreground">{state.block in ATOM_LABEL ? ATOM_LABEL[state.block as keyof typeof ATOM_LABEL] : BLOCK_META[state.block as keyof typeof BLOCK_META].label}</span>
+          <span className="text-xs font-semibold text-ui-muted-foreground">{state.block in ATOM_LABEL ? ATOM_LABEL[state.block as keyof typeof ATOM_LABEL] : BLOCK_META[state.block as keyof typeof BLOCK_META].label}</span>
           {state.block === "callout" ? (
             <NativeSelect aria-label="Kind of callout" value={state.tone ?? "note"} disabled={off} onChange={(event) => editor && setTone(editor, event.target.value as CalloutTone)} className="min-h-11">
               {CALLOUT_TONES.map((t) => <NativeSelectOption key={t} value={t}>{CALLOUT_META[t].label}</NativeSelectOption>)}
@@ -103,15 +107,77 @@ function Toolbar({ editor, disabled, openLink, openImage, openCheck, openVideo, 
   );
 }
 
-export function RichText({ id, label, value, onChange, courseId, disabled = false, onUploaded, questions, files = [] }: {
+/** One thing Add can put in a lesson: media, or an activity learners finish. */
+type AddChoice = { key: string; group: "Media" | "Activities"; label: string; help: string; icon: LucideIcon; disabled: boolean; video?: true; make?: () => BlockValue };
+
+/** Everything a lesson can hold, for the Add menu and an empty lesson's start grid
+ *  (D18: Add is the only way to put content in a lesson). `kinds`: the activities already there. */
+function addChoices(kinds: string[]): AddChoice[] {
+  const full = kinds.length >= MAX_ACTIVITY_BLOCKS;
+  return [
+    { key: "video", group: "Media", label: "Video", help: "A YouTube or Vimeo video, played right here.", icon: PlayCircle, disabled: false, video: true },
+    ...(Object.keys(MEDIA_BLOCK_META) as MediaBlockType[]).map((type): AddChoice => ({ key: type, group: "Media", ...MEDIA_BLOCK_META[type], disabled: false, make: () => newBlock(type) })),
+    ...ACTIVITY_BLOCK_KINDS.map((kind: ActivityBlockKind): AddChoice => ({
+      key: kind, group: "Activities", label: kind === "QUIZ" ? "Practice quiz" : LESSON_KIND_META[kind].label, help: LESSON_KIND_META[kind].help, icon: LESSON_KIND_META[kind].icon,
+      disabled: full || (ONCE_PER_LESSON.includes(kind) && kinds.includes(kind)), make: () => newBlock("activity", kind),
+    })),
+  ];
+}
+
+function AddMenu({ disabled, choices, pick }: { disabled: boolean; choices: AddChoice[]; pick: (choice: AddChoice) => void }) {
+  const full = choices.filter((c) => c.group === "Activities").every((c) => c.disabled);
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button type="button" variant="ghost" className="min-h-11" disabled={disabled} onMouseDown={(event) => event.preventDefault()}><CirclePlus aria-hidden="true" />Add</Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-80">
+        {(["Media", "Activities"] as const).map((group, gi) => (
+          <DropdownMenuGroup key={group}>
+            {gi ? <DropdownMenuSeparator /> : null}
+            <DropdownMenuLabel>{group === "Media" ? "Media" : full ? `Activities (this lesson has the most it can hold: ${MAX_ACTIVITY_BLOCKS})` : "Activities: learners finish each one to move on"}</DropdownMenuLabel>
+            {choices.filter((c) => c.group === group).map((c) => {
+              const Icon = c.icon;
+              return <DropdownMenuItem key={c.key} className="min-h-11 items-start" disabled={c.disabled} onSelect={() => pick(c)}><Icon aria-hidden="true" /><span><span className="block font-semibold">{c.label}</span><span className="block text-xs text-ui-muted-foreground">{c.help}</span></span></DropdownMenuItem>;
+            })}
+          </DropdownMenuGroup>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/** An empty lesson: what it can hold, as tiles to start from. Once it has
+ *  something, the same choices sit in the Add button. */
+function StartGrid({ choices, pick, startText }: { choices: AddChoice[]; pick: (choice: AddChoice) => void; startText: () => void }) {
+  const tile = (key: string, label: string, help: string, Icon: LucideIcon, onClick: () => void) => (
+    <li key={key}><Button type="button" variant="outline" className="tf-start-tile" onClick={onClick}>
+      <Icon aria-hidden="true" /><span className="flex min-w-0 flex-col items-start text-left"><span className="font-semibold">{label}</span><span className="text-xs font-normal text-ui-muted-foreground whitespace-normal">{help}</span></span>
+    </Button></li>
+  );
+  return (
+    <section className="tf-start-grid" aria-labelledby="start-grid-heading">
+      <h3 id="start-grid-heading" className="text-sm font-semibold">Start this lesson with</h3>
+      <ul>
+        {tile("text", "Text", "Write it out, with headings, lists, pictures and tables.", Type, startText)}
+        {choices.map((c) => tile(c.key, c.label, c.help, c.icon, () => pick(c)))}
+      </ul>
+    </section>
+  );
+}
+
+export function RichText({ id, label, value, onChange, courseId, disabled = false, onUploaded, questions, files = [], section }: {
   id: string; label: string; value: JSONContent | null; onChange: (value: JSONContent) => void; courseId: string; disabled?: boolean;
   onUploaded?: (file: UploadedFile) => void;
   /** The course's files, to offer one to download. */
   files?: UploadedFile[];
   /** The course's questions, for knowledge checks. Leave out where checks don't belong. */
   questions?: { id: string; prompt: string }[];
+  /** The lesson's section, for a Practice quiz. */
+  section?: { id: string; count: number; href: string };
 }) {
   const [panel, setPanel] = useState<"link" | "image" | "check" | "video" | "file" | null>(null);
+  const [adding, setAdding] = useState<BlockValue | null>(null);
   const [videoUrl, setVideoUrl] = useState("");
   const [fileId, setFileId] = useState("");
   const [fileLabel, setFileLabel] = useState("");
@@ -129,7 +195,12 @@ export function RichText({ id, label, value, onChange, courseId, disabled = fals
     onUpdate: ({ editor: e }) => onChange(e.getJSON()),
     editorProps: { attributes: { id, class: "tf-lesson tf-editor-prose", role: "textbox", "aria-multiline": "true", "aria-labelledby": `${id}-label` } },
   });
+  // Re-render as the text fills or empties; read straight from the editor so the
+  // first render after it is created already knows.
+  useEditorState({ editor, selector: ({ editor: e }) => !!e?.isEmpty });
+  const empty = !!editor?.isEmpty;
   const close = () => { setPanel(null); setError(""); };
+  const pick = (choice: AddChoice) => { setError(""); if (choice.video) setPanel("video"); else if (choice.make) { setPanel(null); setAdding(choice.make()); } };
   async function insert() {
     if (!editor) return;
     setError("");
@@ -191,7 +262,8 @@ export function RichText({ id, label, value, onChange, courseId, disabled = fals
           openImage={() => { setPanel("image"); setError(""); }}
           openCheck={questions ? () => { setPanel("check"); setError(""); } : null}
           openVideo={() => { setPanel("video"); setError(""); }}
-          openFile={() => { setPanel("file"); setError(""); }} />
+          openFile={() => { setPanel("file"); setError(""); }}
+          openBlock={(block) => { setPanel(null); setError(""); setAdding(block); }} />
         {panel ? (
           <div className="tf-editor-panel">
             {panel === "link" ? (
@@ -232,11 +304,15 @@ export function RichText({ id, label, value, onChange, courseId, disabled = fals
             </div>
           </div>
         ) : null}
-        <CheckQuestions.Provider value={questions ?? []}>
-          <CourseFiles.Provider value={files}>
-            <EditorContent editor={editor} />
-          </CourseFiles.Provider>
-        </CheckQuestions.Provider>
+        <BlockSetup.Provider value={{ courseId, files, onUploaded, section }}>
+          {empty && !disabled && !panel ? <StartGrid choices={addChoices([])} pick={pick} startText={() => editor?.commands.focus()} /> : null}
+          <CheckQuestions.Provider value={questions ?? []}>
+            <CourseFiles.Provider value={files}>
+              <EditorContent editor={editor} />
+            </CourseFiles.Provider>
+          </CheckQuestions.Provider>
+          {adding ? <BlockDialog value={adding} isNew onClose={() => setAdding(null)} onSave={(block) => { if (editor) insertSetupBlock(editor, block); setAdding(null); }} /> : null}
+        </BlockSetup.Provider>
       </div>
     </div>
   );

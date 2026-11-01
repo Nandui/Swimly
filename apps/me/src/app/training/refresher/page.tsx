@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Award, BookCheck, ChevronRight, Clock, Flame, GraduationCap, Medal, Route, Sparkles, Star, Target, Trophy } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { answered, QuestionField, type Answer, type LearnerQuestion } from "@/components/question";
-import { LoadError, Loading, Notice, useLoad } from "@/components/ui";
+import { LoadError, Loading, Notice, Section, useLoad } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
 import { Button } from "@/components/shadcn/button";
 import { PageShell } from "@/components/ui-kit/page-shell";
@@ -26,8 +26,8 @@ const BADGE_ICON: Record<string, typeof Award> = {
 function Badges({ badges }: { badges: Badge[] }) {
   const earned = badges.filter((b) => b.earned).length;
   return (
-    <section className="pc-panel" aria-labelledby="badges-title">
-      <div className="pc-panel-head"><h2 id="badges-title">Badges</h2><span className="text-ui-muted-foreground tabular-nums">{earned} of {badges.length}</span></div>
+    <Section id="badges-title" title="Badges" aside={<p>{earned} of {badges.length}</p>}>
+      <div className="pc-panel">
       <ul className="badges">
         {badges.map((b) => {
           const Icon = BADGE_ICON[b.id] ?? Medal;
@@ -40,7 +40,8 @@ function Badges({ badges }: { badges: Badge[] }) {
           );
         })}
       </ul>
-    </section>
+      </div>
+    </Section>
   );
 }
 

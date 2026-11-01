@@ -34,7 +34,7 @@ export default async function ClubsPage() {
   const archived = clubs.filter((club) => club.archivedAt);
 
   return (
-    <PageShell header={<PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         title="Sites"
         description="Your sites. Swimmers, programmes and staff are shared; each site keeps its own timetable."
         actions={<AddClub />}
@@ -48,8 +48,8 @@ export default async function ClubsPage() {
           action={<AddClub />}
         />
       ) : (
-        <section className="pc-panel" aria-label="Sites">
-          <p className="text-sm text-ui-muted-foreground">
+        <section className="flex min-w-0 flex-col" aria-label="Sites">
+          <p className="pc-section-note">
             {plural(live.length, "site")}. You are working at {current.name}; the site picker on Home and in Swim school changes that.
           </p>
           <ClubList clubs={live} currentId={current.id} summaries={summaries} />
@@ -57,11 +57,11 @@ export default async function ClubsPage() {
       )}
 
       {archived.length > 0 ? (
-        <section className="pc-panel" aria-labelledby="sites-archived">
-          <div className="pc-panel-head">
-            <h2 id="sites-archived" className="text-lg font-semibold">Archived</h2>
+        <section className="flex min-w-0 flex-col" aria-labelledby="sites-archived">
+          <div className="pc-section-head">
+            <h2 id="sites-archived">Archived</h2>
           </div>
-          <p className="text-sm text-ui-muted-foreground">
+          <p className="pc-section-note">
             Not in the site picker. Everything recorded under them is still there.
           </p>
           <ClubList clubs={archived} currentId={current.id} summaries={summaries} archived />
@@ -83,7 +83,7 @@ function ClubList({
   archived?: boolean;
 }) {
   return (
-    <ul className="pc-rows">
+    <ul className="pc-list">
       {clubs.map((club) => (
         <li key={club.id} className="pc-row wrap-anywhere">
           <span className="pc-tile-icon" aria-hidden="true"><Building2 /></span>

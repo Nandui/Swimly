@@ -128,7 +128,7 @@ test("an author builds a course from sections and lessons and publishes it; othe
   lessons = [a.id, b.id, c.id];
   const unfinished = await builder.publishCourse(courseId);
   assert.equal(unfinished.ok, false);
-  assert.match(unfinished.ok ? "" : unfinished.error, /no text yet/);
+  assert.match(unfinished.ok ? "" : unfinished.error, /nothing in it yet/);
   assert.equal((await builder.saveLesson(a.id, { title: "Why we test", body: JSON.stringify(doc("Chlorine keeps the water safe.")), videoUrl: "", fileId: "", minutes: null })).ok, true);
   assert.equal((await builder.saveLesson(b.id, { title: "Using the kit", body: null, videoUrl: "https://example.com/not-https-video", fileId: "", minutes: 4 })).ok, true);
   assert.equal((await builder.saveLesson(b.id, { title: "Using the kit", body: null, videoUrl: "http://insecure.example", fileId: "", minutes: 4 })).ok, false, "https only");

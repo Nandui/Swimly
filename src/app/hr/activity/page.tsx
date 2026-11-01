@@ -3,6 +3,7 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { LinkPagination } from "@/components/ui-kit/link-pagination";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
+import { RecordHistory, RecordSection } from "@/components/ui-kit/record";
 import { formatDateTime, plural } from "@/lib/format";
 import { HR_ACTIVITY_PAGE_SIZE, hrActivity } from "@/modules/hr/features/activity";
 import { requireFreshSession } from "@/lib/policy/session";
@@ -15,39 +16,21 @@ export default async function HrActivityPage({ searchParams }: { searchParams: P
   const page = Math.max(1, Math.floor(Number((await searchParams).page)) || 1);
   const { reads, changes, readsTotal, changesTotal } = await hrActivity(page);
   return (
-    <PageShell header={<PageHeader title="Who read what" description="Every time someone opened an HR record, and every change, newest first." />}>
-      <div className="pc-grid">
-        <section className="pc-panel" aria-labelledby="hr-reads">
-          <div className="pc-panel-head"><h2 id="hr-reads">Reads</h2></div>
+    <PageShell spacing="roomy" header={<PageHeader title="Who read what" description="Every time someone opened an HR record, and every change, newest first." />}>
+      <div className="grid min-w-0 items-start gap-(--space-7) lg:grid-cols-2">
+        <RecordSection id="hr-reads" title="Reads" aside={readsTotal ? <p>{readsTotal}</p> : null}>
           {reads.length === 0 ? <EmptyState compact icon="userSearch" title={page > 1 ? "No more reads" : "Nobody has opened an HR record yet"} /> : (
-            <ul className="pc-feed">{reads.map((r) => {
+            <RecordHistory items={reads.map((r) => {
               const { line, caption } = readSentence(r);
-              return (
-                <li key={r.id}>
-                  <span className="pc-feed-dot" aria-hidden="true" />
-                  <span className="min-w-0">
-                    <span className="block font-semibold break-words">{line}</span>
-                    <span className="block text-xs text-ui-muted-foreground">{[formatDateTime(new Date(r.at)), caption].filter(Boolean).join(" · ")}</span>
-                  </span>
-                </li>
-              );
-            })}</ul>
+              return { key: r.id, title: line, meta: [formatDateTime(new Date(r.at)), caption].filter(Boolean).join(" · ") };
+            })} />
           )}
-        </section>
-        <section className="pc-panel" aria-labelledby="hr-changes">
-          <div className="pc-panel-head"><h2 id="hr-changes">Changes</h2></div>
+        </RecordSection>
+        <RecordSection id="hr-changes" title="Changes" aside={changesTotal ? <p>{changesTotal}</p> : null}>
           {changes.length === 0 ? <EmptyState compact icon="scrollText" title={page > 1 ? "No more changes" : "No changes yet"} /> : (
-            <ul className="pc-feed">{changes.map((c) => (
-              <li key={c.id}>
-                <span className="pc-feed-dot" aria-hidden="true" />
-                <span className="min-w-0">
-                  <span className="block font-semibold break-words">{c.actorName}: {c.summary}</span>
-                  <span className="block text-xs text-ui-muted-foreground">{formatDateTime(new Date(c.at))}</span>
-                </span>
-              </li>
-            ))}</ul>
+            <RecordHistory items={changes.map((c) => ({ key: c.id, title: `${c.actorName}: ${c.summary}`, meta: formatDateTime(new Date(c.at)) }))} />
           )}
-        </section>
+        </RecordSection>
       </div>
       <LinkPagination label="Activity pages" page={page} totalItems={Math.max(readsTotal, changesTotal)} pageSize={HR_ACTIVITY_PAGE_SIZE} pathname="/hr/activity" query={{}} />
     </PageShell>

@@ -34,7 +34,7 @@ const oneLine = (value: string) => value.replace(/[\r\n]+/g, " ").trim();
 export const PO_EMAIL_LOGO_CID = "leisureworld-logo@turnfin";
 
 /* Literal colours because mail clients cannot read CSS variables. The navy band and the
-   white logo match the parent emails; the rest is Poolside Clear v2 (src/app/theme/poolside.css). */
+   white logo match the parent emails; the rest is the Poolside Clear v2 palette, kept for mail. */
 const NAVY = "#07345E", INK = "color:#0f1b2d", MUTED = "color:#56627a", FAINT = "color:#8a94a6";
 const FONT = "font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif";
 const BODY = "font-size:15px;line-height:24px", SMALL = "font-size:13px;line-height:20px";

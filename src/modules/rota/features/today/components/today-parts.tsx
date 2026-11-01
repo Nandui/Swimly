@@ -41,7 +41,7 @@ export function TodayGaps({ gaps }: { gaps: TodayGap[] }) {
   }
   return (
     <>
-      <ul className="pc-rows">
+      <ul className="pc-list">
         {gaps.map((gap, i) => {
           const Icon = activityIcon(gap.icon);
           return (

@@ -26,3 +26,10 @@ export function date(value: string | null | undefined) {
 export function clock(minutes: number) {
   return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
 }
+
+const CLOCK_NOW = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "Europe/Dublin" });
+
+/** The time now at the centre, "17:42", for a confirmation's time (Europe/Dublin, never the phone's zone). */
+export function clockNow(at = new Date()) {
+  return CLOCK_NOW.format(at);
+}

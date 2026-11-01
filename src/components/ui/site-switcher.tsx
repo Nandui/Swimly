@@ -12,7 +12,7 @@ type Site = { id: string; name: string };
  *  choosing one changes only `?site=`, so the week or the date stays; `clear` names the other
  *  parameters that belong to one site. With no `?site=` it shows `fallback` (the page's own
  *  default, such as the working site), else the first site. On phones the frame
- *  shows only the building (poolside.css, .tf-tools). */
+ *  shows only the building (kit.css, .tf-tools). */
 export function SiteSwitcher({ sites, label, clear = [], fallback }: { sites: Site[]; label: string; clear?: string[]; fallback?: string | null }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -33,7 +33,7 @@ export function SiteSwitcher({ sites, label, clear = [], fallback }: { sites: Si
           <Building2 aria-hidden="true" /><span className="min-w-0 truncate">{current.name}</span><ChevronDown className="ml-auto" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-72 max-w-(--pc-overlay-max-width)">
+      <DropdownMenuContent align="end" className="w-72 max-w-(--overlay-max-width)">
         <DropdownMenuLabel>{label}</DropdownMenuLabel>
         <DropdownMenuRadioGroup value={current.id} onValueChange={choose}>
           {sites.map((s) => <DropdownMenuRadioItem key={s.id} value={s.id}>{s.name}</DropdownMenuRadioItem>)}

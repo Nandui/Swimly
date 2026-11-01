@@ -77,7 +77,7 @@ export function LibraryView({
   ];
 
   return (
-    <PageShell header={<PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         title={archived ? 'Document archive' : 'Document library'}
         description={
           archived
@@ -95,7 +95,7 @@ export function LibraryView({
           ) : undefined
         }
       />}>
-      <section className="pc-panel" aria-label={archived ? 'Archived documents' : 'Documents'}>
+      <section className="flex min-w-0 flex-col gap-(--space-5)" aria-label={archived ? 'Archived documents' : 'Documents'}>
         <div className="flex flex-wrap items-end gap-3">
           <form
             action="/docs/library"

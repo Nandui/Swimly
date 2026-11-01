@@ -181,6 +181,7 @@ test("added by hand, with a photo checked by its first bytes", async () => {
   const t = await fixture.prisma.task.findUniqueOrThrow({ where: { id: added.id! } });
   assert.equal((await actions.completeTask(t.id, t.version, { checks: [], records: [{ photo: "someone-elses-file" }] })).ok, false, "a file from another task is dropped");
   assert.equal((await actions.completeTask(t.id, t.version, { checks: [], records: [{ photo: up.fileId! }] })).ok, true);
+  assert.equal(announced.length, 1, "done with no reading out of range, nothing is announced");
 });
 
 test("sites: managers set hours and closed dates; no tasks on a closed date or at a site not live", async () => {

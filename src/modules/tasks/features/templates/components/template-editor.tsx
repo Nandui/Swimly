@@ -108,17 +108,18 @@ export function TemplateEditor({ template, sites, roles, today }: { template: Ed
 
       {tab === "content" ? (
         <>
-          <section className="pc-panel" aria-labelledby="tpl-about">
-            <div className="pc-panel-head"><h2 id="tpl-about">What it is</h2></div>
+          <section className="flex min-w-0 flex-col" aria-labelledby="tpl-about">
+            <div className="pc-section-head"><h2 id="tpl-about">What it is</h2></div>
+            <div className="pc-panel">
             <Input id="tpl-title" label="Task title" required maxLength={120} value={t.title} onChange={(v) => set("title", v)} placeholder="For example: Pool water quality" />
             <Textarea id="tpl-description" label="Instructions" optional description="Shown at the top of the task." maxLength={2000} rows={3} value={t.description ?? ""} onChange={(e) => set("description", e.target.value)} />
+            </div>
           </section>
 
-          <section className="pc-panel" aria-labelledby="tpl-checklist">
-            <div className="pc-panel-head">
-              <div className="flex flex-col gap-1"><h2 id="tpl-checklist">Checklist</h2><p className="pc-row-hint">Each item is ticked before the task can be completed.</p></div>
-              <Button type="button" variant="outline" onClick={() => set("checklist", [...checklist, ""])}><Plus aria-hidden="true" />Add an item</Button>
-            </div>
+          <section className="flex min-w-0 flex-col" aria-labelledby="tpl-checklist">
+            <div className="pc-section-head"><h2 id="tpl-checklist">Checklist</h2><Button type="button" variant="outline" onClick={() => set("checklist", [...checklist, ""])}><Plus aria-hidden="true" />Add an item</Button></div>
+            <p className="pc-section-note">Each item is ticked before the task can be completed.</p>
+            <div className="pc-panel">
             {checklist.length === 0 ? <p className="text-sm text-ui-muted-foreground">No checklist.</p> : (
               <ol className="flex flex-col gap-2">
                 {checklist.map((item, i) => (
@@ -131,13 +132,13 @@ export function TemplateEditor({ template, sites, roles, today }: { template: Ed
                 ))}
               </ol>
             )}
+            </div>
           </section>
 
-          <section className="pc-panel" aria-labelledby="tpl-fields">
-            <div className="pc-panel-head">
-              <div className="flex flex-col gap-1"><h2 id="tpl-fields">Record log</h2><p className="pc-row-hint">Readings and answers recorded with the task. A number can have an acceptable range: a reading outside it is flagged.</p></div>
-              <Button type="button" variant="outline" onClick={() => set("fields", [...fields, { id: key(), label: "", type: "text", required: true }])}><Plus aria-hidden="true" />Add a field</Button>
-            </div>
+          <section className="flex min-w-0 flex-col" aria-labelledby="tpl-fields">
+            <div className="pc-section-head"><h2 id="tpl-fields">Record log</h2><Button type="button" variant="outline" onClick={() => set("fields", [...fields, { id: key(), label: "", type: "text", required: true }])}><Plus aria-hidden="true" />Add a field</Button></div>
+            <p className="pc-section-note">Readings and answers recorded with the task. A number can have an acceptable range: a reading outside it is flagged.</p>
+            <div className="pc-panel">
             <div className="grid gap-4 sm:grid-cols-2">
               <Select id="tpl-logmode" label="Records" value={t.logMode} onValueChange={(v) => set("logMode", v as LogMode)}
                 options={LOG_MODES.map((m) => ({ value: m, label: LOG_MODE_LABELS[m] }))} />
@@ -176,21 +177,24 @@ export function TemplateEditor({ template, sites, roles, today }: { template: Ed
                 </div>
               </fieldset>
             ))}
+            </div>
           </section>
 
-          <section className="pc-panel" aria-labelledby="tpl-signoff">
-            <div className="pc-panel-head"><h2 id="tpl-signoff">Sign-off</h2></div>
+          <section className="flex min-w-0 flex-col" aria-labelledby="tpl-signoff">
+            <div className="pc-section-head"><h2 id="tpl-signoff">Sign-off</h2></div>
+            <div className="pc-panel">
             <Switch id="tpl-comment" label="Require a comment to complete" description="Someone writes a note before completing it." checked={t.requiresComment} onCheckedChange={(v) => set("requiresComment", v)} />
             <Switch id="tpl-approval" label="Require approval after completion" description="A reviewer checks it after it is done; nobody approves their own." checked={t.requiresApproval} onCheckedChange={(v) => set("requiresApproval", v)} />
+            </div>
           </section>
         </>
       ) : null}
 
       {tab === "schedule" ? (
-        <section className="pc-panel" aria-labelledby="tpl-when">
-          <div className="pc-panel-head">
-            <div className="flex flex-col gap-1"><h2 id="tpl-when">How is this task added?</h2><p className="pc-row-hint">{KIND_HINTS[t.kind]}</p></div>
-          </div>
+        <section className="flex min-w-0 flex-col" aria-labelledby="tpl-when">
+          <div className="pc-section-head"><h2 id="tpl-when">How is this task added?</h2></div>
+          <p className="pc-section-note">{KIND_HINTS[t.kind]}</p>
+          <div className="pc-panel">
           <Select id="tpl-kind" label="Kind" value={t.kind} onValueChange={(v) => set("kind", v as TemplateKind)} options={TEMPLATE_KINDS.map((k) => ({ value: k, label: TEMPLATE_KIND_LABELS[k] }))} />
           {scheduled ? (
             <>
@@ -223,42 +227,53 @@ export function TemplateEditor({ template, sites, roles, today }: { template: Ed
               <div><Button type="button" variant="outline" onClick={() => set("schedules", [...schedules, { id: key(), repeat: t.kind === "once" ? "once" : "daily", every: 1, weekdays: [1, 2, 3, 4, 5], from: today, start: "open", due: "close" }])}><Plus aria-hidden="true" />Add a schedule</Button></div>
             </>
           ) : <Notice tone="info" title={TEMPLATE_KIND_LABELS[t.kind]} description={KIND_HINTS[t.kind]} />}
+          </div>
         </section>
       ) : null}
 
       {tab === "assign" ? (
         <>
           <div className="pc-grid">
-            <section className="pc-panel" aria-labelledby="tpl-sites">
-              <div className="pc-panel-head"><div className="flex flex-col gap-1"><h2 id="tpl-sites">Sites</h2><p className="pc-row-hint">None ticked means every site.</p></div></div>
+            <section className="flex min-w-0 flex-col" aria-labelledby="tpl-sites">
+              <div className="pc-section-head"><h2 id="tpl-sites">Sites</h2></div>
+              <p className="pc-section-note">None ticked means every site.</p>
+              <div className="pc-panel">
               <div className="flex flex-col gap-2">
                 {sites.map((s) => <ChoiceRow key={s.id} type="checkbox" id={`tpl-site-${s.id}`} title={s.name} checked={t.siteIds.includes(s.id)} onCheckedChange={(v) => set("siteIds", toggle(t.siteIds, s.id, v === true))} />)}
               </div>
+              </div>
             </section>
-            <section className="pc-panel" aria-labelledby="tpl-roles">
-              <div className="pc-panel-head"><div className="flex flex-col gap-1"><h2 id="tpl-roles">Roles</h2><p className="pc-row-hint">Who it is for. None ticked means everyone who does tasks at the site.</p></div></div>
+            <section className="flex min-w-0 flex-col" aria-labelledby="tpl-roles">
+              <div className="pc-section-head"><h2 id="tpl-roles">Roles</h2></div>
+              <p className="pc-section-note">Who it is for. None ticked means everyone who does tasks at the site.</p>
+              <div className="pc-panel">
               <Switch id="tpl-restricted" label="Restrict completion to these roles" description="Reviewers can always step in." checked={t.restricted} onCheckedChange={(v) => set("restricted", v)} />
               <div className="flex flex-col gap-2">
                 {roles.map((r) => <ChoiceRow key={r.id} type="checkbox" id={`tpl-role-${r.id}`} title={r.name} checked={t.roleIds.includes(r.id)} onCheckedChange={(v) => set("roleIds", toggle(t.roleIds, r.id, v === true))} />)}
               </div>
+              </div>
             </section>
           </div>
-          <section className="pc-panel" aria-labelledby="tpl-tags">
-            <div className="pc-panel-head"><h2 id="tpl-tags">Tags and priority</h2></div>
+          <section className="flex min-w-0 flex-col" aria-labelledby="tpl-tags">
+            <div className="pc-section-head"><h2 id="tpl-tags">Tags and priority</h2></div>
+            <div className="pc-panel">
             <Input id="tpl-tags-input" label="Tags" optional description="Separate tags with commas, for example: Pool, Safety." maxLength={400} value={tags} onChange={setTags} />
             <Switch id="tpl-priority" label="High priority" description="Shown with a flag, so it is not missed." checked={t.priority} onCheckedChange={(v) => set("priority", v)} />
             <p className="text-sm text-ui-muted-foreground">Tasks already made keep their original definition. Changes apply to tasks made from now on.</p>
+            </div>
           </section>
         </>
       ) : null}
 
       {tab === "report" ? (
-        <section className="pc-panel" aria-labelledby="tpl-report">
-          <div className="pc-panel-head"><h2 id="tpl-report">Notifications</h2></div>
+        <section className="flex min-w-0 flex-col" aria-labelledby="tpl-report">
+          <div className="pc-section-head"><h2 id="tpl-report">Notifications</h2></div>
+          <div className="pc-panel">
           <Switch id="tpl-notify-done" label="Notify on completion" description="Reviewers at the site see today's completions on their home page." checked={t.notifyCompletion} onCheckedChange={(v) => set("notifyCompletion", v)} />
           <Switch id="tpl-notify-exc" label="Notify when completed with readings out of range" description="Reviewers at the site see these on their home page." checked={t.notifyException} onCheckedChange={(v) => set("notifyException", v)} />
           <h3 className="font-semibold">Reporting</h3>
           <p className="text-sm text-ui-muted-foreground">Completions, flags, comments, readings out of range and approvals appear in Reports. Every saved change appears in Activity.</p>
+          </div>
         </section>
       ) : null}
 

@@ -8,9 +8,10 @@ import { SearchField } from '@/components/ui-kit/search-field';
 import { EmptyState } from '@/components/ui-kit/empty-state';
 import { PageHeader } from '@/components/ui-kit/page-header';
 import { PageShell } from '@/components/ui-kit/page-shell';
+import { Figure, Figures } from '@/components/ui-kit/figure';
+import { RecordSection } from '@/components/ui-kit/record';
 import { canWrite, documentTypeLabels, type DocumentType, type Workspace } from '@/modules/docs/shared/types';
-import { DocIcon, FilterPicker } from '@/modules/docs/shared/components/ui';
-import { cn } from '@/lib/utils';
+import { FilterPicker, typeIcons } from '@/modules/docs/shared/components/ui';
 import { DocumentList } from '@/modules/docs/shared/components/document-list';
 
 const collections: { type: DocumentType; description: string }[] = [
@@ -41,7 +42,7 @@ export function HomeView({ workspace: w, description }: { workspace: Workspace; 
   ];
 
   return (
-    <PageShell header={<PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         title="Docs"
         description={description}
         actions={
@@ -54,7 +55,7 @@ export function HomeView({ workspace: w, description }: { workspace: Workspace; 
         }
       />}>
 
-      <section className="pc-panel" aria-label="Find a document">
+      <section className="flex min-w-0 flex-col" aria-label="Find a document">
         <form className="flex flex-wrap items-end gap-3" action="/docs/library" role="search" aria-label="Find a document">
           <SearchField
             label="Find a document"
@@ -62,30 +63,28 @@ export function HomeView({ workspace: w, description }: { workspace: Workspace; 
             className="max-w-xl flex-1 basis-64"
           />
           {facility && <input type="hidden" name="facility" value={facility} />}
-          <Button type="submit">
+          <Button type="submit" variant="outline">
             Search
             <ChevronRight aria-hidden="true" />
           </Button>
         </form>
       </section>
 
-      <section className="pc-note flex-wrap items-center" data-tone="danger" aria-labelledby="emergency-title">
-        <LifeBuoy aria-hidden="true" className="size-5" />
-        <div className="min-w-0 flex-1 basis-48">
-          <h2 id="emergency-title" className="text-sm">Emergency plans</h2>
-          <p className="pc-row-hint">Approved responses for your facility</p>
-        </div>
-        <Button asChild variant="outline">
-          <Link href={`/docs/library?type=EAP${facilityQuery ? `&${facilityQuery}` : ''}`}>
-            Open plans
-            <ChevronRight aria-hidden="true" />
+      <ul className="pc-list" aria-label="Emergency plans">
+        <li>
+          <Link className="pc-row" href={`/docs/library?type=EAP${facilityQuery ? `&${facilityQuery}` : ''}`}>
+            <span className="pc-tile-icon" data-tone="red"><LifeBuoy aria-hidden="true" /></span>
+            <span className="pc-row-body">
+              <span className="pc-row-title">Emergency plans</span>
+              <span className="pc-row-hint">Approved responses for your facility</span>
+            </span>
+            <ChevronRight className="pc-row-chevron" aria-hidden="true" />
           </Link>
-        </Button>
-      </section>
+        </li>
+      </ul>
 
-      <div className="pc-grid">
-        <section className="pc-panel" aria-labelledby="required-reading-title">
-          <h2 id="required-reading-title">Your required reading</h2>
+      <div className="grid items-start gap-(--space-7) lg:grid-cols-2">
+        <RecordSection id="required-reading-title" title="Your required reading">
           {/* Personal records live in Turnfin Me, the staff app, never in Turnfin. */}
           <EmptyState
             as="h3"
@@ -101,11 +100,10 @@ export function HomeView({ workspace: w, description }: { workspace: Workspace; 
               </Button>
             }
           />
-        </section>
+        </RecordSection>
 
-        <section className="pc-panel" aria-labelledby="your-work-title">
-          <h2 id="your-work-title">Your work</h2>
-          <ul className="pc-rows">
+        <RecordSection id="your-work-title" title="Your work">
+          <ul className="pc-list">
             {work.map(({ href, icon: Icon, title, hint }) => (
               <li key={title}>
                 <Link className="pc-row" href={href}>
@@ -119,44 +117,25 @@ export function HomeView({ workspace: w, description }: { workspace: Workspace; 
               </li>
             ))}
           </ul>
-        </section>
+        </RecordSection>
       </div>
 
-      <section className="pc-panel" aria-labelledby="collections-title">
-        <h2 id="collections-title">Collections</h2>
-        {/* Four collections fit one row on a wide panel (DCOverview), two on a phone. */}
-        <ul className="pc-stats grid-cols-tiles">
-          {collections.map(({ type, description }) => {
-            const count = documents.filter((d) => d.content.type === type).length;
-            return (
-            <li key={type} className="flex min-w-0">
-              <Link
-                className="pc-stat w-full"
-                href={`/docs/library?type=${encodeURIComponent(type)}${facilityQuery ? `&${facilityQuery}` : ''}`}
-              >
-                <DocIcon type={type} />
-                <span>
-                  <span className={cn('pc-stat-figure block', !count && 'text-ui-muted-foreground')}>{count}</span>
-                  <span className="block font-semibold">{documentTypeLabels[type].many}</span>
-                </span>
-                <span className="text-xs text-ui-muted-foreground">{description}</span>
-              </Link>
-            </li>
-            );
-          })}
-        </ul>
-      </section>
+      <RecordSection id="collections-title" title="Collections">
+        <Figures label="Collections">
+          {collections.map(({ type, description }) => (
+            <Figure key={type} icon={typeIcons[type]} label={documentTypeLabels[type].many} value={documents.filter((d) => d.content.type === type).length}
+              hint={description} href={`/docs/library?type=${encodeURIComponent(type)}${facilityQuery ? `&${facilityQuery}` : ''}`} />
+          ))}
+        </Figures>
+      </RecordSection>
 
-      <section className="pc-panel" aria-labelledby="recent-heading">
-        <div className="pc-panel-head">
-          <h2 id="recent-heading">Recently published</h2>
+      <RecordSection id="recent-heading" title="Recently published" aside={
           <Button asChild variant="link">
             <Link href={libraryUrl}>
               View all documents
               <ChevronRight aria-hidden="true" />
             </Link>
-          </Button>
-        </div>
+          </Button>}>
         {documents.length ? (
           <DocumentList documents={documents.slice(0, 5)} facilities={w.facilities} />
         ) : (
@@ -167,7 +146,7 @@ export function HomeView({ workspace: w, description }: { workspace: Workspace; 
             hint="Approved documents for this facility appear here once they are published"
           />
         )}
-      </section>
+      </RecordSection>
     </PageShell>
   );
 }

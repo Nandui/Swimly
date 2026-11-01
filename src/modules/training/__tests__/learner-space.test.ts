@@ -136,9 +136,12 @@ test("a missed practice question comes back in the refresher, and moves on when 
   assert.equal(card.box, 1);
   // Not due until tomorrow.
   assert.equal((await refresher.myRefresher("ava", ORG)).questions.length, 0);
+  assert.equal(await refresher.refresherWaiting("ava"), 0, "nothing waiting on Me's home yet");
   await fixture.prisma.trainingRefresherCard.update({ where: { id: card.id }, data: { dueOn: new Date("2026-01-01") } });
   const today = await refresher.myRefresher("ava", ORG);
   assert.deepEqual(today.questions.map((q) => q.questionId), ["q1"]);
+  assert.equal(await refresher.refresherWaiting("ava"), 1);
+  assert.equal(await refresher.refresherWaiting("noah"), 0, "never another person's card");
   // The key never travels: options carry no "correct".
   assert.ok(today.questions[0].question.options.every((o) => !("correct" in o)));
   const right = await refresher.answerRefresher("ava", { cardId: card.id }, "a");
@@ -151,6 +154,7 @@ test("a missed practice question comes back in the refresher, and moves on when 
   assert.equal(after.answered, 1);
   assert.equal(after.streak.current, 1);
   assert.equal(after.questions.length, 0);
+  assert.equal(await refresher.refresherWaiting("ava"), 0, "answered, nothing left waiting");
 });
 
 test("only a passed exam turns its wrong answers into refresher cards", async () => {
@@ -210,4 +214,78 @@ test("my record lists every course with its best exam score, and badges count it
   const today = await refresher.myRefresher("ava", ORG);
   const earned = today.badges.filter((b) => b.earned).map((b) => b.id);
   assert.ok(earned.includes("first-course") && !earned.includes("first-time"));
+});
+
+test("a catalogue course's cover is shown only while the course is open to all, and only its own picture", async () => {
+  const db = fixture.prisma;
+  const other = (await db.trainingCourse.create({ data: { orgId: ORG, title: "Synthetic other course" } })).id;
+  const bytes = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
+  const cover = (await db.trainingFile.create({ data: { courseId: course, name: "cover.png", mime: "image/png", size: bytes.length, bytes, addedByName: "maya" } })).id;
+  const stray = (await db.trainingFile.create({ data: { courseId: other, name: "stray.png", mime: "image/png", size: bytes.length, bytes, addedByName: "maya" } })).id;
+  await db.trainingCourse.update({ where: { id: course }, data: { coverId: cover, selfEnrol: false } });
+  assert.equal(await catalogue.catalogueCover(ORG, course), null, "not in the catalogue, no picture");
+  await db.trainingCourse.update({ where: { id: course }, data: { selfEnrol: true } });
+  const shown = await catalogue.catalogueCover(ORG, course);
+  assert.deepEqual([shown?.id, shown?.name, shown?.mime], [cover, "cover.png", "image/png"]);
+  assert.equal(await catalogue.catalogueCover("org_elsewhere", course), null, "another organisation's catalogue");
+  await db.trainingCourse.update({ where: { id: course }, data: { coverId: stray } });
+  assert.equal(await catalogue.catalogueCover(ORG, course), null, "a picture from another course is never served");
+  await db.trainingCourse.update({ where: { id: course }, data: { coverId: null, selfEnrol: false } });
+});
+
+test("Training's front door gives Turnfin Me only the files in the person's own course and their own handed-in work, safely served", async () => {
+  const db = fixture.prisma;
+  const front = serverModule<typeof import("@/modules/training")>("src/modules/training/index.ts", doubles());
+  const png = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
+  const filed = (await db.trainingCourse.create({ data: { orgId: ORG, title: "Synthetic plant room tour" } })).id;
+  const add = async (name: string, courseId = filed) => (await db.trainingFile.create({ data: { courseId, name, mime: "image/png", size: png.length, bytes: png, addedByName: "maya" } })).id;
+  const [lessonFile, inText, onQuestion, cover, unused] = [await add("diagram.png"), await add("valve.png"), await add("label.png"), await add("cover.png"), await add("draft-only.png")];
+  const elsewhere = await add("elsewhere.png", course);
+  const outline = {
+    exam: null,
+    sections: [{ id: "s1", title: "Tour", lessons: [
+      { id: "f1", kind: "FILE", title: "Plant room map", body: null, videoUrl: "", fileId: lessonFile, minutes: 2, data: null },
+      { id: "r1", kind: "READING", title: "Valves", body: { type: "doc", content: [{ type: "image", attrs: { src: `/training/files/${inText}` } }, { type: "image", attrs: { src: `/training/files/${elsewhere}` } }] }, videoUrl: "", fileId: null, minutes: 2, data: null },
+    ] }],
+    questions: [{ id: "q1", sectionId: "s1", kind: "SINGLE", prompt: "Which valve?", imageId: onQuestion, explanation: "",
+      options: [{ id: "a", text: "Left", imageId: null, correct: true, match: "", area: null }, { id: "b", text: "Right", imageId: null, correct: false, match: "", area: null }] }],
+  };
+  const v = (await db.trainingCourseVersion.create({ data: { courseId: filed, number: 1, outline, lessonCount: 2, publishedByName: "maya" } })).id;
+  await db.trainingCourse.update({ where: { id: filed }, data: { publishedVersionId: v, coverId: cover } });
+  const asg = (await db.trainingAssignment.create({ data: { orgId: ORG, courseId: filed, userId: "ava", assignedByName: "maya", versionId: v, dueOn: new Date("2026-10-20") } })).id;
+
+  for (const id of [lessonFile, inText, onQuestion, cover]) assert.equal((await front.myCourseFile("ava", asg, id))?.id, id);
+  assert.equal(await front.myCourseFile("ava", asg, unused), null, "a file not in their version");
+  assert.equal(await front.myCourseFile("ava", asg, elsewhere), null, "another course's file, even when the text names it");
+  assert.equal(await front.myCourseFile("noah", asg, lessonFile), null, "never someone else's course");
+
+  await db.trainingSubmission.create({ data: { orgId: ORG, assignmentId: asg, userId: "ava", lessonId: "f1", text: "Done", fileName: "my photo.png", mime: "image/png", size: png.length, bytes: png } });
+  const work = await front.mySubmissionFile("ava", asg, "f1");
+  assert.deepEqual([work?.name, work?.mime, work?.size], ["my photo.png", "image/png", png.length]);
+  assert.equal(await front.mySubmissionFile("noah", asg, "f1"), null, "never another person's work");
+  assert.equal(await front.mySubmissionFile("ava", asg, "r1"), null, "nothing handed in for that lesson");
+  assert.equal(front.MAX_HAND_IN_TEXT, 5000);
+  assert.deepEqual(front.HAND_IN_TYPES, ["image/jpeg", "image/png", "image/webp", "application/pdf"]);
+
+  const served = front.trainingFileResponse(work!);
+  assert.equal(served.headers.get("Content-Type"), "image/png");
+  assert.equal(served.headers.get("Content-Disposition"), "inline; filename*=UTF-8''my%20photo.png");
+  assert.equal(served.headers.get("Cache-Control"), "private, no-store");
+  assert.equal(served.headers.get("X-Content-Type-Options"), "nosniff");
+  assert.match(served.headers.get("Content-Security-Policy")!, /default-src 'none'.*sandbox/);
+  assert.deepEqual(new Uint8Array(await served.arrayBuffer()), png);
+
+  // The daily digest: due within three days, or overdue; never for someone who has left.
+  const items = async (on: string) => (await front.trainingReminderItems(on)).filter((i) => i.ref === asg);
+  assert.deepEqual(await items("2026-10-16"), [], "four days ahead is not yet due");
+  assert.deepEqual((await items("2026-10-17")).map((i) => [i.userId, i.kind]), [["ava", "training-due"]]);
+  assert.match((await items("2026-10-20"))[0].line, /^Synthetic plant room tour is due /, "due today is not overdue");
+  const [late] = await items("2026-10-21");
+  assert.equal(late.kind, "training-overdue");
+  assert.match(late.line, /is overdue \(it was due .+\)\.$/);
+  await db.user.update({ where: { id: "ava" }, data: { isActive: false } });
+  assert.deepEqual(await items("2026-10-21"), [], "someone who has left is not reminded");
+  await db.user.update({ where: { id: "ava" }, data: { isActive: true } });
+  await db.trainingAssignment.update({ where: { id: asg }, data: { status: "COMPLETED", completedAt: new Date() } });
+  assert.deepEqual(await items("2026-10-21"), [], "finished training is not reminded");
 });

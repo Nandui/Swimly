@@ -34,6 +34,9 @@ const TILES = [
     hint: { NEEDS_INFORMATION: "Sent back to reception", APPROVED: "Approved, not yet paid", REFUNDED: "Payment recorded" }[status],
   })),
 ];
+/** A row's tile takes the tone of what it needs: orange while it waits for finance or reception,
+ *  green once paid, the quiet fill otherwise. The tag beside it says it in words. */
+const TONE: Partial<Record<RefundStatus, "orange" | "green">> = { SUBMITTED: "orange", IN_REVIEW: "orange", NEEDS_INFORMATION: "orange", APPROVED: "orange", REFUNDED: "green" };
 const EMPTY: Record<string, string> = {
   review: "Nothing is waiting for review", SUBMITTED: "Nothing is waiting for review", IN_REVIEW: "Nothing is in review",
   actionable: "Nothing is waiting for your team", NEEDS_INFORMATION: "Nothing needs more information",
@@ -68,20 +71,19 @@ export function RefundQueue({ data }: { data: Data }) {
   const site = data.sites.find(item => item.id === f.site)?.name ?? "All sites";
   const title = view === "mine" ? "My requests" : view === "drafts" ? "My drafts" : "Refund requests";
   const create = who.request ? <Button asChild className="refund-new"><Link href="/refunds/new"><ReceiptText aria-hidden="true" />Log a refund request</Link></Button> : null;
-  return <PageShell header={<PageHeader title={title} description={`${what} · ${site}`} actions={create} />}>
-    <ul className="pc-stats refund-tiles" aria-label="Follow-up queues">
+  return <PageShell spacing="roomy" header={<PageHeader title={title} description={`${what} · ${site}`} actions={create} />}>
+    <ul className="pc-stats" data-compact aria-label="Follow-up queues">
       {TILES.map(tile => {
         const value = count(tile.counts), Icon = tile.icon;
         return <li key={tile.status} className="flex">
           <Link href={href({ status: tile.status })} className="pc-stat w-full" aria-current={f.status === tile.status ? "true" : undefined}>
-            <span className="pc-tile-icon"><Icon aria-hidden="true" /></span>
-            <span className="refund-tile-text"><span className={cn("pc-stat-figure block", !value && "text-ui-muted-foreground")}>{value}</span><span className="block font-semibold">{tile.label}</span></span>
-            <span className="text-xs text-ui-muted-foreground max-sm:hidden">{tile.hint}</span>
+            <span className="pc-stat-label"><Icon aria-hidden="true" />{tile.label}</span><span className="pc-stat-figure" data-zero={value ? undefined : ""}>{value}</span>
+            <span className="pc-stat-hint">{tile.hint}</span>
           </Link>
         </li>;
       })}
     </ul>
-    <section className="pc-panel" aria-label="Requests" aria-busy={pending}>
+    <div className="flex min-w-0 flex-col gap-(--space-3)">
       <Form action="/refunds" role="search" aria-label="Find a refund request" className="min-w-0">
         {KEPT.map(key => key !== "q" && f[key] ? <input key={key} type="hidden" name={key} value={f[key]} /> : null)}
         <SearchField id="refund-search" label="Find a request" defaultValue={f.q ?? ""} placeholder="Name, member or RF number" maxLength={200} clearHref={href({ q: null })} />
@@ -100,17 +102,20 @@ export function RefundQueue({ data }: { data: Data }) {
         </div>
         {filtering ? <Button asChild variant="ghost"><Link href={viewHref}>Clear filters</Link></Button> : null}
       </div>
-      {data.total ? <p className="text-xs text-ui-muted-foreground tabular-nums" aria-live="polite" aria-atomic="true">{plural(data.total, filtering ? "matching request" : "request", filtering ? "matching requests" : "requests")}</p> : null}
+    </div>
+    <section className="flex min-w-0 flex-col" aria-labelledby="refund-list-h" aria-busy={pending}>
+      <div className="pc-section-head"><h2 id="refund-list-h">{what}</h2>{data.total ? <p aria-live="polite" aria-atomic="true">{plural(data.total, filtering ? "match" : "request", filtering ? "matches" : "requests")}</p> : null}</div>
       {data.rows.length === 0
-        ? <EmptyState as="h2" role="status" icon="receipt" title={EMPTY[f.status] ?? (view === "mine" ? "You haven’t logged a request yet" : "No requests to show")} hint={filtering ? "Try changing the filters." : undefined} action={!filtering && (view !== "requests" || f.status === "open") ? create : undefined} />
-        : <ul className="pc-rows">{data.rows.map(row => <li key={row.id}>
+        ? <EmptyState as="h3" role="status" icon="receipt" title={EMPTY[f.status] ?? (view === "mine" ? "You haven’t logged a request yet" : "No requests to show")} hint={filtering ? "Try changing the filters." : undefined} action={!filtering && (view !== "requests" || f.status === "open") ? create : undefined} />
+        : <ul className="pc-list refund-list">{data.rows.map(row => <li key={row.id}>
           <Link href={`/refunds/${row.id}`} className="pc-row">
+            <span className="pc-tile-icon" data-tone={TONE[row.status]}><ReceiptText aria-hidden="true" /></span>
             <span className="pc-row-body"><span className="pc-row-title break-words">{row.customerName || "Unnamed draft"}</span><span className="pc-row-hint">{refundNumber(row.number)} · {row.clubName} · {formatDate(new Date(row.submittedAt || row.createdAt))}</span></span>
             <span className="pc-row-trail"><span className="font-semibold tabular-nums">{euros(row.approvedCents ?? row.requestedCents)}</span><Tag meta={refundStatuses[row.status]} /><ChevronRight aria-hidden="true" className="pc-row-chevron" /></span>
           </Link>
         </li>)}</ul>}
-      <LinkPagination label="Request pages" page={data.page} pageCount={data.pages} pathname="/refunds" query={query()} />
     </section>
+    <LinkPagination label="Request pages" page={data.page} pageCount={data.pages} pathname="/refunds" query={query()} />
   </PageShell>;
 }
 

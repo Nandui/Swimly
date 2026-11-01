@@ -60,8 +60,8 @@ export async function InstructorClassSession({
         ) : view.state === "archived" ? (
           <Notice tone="warning" title="This class is archived" />
         ) : (
-          <section className="pc-panel items-start" aria-labelledby="ready-to-teach">
-            <h2 id="ready-to-teach">Ready to teach?</h2>
+          <section className="rec-card items-start" aria-labelledby="ready-to-teach">
+            <h2 id="ready-to-teach" className="text-title-3">Ready to teach?</h2>
             <p className="max-w-prose text-ui-muted-foreground">
               Confirm you are taking this class before opening the swimmers’
               attendance and competencies.

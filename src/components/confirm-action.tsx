@@ -88,7 +88,7 @@ export function ConfirmAction({
         onOpenChange={(next) => (next ? setOpen(true) : close())}
       >
         <AlertDialogContent
-          className="max-h-(--pc-overlay-max-height) overflow-y-auto"
+          className="max-h-(--overlay-max-height) overflow-y-auto"
           aria-busy={pending}
         >
           <AlertDialogHeader>

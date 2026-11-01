@@ -7,6 +7,7 @@ import { AssignTraining, CancelTraining, GiveExamAttempt, listCourses, personTra
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
+import { RecordSection } from "@/components/ui-kit/record";
 import { Tag } from "@/components/ui-kit/tag";
 import { QUALIFICATION_STATE_META } from "@/lib/people/constants";
 import { formatDate } from "@/lib/format";
@@ -42,7 +43,7 @@ export default async function TrainingPersonPage({ params }: { params: Promise<{
   ]);
   const person = { id: data.person.id, name: data.person.name, jobTitle: data.person.jobTitle };
   return (
-    <PageShell header={<PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         back={{ href: "/training", label: "People" }}
         title={data.person.name}
         description={data.person.jobTitle || "Training record"}
@@ -53,11 +54,11 @@ export default async function TrainingPersonPage({ params }: { params: Promise<{
           </>
         }
       />}>
-      <div className="pc-grid">
-        <section className="pc-panel" aria-labelledby="training-history">
-          <div className="pc-panel-head"><h2 id="training-history">Training</h2></div>
-          {data.assignments.length === 0 ? <EmptyState compact icon="graduation" title="No training assigned yet" /> : (
-            <ul className="pc-rows">
+      <div className="grid gap-(--space-6) lg:grid-cols-main-rail lg:items-start">
+        <div className="flex min-w-0 flex-col gap-(--space-6)">
+        <RecordSection id="training-history" title="Training">
+          {data.assignments.length === 0 ? <div className="pc-list"><EmptyState compact icon="graduation" title="No training assigned yet" /></div> : (
+            <ul className="pc-list">
               {data.assignments.map((a) => (
                 <li key={a.id} className="pc-row">
                   <div className="pc-row-body">
@@ -96,57 +97,25 @@ export default async function TrainingPersonPage({ params }: { params: Promise<{
               ))}
             </ul>
           )}
-        </section>
+        </RecordSection>
         {paths.length ? (
-          <section className="pc-panel" aria-labelledby="training-paths">
-            <div className="pc-panel-head"><h2 id="training-paths">Learning paths</h2></div>
-            <ul className="pc-rows">
+          <RecordSection id="training-paths" title="Learning paths">
+            <ul className="pc-list">
               {paths.map((p) => (
                 <li key={p.id} className="pc-row">
                   <div className="pc-row-body">
                     <Link href={`/training/paths/${p.pathId}`} className="pc-row-title -my-3 inline-flex min-h-11 items-center self-start underline-offset-4 hover:underline">{p.title}</Link>
                     <p className="pc-row-hint tabular-nums">Started {formatDate(p.startsOn)} · {p.done} of {p.total} done{p.finishedOn ? ` · finished ${formatDate(p.finishedOn)}` : p.overdue ? " · behind" : ""}</p>
                   </div>
-                  <div className="pc-row-trail min-w-(--pc-tile-min)"><Progress value={p.total ? Math.round((p.done / p.total) * 100) : 0} aria-label={`${p.done} of ${p.total} courses done`} /></div>
+                  <div className="pc-row-trail min-w-(--tile-min)"><Progress value={p.total ? Math.round((p.done / p.total) * 100) : 0} aria-label={`${p.done} of ${p.total} courses done`} /></div>
                 </li>
               ))}
             </ul>
-          </section>
-        ) : null}
-        {hours.progress.length || hours.log.length ? (
-          <section className="pc-panel" aria-labelledby="training-hours">
-            <div className="pc-panel-head"><h2 id="training-hours">In-service hours</h2></div>
-            {hours.progress.length ? (
-              <ul className="pc-rows">
-                {hours.progress.map((h) => (
-                  <li key={h.typeId} className="pc-row flex-wrap">
-                    <div className="pc-row-body">
-                      <span className="pc-row-title">{h.typeName}</span>
-                      <p className="pc-row-hint tabular-nums">{hoursInWords(h.minutes)} of {h.hours} h since {formatDate(h.since)}{h.met ? " · done" : ` · ${hoursInWords(h.needed - h.minutes)} to go`}</p>
-                    </div>
-                    <div className="pc-row-trail min-w-(--pc-tile-min)"><Progress value={h.percent} aria-label={`${h.percent}% of the hours for ${h.typeName}`} /></div>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            {hours.log.length ? (
-              <ul className="pc-rows" aria-label="Hours logged">
-                {hours.log.slice(0, 10).map((l) => (
-                  <li key={l.id} className="pc-row">
-                    <div className="pc-row-body">
-                      <span className="pc-row-title">{hoursInWords(l.minutes)} · {l.topic}</span>
-                      <p className="pc-row-hint">{formatDate(l.on)}{l.typeName ? ` · ${l.typeName}` : " · general"} · logged by {l.recordedByName}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </section>
+          </RecordSection>
         ) : null}
         {sessions.length ? (
-          <section className="pc-panel" aria-labelledby="training-sessions">
-            <div className="pc-panel-head"><h2 id="training-sessions">Sessions</h2></div>
-            <ul className="pc-rows">
+          <RecordSection id="training-sessions" title="Sessions">
+            <ul className="pc-list">
               {sessions.map((x) => (
                 <li key={x.id} className="pc-row">
                   <div className="pc-row-body">
@@ -157,12 +126,13 @@ export default async function TrainingPersonPage({ params }: { params: Promise<{
                 </li>
               ))}
             </ul>
-          </section>
+          </RecordSection>
         ) : null}
-        <section className="pc-panel" aria-labelledby="training-qualifications">
-          <div className="pc-panel-head"><h2 id="training-qualifications">Qualifications</h2></div>
-          {data.qualifications.length === 0 ? <EmptyState compact icon="award" title="No qualifications recorded" /> : (
-            <ul className="pc-rows">
+        </div>
+        <div className="flex min-w-0 flex-col gap-(--space-6)">
+        <RecordSection id="training-qualifications" title="Qualifications">
+          {data.qualifications.length === 0 ? <div className="pc-list"><EmptyState compact icon="award" title="No qualifications recorded" /></div> : (
+            <ul className="pc-list">
               {data.qualifications.map((q) => (
                 <li key={q.id} className="pc-row">
                   <div className="pc-row-body">
@@ -174,7 +144,37 @@ export default async function TrainingPersonPage({ params }: { params: Promise<{
               ))}
             </ul>
           )}
-        </section>
+        </RecordSection>
+        {hours.progress.length || hours.log.length ? (
+          <RecordSection id="training-hours" title="In-service hours">
+            {hours.progress.length ? (
+              <ul className="pc-list">
+                {hours.progress.map((h) => (
+                  <li key={h.typeId} className="pc-row flex-wrap">
+                    <div className="pc-row-body">
+                      <span className="pc-row-title">{h.typeName}</span>
+                      <p className="pc-row-hint tabular-nums">{hoursInWords(h.minutes)} of {h.hours} h since {formatDate(h.since)}{h.met ? " · done" : ` · ${hoursInWords(h.needed - h.minutes)} to go`}</p>
+                    </div>
+                    <div className="pc-row-trail min-w-(--tile-min)"><Progress value={h.percent} aria-label={`${h.percent}% of the hours for ${h.typeName}`} /></div>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {hours.log.length ? (
+              <ul className="pc-list mt-(--space-3)" aria-label="Hours logged">
+                {hours.log.slice(0, 10).map((l) => (
+                  <li key={l.id} className="pc-row">
+                    <div className="pc-row-body">
+                      <span className="pc-row-title">{hoursInWords(l.minutes)} · {l.topic}</span>
+                      <p className="pc-row-hint">{formatDate(l.on)}{l.typeName ? ` · ${l.typeName}` : " · general"} · logged by {l.recordedByName}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </RecordSection>
+        ) : null}
+        </div>
       </div>
     </PageShell>
   );

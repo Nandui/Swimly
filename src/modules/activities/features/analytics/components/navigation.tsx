@@ -31,8 +31,8 @@ export function dashboardOf(page: AnalyticsPage) {
  *  bar and rail staying the only menus. `query` keeps the chosen period, sites and programme. */
 export function DashboardSwitch({ page, query = "" }: { page: AnalyticsPage; query?: string }) {
   const active = ANALYTICS_PAGES[page];
-  return <nav aria-label="Dashboards" className="ins-switch">
-    {DASHBOARDS.map(({ key, href, label, icon: Icon }) => <Link key={key} href={`${href}${query}`} className="ins-switch-item" aria-current={active === key ? (page === key ? "page" : "true") : undefined}>
+  return <nav aria-label="Dashboards" className="pc-seg ins-switch">
+    {DASHBOARDS.map(({ key, href, label, icon: Icon }) => <Link key={key} href={`${href}${query}`} className="pc-seg-item ins-switch-item" aria-current={active === key ? (page === key ? "page" : "true") : undefined}>
       <Icon aria-hidden="true" strokeWidth={1.75} />{label}
     </Link>)}
   </nav>;

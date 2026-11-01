@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
+import { RecordSection } from "@/components/ui-kit/record";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDate } from "@/lib/format";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
@@ -19,7 +20,7 @@ export default async function PathPage({ params }: { params: Promise<{ id: strin
   if (!data) notFound();
   const { who, path, steps, rows, courses, assignable, summary } = data;
   return (
-    <PageShell header={<PageHeader back={{ href: "/training/paths", label: "Learning paths" }} title={path.title}
+    <PageShell spacing="roomy" header={<PageHeader back={{ href: "/training/paths", label: "Learning paths" }} title={path.title}
         description={path.summary || `${steps.length} ${steps.length === 1 ? "course" : "courses"} in order.`}
         status={path.archived ? <Tag meta={ARCHIVAL_STATUS_META.archived} /> : null}
         actions={
@@ -29,9 +30,8 @@ export default async function PathPage({ params }: { params: Promise<{ id: strin
             {who.assign && !path.archived ? <EnrolInPath pathId={path.id} title={path.title} people={assignable} /> : null}
           </>
         } />}>
-      <section className="pc-panel" aria-labelledby="steps-heading">
-        <h2 id="steps-heading">Courses</h2>
-        <ol className="pc-rows">
+      <RecordSection id="steps-heading" title="Courses" aside={<p>{steps.length}</p>}>
+        <ol className="pc-list">
           {steps.map((s, i) => (
             <li key={s.courseId} className="pc-row">
               <span className="pc-tile-icon tabular-nums" aria-hidden="true">{i + 1}</span>
@@ -42,16 +42,12 @@ export default async function PathPage({ params }: { params: Promise<{ id: strin
             </li>
           ))}
         </ol>
-      </section>
+      </RecordSection>
       {rows.length === 0 ? (
         <EmptyState as="h2" icon="graduation" title="Nobody on this path" hint={who.assign ? "Put new starters on it to assign every course at once." : "Nobody you cover is on it."} />
       ) : (
-        <section className="pc-panel" aria-labelledby="people-heading">
-          <div className="pc-panel-head">
-            <h2 id="people-heading">People on it</h2>
-            <span className="text-sm text-ui-muted-foreground tabular-nums">{summary.enrolled} on it · {summary.finished} finished{summary.overdue ? ` · ${summary.overdue} behind` : ""}</span>
-          </div>
-          <ul className="pc-rows">
+        <RecordSection id="people-heading" title="People on it" aside={<p>{summary.enrolled}</p>} note={`${summary.finished} finished${summary.overdue ? ` · ${summary.overdue} behind` : ""}`}>
+          <ul className="pc-list">
             {rows.map((row) => (
               <li key={row.id} className="pc-row flex-wrap">
                 <div className="pc-row-body">
@@ -70,7 +66,7 @@ export default async function PathPage({ params }: { params: Promise<{ id: strin
               </li>
             ))}
           </ul>
-        </section>
+        </RecordSection>
       )}
     </PageShell>
   );

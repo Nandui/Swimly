@@ -73,7 +73,7 @@ export function FilterPicker({
     </Select>
   );
 }
-const typeIcons = {
+export const typeIcons = {
   SOP: FileCheck2,
   NOP: BookOpen,
   EAP: LifeBuoy,

@@ -25,10 +25,10 @@ export default async function AcademyCallsPage() {
           {soon ? <Tag meta={ACADEMY_CALL_DUE_META.soon} label={`${soon} due within a day`} /> : null}
           <Tag meta={ACADEMY_CALL_DUE_META.later} label={plural(people.length, "to call", "to call")} />
         </> : undefined} />}>
-      <section className="pc-panel" aria-labelledby="calls-h">
-        <div className="pc-panel-head"><h2 id="calls-h">To call</h2></div>
+      <section className="flex min-w-0 flex-col" aria-labelledby="calls-h">
+        <div className="pc-section-head"><h2 id="calls-h">To call</h2></div>
         {people.length === 0 ? <EmptyState compact icon="calendarCheck" title="Nobody to call" hint="When someone holds a place on the booking site, they show here until their payment is recorded." /> : (
-          <ul className="pc-rows">
+          <ul className="pc-list">
             {people.map((p) => {
               const last = p.calls[0];
               return (

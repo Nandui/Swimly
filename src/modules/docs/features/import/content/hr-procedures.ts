@@ -124,7 +124,7 @@ Applies to: duty managers and supervisors who hold Rota: Run, at every LeisureWo
 ## Covering the shift
 
 1. Open **Rota** in Turnfin and go to **Today** (or the **Plan** for a later day).
-2. Their places show under **Not covered yet**. Tap the gap and use **Choose someone**.
+2. Their places show under **Not covered yet**. Tap the gap, or use **Find cover** beside it.
 3. Pick someone who is free and qualified. Turnfin warns you if they are missing a certificate, would go over their hours, or would miss a break they are owed.
 4. When it asks for a reason, choose **Covering an absence**.
 5. If you can't cover a lifeguard or swim teacher place, follow the pool's normal operating procedure (close a lane or area, or cancel the class) and tell the centre manager. Never run a pool short of its minimum lifeguards.

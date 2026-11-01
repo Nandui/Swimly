@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { Download } from "lucide-react";
+import { CircleCheck, ClipboardCheck, Download, GraduationCap, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { formatDate } from "@/lib/format";
 import type { TrainingReport } from "@/modules/training/features/insight/server/data";
-import { days, Figure, filterQuery, pct } from "@/modules/training/features/insight/components/parts";
+import { Figure, Figures } from "@/components/ui-kit/figure";
+import { days, filterQuery, pct } from "@/modules/training/features/insight/components/parts";
 
 const MAX_ROWS = 300;
 
@@ -21,11 +22,9 @@ function ReportDownload({ kind, report }: { kind: "overdue" | "courses"; report:
 /** Open and overdue training by site or by line manager. */
 function Groups({ id, title, hint, lines }: { id: string; title: string; hint: string; lines: TrainingReport["bySite"] }) {
   return (
-    <section aria-labelledby={id} className="pc-panel">
-      <div className="space-y-1">
-        <h2 id={id}>{title}</h2>
-        <p className="text-sm text-ui-muted-foreground">{hint}</p>
-      </div>
+    <section aria-labelledby={id} className="flex min-w-0 flex-col">
+      <div className="pc-section-head"><h2 id={id}>{title}</h2></div>
+      <p className="pc-section-note">{hint}</p>
       {lines.length ? (
         <Table>
           <TableCaption className="sr-only">{title}</TableCaption>
@@ -50,7 +49,7 @@ function Groups({ id, title, hint, lines }: { id: string; title: string; hint: s
             ))}
           </TableBody>
         </Table>
-      ) : <p className="text-sm text-ui-muted-foreground">No open training.</p>}
+      ) : <div className="pc-list"><EmptyState compact icon="graduation" title="No open training" /></div>}
     </section>
   );
 }
@@ -61,27 +60,25 @@ export function ReportView({ report }: { report: TrainingReport }) {
   const { totals } = report;
   if (!report.people) return <EmptyState as="h2" icon="graduation" title="Nobody here" hint="No one you cover matches these filters." />;
   return (
-    <div className="flex flex-col gap-6">
-      <div className="pc-stats pc-stats-fill">
-        <Figure value={totals.open} label="Open training" hint={`For ${report.people} ${report.people === 1 ? "person" : "people"}`} />
-        <Figure value={totals.overdue} label="Overdue" hint={totals.overdue ? `${pct(totals.inDate)} of all training is on time` : "Nothing is late"} />
-        <Figure value={totals.awaitingSignoff} label="Waiting for sign-off" hint="Handed in for a practical" />
-        <Figure value={totals.completedLately} label="Completed" hint="In the past 30 days" />
-      </div>
+    <div className="flex flex-col gap-(--space-7)">
+      <Figures label="Training at a glance">
+        <Figure icon={GraduationCap} value={totals.open} label="Open training" hint={`For ${report.people} ${report.people === 1 ? "person" : "people"}`} />
+        <Figure icon={TriangleAlert} value={totals.overdue} label="Overdue" hint={totals.overdue ? `${pct(totals.inDate)} of all training is on time` : "Nothing is late"} tone={totals.overdue ? "orange" : undefined} />
+        <Figure icon={ClipboardCheck} value={totals.awaitingSignoff} label="Waiting for sign-off" hint="Handed in for a practical" />
+        <Figure icon={CircleCheck} value={totals.completedLately} label="Completed" hint="In the past 30 days" />
+      </Figures>
 
-      <div className="grid items-start gap-6 lg:grid-cols-2">
+      <div className="grid items-start gap-(--space-7) 2xl:grid-cols-2">
         <Groups id="report-sites" title="Overdue by site" hint="Someone who works at two sites counts at both." lines={report.bySite} />
         <Groups id="report-managers" title="Overdue by manager" hint="By each person's line manager, set in HR." lines={report.byManager} />
       </div>
 
-      <section aria-labelledby="report-overdue" className="pc-panel">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="space-y-1">
-            <h2 id="report-overdue">Overdue training · {report.overdue.length}</h2>
-            <p className="text-sm text-ui-muted-foreground">Longest late first.{report.overdue.length > MAX_ROWS ? ` The first ${MAX_ROWS}; the download has them all.` : ""}</p>
-          </div>
+      <section aria-labelledby="report-overdue" className="flex min-w-0 flex-col">
+        <div className="pc-section-head">
+          <h2 id="report-overdue">Overdue training</h2>
           {report.overdue.length ? <ReportDownload kind="overdue" report={report} /> : null}
         </div>
+        <p className="pc-section-note">{report.overdue.length ? `${report.overdue.length} late, longest first.` : "Longest late first."}{report.overdue.length > MAX_ROWS ? ` The first ${MAX_ROWS}; the download has them all.` : ""}</p>
         {report.overdue.length ? (
           <Table>
             <TableCaption className="sr-only">Overdue training, longest late first</TableCaption>
@@ -109,17 +106,15 @@ export function ReportView({ report }: { report: TrainingReport }) {
               ))}
             </TableBody>
           </Table>
-        ) : <p className="text-sm text-ui-muted-foreground">Nothing is overdue.</p>}
+        ) : <div className="pc-list"><EmptyState compact icon="graduation" title="Nothing is overdue" /></div>}
       </section>
 
-      <section aria-labelledby="report-courses" className="pc-panel">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="space-y-1">
-            <h2 id="report-courses">Courses</h2>
-            <p className="text-sm text-ui-muted-foreground">Each course the people here were given. Open one to see where people stop.</p>
-          </div>
+      <section aria-labelledby="report-courses" className="flex min-w-0 flex-col">
+        <div className="pc-section-head">
+          <h2 id="report-courses">Courses</h2>
           {report.courses.length ? <ReportDownload kind="courses" report={report} /> : null}
         </div>
+        <p className="pc-section-note">Each course the people here were given. Open one to see where people stop.</p>
         {report.courses.length ? (
           <Table>
             <TableCaption className="sr-only">Each course and how the people here are doing on it</TableCaption>
@@ -148,7 +143,7 @@ export function ReportView({ report }: { report: TrainingReport }) {
               ))}
             </TableBody>
           </Table>
-        ) : <p className="text-sm text-ui-muted-foreground">Nobody here has been given a course yet.</p>}
+        ) : <div className="pc-list"><EmptyState compact icon="graduation" title="Nobody here has been given a course yet" /></div>}
       </section>
     </div>
   );

@@ -18,9 +18,9 @@ export default async function CourseTypesPage() {
   return (
     <PageShell spacing="roomy" header={<PageHeader title="Academy list" description="The Academy courses we deliver, and what each asks of a candidate."
         actions={who.manage ? <CourseTypeDialog qualifications={qualifications} /> : undefined} />}>
-      <section className="pc-panel" aria-label="Courses we deliver">
+      <section className="flex min-w-0 flex-col" aria-label="Courses we deliver">
         {types.length === 0 ? <EmptyState compact icon="award" title="No courses yet" hint={who.manage ? "Add the first, such as the National Pool Lifeguard Qualification." : "Whoever manages the Academy adds them."} /> : (
-          <ul className="pc-rows">
+          <ul className="pc-list">
             {types.map((t) => {
               const kind = ACADEMY_KIND_META[t.kind as AcademyKind] ?? ACADEMY_KIND_META.other;
               const Icon = kind.icon;

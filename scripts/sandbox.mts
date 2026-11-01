@@ -67,13 +67,13 @@ const roles: Record<string, string> = {};
 const levelRoles: { name: string; homeName: string; levels: Record<string, string>; extras?: string[]; system?: boolean }[] = [
   { name: "Admin", homeName: "Management", levels: { admin: "manage" }, system: true },
   { name: "Instructor", homeName: "Pool deck", levels: { "pool-deck": "teach" }, system: true },
-  { name: "Receptionist", homeName: "Front of House", levels: { "swim-school": "desk", "short-courses": "view", refunds: "use", coinage: "use", docs: "read", rota: "view", tasks: "do", stock: "count" } },
-  { name: "Lifeguard", homeName: "Poolside", levels: { docs: "read", rota: "view", tasks: "do" } },
-  { name: "Pool supervisor", homeName: "Pool planning", levels: { docs: "read", rota: "plan", academy: "run", "short-courses": "run", tasks: "review", incidents: "report" } },
-  { name: "Duty manager", homeName: "Duty desk", levels: { "swim-school": "desk", refunds: "manage", coinage: "manage", docs: "read", training: "trainer", rota: "manage", academy: "run", "short-courses": "run", tasks: "review", incidents: "report", cctv: "record" }, extras: ["swim-school.cancel-classes"] },
-  { name: "Swim school manager", homeName: "Swim school office", levels: { "swim-school": "manage", "pool-deck": "lead", docs: "manage", training: "manage", rota: "manage", hr: "team", academy: "manage", "short-courses": "manage", tasks: "manage", incidents: "report" }, extras: ["swim-school.cancel-classes", "docs.approve"] },
-  { name: "Centre manager", homeName: "Centre office", levels: { docs: "read", rota: "manage", tasks: "review", incidents: "investigate", stock: "manage", cctv: "review", "site-monitoring": "act" } },
-  { name: "Operations manager", homeName: "Operations", levels: { docs: "read", tasks: "review", incidents: "manage", stock: "manage", cctv: "review", "site-monitoring": "act" } },
+  { name: "Receptionist", homeName: "Front of House", levels: { "swim-school": "desk", "short-courses": "view", refunds: "use", coinage: "use", docs: "read", rota: "view", plan: "view", tasks: "do", stock: "count", maintenance: "report" } },
+  { name: "Lifeguard", homeName: "Poolside", levels: { docs: "read", rota: "view", plan: "view", tasks: "do", maintenance: "report" } },
+  { name: "Pool supervisor", homeName: "Pool planning", levels: { docs: "read", rota: "plan", plan: "plan", academy: "run", "short-courses": "run", tasks: "review", incidents: "report", maintenance: "report" } },
+  { name: "Duty manager", homeName: "Duty desk", levels: { "swim-school": "desk", refunds: "manage", coinage: "manage", docs: "read", training: "trainer", rota: "manage", plan: "manage", academy: "run", "short-courses": "run", tasks: "review", incidents: "report", cctv: "record", maintenance: "manage" }, extras: ["swim-school.cancel-classes"] },
+  { name: "Swim school manager", homeName: "Swim school office", levels: { "swim-school": "manage", "pool-deck": "lead", docs: "manage", training: "manage", rota: "manage", plan: "manage", hr: "team", academy: "manage", "short-courses": "manage", tasks: "manage", incidents: "report" }, extras: ["swim-school.cancel-classes", "docs.approve"] },
+  { name: "Centre manager", homeName: "Centre office", levels: { docs: "read", rota: "manage", plan: "manage", tasks: "review", incidents: "investigate", stock: "manage", cctv: "review", "site-monitoring": "act", maintenance: "manage" } },
+  { name: "Operations manager", homeName: "Operations", levels: { docs: "read", tasks: "review", incidents: "manage", stock: "manage", cctv: "review", "site-monitoring": "act", maintenance: "manage" } },
 ];
 for (const [i, role] of levelRoles.entries()) {
   const data = { homeName: role.homeName, ...roleColumns({ levels: role.levels, extras: role.extras ?? [] }) };
@@ -152,6 +152,8 @@ console.log(`[sandbox] Seeded a fictional leisure group (Riverside and Hillview)
 const env = {
   ...process.env,
   DATABASE_URL: mainUrl, DIRECT_URL: mainUrl, DOCS_DATABASE_URL: docsUrl, DOCS_DIRECT_URL: docsUrl,
+  // Each PGlite is one Postgres session: parallel connections would cross their queries.
+  DATABASE_POOL_MAX: "1",
   ...(hrUrl ? { HR_DATABASE_URL: hrUrl, HR_DIRECT_URL: hrUrl } : {}),
   AUTH_SECRET: "sandbox-only-secret-not-for-deployment-0000", AUTH_TRUST_HOST: "true",
   DEV_AUTH_BYPASS: "", NEXT_TELEMETRY_DISABLED: "1",

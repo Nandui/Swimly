@@ -1,5 +1,5 @@
-/* Docs and Refunds layout rules only. The theme, tokens and control rules come from Poolside
-   Clear (poolside.css) on body.turnfin-app; nothing here restyles shared controls. */
+/* Docs and Refunds layout rules only. The theme, tokens and control rules come from Turnfin
+   Glass (glass.css, kit.css) on body.turnfin-app; nothing here restyles shared controls. */
 .turnfin-docs {
   --reading-size: 16px;
   font-family: var(--font-sans);

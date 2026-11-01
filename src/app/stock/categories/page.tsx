@@ -14,9 +14,9 @@ export default async function StockCategoriesPage() {
   const { who, categories } = await stockCategories();
   return (
     <PageShell spacing="roomy" header={<PageHeader title="Categories" description="How products are grouped on the count sheet, in this order." actions={who.manage ? <CategoryDialog /> : undefined} />}>
-      <section className="pc-panel" aria-label="Categories">
-        {categories.length === 0 ? <EmptyState compact icon="layers" title="No categories yet" hint={who.manage ? "Add the first, such as Retail or Drink." : "Whoever manages Stock adds them."} /> : (
-          <ul className="pc-rows">
+      <section className="flex min-w-0 flex-col" aria-label="Categories">
+        {categories.length === 0 ? <EmptyState icon="layers" title="No categories yet" hint={who.manage ? "Add the first, such as Retail or Drink." : "Whoever manages Stock adds them."} /> : (
+          <ul className="pc-list">
             {categories.map((c) => (
               <li key={c.id} className="pc-row" {...(c.archivedAt ? { "data-muted": "" } : {})}>
                 <span className="pc-row-body">

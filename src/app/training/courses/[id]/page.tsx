@@ -22,7 +22,7 @@ export default async function CourseBuilderPage({ params, searchParams }: { para
   const canEdit = who.manage && !course.archivedAt;
   const state = !published ? "draft" : changed ? "changed" : "published";
   return (
-    <PageShell header={<PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         back={{ href: "/training/courses", label: "Courses" }}
         title={course.title}
         description={published

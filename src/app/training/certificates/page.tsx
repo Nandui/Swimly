@@ -7,6 +7,7 @@ import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
+import { RecordSection } from "@/components/ui-kit/record";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { Tag } from "@/components/ui-kit/tag";
 import { CERTIFICATE_STATUS_META, certificateQueue, DeclineCertificate, VerifyCertificate } from "@/modules/training/features/certificates";
@@ -21,7 +22,7 @@ export default async function CertificatesPage({ searchParams }: { searchParams:
   const { who, rows, types } = await certificateQueue(done ? "DONE" : "PENDING");
   if (!who.qualifications) notFound();
   return (
-    <PageShell header={<PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         title="Certificates to check"
         description={done ? "Recently checked certificates" : "Open each file, check it, then record it or decline it with a reason"}
       />}>
@@ -32,8 +33,8 @@ export default async function CertificatesPage({ searchParams }: { searchParams:
       {rows.length === 0 ? (
         <EmptyState as="h2" icon="certificate" title={done ? "Nothing checked yet" : "Nothing waiting"} hint="Staff upload certificates in Turnfin Me. They appear here for the people you cover." />
       ) : (
-        <section className="pc-panel" aria-label={done ? "Checked certificates" : "Certificates waiting"}>
-          <ul className="pc-rows">
+        <RecordSection id="certificates-heading" title={done ? "Checked" : "Waiting"} aside={<p>{rows.length}</p>}>
+          <ul className="pc-list">
             {rows.map((row) => {
               const status = CERTIFICATE_STATUS_META[row.status as keyof typeof CERTIFICATE_STATUS_META];
               return (
@@ -64,7 +65,7 @@ export default async function CertificatesPage({ searchParams }: { searchParams:
               );
             })}
           </ul>
-        </section>
+        </RecordSection>
       )}
     </PageShell>
   );

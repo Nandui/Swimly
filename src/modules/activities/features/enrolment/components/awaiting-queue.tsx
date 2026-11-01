@@ -21,7 +21,7 @@ export function AwaitingQueue({ view, total, q, counts, page, pageSize, actions,
 }) {
   const moves = view === "moves";
   return <PageShell spacing="roomy" header={<PageHeader title="Awaiting enrolment" description="Select a swimmer to arrange a class or update their follow-up" actions={actions} />}>
-    <section className="pc-panel" aria-label={moves ? "Move queue" : "Enrolment queue"}>
+    <section className="flex min-w-0 flex-col gap-(--space-5)" aria-label={moves ? "Move queue" : "Enrolment queue"}>
       <div className="min-w-0 flex flex-wrap items-end gap-3">
         <AwaitingNavigation active={view} q={q} counts={counts} />
         <form action="/awaiting-enrolment" className="min-w-0 grow basis-field md:max-w-md" role="search">
@@ -48,7 +48,7 @@ function NextContact({ on }: { on: string }) {
 
 export function QueueRow({ name, description, status, nextContactOn, contactSummary, identity, placement, followUp }: { name: string; description: string; status: ReactNode; nextContactOn?: string; contactSummary?: FollowUpSummary; identity: ReactNode; placement: ReactNode; followUp: ReactNode }) {
   const latest = contactSummary?.latest;
-  // The row is a white bordered row from the list theme (poolside.css); the open one takes the
+  // The row is a white bordered row from the list theme (kit.css); the open one takes the
   // primary edge there too.
   return <Item role="listitem" aria-label={name} className="block min-w-0 overflow-hidden p-0">
     <QueueDisclosure>

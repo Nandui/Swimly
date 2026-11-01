@@ -9,6 +9,8 @@ import { Separator } from "@/components/shadcn/separator";
 import { Table, TableBody, TableCell, TableHead, TableRow } from "@/components/shadcn/table";
 import { Tabs as TabSet, TabsContent, TabsList, TabsTrigger } from "@/components/shadcn/tabs";
 import { Bar, Notice } from "@/components/ui";
+import { ActivityBlock, AudioBlock, FileView, SlidesBlock } from "@/components/lesson-blocks";
+import type { Embed } from "@/components/lesson-kinds-more";
 import { ApiError, api, apiFile } from "@/lib/api";
 
 /** Renders a training lesson's text (Tiptap JSON, cleaned by Turnfin) as plain,
@@ -232,6 +234,21 @@ function render(node: Node, key: string, assignmentId: string, checks: Checks | 
       return id ? <FileButton key={key} assignmentId={assignmentId} fileId={id} label={String(node.attrs?.label ?? "")} /> : null;
     }
     case "knowledgeCheck": return checks ? <KnowledgeCheck key={key} checks={checks} questionId={String(node.attrs?.questionId ?? "")} /> : null;
+    // Several things in one lesson (29 October 2026): Turnfin cleans these, and sends slides with the address they play from.
+    case "audioBlock": {
+      const id = fileId(`/training/files/${String(node.attrs?.fileId ?? "")}`);
+      return id ? <AudioBlock key={key} assignmentId={assignmentId} fileId={id} transcript={String(node.attrs?.transcript ?? "")} /> : null;
+    }
+    case "slidesBlock": return <SlidesBlock key={key} embed={(node.attrs?.embed ?? null) as Embed | null} />;
+    case "fileView": {
+      const id = fileId(`/training/files/${String(node.attrs?.fileId ?? "")}`);
+      return id ? <FileView key={key} assignmentId={assignmentId} fileId={id} /> : null;
+    }
+    case "activity": {
+      const id = typeof node.attrs?.id === "string" ? node.attrs.id : null;
+      const file = fileId(`/training/files/${String(node.attrs?.fileId ?? "")}`);
+      return id ? <ActivityBlock key={key} assignmentId={assignmentId} id={id} kind={String(node.attrs?.kind ?? "")} fileId={file} data={(node.attrs?.data ?? null) as Parameters<typeof ActivityBlock>[0]["data"]} /> : null;
+    }
     default: return null;
   }
 }

@@ -106,14 +106,9 @@ export function SignInForm({ devAdminName, sharedDeviceName = null, google = fal
       />}>
 
       {sharedDeviceName ? (
-        <div className="pc-note flex-wrap">
-          <Tablet aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-ui-primary" />
-          <div className="min-w-0 flex-1 basis-40">
-            <p className="text-sm font-semibold">{`${sharedDeviceName} is a work device`}</p>
-            <p className="text-xs text-ui-muted-foreground">If you have set a PIN and signed in here before, switch in with it instead.</p>
-          </div>
-          <Button asChild variant="outline" className="ml-auto"><Link href="/switch">Switch user</Link></Button>
-        </div>
+        <Notice icon={Tablet} title={`${sharedDeviceName} is a work device`}
+          description="If you have set a PIN and signed in here before, switch in with it instead."
+          actions={<Button asChild variant="outline"><Link href="/switch">Switch user</Link></Button>} />
       ) : null}
 
       <form method="post" onSubmit={handleSubmit}>

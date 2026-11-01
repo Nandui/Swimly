@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { areasAt } from "@/lib/directory";
 import Link from "next/link";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, CalendarRange, Users } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
+import { Figure, Figures } from "@/components/ui-kit/figure";
 import { Tag } from "@/components/ui-kit/tag";
 import { Progress } from "@/components/shadcn/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
@@ -67,15 +68,16 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
         <EmptyState icon="calendarRange" title="No bookings yet" hint="When a school, a party or a club books time that needs staff, add it here." />
       ) : (
         <>
-          <dl className="rota-kpis rota-kpis-three tabular-nums">
-            <div><dt>Running bookings</dt><dd>{running.length}</dd></div>
-            <div><dt>Days still to come</dt><dd>{running.reduce((n, b) => n + b.needs.length, 0)}</dd></div>
-            <div data-tone={openPlaces ? "warning" : "success"}><dt>Places still to fill</dt><dd>{openPlaces}</dd></div>
-          </dl>
+          <Figures label="Bookings at a glance">
+            <Figure icon={CalendarRange} label="Running bookings" value={running.length} />
+            <Figure icon={CalendarDays} label="Days still to come" value={running.reduce((n, b) => n + b.needs.length, 0)} />
+            <Figure icon={Users} label="Places still to fill" value={openPlaces} hint={openPlaces ? "Need someone" : "All filled"} tone={openPlaces ? "orange" : undefined} />
+          </Figures>
           {[{ id: "bookings-running", title: "Running", hint: "Bookings with days still to come.", list: running }, { id: "bookings-done", title: "Finished", hint: "No days left to come. Kept so you can see what ran.", list: finished }]
             .filter((x) => x.list.length).map((x) => (
-            <section key={x.id} aria-labelledby={x.id} className="pc-panel">
-              <div className="pc-panel-head"><div><h2 id={x.id}>{x.title}</h2><p className="text-sm text-ui-muted-foreground">{x.hint}</p></div></div>
+            <section key={x.id} aria-labelledby={x.id} className="flex min-w-0 flex-col">
+              <div className="pc-section-head"><h2 id={x.id}>{x.title}</h2><p>{x.list.length}</p></div>
+              <p className="pc-section-note">{x.hint}</p>
               <Table containerClassName="rota-wide-only">
                 <TableHeader>
                   <TableRow>
@@ -106,7 +108,7 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
                   })}
                 </TableBody>
               </Table>
-              <ul className="pc-rows rota-narrow-only">
+              <ul className="pc-list rota-narrow-only">
                 {x.list.map((b) => {
                   const f = fill(b);
                   return (

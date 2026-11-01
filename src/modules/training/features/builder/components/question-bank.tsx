@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { ArrowDown, ArrowUp, Check, GraduationCap, ImagePlus, Pencil, Plus, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, ImagePlus, Pencil, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Checkbox } from "@/components/shadcn/checkbox";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
@@ -55,20 +55,17 @@ export function QuestionsPanel({ courseId, section, questions, quizzes, files, o
   const { act, pending } = useAct();
   const router = useRouter();
   return (
-    <section className="pc-panel flex flex-col gap-5" aria-labelledby="questions-heading">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="pc-tile-icon"><GraduationCap aria-hidden="true" /></span>
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-ui-muted-foreground">Questions · {questions.length}</p>
-          <h2 id="questions-heading" className="truncate text-lg">{section.title}</h2>
-        </div>
+    <section className="flex min-w-0 flex-col" aria-labelledby="questions-heading">
+      <div className="pc-section-head">
+        <h2 id="questions-heading" className="min-w-0 truncate">Questions: {section.title}</h2>
         {canEdit ? (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex shrink-0 flex-wrap gap-2">
             <ImportQuestions sectionId={section.id} sectionTitle={section.title} />
             <QuestionDialog courseId={courseId} sectionId={section.id} files={files} onUploaded={onUploaded} onSaved={() => router.refresh()} />
           </div>
-        ) : null}
+        ) : <p>{questions.length}</p>}
       </div>
+      <div className="rec-card gap-5">
       <p className="text-sm text-ui-muted-foreground">
         {quizzes.length ? `Learners practise these in ${quizzes.map((q) => `“${q}”`).join(" and ")}. ` : "Add a Quiz lesson to this section to let learners practise these. "}
         The final exam draws from every section’s questions.
@@ -80,7 +77,7 @@ export function QuestionsPanel({ courseId, section, questions, quizzes, files, o
           {questions.map((q, i) => (
             <li key={q.id} className="pc-row items-start">
               <span className="pc-row-body">
-                <span className="text-xs font-semibold uppercase tracking-wide text-ui-muted-foreground">{i + 1} · {QUESTION_KIND_META[q.kind].label}</span>
+                <span className="text-xs font-semibold text-ui-muted-foreground">{i + 1} · {QUESTION_KIND_META[q.kind].label}</span>
                 <span className="pc-row-title">{q.kind === "FILL_BLANK" ? blankedPrompt(q.prompt) : q.prompt}</span>
                 <AnswerSummary question={q} />
                 {missedLine(report.questions[q.id]) ? <span className="pc-row-hint">{missedLine(report.questions[q.id])}</span> : null}
@@ -105,6 +102,7 @@ export function QuestionsPanel({ courseId, section, questions, quizzes, files, o
           ))}
         </ol>
       )}
+      </div>
     </section>
   );
 }
@@ -357,14 +355,10 @@ export function ExamPanel({ courseId, exam, questions, sections, canEdit, report
     .sort((a, b) => b.stat!.missed / b.stat!.asked - a.stat!.missed / a.stat!.asked)
     .slice(0, 10);
   return (
-    <section className="pc-panel flex flex-col gap-5" aria-labelledby="exam-heading">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="pc-tile-icon"><GraduationCap aria-hidden="true" /></span>
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-ui-muted-foreground">End of the course</p>
-          <h2 id="exam-heading" className="text-lg">Final exam</h2>
-        </div>
-      </div>
+    <section className="flex min-w-0 flex-col" aria-labelledby="exam-heading">
+      <div className="pc-section-head"><h2 id="exam-heading">Final exam</h2></div>
+      <p className="pc-section-note">At the end of the course.</p>
+      <div className="rec-card gap-5">
       <Switch id="exam-on" label="Learners sit a final exam" description="Marked on the server. They finish the course once they pass." checked={on} onCheckedChange={change(setOn)} disabled={!canEdit} labelSpacing="spread" />
       {on ? (
         <>
@@ -412,6 +406,7 @@ export function ExamPanel({ courseId, exam, questions, sections, canEdit, report
             ) : null}
           </>
         ) : <Notice title="Nobody has sat this exam yet">Results show here once people have.</Notice>}
+      </div>
       </div>
     </section>
   );

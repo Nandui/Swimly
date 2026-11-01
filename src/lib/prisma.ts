@@ -1,6 +1,6 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/generated/prisma/client";
-import { postgresConnectionString } from "@/lib/postgres-connection";
+import { poolMax, postgresConnectionString } from "@/lib/postgres-connection";
 
 /** One client per process. Next.js reloads modules on every edit in dev, so
  *  without the global the dev server opens a new pool every time you save. */
@@ -17,7 +17,7 @@ function createPrismaClient(): PrismaClient {
   }
 
   const adapter = new PrismaPg(
-    { connectionString: postgresConnectionString(connectionString) },
+    { connectionString: postgresConnectionString(connectionString), max: poolMax() },
     {
       // Prisma 7 hands the pool to `pg`, and an unhandled `error` event on a
       // `pg.Pool` is an unhandled EventEmitter error — it takes the whole Node

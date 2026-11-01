@@ -8,6 +8,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-sel
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
+import { RecordSection } from "@/components/ui-kit/record";
 import { Tag } from "@/components/ui-kit/tag";
 import { QUALIFICATION_STATE_META } from "@/lib/people/constants";
 import { REQUIREMENT_META } from "@/lib/people/requirements";
@@ -25,8 +26,8 @@ export default async function TrainingExpiringPage({ searchParams }: { searchPar
   const { rows, missing, sites, positions } = await expiringQualifications({ site: input.site || undefined, position: input.position || undefined });
   const filtered = !!(input.site || input.position);
   return (
-    <PageShell header={<PageHeader title="Expiring qualifications" description={`Expired, or expiring in the next ${EXPIRY_WARNING_DAYS} days. Assign the renewal course so it is done in time.`} />}>
-      <form method="get" className="pc-panel flex flex-wrap items-end gap-4" role="search" aria-label="Filter expiring qualifications">
+    <PageShell spacing="roomy" header={<PageHeader title="Expiring qualifications" description={`Expired, or expiring in the next ${EXPIRY_WARNING_DAYS} days. Assign the renewal course so it is done in time.`} />}>
+      <form method="get" className="flex flex-wrap items-end gap-4" role="search" aria-label="Filter expiring qualifications">
         <div className="min-w-0 grow basis-40 space-y-2 sm:grow-0 sm:basis-auto sm:min-w-52"><Label htmlFor="expiring-site" className="block">Site</Label>
           <NativeSelect id="expiring-site" name="site" defaultValue={input.site ?? ""} className="min-h-11 w-full">
             <NativeSelectOption value="">Every site</NativeSelectOption>
@@ -40,7 +41,7 @@ export default async function TrainingExpiringPage({ searchParams }: { searchPar
           </NativeSelect>
         </div>
         <div className="flex gap-2">
-          <Button type="submit" className="min-h-11">Apply filters</Button>
+          <Button type="submit" variant="outline" className="min-h-11">Apply filters</Button>
           {filtered ? <Button asChild variant="ghost" className="min-h-11"><Link href="/training/expiring">Reset</Link></Button> : null}
         </div>
       </form>
@@ -48,8 +49,8 @@ export default async function TrainingExpiringPage({ searchParams }: { searchPar
       {rows.length === 0 ? (
         <EmptyState as="h2" icon="hourglass" title="Nothing expiring" hint={filtered ? `No one here expires in the next ${EXPIRY_WARNING_DAYS} days.` : `Everyone you cover is in date for the next ${EXPIRY_WARNING_DAYS} days.`} />
       ) : (
-        <section className="pc-panel" aria-label="Expiring qualifications">
-          <ul className="pc-rows">
+        <RecordSection id="expiring-heading" title="Expired or expiring" aside={<p>{rows.length}</p>}>
+          <ul className="pc-list">
             {rows.map((row) => (
               <li key={row.id} className="pc-row">
                 <Avatar size="lg" aria-hidden="true"><AvatarFallback>{nameInitials(row.name)}</AvatarFallback></Avatar>
@@ -72,18 +73,12 @@ export default async function TrainingExpiringPage({ searchParams }: { searchPar
               </li>
             ))}
           </ul>
-        </section>
+        </RecordSection>
       )}
 
       {missing.length ? (
-        <section className="pc-panel" aria-labelledby="missing-heading">
-          <div className="pc-panel-head">
-            <div className="flex flex-col gap-1">
-              <h2 id="missing-heading" className="text-lg font-semibold">Missing for their position</h2>
-              <p className="pc-row-hint">Never recorded, though their position needs it. Record it on their HR file, or assign the course.</p>
-            </div>
-          </div>
-          <ul className="pc-rows">
+        <RecordSection id="missing-heading" title="Missing for their position" aside={<p>{missing.length}</p>} note="Never recorded, though their position needs it. Record it on their HR file, or assign the course.">
+          <ul className="pc-list">
             {missing.map((row) => (
               <li key={row.userId} className="pc-row">
                 <Avatar size="lg" aria-hidden="true"><AvatarFallback>{nameInitials(row.name)}</AvatarFallback></Avatar>
@@ -95,7 +90,7 @@ export default async function TrainingExpiringPage({ searchParams }: { searchPar
               </li>
             ))}
           </ul>
-        </section>
+        </RecordSection>
       ) : null}
     </PageShell>
   );

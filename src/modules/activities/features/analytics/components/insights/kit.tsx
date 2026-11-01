@@ -105,7 +105,7 @@ export function ReportShell({ ctx, page, path, title, description, back, childre
   const dashboard = dashboardOf(page);
   const backTo = back === true ? { href: reportHref(ctx, dashboard.href), label: dashboard.label } : back;
   return <PageShell className="ins" data-dashboard={dashboard.key}
-    header={<PageHeader title={title} back={backTo} eyebrow={backTo ? null : <p className="ins-eyebrow">Swim school analytics</p>}
+    header={<PageHeader title={title} back={backTo}
       description={description ? <>{description}<span className="ins-context">{context}</span></> : context} actions={<>{actions}<AnalyticsRefresh /></>} />}>
     <FilterBar {...bar} switcher={<DashboardSwitch page={page} query={filterQuery(ctx)} />} />
     <div className="ins-body">{children}</div>
@@ -117,7 +117,8 @@ export function ReportShell({ ctx, page, path, title, description, back, childre
   </PageShell>;
 }
 
-/** A group of panels that answer one question, laid out as a bento grid. */
+/** A group of panels that answer one question, laid out as a bento grid. Each panel's title sits
+ *  above its card (DESIGN.md, The page shell). */
 export function Section({ id, title, intro, children }: { id: string; title: string; intro?: React.ReactNode; children: React.ReactNode }) {
   return <section id={id} className="ins-section" aria-labelledby={`${id}-title`}>
     <header className="ins-section-head">
@@ -136,16 +137,18 @@ export function Panel({ id, title, sub, action, children, className, span = 12, 
   /** A headline number for the panel, shown beside its title. */
   figure?: React.ReactNode;
 }) {
-  return <section id={id} className={`pc-panel ins-panel${className ? ` ${className}` : ""}`} data-span={span} aria-labelledby={`${id}-heading`}>
+  return <section id={id} className={`ins-panel-wrap${className ? ` ${className}` : ""}`} data-span={span} aria-labelledby={`${id}-heading`}>
     <div className="ins-head">
-      <div className="ins-head-text">
+      <div className="pc-section-head">
         <h3 id={`${id}-heading`}>{title}</h3>
-        {sub ? <p className="ins-sub">{sub}</p> : null}
+        {action}
       </div>
-      {action}
+      {sub ? <p className="pc-section-note">{sub}</p> : null}
     </div>
-    {figure ? <div className="ins-panel-figure">{figure}</div> : null}
-    {children}
+    <div className="rec-card ins-panel">
+      {figure ? <div className="ins-panel-figure">{figure}</div> : null}
+      {children}
+    </div>
   </section>;
 }
 

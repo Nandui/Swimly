@@ -5,6 +5,7 @@ import { Button } from "@/components/shadcn/button";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
+import { RecordFact, RecordFacts, RecordSection } from "@/components/ui-kit/record";
 import { EmailHistory, EmailPreview, lastSentToSupplier, orderEmailPage, SendTest, SendToSupplier } from "@/modules/purchasing/features/orders";
 
 export const metadata: Metadata = { title: "Email purchase order" };
@@ -18,7 +19,7 @@ export default async function EmailOrderPage({ params }: { params: Promise<{ id:
   const supplierEmail = o.supplier.email.trim();
   const sentBefore = lastSentToSupplier(o.emails);
   return (
-    <PageShell className="po-desk" header={<PageHeader title={<span className="po-num">Email {input.number}</span>} back={{ href: `/purchasing/${o.id}`, label: "The order" }}
+    <PageShell spacing="roomy" header={<PageHeader title={<span className="tabular-nums">Email {input.number}</span>} back={{ href: `/purchasing/${o.id}`, label: "The order" }}
         description={`To ${o.supplier.name}. Check the email, send yourself a test, then send it.`}
         actions={mayEmail ? <span className="flex flex-wrap gap-2">
           {sender.email ? <SendTest id={o.id} to={sender.email} /> : null}
@@ -40,19 +41,19 @@ export default async function EmailOrderPage({ params }: { params: Promise<{ id:
         {!sender.email ? <Notice tone="warning" title="Your account has no email address" description={replyTo.email ? "A test can't reach you. Ask an administrator to add one." : "A test can't reach you, and the supplier's replies would have nowhere to go. Ask an administrator to add one."} /> : null}
       </div>
 
-      <section aria-labelledby="po-email" className="po-card">
-        <div className="po-card-head"><div><span className="po-eyebrow">Exactly as it arrives</span><h2 id="po-email">The email</h2></div></div>
-        <dl className="po-envelope">
-          <dt>To</dt><dd>{supplierEmail || "No address yet"}</dd>
-          <dt>Copy to</dt><dd>{supplierCopies.join(", ") || "Nobody"}<span className="font-normal text-ui-muted-foreground"> (not on tests)</span></dd>
-          <dt>Replies go to</dt><dd>{replyTo.email ? `${replyTo.name}, ${replyTo.email}` : "Nobody: no email address for whoever raised the order or for you"}{replyTo.email && replyTo.email !== sender.email ? <span className="font-normal text-ui-muted-foreground"> (raised the order)</span> : null}</dd>
-          <dt>Subject</dt><dd>{preview.subject}</dd>
-        </dl>
-        <div className="po-pane">
-          <div className="po-pane-bar" aria-hidden="true"><span /><span /><span /><p>{preview.subject}</p></div>
-          <EmailPreview html={preview.html} title={`The email of ${input.number}`} />
+      <RecordSection id="po-email" title="The email" note="Exactly as it arrives.">
+        <div className="rec-card">
+          <RecordFacts>
+            <RecordFact label="To">{supplierEmail || "No address yet"}</RecordFact>
+            <RecordFact label="Copy to">{supplierCopies.join(", ") || "Nobody"}<span className="font-normal text-ui-muted-foreground"> (not on tests)</span></RecordFact>
+            <RecordFact label="Replies go to">{replyTo.email ? `${replyTo.name}, ${replyTo.email}` : "Nobody: no email address for whoever raised the order or for you"}{replyTo.email && replyTo.email !== sender.email ? <span className="font-normal text-ui-muted-foreground"> (raised the order)</span> : null}</RecordFact>
+            <RecordFact label="Subject">{preview.subject}</RecordFact>
+          </RecordFacts>
+          <div className="overflow-hidden rounded-card bg-(--fill-2)">
+            <EmailPreview html={preview.html} title={`The email of ${input.number}`} />
+          </div>
         </div>
-      </section>
+      </RecordSection>
 
       <EmailHistory emails={o.emails} />
     </PageShell>

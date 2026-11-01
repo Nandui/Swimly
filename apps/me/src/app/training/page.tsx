@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { Bookmark, CalendarDays, ChevronRight, FileText, Flame, GraduationCap, LibraryBig, Route, Search, Timer } from "lucide-react";
+import { Bookmark, CalendarDays, ChevronRight, FileText, Flame, GraduationCap, LibraryBig, Search } from "lucide-react";
 import { Frame } from "@/components/frame";
 import { CourseImage } from "@/components/question";
-import { Bar, EmptyRows, LoadError, Loading, Tag, useLoad } from "@/components/ui";
+import { Bar, EmptyRows, LoadError, Loading, Section, Tag, useLoad } from "@/components/ui";
 import { date, day } from "@/lib/format";
 import { TRAINING_META, type Meta } from "@/lib/meta";
 import { Input } from "@/components/shadcn/input";
@@ -37,12 +37,13 @@ function OnTheJob({ plan }: { plan: Plan }) {
   return (
     <>
       {plan.paths.map((p) => (
-        <section key={p.id} className="pc-panel stack-sm" aria-labelledby={`path-${p.id}`}>
-          <div className="flex flex-wrap items-center gap-2"><span className="pc-tile-icon"><Route aria-hidden="true" /></span><h2 id={`path-${p.id}`}>{p.title}</h2></div>
-          {p.summary ? <p className="text-ui-muted-foreground">{p.summary}</p> : null}
-          <p className="text-ui-muted-foreground tabular-nums">{p.finishedOn ? `Finished ${date(p.finishedOn)}` : `${p.done} of ${p.total} courses done${p.overdue ? " · something is overdue" : ""}`}</p>
-          <Bar max={p.total} value={p.done} label="Courses done on this path" />
-          <ol className="pc-rows">
+        <Section key={p.id} id={`path-${p.id}`} title={p.title} aside={<p>{p.done} of {p.total}</p>}>
+          <div className="me-section-note stack-sm">
+            {p.summary ? <span>{p.summary}</span> : null}
+            <span className="tabular-nums">{p.finishedOn ? `Finished ${date(p.finishedOn)}` : `${p.done} of ${p.total} courses done${p.overdue ? " · something is overdue" : ""}`}</span>
+            <Bar max={p.total} value={p.done} label="Courses done on this path" />
+          </div>
+          <ol className="pc-list">
             {p.steps.map((step, i) => {
               const body = (
                 <>
@@ -55,12 +56,11 @@ function OnTheJob({ plan }: { plan: Plan }) {
               return <li key={`${p.id}-${i}`}>{step.assignmentId ? <Link href={`/training/${step.assignmentId}`} className="pc-row">{body}</Link> : <div className="pc-row">{body}</div>}</li>;
             })}
           </ol>
-        </section>
+        </Section>
       ))}
       {coming.length || past.length ? (
-        <section className="pc-panel" aria-labelledby="t-sessions">
-          <div className="pc-panel-head"><h2 id="t-sessions">Sessions</h2></div>
-          <ul className="pc-rows">
+        <Section id="t-sessions" title="Sessions">
+          <ul className="pc-list">
             {[...coming, ...past].map((s) => (
               <li key={s.id} className="pc-row">
                 <span className="pc-tile-icon"><CalendarDays aria-hidden="true" /></span>
@@ -71,25 +71,28 @@ function OnTheJob({ plan }: { plan: Plan }) {
               </li>
             ))}
           </ul>
-        </section>
+        </Section>
       ) : null}
       {plan.hours.progress.length || plan.hours.log.length ? (
-        <section className="pc-panel stack-sm" aria-labelledby="t-hours">
-          <div className="flex flex-wrap items-center gap-2"><span className="pc-tile-icon"><Timer aria-hidden="true" /></span><h2 id="t-hours">In-service hours</h2></div>
-          {plan.hours.progress.map((h) => (
-            <div key={h.qualification} className="stack-sm">
-              <p className="tabular-nums"><strong>{h.qualification}</strong>: {inWords(h.minutes)} of {h.hours} h since {date(h.since)}{h.met ? ", done" : `, ${inWords(h.hours * 60 - h.minutes)} to go`}</p>
-              <Bar max={100} value={h.percent} label={`${h.qualification} hours`} />
+        <Section id="t-hours" title="In-service hours" className="gap-(--space-3)">
+          {plan.hours.progress.length ? (
+            <div className="pc-panel">
+              {plan.hours.progress.map((h) => (
+                <div key={h.qualification} className="stack-sm">
+                  <p className="tabular-nums"><strong>{h.qualification}</strong>: {inWords(h.minutes)} of {h.hours} h since {date(h.since)}{h.met ? ", done" : `, ${inWords(h.hours * 60 - h.minutes)} to go`}</p>
+                  <Bar max={100} value={h.percent} label={`${h.qualification} hours`} />
+                </div>
+              ))}
             </div>
-          ))}
+          ) : null}
           {plan.hours.log.length ? (
-            <ul className="pc-rows" aria-label="Hours logged">
+            <ul className="pc-list" aria-label="Hours logged">
               {plan.hours.log.slice(0, 8).map((l) => (
                 <li key={l.id} className="pc-row"><span className="pc-row-body"><span className="pc-row-title">{inWords(l.minutes)} · {l.topic}</span><span className="pc-row-hint">{[date(l.on), l.qualification].filter(Boolean).join(" · ")}</span></span></li>
               ))}
             </ul>
           ) : null}
-        </section>
+        </Section>
       ) : null}
     </>
   );
@@ -141,7 +144,7 @@ export default function TrainingPage() {
   const open = data?.items.filter((t) => t.state !== "completed" && t.state !== "cancelled") ?? [];
   const done = data?.items.filter((t) => t.state === "completed") ?? [];
   const list = (items: Item[], empty: string) => items.length === 0 ? <EmptyRows>{empty}</EmptyRows> : (
-    <ul className="pc-rows">{items.map((t) => (
+    <ul className="pc-list">{items.map((t) => (
       <li key={t.id}><Link href={`/training/${t.id}`} className="pc-row">
         {t.coverId ? <CourseImage assignmentId={t.id} fileId={t.coverId} alt="" className="course-thumb" /> : <span className="pc-tile-icon"><GraduationCap aria-hidden="true" /></span>}
         <span className="pc-row-body">{t.category ? <span className="caption eyebrow">{t.category}</span> : null}<span className="pc-row-title">{t.title}</span><span className="pc-row-hint">{[t.completedAt ? `Completed ${date(t.completedAt)}` : t.dueOn ? `Due ${day(t.dueOn)}` : "No deadline", lessonsHint(t)].filter(Boolean).join(" · ")}</span></span>
@@ -151,13 +154,13 @@ export default function TrainingPage() {
   );
   return (
     <Frame title="My training">
-      <PageShell header={<PageHeader title="My training" description="Courses assigned to you. Open one to work through its lessons; it remembers where you got to." />}>
+      <PageShell spacing="roomy" header={<PageHeader title="My training" description="Courses assigned to you. Open one to work through its lessons; it remembers where you got to." />}>
         <LearnerTools refresher={refresher} />
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading /> : (
           <>
-            <section className="pc-panel" aria-labelledby="t-open"><div className="pc-panel-head"><h2 id="t-open">To do</h2></div>{list(open, "No training to do right now.")}</section>
+            <Section id="t-open" title="To do" aside={open.length ? <p>{open.length}</p> : null}>{list(open, "No training to do right now.")}</Section>
             {plan ? <OnTheJob plan={plan} /> : null}
-            <section className="pc-panel" aria-labelledby="t-done"><div className="pc-panel-head"><h2 id="t-done">Completed</h2></div>{list(done, "Nothing completed yet.")}</section>
+            <Section id="t-done" title="Completed" aside={done.length ? <p>{done.length}</p> : null}>{list(done, "Nothing completed yet.")}</Section>
           </>
         )}
       </PageShell>

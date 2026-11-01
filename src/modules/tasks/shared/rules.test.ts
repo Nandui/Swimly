@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
-  completionProblems, csvRows, dueOn, exceptions, score, scheduleLabel, scoreBand, taskState, tasksOn, templateProblems, windowOn, zonedInstant,
+  clockOf, completionProblems, csvRows, dayIn, dueOn, exceptions, isClock, isScheduleTime, outOfRange, score, scheduleLabel, scoreBand, taskState, tasksOn, templateProblems, windowOn, zonedInstant,
   type TaskDefinition, type TaskSchedule,
 } from "./rules";
 
@@ -109,4 +109,37 @@ test("kinds and roles: a scheduled kind needs a schedule; restricting needs role
   assert.deepEqual(templateProblems({ ...base, kind: "adhoc" }), []);
   assert.ok(templateProblems({ ...base, kind: "action", restricted: true, roleIds: [] }).some((p) => p.includes("restricted to")));
   assert.deepEqual([scoreBand(100), scoreBand(96), scoreBand(80), scoreBand(50)], ["good", "good", "fair", "low"]);
+});
+
+test("readings out of range, as announced to Site Monitoring: which record and field, the value read, the range allowed and what to do", () => {
+  const chlorine = { id: "cl", label: "Free chlorine", type: "number" as const, required: true, min: 1, unit: "mg/L" };
+  const def = { fields: [...water.fields, chlorine, { id: "cya", label: "Stabiliser", type: "number" as const, required: false, max: 50 }] };
+  assert.deepEqual(outOfRange(def, [{ ph: "8.1", cl: " 0.4 ", cya: "60", clear: "Cloudy" }]), [
+    { record: 0, fieldId: "ph", reading: "pH", value: "8.1", unit: "", allowed: "7.2 to 7.6", guidance: "Check dosing and retest." },
+    { record: 0, fieldId: "cl", reading: "Free chlorine", value: "0.4", unit: "mg/L", allowed: "at least 1", guidance: "" },
+    { record: 0, fieldId: "cya", reading: "Stabiliser", value: "60", unit: "", allowed: "at most 50", guidance: "" },
+  ], "a choice is never out of range");
+  assert.deepEqual(outOfRange(def, [{ ph: "7.2", cl: "1", cya: "50" }, { ph: "7.6" }]), [], "the ends of a range are in range");
+  assert.deepEqual(outOfRange(def, [{ ph: "", cl: "x" }, {}]), [], "no answer, or not a number, is not a reading");
+  assert.deepEqual(outOfRange(def, [{ ph: "7.4" }, { ph: "7.0" }]).map((r) => [r.record, r.reading]), [[1, "Record 2 · pH"]], "with two records, the reading says which");
+  assert.deepEqual(outOfRange(def, [{ temp: "40" }]), [], "a number with no range is never out of it");
+});
+
+test("clock times are hours and minutes; a schedule may also start at opening or end at closing", () => {
+  for (const clock of ["00:00", "09:05", "23:59"]) assert.equal(isClock(clock), true, clock);
+  for (const clock of ["24:00", "9:05", "12:60", "12.30", "", "open"]) assert.equal(isClock(clock), false, clock);
+  assert.equal(isScheduleTime("open"), true);
+  assert.equal(isScheduleTime("close"), true);
+  assert.equal(isScheduleTime("10:00"), true);
+  assert.equal(isScheduleTime("closing"), false);
+});
+
+test("the time and the day at a site follow its own time zone, Dublin by default", () => {
+  const summerMorning = new Date("2026-07-01T08:05:00Z"), winterMorning = new Date("2026-01-15T08:05:00Z");
+  assert.equal(clockOf(summerMorning), "09:05", "Irish summer time");
+  assert.equal(clockOf(winterMorning), "08:05");
+  assert.equal(clockOf(summerMorning, "America/New_York"), "04:05");
+  const lateEvening = new Date("2026-07-01T23:30:00Z");
+  assert.equal(dayIn("Europe/Dublin", lateEvening), "2026-07-02", "already tomorrow in Cork");
+  assert.equal(dayIn("America/New_York", lateEvening), "2026-07-01");
 });

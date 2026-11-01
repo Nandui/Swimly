@@ -23,7 +23,7 @@ flowchart TB
       a1["Swim school · Pool deck · Analytics"]
       a2["Short courses · Refunds · Coinage"]
       a3["Tasks · Incidents · Rota · Training"]
-      a4["Docs · HR · CCTV log · Site Monitoring"]
+      a4["Docs · HR · CCTV log · Site Monitoring · Maintenance"]
       a5["Purchasing · Stock · next app"]
     end
     platform["Platform: sign-in, people, jobs, sites, access, audit,<br/>events, app switches, shared services"]
@@ -68,7 +68,7 @@ Each module folder also has a `README.md` for coders (features, front door, data
 
 ## The frame
 
-**Planned (D14; search in roadmap step 4, the frame in step 5).** One frame for everyone, worked out on each request from the session: the person's levels at the working site, and the screen width. Nothing is stored per role or per person, and nothing names a role.
+**Planned (D19; search in roadmap step 4, the frame in step 5).** One frame for everyone, worked out on each request from the session: the person's levels at the working site, and the screen width. Nothing is stored per role or per person, and nothing names a role.
 
 | What | Worked out from |
 | --- | --- |
@@ -216,7 +216,7 @@ Only a superadmin makes another; the last active superadmin cannot be removed. T
 | --- | --- | --- | --- |
 | Audit log | `src/lib/audit.ts`, `AuditLog` | one row per change: who, what, which app (`module`), which record, when; `actorName` stored so it survives deletion | |
 | Email | `src/lib/email` | one Google transport and sender (`TURNFIN_EMAIL_FROM`, `TURNFIN_GOOGLE_*`, falling back to `PARENT_*`) | **one outbox** (`src/lib/notify`, `Notification`): queued in the caller's transaction, sent after commit, retried, audited. Replaces the Refunds, Coinage and Incidents queues and gives Purchasing approver emails (roadmap step 4) |
-| Files | each app | each app checks uploads its own way | **one file check** (`src/lib/files`): type by first bytes, size limit, plain errors; bytes stay in each app's tables (step 4) |
+| Files | `src/lib/files`, and each app | the one file check (type by first bytes, a size limit, a plain error, a safe name), used by Maintenance ([D14](decisions.md)); the other apps still check uploads their own way | the other apps move onto `src/lib/files`; bytes stay in each app's tables (step 4) |
 | Waiting for you | `src/lib/home.ts` from `registerHomeCard` items | Home counts what needs the person | **complete**: Docs reviews, parent access requests and Rota's Timepoint updates report through it; items carry `since` so the oldest comes first; Home never writes (step 4). No stored work-item table |
 | Public API toolkit | `src/lib/public-api/http.ts` | origin allowlist and CORS, 16 KiB JSON bodies, no-store, error envelope, Bearer tokens | the email-code check and rate limit move here from the three APIs |
 | Dates and numbers | `src/lib/format.ts` | every date, time and count; "today" is asked in `Europe/Dublin` | one date helper replaces Tasks' and Rota's own `addDays` |
@@ -263,4 +263,4 @@ What the code does not yet match in this document, each owned by a roadmap step:
 - Legacy columns and tables still in the schema, unread or soon unread: `StaffRole.screens`, `StaffRole.home`, `User.role`, `RoleAssignment`. Dropping them is an owner decision ([roadmap.md](roadmap.md)).
 - `AuditLog.programmeId` is swim-school-shaped; `module` is what the activity log filters by.
 - Rota still reads the platform's people, sites, departments, activity types and qualifications with Prisma instead of `src/lib/directory.ts` and the other platform functions.
-- The live theme is still the pre-2.0 one, named Poolside Clear in the code (`src/app/theme/poolside.css` and its copies in `apps/me` and `apps/academy`), with Docs-era file names (`docs-shell.css`, `docs-integration.css`); step 5 replaces all of it.
+- The 2.0 tokens (`src/app/theme/glass.css`, copied into `apps/me` and `apps/academy`), the glass material and the frame (`src/app/theme/kit.css`, `src/components/ui-kit/glass.tsx`, with Turnfin Me's own copies) are built, and every screen inside the frame is on them (26 October 2026); the pre-2.0 `poolside.css` is retired, apart from the Academy site's own copy (on hold). Docs keeps its Docs-era file names (`docs-shell.css`, `docs-integration.css`), on the 2.0 tokens.

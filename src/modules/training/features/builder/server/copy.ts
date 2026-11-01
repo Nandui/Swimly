@@ -33,9 +33,13 @@ export function remapDoc(body: unknown, files: Ids, questions: Ids | null): DocN
       const next = id ? files.get(id) : null;
       return next ? { ...node, attrs: { ...node.attrs, src: fileSrc(next) } } : null;
     }
-    if (node.type === "fileButton") {
+    if (node.type === "fileButton" || node.type === "audioBlock" || node.type === "fileView") {
       const next = files.get(String(node.attrs?.fileId ?? ""));
       return next ? { ...node, attrs: { ...node.attrs, fileId: next } } : null;
+    }
+    if (node.type === "activity") {
+      const fileId = node.attrs?.fileId ? files.get(String(node.attrs.fileId)) ?? null : null;
+      return { ...node, attrs: { ...node.attrs, fileId, data: remapData((node.attrs?.data ?? null) as LessonData | null, files) } };
     }
     if (node.type === "knowledgeCheck") {
       const id = String(node.attrs?.questionId ?? "");

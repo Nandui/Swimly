@@ -3,27 +3,27 @@
   container-type: inline-size;
   display: flex;
   flex-direction: column;
-  gap: calc(var(--spacing) * 4);
+  gap: var(--space-5);
   min-width: 0;
   overflow-wrap: anywhere;
-  color: var(--ui-foreground);
+  color: var(--label);
 }
-/* The glance panel comes first in the DOM (phones read it first); from 850px it sits on the right. */
+/* The glance comes first in the DOM (phones read it first); from 850px it sits on the right. */
 .body {
   display: grid;
-  gap: 16px;
-  padding-top: 16px;
+  gap: var(--space-7);
+  padding-top: var(--space-5);
   align-items: start;
 }
 .main,
 .glance {
   min-width: 0;
 }
-/* Chapters: a list of separate 16px cards (V2Profile); the current one carries the blue edge. */
+/* Chapters: one card each on the ground (DESIGN.md, Content), opened in place. */
 .chapters {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -32,13 +32,9 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  border: 1px solid var(--pc-line);
-  border-radius: var(--pc-radius-card);
-  background: var(--pc-surface);
-}
-.profile .chapter[data-current="true"] {
-  border-color: var(--pc-primary);
-  box-shadow: 0 0 0 3px var(--pc-primary-soft);
+  border-radius: var(--radius-card);
+  background: var(--bg-2);
+  box-shadow: var(--shadow-card);
 }
 .chapterTrigger {
   display: flex;
@@ -46,71 +42,54 @@
   justify-content: space-between;
   gap: 12px;
   width: 100%;
-  min-height: var(--pc-control-height);
-  padding: 16px;
+  min-height: var(--control-height);
+  padding: var(--space-4) var(--space-5);
   border: 0;
-  border-radius: var(--pc-radius-card);
+  border-radius: var(--radius-card);
   background: none;
-  color: var(--pc-ink);
+  color: var(--label);
   font: inherit;
   text-align: start;
   cursor: pointer;
+  transition: background-color var(--duration-fade) var(--ease);
 }
 .chapterTrigger:hover {
-  background: var(--pc-surface-sunken);
+  background: var(--bg-3);
 }
 .chapterTrigger:focus-visible {
-  outline: 2px solid var(--pc-focus);
+  outline: 2px solid var(--accent);
   outline-offset: -2px;
 }
 .chapterContent {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 0 16px 16px;
-}
-/* Details: one row per field, label beside the value, each at least a 44px target. */
-.profile .details > :global(.pc-row) {
-  min-height: var(--pc-control-height);
-  padding-block: 4px;
-  /* On phones the label wraps above its value; keep the pair together. */
-  row-gap: 2px;
-}
-.details dt {
-  flex: 0 0 calc(var(--spacing) * 40);
-}
-.details dd {
-  flex: 1 1 calc(var(--spacing) * 48);
-  min-width: 0;
+  padding: 0 var(--space-5) var(--space-5);
 }
 /* Competency levels on the profile: the same card as a chapter. */
 .level {
   min-width: 0;
-  border: 1px solid var(--pc-line);
-  border-radius: var(--pc-radius-card);
+  border-radius: var(--radius-card);
+  background: var(--bg-2);
+  box-shadow: var(--shadow-card);
 }
 .levelContent {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 0 16px 16px;
+  padding: 0 var(--space-5) var(--space-5);
 }
 /* Class picker: each class is a selectable row; the header lines up with the row's text
-   (1px line + 16px inset + 16px radio + 12px gap). */
+   (16px inset + 16px radio + 12px gap). */
 .pickerHead {
   padding: 0 17px 0 45px;
-  color: var(--pc-ink-muted);
-  font-size: var(--pc-text-caption);
-  line-height: var(--pc-leading-caption);
+  color: var(--label-2);
+  font-size: 12px;
+  line-height: 16px;
   font-weight: 600;
 }
 .picker .options label.option {
   align-items: center;
-}
-.picker .options label.option:has([data-state="checked"]) {
-  border: 2px solid var(--pc-primary);
-  padding: 11px 15px;
-  background: var(--pc-primary-soft);
 }
 .picker .options label.option:has(:disabled) {
   cursor: not-allowed;
@@ -123,13 +102,16 @@
   padding-block: 12px;
   min-height: 64px;
 }
+.briefEvent + .briefEvent {
+  border-top: 0.5px solid var(--sep);
+}
 .briefEvent time {
-  font-size: var(--pc-text-caption);
-  line-height: var(--pc-leading-caption);
-  color: var(--pc-ink-muted);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--label-2);
 }
 .briefEvent > svg {
-  color: var(--pc-ink-muted);
+  color: var(--label-2);
 }
 @container (max-width: 700px) {
   .briefEvent {
@@ -151,4 +133,16 @@
     grid-column: 1;
     grid-row: 1;
   }
+}
+/* Rows inside a level card part with an inset hairline, as rows in any card do (kit.css). */
+.level :global(.pc-rows) :global(.pc-row) {
+  margin-inline: calc(-1 * var(--space-3));
+  padding-inline: var(--space-3);
+  background: transparent;
+}
+.level :global(.pc-rows) {
+  gap: 0;
+}
+.level :global(.pc-rows) > :global(li) + :global(li) {
+  border-top: 0.5px solid var(--sep);
 }

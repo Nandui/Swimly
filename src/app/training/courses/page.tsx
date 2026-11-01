@@ -29,7 +29,7 @@ export default async function TrainingCoursesPage({ searchParams }: { searchPara
   // Grouped by category, those without one last.
   const groups = [...categories, ""].map((category) => ({ category, courses: courses.filter((c) => c.category === category) })).filter((g) => g.courses.length);
   return (
-    <PageShell header={<PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         title="Courses"
         description={archived ? "Courses that can no longer be assigned. Training already done on them is kept." : "Build each course from lessons, publish it, then assign it. Staff take it in Turnfin Me."}
         actions={
@@ -45,7 +45,7 @@ export default async function TrainingCoursesPage({ searchParams }: { searchPara
         }
       />}>
       {all.length > 6 || search ? (
-        <form method="get" role="search" aria-label="Find a course" className="pc-panel">
+        <form method="get" role="search" aria-label="Find a course" className="flex min-w-0 flex-col">
           {archived ? <input type="hidden" name="view" value="retired" /> : null}
           <SearchField id="course-search" name="q" label="Find a course" placeholder="Name, category or tag" defaultValue={q} maxLength={80}
             clearHref={search ? (archived ? "/training/courses?view=retired" : "/training/courses") : undefined} />
@@ -57,10 +57,10 @@ export default async function TrainingCoursesPage({ searchParams }: { searchPara
           : archived
           ? { title: "No course has been retired", hint: "Retired courses appear here. Training already done on them is kept." }
           : { title: "No courses yet", hint: who.manage ? "Add the first course people should complete, or start from a template." : "Ask whoever builds the training catalogue to add one." })} />
-      ) : groups.map((group) => (
-        <section key={group.category || "none"} className="pc-panel" aria-label={group.category || (categories.length ? "Other courses" : archived ? "Retired courses" : "Current courses")}>
-          {categories.length ? <h2 className="pc-panel-head text-lg">{group.category || "Other"}</h2> : null}
-          <ul className="pc-rows">
+      ) : groups.map((group, i) => (
+        <section key={group.category || "none"} className="flex min-w-0 flex-col" {...(categories.length ? { "aria-labelledby": `course-group-${i}` } : { "aria-label": archived ? "Retired courses" : "Current courses" })}>
+          {categories.length ? <div className="pc-section-head"><h2 id={`course-group-${i}`}>{group.category || "Other"}</h2><p>{group.courses.length}</p></div> : null}
+          <ul className="pc-list">
             {group.courses.map((course) => (
               <li key={course.id} className="pc-row">
                 {/* eslint-disable-next-line @next/next/no-img-element -- a private file served by this app */}

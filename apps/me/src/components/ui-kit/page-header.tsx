@@ -5,8 +5,8 @@ import { BackLink } from "@/components/ui-kit/back-link";
  *  aligned with the primary action last. The H1 holds the title only; status
  *  tags go in `status`, never inside it. The title keeps a readable width;
  *  when the actions do not fit beside it they wrap underneath, still right
- *  aligned from 768px, instead of squeezing it, and on phones the buttons share that row (poolside.css,
- *  `.pc-phead-actions`). poolside.css styles the H1. */
+ *  aligned from 768px, instead of squeezing it, and on phones the buttons share that row (kit.css,
+ *  `.pc-phead-actions`). kit.css styles the H1. */
 export function PageHeader({
   title,
   description,

@@ -50,7 +50,7 @@ export function StaffFilterBar({ filters, showCounts, pickers, shown, total }: {
   const chosen = filtersChosen({ ...filters, q: q.trim() });
 
   return (
-    <section className="pc-panel" aria-label="Find people" aria-busy={pending}>
+    <section className="flex min-w-0 flex-col gap-(--space-3)" aria-label="Find people" aria-busy={pending}>
       <div className="min-w-0 flex flex-wrap items-end gap-3">
         <form role="search" aria-label="Search staff" className="min-w-0 grow basis-field md:max-w-md" onSubmit={(event) => event.preventDefault()}>
           <SearchField id="staff-query" label="Find a person" placeholder="Name or email" maxLength={100} value={q} onValueChange={setQ} />
@@ -97,7 +97,7 @@ function FilterPicker({ picker, selected, onPick, disabled }: {
           <ChevronDown className="shrink-0" aria-hidden="true" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" aria-label={`${picker.label} filter`} className="w-80 max-w-(--pc-overlay-max-width) p-0">
+      <PopoverContent align="start" aria-label={`${picker.label} filter`} className="w-80 max-w-(--overlay-max-width) p-0">
         <Command>
           <CommandInput placeholder={`Search ${picker.label.toLowerCase()}`} aria-label={`Search ${picker.label.toLowerCase()}`} />
           <CommandList id={`${id}-options`}>

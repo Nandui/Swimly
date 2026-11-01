@@ -11,7 +11,7 @@ export default async function TrainingReportsPage({ searchParams }: { searchPara
   const filters = readFilters(await searchParams);
   const report = await trainingReport({ site: filters.site, department: filters.department });
   return (
-    <PageShell header={<PageHeader title="Reports" description="Where training stands for everyone you cover, and who is late." />}>
+    <PageShell spacing="roomy" header={<PageHeader title="Reports" description="Where training stands for everyone you cover, and who is late." />}>
       <InsightFilterForm action="/training/reports" label="Filter the reports" filters={report.filters} sites={report.sites} departments={report.departments} />
       <ReportView report={report} />
     </PageShell>

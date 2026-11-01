@@ -8,13 +8,13 @@ import { incidentLabel, reasonMeta, viewingNumber } from "@/modules/cctv/shared/
 
 const day = (iso: string) => formatDate(new Date(`${iso}T12:00:00Z`));
 
-/** One panel of entries, newest first: one row each with why, where, when and who. */
+/** One section of entries, newest first: one row each with why, where, when and who. */
 export function ViewingPanel({ id, title, rows, empty }: { id: string; title: string; rows: CctvViewingRow[]; empty: { title: string; hint?: string } }) {
   return (
-    <section aria-labelledby={`${id}-h`} className="pc-panel">
-      <div className="pc-panel-head"><h2 id={`${id}-h`}>{title}</h2></div>
+    <section aria-labelledby={`${id}-h`} className="flex min-w-0 flex-col">
+      <div className="pc-section-head"><h2 id={`${id}-h`}>{title}</h2>{rows.length ? <p>{rows.length}</p> : null}</div>
       {rows.length === 0 ? <EmptyState compact icon="clipboardList" title={empty.title} hint={empty.hint} /> : (
-        <ul className="pc-rows">
+        <ul className="pc-list">
           {rows.map((r) => (
             <li key={r.id}>
               <Link href={`/cctv/${r.id}`} className="pc-row">

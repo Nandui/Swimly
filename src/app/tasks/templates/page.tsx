@@ -31,10 +31,10 @@ export default async function TaskTemplatesPage({ searchParams }: { searchParams
           <Button asChild variant="outline"><a href="/tasks/export.json"><Download aria-hidden="true" />Export everything</a></Button>
           <Button asChild><Link href="/tasks/templates/new"><Plus aria-hidden="true" />Create task</Link></Button>
         </>} />}>
-      <section className="pc-panel" aria-labelledby="tpl-library">
-        <div className="pc-panel-head">
-          <div className="flex flex-col gap-1"><h2 id="tpl-library">Task library <span className="text-ui-muted-foreground tabular-nums">· {templates.length}{filtered ? ` of ${total}` : ""}</span></h2><p className="pc-row-hint">Reusable routines, built for your team.</p></div>
-        </div>
+      <section className="flex min-w-0 flex-col" aria-labelledby="tpl-library">
+        <div className="pc-section-head"><h2 id="tpl-library">Task library</h2><p>{templates.length}{filtered ? ` of ${total}` : ""}</p></div>
+        <p className="pc-section-note">Reusable routines, built for your team.</p>
+        <div className="pc-panel">
         <form method="get" role="search" aria-label="Filter the library" className="flex flex-wrap items-end gap-4">
           <SearchField label="Find a task" placeholder="Title or tag" name="q" defaultValue={filters.q} className="grow basis-56" />
           <div className="min-w-0 grow basis-40 space-y-2 sm:grow-0 sm:min-w-40"><Label htmlFor="tpl-state" className="block">State</Label>
@@ -77,6 +77,7 @@ export default async function TaskTemplatesPage({ searchParams }: { searchParams
             ))}
           </ul>
         )}
+        </div>
       </section>
     </PageShell>
   );

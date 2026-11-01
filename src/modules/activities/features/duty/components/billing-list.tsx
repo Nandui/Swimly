@@ -12,10 +12,10 @@ const EMPTY = {
 
 export function BillingList({ rows, canNotify, view }: { rows: BillingCancellation[]; canNotify: boolean; view: "awaiting" | "restore" | "done" }) {
   if (!rows.length) return <EmptyState icon="calendarX" title={EMPTY[view].title} hint={EMPTY[view].hint} />;
-  return <ul className="pc-rows">{rows.map(row => {
+  return <ul className="pc-list">{rows.map(row => {
     const meta = row.restoredAt ? CANCELLATION_META.restored : row.legendProcessedAt ? CANCELLATION_META.restore : row.billingNotifiedAt ? CANCELLATION_META.notified : CANCELLATION_META.pending;
     return <li key={row.id} className="pc-row">
-      <span className="pc-block w-28" data-state="off"><span className="pc-block-time">{formatShortDay(row.date)}<small>{formatTime(row.startMinutes)}</small></span></span>
+      <span className="w-24 shrink-0 font-semibold tabular-nums">{formatShortDay(row.date)}<span className="block text-xs font-normal text-ui-muted-foreground">{formatTime(row.startMinutes)}</span></span>
       <div className="pc-row-body basis-48">
         <span className="flex flex-wrap items-center gap-2"><span className="pc-row-title">{row.className}</span><Tag meta={meta} /></span>
         <span className="pc-row-hint">{row.programmeName} · {row.location || "Pool area not set"} · {plural(row.swimmers.length, "affected swimmer")}</span>

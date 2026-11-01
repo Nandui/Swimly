@@ -1,7 +1,5 @@
 /** Planning the week: shifts, activities, breaks, copying and sharing a week.
  *  Entry for the module and its routes. */
-export { DayPlan } from "@/modules/rota/features/plan/components/day-plan";
-export { AddShiftSheet } from "@/modules/rota/features/plan/components/people-plan";
 export { ALL_DEPARTMENTS, planWeek } from "@/modules/rota/features/plan/server/data";
 export { planExport } from "@/modules/rota/features/plan/server/export";
 export { CopyDialog, NeedDialog, ShareWeek } from "@/modules/rota/shared/components/plan-dialogs";

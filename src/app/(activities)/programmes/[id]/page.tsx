@@ -96,8 +96,8 @@ export default async function ProgrammePage(
         </div>
       )}
 
-      <section className="pc-panel" aria-labelledby="assessment-kinds">
-        <div className="pc-panel-head">
+      <section className="flex min-w-0 flex-col" aria-labelledby="assessment-kinds">
+        <div className="pc-section-head">
           <h2 id="assessment-kinds">Kinds of assessment</h2>
           {programme.archivedAt ? null : (
             <AddAssessmentType
@@ -106,18 +106,18 @@ export default async function ProgrammePage(
             />
           )}
         </div>
-        <Lead>
+        <p className="pc-section-note">
           What an assessment session for this programme can be, such as new
           swimmers or mixed abilities. The desk picks one when adding a session.
-        </Lead>
+        </p>
         {assessmentTypes.length === 0 ? (
-          <EmptyState
+          <div className="pc-list"><EmptyState
             compact
             title="None yet"
             hint="Add one and it becomes something a session can be."
-          />
+          /></div>
         ) : (
-          <ul className="pc-rows">
+          <ul className="pc-list">
             {assessmentTypes.map((type) => (
               <li key={type.id} className="pc-row wrap-anywhere">
                 <span className="pc-tile-icon">
@@ -203,9 +203,9 @@ function LevelSection({
     .join(" · ");
 
   return (
-    <section className="pc-panel" aria-labelledby={headingId}>
-      <div className="flex flex-col gap-1">
-        <div className="pc-panel-head">
+    <section className="flex min-w-0 flex-col" aria-labelledby={headingId}>
+      <div className="flex flex-col">
+        <div className="pc-section-head">
           <h2
             id={headingId}
             className="min-w-0 flex gap-2 items-center flex-wrap"
@@ -222,11 +222,11 @@ function LevelSection({
             <ArchiveLevel level={level} />
           </div>
         </div>
-        <p className="text-sm text-ui-muted-foreground">{caption}</p>
+        <p className="pc-section-note">{caption}</p>
       </div>
 
       {level.competencies.length === 0 ? (
-        <EmptyState
+        <div className="pc-list"><EmptyState
           compact
           title="No competencies yet"
           hint={`Add the first competency and it becomes what completing ${level.name} means.`}
@@ -235,10 +235,10 @@ function LevelSection({
               <AddCompetency levelId={level.id} levelName={level.name} />
             )
           }
-        />
+        /></div>
       ) : (
         <>
-          <ul className="pc-rows">
+          <ul className="pc-list">
             {numberLive(level.competencies).map(
               ({ competency, position, first, last }) => (
                 <li

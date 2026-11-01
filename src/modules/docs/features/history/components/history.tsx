@@ -18,6 +18,7 @@ import {
   type AuditEvent,
 } from '@/modules/docs/shared/types';
 import { Tag } from '@/components/ui-kit/tag';
+import { RecordHistory } from '@/components/ui-kit/record';
 import { EmptyState } from '@/components/ui-kit/empty-state';
 import { PageHeader } from '@/components/ui-kit/page-header';
 import { PageShell } from '@/components/ui-kit/page-shell';
@@ -73,8 +74,9 @@ export function HistoryView({
       <div className="docs-split">
         <div className="flex min-w-0 flex-col gap-4">
           {compare && a && b && (
-              <section className="pc-panel comparison" aria-labelledby="compare-heading">
-                <h2 id="compare-heading">Compare versions</h2>
+              <section className="flex min-w-0 flex-col comparison" aria-labelledby="compare-heading">
+                <div className="pc-section-head"><h2 id="compare-heading">Compare versions</h2></div>
+                <div className="rec-card">
                 <div className="flex flex-wrap gap-3">
                   <FilterSelect label="Earlier version" value={left} onChange={setLeft}>
                     {snapshots.map((s) => (
@@ -140,12 +142,13 @@ export function HistoryView({
                     </article>
                   ))}
                 </div>
-              </section>
+              </div>
+            </section>
           )}
-          <section className="pc-panel" aria-labelledby="versions-heading">
-            <h2 id="versions-heading">{title || 'Versions'}</h2>
+<section className="flex min-w-0 flex-col" aria-labelledby="versions-heading">
+            <div className="pc-section-head"><h2 id="versions-heading">{title || 'Versions'}</h2><p>{snapshots.length}</p></div>
             {snapshots.length ? (
-              <ul className="pc-rows">
+              <ul className="pc-list">
                 {snapshots.map((s) => (
                   <li className="pc-row" key={s.id}>
                     <div className="flex min-w-0 flex-1 basis-full flex-col gap-2">
@@ -204,22 +207,10 @@ export function HistoryView({
           </section>
         </div>
         {events.length > 0 && (
-          <section className="pc-panel" aria-labelledby="activity-heading">
-            <h2 id="activity-heading">Activity log</h2>
-            <ul className="pc-feed">
-              {events.map((event) => (
-                <li key={event.id}>
-                  <span className="pc-feed-dot" aria-hidden="true" />
-                  <div className="min-w-0">
-                    <p className="font-semibold">{docEventLabel(event.action)}</p>
-                    {event.detail ? <p className="text-sm break-words">{event.detail}</p> : null}
-                    <p className="pc-row-hint">
-                      {name(event.actorId)} · {formatDate(event.createdAt)}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
+          <section className="flex min-w-0 flex-col" aria-labelledby="activity-heading">
+            <div className="pc-section-head"><h2 id="activity-heading">Activity log</h2></div>
+            <RecordHistory items={events.map((event) => ({ key: event.id, title: docEventLabel(event.action), note: event.detail,
+              meta: [name(event.actorId), formatDate(event.createdAt)].filter(Boolean).join(" · ") }))} />
           </section>
         )}
       </div>

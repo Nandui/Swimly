@@ -59,10 +59,10 @@ export function QuickSwitch({ device, people }: { device: string; people: { id: 
         {people.length === 0 ? (
           <Notice title="Nobody can quick-switch here yet" description="Sign in once on this device, after setting a PIN on your Account page." tone="info" />
         ) : (
-          <ul className="pc-rows" aria-label="People who can switch in">
+          <ul className="pc-list" aria-label="People who can switch in">
             {people.map((person) => (
               <li key={person.id}>
-                {/* A Button for the press and focus; .pc-row gives the shape, inset and hover (poolside.css). */}
+                {/* A Button for the press and focus; .pc-row gives the shape, inset and hover (kit.css). */}
                 <Button type="button" variant="outline" className="pc-row h-auto w-full justify-start text-start whitespace-normal" onClick={() => { setChosen(person); setPin(""); setError(null); }}>
                   <Avatar aria-hidden="true"><AvatarFallback>{nameInitials(person.name)}</AvatarFallback></Avatar>
                   <span className="pc-row-body"><span className="pc-row-title">{person.name}</span></span>

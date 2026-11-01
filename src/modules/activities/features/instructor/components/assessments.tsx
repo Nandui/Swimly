@@ -14,12 +14,12 @@ export function InstructorAssessments({ sessions, canRun, params = {} }: {
 }) {
   if (!sessions.length) return null;
   return (
-    <section aria-labelledby="instructor-assessments" className="pc-panel">
-      <div className="pc-panel-head">
+    <section aria-labelledby="instructor-assessments" className="flex min-w-0 flex-col">
+      <div className="pc-section-head">
         <h2 id="instructor-assessments">Assessments today</h2>
-        <p className="pc-row-hint">{plural(sessions.length, "session")} at this site</p>
+        <p>{plural(sessions.length, "session")}</p>
       </div>
-      <ul className="pc-rows">
+      <ul className="pc-list">
         {sessions.map(session => (
           <li key={session.id} className="pc-row">
             <span className="pc-tile-icon" aria-hidden="true"><ClipboardCheck /></span>

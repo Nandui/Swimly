@@ -5,7 +5,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 
 type Point = { label: string; value: number | null };
 
-const config = { value: { label: "Score", color: "var(--pc-chart-1)" } } satisfies ChartConfig;
+const config = { value: { label: "Score", color: "var(--accent)" } } satisfies ChartConfig;
 
 /** A site's score over the report's periods (the prototype's "Consistency over time"), on the
  *  shadcn Chart: one line in the chart blue with markers, a recessive 0/50/100% grid, and a
@@ -25,8 +25,8 @@ export function ScoreTrend({ points, site }: { points: Point[]; site: string }) 
           <ChartTooltip cursor={{ strokeDasharray: "4 4" }}
             content={<ChartTooltipContent formatter={(value) => <span className="tabular-nums"><strong className="font-semibold">{`${value}%`}</strong> score</span>} />} />
           <Line dataKey="value" type="linear" stroke="var(--color-value)" strokeWidth={2} connectNulls={false}
-            dot={{ r: 4, fill: "var(--color-value)", stroke: "var(--pc-surface)", strokeWidth: 2 }}
-            activeDot={{ r: 6, fill: "var(--color-value)", stroke: "var(--pc-surface)", strokeWidth: 2 }} isAnimationActive={false} />
+            dot={{ r: 4, fill: "var(--color-value)", stroke: "var(--bg-2)", strokeWidth: 2 }}
+            activeDot={{ r: 6, fill: "var(--color-value)", stroke: "var(--bg-2)", strokeWidth: 2 }} isAnimationActive={false} />
         </LineChart>
       </ChartContainer>
     </figure>

@@ -1,4 +1,4 @@
-import { docChecks, lessonMinutes, readingMinutes, type DocNode, type Outline } from "@/modules/training/shared/lessons";
+import { docActivities, docChecks, lessonMinutes, readingMinutes, type DocNode, type Outline } from "@/modules/training/shared/lessons";
 
 /** The builder's quality check (e-learning phase 8): advice on making a course
  *  easier to take, worded for its author. Unlike publishProblems none of it
@@ -31,7 +31,7 @@ export function qualityTips(outline: Outline): QualityTip[] {
   }
   for (const section of outline.sections) {
     if (section.lessons.length < 3) continue;
-    const checked = outline.questions.some((q) => q.sectionId === section.id) || section.lessons.some((l) => docChecks(l.body).length || ["QUIZ", "SCENARIO", "SORTING", "FLASHCARDS", "ASSIGNMENT"].includes(l.kind));
+    const checked = outline.questions.some((q) => q.sectionId === section.id) || section.lessons.some((l) => docChecks(l.body).length || [l.kind, ...docActivities(l.body).map((b) => b.kind)].some((k) => ["QUIZ", "SCENARIO", "SORTING", "FLASHCARDS", "ASSIGNMENT"].includes(k)));
     if (!checked) tip(`Nothing in “${section.title}” checks that people understood it. Add a knowledge check, a quiz, a scenario or a sort into groups.`, null, section.id);
   }
   if (outline.exam) {

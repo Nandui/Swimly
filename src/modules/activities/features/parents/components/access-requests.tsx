@@ -61,10 +61,10 @@ export function ParentAccessRequests() {
     }
   }, [resource.loading]);
   function reviewed() { focusAfterReview.current = true; resource.reload(); }
-  return <section aria-labelledby="access-requests-heading" className="pc-panel">
-    <div className="min-w-0">
-      <h2 id="access-requests-heading">Parent access requests{resource.data ? ` (${resource.data.pendingCount} waiting)` : ""}</h2>
-      <p className="pc-row-hint">Families from every site. Match each request to an existing swimmer before approving.</p>
+  return <section aria-labelledby="access-requests-heading" className="flex min-w-0 flex-col gap-(--space-4)">
+    <div>
+      <div className="pc-section-head"><h2 id="access-requests-heading">Parent access requests</h2>{resource.data ? <p>{resource.data.pendingCount} waiting</p> : null}</div>
+      <p className="pc-section-note mb-0">Families from every site. Match each request to an existing swimmer before approving.</p>
     </div>
     <div className="flex flex-wrap items-center justify-between gap-3">
       <SegmentedChoice aria-label="Request status" value={status} onValueChange={value => { setStatus(value as keyof typeof ACCESS_REQUEST_META); setPage(1); }}
@@ -73,8 +73,8 @@ export function ParentAccessRequests() {
     </div>
     <ParentLoadState {...resource} />
     {resource.data && <div aria-live="polite" className="flex flex-col gap-4">
-      {!resource.data.items.length && <EmptyState compact title={status === "PENDING" ? "No requests waiting for review" : "No requests in this view"} />}
-      {resource.data.items.length ? <ul className="pc-rows">{resource.data.items.map(request => <li key={request.id} className="pc-row">
+      {!resource.data.items.length && <EmptyState title={status === "PENDING" ? "No requests waiting for review" : "No requests in this view"} />}
+      {resource.data.items.length ? <ul className="pc-list">{resource.data.items.map(request => <li key={request.id} className="pc-row">
         <div className="pc-row-body basis-64">
           <h3 className="pc-row-title break-words">{request.firstName} {request.lastName}</h3>
           <p className="pc-row-hint">Date of birth: {birthDate(request.dateOfBirth)} · Requested by {request.parent.name || "a parent (name not supplied)"}</p>

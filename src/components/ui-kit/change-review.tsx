@@ -100,7 +100,7 @@ function PlaceCard({ place, heading, when, bigCentre, highlight = false }: {
 }) {
   return (
     <div className={cn("flex min-w-0 flex-1 flex-col gap-2 rounded-ui-lg border border-ui-border p-4", highlight && "border-2 border-ui-primary bg-ui-brand-soft")}>
-      <p className="text-xs font-semibold uppercase text-ui-muted-foreground">
+      <p className="text-xs font-semibold text-ui-muted-foreground">
         {heading} <span className="font-normal normal-case">· {when}</span>
       </p>
       <p className="min-w-0 break-words text-lg font-semibold">{place.title}</p>

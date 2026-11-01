@@ -28,7 +28,7 @@ export default function RemindersPage() {
   }
   return (
     <Frame title="Reminders">
-      <PageShell header={<PageHeader title="Reminders" description="We email you when something needs you. Emails never include HR details." />}>
+      <PageShell spacing="roomy" header={<PageHeader back={{ href: "/more", label: "More" }} title="Reminders" description="We email you when something needs you. Emails never include HR details." />}>
         {failure ? <Notice title={failure} tone="error" live /> : null}
         {error ? <LoadError error={error} retry={reload} /> : !data ? <Loading rows={4} /> : (
           <fieldset className="pc-panel" aria-describedby="reminders-saved">

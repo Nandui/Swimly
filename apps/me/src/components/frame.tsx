@@ -2,25 +2,29 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
-import { BookOpen, CalendarDays, GraduationCap, House, LayoutGrid, LogOut } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { CalendarDays, GraduationCap, House, LayoutGrid, LogOut } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { TextSizeEffect } from "@/components/learner";
 import { OfflineBar, useOffline } from "@/components/offline";
 import { api, session } from "@/lib/api";
 import { clearAll } from "@/lib/offline";
 
+/** The tab bar holds four destinations (DESIGN.md, Phone): Home, Training, Shifts and More.
+ *  Reading is in More, and what is due shows on Home. */
 const TABS = [
   { href: "/", label: "Home", icon: House },
   { href: "/training", label: "Training", icon: GraduationCap },
-  { href: "/reading", label: "Reading", icon: BookOpen },
   { href: "/shifts", label: "Shifts", icon: CalendarDays },
   { href: "/more", label: "More", icon: LayoutGrid },
 ];
-const MORE = ["/more", "/qualifications", "/hr", "/details", "/reminders", "/display"];
+const MORE = ["/more", "/reading", "/qualifications", "/hr", "/details", "/reminders", "/display", "/offline"];
+/** How far the page scrolls before the large title gives way to the glass bar, and before
+ *  scrolling down minimises the tab bar. */
+const TITLE_AT = 56;
+const MINIMISE_AT = 160;
 
-/** The fin on its tile (Turnfin's `.tf-brand`) and the name beside it. Signed-in pages link the
- *  fin home; sign-in shows it without a link. */
+/** The fin on its tile (Turnfin's `.tf-brand`) and the name beside it, on the sign-in page. */
 export function Brand({ href }: { href?: string }) {
   // eslint-disable-next-line @next/next/no-img-element
   const fin = <img src="/icon-192.png" alt="" width={72} height={72} />;
@@ -32,17 +36,13 @@ export function Brand({ href }: { href?: string }) {
   );
 }
 
-/** Every signed-in page: the top row (the fin, the name, Sign out), the page, and the bottom
- *  bar. `title` is the page's H1; it also names the browser tab. */
-export function Frame({ title, children }: { title: string; children: ReactNode }) {
-  const pathname = usePathname();
+/** Signing out, at the foot of More. Changes not sent yet would be lost, so it says so first. */
+export function SignOut() {
   const router = useRouter();
   const [leaving, setLeaving] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const { waiting } = useOffline();
-  const active = (href: string) => href === "/" ? pathname === "/" : href === "/more" ? MORE.some((p) => pathname.startsWith(p)) : pathname.startsWith(href);
   async function signOut(sure = false) {
-    // Changes not sent yet would be lost: say so first.
     if (waiting && !sure) { setConfirming(true); return; }
     setLeaving(true);
     try { await api("auth/logout", { method: "POST" }); } catch { /* the token is dropped anyway */ }
@@ -50,28 +50,51 @@ export function Frame({ title, children }: { title: string; children: ReactNode 
     await clearAll();
     router.replace("/sign-in");
   }
+  return confirming ? (
+    <div className="offline-failed" role="alert">
+      <p><strong>{waiting === 1 ? "1 change hasn’t" : `${waiting} changes haven’t`} reached Turnfin yet.</strong> Signing out now deletes {waiting === 1 ? "it" : "them"} from this phone.</p>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button type="button" variant="outline" onClick={() => void signOut(true)}>Sign out anyway</Button>
+        <Button type="button" variant="ghost" onClick={() => setConfirming(false)}>Stay signed in</Button>
+      </div>
+    </div>
+  ) : (
+    <Button type="button" variant="outline" className="self-start" onClick={() => void signOut()} disabled={leaving}>
+      <LogOut aria-hidden="true" />{leaving ? "Signing out…" : "Sign out"}
+    </Button>
+  );
+}
+
+/** Every signed-in page in the phone frame (DESIGN.md, Phone): the page with its large title, a
+ *  glass bar with the title inline once the large one scrolls away, and the glass tab bar, which
+ *  minimises to the current tab while scrolling down and comes back on the way up. `title` is the
+ *  page's name; it also names the browser tab. */
+export function Frame({ title, children }: { title: string; children: ReactNode }) {
+  const pathname = usePathname();
+  const [titled, setTitled] = useState(false);
+  const [minimised, setMinimised] = useState(false);
+  const last = useRef(0);
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY;
+      setTitled(y > TITLE_AT);
+      setMinimised(y > MINIMISE_AT && y > last.current);
+      last.current = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  const active = (href: string) => href === "/" ? pathname === "/" : href === "/more" ? MORE.some((p) => pathname.startsWith(p)) : pathname.startsWith(href);
   return (
     <div className="frame">
       <title>{`${title} · Turnfin Me`}</title>
       <TextSizeEffect />
-      <header className="topbar">
-        <Brand href="/" />
-        <div className="tf-bar">
-          <Button type="button" variant="ghost" className="tf-bar-item" onClick={() => void signOut()} disabled={leaving}><LogOut aria-hidden="true" />{leaving ? "Signing out…" : "Sign out"}</Button>
-        </div>
-      </header>
+      <div className="me-nav glass" data-shown={titled ? "" : undefined} aria-hidden="true">
+        <span className="me-nav-title">{title}</span>
+      </div>
       <OfflineBar />
-      {confirming ? (
-        <div className="offline-failed" role="alert">
-          <p><strong>{waiting === 1 ? "1 change hasn’t" : `${waiting} changes haven’t`} reached Turnfin yet.</strong> Signing out now deletes {waiting === 1 ? "it" : "them"} from this phone.</p>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button type="button" variant="outline" onClick={() => void signOut(true)}>Sign out anyway</Button>
-            <Button type="button" variant="ghost" onClick={() => setConfirming(false)}>Stay signed in</Button>
-          </div>
-        </div>
-      ) : null}
       <main className="page" id="main" aria-label={title}>{children}</main>
-      <nav className="tf-bottom" aria-label="Turnfin Me">
+      <nav className="tf-bottom glass" aria-label="Turnfin Me" data-minimised={minimised ? "" : undefined}>
         {TABS.map(({ href, label, icon: Icon }) => (
           <Link key={href} href={href} className="tf-bottom-item" aria-current={active(href) ? "page" : undefined}>
             <span className="tf-bottom-icon"><Icon aria-hidden="true" /></span>

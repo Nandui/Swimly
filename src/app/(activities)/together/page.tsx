@@ -58,9 +58,9 @@ export default async function TogetherPage(props: PageProps<"/together">) {
         ) : undefined}
       />}>
 
-      <section className="pc-panel" aria-labelledby="together-children">
-        <div className="pc-panel-head">
-          <h2 id="together-children" className="text-lg font-semibold">Who&rsquo;s coming</h2>
+      <section className="flex min-w-0 flex-col gap-(--space-3)" aria-labelledby="together-children">
+        <div className="pc-section-head mb-0">
+          <h2 id="together-children">Who&rsquo;s coming</h2>
         </div>
         {chosen.length > 0 ? (
           <>

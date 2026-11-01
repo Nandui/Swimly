@@ -118,16 +118,16 @@ export function EditProfile({ person, sites, departments, people, positions }: {
 // Where they work
 // ---------------------------------------------------------------------------
 
-/** The sites where their role's Swim school, Training and Rota levels apply.
+/** The sites where their role's site-bound levels (`apps`, in words) apply.
  *  None ticked means every site. */
-export function WorksAt({ userId, name, sites, current }: { userId: string; name: string; sites: Option[]; current: string[] }) {
+export function WorksAt({ userId, name, sites, current, apps }: { userId: string; name: string; sites: Option[]; current: string[]; apps: string }) {
   const id = React.useId();
   const [chosen, setChosen] = React.useState<string[]>(current);
   return (
     <FormDialog
       trigger={<Button variant="outline">{icon(Building2)}Change sites</Button>}
       title={`Where ${name} works`}
-      description="Their Swim school, Training and Rota levels apply at these sites. Leave all unticked for every site."
+      description={`Their ${apps} levels apply at these sites. Leave all unticked for every site.`}
       submitLabel="Save sites"
       successMessage="Sites saved"
       onOpen={() => setChosen(current)}

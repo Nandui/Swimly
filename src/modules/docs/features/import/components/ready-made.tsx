@@ -2,7 +2,6 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { CircleCheck, CircleDashed, FilePlus2 } from 'lucide-react';
-import { Card } from '@/components/shadcn/card';
 import { Button } from '@/components/shadcn/button';
 import { Notice } from '@/components/ui-kit/notice';
 import { Tag } from '@/components/ui-kit/tag';
@@ -38,14 +37,12 @@ export function ReadyMadeProcedures({ items }: { items: ReadyMadeItem[] }) {
     });
   }
   return (
-    <Card asChild>
-      <section className="pc-panel" aria-labelledby="ready-made-heading">
-        <div>
-          <h2 id="ready-made-heading">HR procedures</h2>
-          <p className="text-sm text-ui-muted-foreground">
-            Ten short procedures for absence, sickness, lateness and leave. They are added as your drafts for every site. Fill in each part marked Set by LeisureWorld from the staff handbook, then send it for approval as usual.
-          </p>
-        </div>
+      <section className="flex min-w-0 flex-col" aria-labelledby="ready-made-heading">
+        <div className="pc-section-head"><h2 id="ready-made-heading">HR procedures</h2></div>
+        <p className="pc-section-note">
+          Ten short procedures for absence, sickness, lateness and leave. They are added as your drafts for every site. Fill in each part marked Set by LeisureWorld from the staff handbook, then send it for approval as usual.
+        </p>
+        <div className="rec-card">
         <div className="flex">
           <Button variant="default" disabled={pending || missing === 0} onClick={add}>
             <FilePlus2 aria-hidden="true" />
@@ -64,7 +61,7 @@ export function ReadyMadeProcedures({ items }: { items: ReadyMadeItem[] }) {
             </li>
           ))}
         </ul>
-      </section>
-    </Card>
+      </div>
+    </section>
   );
 }

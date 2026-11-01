@@ -4,6 +4,7 @@ import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
+import { RecordFacts } from "@/components/ui-kit/record";
 import { Tag } from "@/components/ui-kit/tag";
 import {
   clock, CourseDialog, CourseStatusButton, euro, HEALTH_FORM_META, LinkPersonButton, newCourseOptions, PersonDialog, PlaceButton, RegisterDialog, SessionDialog,
@@ -69,25 +70,20 @@ export default async function ShortCoursePage({ params }: { params: Promise<{ id
           {closed ? <CourseStatusButton id={course.id} to="planned" label="Reopen" title="Reopen this course?" description="It goes back on, and its sessions back on the Rota." /> : null}
         </> : undefined} />}>
 
-      <section className="pc-panel" aria-labelledby="sc-facts">
-        <div className="pc-panel-head"><h2 id="sc-facts">About the course</h2></div>
-        <dl className="grid gap-4 grid-cols-tiles">
-          {facts.map(([label, value]) => (
-            <div key={label} className="min-w-0"><dt className="text-xs font-semibold text-ui-muted-foreground">{label}</dt><dd className="mt-1 wrap-anywhere">{value}</dd></div>
-          ))}
-        </dl>
-        {course.type.description ? <p className="text-sm text-ui-muted-foreground">{course.type.description}</p> : null}
-        {course.note ? <p className="text-sm">{course.note}</p> : null}
+      <section className="flex min-w-0 flex-col" aria-labelledby="sc-facts">
+        <div className="pc-section-head"><h2 id="sc-facts">About the course</h2></div>
+        <div className="rec-card">
+          <RecordFacts items={facts} />
+          {course.type.description ? <p className="text-sm text-ui-muted-foreground">{course.type.description}</p> : null}
+          {course.note ? <p className="text-sm">{course.note}</p> : null}
+        </div>
       </section>
 
-      <section className="pc-panel" aria-labelledby="sc-people">
-        <div className="pc-panel-head">
-          <div className="flex flex-col gap-1"><h2 id="sc-people">Booked · {course.taken} of {course.capacity}</h2>
-            <p className="pc-row-hint">Payment is taken at the till and recorded here.</p></div>
-          {!closed ? personDialog() : null}
-        </div>
+      <section className="flex min-w-0 flex-col" aria-labelledby="sc-people">
+        <div className="pc-section-head"><h2 id="sc-people">Booked · {course.taken} of {course.capacity}</h2>{!closed ? personDialog() : null}</div>
+        <p className="pc-section-note">Payment is taken at the till and recorded here.</p>
         {booked.length === 0 ? <EmptyState compact icon="users" title="Nobody booked yet" hint={!closed ? "Book each person on with their payment." : undefined} /> : (
-          <ul className="pc-rows">
+          <ul className="pc-list">
             {booked.map((p) => (
               <li key={p.id} className="pc-row">
                 <span className="pc-row-body">
@@ -114,12 +110,10 @@ export default async function ShortCoursePage({ params }: { params: Promise<{ id
       </section>
 
       {waiting.length ? (
-        <section className="pc-panel" aria-labelledby="sc-waiting">
-          <div className="pc-panel-head">
-            <div className="flex flex-col gap-1"><h2 id="sc-waiting">Waiting list · {waiting.length}</h2>
-              <p className="pc-row-hint">{free > 0 ? `${plural(free, "place")} free. Offer it to whoever is first, then give them the place.` : "In the order they were added. A place is offered when someone withdraws."}</p></div>
-          </div>
-          <ul className="pc-rows">
+        <section className="flex min-w-0 flex-col" aria-labelledby="sc-waiting">
+          <div className="pc-section-head"><h2 id="sc-waiting">Waiting list · {waiting.length}</h2></div>
+          <p className="pc-section-note">{free > 0 ? `${plural(free, "place")} free. Offer it to whoever is first, then give them the place.` : "In the order they were added. A place is offered when someone withdraws."}</p>
+          <ul className="pc-list">
             {waiting.map((p, i) => (
               <li key={p.id} className="pc-row">
                 <span className="pc-row-body">
@@ -141,13 +135,11 @@ export default async function ShortCoursePage({ params }: { params: Promise<{ id
         </section>
       ) : null}
 
-      <section className="pc-panel" aria-labelledby="sc-sessions">
-        <div className="pc-panel-head">
-          <div className="flex flex-col gap-1"><h2 id="sc-sessions">Sessions</h2><p className="pc-row-hint">Each shows on the Rota in its area for the instructor. Move a week here when it changes.</p></div>
-          {canManage && !closed ? <SessionDialog courseId={course.id} areas={areas} suggest={nextWeek} /> : null}
-        </div>
+      <section className="flex min-w-0 flex-col" aria-labelledby="sc-sessions">
+        <div className="pc-section-head"><h2 id="sc-sessions">Sessions</h2>{canManage && !closed ? <SessionDialog courseId={course.id} areas={areas} suggest={nextWeek} /> : null}</div>
+        <p className="pc-section-note">Each shows on the Rota in its area for the instructor. Move a week here when it changes.</p>
         {course.sessions.length === 0 ? <EmptyState compact icon="calendarDays" title="No sessions" hint={canManage ? "Add a session for each week." : undefined} /> : (
-          <ul className="pc-rows">
+          <ul className="pc-list">
             {course.sessions.map((s, i) => {
               const marks = Object.fromEntries(s.attendance.map((a) => [a.participantId, a.present]));
               const there = s.attendance.filter((a) => a.present).length;
@@ -170,9 +162,9 @@ export default async function ShortCoursePage({ params }: { params: Promise<{ id
       </section>
 
       {withdrawn.length ? (
-        <section className="pc-panel" aria-labelledby="sc-withdrawn">
-          <div className="pc-panel-head"><h2 id="sc-withdrawn">Withdrawn · {withdrawn.length}</h2></div>
-          <ul className="pc-rows">
+        <section className="flex min-w-0 flex-col" aria-labelledby="sc-withdrawn">
+          <div className="pc-section-head"><h2 id="sc-withdrawn">Withdrawn · {withdrawn.length}</h2></div>
+          <ul className="pc-list">
             {withdrawn.map((p) => (
               <li key={p.id} className="pc-row" data-muted="">
                 <span className="pc-row-body">

@@ -13,10 +13,10 @@ export async function incidentHomeItems(viewer: HomeViewer): Promise<HomeItem[]>
   const counts = await incidentCounts();
   if (counts.yourActions) items.push({ label: counts.yourOverdue ? "Your incident actions, some overdue" : "Your incident actions", href: "/incidents#your-actions", count: counts.yourActions, attention: counts.yourOverdue > 0 });
   if (!held.has("incidents.reports.review")) return items;
-  if (counts.toTriage) items.push({ label: "Incident reports to triage", href: "/incidents#to-triage", count: counts.toTriage, attention: true });
-  if (counts.toSignOff) items.push({ label: "Serious incidents to sign off", href: "/incidents#investigating", count: counts.toSignOff, attention: true });
+  if (counts.toTriage) items.push({ label: "Incident reports to triage", href: "/incidents?show=triage", count: counts.toTriage, attention: true });
+  if (counts.toSignOff) items.push({ label: "Serious incidents to sign off", href: "/incidents?show=investigating", count: counts.toSignOff, attention: true });
   const others = counts.investigating - counts.toSignOff;
-  if (others > 0) items.push({ label: "Incidents under investigation", href: "/incidents#investigating", count: others });
-  if (counts.overdueActions) items.push({ label: "Incident actions overdue", href: "/incidents#investigating", count: counts.overdueActions, attention: true });
+  if (others > 0) items.push({ label: "Incidents under investigation", href: "/incidents?show=investigating", count: others });
+  if (counts.overdueActions) items.push({ label: "Incident actions overdue", href: "/incidents?show=investigating", count: counts.overdueActions, attention: true });
   return items;
 }

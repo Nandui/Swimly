@@ -4,6 +4,7 @@ import { History } from "lucide-react";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
+import { RecordSection } from "@/components/ui-kit/record";
 import {
   ABSENCE_REASON_META, BackAtWork, ExtendAbsence, RemoveAbsence, ReportAbsence, requireRotaActor, RETURN_FIT_META, ReturnToWork, type RotaAbsenceRow, rotaAbsences, type RotaReturnRow,
 } from "@/modules/rota/features/absences";
@@ -74,16 +75,9 @@ function PersonRow({ name, tags, lines, actions, updates }: { name: string; tags
   );
 }
 
-/** A section of the page: a white panel with its heading, an optional caption, and its rows. */
+/** A section of the page: its heading and an optional caption above its rows. */
 function Panel({ id, title, hint, children }: { id: string; title: string; hint?: string; children: React.ReactNode }) {
-  return (
-    <section aria-labelledby={id} className="pc-panel">
-      <div className="pc-panel-head">
-        <div className="flex flex-col gap-1"><h2 id={id}>{title}</h2>{hint ? <p className="pc-row-hint">{hint}</p> : null}</div>
-      </div>
-      {children}
-    </section>
-  );
+  return <RecordSection id={id} title={title} note={hint}>{children}</RecordSection>;
 }
 
 /** When the return to work is due: from their first shift back. */
@@ -107,7 +101,7 @@ export default async function AbsencesPage({ searchParams }: { searchParams: Pro
         {current.length === 0 ? (
           <EmptyState compact icon="userX" title="Nobody you look after is off" hint="Among the people your rota role covers. When someone calls in sick or can’t come in, report it here or from Today." />
         ) : (
-          <ul className="pc-rows">
+          <ul className="pc-list">
             {current.map((a) => (
               <PersonRow key={a.id} name={a.user.name} tags={<Tag meta={ABSENCE_REASON_META[a.reason]} />} updates={a.updates}
                 lines={[`${when(a)} · ${a.shiftsToCover ? plural(a.shiftsToCover, "day of work needs", "days of work need") + " cover" : "nothing on the rota affected"}`,
@@ -123,7 +117,7 @@ export default async function AbsencesPage({ searchParams }: { searchParams: Pro
       </Panel>
       {returning.length ? (
         <Panel id="absences-return" title="Return to work" hint="Back from an absence. Talk to them on their first day back and record it here; it goes on their personal file.">
-          <ul className="pc-rows">
+          <ul className="pc-list">
             {returning.map((a) => (
               <PersonRow key={a.id} name={a.user.name} tags={<Tag meta={ABSENCE_REASON_META[a.reason]} />}
                 lines={[`${when(a)} · ${due(a)}`, story(a) || null]}
@@ -134,7 +128,7 @@ export default async function AbsencesPage({ searchParams }: { searchParams: Pro
       ) : null}
       {returned.length ? (
         <Panel id="absences-returned" title="Back in the last 30 days">
-          <ul className="pc-rows">
+          <ul className="pc-list">
             {returned.map((a) => (
               <PersonRow key={a.id} name={a.user.name} tags={<Tag meta={ABSENCE_REASON_META[a.reason]} />}
                 lines={[[when(a), a.returnMetOn ? `return to work ${day(a.returnMetOn)}${a.returnByName ? ` with ${a.returnByName}` : ""}` : null, story(a) || null].filter(Boolean).join(" · ")]}

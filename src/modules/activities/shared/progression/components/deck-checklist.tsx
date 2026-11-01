@@ -321,7 +321,7 @@ function DeckChecklistState({
 
   if (competencies.length === 0)
     return (
-      <section className="pc-panel" aria-label="Competencies">
+      <section aria-label="Competencies">
         <EmptyState
           icon="clipboardList"
           title="This level has no competencies yet."
@@ -474,13 +474,13 @@ function DeckChecklistState({
     </li>
   );
   const list = (people: DeckSwimmer[], dimmed: boolean, label: string) => (
-    <ul className="pc-rows" aria-label={label}>
+    <ul className="pc-list" aria-label={label}>
       {people.map((s) => (bySwimmer ? swimmerRow(s, dimmed) : row(s, dimmed)))}
     </ul>
   );
   return (
     <>
-    <section className="pc-panel" aria-label="Competencies">
+    <section className="flex min-w-0 flex-col gap-(--space-4)" aria-label="Competencies">
       {teaching ? (
         // Two views of one draft: plain toggle buttons (aria-pressed), not radios, so each is
         // one press with Enter or Space.
@@ -523,7 +523,7 @@ function DeckChecklistState({
         </Select>
       </div>
       ) : null}
-      <div className="pc-panel-head items-start">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <p className="pc-row-hint">
             Competency {currentIndex + 1} of {competencies.length}
@@ -580,7 +580,6 @@ function DeckChecklistState({
         list(here, false, bySwimmer ? "Swimmers in today" : `${competency.name} marks`)
       ) : (
         <EmptyState
-          compact
           icon="users"
           title={swimmers.length ? "Nobody was marked in today." : "Nobody in this class yet."}
         />

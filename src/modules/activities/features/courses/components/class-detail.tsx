@@ -23,6 +23,7 @@ import { AppIcon } from "@/components/ui-kit/app-icon";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
+import { RecordFact, RecordFacts, RecordSection } from "@/components/ui-kit/record";
 import { Tag } from "@/components/ui-kit/tag";
 import {
   capacityLabel,
@@ -116,8 +117,9 @@ export function ClassDetailView({
         }
       />}>
 
-      <section aria-label="Class details" className="min-w-0">
-        <div className="min-w-0 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <RecordSection id="class-details-heading" title="About this class">
+        <div className="rec-card">
+        <RecordFacts>
           <ClassFact
             label="Weekly schedule"
             value={formatSlot(course)}
@@ -143,14 +145,14 @@ export function ClassDetailView({
                   : `${available} available · ${waiting.length} waiting`
             }
           />
+        </RecordFacts>
         </div>
-      </section>
+      </RecordSection>
 
-      <section aria-labelledby="enrolled-heading" className="pc-panel">
-        <div className="pc-panel-head">
-          <h2 id="enrolled-heading">
-            Enrolled swimmers ({active.length})
-          </h2>
+      <section aria-labelledby="enrolled-heading" className="flex min-w-0 flex-col">
+        <div className="pc-section-head">
+          <h2 id="enrolled-heading">Enrolled swimmers</h2>
+          <div className="flex items-center gap-3"><p>{active.length}</p>
           {access.attendance && !course.archivedAt ? (
             <Button variant="outline" asChild={true}>
               <UiLink href={`/courses/${course.id}/class`}>
@@ -159,6 +161,7 @@ export function ClassDetailView({
               </UiLink>
             </Button>
           ) : null}
+          </div>
         </div>
         {active.length ? (
           <ClassRoster
@@ -168,7 +171,7 @@ export function ClassDetailView({
             targets={targets}
           />
         ) : (
-          <EmptyState
+          <div className="pc-list"><EmptyState
             compact
             icon="users"
             title="No enrolled swimmers"
@@ -181,17 +184,18 @@ export function ClassDetailView({
                     ? "Choose Enrol a swimmer to add the first place in this class."
                     : "Swimmers will appear here when they are enrolled."
             }
-          />
+          /></div>
         )}
       </section>
 
-      <section aria-labelledby="waitlist-heading" className="pc-panel">
-        <div className="pc-panel-head">
-          <h2 id="waitlist-heading">Waitlist ({waiting.length})</h2>
+      <section aria-labelledby="waitlist-heading" className="flex min-w-0 flex-col">
+        <div className="pc-section-head">
+          <h2 id="waitlist-heading">Waitlist</h2>
+          <p>{waiting.length}</p>
         </div>
         {waiting.length ? (
           <>
-            <p className="text-sm text-ui-muted-foreground">
+            <p className="pc-section-note">
               Waiting swimmers do not hold a place. Enrolling from the waitlist
               checks capacity again.
             </p>
@@ -204,15 +208,13 @@ export function ClassDetailView({
             />
           </>
         ) : (
-          <p className="text-sm text-ui-muted-foreground">
-            No swimmers are waiting for this class.
-          </p>
+          <div className="pc-list"><EmptyState compact icon="users" title="No swimmers are waiting for this class" /></div>
         )}
       </section>
 
       {access.admin ? (
-        <section aria-labelledby="manage-heading" className="pc-panel">
-          <div className="pc-panel-head">
+        <section aria-labelledby="manage-heading" className="flex min-w-0 flex-col">
+          <div className="pc-section-head">
             <h2 id="manage-heading">Manage class</h2>
             <div className="min-w-0 flex gap-2 items-center flex-wrap">
               <ArchiveCourse course={course} />
@@ -223,7 +225,7 @@ export function ClassDetailView({
               />
             </div>
           </div>
-          <p className="text-sm text-ui-muted-foreground">
+          <p className="pc-section-note">
             Update the weekly schedule, pool area or capacity, or move the class to another site.
           </p>
         </section>
@@ -242,15 +244,12 @@ function ClassFact({
   hint?: string;
 }) {
   return (
-    <div className="pc-panel">
-      <div className="min-w-0 flex flex-col">
-        <span className="text-xs text-ui-muted-foreground">{label}</span>
-        <span className="text-sm text-ui-foreground font-semibold">{value}</span>
-        {hint ? (
-          <span className="text-xs text-ui-muted-foreground">{hint}</span>
-        ) : null}
-      </div>
-    </div>
+    <RecordFact label={label}>
+      <span className="block">{value}</span>
+      {hint ? (
+        <span className="block text-xs font-normal text-ui-muted-foreground">{hint}</span>
+      ) : null}
+    </RecordFact>
   );
 }
 
@@ -283,7 +282,7 @@ function ClassRoster({
       {/* Phones and tablets: closed rows, actions in the row's trail. */}
       <div className="lg:hidden">
         <ul
-          className="pc-rows"
+          className="pc-list"
           aria-label={waiting ? "Waitlisted swimmers" : "Enrolled swimmers"}
         >
           {entries.map((entry) => (

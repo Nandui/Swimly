@@ -16,8 +16,8 @@ export default async function CheckCertificatePage({ searchParams }: { searchPar
   const { code } = await searchParams;
   const result = code?.trim() ? await checkCertificate(code) : null;
   return (
-    <PageShell header={<PageHeader title="Check a certificate" description="Every certificate from Turnfin Me has a code at the bottom. Type it here to see that it is real." />}>
-      <form method="get" className="pc-panel" role="search" aria-label="Check a certificate">
+    <PageShell spacing="roomy" header={<PageHeader title="Check a certificate" description="Every certificate from Turnfin Me has a code at the bottom. Type it here to see that it is real." />}>
+      <form method="get" role="search" aria-label="Check a certificate">
         <div className="flex flex-wrap items-end gap-4">
         <div className="min-w-0 grow basis-60">
           <Input id="certificate-code" name="code" label="Certificate code" defaultValue={code ?? ""} placeholder="ABCD-EFGH-JKMN" autoComplete="off" spellCheck={false} maxLength={20} required />

@@ -315,7 +315,7 @@ export function DocumentEditor({
       </div>
       <TabsContent value="write" forceMount className="data-[state=inactive]:hidden">
         <div className="editor-columns">
-          <section className="pc-panel min-w-0" aria-label="Document">
+          <section className="rec-card min-w-0" aria-label="Document">
             <div className="flex flex-col gap-2">
               <Label className="block" htmlFor={titleId}>Document title</Label>
               <Input
@@ -407,8 +407,9 @@ export function DocumentEditor({
               </Label>
             </section>
           </section>
-          <aside className="pc-panel min-w-0" aria-labelledby="details-title">
-            <h2 id="details-title">Document details</h2>
+          <aside className="flex min-w-0 flex-col" aria-labelledby="details-title">
+            <div className="pc-section-head"><h2 id="details-title">Document details</h2></div>
+            <div className="rec-card">
             <div className="flex flex-col gap-2">
               <Label className="block" htmlFor={referenceId}>Reference number</Label>
               <Input
@@ -455,15 +456,15 @@ export function DocumentEditor({
                 ? 'You’re editing. Others can read the document while you work.'
                 : 'Editing opens once the editor is ready.'}
             </p>
-          </aside>
+          </div>
+</aside>
         </div>
       </TabsContent>
       <TabsContent value="details" forceMount className="data-[state=inactive]:hidden">
-        <section className="pc-panel" aria-labelledby="audience-title">
-          <div>
-            <h2 id="audience-title">Details and audience</h2>
-            <p className="text-sm text-ui-muted-foreground">Who the document is for, and what it links to</p>
-          </div>
+        <section className="flex min-w-0 flex-col" aria-labelledby="audience-title">
+          <div className="pc-section-head"><h2 id="audience-title">Details and audience</h2></div>
+          <p className="pc-section-note">Who the document is for, and what it links to</p>
+          <div className="rec-card">
           <div className="grid min-w-0 gap-6 md:grid-cols-cards">
             <ChoiceList
               legend="Facilities"
@@ -490,7 +491,8 @@ export function DocumentEditor({
               onChange={(relatedIds) => change({ relatedIds })}
             />
           </div>
-        </section>
+        </div>
+      </section>
       </TabsContent>
       <AlertDialog
         open={!!leaveHref}

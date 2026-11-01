@@ -31,12 +31,14 @@ const otherModules = {
   training: moduleArea("training", "src/app/api/cron/training/**"),
   hr: moduleArea("hr"),
   rota: moduleArea("rota"),
+  plan: moduleArea("plan"),
   purchasing: moduleArea("purchasing"),
   tasks: moduleArea("tasks", "src/app/api/cron/tasks/**"),
   "short-courses": moduleArea("short-courses", "src/app/api/academy/**"),
   stock: moduleArea("stock"),
   cctv: moduleArea("cctv"),
   "site-monitoring": moduleArea("site-monitoring"),
+  maintenance: moduleArea("maintenance", "src/app/api/maintenance/**"),
   incidents: moduleArea("incidents", "src/app/api/incidents/**", "src/app/api/cron/incidents/**", "src/app/footage/**", "src/app/wellbeing/**"),
 };
 const moduleFiles = { activities: activitiesFiles, ...otherModules };
@@ -112,9 +114,11 @@ const coreThroughFunctions = {
   stock: [],
   cctv: [],
   "site-monitoring": [],
+  maintenance: [],
   hr: [],
   training: ["grantsType", "organisation", "user"],
   rota: ["department", "organisation", "requiredType", "site", "type", "user"],
+  plan: [],
 };
 const coreJoins = (relations) => relations.length ? [{
   selector: `Property[key.name=/^(include|select|where|orderBy)$/] Property[key.name=/^(${relations.join("|")})$/][value.type=/^(ObjectExpression|Literal)$/]`,
@@ -307,6 +311,13 @@ const eslintConfig = defineConfig([
         policies: layerPolicies,
       }],
     },
+  },
+  // The glass material's lens filters are SVG filter primitives, neither a chart nor an icon:
+  // the one place outside the library that draws <svg>. Every other UI rule still applies.
+  // DESIGN.md (How it is built, 2): the lint rules follow the new kit.
+  {
+    files: ["src/components/ui-kit/glass.tsx"],
+    rules: { "no-restricted-syntax": ["error", ...uiSyntax.filter((rule) => !rule.selector.includes("'svg'")), ...coreData] },
   },
   // Override default ignores of eslint-config-next.
   globalIgnores([

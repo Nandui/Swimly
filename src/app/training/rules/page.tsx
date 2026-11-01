@@ -3,6 +3,7 @@ import Link from "next/link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
+import { RecordSection } from "@/components/ui-kit/record";
 import { Tag } from "@/components/ui-kit/tag";
 import { PauseRule, RemoveRule, RULE_STATE_META, RuleDialog, RunRulesNow, trainingRules } from "@/modules/training/features/compliance";
 
@@ -15,13 +16,13 @@ export default async function TrainingRulesPage() {
   const { canManage, rules, coursesWithout, options } = await trainingRules();
   const percent = (r: { covered: number; compliant: number }) => r.covered ? Math.floor((r.compliant / r.covered) * 100) : 100;
   return (
-    <PageShell header={<PageHeader title="Training rules" description="Say who must take each course and how often. Turnfin assigns it to them every morning, including new starters and anyone due again."
+    <PageShell spacing="roomy" header={<PageHeader title="Training rules" description="Say who must take each course and how often. Turnfin assigns it to them every morning, including new starters and anyone due again."
         actions={canManage ? <div className="flex flex-wrap gap-2"><RunRulesNow /><RuleDialog options={options} courses={coursesWithout} /></div> : null} />}>
       {rules.length === 0 ? (
         <EmptyState as="h2" icon="graduation" title="No training rules yet" hint={canManage ? "Add one to stop assigning the same course by hand, for example safeguarding for everyone every year." : "Someone with the Manage level in Training can add them."} />
       ) : (
-        <section className="pc-panel" aria-label="Training rules">
-          <ul className="pc-rows">
+        <RecordSection id="rules-heading" title="Rules" aside={<p>{rules.length}</p>} note="Cancelling training a rule assigned excuses that person until it would be due again.">
+          <ul className="pc-list">
             {rules.map((rule) => (
               <li key={rule.id} className="pc-row flex-wrap">
                 <div className="pc-row-body">
@@ -45,10 +46,10 @@ export default async function TrainingRulesPage() {
               </li>
             ))}
           </ul>
-        </section>
+        </RecordSection>
       )}
       <p className="text-sm text-ui-muted-foreground">
-        Cancelling training a rule assigned excuses that person until it would be due again. See where everyone stands in the <Link href="/training/matrix" className="text-ui-primary underline-offset-4 hover:underline">training matrix</Link>.
+        See where everyone stands in the <Link href="/training/matrix" className="text-ui-primary underline-offset-4 hover:underline">training matrix</Link>.
       </p>
     </PageShell>
   );

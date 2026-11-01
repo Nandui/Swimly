@@ -51,7 +51,7 @@ export default async function ProgrammesPage() {
           action={<AddProgramme />}
         />
       ) : (
-        <section className="pc-panel" aria-label="Programmes in use">
+        <section className="flex min-w-0 flex-col gap-(--space-5)" aria-label="Programmes in use">
           <Lead>
             <Num>{summary.programmes}</Num>{" "}
             {summary.programmes === 1 ? "programme" : "programmes"}, holding{" "}
@@ -66,8 +66,8 @@ export default async function ProgrammesPage() {
       )}
 
       {archived.length > 0 ? (
-        <section className="pc-panel">
-          <h2 className="text-lg font-semibold">Archived</h2>
+        <section className="flex min-w-0 flex-col gap-(--space-3)" aria-labelledby="archived-heading">
+          <div className="pc-section-head mb-0"><h2 id="archived-heading">Archived</h2><p>{archived.length}</p></div>
           <Lead>
             Not offered any more. Everything recorded against them is still
             readable.
