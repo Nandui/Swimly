@@ -6,6 +6,17 @@ The decisions Turnfin 2.0 stands on, newest first. Each says what was decided, w
 
 ---
 
+### D23 · 2 November 2026 · Five front-of-house apps become Classes, Finance requests and Academy
+
+Swim school, Short courses, Refunds, Coinage and Payments do not become one app. They become three:
+
+- **Classes** replaces Swim school (gym activities may follow, so the name is not about swimming; "Activities" is already Rota's activity list). Short courses become its second activity type: Short courses' View becomes Desk, its Instructor or tutor level becomes teaching on the pool deck, and Manage stays Manage. Payments folds in: Desk works the failed payments, Manage uploads the bank's sheet. Its rows move into new tables in Classes' schema.
+- **Finance requests** replaces Refunds and Coinage, in Front of house. Reception asks; the same finance team decides, can send a request back as **Needs information**, and pays or orders. Nobody decides their own. New tables: one `FinanceRequest` with a detail table per kind (refund, coinage), so a new kind adds a table and never changes the base.
+- **Academy** leaves Short courses as its own app in Team, with two levels: **Tutor** (candidates, checks, payment, registers and results) and **Manage** (the course list, putting courses on). It keeps its tables and the Academy booking site's API.
+
+**Why:** they are all front of house, but one app gives a role one level for all of it, so finance could not decide a refund without opening swimmer records, and the apps reach differently (sites against everywhere). Refunds and Coinage already ran the same flow, and Payments and Short courses only exist around the swim school's members. Reception goes from five apps to two, with Home showing what waits in both, so no desk view is added.
+**Follows:** roadmap step 8, smallest first: Payments into Classes, then Finance requests, then Academy, then short courses as an activity type. Each copy into new tables is approved by the owner before it runs on Production; old tables stop receiving rows, stay readable, and are dropped a month later with the owner's yes. [apps.md](apps.md), D1 and D21 change as each merge ships.
+
 ### D22 · 2 November 2026 · Managers report on staff; HR notes have a kind
 
 Managers on duty file a quick **report** about someone they line-manage: the person, the kind (Conduct, Performance, Attendance or Safety), what happened and when. It goes on that person's HR file as a note on their record, never shared with them, and the reporter sees nothing afterwards, not even their own report. Every HR note now has a kind, with General for the rest; a report is a note filed through the quick form. HR's levels become **Report** (file reports on the people they line-manage), **Their sites** (read and write the files of everyone who works at their sites) and **Everyone**. "Their team" is relabelled Report (it keeps its stored key, so the roles that held it move with no data change). The "Their sites" holders at the reporter's working site see the report under Needs you on Home until one of them opens that person's file. A wrong report is withdrawn, with a reason, by someone who can write notes on that file. Only a superadmin gives any HR level.
@@ -14,6 +25,8 @@ Managers on duty file a quick **report** about someone they line-manage: the per
 **Follows:** [apps.md](apps.md#hr) and `src/modules/hr/README.md`. Additive HR migration `002_note_kinds.sql`: a kind on every note, and when it happened, the site, how it was filed and who first read it for reports.
 
 ### D21 · 2 November 2026 · Payments: failed direct debits, followed up at the desk
+
+*Folds into Classes (D23); what it does stays.*
 
 **Payments** is a new app in Front of house. Each month the bank's failure sheet is uploaded (Manage) and every failed direct debit on it whose member number belongs to a swimmer on Turnfin goes on a list per site; the rest (gym memberships, unknown numbers) are ignored (changed the same day from "every row"). Reception contacts each member, logs every attempt, and closes it as **Paid at the desk**, **New mandate set up** or **Place cancelled**; there is no write-off. A failure whose member number belongs to a swimmer shows "Payment failed" on that swimmer's profile until it is closed. Legend stays the billing system: the money and the mandate are handled there, never in Turnfin.
 **Why:** the monthly sheet was followed up on paper, so nobody could see who had been contacted or what was still owed.
@@ -140,4 +153,4 @@ The platform (sign-in, people, sites, access, audit, events, email, the API tool
 ### D1 · Apps in the catalogue
 
 The apps are those in [apps.md](apps.md): Swim school, Pool deck and Analytics (one module); Short courses with the Academy; Refunds; Coinage; Tasks; Incidents; Rota; Training; Docs; HR; CCTV log; Site Monitoring; Purchasing; Stock; Payments; Admin. Short courses book people from the swim school's member records rather than keeping their own.
-**Follows:** a new app is a new entry here.
+**Follows:** a new app is a new entry here. D23 regroups the front-of-house apps into Classes, Finance requests and Academy; this list changes as each merge ships.

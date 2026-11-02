@@ -17,6 +17,7 @@ What is being built for 2.0, in order, and how each step is known to be done. Th
 | 5 | The 2.0 design | yes | yes: approving the design |
 | 6 | Events between apps | no | |
 | 7 | New apps | yes | yes: each new app |
+| 8 | Fewer front-of-house apps | yes | yes: each data copy and table drop |
 
 Step 1 comes first, because nothing else is safe without it. Step 5 can start as soon as step 1 is done and the design is approved, and runs alongside steps 2 to 4.
 
@@ -85,18 +86,31 @@ Each cross-app side effect becomes an event when its code is next touched, start
 
 Each follows "Adding an app" in [apps.md](apps.md) and the checklist in [../AGENTS.md](../AGENTS.md), and ships switched on at one site first.
 
+## 8. Fewer front-of-house apps
+
+Swim school, Short courses, Refunds, Coinage and Payments become **Classes**, **Finance requests** and **Academy** ([D23](decisions.md)). Smallest first, each shipped and checked on `main` before the next starts:
+
+1. **Payments into Classes.** Its pages and home items move into the swim school's module; Payments' Use goes to Desk, its Manage to Manage. Its rows are copied into new tables in the module's schema.
+2. **Finance requests.** One app with refund and coinage requests: new `FinanceRequest` tables with a detail table per kind, one flow, one queue for finance. Rows are copied from the Refunds and Coinage tables.
+3. **Academy.** Its own module, levels Tutor and Manage, in Team; it keeps its tables and the Academy booking site's API.
+4. **Short courses as an activity type** in Classes, using `Programme.activityType` ([architecture.md](architecture.md#activity-types)): the desk books them, instructors take their registers on the pool deck. Swim school is renamed Classes on screen when this lands.
+
+Every copy is a script, dry-run until `--confirm`, run on Production only with the owner's yes. Old tables stop receiving rows and stay readable; each is dropped a month later, with the owner's yes. A merged app that has not been re-themed yet (step 5) gets the 2.0 design in its merge, so nothing is designed twice.
+
+**Done when** reception works in two apps, Classes and Finance requests; Payments, Refunds, Coinage and Short courses are gone from the catalogue; and finance decides requests without any swimmer level.
+
 ## Decisions the owner still holds
 
 These do not block steps 1 to 4.
 
 1. **Admin's five setup extras.** The rule is at most two extras per app, and Admin has five. Recommendation: fold them into one "Keeps the setup lists" extra, after checking which roles hold only some of them, because those roles would gain the rest.
-2. **Dropping legacy columns and tables:** `StaffRole.screens` and `home`, `User.role`, `RoleAssignment`, and the three old notification tables, each after its step has run on `main` for a month. Each is a removing migration, so each waits for the owner's yes.
+2. **Dropping legacy columns and tables:** `StaffRole.screens` and `home`, `User.role`, `RoleAssignment`, the three old notification tables, and the tables step 8 copies from, each after its step has run on `main` for a month. Each is a removing migration, so each waits for the owner's yes.
 3. **Purchasing approves by role and amount.** Recommendation: keep it; with jobs it means "holds that role at the order's site".
 4. **Unused Neon databases** (`turnfin-dev-db`, `turnfin-activities-db`, `turnfin-activities-dev-db`): removing them is the owner's call.
 
 ## Not in 2.0
 
 - Splitting Turnfin into separately deployed services.
-- Regrouping the apps, or moving the swim school's pages under one path.
+- Regrouping the apps beyond step 8, or moving the swim school's pages under one path.
 - Department-scoped access. A job covers sites; a real department case starts as a filter inside that app.
 - A stored work-item table, permission bundles, workspaces, or any other sixth concept.

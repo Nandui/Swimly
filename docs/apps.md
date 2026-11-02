@@ -6,6 +6,8 @@ Every app inside Turnfin: what it is for, its levels, where they reach, what it 
 
 ## Front of house
 
+These five apps are being regrouped into **Classes** (Swim school with Payments and short courses), **Finance requests** (Refunds and Coinage) and **Academy** ([D23](decisions.md), [roadmap step 8](roadmap.md#8-fewer-front-of-house-apps)). This page changes as each merge ships.
+
 ### Swim school
 *Module `activities` · starter page `/swim-school` · reach: sites · data: `activities.prisma`*
 

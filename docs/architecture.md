@@ -253,7 +253,7 @@ Prisma 7: the client is generated into `src/generated/prisma`, uses the `@prisma
 
 ## Activity types
 
-`src/modules/activities/shared/types.ts` defines `ACTIVITY_TYPES`. Swim school is the only one (features `progression`, `assessments`, `parentApp`, `waitlists`, `cover`). A second type gives `Programme` an additive `activityType` column and makes screens ask `hasFeature` instead of assuming levels and competencies exist.
+`src/modules/activities/shared/types.ts` defines `ACTIVITY_TYPES`. Swim school is the only one (features `progression`, `assessments`, `parentApp`, `waitlists`, `cover`). Short courses become the second ([D23](decisions.md)). A second type gives `Programme` an additive `activityType` column and makes screens ask `hasFeature` instead of assuming levels and competencies exist.
 
 ## Known gaps
 
