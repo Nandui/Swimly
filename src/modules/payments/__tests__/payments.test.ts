@@ -33,7 +33,8 @@ const workbook = (...rows: unknown[][]) => { sheet.current = [{ sheet: "CF", dat
 const file = (name = "Failed Lessons 09.xlsx") => new File([new Uint8Array([80, 75, 3, 4])], name);
 const form = (fields: Record<string, string | File>) => { const f = new FormData(); for (const [k, v] of Object.entries(fields)) f.set(k, v); return f; };
 
-const swimmers = new Map([["LWC1001", { id: "swimmer-1", memberNumber: "LWC1001", firstName: "Synthetic", lastName: "Swimmer", dateOfBirth: null, active: true, contactName: "Synthetic Parent" }]]);
+const swimmer = (n: number, memberNumber: string) => [memberNumber, { id: `swimmer-${n}`, memberNumber, firstName: "Synthetic", lastName: `Swimmer ${n}`, dateOfBirth: null, active: true, contactName: "Synthetic Parent" }] as const;
+const swimmers = new Map([swimmer(1, "LWC1001"), swimmer(2, "LWC2002"), swimmer(3, "LWB3003"), swimmer(4, "X1"), swimmer(5, "LWC4004")]);
 const directory = {
   app: "swim-school",
   search: async () => [],
@@ -77,9 +78,10 @@ const manager = () => as("mia", [at(churchfield, "payments.manage")]);
 const reception = () => as("lena", [at(churchfield, "payments.follow")]);
 const failure = (reference: string) => fixture.prisma.paymentFailure.findFirstOrThrow({ where: { reference } });
 
-test("the sheet is counted first, then added once, at the uploader's sites only, matched to swimmers", async () => {
+test("the sheet is counted first, then added once: swimmers only, at the uploader's sites only", async () => {
   workbook(
     ["LW Churchfield", "Synthetic Parent", 54, "A/LWC1001", "AM04", "Insufficient Funds", "LWC1001", null],
+    ["LW Churchfield", "Gym Member", 40, "A/GYM9009", "AM04", "Insufficient Funds", "GYM9009", null],
     ["LW Churchfield", "Example Person", 46, "B/LWC2002", "MD01", "No Mandate", "LWC2002", null],
     ["LW Bishopstown", "Another Example", 65, "A/LWB3003", "AM04", "Insufficient Funds", "LWB3003", null],
   );
@@ -89,7 +91,7 @@ test("the sheet is counted first, then added once, at the uploader's sites only,
   const preview = await upload.previewFailureSheet(form({ file: file() }));
   assert.ok(preview.ok);
   assert.equal(preview.preview.month.slice(5), "09", "the month from the file's name");
-  assert.deepEqual([preview.preview.rows, preview.preview.added, preview.preview.elsewhere, preview.preview.swimmers], [3, 2, 1, 1]);
+  assert.deepEqual([preview.preview.rows, preview.preview.added, preview.preview.elsewhere, preview.preview.notSwimmers], [4, 2, 1, 1]);
   assert.equal(await fixture.prisma.paymentFailure.count(), 0, "the count saves nothing");
 
   const operationId = uuid();
@@ -107,7 +109,8 @@ test("the sheet is counted first, then added once, at the uploader's sites only,
   assert.equal(await fixture.prisma.paymentFailure.count(), 2);
   const matched = await failure("A/LWC1001");
   assert.deepEqual([matched.siteId, matched.memberId, matched.amountCents, matched.status, matched.orgId], [churchfield, "swimmer-1", 5400, "to_contact", ORG]);
-  assert.equal((await failure("B/LWC2002")).memberId, null, "not on the swimmer records");
+  assert.equal((await failure("B/LWC2002")).memberId, "swimmer-2");
+  assert.equal(await fixture.prisma.paymentFailure.count({ where: { reference: "A/GYM9009" } }), 0, "a member number that is no swimmer is never tracked");
   const audit = await fixture.prisma.auditLog.findMany({ where: { entity: "PaymentFailure" } });
   assert.equal(audit.length, 2);
   assert.ok(audit.every((a) => a.module === "Payments" && a.clubId === churchfield));
@@ -130,6 +133,11 @@ test("a club name that matches no site is left out and named; the rest are added
   const none = await upload.uploadFailureSheet(form({ file: file(), month: "2026-10", operationId: uuid() }));
   assert.equal(none.ok, false, "a sheet with only unmatched clubs adds nothing");
   assert.match(none.ok ? "" : none.error, /LW Riverside/);
+
+  workbook(["LW Churchfield", "Gym Member", 40, "A/GYM9010", "AM04", "", "GYM9010", null]);
+  const gym = await upload.uploadFailureSheet(form({ file: file(), month: "2026-10", operationId: uuid() }));
+  assert.equal(gym.ok, false, "a sheet with no swimmers adds nothing");
+  assert.match(gym.ok ? "" : gym.error, /belong to a swimmer/);
   await fixture.prisma.auditLog.deleteMany({ where: { entity: "PaymentFailure", summary: { contains: "October" } } });
   await fixture.prisma.paymentFailureEvent.deleteMany({ where: { failure: { month: "2026-10" } } });
   await fixture.prisma.paymentFailure.deleteMany({ where: { month: "2026-10" } });

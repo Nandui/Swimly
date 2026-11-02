@@ -13,7 +13,7 @@ export default async function PaymentsUploadPage() {
   if (!(await requirePaymentsActor()).manage) notFound();
   return (
     <PageShell spacing="roomy" header={<PageHeader title="Upload the failure sheet" back={{ href: "/payments", label: "Failed payments" }}
-        description="The bank’s monthly list of direct debits that failed. Each one not already in goes on the list for reception to contact." />}>
+        description="The bank’s monthly list of direct debits that failed. Each swimmer on it whose member number is on Turnfin goes on the list for reception to contact; everyone else is ignored." />}>
       <UploadForm today={today()} />
     </PageShell>
   );

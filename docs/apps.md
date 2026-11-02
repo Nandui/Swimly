@@ -66,7 +66,7 @@ The direct debits that failed each month, followed up by reception until each is
 | Use | see the failed payments at their sites, log each contact and record how it ended: paid at the desk, new mandate set up, or place cancelled |
 | Manage | also upload the bank's monthly failure sheet and open closed payments again |
 
-A failure is **To contact**, **Contacted**, **Paid at the desk**, **New mandate set up** or **Place cancelled**. Every row on the sheet is kept, swim lessons and gym memberships alike; a member number that belongs to a swimmer links the two.
+A failure is **To contact**, **Contacted**, **Paid at the desk**, **New mandate set up** or **Place cancelled**. Only rows whose member number belongs to a swimmer on Turnfin are tracked; gym memberships and unknown numbers are left out.
 
 Connects: matches member numbers through the swim school's member directory; puts a "Payment failed" notice on the swimmer's profile while one is open (member notices); home items.
 

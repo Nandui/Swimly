@@ -18,7 +18,9 @@ import { euro, monthLabel, PAYMENT_ACTIONS } from "@/modules/payments/shared/typ
 /** The monthly failure sheet (owner, 2 November 2026): the bank's list of direct debits that
  *  failed, one tab per site. A count first, which writes nothing; then the upload, which reads the
  *  file again and adds each debit not already in for that month, at the sites where this person
- *  holds `payments.manage`. A club matching no site is left out and named; the rest are added.
+ *  holds `payments.manage`. Only debits whose member number belongs to a swimmer on Turnfin are
+ *  tracked (owner, 2 November 2026); the rest (gym memberships, unknown numbers) are counted and
+ *  left out. A club matching no site is left out and named; the rest are added.
  *  The same sheet uploaded again is refused, whatever month it is given, and within a month a
  *  debit already in is never added twice. */
 
@@ -27,7 +29,9 @@ const MAX_BYTES = 10 * 1024 * 1024;
 export type SheetPreview = {
   fileName: string; month: string; monthLabel: string;
   /** Debits on the sheet; those new for the month at the person's sites; those already in. */
-  rows: number; added: number; already: number; addedCents: number; swimmers: number;
+  rows: number; added: number; already: number; addedCents: number;
+  /** Debits whose member number belongs to no swimmer on Turnfin: never tracked. */
+  notSwimmers: number;
   bySite: { name: string; added: number; cents: string }[];
   /** Club names that match no site, with their debits: those are left out and the rest are added.
    *  Once the site exists, uploading the sheet again adds only them. */
@@ -69,14 +73,17 @@ async function readSheet(formData: FormData): Promise<{ ok: true; fileName: stri
 /** A debit within its month: the same reference can fail twice, for different amounts. */
 const debitKey = (d: { reference: string; amountCents: number; copy: number }) => `${d.reference}|${d.amountCents}|${d.copy}`;
 
-/** Which debits go where: each row's site, whether this person manages it, whether it is already
- *  in for the month, and the swimmer holding its member number (when the swim school is on). */
-async function plan(who: PaymentsActor, month: string, rows: SheetRow[]) {
+/** Which debits go where: only those whose member number belongs to a swimmer (when the swim
+ *  school is on, else none), then each one's site, whether this person manages it and whether it
+ *  is already in for the month. */
+async function plan(who: PaymentsActor, month: string, all: SheetRow[]) {
   const [sites, manage, existing, directory] = await Promise.all([
     liveSitesOf(who.orgId), sitesFor("payments.manage"),
-    prisma.paymentFailure.findMany({ where: { orgId: who.orgId ?? "", month, reference: { in: rows.map((r) => r.reference) } }, select: { reference: true, amountCents: true, copy: true } }),
+    prisma.paymentFailure.findMany({ where: { orgId: who.orgId ?? "", month, reference: { in: all.map((r) => r.reference) } }, select: { reference: true, amountCents: true, copy: true } }),
     members(),
   ]);
+  const swimmers = directory ? await directory.byNumbers(all.map((r) => r.memberNumber).filter(Boolean)) : new Map<string, MemberHit>();
+  const rows = all.filter((r) => swimmers.has(r.memberNumber));
   const have = new Set(existing.map(debitKey));
   const placed = rows.map((row) => ({ row, site: siteForClub(row.club, sites) }));
   const unknown = new Map<string, { rows: number; cents: number }>();
@@ -88,8 +95,8 @@ async function plan(who: PaymentsActor, month: string, rows: SheetRow[]) {
   const unplaced = placed.length - placed.filter((p) => p.site).length;
   const mine = placed.filter((p) => p.site && covers(manage, p.site.id));
   const fresh = mine.filter((p) => !have.has(debitKey(p.row))) as { row: SheetRow; site: { id: string; name: string } }[];
-  const swimmers = directory ? await directory.byNumbers(fresh.map((p) => p.row.memberNumber).filter(Boolean)) : new Map<string, MemberHit>();
   return {
+    swimSchoolOff: !directory, notSwimmers: all.length - rows.length,
     unknown: [...unknown].sort(([a], [b]) => a.localeCompare(b)).map(([club, u]) => ({ club, ...u })),
     elsewhere: placed.length - unplaced - mine.length, already: mine.length - fresh.length, fresh, swimmers,
   };
@@ -109,7 +116,7 @@ export async function previewFailureSheet(formData: FormData): Promise<{ ok: tru
   return { ok: true, preview: {
     fileName: read.fileName, month: read.month, monthLabel: monthLabel(read.month),
     rows: read.rows.length, added: p.fresh.length, already: p.already, addedCents: p.fresh.reduce((t, f) => t + f.row.amountCents, 0),
-    swimmers: p.fresh.filter((f) => p.swimmers.has(f.row.memberNumber)).length,
+    notSwimmers: p.notSwimmers,
     bySite: [...bySite.values()].map((s) => ({ name: s.name, added: s.added, cents: euro(s.cents) })),
     unknownClubs: p.unknown.map((u) => ({ club: u.club, rows: u.rows, cents: euro(u.cents) })), elsewhere: p.elsewhere, uploadedBefore: before,
   } };
@@ -130,7 +137,9 @@ export async function uploadFailureSheet(formData: FormData): Promise<{ ok: true
   const before = await uploadedBefore(orgId, read.rows);
   if (before) return { ok: false, error: `This sheet was already ${before}, so nothing was added again.` };
   const p = await plan(who, read.month, read.rows);
-  if (!p.fresh.length) return { ok: false, error: p.already ? "Every debit on this sheet is already in for that month."
+  if (!p.fresh.length) return { ok: false, error: p.swimSchoolOff ? "Swimmers can’t be matched while the Swim school app is switched off, so nothing was added."
+    : p.already ? "Every swimmer’s debit on this sheet is already in for that month."
+    : p.notSwimmers === read.rows.length ? "None of the member numbers on this sheet belong to a swimmer on Turnfin, so there is nothing to add."
     : p.unknown.length ? `No site matches ${p.unknown.map((u) => u.club).join(", ")}, so nothing could be added. Check the site names in Admin › Sites.`
     : "None of these debits are at a site you manage." };
   const added = await prisma.$transaction(async (tx) => {
