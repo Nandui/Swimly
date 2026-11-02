@@ -85,9 +85,11 @@ export const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 
 /** The collection month a file's name suggests, "Failed Lessons 09.xlsx" in November 2026 being
  *  September 2026: the last number from 1 to 12, in this year unless that month is still to come.
- *  Empty when the name has none. */
+ *  A browser's copy number, "Failed Lessons 09 (1).xlsx", is not a month. Empty when the name has
+ *  none. */
 export function monthFromFileName(fileName: string, todayIso: string): string {
-  const numbers = [...fileName.replace(/\.[a-z]+$/i, "").matchAll(/\d+/g)].map((m) => Number(m[0])).filter((n) => n >= 1 && n <= 12);
+  const name = fileName.replace(/\.[a-z]+$/i, "").replace(/\s*\(\d+\)\s*$/, "");
+  const numbers = [...name.matchAll(/\d+/g)].map((m) => Number(m[0])).filter((n) => n >= 1 && n <= 12);
   const month = numbers.at(-1);
   if (!month) return "";
   const [year, current] = [Number(todayIso.slice(0, 4)), Number(todayIso.slice(5, 7))];

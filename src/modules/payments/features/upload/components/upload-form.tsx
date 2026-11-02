@@ -67,7 +67,7 @@ export function UploadForm({ today }: { today: string }) {
       router.push(`/payments?show=to_contact&month=${result.month}`);
     });
   }
-  const blocked = !!preview && (preview.unknownClubs.length > 0 || preview.added === 0);
+  const blocked = !!preview && preview.added === 0;
 
   return (
     <div className="flex max-w-2xl min-w-0 flex-col gap-6">
@@ -101,8 +101,8 @@ export function UploadForm({ today }: { today: string }) {
             ) : null}
           </div>
           {preview.unknownClubs.length ? (
-            <Notice tone="error" title={`No site matches ${preview.unknownClubs.join(", ")}`}
-              description="Check the Club Name column on the sheet, or the site’s name in Admin › Sites, then upload it again. Nothing has been saved." />
+            <Notice tone="warning" title={`Left out: ${preview.unknownClubs.map((u) => `${plural(u.rows, "debit")} at ${u.club} (${u.cents})`).join(", ")}`}
+              description={`No site in Turnfin matches ${preview.unknownClubs.length === 1 ? "that club" : "those clubs"}, so ${preview.unknownClubs.length === 1 ? "its" : "their"} debits are not added. The rest are. To bring them in, add or rename the site in Admin › Sites, then upload the sheet again: only the missing ones are added.`} />
           ) : null}
           <div className="flex flex-wrap gap-2">
             <LoadingButton type="button" pending={saving} pendingLabel="Adding…" onClick={add} disabled={blocked} className="min-h-11">

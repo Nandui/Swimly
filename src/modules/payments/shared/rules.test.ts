@@ -52,6 +52,7 @@ test("the month comes from the file's name: this year, or last year for a month 
   assert.equal(monthFromFileName("Failed Lessons 12.xlsx", "2027-01-05"), "2026-12");
   assert.equal(monthFromFileName("failures 2026 03.xlsx", "2026-04-01"), "2026-03");
   assert.equal(monthFromFileName("Failed Lessons.xlsx", "2026-11-02"), "");
+  assert.equal(monthFromFileName("Failed Lessons 09 (1).xlsx", "2026-11-02"), "2026-09", "a browser's copy number is not the month");
 });
 
 test("following up: contacts count while open; closing needs an open payment, cancelling a reason; reopening goes back to where it was", () => {
