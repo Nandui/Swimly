@@ -11,8 +11,8 @@ import { isRestrictedPermission, type PermissionKey } from "@/lib/staff/permissi
  *  password there. */
 
 export const SCREENS = [
-  { key: "refunds", label: "Refunds", path: "/refunds", description: "A separate workspace for customer refund requests, finance decisions and external payment records.", requires: "refunds.read" },
-  { key: "coinage", label: "Coinage", path: "/coinage", description: "Coins and notes for the tills: requests from the desk, accounts decisions and order records.", requires: "coinage.read" },
+  { key: "refunds", label: "Refunds", path: "/refunds", description: "Refund requests in Finance requests: customer refunds, finance decisions and external payment records.", requires: "refunds.read" },
+  { key: "coinage", label: "Coinage", path: "/coinage", description: "Coinage requests in Finance requests: coins and notes for the tills, accounts decisions and order records.", requires: "coinage.read" },
   {
     key: "analytics",
     label: "Analytics",

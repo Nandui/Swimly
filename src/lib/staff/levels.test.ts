@@ -75,6 +75,15 @@ test("a level stored for the Academy counts for Short courses, which it joined; 
   assert.ok(at({ academy: "view" }).includes("academy.read"), "Academy pages still open");
 });
 
+test("Refunds and Coinage levels count for Finance requests, which they joined; the higher wins", () => {
+  assert.deepEqual(cleanLevels({ refunds: "use" }).levels, { "finance-requests": "use" });
+  assert.deepEqual(cleanLevels({ refunds: "use", coinage: "manage" }).levels, { "finance-requests": "manage" });
+  assert.deepEqual(cleanLevels({ coinage: "use", "finance-requests": "manage" }).levels, { "finance-requests": "manage" });
+  const desk = at({ refunds: "use" });
+  for (const key of ["refunds.request", "coinage.request"]) assert.ok(desk.includes(key as never), `a refunds desk role now asks for coinage too: ${key}`);
+  assert.ok(!desk.includes("refunds.review" as never) && !desk.includes("coinage.review" as never), "Use never decides");
+});
+
 test("the receptionist from the mockup gets the desk, refunds to log, reading and the rota", () => {
   const receptionist = at({ "swim-school": "desk", refunds: "use", docs: "read", rota: "view" });
   for (const key of ["swimschool.desk", "students.manage", "enrolment.manage", "refunds.request", "docs.read", "rota.view"]) assert.ok(receptionist.includes(key as never), key);
@@ -111,7 +120,7 @@ test("a legacy role holding HR everywhere converts to HR Everyone, not Report or
 
 test("a role is described in the owner's words, and its columns match its levels", () => {
   const role = cleanLevels({ "swim-school": "desk", refunds: "use" }, ["swim-school.cancel-classes"]);
-  assert.equal(describeLevels(role), "Swim school: Desk (can cancel classes) · Refunds: Use");
+  assert.equal(describeLevels(role), "Swim school: Desk (can cancel classes) · Finance requests: Use");
   const columns = roleColumns(role);
   assert.equal(columns.restricted, false);
   assert.ok(columns.permissions.includes("classes.cancel") && screensOf(columns.permissions).has("cancellations"));
@@ -120,8 +129,8 @@ test("a role is described in the owner's words, and its columns match its levels
 test("level lines give one row per module, with the level's help and its ticks", () => {
   const role = cleanLevels({ "swim-school": "desk", refunds: "use" }, ["swim-school.cancel-classes", WORK_ANYWHERE]);
   const lines = levelLines(role);
-  assert.deepEqual(lines.map((line) => `${line.module}: ${line.level}`), ["Swim school: Desk", "Refunds: Use"]);
-  assert.equal(lines[1].help, "Log a customer's refund request and follow it.");
+  assert.deepEqual(lines.map((line) => `${line.module}: ${line.level}`), ["Swim school: Desk", "Finance requests: Use"]);
+  assert.equal(lines[1].help, "Log a customer's refund request or ask for coinage for a till, and follow them.");
   assert.deepEqual(lines[0].ticks.map((tick) => tick.label), ["Can cancel classes"]);
   assert.deepEqual(levelLines(cleanLevels({})), []);
 });
@@ -138,5 +147,5 @@ test("an old screen never grants a permission its page already needed", () => {
 test("the Works at wording names every app that applies only at a person's sites", () => {
   const names = siteBoundAppNames();
   for (const name of ["Swim school", "Rota", "Training", "Incidents"]) assert.ok(names.includes(name), name);
-  for (const name of ["Refunds", "Docs"]) assert.ok(!names.includes(name), `${name} applies everywhere`);
+  for (const name of ["Finance requests", "Docs"]) assert.ok(!names.includes(name), `${name} applies everywhere`);
 });

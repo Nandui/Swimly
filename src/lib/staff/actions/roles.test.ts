@@ -36,7 +36,7 @@ function fixture(options: { superadmin?: boolean } = {}) {
 }
 
 const administrator: RoleInput = { name: "Synthetic team", description: "", homeName: "Management", levels: { admin: "manage" }, extras: [] };
-const receptionist: RoleInput = { name: "Synthetic desk", description: "", homeName: "Front of House", levels: { "swim-school": "desk", refunds: "use", docs: "read" }, extras: [] };
+const receptionist: RoleInput = { name: "Synthetic desk", description: "", homeName: "Front of House", levels: { "swim-school": "desk", "finance-requests": "use", docs: "read" }, extras: [] };
 
 test("a role is saved as levels, with their translation in the permission column", async () => {
   const f = fixture();
@@ -45,7 +45,7 @@ test("a role is saved as levels, with their translation in the permission column
   assert.equal(f.role().homeName, "Front of House");
   assert.ok(f.role().permissions.includes("enrolment.manage") && f.role().permissions.includes("refunds.request"));
   assert.ok(!f.role().permissions.includes("staff.manage") && !f.role().permissions.includes("attendance.mark"));
-  assert.equal(f.audits[0], "Created role Synthetic desk: Swim school: Desk · Refunds: Use · Docs: Read");
+  assert.equal(f.audits[0], "Created role Synthetic desk: Swim school: Desk · Finance requests: Use · Docs: Read");
 });
 
 test("Admin Manage stores today's administrator access", async () => {
@@ -70,7 +70,7 @@ test("switching an old role to levels is audited, and a no-change retry writes n
   assert.equal((await f.actions.updateRole("role", administrator)).ok, true);
   assert.equal(f.writes(), 1);
   assert.equal((await f.actions.updateRole("role", receptionist)).ok, true);
-  assert.match(f.audits[1], /Admin: Manage → Swim school: Desk · Refunds: Use · Docs: Read/);
+  assert.match(f.audits[1], /Admin: Manage → Swim school: Desk · Finance requests: Use · Docs: Read/);
 });
 
 test("updates keep the keyholder guard and write the audit with the change", async () => {

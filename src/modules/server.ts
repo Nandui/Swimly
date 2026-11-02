@@ -3,8 +3,7 @@ import "server-only";
 // allowed to import every module, so Core pages can import this file instead
 // of any module directly (see the import boundaries in eslint.config.mjs).
 import "@/modules/activities/module";
-import "@/modules/refunds/module";
-import "@/modules/coinage/module";
+import "@/modules/finance-requests/module";
 import "@/modules/docs/module";
 import "@/modules/training/module";
 import "@/modules/rota/module";

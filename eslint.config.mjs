@@ -26,8 +26,7 @@ const activitiesFiles = [
 const moduleArea = (id, ...extra) => [`src/modules/${id}/**`, `src/app/${id}/**`, ...extra];
 const otherModules = {
   docs: moduleArea("docs", "src/app/api/docs/**"),
-  refunds: moduleArea("refunds", "src/app/api/refunds/**"),
-  coinage: moduleArea("coinage"),
+  "finance-requests": moduleArea("finance-requests", "src/app/(finance-requests)/**", "src/app/api/refunds/**"),
   training: moduleArea("training", "src/app/api/cron/training/**"),
   hr: moduleArea("hr"),
   rota: moduleArea("rota"),
@@ -106,8 +105,7 @@ const coreData = notTables(Object.keys(moduleFiles), "Core never queries a modul
 // names the module's relations to Core tables, so joins are caught too.
 const coreThroughFunctions = {
   docs: [],
-  refunds: [],
-  coinage: [],
+  "finance-requests": [],
   purchasing: ["role", "site"],
   tasks: ["site"],
   incidents: [],

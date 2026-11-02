@@ -53,9 +53,9 @@ export const MODULE_OF_ENTITY: Readonly<Record<string, string>> = {
   ParentChangeRequest: "Swim school", ParentAssessmentPublication: "Swim school",
   // Training, including the qualifications it keeps.
   TrainingCourse: "Training", TrainingAssignment: "Training", TrainingRule: "Training", TrainingEvidence: "Training", TrainingPath: "Training", TrainingPathEnrolment: "Training", TrainingSession: "Training", TrainingHours: "Training", TrainingHourTarget: "Training", Qualification: "Training", QualificationType: "Training", QualificationEvidence: "Training",
-  // Refunds and Rota.
-  RefundRequest: "Refunds", RefundNotification: "Refunds",
-  CoinageRequest: "Coinage", CoinageNotification: "Coinage",
+  // Finance requests (Refunds and Coinage, D24) and Rota.
+  RefundRequest: "Finance requests", RefundNotification: "Finance requests",
+  CoinageRequest: "Finance requests", CoinageNotification: "Finance requests",
   AcademyCourseType: "Short courses", AcademyCourse: "Short courses", AcademySession: "Short courses", AcademyCandidate: "Short courses", AcademyCall: "Short courses",
   Supplier: "Purchasing", PurchaseProduct: "Purchasing", PurchaseApprovalRule: "Purchasing", PurchaseOrder: "Purchasing", PurchasingSettings: "Purchasing",
   TaskTemplate: "Tasks", Task: "Tasks", TaskAction: "Tasks", TaskSite: "Tasks",

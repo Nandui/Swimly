@@ -6,7 +6,7 @@ import { greetingAt, homeLines } from "./home-lines";
 /** What Home shows from the apps' items: places to cover first, then queues that need the person;
  *  today's figures; New; and what starts next. Invented classes and queues. */
 const session = (label: string, start: number, state: HomeSession["state"]): HomeSession => ({ label, area: "Learner Pool", start, end: start + 30, state, href: `/courses/${label}` });
-const modules = [{ id: "swim-school" }, { id: "refunds" }, { id: "rota" }];
+const modules = [{ id: "swim-school" }, { id: "finance-requests" }, { id: "rota" }];
 const items = new Map<string, HomeItem[]>([
   ["swim-school", [
     { kind: "action", label: "Add a swimmer", href: "/students?add=1", icon: "userPlus" },
@@ -19,7 +19,7 @@ const items = new Map<string, HomeItem[]>([
     { label: "Awaiting enrolment", count: 6, href: "/awaiting-enrolment", attention: true },
     { label: "Parent updates", count: 0, href: "/students/parent-changes", attention: false },
   ]],
-  ["refunds", [{ label: "Refund requests to decide", count: 4, href: "/refunds?status=review", attention: true }]],
+  ["finance-requests", [{ label: "Refund requests to decide", count: 4, href: "/refunds?status=review", attention: true }]],
   ["rota", [{ kind: "today", label: "On the rota at Example site", count: 11, href: "/rota/today", attention: true, hint: "2 gaps to fill" }]],
 ]);
 

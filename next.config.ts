@@ -31,6 +31,9 @@ const nextConfig: NextConfig = {
       { source: "/academy/overview", destination: "/short-courses/overview", permanent: false },
       { source: "/academy", destination: "/short-courses/academy", permanent: false },
       { source: "/academy/:path*", destination: "/short-courses/academy/:path*", permanent: false },
+      // Refunds and Coinage became Finance requests (D24): their overviews are its one Overview.
+      { source: "/refunds/overview", destination: "/finance-requests", permanent: false },
+      { source: "/coinage/overview", destination: "/finance-requests", permanent: false },
     ];
   },
 };
