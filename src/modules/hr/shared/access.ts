@@ -1,4 +1,5 @@
 import "server-only";
+import { notFound } from "next/navigation";
 import type { Session } from "next-auth";
 import { requireSession, AuthorizationError } from "@/lib/authz";
 import { holdsAnywhere } from "@/lib/policy/engine";
@@ -38,9 +39,10 @@ export function hrAccess(session: Session): HrActor | null {
   };
 }
 
-/** For record reads: someone who only files reports is refused. */
+/** For record reads. Someone who only files reports finds no such page. */
 export async function requireHrActor() {
   const who = hrAccess(await requireSession());
-  if (!who?.records) throw new AuthorizationError("HR access is required.");
+  if (!who) throw new AuthorizationError("HR access is required.");
+  if (!who.records) notFound();
   return who;
 }

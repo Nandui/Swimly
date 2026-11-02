@@ -234,7 +234,7 @@ test("a manager on duty files a report on someone they manage, without a fresh s
   assert.equal((await report.fileReport("ava", { ...input, kind: "general" })).ok, false, "a report has a kind other than General");
   assert.equal((await report.fileReport("ava", { ...input, date: "2099-01-01" })).ok, false, "not in the future");
   assert.equal((await report.fileReport("ava", input)).ok, true, "a PIN session may file: it reads nothing");
-  await assert.rejects(records.hrPerson("ava"), /HR access/, "a reporter cannot open the file");
+  await assert.rejects(records.hrPerson("ava"), NotFound, "a reporter cannot open the file");
   const [row] = await hr.db.query<{ visibility: string; kind: string; via: string; site_id: string; occurred_at: Date }>("SELECT visibility, kind, via, site_id, occurred_at FROM notes WHERE via='report'");
   assert.deepEqual([row.visibility, row.kind, row.via, row.site_id], ["record", "conduct", "report", "club_churchfield"]);
   assert.equal(new Date(row.occurred_at).toISOString(), "2026-10-20T13:30:00.000Z", "Ireland summer time");
