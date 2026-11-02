@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { operationContext } from "@/lib/operations/context";
-import { appPermissions } from "@/modules/registry";
+import { appPermissions, switchHeirs } from "@/modules/registry";
 
 /** App switches (docs/architecture.md, App switches): for each organisation, every app is on
  *  everywhere, off, or on only at some sites. This file is the one place that answers "is this
@@ -69,6 +69,22 @@ export function withAppSwitches<U extends SwitchableUser>(user: U, switches: App
   };
 }
 
+/** A new app that took over others (a manifest's `formerly` marked `switch`, D24) has no switch
+ *  of its own until a superadmin sets one. Until then it is on wherever any of its former apps was
+ *  on, so a merge never hides work a site had on; it is off only where every former app was off.
+ *  A former app with no row was on everywhere. An app's own row always wins. Pure. */
+export function withCarriedSwitches(switches: AppSwitches, heirs: readonly { appId: string; from: readonly string[] }[]): AppSwitches {
+  const out = new Map(switches);
+  for (const { appId, from } of heirs) {
+    if (switches.has(appId) || !from.some((id) => switches.has(id))) continue;
+    const settings = from.map((id) => switches.get(id));
+    if (settings.some((setting) => !setting || setting.state === "on")) continue;
+    const siteIds = [...new Set(settings.flatMap((setting) => (setting!.state === "sites" ? setting!.siteIds : [])))];
+    out.set(appId, siteIds.length ? { state: "sites", siteIds } : { state: "off", siteIds: [] });
+  }
+  return out;
+}
+
 const isState = (value: string): value is AppSwitchState => (APP_SWITCH_STATES as readonly string[]).includes(value);
 
 /** The database, loaded when first asked: the session, menus and plugs import this file, and
@@ -82,7 +98,8 @@ const switchesOf = cache(async (orgId: string): Promise<AppSwitches> => {
   try {
     const { prisma } = await database();
     const rows = await prisma.appSwitch.findMany({ where: { orgId }, select: { appId: true, state: true, siteIds: true } });
-    return new Map(rows.filter((row) => isState(row.state)).map((row) => [row.appId, { state: row.state as AppSwitchState, siteIds: row.siteIds }]));
+    const stored: AppSwitches = new Map(rows.filter((row) => isState(row.state)).map((row) => [row.appId, { state: row.state as AppSwitchState, siteIds: row.siteIds }]));
+    return withCarriedSwitches(stored, switchHeirs());
   } catch (error) {
     console.error("App switches could not be read; every app stays on", error);
     return new Map();

@@ -26,6 +26,6 @@ export const shortCoursesModule: ModuleManifest = {
       { key: "manage", label: "Manage", help: "Also keep both course lists, and put courses on with their sessions, instructor or tutor, places and price.",
         permissions: ["short-courses.manage", "academy.manage"] },
     ],
-    formerly: ["academy"],
+    formerly: [{ id: "academy" }],
   },
 };

@@ -6,7 +6,7 @@ import { actorFrom, can, siteFilter } from "@/lib/policy/engine";
 import type { Directory } from "@/lib/policy/types";
 import { ALL_PERMISSIONS } from "@/lib/staff/permissions";
 import { appPermissions, switchableApps } from "@/modules/registry";
-import { appsOffAt, describeSwitch, switchedOn, withAppSwitches, type AppSwitches } from "./switches";
+import { appsOffAt, describeSwitch, switchedOn, withAppSwitches, withCarriedSwitches, type AppSwitches } from "./switches";
 
 /** App switches (docs/architecture.md, App switches): the rule, the session it shapes, and the
  *  superadmin's screen that changes it. Sites and people are synthetic. */
@@ -35,6 +35,21 @@ test("the apps off at a site, and the switch in words", () => {
   assert.equal(describeSwitch("on", []), "On everywhere");
   assert.equal(describeSwitch("off", []), "Off");
   assert.equal(describeSwitch("sites", ["Riverside", "Hilltop"]), "On at Riverside, Hilltop only");
+});
+
+test("a new app follows its former apps' switches until it has its own: on wherever any was on", () => {
+  const heirs = [{ appId: "merged", from: ["one", "two"] }];
+  const carried = (entries: Parameters<typeof switches>[0]) => withCarriedSwitches(switches(entries), heirs).get("merged");
+  assert.equal(carried({}), undefined, "no former rows: on everywhere");
+  assert.equal(carried({ one: { state: "off" } }), undefined, "the other former app had no row, so it was on everywhere");
+  assert.deepEqual(carried({ one: { state: "off" }, two: { state: "off" } }), { state: "off", siteIds: [] }, "both off: off, never silently on");
+  assert.deepEqual(carried({ one: { state: "off" }, two: { state: "sites", siteIds: [RIVERSIDE] } }), { state: "sites", siteIds: [RIVERSIDE] });
+  assert.deepEqual(carried({ one: { state: "sites", siteIds: [HILLTOP] }, two: { state: "sites", siteIds: [RIVERSIDE, HILLTOP] } }), { state: "sites", siteIds: [HILLTOP, RIVERSIDE] });
+  assert.equal(carried({ one: { state: "on" }, two: { state: "off" } }), undefined, "on anywhere it was on, so never silently off");
+  assert.deepEqual(carried({ one: { state: "off" }, two: { state: "off" }, merged: { state: "on" } }), { state: "on", siteIds: [] }, "its own switch wins");
+  const untouched = switches({ one: { state: "off" }, two: { state: "off" }, other: { state: "off" } });
+  assert.equal(withCarriedSwitches(untouched, heirs).get("other")?.state, "off");
+  assert.equal(untouched.has("merged"), false, "the stored switches are not changed");
 });
 
 test("Admin is never switchable, and every app's permissions are its own", () => {
