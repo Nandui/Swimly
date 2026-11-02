@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import "./theme/kit.css";
 import "./me.css";
-import { inter } from "./fonts";
+import { manrope } from "./fonts";
 import { GlassRoot } from "@/components/ui-kit/glass";
 import { LiveBannerProvider } from "@/components/ui-kit/live-banner";
 
@@ -28,5 +28,5 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  return <html lang="en" className={inter.variable}><body className="turnfin-app"><GlassRoot /><LiveBannerProvider>{children}</LiveBannerProvider></body></html>;
+  return <html lang="en" className={manrope.variable}><body className="turnfin-app"><GlassRoot /><LiveBannerProvider>{children}</LiveBannerProvider></body></html>;
 }

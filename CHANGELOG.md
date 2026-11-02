@@ -4,6 +4,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.35.0 · 2 November 2026 · Turnfin's new look
+
+- **Turnfin wears its own colour now**: the blue of the Turnfin logo runs down the side of every screen, with the fin drawn large behind your list of apps.
+- **Your work sits on one white page** beside it, the same in every app.
+- **The app you are in** shows as a white pill in the list on the left.
+- **On your phone**, the top of the screen is blue and your page rises up beneath it. The bar at the bottom is white, and the part you are in is blue.
+- **The writing** has a new, clearer typeface, and headings are bolder.
+- **Colours keep their meaning**: orange still means something needs you, green means done and red means serious. Nothing has moved, and everything works as before.
+
 ## 2.34.4 · 2 November 2026 · Payments: remove the non-swimmers
 
 - **Failed payments**: managers see **Remove non-swimmers** while the list still holds payments from before Payments tracked swimmers only. It asks first, then takes them off the list. Anyone who has become a swimmer since stays and is linked to their swimmer.

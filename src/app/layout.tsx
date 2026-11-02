@@ -17,7 +17,7 @@ import { getCurrentClub } from "@/lib/clubs/current";
 import "./globals.css";
 import "./theme/kit.css";
 import { GlassRoot } from "@/components/ui-kit/glass";
-import { inter } from "./fonts";
+import { manrope } from "./fonts";
 
 /** One template all the way down: a layout that sets a title must also set
  *  TITLE_TEMPLATE. The browser and home-screen icons are the fin, from the
@@ -37,8 +37,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f2f2f7" },
-    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+    { media: "(prefers-color-scheme: light)", color: "#0062b1" },
+    { media: "(prefers-color-scheme: dark)", color: "#0062b1" },
   ],
 };
 
@@ -65,7 +65,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     // The appearance provider updates this attribute when the preference changes.
     <html
       lang="en"
-      className={inter.variable}
+      className={manrope.variable}
       suppressHydrationWarning
       data-theme={mode === "system" ? undefined : mode}
     >
