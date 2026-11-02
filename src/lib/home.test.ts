@@ -71,6 +71,8 @@ function swimSchool() {
     "@/modules/activities/shared/cancellations/data": { getCancellationsForDay: async () => new Map([["b", { id: "x", courseId: "b", reason: "Pool closed" }]]) },
     "@/modules/activities/shared/today/assessments": { getTodayAssessments: async () => [{ booked: 4 }] },
     "@/modules/activities/features/enrolment/server/data/awaiting-enrolment": { getAwaitingEnrolment: async () => ({ total: 0 }) },
+    "@/modules/activities/features/failed-payments/server/data": { memberPaymentNotices: async () => [] },
+    "@/modules/activities/features/failed-payments/server/home": { paymentsHomeItems: async () => [] },
   });
   return async (levels: Record<string, string>, extras: string[] = [], id = "swim-school") =>
     (await contributions.homeCardItems([id], viewer({ name: "R", homeName: null, levels, extras }))).get(id) ?? [];

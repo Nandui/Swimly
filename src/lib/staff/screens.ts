@@ -141,7 +141,7 @@ export const SCREENS = [
   { key: "stock", label: "Stock", path: "/stock", description: "A separate workspace for stock taking: count what is on the shelf at each site on a phone or tablet, keep the product list and compare two counts.", requires: "stock.read" },
   { key: "cctv", label: "CCTV log", path: "/cctv", description: "A separate workspace for managers: a record of every time CCTV footage is checked, who checked it, why, what they looked for and what they saw.", requires: "cctv.record" },
   { key: "site-monitoring", label: "Site Monitoring", path: "/site-monitoring", description: "A separate workspace for managers: actions raised automatically at their sites, such as a task completed with a reading out of range, each closed by saying what was done.", requires: "site-monitoring.read" },
-  { key: "payments", label: "Payments", path: "/payments", description: "A separate workspace for the direct debits that failed each month: the bank's sheet is uploaded, and reception contacts each member until it is recovered.", requires: "payments.read" },
+  { key: "payments", label: "Failed payments", path: "/payments", description: "The direct debits that failed each month: the bank's sheet is uploaded, and reception contacts each member until it is recovered.", requires: "payments.read" },
   { key: "maintenance", label: "Maintenance", path: "/maintenance", description: "A separate workspace for what is broken at each site: staff report it, and managers make sure it is in Trackplan and follow it until it is fixed.", requires: "maintenance.report" },
   { key: "hr", label: "HR", path: "/hr", description: "A separate, restricted workspace for HR notes and performance reviews of the people a role covers. Staff read what is shared with them in Turnfin Me.", requires: "hr.records.read" },
   { key: "docs", label: "Docs", path: "/docs", description: "A separate workspace for documents, independent approvals and required reading.", requires: "docs.read" },
@@ -184,9 +184,9 @@ export function visibleScreens(permissions: ReadonlySet<PermissionKey>): Set<Scr
 export const CORE_SCREENS = ["staff", "roles", "clubs", "departments", "positions", "qualifications", "activity-list", "areas", "activity"] as const satisfies readonly ScreenKey[];
 export const ACTIVITIES_SCREENS = [
   "analytics", "duty", "cancellations", "calendar", "instructor", "students", "courses",
-  "together", "assessments", "awaiting-enrolment", "legend-agreements", "programmes",
+  "together", "assessments", "awaiting-enrolment", "legend-agreements", "programmes", "payments",
 ] as const satisfies readonly ScreenKey[];
-export const OTHER_APP_SCREENS = ["docs", "refunds", "coinage", "training", "hr", "rota", "purchasing", "stock", "short-courses", "tasks", "incidents", "cctv", "site-monitoring", "maintenance", "plan", "payments"] as const satisfies readonly ScreenKey[];
+export const OTHER_APP_SCREENS = ["docs", "refunds", "coinage", "training", "hr", "rota", "purchasing", "stock", "short-courses", "tasks", "incidents", "cctv", "site-monitoring", "maintenance", "plan"] as const satisfies readonly ScreenKey[];
 
 const CORE = new Set<string>(CORE_SCREENS);
 const SWIM_SCHOOL = new Set<string>(ACTIVITIES_SCREENS);

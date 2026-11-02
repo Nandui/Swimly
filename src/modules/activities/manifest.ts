@@ -17,12 +17,12 @@ export const swimSchoolModule: ModuleManifest = {
     reach: "sites",
     levels: [
       {
-        key: "desk", label: "Desk", help: "Every swimmer, booking, move, waitlist and assessment booking.",
-        permissions: ["swimschool.desk", "students.manage", "enrolment.manage", "parents.manage"],
+        key: "desk", label: "Desk", help: "Every swimmer, booking, move, waitlist and assessment booking, and following up failed payments.",
+        permissions: ["swimschool.desk", "students.manage", "enrolment.manage", "parents.manage", "payments.read", "payments.follow"],
       },
       {
-        key: "manage", label: "Manage", help: "Programmes, levels and classes.",
-        permissions: ["courses.manage", "curriculum.manage", "progression.override"],
+        key: "manage", label: "Manage", help: "Programmes, levels and classes, and uploading the bank's failed payments sheet.",
+        permissions: ["courses.manage", "curriculum.manage", "progression.override", "payments.manage"],
       },
     ],
     extras: [

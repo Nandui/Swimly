@@ -19,12 +19,15 @@ It covers both menu entries Swim school (the desk, `src/app/(activities)`) and P
 - `analytics` — the swim school reports (`/analytics`): Overview, Classes (and each class), Swimmers, Progression, Teachers (and each teacher, by who started each lesson), Reception (and each person on the desk: work done, response times against targets, busy hours, record quality), plus the Registers and multiple-places reports. Swim school Manage only. Reception reads the log through Core and Short courses' and Refunds' timed jobs through `registerDeskMeasures`.
 - `parents` — parent accounts and access requests (`/students/parents`), the parent API and the parent-admin API.
 - `instructor` — the pool-deck workspace: today's classes, starting a class, assessments and swimmers (`/instructor`).
+- `failed-payments` — the lists (`/payments`: to contact, contacted, closed; by site, month, or a search for name, member number or reference) and one failure's page (`/payments/[id]`). On that page reception logs a contact (phone, text, email or at the desk; no answer, left a message or spoke to them) and closes it: **Paid at the desk**, **New mandate set up** or **Place cancelled** (with a reason). Swim school Manage can open a closed one again. The page shows the swimmer's contact from the swim school's records when the member number matched, what the bank's return code means, and the member's other failed payments. Manage also gets **Remove N non-swimmers** on the list while any payment at their sites has no swimmer behind it (from sheets uploaded before swimmers only): after a confirmation it removes them with their history, one audit row each, and links any whose member number is a swimmer's now. This feature also gives the swim school's failed-payment Home items and the swimmer profile's notices. Its access check is `shared/payments/access.ts`; its page sits in the swim school frame on its Overview (`/payments`, guarded by `src/app/(activities)/payments/layout.tsx`).
+- `payment-upload` — the failed payments sheet (D21, part of the swim school since D24): the upload page (`/payments/upload`, Manage only). Choose the file; the month is read from its name ("Failed Lessons 09" is September) and can be changed. The count per site comes first and saves nothing; **Add** reads the file again and adds each debit not already in for that month, at the sites where the person holds `payments.manage`. Every row is a debit: a debit is its reference, amount and copy within the month (the same reference can fail twice for different amounts), so uploading the same sheet again adds nothing. The bank's "LW Douglas" is the Gus Healy Swimming Pool (`CLUB_ALIASES` in `shared/payments/rules.ts`). The same sheet uploaded again is refused under any month, by a hash of its debits kept on `PaymentImport.fingerprint`. A club name that matches no site is named and its debits left out; the rest are added, and once the site exists the same sheet uploaded again adds only those. A browser's copy number in the name ("Failed Lessons 09 (1)") is not read as the month. Only debits whose member number belongs to a swimmer are tracked (owner, 2 November 2026): member numbers are matched to the swim school's swimmers (capitals, no spaces) through the member directory, and every other row (gym memberships, unknown numbers) is counted on the preview and left out.
 - `workspace` — the swim school frame, its menu (`NAV_ITEMS`, for the page bar and the starter page `/swim-school`) and workspace search (`src/app/(activities)/layout.tsx`).
 
 `shared/` holds what two or more features use, by domain (`shared/<domain>/`):
 - the class, swimmer, enrolment, attendance, progression, assessment and curriculum rules, reads and actions that several screens call;
 - the register form, teaching UI and deck checklist shared by the desk and the deck;
 - the parent API's plumbing;
+- `payments/`: failed payments' statuses and words (`types.ts`), the pure rules, including reading the bank's sheet (`rules.ts`, tested in `rules.test.ts`), the access check (`access.ts`) and the locked, audited step (`service.ts`);
 - `classification.ts` (what the deck may show) and `types.ts`.
 
 The swim school is one tightly linked domain, so about 90 of its 280 files are shared. Splitting the larger shared files by declaration, as was done for the other modules, could move more code into features later.
@@ -42,6 +45,7 @@ The swim school is one tightly linked domain, so about 90 of its 280 files are s
 - `ManualPlacement` — swimmers the desk put on Awaiting enrolment by hand, without an assessment
 - `LegendAgreementPrice`
 - the `Parent*` tables of the parent app
+- `PaymentImport` (`payment_imports`), `PaymentFailure` (`payment_failures`), `PaymentFailureEvent` (`payment_failure_events`): each uploaded failure sheet, each failed direct debit and its history (contacts and changes). Added for Payments (D21, migration `20261211090000_payments`) and owned here since D24; the tables kept their names.
 
 It never queries Core tables. It reads people and sites through `src/lib/directory.ts`.
 
@@ -52,16 +56,17 @@ It never queries Core tables. It reads people and sites through `src/lib/directo
 ## Registration (module.ts)
 - Commitments (`activities.classes`): each class, its time and who teaches it, for the rota. Also `plan`, which records a class's planned teacher. The rota's Plan is the only place a class's teacher is chosen (owner decision, 16 October 2026); `Course.instructorId` is kept but only counts until the grace day `USUAL_INSTRUCTOR_UNTIL` (`shared/courses/planned.ts`).
 - Site summary: programmes, swimmers and classes on Sites.
-- Starter page items (`registerHomeCard`; Home counts the ones that need the person): Swim school (today's classes and assessments, swimmers awaiting enrolment, parent updates) and Pool deck (the viewer's classes today).
+- Starter page items (`registerHomeCard`; Home counts the ones that need the person): Swim school (today's classes and assessments, swimmers awaiting enrolment, parent updates, failed payments to contact and waiting on the member, and Manage's "Upload the failure sheet") and Pool deck (the viewer's classes today).
 - Area rename: classes and assessment sessions follow an area renamed in Admin.
 - Member directory (`registerMemberDirectory`, `features/students/server/members.ts`): the swimmer records other modules book people from (owner request, 21 October 2026). Short courses and the Academy search, read (medical notes only when they say their viewer may) and add swimmers; the swim school writes and audits every add. The swimmer profile's **Other courses** reads `memberHistoryFor`.
+- Member notices (`registerMemberNotices`): "Payment failed" on the swimmer profile of anyone with a failed payment still open.
 - Menu entries, levels and permissions: `manifest.ts` (Swim school and Pool deck), listed in `src/app/modules.ts`.
 
 ## Permissions
-- Swim school: `swimschool.desk`, `students.manage`, `courses.manage`, `enrolment.manage`, `curriculum.manage`, `classes.cancel`, `billing.notify`, `parents.manage`, `progression.override`.
+- Swim school: `swimschool.desk`, `students.manage`, `courses.manage`, `enrolment.manage`, `curriculum.manage`, `classes.cancel`, `billing.notify`, `parents.manage`, `progression.override`, `payments.read` and `payments.follow` (Desk), `payments.manage` (Manage).
 - Pool deck: `attendance.mark`, `attendance.markAny`, `attendance.cover`, `progression.assess`, `progression.complete`, `assessments.run`.
 
 ## Depends on
-- Platform: auth and the session, the policy engine, permissions, audit, the database client, `src/lib/directory.ts`, home cards, site summaries, commitments, the member directory and member history.
+- Platform: auth and the session, the policy engine, permissions, audit, the database client, `src/lib/directory.ts`, home cards, site summaries, commitments, the member directory, member history and member notices, and the workbook reader (`src/lib/xlsx.ts`) for the failure sheet.
 - The UI kit's account menu, working-site switcher and wrong-site notice (`src/components/ui`: `account-menu.tsx`, `club-switcher.tsx`, `wrong-club.tsx`); switching runs Core's `switchClub` through the frame context.
 - Other modules: none.
