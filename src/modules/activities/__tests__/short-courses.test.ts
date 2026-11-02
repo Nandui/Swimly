@@ -133,6 +133,20 @@ test("Instructor takes the register on the day; View cannot", async () => {
   assert.equal(await fixture.prisma.shortCourseAttendance.count({ where: { sessionId: session.id } }), 2);
 });
 
+test("an instructor with Pool deck Teach only sees and registers the courses they instruct, and never books (D24)", async () => {
+  const session = await fixture.prisma.shortCourseSession.findFirstOrThrow({ where: { courseId }, orderBy: { date: "asc" } });
+  as("nora", [], [at(bishopstown, ["short-courses.run"])]);
+  assert.equal((await data.shortCoursesHome()).current.some((c) => c.id === courseId), false, "Ray instructs it, not Nora");
+  await assert.rejects(data.shortCourse(courseId), NotFound);
+  assert.equal((await actions.takeRegister(session.id, [])).ok, false, "only the course's instructor or the desk");
+  as("ray", [], [at(bishopstown, ["short-courses.run"])]);
+  const own = await data.shortCourse(courseId);
+  assert.equal(own.canBook, false, "booking stays the desk's");
+  assert.equal(own.canRun, true);
+  assert.ok((await data.shortCoursesHome()).current.some((c) => c.id === courseId));
+  assert.deepEqual((await data.shortCoursesHome()).toPhone, [], "the phone list is the desk's");
+});
+
 test("with the swim school on, a booking is someone on the swimmer records, picked or added there", async () => {
   contributions.registerMemberDirectory(directory);
   as("nora", ["short-courses.manage"]);

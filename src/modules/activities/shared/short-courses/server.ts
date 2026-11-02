@@ -34,7 +34,7 @@ export async function atSite(siteId: string, cap: PermissionKey) {
 }
 
 export async function courseFor(id: string, cap: PermissionKey) {
-  const course = await prisma.shortCourse.findFirst({ where: { id }, select: { id: true, siteId: true, capacity: true, status: true, cancelledAt: true, type: { select: { name: true, healthForm: true } } } });
+  const course = await prisma.shortCourse.findFirst({ where: { id }, select: { id: true, siteId: true, instructorId: true, capacity: true, status: true, cancelledAt: true, type: { select: { name: true, healthForm: true } } } });
   if (!course) return { ok: false as const, error: "That course no longer exists." };
   const at = await atSite(course.siteId, cap);
   if (!at.ok) return at;

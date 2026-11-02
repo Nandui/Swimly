@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { mayFor, sitesFor } from "@/lib/policy/session";
 import { callDue } from "@/modules/activities/shared/short-courses/public-booking";
 import { requireShortCoursesActor } from "@/modules/activities/shared/short-courses/access";
-import { inSites, iso, eitherSites } from "@/modules/activities/shared/short-courses/reads";
+import { inSites, iso } from "@/modules/activities/shared/short-courses/reads";
 import { swimmersFor, swimmerView } from "@/modules/activities/shared/short-courses/swimmers";
 import { canSee, requireSession } from "@/lib/authz";
 import { courseState, SHORT_COURSE_CALL_TIMES, stillOwed, takesPlace, toPhone, waitingOrder } from "@/modules/activities/shared/short-courses/rules";
@@ -69,10 +69,12 @@ async function toPhoneList(sites: Awaited<ReturnType<typeof sitesFor>>, orgId: s
 /** The courses page: coming up and running, and those finished in the last 90 days. */
 export async function shortCoursesHome() {
   const who = await requireShortCoursesActor();
+  // The desk sees every course at its sites; an instructor (Pool deck Teach) only those they
+  // instruct, as the pool deck shows only their own classes (D24).
   const [booking, registers] = await Promise.all([sitesFor("short-courses.read"), sitesFor("short-courses.run")]);
-  const sites = eitherSites(booking, registers);
   const on = today();
-  const rows = await withPeople(await prisma.shortCourse.findMany({ where: { orgId: who.orgId ?? undefined, ...inSites(sites) }, orderBy: { createdAt: "desc" }, take: 300, select: COURSE_ROW }));
+  const visible = { OR: [inSites(booking), { ...inSites(registers), instructorId: who.id }] };
+  const rows = await withPeople(await prisma.shortCourse.findMany({ where: { orgId: who.orgId ?? undefined, ...(who.read ? visible : { ...inSites(registers), instructorId: who.id }) }, orderBy: { createdAt: "desc" }, take: 300, select: COURSE_ROW }));
   const courses = rows.map((c) => rowOf(c, on));
   const since = new Date(Date.now() - 90 * 86_400_000).toISOString().slice(0, 10);
   const byStart = (a: CourseRow, b: CourseRow) => (a.first ?? "9999").localeCompare(b.first ?? "9999");
@@ -119,12 +121,14 @@ export async function shortCourse(id: string) {
   const [course] = await withPeople([row]);
   const resource = { siteId: course.siteId, orgId: who.orgId };
   const [read, run, manage] = await Promise.all([mayFor("short-courses.read", resource), mayFor("short-courses.run", resource), mayFor("short-courses.manage", resource)]);
-  if (!read && !run) notFound();
+  // An instructor without the desk's level opens only the courses they instruct (D24).
+  const instructs = run && course.instructorId === who.id;
+  if (!read && !instructs) notFound();
   const on = today();
   const first = course.sessions[0] ? iso(course.sessions[0].date) : null;
   const held = course.sessions.filter((s) => iso(s.date) <= on).length;
   // Their swimmer records: member number, contacts and medical notes, for everyone working the course.
-  const [swimmers, session] = await Promise.all([swimmersFor(course.participants.map((p) => p.swimmerId), read || run), requireSession()]);
+  const [swimmers, session] = await Promise.all([swimmersFor(course.participants.map((p) => p.swimmerId), read || instructs), requireSession()]);
   const person = (p: (typeof course.participants)[number], swimmer = p.swimmerId ? swimmerView(swimmers.byId.get(p.swimmerId)) : null) => ({
     ...p, swimmer, name: swimmer?.name ?? p.name, dateOfBirth: p.dateOfBirth ? iso(p.dateOfBirth) : null, healthFormOn: p.healthFormOn ? iso(p.healthFormOn) : null,
     attended: course.sessions.filter((s) => s.attendance.some((a) => a.participantId === p.id && a.present)).length,
