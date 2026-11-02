@@ -15,7 +15,14 @@ Swim school, Short courses, Refunds, Coinage and Payments do not become one app.
 - **Academy** leaves Short courses as its own app in Team, with two levels: **Tutor** (candidates, checks, payment, registers and results) and **Manage** (the course list, putting courses on). It keeps its tables and the Academy booking site's API.
 
 **Why:** they are all front of house, but one app gives a role one level for all of it, so finance could not decide a refund without opening swimmer records, and the apps reach differently (sites against everywhere). Refunds and Coinage already ran the same flow, and Payments and Short courses only exist around the swim school's members. Reception goes from five apps to two, with Home showing what waits in both, so no desk view is added.
-**Follows:** roadmap step 8, smallest first: Payments into Classes (built 2 November 2026, 3.2.0), then Finance requests, then Academy, then short courses as an activity type. Each copy into new tables is approved by the owner before it runs on Production; old tables stop receiving rows, stay readable, and are dropped a month later with the owner's yes. [apps.md](apps.md), D1 and D21 change as each merge ships.
+**Follows:** roadmap step 8, smallest first: Payments into Classes (built 2 November 2026, 3.2.0), then Finance requests, Academy and short courses into Classes (built 3 November 2026, 3.3.0). Each copy into new tables is approved by the owner before it runs on Production; old tables stop receiving rows, stay readable, and are dropped a month later with the owner's yes. [apps.md](apps.md), D1 and D21 follow.
+**Decided with it (owner defaults, 3 November 2026):**
+1. *Finance requests keeps the Refunds and Coinage tables for now.* No new tables and no copy: both kinds' code is one module with one frame and Overview (`/finance-requests`), their URLs stay (`/refunds/…`, `/coinage/…`; emails link there), and Use and Manage give the existing `refunds.*` and `coinage.*` permissions. One `FinanceRequest` table is a later step staff will not notice.
+2. *Academy levels:* Short courses' Instructor or tutor becomes Academy Tutor and its Manage becomes Academy Manage; Short courses' View gives no Academy access.
+3. *Short courses move into Classes now, their data later.* Their pages and code join the swim school's module and keep their own tables and registers; moving them onto `Programme` with an `activityType`, and their registers onto the pool deck, is a later step. Short courses' View becomes Classes Desk, Instructor becomes Pool deck Teach (which now gives `short-courses.run`: the short courses they instruct and their registers, never booking), and Manage becomes Classes Manage.
+4. *Swim school is shown as Classes;* its timetable page "Classes" becomes "Timetable". The app id stays `swim-school` and its log name Swim school, so the activity log reads on.
+
+Stored role levels carry over through each manifest's `formerly`, which now maps one former app's level keys to several apps. App switches: a new app with no switch of its own follows its former apps' (Finance requests: Refunds' and Coinage's; Academy: Short courses'), on wherever any was on and off only where all were off, until a superadmin sets its own in Admin › Apps; an existing app keeps its own (Classes and Pool deck do not take Short courses' switch).
 
 ### D23 · 2 November 2026 · HR moves into the main database
 
@@ -32,11 +39,11 @@ Managers on duty file a quick **report** about someone they line-manage: the per
 
 ### D21 · 2 November 2026 · Payments: failed direct debits, followed up at the desk
 
-*Folded into Swim school, the future Classes, on 2 November 2026 (D24); what it does stays. Its levels are now Swim school Desk and Manage, and its code and tables belong to the `activities` module.*
+*Folded into Swim school, now Classes, on 2 November 2026 (D24); what it does stays. Its levels are now Classes Desk and Manage, and its code and tables belong to the `activities` module.*
 
 **Payments** is a new app in Front of house. Each month the bank's failure sheet is uploaded (Manage) and every failed direct debit on it whose member number belongs to a swimmer on Turnfin goes on a list per site; the rest (gym memberships, unknown numbers) are ignored (changed the same day from "every row"). Reception contacts each member, logs every attempt, and closes it as **Paid at the desk**, **New mandate set up** or **Place cancelled**; there is no write-off. A failure whose member number belongs to a swimmer shows "Payment failed" on that swimmer's profile until it is closed. Legend stays the billing system: the money and the mandate are handled there, never in Turnfin.
 **Why:** the monthly sheet was followed up on paper, so nobody could see who had been contacted or what was still owed.
-**Follows:** [apps.md](apps.md#swim-school) and `src/modules/activities/README.md` (since D24). Two additive plug changes in the platform: the member directory gains `byNumbers`, and `registerMemberNotices` lets an app put a notice on a swimmer's profile without the swim school importing it. New tables `payment_*`, additive.
+**Follows:** [apps.md](apps.md#classes) and `src/modules/activities/README.md` (since D24). Two additive plug changes in the platform: the member directory gains `byNumbers`, and `registerMemberNotices` lets an app put a notice on a swimmer's profile without the swim school importing it. New tables `payment_*`, additive.
 
 ### D20 · 1 November 2026 · Turnfin Sheet replaces Turnfin Glass
 
@@ -158,5 +165,5 @@ The platform (sign-in, people, sites, access, audit, events, email, the API tool
 
 ### D1 · Apps in the catalogue
 
-The apps are those in [apps.md](apps.md): Swim school, Pool deck and Analytics (one module); Short courses with the Academy; Refunds; Coinage; Tasks; Incidents; Rota; Training; Docs; HR; CCTV log; Site Monitoring; Purchasing; Stock; Admin. Failed payments are part of Swim school (D24). Short courses book people from the swim school's member records rather than keeping their own.
-**Follows:** a new app is a new entry here. D24 regroups the front-of-house apps into Classes, Finance requests and Academy; this list changes as each merge ships.
+The apps are those in [apps.md](apps.md): Classes (the swim school, with failed payments and short courses), Pool deck and Analytics (one module); Finance requests; Academy; Tasks; Incidents; Rota; Training; Docs; HR; CCTV log; Site Monitoring; Purchasing; Stock; Admin (D24). Classes and the Academy book people from the swim school's member records rather than keeping their own.
+**Follows:** a new app is a new entry here.
