@@ -48,7 +48,7 @@ The values below are the contract. Names are the CSS custom properties the theme
 
 The ground carries one texture: the logo's fin, drawn as a white silhouette of the real logo file (`public/brand/turnfin.png`, used at full resolution so its edges stay sharp).
 - **Fin XL, white:** white at **10%**, masked by the logo's shape, oversized on purpose, with its tip pointing up into the blue.
-- **Desk and tablet:** about 1100px, its tip at the sidebar's right edge about halfway down, sweeping down and off the left edge behind the app list.
+- **Desk and tablet:** about 1100px, anchored to the foot of the window: its tip about 400px above the bottom near the sidebar's right edge, its body running off the bottom and on under the sheet, as if too big to fit.
 - **Phone:** about 700px, its tip near the top right, sweeping behind the greeting.
 - One fin per screen, only on the ground, never on the sheet, never moving, and never coloured. Under *Increase contrast* it goes.
 
