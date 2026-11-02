@@ -1,12 +1,13 @@
 # HR
 
-**Purpose:** keeps each person's HR record (notes and performance reviews) private to the people allowed to see it.
+**Purpose:** keeps each person's HR record (notes, reports and performance reviews) private to the people allowed to see it.
 
 HR keeps its records in its own database (`HR_DATABASE_URL`, migrations in `hr-database/migrations`); unset, HR stays switched off. Its levels and restrictions are in [docs/apps.md](../../../docs/apps.md).
 
 ## Features
 - `team` — the people this person may see in HR, with their latest review (`/hr`).
-- `person` — one person's HR file: notes (add, withdraw), reviews and details (`/hr/people/[id]`).
+- `person` — one person's HR file: notes of a kind (add, withdraw), reviews and details (`/hr/people/[id]`). Opening it reads the reports waiting for the reader's sites.
+- `report` — quick reports on the people you manage (`/hr/report`), and their home-page count for the centre managers of the site they came from ([D22](../../../docs/decisions.md)).
 - `reviews` — performance reviews: start, write, share and see one (`/hr/reviews/[id]`, started from a person's file).
 - `activity` — who opened which HR records, and when (`/hr/activity`).
 - `export` — a person's HR records as one download for subject access (`/hr/people/[id]/export`).
@@ -14,7 +15,7 @@ HR keeps its records in its own database (`HR_DATABASE_URL`, migrations in `hr-d
 - `me` — what HR has shared with a person, for Turnfin Me: notes and reviews, logging that read, acknowledging a review. Reached through `index.ts`.
 - `workspace` — the HR frame, its one page list (`pages.ts`, for the page bar and the starter page `/hr/overview`) and the access check (`src/app/hr/layout.tsx`).
 
-`shared/` holds what two or more features use: the HR database and its configuration, the access check, statuses, the column lists, the access log and the subject check (`records.ts`), write helpers (`writes.ts`) and the dialogs' kit.
+`shared/` holds what two or more features use: the HR database and its configuration, the access check, statuses and note kinds, the reports waiting to be read (`reports.ts`), the column lists, the access log and the subject check (`records.ts`), write helpers (`writes.ts`) and the dialogs' kit.
 
 ## Front door (index.ts)
 - `hrConfigured()` — whether the HR database is set up.
@@ -32,11 +33,11 @@ HR's starter-page item counts Core's `StaffDetailChangeRequest`, and a person's 
 - Listens to: none.
 
 ## Registration (module.ts)
-- Starter page items (`registerHomeCard`; Home counts the ones that need the person): details changes to check.
+- Starter page items (`registerHomeCard`; Home counts the ones that need the person): details changes to check, and staff reports to read.
 - Menu entry, levels and permissions: `manifest.ts`, listed in `src/app/modules.ts`. Only a superadmin gives HR.
 
 ## Permissions
-- `hr.records.read`, `hr.notes.write`, `hr.reviews.write`, `hr.details.write`.
+- `hr.reports.write` (no fresh sign-in: it reads nothing), `hr.records.read`, `hr.notes.write`, `hr.reviews.write`, `hr.details.write`.
 
 ## Depends on
 - Platform: the policy engine (`subjectsFor`, `requireCapFor`), audit, the database client, home cards.

@@ -5,6 +5,7 @@ import { requireHrActor } from "@/modules/hr/shared/access";
 import type { ReviewStatus } from "@/modules/hr/shared/constants";
 import { subjectsFor } from "@/lib/policy/session";
 import { logHrAccess } from "@/modules/hr/shared/records";
+import { unreadReports } from "@/modules/hr/shared/reports";
 
 /** Everyone whose HR record the reader covers, with their latest review. */
 export async function hrPeople(query = "") {
@@ -20,7 +21,8 @@ export async function hrPeople(query = "") {
       ORDER BY subject_user_id, created_at DESC`,
     [who.orgId, ids, who.id, who.superadmin],
   );
+  const unread = await unreadReports(db, who);
   await logHrAccess(db, who, ids, "HrPeople", null, "HR people list");
   const byId = new Map(latest.map((r) => [r.subjectUserId, r]));
-  return { who, people: people.map((p) => ({ ...p, latestReview: byId.get(p.id) ?? null })) };
+  return { who, people: people.map((p) => ({ ...p, latestReview: byId.get(p.id) ?? null, unreadReports: unread.get(p.id) ?? 0 })) };
 }

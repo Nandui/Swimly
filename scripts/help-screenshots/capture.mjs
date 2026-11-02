@@ -54,6 +54,7 @@ const plans = [
   { id: 'tasks-reports', as: 'maya', steps: [{ go: '/tasks/reports' }] },
   { id: 'tasks-template', steps: [{ go: '/tasks/templates/tpl_water' }] },
   { id: 'hr-note', steps: [{ go: '/hr' }, { confirmPassword: true }, { link: /^Ava Example/ }, { click: 'Add note' }], shot: 'dialog' },
+  { id: 'hr-report', as: 'maya', steps: [{ go: '/hr/report' }, { click: 'Report' }], shot: 'dialog' },
   { id: 'hr-review', steps: [{ go: '/hr' }, { confirmPassword: true }, { link: /^Ava Example/ }, { link: /review/ }] },
   // Swimmers, enrolment and parents
   { id: 'directory', steps: [{ go: '/students' }] },

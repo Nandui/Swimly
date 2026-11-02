@@ -162,16 +162,17 @@ Staff documents to read, write and approve, and who has read them. Every role is
 | *Extra:* Can approve documents | approve and publish colleagues' documents, never their own |
 
 ### HR
-*Module `hr` · `/hr/overview` · reach: the people they manage, or everyone · data: its own database*
+*Module `hr` · `/hr/overview` · reach: the people they manage, their sites, or everyone · data: its own database*
 
-Restricted staff files: details, employment, notes and performance reviews.
+Restricted staff files: details, employment, notes (each of a kind: General, Conduct, Performance, Attendance or Safety) and performance reviews, and quick reports from managers on duty ([D22](decisions.md)).
 
 | Level | Gives |
 | --- | --- |
-| Their team | files, notes and reviews for the people they manage |
+| Report | file reports on the people they manage; no files, not even their own reports |
+| Their sites | files, notes, reports and reviews for everyone who works at their sites |
 | Everyone | the same for everyone |
 
-Only a superadmin gives HR. Administrators never inherit it. Every read and write needs a fresh sign-in, is logged (`access_events`), and the subject export is superadmin-only.
+Only a superadmin gives HR. Administrators never inherit it. Every read and write needs a fresh sign-in, except filing a report, which reads nothing. Reads are logged (`access_events`), and the subject export is superadmin-only. A report is never shared with the person; the Their sites holders at the site it was filed from see it under Needs you until one of them opens that person's file.
 
 ## Managers
 

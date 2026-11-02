@@ -187,10 +187,10 @@ export const MODULE_GUIDES: HelpArticle[] = [
     slug: "hr-note", title: "Add an HR note", category: "hr", scopes: ["desk"],
     summary: "Record what happened, when and what was agreed, and choose who can read it.",
     keywords: ["hr", "note", "record", "conversation", "personal file", "manager", "shared"],
-    before: ["You need the HR: Their team level for people you manage, or Everyone. HR is restricted: you confirm your password and every read is logged."],
+    before: ["You need the HR: Their sites level for the people at your sites, or Everyone. HR is restricted: you confirm your password and every read is logged."],
     steps: [
       { title: "Open the person’s HR record", text: "In HR, search for the person under People and open their record." },
-      { title: "Choose Add note", text: "Choose Add note. Keep to facts: what happened, when and what was agreed." },
+      { title: "Choose Add note", text: "Choose Add note, then what it is about: Conduct, Performance, Attendance, Safety or General. Keep to facts: what happened, when and what was agreed." },
       { title: "Choose who can read it", text: "Only me keeps it to you; On their record lets anyone who can read their HR record see it; Shared with them also shows it to the person in Turnfin Me. Choose Add note." },
     ],
     result: "The note is saved against your name on their record. You can withdraw it later with a reason.",
@@ -198,10 +198,24 @@ export const MODULE_GUIDES: HelpArticle[] = [
     related: ["hr-review"], action: "hr",
   },
   {
+    slug: "hr-report", title: "Report an issue with a staff member", category: "hr", scopes: ["desk"],
+    summary: "Put a quick report on someone's HR file without opening it.",
+    keywords: ["hr", "report", "issue", "conduct", "performance", "attendance", "safety", "duty manager", "staff"],
+    before: ["You need the HR: Report level, or higher. You can report on the people you manage."],
+    steps: [
+      { title: "Open Report", text: "In HR, choose Report." },
+      { title: "Fill it in", text: "Choose the person and what it is about: Conduct, Performance, Attendance or Safety. Write what happened, keeping to facts, and when it happened." },
+      { title: "Send it", text: "Choose Send report. It goes on their HR file against your name. The person is not told." },
+    ],
+    result: "The centre managers for your site see it under Needs you until one of them reads it. You cannot open it again; if it is wrong, ask a centre manager to withdraw it.",
+    troubleshooting: [{ question: "Why isn't the person I want in the list?", answer: "You can report only on the people you manage. Ask an administrator to check that you are set as their manager under Admin › People." }],
+    related: ["hr-note"], action: "hr",
+  },
+  {
     slug: "hr-review", title: "Run a performance review", category: "hr", scopes: ["desk"],
     summary: "Start a review, write it as a draft and share it with the person to acknowledge.",
     keywords: ["hr", "review", "performance", "appraisal", "probation", "annual", "goals", "acknowledge"],
-    before: ["You need the HR: Their team level for people you manage, or Everyone."],
+    before: ["You need the HR: Their sites level for the people at your sites, or Everyone."],
     steps: [
       { title: "Start a review", text: "Open the person’s HR record and choose Start a review. Enter the review period, for example 2026 annual review, and choose Start draft." },
       { title: "Write the review", text: "Fill in the summary, strengths, goals for the next period and overall. It stays a draft that only you and superadmins can see; choose Save draft as you go." },

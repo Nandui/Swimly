@@ -7,7 +7,7 @@ import { CONTRACT_META, QUALIFICATION_STATE_META, hoursOf, type ContractType } f
 import { qualificationFile } from "@/lib/people/qualifications";
 import { REQUIREMENT_META, requirementSummary } from "@/lib/people/requirements";
 import { Button } from "@/components/shadcn/button";
-import { AddNote, hrConfigured, hrPerson, NOTE_VISIBILITY_META, REVIEW_STATUS_META, WithdrawNote } from "@/modules/hr/features/person";
+import { AddNote, hrConfigured, hrPerson, NOTE_KIND_META, NOTE_VISIBILITY_META, REVIEW_STATUS_META, WithdrawNote } from "@/modules/hr/features/person";
 import { StartReview } from "@/modules/hr/features/reviews";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
@@ -104,12 +104,15 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
                 <li key={n.id} className="pc-row">
                   {/* A note is prose: it keeps a readable width, and the tag and Withdraw wrap under it. */}
                   <div className="pc-row-body min-w-field!">
-                    <span className="pc-row-title">{n.authorName} · {formatDateTime(new Date(n.createdAt))}</span>
+                    <span className="pc-row-title">{n.via === "report" ? `Report from ${n.authorName}` : n.authorName} · {formatDateTime(new Date(n.createdAt))}</span>
+                    {n.occurredAt ? <span className="pc-row-hint">Happened {formatDateTime(new Date(n.occurredAt))}</span> : null}
                     <p className="text-sm whitespace-pre-wrap break-words">{n.body}</p>
                   </div>
                   <div className="pc-row-trail">
+                    <Tag meta={NOTE_KIND_META[n.kind]} />
                     <Tag meta={NOTE_VISIBILITY_META[n.visibility]} />
-                    {data.canWriteNotes && (n.authorId === who.id || who.superadmin) ? <WithdrawNote id={n.id} /> : null}
+                    {/* A reporter can't read their report back, so whoever keeps the file withdraws a wrong one (D22). */}
+                    {data.canWriteNotes && (n.authorId === who.id || who.superadmin || n.via === "report") ? <WithdrawNote id={n.id} /> : null}
                   </div>
                 </li>
               ))}

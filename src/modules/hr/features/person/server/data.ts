@@ -6,6 +6,7 @@ import { NOTE_COLUMNS, REVIEW_COLUMNS, type HrNote, type HrReview } from "@/modu
 import { mayFor } from "@/lib/policy/session";
 import { personFile } from "@/modules/contributions";
 import { coveredPerson, logHrAccess } from "@/modules/hr/shared/records";
+import { markReportsRead } from "@/modules/hr/shared/reports";
 
 /** Their details as HR keeps them (owner decision, 8 October 2026: staff
  *  details are HR's, not Admin's): position, manager, departments, employment
@@ -43,6 +44,7 @@ export async function hrPerson(userId: string) {
     canWriteDetails ? detailOptions(who.orgId, details.positionId) : null,
   ]);
   await logHrAccess(db, who, [userId], "HrRecord", userId, "HR record");
+  if (!self) await markReportsRead(db, who, userId);
   return {
     who, person, details, notes, reviews, file, options, canWriteDetails,
     // Nobody writes their own HR record.

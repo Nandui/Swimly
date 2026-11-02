@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.1.0 · 2 November 2026 · Report an issue with a staff member
+
+- **Report** in HR lets managers on duty put an issue with someone they manage on that person's HR file in under a minute: choose what it is about (Conduct, Performance, Attendance or Safety), write what happened and when, and send it. The person is not told, and you can't open the report again afterwards.
+- **Centre managers** see new reports from their site under Needs you on Home, and on the person in HR's People list, until they open that person's file. If a report is wrong, they withdraw it with a reason.
+- **HR notes** now say what they are about: General, Conduct, Performance, Attendance or Safety.
+- **HR access** has new levels: Report, Their sites (the files of everyone who works at your sites) and Everyone. Anyone who had Their team now has Report; ask a superadmin if you still need to read files.
+
 ## 3.0.3 · 2 November 2026 · A sharp fin
 
 - **The Turnfin fin** behind the list on the left now has a sharp, clean edge on every screen, including high-resolution laptops and monitors, where it looked soft before.

@@ -40,7 +40,7 @@ export default async function HrPeoplePage({ searchParams }: { searchParams: Pro
                   <Avatar size="lg" aria-hidden="true"><AvatarFallback>{nameInitials(p.name)}</AvatarFallback></Avatar>
                   <span className="pc-row-body">
                     <span className="pc-row-title">{p.name}</span>
-                    <span className="pc-row-hint">{p.jobTitle || "No job title"}{p.latestReview ? ` · latest review: ${p.latestReview.period}` : ""}</span>
+                    <span className="pc-row-hint">{p.jobTitle || "No job title"}{p.latestReview ? ` · latest review: ${p.latestReview.period}` : ""}{p.unreadReports ? ` · ${plural(p.unreadReports, "new report")}` : ""}</span>
                   </span>
                   <span className="pc-row-trail">
                     {p.latestReview ? <Tag meta={REVIEW_STATUS_META[p.latestReview.status]} /> : null}
