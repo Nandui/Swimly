@@ -6,7 +6,7 @@ Every app inside Turnfin: what it is for, its levels, where they reach, what it 
 
 ## Front of house
 
-These apps are being regrouped into **Classes** (Swim school with failed payments and short courses), **Finance requests** (Refunds and Coinage) and **Academy** ([D23](decisions.md), [roadmap step 8](roadmap.md#8-fewer-front-of-house-apps)). This page changes as each merge ships; failed payments are already in Swim school (step 8.1).
+These apps are being regrouped into **Classes** (Swim school with failed payments and short courses), **Finance requests** (Refunds and Coinage) and **Academy** ([D24](decisions.md), [roadmap step 8](roadmap.md#8-fewer-front-of-house-apps)). This page changes as each merge ships; failed payments are already in Swim school (step 8.1).
 
 ### Swim school
 *Module `activities` · starter page `/swim-school` · reach: sites · data: `activities.prisma`*
@@ -21,7 +21,7 @@ Swimmers, classes, assessments and failed payments at the desk, and the swim sch
 
 Connects: class commitments for Rota; the member directory and history for Short courses; site summaries; home items; the parent app's API.
 
-**Failed payments** (`/payments`, on the Overview; D21, moved here by D23): the direct debits that failed each month, followed up by reception until each is recovered. Legend stays the billing system: money is taken there, never in Turnfin. A failure is **To contact**, **Contacted**, **Paid at the desk**, **New mandate set up** or **Place cancelled**. Only rows whose member number belongs to a swimmer on Turnfin are tracked; gym memberships and unknown numbers are left out. While one is open, the swimmer's profile shows "Payment failed".
+**Failed payments** (`/payments`, on the Overview; D21, moved here by D24): the direct debits that failed each month, followed up by reception until each is recovered. Legend stays the billing system: money is taken there, never in Turnfin. A failure is **To contact**, **Contacted**, **Paid at the desk**, **New mandate set up** or **Place cancelled**. Only rows whose member number belongs to a swimmer on Turnfin are tracked; gym memberships and unknown numbers are left out. While one is open, the swimmer's profile shows "Payment failed".
 
 Who can book an assessment: programmes run in the order set on the Programmes page (Water Safety and Fun, Swimming Skills, Rookie Lifesaving). A swimmer with a place in a class can be booked only for an assessment of that programme or a later one, never an earlier one; with places in two programmes, the later counts. The session's age range must fit too. The desk and the parent app's API refuse the booking, and the API's `assessment-sessions/{id}/children` tells the app which children can book and why not (`shared/assessments/programme-rule.ts`).
 
@@ -152,7 +152,7 @@ Staff documents to read, write and approve, and who has read them. Every role is
 | *Extra:* Can approve documents | approve and publish colleagues' documents, never their own |
 
 ### HR
-*Module `hr` · `/hr/overview` · reach: the people they manage, their sites, or everyone · data: its own database*
+*Module `hr` · `/hr/overview` · reach: the people they manage, their sites, or everyone · data: its own schema, `turnfin_hr`, in the main database*
 
 Restricted staff files: details, employment, notes (each of a kind: General, Conduct, Performance, Attendance or Safety) and performance reviews, and quick reports from managers on duty ([D22](decisions.md)).
 

@@ -21,9 +21,9 @@ import { roleColumns } from "../src/lib/staff/levels";
 import { seedTasks } from "./sandbox-tasks";
 
 export const SANDBOX_PASSWORD = "sandbox-turnfin-2026";
-// SANDBOX_DB_PORT moves the three databases (main, then Docs and HR on the next two ports), for a second sandbox.
+// SANDBOX_DB_PORT moves the two databases (main, then Docs on the next port), for a second sandbox.
 const DB_PORT = Number(process.env.SANDBOX_DB_PORT ?? 54391);
-const PORTS = { main: DB_PORT, docs: DB_PORT + 1, hr: DB_PORT + 2, app: Number(process.env.SANDBOX_PORT ?? 3100) };
+const PORTS = { main: DB_PORT, docs: DB_PORT + 1, app: Number(process.env.SANDBOX_PORT ?? 3100) };
 
 async function serve(name: string, port: number, migrate: (db: PGlite) => Promise<void>) {
   const db = new PGlite();
@@ -38,15 +38,14 @@ const mainUrl = await serve("main", PORTS.main, async (db) => {
   for (const folder of readdirSync("prisma/migrations").filter((name) => /^\d/.test(name)).sort()) {
     await db.exec(readFileSync(`prisma/migrations/${folder}/migration.sql`, "utf8"));
   }
+  // HR is the turnfin_hr schema in the main database (D23).
+  for (const file of readdirSync("hr-database/migrations").sort()) await db.exec(readFileSync(`hr-database/migrations/${file}`, "utf8"));
+  // HR's migrations set search_path on this one session; the rest of Turnfin lives in public.
+  await db.exec("SET search_path = public");
 });
 const docsUrl = await serve("docs", PORTS.docs, async (db) => {
   for (const file of readdirSync("docs-database/migrations").sort()) await db.exec(readFileSync(`docs-database/migrations/${file}`, "utf8"));
 });
-const hrUrl = existsSync("hr-database/migrations")
-  ? await serve("hr", PORTS.hr, async (db) => {
-      for (const file of readdirSync("hr-database/migrations").sort()) await db.exec(readFileSync(`hr-database/migrations/${file}`, "utf8"));
-    })
-  : null;
 
 // ---------------------------------------------------------------------------
 // A fictional leisure group
@@ -144,7 +143,7 @@ await seedTasks(prisma, ORG, roles);
 const seedModule = "./sandbox-seed.ts";
 if (existsSync(new URL(seedModule, import.meta.url))) {
   const extra = await import(seedModule) as { seed: (ctx: { prisma: PrismaClient; docsUrl: string; hrUrl: string | null; roles: Record<string, string> }) => Promise<void> };
-  await extra.seed({ prisma, docsUrl, hrUrl, roles });
+  await extra.seed({ prisma, docsUrl, hrUrl: mainUrl, roles });
 }
 await prisma.$disconnect();
 
@@ -154,7 +153,6 @@ const env = {
   DATABASE_URL: mainUrl, DIRECT_URL: mainUrl, DOCS_DATABASE_URL: docsUrl, DOCS_DIRECT_URL: docsUrl,
   // Each PGlite is one Postgres session: parallel connections would cross their queries.
   DATABASE_POOL_MAX: "1",
-  ...(hrUrl ? { HR_DATABASE_URL: hrUrl, HR_DIRECT_URL: hrUrl } : {}),
   AUTH_SECRET: "sandbox-only-secret-not-for-deployment-0000", AUTH_TRUST_HOST: "true",
   DEV_AUTH_BYPASS: "", NEXT_TELEMETRY_DISABLED: "1",
   // Turnfin Me (apps/me, port 3101) against this sandbox. Codes print here.

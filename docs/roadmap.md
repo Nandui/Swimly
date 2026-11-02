@@ -88,7 +88,7 @@ Each follows "Adding an app" in [apps.md](apps.md) and the checklist in [../AGEN
 
 ## 8. Fewer front-of-house apps
 
-Swim school, Short courses, Refunds, Coinage and Payments become **Classes**, **Finance requests** and **Academy** ([D23](decisions.md)). Smallest first, each shipped and checked on `main` before the next starts:
+Swim school, Short courses, Refunds, Coinage and Payments become **Classes**, **Finance requests** and **Academy** ([D24](decisions.md)). Smallest first, each shipped and checked on `main` before the next starts:
 
 1. **Payments into Classes** (built 2 November 2026, 3.2.0). Its pages and home items moved into the swim school's module and frame (Failed payments on its Overview); Payments' Use went to Desk, its Manage to Manage. Its tables moved into `activities.prisma` with their names, so nothing was copied.
 2. **Finance requests.** One app with refund and coinage requests: new `FinanceRequest` tables with a detail table per kind, one flow, one queue for finance. Rows are copied from the Refunds and Coinage tables.

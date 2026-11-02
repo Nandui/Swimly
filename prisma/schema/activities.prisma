@@ -862,7 +862,7 @@ model LegendAgreementPrice {
   updatedByName String?
 }
 
-// Failed payments (owner, 2 November 2026; part of the swim school since D23): the direct debits that failed each month, from the bank's
+// Failed payments (owner, 2 November 2026; part of the swim school since D24): the direct debits that failed each month, from the bank's
 // failure sheet until reception has recovered each one. Legend stays the billing system: Turnfin
 // never takes money or changes a mandate, it only keeps who was contacted and how each ended.
 // Sites, people and swimmers are other owners' and read only through their functions, so the

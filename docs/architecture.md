@@ -59,7 +59,7 @@ Every app has the same six parts, whatever its size.
 | **Plug** | `module.ts`, loaded by `src/modules/server.ts` | what the app gives the platform: home items, site summaries, person-file sections, subject records, commitments, listeners |
 | **Front door** | `index.ts` | the few functions other apps and the front may call; functions and types only |
 | **Events** | `events.ts` | what the app announces after something has happened |
-| **Own data** | `prisma/schema/<id>.prisma`, or its own database (Docs, HR) | its tables; other apps keep only its ids |
+| **Own data** | `prisma/schema/<id>.prisma`, its own database (Docs) or its own schema (HR) | its tables; other apps keep only its ids |
 | **Own tests** | beside the code | its rules, front door and events, with other apps faked |
 
 Each module folder also has a `README.md` for coders (features, front door, data, events, permissions, dependencies). Its page list, `features/workspace/pages.ts`, builds both its pages in the frame and its starter page (`ModuleStart`).
@@ -245,15 +245,15 @@ Rules for every connected product:
 
 | Database | Setting | Holds | Migrations |
 | --- | --- | --- | --- |
-| Main | `DATABASE_URL` | the platform and every app except Docs and HR | `prisma/migrations`, schema split by owner in `prisma/schema/*.prisma` |
+| Main | `DATABASE_URL` | the platform and every app except Docs; HR in its own schema (below) | `prisma/migrations`, schema split by owner in `prisma/schema/*.prisma` |
 | Docs | `DOCS_DATABASE_URL` | Docs' documents, teams and reading | `docs-database`, plain SQL, production only |
-| HR | `HR_DATABASE_URL` | staff files, notes, reviews, `access_events`; ids only, never permissions | `hr-database/migrations`, plain SQL, production only. Unset, HR is off |
+| HR, schema `turnfin_hr` in Main ([D23](decisions.md)) | `DATABASE_URL` | staff files, notes, reviews, `access_events`; ids only, never permissions | `hr-database/migrations`, plain SQL, wherever the main database is migrated |
 
 Prisma 7: the client is generated into `src/generated/prisma`, uses the `@prisma/adapter-pg` driver adapter, and the datasource is in `prisma.config.ts`. Every table has one owner, named by its schema file: `core.prisma` and `base.prisma` are the platform's; each other file is its app's. Environments, previews and migrations in practice are in [operations.md](operations.md).
 
 ## Activity types
 
-`src/modules/activities/shared/types.ts` defines `ACTIVITY_TYPES`. Swim school is the only one (features `progression`, `assessments`, `parentApp`, `waitlists`, `cover`). Short courses become the second ([D23](decisions.md)). A second type gives `Programme` an additive `activityType` column and makes screens ask `hasFeature` instead of assuming levels and competencies exist.
+`src/modules/activities/shared/types.ts` defines `ACTIVITY_TYPES`. Swim school is the only one (features `progression`, `assessments`, `parentApp`, `waitlists`, `cover`). Short courses become the second ([D24](decisions.md)). A second type gives `Programme` an additive `activityType` column and makes screens ask `hasFeature` instead of assuming levels and competencies exist.
 
 ## Known gaps
 

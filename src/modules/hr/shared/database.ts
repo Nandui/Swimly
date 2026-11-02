@@ -3,7 +3,7 @@ import { Pool, type PoolClient, type QueryResultRow } from 'pg';
 import { poolMax, postgresConnectionString } from '@/lib/postgres-connection';
 import { hrStorageConfig } from '@/modules/hr/shared/storage-config';
 
-/** The HR database connection. Plain SQL in schema `turnfin_hr`; identity and
+/** HR's connection: the main database, plain SQL in schema `turnfin_hr` (D23); identity and
  *  access decisions come from the main database and the policy engine, never
  *  from here. Tests replace this module with a PGlite-backed one. */
 export type HrSql = { query<T = Record<string, unknown>>(sql: string, params?: unknown[]): Promise<T[]> };

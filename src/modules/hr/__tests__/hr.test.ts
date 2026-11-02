@@ -262,19 +262,16 @@ test("the centre managers of the report's site see it under Needs you until one 
   assert.equal((await actions.withdrawNote(filed.id, "Synthetic: wrong person")).ok, true, "a reporter can't, so the file's keeper withdraws it");
 });
 
-test("HR is on only when its own database is set, and refuses one shared with Turnfin", () => {
+test("HR is on whenever the main database is set (D23)", () => {
   const { hrConfigured } = serverModule<typeof import("@/modules/hr")>("src/modules/hr/shared/database.ts", { "server-only": {} });
-  const keys = ["HR_DATABASE_URL", "HR_DIRECT_URL", "HR_DB_DATABASE_URL", "HR_DB_DATABASE_URL_UNPOOLED", "DATABASE_URL", "DIRECT_URL", "DATABASE_URL_UNPOOLED", "DOCS_DATABASE_URL", "DOCS_DIRECT_URL"] as const;
-  const saved = Object.fromEntries(keys.map((k) => [k, process.env[k]]));
+  const saved = process.env.DATABASE_URL;
   try {
-    for (const k of keys) delete process.env[k];
-    assert.equal(hrConfigured(), false, "unset: HR says it is not set up, and nothing else is affected");
+    delete process.env.DATABASE_URL;
+    assert.equal(hrConfigured(), false, "no database: HR says it is not set up, and nothing else is affected");
     process.env.DATABASE_URL = "postgres://synthetic@main.example.invalid/turnfin";
-    process.env.HR_DATABASE_URL = "postgres://synthetic@hr.example.invalid/hr";
     assert.equal(hrConfigured(), true);
-    process.env.HR_DATABASE_URL = "postgres://synthetic@main.example.invalid/turnfin";
-    assert.throws(() => hrConfigured(), /own database/);
   } finally {
-    for (const k of keys) if (saved[k] === undefined) delete process.env[k]; else process.env[k] = saved[k];
+    if (saved === undefined) delete process.env.DATABASE_URL; else process.env.DATABASE_URL = saved;
   }
 });
+
