@@ -1,4 +1,4 @@
-import { CircleCheck, CirclePause, Clock3, HeartPulse, XCircle } from "lucide-react";
+import { CircleAlert, CircleCheck, CirclePause, Clock3, HeartPulse, XCircle } from "lucide-react";
 import type { StudentStatus } from "@/generated/prisma/client";
 import { ageInYears } from "@/lib/format";
 import type { StatusMeta } from "@/lib/status";
@@ -10,6 +10,12 @@ export const MEDICAL_STATUS_META = {
 /** One map per enum. Adding a status to the schema is a type error here until
  *  it has a label, a tone and an icon, which is how the untinted status gets
  *  caught by the compiler rather than by a reviewer. */
+/** A notice another module raised about the swimmer (a failed payment): orange, it needs raising
+ *  with the family. The notice's own words replace the label. */
+export const MEMBER_NOTICE_META = {
+  notice: { label: "Needs raising", color: "orange", icon: CircleAlert },
+} as const satisfies Record<string, StatusMeta>;
+
 export const STUDENT_STATUS_META: Record<StudentStatus, StatusMeta> = {
   ACTIVE: { label: "Active", color: "green", icon: CircleCheck },
   INACTIVE: { label: "Inactive", color: "gray", icon: CirclePause },

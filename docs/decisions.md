@@ -6,6 +6,12 @@ The decisions Turnfin 2.0 stands on, newest first. Each says what was decided, w
 
 ---
 
+### D21 · 2 November 2026 · Payments: failed direct debits, followed up at the desk
+
+**Payments** is a new app in Front of house. Each month the bank's failure sheet is uploaded (Manage) and every failed direct debit on it, swim lessons and gym memberships alike, goes on a list per site. Reception contacts each member, logs every attempt, and closes it as **Paid at the desk**, **New mandate set up** or **Place cancelled**; there is no write-off. A failure whose member number belongs to a swimmer shows "Payment failed" on that swimmer's profile until it is closed. Legend stays the billing system: the money and the mandate are handled there, never in Turnfin.
+**Why:** the monthly sheet was followed up on paper, so nobody could see who had been contacted or what was still owed.
+**Follows:** [apps.md](apps.md#payments) and `src/modules/payments/README.md`. Two additive plug changes in the platform: the member directory gains `byNumbers`, and `registerMemberNotices` lets an app put a notice on a swimmer's profile without the swim school importing it. New tables `payment_*`, additive.
+
 ### D20 · 1 November 2026 · Turnfin Sheet replaces Turnfin Glass
 
 The 2.0 design is **Turnfin Sheet**: the logo's blue (#0062B1) as the ground, the work on one white page that floats on it, the logo's fin drawn oversized in white on the blue as its only texture, Manrope type, and colour on the page only for needs action, done, serious and live. It replaces Turnfin Glass (D13), which the owner found confusing, not uniform, too like Apple, too grey and not a leisure centre. It was chosen from screenshot-checked mockups on the new frame (D19), after Depth, Pool tile, Pace clock and Night were tried (https://claude.ai/artifact/QmVi8aMcECQzQxNNrgEKe5).
@@ -126,5 +132,5 @@ The platform (sign-in, people, sites, access, audit, events, email, the API tool
 
 ### D1 · Apps in the catalogue
 
-The apps are those in [apps.md](apps.md): Swim school, Pool deck and Analytics (one module); Short courses with the Academy; Refunds; Coinage; Tasks; Incidents; Rota; Training; Docs; HR; CCTV log; Site Monitoring; Purchasing; Stock; Admin. Short courses book people from the swim school's member records rather than keeping their own.
+The apps are those in [apps.md](apps.md): Swim school, Pool deck and Analytics (one module); Short courses with the Academy; Refunds; Coinage; Tasks; Incidents; Rota; Training; Docs; HR; CCTV log; Site Monitoring; Purchasing; Stock; Payments; Admin. Short courses book people from the swim school's member records rather than keeping their own.
 **Follows:** a new app is a new entry here.

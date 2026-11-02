@@ -1,0 +1,131 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { logAudit } from "@/lib/audit";
+import { liveSitesOf } from "@/lib/directory";
+import { today } from "@/lib/format";
+import { sitesFor } from "@/lib/policy/session";
+import { prisma } from "@/lib/prisma";
+import { readWorkbook } from "@/lib/xlsx";
+import { members, type MemberHit } from "@/modules/contributions";
+import { covers, requirePaymentsActor, type PaymentsActor } from "@/modules/payments/shared/access";
+import { MONTH, monthFromFileName, parseFailureSheets, PaymentError, siteForClub, type SheetRow } from "@/modules/payments/shared/rules";
+import { failureLabel } from "@/modules/payments/shared/service";
+import { euro, monthLabel, PAYMENT_ACTIONS } from "@/modules/payments/shared/types";
+
+/** The monthly failure sheet (owner, 2 November 2026): the bank's list of direct debits that
+ *  failed, one tab per site. A count first, which writes nothing; then the upload, which reads the
+ *  file again and adds each debit not already in for that month, at the sites where this person
+ *  holds `payments.manage`. Uploading the same sheet twice adds nothing the second time. */
+
+const MAX_BYTES = 10 * 1024 * 1024;
+
+export type SheetPreview = {
+  fileName: string; month: string; monthLabel: string;
+  /** Debits on the sheet; those new for the month at the person's sites; those already in. */
+  rows: number; added: number; already: number; addedCents: number; swimmers: number;
+  bySite: { name: string; added: number; cents: string }[];
+  /** Club names that match no site: nothing is saved until the sheet or the sites are put right. */
+  unknownClubs: string[];
+  /** Debits at sites this person does not manage, left for someone who does. */
+  elsewhere: number;
+};
+
+async function readSheet(formData: FormData): Promise<{ ok: true; fileName: string; month: string; rows: SheetRow[] } | { ok: false; error: string }> {
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) return { ok: false, error: "Choose the failure sheet (.xlsx)." };
+  if (!/\.xlsx$/i.test(file.name)) return { ok: false, error: "Upload the failure sheet as an Excel file (.xlsx)." };
+  if (file.size > MAX_BYTES) return { ok: false, error: "That file is larger than a failure sheet should be (10 MB)." };
+  const month = String(formData.get("month") ?? "") || monthFromFileName(file.name, today());
+  if (!MONTH.test(month)) return { ok: false, error: "Choose the month these direct debits were collected." };
+  if (month > today().slice(0, 7)) return { ok: false, error: "That month has not happened yet. Choose the month the debits were collected." };
+  try {
+    const rows = parseFailureSheets((await readWorkbook(file)) as { sheet: string; data: unknown[][] }[]);
+    if (!rows.length) return { ok: false, error: "No failed debits were found on that sheet." };
+    return { ok: true, fileName: file.name, month, rows };
+  } catch (error) {
+    if (error instanceof PaymentError) return { ok: false, error: error.message };
+    return { ok: false, error: "That file could not be read. Save it again as .xlsx and upload it." };
+  }
+}
+
+/** A debit within its month: the same reference can fail twice, for different amounts. */
+const debitKey = (d: { reference: string; amountCents: number; copy: number }) => `${d.reference}|${d.amountCents}|${d.copy}`;
+
+/** Which debits go where: each row's site, whether this person manages it, whether it is already
+ *  in for the month, and the swimmer holding its member number (when the swim school is on). */
+async function plan(who: PaymentsActor, month: string, rows: SheetRow[]) {
+  const [sites, manage, existing, directory] = await Promise.all([
+    liveSitesOf(who.orgId), sitesFor("payments.manage"),
+    prisma.paymentFailure.findMany({ where: { orgId: who.orgId ?? "", month, reference: { in: rows.map((r) => r.reference) } }, select: { reference: true, amountCents: true, copy: true } }),
+    members(),
+  ]);
+  const have = new Set(existing.map(debitKey));
+  const unknown = new Set<string>();
+  const placed = rows.map((row) => ({ row, site: siteForClub(row.club, sites) }));
+  for (const p of placed) if (!p.site) unknown.add(p.row.club);
+  const mine = placed.filter((p) => p.site && covers(manage, p.site.id));
+  const fresh = mine.filter((p) => !have.has(debitKey(p.row))) as { row: SheetRow; site: { id: string; name: string } }[];
+  const swimmers = directory ? await directory.byNumbers(fresh.map((p) => p.row.memberNumber).filter(Boolean)) : new Map<string, MemberHit>();
+  return { unknown: [...unknown].sort(), elsewhere: placed.length - unknown.size - mine.length, already: mine.length - fresh.length, fresh, swimmers };
+}
+
+export async function previewFailureSheet(formData: FormData): Promise<{ ok: true; preview: SheetPreview } | { ok: false; error: string }> {
+  const who = await requirePaymentsActor();
+  if (!who.manage) return { ok: false, error: "Uploading the failure sheet needs Payments: Manage." };
+  const read = await readSheet(formData);
+  if (!read.ok) return read;
+  const p = await plan(who, read.month, read.rows);
+  const bySite = new Map<string, { name: string; added: number; cents: number }>();
+  for (const { row, site } of p.fresh) {
+    const s = bySite.get(site.id) ?? { name: site.name, added: 0, cents: 0 };
+    bySite.set(site.id, { ...s, added: s.added + 1, cents: s.cents + row.amountCents });
+  }
+  return { ok: true, preview: {
+    fileName: read.fileName, month: read.month, monthLabel: monthLabel(read.month),
+    rows: read.rows.length, added: p.fresh.length, already: p.already, addedCents: p.fresh.reduce((t, f) => t + f.row.amountCents, 0),
+    swimmers: p.fresh.filter((f) => p.swimmers.has(f.row.memberNumber)).length,
+    bySite: [...bySite.values()].map((s) => ({ name: s.name, added: s.added, cents: euro(s.cents) })),
+    unknownClubs: p.unknown, elsewhere: p.elsewhere,
+  } };
+}
+
+export async function uploadFailureSheet(formData: FormData): Promise<{ ok: true; added: number; month: string } | { ok: false; error: string }> {
+  const who = await requirePaymentsActor();
+  if (!who.manage) return { ok: false, error: "Uploading the failure sheet needs Payments: Manage." };
+  const read = await readSheet(formData);
+  if (!read.ok) return read;
+  const operationId = String(formData.get("operationId") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(operationId)) return { ok: false, error: "Refresh the page and upload the sheet again." };
+  if (!who.orgId) return { ok: false, error: "Your account belongs to no organisation." };
+  const orgId = who.orgId;
+  // The same press twice (a retry) saves once: the import's id is the form's operation.
+  const done = await prisma.paymentImport.findUnique({ where: { id: operationId }, select: { added: true, month: true, uploadedById: true } });
+  if (done) return done.uploadedById === who.id ? { ok: true, added: done.added, month: done.month } : { ok: false, error: "Refresh the page and upload the sheet again." };
+  const p = await plan(who, read.month, read.rows);
+  if (p.unknown.length) return { ok: false, error: `No site matches ${p.unknown.join(", ")}. Check the club names on the sheet.` };
+  if (!p.fresh.length) return { ok: false, error: p.already ? "Every debit on this sheet is already in for that month." : "None of these debits are at a site you manage." };
+  const added = await prisma.$transaction(async (tx) => {
+    // Only debits still not in: anything another upload added since the count is left as it is.
+    const since = new Set((await tx.paymentFailure.findMany({ where: { orgId, month: read.month, reference: { in: p.fresh.map((f) => f.row.reference) } }, select: { reference: true, amountCents: true, copy: true } })).map(debitKey));
+    const rows = p.fresh.filter((f) => !since.has(debitKey(f.row)));
+    await tx.paymentImport.create({ data: {
+      id: operationId, orgId, month: read.month, fileName: read.fileName.slice(0, 200), rows: read.rows.length, added: rows.length,
+      totalCents: rows.reduce((t, f) => t + f.row.amountCents, 0), uploadedById: who.id, uploadedByName: who.name,
+    } });
+    for (const { row, site } of rows) {
+      const failure = await tx.paymentFailure.create({ data: {
+        orgId, siteId: site.id, importId: operationId, month: read.month, reference: row.reference.slice(0, 80), copy: row.copy,
+        memberNumber: row.memberNumber.slice(0, 40), memberId: p.swimmers.get(row.memberNumber)?.id ?? null,
+        name: row.name.slice(0, 160), amountCents: row.amountCents, returnCode: row.returnCode.slice(0, 10), returnReason: row.returnReason.slice(0, 300),
+      } });
+      await tx.paymentFailureEvent.create({ data: { orgId, failureId: failure.id, operationId, actorId: who.id, actorName: who.name, action: "import", note: read.fileName.slice(0, 200) } });
+      await logAudit({ actorId: who.id, actorName: who.name, action: "import", entity: "PaymentFailure", entityId: failure.id, clubId: site.id,
+        summary: `${failureLabel(failure)}. ${PAYMENT_ACTIONS.import} ${read.fileName}`.slice(0, 1000) }, tx);
+    }
+    return rows.length;
+  }, { timeout: 120_000 });
+  revalidatePath("/payments", "layout");
+  revalidatePath("/students/[id]", "page");
+  return { ok: true, added, month: read.month };
+}
