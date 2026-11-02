@@ -17,8 +17,8 @@ const SITE_PAGES = new Set(['/rota', '/rota/today', '/rota/bookings']);
 export function RotaShell({ who, sites, children }: { who: RotaActor; sites: { id: string; name: string }[]; children: ReactNode }) {
   const pathname = usePathname();
   const site = useSearchParams().get('site');
-  const links = rotaPages(who.run).map(({ href, label, icon, match }) => ({
-    href: site && SITE_PAGES.has(href) ? `${href}?${new URLSearchParams({ site })}` : href, label, icon, active: match(pathname),
+  const links = rotaPages(who.run).map(({ href, label, icon, place, match }) => ({
+    href: site && SITE_PAGES.has(href) ? `${href}?${new URLSearchParams({ site })}` : href, label, icon, place, active: match(pathname),
   }));
   return (
     <ModuleShell module="Rota" id="rota" who={who} links={links} scopeNote="Only the sites you cover"

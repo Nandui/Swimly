@@ -402,6 +402,43 @@ export type Member = {
 /** A search result: enough to tell two people with the same name apart. */
 export type MemberHit = Pick<Member, "id" | "memberNumber" | "firstName" | "lastName" | "dateOfBirth" | "active" | "contactName">;
 /** A person who is not on the records yet. Empty strings mean "not given". */
+/** One search across the person's apps (D19; roadmap step 4): what each app can be searched
+ *  for, such as the swim school's members. Pages and apps are matched in the frame itself, and
+ *  people by the platform (src/lib/search). An app answers only with what this viewer may open,
+ *  and shows the least that names each hit: a name and a short line, never contact or medical
+ *  details. Opening a hit checks permission again. */
+export type SearchHit = { label: string; hint: string; href: string };
+export type SearchSource = {
+  /** The app answering (its manifest id). */
+  app: string;
+  /** At most 8 hits, best first. */
+  search(q: string, viewer: HomeViewer): Promise<SearchHit[]>;
+};
+
+const searchSources: SearchSource[] = [];
+
+/** One source per app; registering again replaces it. */
+export function registerSearch(source: SearchSource) {
+  const at = searchSources.findIndex((s) => s.app === source.app);
+  if (at >= 0) searchSources[at] = source;
+  else searchSources.push(source);
+}
+
+/** The hits from every app this person holds that is switched on. An app whose search fails is
+ *  left out, so one app never breaks the search. */
+export async function searchApps(q: string, moduleIds: readonly string[], viewer: HomeViewer): Promise<SearchHit[]> {
+  await modulesLoaded();
+  const lists = await Promise.all(searchSources.filter((s) => moduleIds.includes(s.app)).map(async (source) => {
+    try {
+      return (await appOn(source.app)) ? (await source.search(q, viewer)).slice(0, 8) : [];
+    } catch (error) {
+      console.error(`Search for ${source.app} failed`, error);
+      return [];
+    }
+  }));
+  return lists.flat();
+}
+
 export type NewMember = {
   firstName: string; lastName: string; dateOfBirth: string; memberNumber: string;
   contactName: string; contactEmail: string; contactPhone: string;

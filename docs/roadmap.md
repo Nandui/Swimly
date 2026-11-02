@@ -58,7 +58,7 @@ The model is in [architecture.md](architecture.md#access-who-can-do-what-where).
 - **One email outbox** (`src/lib/notify`): queue in the caller's transaction, deliver after commit, retry, audit, "Send again". Apps move one at a time: Refunds, Coinage, Incidents (gains retries), Purchasing (starts emailing approvers). Old queue tables stop receiving rows and stay readable.
 - **One file check** (`src/lib/files`): type by first bytes, a size limit, plain errors, used by Refunds, Tasks, Incidents, Training and Docs. Storage does not move.
 - The email-code check and the rate limit move from the three public APIs into the API toolkit; one date helper replaces the apps' own.
-- **One search** (D19): the `registerSearch` plug, with each app registering its pages and records (the swim school's members first) and people from the directory. Results respect permissions and show the least that names them.
+- **One search** (D19; built 2 November 2026, 3.0.0): the `registerSearch` plug, with the swim school's members first, people from the platform, and apps and pages matched in the frame. Results respect permissions and show the least that names them. Other apps register their records as they need to be found.
 
 Comments are not unified: task comments, course reviews, incident addenda and statements have different rules, and merging them would add a concept.
 
@@ -69,7 +69,7 @@ Comments are not unified: task comments, course reviews, incident addenda and st
 The design is approved: **Turnfin Sheet** (D20, 1 November 2026), written in [../DESIGN.md](../DESIGN.md). It replaces Turnfin Glass (D13), which is built and live (25 to 27 October 2026), so step 5 now re-themes that work rather than starting again. The build order is in DESIGN.md's "How it is built".
 
 - The theme and kit are re-themed first (the tokens in the theme file, the ground and fin, the page sheet, frame, page shell, states), then Home and the app frame, then each app's screens, one app per pull request.
-- The frame is the one worked out from the job (D19, [architecture.md](architecture.md#the-frame)): Home as one list of work, a sidebar that drills in, no top tabs, one shell. Each app's pull request brings its `pages.ts` to five work pages plus Set up (Training and Tasks have the most to fold into filters).
+- The frame is the one worked out from the job (D19, [architecture.md](architecture.md#the-frame); built 2 November 2026, 3.0.0): Home as one list of work, a sidebar that drills in, no top tabs, one shell, and every app at five work pages plus Set up, with the rest on its Overview.
 - The old look is removed as each part is replaced: no two designs in one screen, and none left at the end. Turnfin Me and the Academy booking site follow with their own pull requests.
 - The help centre's guides and screenshots are redone for the new screens.
 

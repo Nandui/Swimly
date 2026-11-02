@@ -6,6 +6,7 @@ import { FrameProvider } from '@/components/ui/frame';
 import { APP_VERSION } from '@/lib/app';
 import { toast } from '@/components/ui/toast';
 import { switchClub } from '@/lib/clubs/actions/clubs';
+import { searchEverything } from '@/lib/search/actions';
 import { allModules, MODULE_GROUPS } from '@/modules/registry';
 
 /** The signed-in person's modules, role and working site, set once by the
@@ -22,7 +23,7 @@ export function YourModulesProvider({ ids, role, site, picture = null, children 
     catch (error) { toast.error('Could not sign out. Try again.'); throw error; }
   }
   return (
-    <FrameProvider value={{ modules, groups: MODULE_GROUPS, role, site, picture, version: APP_VERSION, signOut: leave, switchSite: (id) => switchClub(id, { stay: true }), tools: <RolePreviewToggle /> }}>
+    <FrameProvider value={{ modules, groups: MODULE_GROUPS, role, site, picture, version: APP_VERSION, signOut: leave, switchSite: (id) => switchClub(id, { stay: true }), tools: <RolePreviewToggle />, search: searchEverything }}>
       {children}
     </FrameProvider>
   );

@@ -100,6 +100,10 @@ export type ModulePage = {
   icon: LucideIcon;
   /** One line on what the page is for, shown on the module's starter page. */
   description: string;
+  /** Where the frame lists it (DESIGN.md, The frame and navigation; D19): work pages (no place)
+   *  in the sidebar, five at most; `setup` under the app's one Set up item; `overview` only on the
+   *  app's Overview page, which lists every page. */
+  place?: "setup" | "overview";
 };
 
 const groupRank = (mod: ModuleManifest) => MODULE_GROUPS.findIndex((g) => g.key === mod.group);

@@ -10,7 +10,7 @@ export function shortCoursesPages(): (ModulePage & { match: (pathname: string) =
     { href: "/short-courses", label: "Courses", icon: CalendarRange, description: "Courses on and coming up: who is booked, who is waiting, registers and payment", match: (p) => p === "/short-courses" || /^\/short-courses\/(?!types|overview|academy)/.test(p) },
     { href: "/short-courses/academy", label: "Academy", icon: Award, description: "Lifeguard and swim teacher courses: candidates, checks, registers and results", match: (p) => p === "/short-courses/academy" || /^\/short-courses\/academy\/(?!types|calls)/.test(p) },
     { href: "/short-courses/academy/calls", label: "To call", icon: Phone, description: "People who held an Academy place online, to phone and take payment", match: (p) => p.startsWith("/short-courses/academy/calls") },
-    { href: "/short-courses/types", label: "Course list", icon: ListChecks, description: "The courses we offer, with their weeks and session length", match: (p) => p.startsWith("/short-courses/types") },
-    { href: "/short-courses/academy/types", label: "Academy list", icon: ListChecks, description: "The Academy courses we deliver, and what each asks of a candidate", match: (p) => p.startsWith("/short-courses/academy/types") },
+    { href: "/short-courses/types", label: "Course list", place: "setup" as const, icon: ListChecks, description: "The courses we offer, with their weeks and session length", match: (p) => p.startsWith("/short-courses/types") },
+    { href: "/short-courses/academy/types", label: "Academy list", place: "setup" as const, icon: ListChecks, description: "The Academy courses we deliver, and what each asks of a candidate", match: (p) => p.startsWith("/short-courses/academy/types") },
   ];
 }

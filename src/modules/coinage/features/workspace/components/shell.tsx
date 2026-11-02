@@ -12,7 +12,7 @@ export function CoinageShell({ who, children }: { who: CoinageActor; children: R
   const pathname = usePathname(), query = useSearchParams();
   // A request page, the new-request form and every status view sit under "Coinage requests".
   const view = pathname === '/coinage/overview' ? 'overview' : pathname === '/coinage' ? coinageListView(query, who.id) : 'requests';
-  const links = coinagePages(who).map(({ href, label, icon, view: page }) => ({ href, label, icon, active: page === view }));
+  const links = coinagePages(who).map(({ href, label, icon, place, view: page }) => ({ href, label, icon, place, active: page === view }));
   return (
     <ModuleShell module="Coinage" id="coinage" who={who} scopeNote="Your team's space" links={links} scrollKey={query.toString()}>
       {children}

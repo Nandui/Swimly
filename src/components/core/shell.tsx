@@ -22,7 +22,7 @@ export function CoreShell({ who, screens, children }: {
     { label: '', links: [{ href: '/core', label: 'Overview', icon: ADMIN_GROUPS[0].links[0].icon, active: pathname === '/core' }] },
     ...ADMIN_GROUPS.slice(1).map((g) => ({
       label: g.label,
-      links: g.links.filter((l) => screens.includes(l.key as CoreLinkKey)).map(({ href, label, icon }) => ({ href, label, icon, active: isOn(href) })),
+      links: g.links.filter((l) => screens.includes(l.key as CoreLinkKey)).map(({ href, label, icon, place }) => ({ href, label, icon, place, active: isOn(href) })),
     })).filter((g) => g.links.length),
   ];
   return (

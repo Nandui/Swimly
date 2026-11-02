@@ -16,8 +16,8 @@ export function TasksShell({ who, sites, home, openActions, children }: { who: T
   const pathname = usePathname();
   const site = useSearchParams().get('site');
   const keep = (href: string) => (site && SITE_PAGES.has(href) ? `${href}?${new URLSearchParams({ site })}` : href);
-  const links = tasksPages(who).map(({ href, label, icon, match }) => ({
-    href: keep(href), label: href === '/tasks/actions' && openActions ? `${label} · ${openActions}` : label, icon, active: match(pathname),
+  const links = tasksPages(who).map(({ href, label, icon, place, match }) => ({
+    href: keep(href), label: href === '/tasks/actions' && openActions ? `${label} · ${openActions}` : label, icon, place, active: match(pathname),
   }));
   return (
     <ModuleShell module="Tasks" id="tasks" who={who} links={links} scopeNote="Only the sites you cover"

@@ -96,7 +96,7 @@ Turnfin is one frame holding apps ([PRODUCT.md](PRODUCT.md)). What it shows is w
 - **One level of navigation on screen.** The sidebar (or, on phones, the tab bar) is the only navigation. There are no top tabs and no page bars.
 - **Home is the work.** One "Needs you" list across apps, each item naming its app, then today. There is no separate "Today" entry.
 - **Only your apps, in a fixed order.** Never ranked by use, so shared desks and training screenshots stay right.
-- **Five pages and Set up.** An app shows at most five work pages, then Set up after a separator, at Manage only.
+- **Five pages and Set up.** An app shows at most five work pages, then Set up after a separator. Each page has a place in its app's page list: a work page (the sidebar), `setup` (under Set up, which opens in place and shows only when the person may open one of its pages) or `overview` (reached from the app's Overview, which lists every page). The first work page is the Overview. `src/modules/module-pages.test.ts` checks every app.
 - **One app, no list.** A person with exactly one app lands straight in it, and its pages are the navigation.
 
 ### Desktop (1100px and wider)
@@ -111,7 +111,7 @@ Turnfin is one frame holding apps ([PRODUCT.md](PRODUCT.md)). What it shows is w
   - Then the page's content.
 - **Detail** opens beside the list in the same sheet: a list pane (400px) and a detail pane, split by a hairline. Quick actions sit at the foot of the detail pane.
 - **Confirmations** happen in place (the tag turns, a line says what happens next, with Undo), and a notification at the top right when the result is elsewhere.
-- **Search** opens from the sidebar's field or Ctrl K, as a white panel over a `scrim`. It finds pages, people and members the person may open.
+- **Search** opens from the sidebar's field (under the logo), Ctrl K or ⌘K, and the phone's white circle beside the tab bar, as a white panel over a `scrim`. It finds the person's apps and the open app's pages, people (for those who manage staff) and swimmers (for the swim school's desk): each hit is a name and one short line.
 
 ### Tablet and the pool deck (768px to 1099px)
 
@@ -208,7 +208,7 @@ Roadmap step 5, in this order. It re-themes the built Glass work rather than sta
 
 1. **The theme** (started 1 November 2026: these tokens, Manrope, the ground with the fin, the sheet, the sidebar and rail on the ground, and the white tab bar; the glass material is flattened to opaque fills until the kit step removes it). These tokens replace the Glass values in the theme file, in light and dark, mapped into `src/app/shadcn.css`; the `type-*` and layout tokens keep their names. Manrope is loaded with `next/font`. The fin's mask uses the logo from `public/brand/turnfin.png`. The glass material, lens filters and unused springs go. The file takes a plain name once nothing names `glass.css`.
 2. **The kit.** The components above, restyled in `src/components/ui-kit` on the shadcn primitives: `GlassRoot` and `Glass` become `Ground`, `Inspector` becomes `DetailPane`. The lint rules (AGENTS.md, "Enforcement") follow.
-3. **The frame.** `ModuleShell` becomes `Ground`, `Sidebar`, `PageSheet` and `TabBar`, with the drill-in frame of D19: the app's pages move from the toolbar's segmented control into the sidebar. `PageShell` and `PageHeader` are rebuilt in this design.
+3. **The frame** (built 2 November 2026, 3.0.0: the drill-in sidebar and the phone tab bar with search, no top tabs, Set up and the five-page check, one-app landing, the pool deck in the shared frame, Home's one list of work, and the phone header on the ground). `ModuleShell` becomes `Ground`, `Sidebar`, `PageSheet` and `TabBar`, with the drill-in frame of D19: the app's pages move from the toolbar's segmented control into the sidebar. `PageShell` and `PageHeader` are rebuilt in this design.
 4. **Home and the app frame,** then each app, one pull request each, checked in the running app at phone, tablet and desktop widths in light and dark.
 5. **Turnfin Me and the Academy booking site,** with their own copies of the theme and kit.
 

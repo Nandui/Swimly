@@ -10,7 +10,7 @@ import { paymentsPages } from '@/modules/payments/features/workspace/pages';
 export function PaymentsShell({ who, children }: { who: { id: string; name: string; manage: boolean }; children: ReactNode }) {
   const pathname = usePathname(), query = useSearchParams();
   const view = pathname === '/payments/overview' ? 'overview' : pathname === '/payments/upload' ? 'upload' : 'failures';
-  const links = paymentsPages(who).map(({ href, label, icon, view: page }) => ({ href, label, icon, active: page === view }));
+  const links = paymentsPages(who).map(({ href, label, icon, place, view: page }) => ({ href, label, icon, place, active: page === view }));
   return (
     <ModuleShell module="Payments" id="payments" who={who} scopeNote="Your sites" links={links} scrollKey={query.toString()}>
       {children}

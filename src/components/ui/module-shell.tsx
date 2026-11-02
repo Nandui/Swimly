@@ -3,39 +3,44 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
-import { ChevronDown, ChevronLeft, CircleHelp, House, LayoutGrid, type LucideIcon } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/shadcn/dropdown-menu';
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { ChevronLeft, ChevronRight, CircleHelp, House, LayoutGrid, Search, Settings2, type LucideIcon } from 'lucide-react';
+import { Button } from '@/components/shadcn/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/shadcn/collapsible';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/shadcn/dropdown-menu';
 import { AccountMenu } from '@/components/ui/account-menu';
 import { groupFrameModules, useFrame } from '@/components/ui/frame';
 import { Glass } from '@/components/ui-kit/glass';
+import { SearchDialog } from '@/components/ui/search-dialog';
 
-/** A page in the bar. The icon shows in the "More" menu; links handed over by a server page
- *  (the home page's) have none, because a component cannot cross to the client. */
-export type ModuleLink = { href: string; label: string; icon?: LucideIcon; active: boolean };
+/** A page of the open app (DESIGN.md, The frame and navigation; D19). Most pages are work pages,
+ *  listed in the sidebar (five at most, checked by module-pages.test.ts). `setup` pages sit under
+ *  the app's one Set up item, which only shows when the person may open one of them; `overview`
+ *  pages are reached from the app's Overview page, which lists every page. The icon shows in
+ *  menus; links handed over by a server page have none, because a component cannot cross to
+ *  the client. */
+export type ModuleLink = { href: string; label: string; icon?: LucideIcon; active: boolean; place?: 'setup' | 'overview' };
 export type ModuleLinkGroup = { label: string; links: ModuleLink[] };
 
-/** The one frame every app opens in (DESIGN.md, The frame and navigation): on desktop the
- *  floating glass sidebar of the person's apps, with their account at its foot; on tablet the same
- *  as a rail of symbols; on phones a glass tab bar. Above the page a sticky toolbar holds the
- *  app's pages as a glass segmented control and the app's tools in a glass group. Links are
- *  presentation; every page checks its permission again. The pool deck and Help use the same
- *  tf-shell/tf-frame with their own top bar and no sidebar or tab bar. The person's apps and the
- *  app's extra tools come from the frame context (useFrame). On phones the page's large title
- *  collapses: once it scrolls under the toolbar, the page bar folds away and the toolbar becomes
- *  one glass row with the title inline in the middle and the page's way back on the leading side
- *  (useLargeTitle; kit.css shows it only under 768px). */
+/** The one frame every app opens in (DESIGN.md, The frame and navigation; D19). One level of
+ *  navigation is on screen at a time, and there are no top tabs:
+ *  - On Home, the sidebar lists the person's apps. In an app, it drills in: "‹ Home", the app's
+ *    name, its work pages, and Set up last. A person with exactly one app sees only its pages.
+ *  - Phones have a tab bar instead: Home, the open app (which opens its pages) and Apps.
+ *  Above the page a sticky toolbar holds the app's tools. Links are presentation; every page
+ *  checks its permission again. On phones the page's large title collapses into the toolbar
+ *  once it scrolls under it (useLargeTitle). */
 export function ModuleShell({ module, id, current = id, who, links = [], groups, tools, scopeNote, contentClass = 'module-content', scrollKey = '', children }: {
   /** Display name, e.g. "Training". */
   module: string;
   /** Short id for the scope class and landmarks, e.g. "training". */
   id: string;
-  /** The module marked in the module bar ("home" on the home page). */
+  /** The module marked in the sidebar ("home" on the home page). */
   current?: string;
   who: { id: string; name: string };
   /** The module's own pages, as one list… */
   links?: ModuleLink[];
-  /** …or as several named groups (shown in order; the names are for the "More" menu). */
+  /** …or as several named groups (shown as one list, in order). */
   groups?: ModuleLinkGroup[];
   /** Module controls in the top bar, e.g. the swim school's site and swimmer search. */
   tools?: ReactNode;
@@ -49,25 +54,25 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
   const pathname = usePathname();
   const frame = useFrame();
   useEffect(() => { window.scrollTo({ top: 0 }); }, [pathname, scrollKey]);
-  const pageGroups = groups ?? [{ label: '', links }];
-  const pages = pageGroups.flatMap((group) => group.links);
-  const navRef = useRef<HTMLElement>(null), measureRef = useRef<HTMLDivElement>(null);
-  const { fit, measured } = useBarFit(navRef, measureRef, pages.length);
+  const pages = (groups ?? [{ label: '', links }]).flatMap((group) => group.links);
   const topRef = useRef<HTMLElement>(null);
   const inline = useLargeTitle(`${id}-main`, topRef, pathname);
   const railCurrent = current === 'core' ? 'admin' : current;
-  // Only the open page itself is the "page"; a link to one of its parents is "true".
-  const currentFor = (page: ModuleLink) => !page.active ? undefined : pathname === page.href.split('?')[0] ? 'page' as const : 'true' as const;
-  // The links past the fit, still under their group names, for "More".
-  const overflow = pageGroups.reduce<{ start: number; groups: ModuleLinkGroup[] }>((acc, group) => {
-    const hidden = group.links.filter((_, index) => acc.start + index >= fit);
-    return { start: acc.start + group.links.length, groups: hidden.length ? [...acc.groups, { label: group.label, links: hidden }] : acc.groups };
-  }, { start: 0, groups: [] }).groups;
+  const app = railCurrent === 'home' ? null : { name: module, pages };
+  // One search (D19): Ctrl K or ⌘K anywhere in the frame, the sidebar's field, or the phone's circle.
+  const [searching, setSearching] = useState(false);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); setSearching(true); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   return (
     <div className={`turnfin-module turnfin-${id} tf-shell`}>
       <a className="skip-link" href={`#${id}-main`}>Skip to content</a>
-      <Sidebar current={railCurrent} name={who.name} />
+      <Sidebar current={railCurrent} name={who.name} app={app} scopeNote={scopeNote} pathname={pathname} onSearch={() => setSearching(true)} />
       <div className="tf-frame">
         <header ref={topRef} className="tf-top" data-titled={inline ? '' : undefined}>
           {inline?.back ? (
@@ -79,23 +84,6 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
           <Link href="/" className="tf-brand" aria-label="Turnfin home">
             <Image src="/brand/turnfin.png" alt="" width={72} height={72} priority />
           </Link>
-          {/* A module with one page needs no page bar; its H1 names it. */}
-          {pages.length > 1 ? (
-            <nav ref={navRef} className="tf-pages" aria-label={`${module} pages`}>
-              <span className="sr-only">{scopeNote}</span>
-              <Glass className="tf-bar" data-measured={measured || undefined}>
-                {pages.slice(0, fit).map((page) => (
-                  <Link key={page.href} href={page.href} className="tf-bar-item" aria-current={currentFor(page)}>{page.label}</Link>
-                ))}
-                {fit < pages.length && <PagesMore groups={overflow} currentFor={currentFor} />}
-              </Glass>
-              {/* Every label at its natural width, unseen, so the bar can tell how many fit. */}
-              <div ref={measureRef} className="tf-bar-measure" aria-hidden="true">
-                {pages.map((page) => <span key={page.href} className="tf-bar-item">{page.label}</span>)}
-                <span className="tf-bar-item">More<ChevronDown /></span>
-              </div>
-            </nav>
-          ) : <span className="sr-only">{scopeNote}</span>}
           {/* On desktop the account is at the sidebar's foot, so this group shows only when the
               app or the frame adds a tool (kit.css). */}
           <Glass className="tf-bar tf-tools" role="group" aria-label="Search, site and account">
@@ -108,9 +96,20 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
           <div className={`tf-content ${contentClass}`}>{children}</div>
         </main>
       </div>
-      <TabBar current={railCurrent} />
+      <TabBar current={railCurrent} app={app} pathname={pathname} onSearch={() => setSearching(true)} />
+      <SearchDialog open={searching} onOpenChange={setSearching} appName={app?.name ?? null} pages={app?.pages ?? []} />
     </div>
   );
+}
+
+type OpenApp = { name: string; pages: ModuleLink[] } | null;
+
+/** The open page is "page"; a page whose part of the app is open (a record under a list) is
+ *  "true". A page reached only from the Overview marks the Overview as its parent. */
+function currentFor(page: ModuleLink, pages: ModuleLink[], pathname: string): 'page' | 'true' | undefined {
+  if (page.active) return pathname === page.href.split('?')[0] ? 'page' : 'true';
+  const openElsewhere = pages.find((p) => p.active && p.place === 'overview');
+  return openElsewhere && page === pages.find((p) => !p.place) ? 'true' : undefined;
 }
 
 /** The page's large title, watched: once its H1 (every page has exactly one, in PageHeader) has
@@ -146,117 +145,128 @@ function useLargeTitle(mainId: string, top: RefObject<HTMLElement | null>, pathn
   return inline;
 }
 
-/** As many page links as fit the bar, measured, so a link never scrolls out of sight; the rest go
- *  under "More". Until measured (the server render) the links that do not fit wrap out of
- *  sight below the 44px bar, and the open page's link goes first so it is never one of them
- *  (kit.css), so it never scrolls. */
-function useBarFit(nav: RefObject<HTMLElement | null>, measure: RefObject<HTMLDivElement | null>, count: number) {
-  const [fit, setFit] = useState(count);
-  const [measured, setMeasured] = useState(false);
-  useLayoutEffect(() => {
-    const bar = nav.current, sizes = measure.current;
-    if (!bar || !sizes) return;
-    const update = () => {
-      const widths = [...sizes.children].map((child) => child.getBoundingClientRect().width);
-      const more = widths.pop() ?? 0;
-      const room = bar.clientWidth - 8; // the bar's own 4px inset each side
-      let used = 0, shown = 0;
-      while (shown < count && used + widths[shown] + (shown + 1 < count ? more : 0) <= room) used += widths[shown++];
-      setFit(Math.max(1, shown));
-      setMeasured(true);
-    };
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(bar);
-    return () => observer.disconnect();
-  }, [nav, measure, count]);
-  return { fit, measured };
-}
-
-/** The pages that do not fit the bar, under their group names. "More" keeps its short name so
- *  the bar never grows; it is filled when it holds the open page, which the page's H1 names. */
-function PagesMore({ groups, currentFor }: { groups: ModuleLinkGroup[]; currentFor: (page: ModuleLink) => 'page' | 'true' | undefined }) {
-  const active = groups.flatMap((group) => group.links).find((page) => page.active);
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger className="tf-bar-item" aria-current={active ? 'true' : undefined} aria-label={active ? `More pages, including ${active.label}, the current page` : undefined}>
-        More<ChevronDown aria-hidden="true" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-64 max-w-(--overlay-max-width)">
-        {groups.map((group) => (
-          <DropdownMenuGroup key={group.label || group.links[0].href}>
-            {group.label && <DropdownMenuLabel className="text-xs font-semibold text-ui-muted-foreground">{group.label}</DropdownMenuLabel>}
-            {group.links.map((page) => (
-              <DropdownMenuItem key={page.href} asChild className="min-h-11 aria-[current]:bg-ui-accent aria-[current]:font-semibold aria-[current]:text-ui-accent-foreground">
-                <Link href={page.href} aria-current={currentFor(page)}>{page.icon ? <page.icon aria-hidden="true" /> : null}{page.label}</Link>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuGroup>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-/** The person's apps (DESIGN.md, Sidebar): the fin to Home, Home, one "Apps" heading and their
- *  apps in the groups' order, Help, and their account at the foot. Symbols are the fin blue; the
- *  open app has the glass droplet. On tablet only the symbols show (kit.css): each keeps its name
- *  for screen readers and shows it on hover and focus. */
-function Sidebar({ current, name }: { current: string; name: string }) {
+/** The sidebar (DESIGN.md, Sidebar; D19), on the ground. On Home: the logo and name, Home, one
+ *  "Apps" heading and the person's apps in the groups' order. In an app it drills in: "‹ Home"
+ *  (unless the app is the person's only one), the app's name, its work pages and its Set up
+ *  pages under one item that opens in place. Help and the account sit at the foot. */
+function Sidebar({ current, name, app, scopeNote, pathname, onSearch }: { current: string; name: string; app: OpenApp; scopeNote: string; pathname: string; onSearch: () => void }) {
   const { modules, groups } = useFrame();
   const apps = groupFrameModules(modules, groups).flatMap((group) => group.modules);
-  const item = (key: string, href: string, label: string, Icon: LucideIcon) => (
-    <Link key={key} href={href} className="tf-side-item" aria-current={current === key ? 'true' : undefined}>
-      <Icon aria-hidden="true" /><span className="tf-side-label">{label}</span><span className="tf-side-tip" aria-hidden="true">{label}</span>
+  const only = modules.length === 1;
+  const item = (key: string, href: string, label: string, Icon: LucideIcon | undefined, ariaCurrent: 'page' | 'true' | undefined) => (
+    <Link key={key} href={href} className="tf-side-item" aria-current={ariaCurrent}>
+      {Icon ? <Icon aria-hidden="true" /> : null}<span className="tf-side-label">{label}</span>
     </Link>
   );
+  const work = app?.pages.filter((p) => !p.place) ?? [];
+  const setup = app?.pages.filter((p) => p.place === 'setup') ?? [];
   return (
-    <Glass as="nav" shape="panel" className="tf-side" aria-label="Apps">
+    <Glass as="nav" shape="panel" className="tf-side" aria-label={app ? `${app.name} pages` : 'Apps'}>
       <Link href="/" className="tf-side-brand" aria-label="Turnfin home">
         <span className="tf-brand"><Image src="/brand/turnfin.png" alt="" width={72} height={72} priority /></span>
         <span className="tf-side-brand-name" aria-hidden="true">Turnfin</span>
       </Link>
-      <div className="tf-side-list">
-        {item('home', '/', 'Home', House)}
-        {apps.length > 0 && <p className="tf-side-heading">Apps</p>}
-        {apps.map((m) => item(m.id, m.href, m.name, m.icon))}
-        <a href="/help" target="_blank" rel="noopener noreferrer" className="tf-side-item">
-          <CircleHelp aria-hidden="true" /><span className="tf-side-label">Help<span className="sr-only"> (opens in a new tab)</span></span><span className="tf-side-tip" aria-hidden="true">Help</span>
-        </a>
+      <Button type="button" variant="ghost" className="tf-side-search" onClick={onSearch} aria-keyshortcuts="Control+K Meta+K">
+        <Search aria-hidden="true" /><span>Search</span><kbd>Ctrl K</kbd>
+      </Button>
+      <div className="tf-side-list" key={app ? `app:${current}` : 'home'} data-drill={app ? 'in' : 'out'}>
+        {app ? (
+          <>
+            {only ? null : (
+              <Link href="/" className="tf-side-item tf-side-back"><ChevronLeft aria-hidden="true" /><span className="tf-side-label">Home</span></Link>
+            )}
+            <p className="tf-side-app">{app.name}<span className="sr-only">. {scopeNote}</span></p>
+            {work.map((page) => item(page.href, page.href, page.label, page.icon, currentFor(page, app.pages, pathname)))}
+            {setup.length ? (
+              <Collapsible className="tf-side-setup" defaultOpen={setup.some((p) => p.active)}>
+                <CollapsibleTrigger className="tf-side-item" data-current={setup.some((p) => p.active) || undefined}>
+                  <Settings2 aria-hidden="true" /><span className="tf-side-label">Set up</span><ChevronRight aria-hidden="true" className="tf-side-chevron" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="tf-side-setup-pages">
+                  {setup.map((page) => item(page.href, page.href, page.label, undefined, currentFor(page, app.pages, pathname)))}
+                </CollapsibleContent>
+              </Collapsible>
+            ) : null}
+          </>
+        ) : (
+          <>
+            {item('home', '/', 'Home', House, current === 'home' ? 'page' : undefined)}
+            {apps.length > 0 && <p className="tf-side-heading">Apps</p>}
+            {apps.map((m) => item(m.id, m.href, m.name, m.icon, current === m.id ? 'true' : undefined))}
+          </>
+        )}
       </div>
-      <div className="tf-side-foot"><AccountMenu name={name} layout="sidebar" /></div>
+      <div className="tf-side-foot">
+        <a href="/help" target="_blank" rel="noopener noreferrer" className="tf-side-item">
+          <CircleHelp aria-hidden="true" /><span className="tf-side-label">Help<span className="sr-only"> (opens in a new tab)</span></span>
+        </a>
+        <AccountMenu name={name} layout="sidebar" />
+      </div>
     </Glass>
   );
 }
 
-/** Phones (DESIGN.md, Tab bar): a glass capsule with Home, the open app and Apps, which lists
- *  every app under its group, and Help. */
-function TabBar({ current }: { current: string }) {
+/** Phones (DESIGN.md, Tab bar; D19): a white capsule with Home, the open app, which opens its
+ *  pages, and Apps, which lists every app under its group, and Help; search is a white circle
+ *  beside it. A person with one app has no Home or Apps: the app's tab holds its pages. */
+function TabBar({ current, app, pathname, onSearch }: { current: string; app: OpenApp; pathname: string; onSearch: () => void }) {
   const { modules, groups } = useFrame();
-  const open = modules.find((m) => m.id === current);
-  const item = (key: string, href: string, label: string, Icon: LucideIcon) => (
-    <Link key={key} href={href} className="tf-bottom-item" aria-current={current === key ? 'true' : undefined}>
+  const only = modules.length === 1;
+  const open = modules.find((m) => m.id === current) ?? (only ? modules[0] : undefined);
+  const tab = (key: string, href: string, label: string, Icon: LucideIcon) => (
+    <Link key={key} href={href} className="tf-bottom-item" aria-current={current === key ? 'page' : undefined}>
       <span className="tf-bottom-icon"><Icon aria-hidden="true" /></span><span>{label}</span>
     </Link>
   );
+  const pageItem = (page: ModuleLink) => (
+    <DropdownMenuItem key={page.href} asChild className="min-h-11">
+      <Link href={page.href} aria-current={currentFor(page, app?.pages ?? [], pathname)}>{page.icon ? <page.icon aria-hidden="true" /> : null}{page.label}</Link>
+    </DropdownMenuItem>
+  );
+  const work = app?.pages.filter((p) => p.place !== 'setup') ?? [];
+  const setup = app?.pages.filter((p) => p.place === 'setup') ?? [];
   return (
+    <div className="tf-bottom-wrap">
     <Glass as="nav" className="tf-bottom" aria-label="Apps">
-      {item('home', '/', 'Home', House)}
-      {open ? item(open.id, open.href, open.name, open.icon) : null}
-      <DropdownMenu>
-        <DropdownMenuTrigger className="tf-bottom-item"><span className="tf-bottom-icon"><LayoutGrid aria-hidden="true" /></span><span>Apps</span></DropdownMenuTrigger>
-        <DropdownMenuContent side="top" align="end" className="w-64 max-w-(--overlay-max-width)">
-          {groupFrameModules(modules, groups).map((group) => (
-            <DropdownMenuGroup key={group.key}>
-              <DropdownMenuLabel className="text-xs font-semibold text-ui-muted-foreground">{group.label}</DropdownMenuLabel>
-              {group.modules.map((m) => (
-                <DropdownMenuItem key={m.id} asChild className="min-h-11"><Link href={m.href} aria-current={current === m.id ? 'true' : undefined}><m.icon aria-hidden="true" />{m.name}</Link></DropdownMenuItem>
-              ))}
-            </DropdownMenuGroup>
-          ))}
-          <DropdownMenuItem asChild className="min-h-11"><a href="/help" target="_blank" rel="noopener noreferrer"><CircleHelp aria-hidden="true" />Help<span className="sr-only"> (opens in a new tab)</span></a></DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {only ? null : tab('home', '/', 'Home', House)}
+      {open ? (
+        app && app.pages.length > 1 ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger className="tf-bottom-item" aria-current="true" aria-label={`${open.name} pages`}>
+              <span className="tf-bottom-icon"><open.icon aria-hidden="true" /></span><span>{open.name}</span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="center" className="w-64 max-w-(--overlay-max-width)">
+              <DropdownMenuLabel className="text-xs font-semibold text-ui-muted-foreground">{open.name}</DropdownMenuLabel>
+              {work.map(pageItem)}
+              {setup.length ? (
+                <DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-xs font-semibold text-ui-muted-foreground">Set up</DropdownMenuLabel>
+                  {setup.map(pageItem)}
+                </DropdownMenuGroup>
+              ) : null}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : tab(open.id, open.href, open.name, open.icon)
+      ) : null}
+      {only ? null : (
+        <DropdownMenu>
+          <DropdownMenuTrigger className="tf-bottom-item"><span className="tf-bottom-icon"><LayoutGrid aria-hidden="true" /></span><span>Apps</span></DropdownMenuTrigger>
+          <DropdownMenuContent side="top" align="end" className="w-64 max-w-(--overlay-max-width)">
+            {groupFrameModules(modules, groups).map((group) => (
+              <DropdownMenuGroup key={group.key}>
+                <DropdownMenuLabel className="text-xs font-semibold text-ui-muted-foreground">{group.label}</DropdownMenuLabel>
+                {group.modules.map((m) => (
+                  <DropdownMenuItem key={m.id} asChild className="min-h-11"><Link href={m.href} aria-current={current === m.id ? 'true' : undefined}><m.icon aria-hidden="true" />{m.name}</Link></DropdownMenuItem>
+                ))}
+              </DropdownMenuGroup>
+            ))}
+            <DropdownMenuItem asChild className="min-h-11"><a href="/help" target="_blank" rel="noopener noreferrer"><CircleHelp aria-hidden="true" />Help<span className="sr-only"> (opens in a new tab)</span></a></DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
     </Glass>
+    <Button type="button" variant="ghost" className="tf-bottom-search glass" onClick={onSearch} aria-label="Search"><Search aria-hidden="true" /></Button>
+    </div>
   );
 }

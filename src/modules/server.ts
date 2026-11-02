@@ -21,4 +21,4 @@ import "@/modules/payments/module";
 import "@/lib/people/home";
 import "@/modules/hr/module";
 
-export { renameAreaEverywhere, homeCardItems, siteSummaryLines } from "./contributions";
+export { renameAreaEverywhere, homeCardItems, searchApps, siteSummaryLines } from "./contributions";

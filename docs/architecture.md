@@ -68,7 +68,7 @@ Each module folder also has a `README.md` for coders (features, front door, data
 
 ## The frame
 
-**Planned (D19; search in roadmap step 4, the frame in step 5).** One frame for everyone, worked out on each request from the session: the person's levels at the working site, and the screen width. Nothing is stored per role or per person, and nothing names a role.
+**Built (D19; 2 November 2026, 3.0.0).** One frame for everyone, worked out on each request from the session: the person's levels at the working site, and the screen width. Nothing is stored per role or per person, and nothing names a role.
 
 | What | Worked out from |
 | --- | --- |
@@ -80,7 +80,9 @@ Each module folder also has a `README.md` for coders (features, front door, data
 
 There is one shell: the swim school's own nav, the instructor shell and the CCTV shell are replaced by it. A test checks every `pages.ts` against the page limit.
 
-**Search** is a plug, `registerSearch`: each app says what it can be searched for (its pages, and records such as members), and answers only with what the person may open, showing the least that names the result. People come from the platform's directory. Results link to the record in its app, which checks permission again.
+Each page in an app's page list has a `place` (`ModulePage` in `src/modules/registry.ts`): none for a work page in the sidebar, `setup` under Set up, `overview` for a page reached from the app's Overview. `src/modules/module-pages.test.ts` holds every app to five work pages, Overview first. The frame is `ModuleShell` (`src/components/ui/module-shell.tsx`); the pool deck uses it too.
+
+**Search** is a plug, `registerSearch` in `src/modules/contributions.ts`: each app says what it can be searched for and answers only with what the person may open, showing the least that names the result (the swim school: swimmers, for `swimschool.desk`). `searchEverything` (`src/lib/search/actions.ts`) adds people, for those who manage staff, and is handed to the frame through `FrameSetup.search`, so the UI kit never imports the platform; the frame matches apps and pages itself (`src/components/ui/search-dialog.tsx`). Results link to the record in its app, which checks permission again.
 
 ## How apps talk
 
@@ -106,7 +108,7 @@ An app must keep working when any other app is switched off: a missing front doo
 | `registerMemberNotices` | what another app needs raised with a member, shown as a badge on their swimmer profile (Payments' "Payment failed") |
 | `registerAreaRename` | renaming a site's area updates every app that stores area names |
 | `registerAppCourses` | the short courses the parent app offers |
-| `registerSearch` (planned, step 4) | what an app can be searched for, for the one search ([The frame](#the-frame)) |
+| `registerSearch` | what an app can be searched for, for the one search ([The frame](#the-frame)) |
 
 Every registration names its `app` (the manifest id), so a switched-off app's plugs answer "not available". A plug that fails is named on the page, never fatal. Other seams: **session hooks** (`src/modules/session-hooks.ts`, per-request work such as applying due scheduled unenrolments) and **links** by URL.
 
