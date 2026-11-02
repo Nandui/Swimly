@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
-import { departmentById } from "@/lib/directory";
+import { areaById, departmentById } from "@/lib/directory";
 import { today } from "@/lib/format";
 import { holdsAnywhere } from "@/lib/policy/engine";
 import { currentActor } from "@/lib/policy/session";
@@ -11,12 +11,12 @@ import { liveQualificationTypeById } from "@/lib/qualifications";
 import { prisma } from "@/lib/prisma";
 import { requirePlanActor } from "@/modules/plan/shared/access";
 import { shiftIso } from "@/modules/plan/shared/model";
-import { areaSchema, dutySchema, firstIssue, sessionSchema, type AreaInput, type DutyInput, type SessionInput } from "@/modules/plan/shared/rules";
+import { dutySchema, firstIssue, sessionSchema, type DutyInput, type SessionInput } from "@/modules/plan/shared/rules";
 import { mayManage, viewableSite } from "@/modules/plan/shared/scope";
 
-/** Setup's writes, Manage only: duties (the organisation's), areas and sessions (a site's).
- *  Nothing is deleted: duties and areas are archived, sessions called off, so past days still read
- *  the same. */
+/** Setup's writes, Manage only: duties (the organisation's) and sessions (a site's). Areas are
+ *  Admin's (Admin › Areas). Nothing is deleted: duties are archived and sessions called off, so past
+ *  days still read the same. */
 
 const refresh = () => revalidatePath("/plan", "layout");
 
@@ -68,51 +68,6 @@ export async function archiveDuty(id: string): Promise<ActionResult> {
   return ok();
 }
 
-export async function saveArea(input: AreaInput, id?: string): Promise<ActionResult> {
-  const who = await requirePlanActor();
-  const parsed = areaSchema.safeParse(input);
-  if (!parsed.success) return fail(firstIssue(parsed.error));
-  const v = parsed.data;
-  const site = await viewableSite(v.siteId);
-  if (!site || !(await mayManage(site.id, site.orgId))) return fail("Only someone who manages the plan here can change its areas.");
-  if (v.departmentId && !(await departmentById(v.departmentId, site.orgId))) return fail("That department is no longer open.");
-  const result = await prisma.$transaction(async (tx) => {
-    const existing = id ? await tx.planArea.findFirst({ where: { id, orgId: site.orgId, siteId: site.id, archivedAt: null } }) : null;
-    if (id && !existing) return fail("That area is no longer on the list.");
-    if (v.parentId) {
-      const parent = await tx.planArea.findFirst({ where: { id: v.parentId, orgId: site.orgId, siteId: site.id, archivedAt: null } });
-      if (!parent || parent.parentId) return fail("An area can only be part of a whole area, one level deep.");
-      if (id && v.parentId === id) return fail("An area can't be part of itself.");
-      if (id && (await tx.planArea.count({ where: { parentId: id, archivedAt: null } }))) return fail("This area has parts of its own, so it can't be a part.");
-    }
-    const twin = await tx.planArea.findFirst({ where: { orgId: site.orgId, siteId: site.id, archivedAt: null, name: { equals: v.name, mode: "insensitive" }, ...(id ? { id: { not: id } } : {}) } });
-    if (twin) return fail(`There is already an area called ${twin.name} here.`);
-    const data = { name: v.name, parentId: v.parentId, lanes: v.lanes, departmentId: v.departmentId };
-    const row = existing ? await tx.planArea.update({ where: { id: existing.id }, data })
-      : await tx.planArea.create({ data: { ...data, orgId: site.orgId, siteId: site.id, sortOrder: await tx.planArea.count({ where: { siteId: site.id } }) } });
-    await logAudit({ actorId: who.id, actorName: who.name, action: existing ? "update" : "create", entity: "PlanArea", entityId: row.id, clubId: site.id,
-      summary: `${existing ? "Changed" : "Added"} the area ${row.name}` }, tx);
-    return ok();
-  });
-  if (result.ok) refresh();
-  return result;
-}
-
-export async function archiveArea(id: string): Promise<ActionResult> {
-  const who = await requirePlanActor();
-  const area = await prisma.planArea.findFirst({ where: { id, orgId: who.orgId ?? undefined, archivedAt: null } });
-  if (!area) return fail("That area is no longer on the list.");
-  const site = await viewableSite(area.siteId);
-  if (!site || !(await mayManage(site.id, site.orgId))) return fail("Only someone who manages the plan here can change its areas.");
-  if (await prisma.planArea.count({ where: { parentId: id, archivedAt: null } })) return fail("Take its parts off first.");
-  await prisma.$transaction(async (tx) => {
-    await tx.planArea.update({ where: { id }, data: { archivedAt: new Date() } });
-    await logAudit({ actorId: who.id, actorName: who.name, action: "archive", entity: "PlanArea", entityId: id, clubId: site.id, summary: `Took ${area.name} off the areas` }, tx);
-  });
-  refresh();
-  return ok();
-}
-
 /** Add or change a session: what's on, where, when it repeats and the duties it needs. */
 export async function saveSession(input: SessionInput, id?: string): Promise<ActionResult> {
   const who = await requirePlanActor();
@@ -122,8 +77,8 @@ export async function saveSession(input: SessionInput, id?: string): Promise<Act
   const site = await viewableSite(v.siteId);
   if (!site || !(await mayManage(site.id, site.orgId))) return fail("Only someone who manages the plan here can change what's on.");
   if (v.areaId) {
-    const area = await prisma.planArea.findFirst({ where: { id: v.areaId, siteId: site.id, archivedAt: null } });
-    if (!area) return fail("That area is no longer on the list.");
+    const area = await areaById(v.areaId);
+    if (!area || area.siteId !== site.id) return fail("That area is no longer on the list.");
     if (v.lanes.some((l) => l > area.lanes)) return fail(area.lanes ? `${area.name} has ${area.lanes} lanes.` : `${area.name} has no lanes; take the whole area.`);
   } else if (v.lanes.length) return fail("Choose the area before its lanes.");
   const duties = await prisma.planDuty.findMany({ where: { orgId: site.orgId, archivedAt: null, id: { in: v.needs.map((n) => n.dutyId) } } });
@@ -132,7 +87,7 @@ export async function saveSession(input: SessionInput, id?: string): Promise<Act
   const result = await prisma.$transaction(async (tx) => {
     const existing = id ? await tx.planSession.findFirst({ where: { id, orgId: site.orgId, siteId: site.id, cancelledAt: null } }) : null;
     if (id && !existing) return fail("That session no longer exists.");
-    const data = { title: v.title, areaId: v.areaId, lanes: [...new Set(v.lanes)].sort((a, b) => a - b), startMinutes: v.start, endMinutes: v.end,
+    const data = { title: v.title, siteAreaId: v.areaId, lanes: [...new Set(v.lanes)].sort((a, b) => a - b), startMinutes: v.start, endMinutes: v.end,
       weekdays: [...new Set(v.weekdays)].sort(), firstDay: v.firstDay, lastDay: v.lastDay, skipDays, note: v.note };
     const needs = { create: v.needs.map((n) => ({ dutyId: n.dutyId, count: n.count })) };
     const row = existing

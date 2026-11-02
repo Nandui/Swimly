@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.33.0 · 2 November 2026 · Plan (test): what's on, area by area
+
+- **Plan (test) › Day**: **What's on** now has one row for each area, such as Main pool, Learner pool and Gym. Each class or session is one block, with who is on it, or how many are still needed, in orange.
+- Pick a block to see each duty it needs, who is on it, and **Fill** for any gap.
+- **Needs someone**, under the timeline, lists everything still short of people, with a **Fill** button for each.
+- **One list of areas**: Plan (test) now uses the areas in **Admin › Areas**, the same ones swim classes use, so classes show in the right area by themselves. Plan (test)'s own area list has gone.
+- **Admin › Areas** keeps each area's name, what it is part of, its department and its lanes. The old Rota's opening hours, minimum staff and "covered from" settings are no longer changed here, and Rota keeps the ones already saved.
 ## 2.32.1 · 31 October 2026 · Assessments only for the right programme
 
 - **Assessments** can no longer be booked for a programme a swimmer has already moved past. A swimmer in a Water Safety and Fun class can book Water Safety and Fun, Swimming Skills or Rookie Lifesaving. A swimmer in Swimming Skills can book Swimming Skills or Rookie Lifesaving. A swimmer in Rookie Lifesaving can book Rookie Lifesaving.

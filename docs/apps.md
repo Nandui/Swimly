@@ -120,7 +120,7 @@ The rota started again, on test at one site beside Rota ([D17](decisions.md)): s
 | Plan | plan shifts and duties for the departments they belong to, and mark people off |
 | Manage | plan every department, run today, and keep the duties, areas and what's on |
 
-Connects: reads people, departments and qualifications; reads swim classes and plans their teachers through Swim school's commitments. No Turnfin Me, home card or person file while it is on test.
+Connects: reads people, departments, qualifications and the site's areas (Admin › Areas, shared with Swim school and Rota); reads swim classes and plans their teachers through Swim school's commitments. No Turnfin Me, home card or person file while it is on test.
 
 ### Training
 *Module `training` · `/training/overview` · reach: sites · data: `training.prisma`*

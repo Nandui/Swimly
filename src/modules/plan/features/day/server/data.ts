@@ -17,7 +17,7 @@ export async function planDay(params: { site?: string; date?: string }) {
   if (!site) notFound();
   const date = params.date && isDateOnly(params.date) ? params.date : today();
   const [sessions, areas, duties, shifts, departments, manage, qNames] = await Promise.all([
-    sessionsOf(site.orgId, site.id, date, date), areasOf(site.orgId, site.id), dutiesOf(site.orgId), shiftsAt(site.orgId, site.id, date, date),
+    sessionsOf(site.orgId, site.id, date, date), areasOf(site.id), dutiesOf(site.orgId), shiftsAt(site.orgId, site.id, date, date),
     plannableDepartments(who, site.id, site.orgId), mayManage(site.id, site.orgId), qualificationNames(site.orgId),
   ]);
   const userIds = [...new Set(shifts.map((s) => s.userId))];
@@ -31,7 +31,12 @@ export async function planDay(params: { site?: string; date?: string }) {
   const blocks = shifts.flatMap((s) => s.blocks);
   const needs = needsOf(occurrences, classes.atSite, classDuty?.id ?? null, areas).map((need) => {
     const fills = fillsOf(need, blocks, classes.atSite);
-    return { ...need, fills, gaps: gapsOf(need, fills) };
+    // Where it is, for What's on's rows: the Plan area, else the class's own place; and its name
+    // without that place ("Dolphins (A), Main pool" reads "Dolphins (A)" in the Main pool row).
+    const place = need.kind === "class" ? classes.atSite.find((c) => `c:${c.source}:${c.ref}` === need.key)?.place.trim() ?? "" : "";
+    const where = areas.find((a) => a.id === need.areaId)?.name ?? (place || "No area");
+    const label = place && need.title.endsWith(`, ${place}`) ? need.title.slice(0, -place.length - 2) : need.title;
+    return { ...need, fills, gaps: gapsOf(need, fills), where, label };
   });
   const heldToday = (userId: string, typeId: string) => held(userId, typeId, date);
   const departmentOf = (userId: string) => people.find((p) => p.id === userId)?.departmentIds ?? [];
