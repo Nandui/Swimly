@@ -48,8 +48,9 @@ export default async function ShortCoursesPage() {
         </section>
       ) : null}
       <Panel id="sc-current" title="Coming up and running" courses={current}
-        empty={types ? { title: "No courses on", hint: who.manage ? "Put a course on; its weekly sessions are made for you." : "Whoever manages Short courses puts them on." }
-          : { title: "No courses on the list yet", hint: "Whoever manages Short courses adds what we offer first, such as Couch to 5k." }} />
+        empty={types ? (who.read ? { title: "No courses on", hint: who.manage ? "Put a course on; its weekly sessions are made for you." : "Whoever manages Classes puts them on." }
+          : { title: "No courses of yours", hint: "The short courses you instruct show here, with their registers." })
+          : { title: "No courses on the list yet", hint: "Whoever manages Classes adds what we offer first, such as Couch to 5k." }} />
       {past.length ? <Panel id="sc-past" title="Finished in the last 90 days" courses={past} /> : null}
     </PageShell>
   );

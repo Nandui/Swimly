@@ -20,8 +20,8 @@ export function refresh(courseId?: string) {
 }
 
 const REFUSALS: Partial<Record<PermissionKey, string>> = {
-  "short-courses.manage": "Putting courses on at this site needs Short courses Manage there.",
-  "short-courses.run": "Taking registers at this site needs Short courses Instructor there.",
+  "short-courses.manage": "Putting courses on at this site needs Classes Manage there.",
+  "short-courses.run": "Taking registers at this site needs Pool deck Teach there.",
 };
 
 /** The signed-in person, if they hold `cap` at the site. */

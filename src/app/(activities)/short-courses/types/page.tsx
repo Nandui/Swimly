@@ -19,7 +19,7 @@ export default async function ShortCourseTypesPage() {
     <PageShell spacing="roomy" header={<PageHeader title="Course list" description="The short courses we offer. A new run starts with these weeks and session length."
         actions={who.manage ? <CourseTypeDialog /> : undefined} />}>
       <section className="flex min-w-0 flex-col" aria-label="Courses we offer">
-        {types.length === 0 ? <EmptyState compact icon="calendarRange" title="No courses yet" hint={who.manage ? "Add the first, such as Couch to 5k or Adult swim lessons." : "Whoever manages Short courses adds them."} /> : (
+        {types.length === 0 ? <EmptyState compact icon="calendarRange" title="No courses yet" hint={who.manage ? "Add the first, such as Couch to 5k or Adult swim lessons." : "Whoever manages Classes adds them."} /> : (
           <ul className="pc-list">
             {types.map((t) => {
               const area = SHORT_COURSE_AREA_META[t.area as ShortCourseArea] ?? SHORT_COURSE_AREA_META.other;
