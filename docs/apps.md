@@ -6,20 +6,22 @@ Every app inside Turnfin: what it is for, its levels, where they reach, what it 
 
 ## Front of house
 
-These five apps are being regrouped into **Classes** (Swim school with Payments and short courses), **Finance requests** (Refunds and Coinage) and **Academy** ([D23](decisions.md), [roadmap step 8](roadmap.md#8-fewer-front-of-house-apps)). This page changes as each merge ships.
+These apps are being regrouped into **Classes** (Swim school with failed payments and short courses), **Finance requests** (Refunds and Coinage) and **Academy** ([D23](decisions.md), [roadmap step 8](roadmap.md#8-fewer-front-of-house-apps)). This page changes as each merge ships; failed payments are already in Swim school (step 8.1).
 
 ### Swim school
 *Module `activities` · starter page `/swim-school` · reach: sites · data: `activities.prisma`*
 
-Swimmers, classes and assessments at the desk, and the swim school's set-up.
+Swimmers, classes, assessments and failed payments at the desk, and the swim school's set-up.
 
 | Level | Gives |
 | --- | --- |
-| Desk | every swimmer, booking, move, waiting list and assessment booking |
-| Manage | also programmes, levels and classes |
+| Desk | every swimmer, booking, move, waiting list and assessment booking; see the failed payments at their sites, log each contact and record how it ended: paid at the desk, new mandate set up, or place cancelled |
+| Manage | also programmes, levels and classes; upload the bank's monthly failure sheet, open closed payments again, and remove payments that aren't swimmers |
 | *Extra:* Can cancel classes | cancel today's sessions on the duty manager page and pass them to billing |
 
 Connects: class commitments for Rota; the member directory and history for Short courses; site summaries; home items; the parent app's API.
+
+**Failed payments** (`/payments`, on the Overview; D21, moved here by D23): the direct debits that failed each month, followed up by reception until each is recovered. Legend stays the billing system: money is taken there, never in Turnfin. A failure is **To contact**, **Contacted**, **Paid at the desk**, **New mandate set up** or **Place cancelled**. Only rows whose member number belongs to a swimmer on Turnfin are tracked; gym memberships and unknown numbers are left out. While one is open, the swimmer's profile shows "Payment failed".
 
 Who can book an assessment: programmes run in the order set on the Programmes page (Water Safety and Fun, Swimming Skills, Rookie Lifesaving). A swimmer with a place in a class can be booked only for an assessment of that programme or a later one, never an earlier one; with places in two programmes, the later counts. The session's age range must fit too. The desk and the parent app's API refuse the booking, and the API's `assessment-sessions/{id}/children` tells the app which children can book and why not (`shared/assessments/programme-rule.ts`).
 
@@ -57,20 +59,6 @@ Coins for the tills, requested at the desk and ordered by accounts.
 | --- | --- |
 | Use | request coinage for a till and follow it |
 | Manage | decide requests and record the orders. Nobody decides their own |
-
-### Payments
-*Module `payments` · `/payments/overview` · reach: sites · data: `payments.prisma`*
-
-The direct debits that failed each month, followed up by reception until each is recovered. Legend stays the billing system: money is taken there, never in Turnfin ([D21](decisions.md)).
-
-| Level | Gives |
-| --- | --- |
-| Use | see the failed payments at their sites, log each contact and record how it ended: paid at the desk, new mandate set up, or place cancelled |
-| Manage | also upload the bank's monthly failure sheet, open closed payments again, and remove payments that aren't swimmers |
-
-A failure is **To contact**, **Contacted**, **Paid at the desk**, **New mandate set up** or **Place cancelled**. Only rows whose member number belongs to a swimmer on Turnfin are tracked; gym memberships and unknown numbers are left out.
-
-Connects: matches member numbers through the swim school's member directory; puts a "Payment failed" notice on the swimmer's profile while one is open (member notices); home items.
 
 ## Poolside
 

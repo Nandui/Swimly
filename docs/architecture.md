@@ -104,8 +104,8 @@ An app must keep working when any other app is switched off: a missing front doo
 | `registerSubjectRecords` | an app's full records about a person, for HR's subject export |
 | `registerCommitments` | who is busy when (classes, course sessions), which Rota shows and may plan |
 | `registerDeskMeasures` | timed desk jobs, for the swim school's Reception analytics |
-| `registerMemberDirectory`, `registerMemberHistory` | the swim school's member records, for Short courses to book people from and Payments to match member numbers (`byNumbers`) |
-| `registerMemberNotices` | what another app needs raised with a member, shown as a badge on their swimmer profile (Payments' "Payment failed") |
+| `registerMemberDirectory`, `registerMemberHistory` | the swim school's member records, for Short courses to book people from and the swim school's failed payments to match member numbers (`byNumbers`) |
+| `registerMemberNotices` | what another app needs raised with a member, shown as a badge on their swimmer profile (the swim school's own "Payment failed") |
 | `registerAreaRename` | renaming a site's area updates every app that stores area names |
 | `registerAppCourses` | the short courses the parent app offers |
 | `registerSearch` | what an app can be searched for, for the one search ([The frame](#the-frame)) |

@@ -3,7 +3,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import { visibleScreens, type ScreenKey } from "@/lib/staff/screens";
-import { registerAreaRename, registerCommitments, registerHomeCard, registerMemberDirectory, registerSiteSummary, type Commitment, type HomeIcon, type HomeItem, type HomeSession, registerSearch } from "@/modules/contributions";
+import { registerAreaRename, registerCommitments, registerHomeCard, registerMemberDirectory, registerMemberNotices, registerSiteSummary, type Commitment, type HomeIcon, type HomeItem, type HomeSession, registerSearch } from "@/modules/contributions";
 import { formatTime, isDateOnly, minutesNow, parseDateOnly, plural, today } from "@/lib/format";
 import { logAudit } from "@/lib/audit";
 import { staffByIds } from "@/lib/directory";
@@ -16,6 +16,8 @@ import { getAwaitingEnrolment } from "@/modules/activities/features/enrolment/se
 import { getTodayAssessments } from "@/modules/activities/shared/today/assessments";
 import { sessionState } from "@/modules/activities/shared/today/calendar";
 import { memberDirectory } from "@/modules/activities/features/students/server/members";
+import { memberPaymentNotices } from "@/modules/activities/features/failed-payments/server/data";
+import { paymentsHomeItems } from "@/modules/activities/features/failed-payments/server/home";
 
 
 /** Who teaches which class when, for the rota's plan and its clash check: each class on each
@@ -167,6 +169,7 @@ registerHomeCard({
     }
     if (awaiting) items.push({ label: "Awaiting enrolment", hint: "Class places and family follow-ups", href: "/awaiting-enrolment", count: awaiting.total, attention: awaiting.total > 0 });
     if (parentUpdates !== null) items.push({ label: "Parent updates", hint: "Contact and medical corrections", href: "/students/parent-changes", count: parentUpdates, attention: parentUpdates > 0 });
+    items.push(...await paymentsHomeItems(viewer));
     return items;
   },
 });
@@ -214,6 +217,9 @@ registerAreaRename({
 /** The swimmer records other modules book people from (owner request, 21 October 2026): Short
  *  courses and the Academy search, read and add swimmers here, and keep only the id. */
 registerMemberDirectory(memberDirectory);
+
+/** "Payment failed" on the swimmer profile of anyone with a failed payment still open (D21). */
+registerMemberNotices({ id: "payments.failed", app: "swim-school", list: memberPaymentNotices });
 
 /** Search finds swimmers by name or member number for those who can open Swimmers; the hit names
  *  the swimmer and their number, nothing more. */

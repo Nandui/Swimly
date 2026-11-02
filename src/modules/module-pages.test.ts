@@ -7,7 +7,6 @@ import { coinagePages } from "@/modules/coinage/features/workspace/pages";
 import { hrPages } from "@/modules/hr/features/workspace/pages";
 import { incidentPages } from "@/modules/incidents/features/workspace/pages";
 import { maintenancePages } from "@/modules/maintenance/features/workspace/pages";
-import { paymentsPages } from "@/modules/payments/features/workspace/pages";
 import { planPages } from "@/modules/plan/features/workspace/pages";
 import { purchasingPages } from "@/modules/purchasing/features/workspace/pages";
 import { refundPages } from "@/modules/refunds/features/workspace/pages";
@@ -31,7 +30,6 @@ const APPS: [string, { label: string; place?: "setup" | "overview" }[]][] = [
   ["HR", hrPages(everything)],
   ["Incidents", incidentPages(everything)],
   ["Maintenance", maintenancePages()],
-  ["Payments", paymentsPages(everything)],
   ["Plan (test)", planPages()],
   ["Purchasing", purchasingPages(everything)],
   ["Refunds", refundPages(everything)],

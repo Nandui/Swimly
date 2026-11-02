@@ -9,6 +9,7 @@ import {
   Layers,
   UserRoundCheck,
   FileCheck2,
+  Landmark,
   Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -42,6 +43,7 @@ export const NAV_ITEMS: AppNavItem[] = [
   { href: "/awaiting-enrolment", label: "Awaiting enrolment", place: "overview", description: "Swimmers ready for a class place, and family follow-ups", icon: UserRoundCheck, screen: "awaiting-enrolment", group: "daily" },
   { href: "/legend-agreements", label: "Legend agreements", place: "overview", description: "Billing agreements still to confirm for class places", icon: FileCheck2, screen: "legend-agreements", group: "daily" },
   { href: "/together", label: "Together", place: "overview", description: "A time that suits every child in one family", icon: CalendarHeart, screen: "together", group: "daily" },
+  { href: "/payments", label: "Failed payments", place: "overview", description: "Failed direct debits at your sites, to contact until each is recovered", icon: Landmark, screen: "payments", group: "daily" },
   { href: "/analytics", label: "Analytics", place: "overview", description: "Enrolment, capacity and attendance reports", icon: ChartNoAxesCombined, screen: "analytics", group: "monitoring" },
   { href: "/cancellations", label: "Cancelled classes", place: "overview", description: "Cancelled sessions whose billing needs following up", icon: CalendarX2, screen: "cancellations", group: "monitoring" },
   { href: "/programmes", label: "Programmes", place: "setup", description: "Programmes, levels and competencies", icon: Layers, screen: "programmes", group: "setup" },

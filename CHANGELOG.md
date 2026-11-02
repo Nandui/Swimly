@@ -4,6 +4,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.2.0 · 2 November 2026 · Failed payments are part of Swim school
+
+- **Failed payments** are now in Swim school instead of a separate Payments app. Open Swim school and choose **Failed payments** on its Overview; Home still shows the ones to contact.
+- **Who sees them:** everyone with Swim school Desk can follow up failed payments, and Swim school Manage uploads the bank's monthly sheet. If you followed them up before but can't see them now, ask an admin for Swim school Desk.
+- Nothing else changes: the lists, each payment's page and "Payment failed" on the swimmer's profile work as before.
+
 ## 3.1.0 · 2 November 2026 · Report an issue with a staff member
 
 - **Report** in HR lets managers on duty put an issue with someone they manage on that person's HR file in under a minute: choose what it is about (Conduct, Performance, Attendance or Safety), write what happened and when, and send it. The person is not told, and you can't open the report again afterwards.

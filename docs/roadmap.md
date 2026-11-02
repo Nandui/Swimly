@@ -90,7 +90,7 @@ Each follows "Adding an app" in [apps.md](apps.md) and the checklist in [../AGEN
 
 Swim school, Short courses, Refunds, Coinage and Payments become **Classes**, **Finance requests** and **Academy** ([D23](decisions.md)). Smallest first, each shipped and checked on `main` before the next starts:
 
-1. **Payments into Classes.** Its pages and home items move into the swim school's module; Payments' Use goes to Desk, its Manage to Manage. Its rows are copied into new tables in the module's schema.
+1. **Payments into Classes** (built 2 November 2026, 3.2.0). Its pages and home items moved into the swim school's module and frame (Failed payments on its Overview); Payments' Use went to Desk, its Manage to Manage. Its tables moved into `activities.prisma` with their names, so nothing was copied.
 2. **Finance requests.** One app with refund and coinage requests: new `FinanceRequest` tables with a detail table per kind, one flow, one queue for finance. Rows are copied from the Refunds and Coinage tables.
 3. **Academy.** Its own module, levels Tutor and Manage, in Team; it keeps its tables and the Academy booking site's API.
 4. **Short courses as an activity type** in Classes, using `Programme.activityType` ([architecture.md](architecture.md#activity-types)): the desk books them, instructors take their registers on the pool deck. Swim school is renamed Classes on screen when this lands.
