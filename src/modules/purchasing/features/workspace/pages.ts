@@ -9,6 +9,6 @@ export function purchasingPages(who: Pick<PurchasingActor, "request">): (ModuleP
     { href: "/purchasing/overview", label: "Overview", icon: LayoutDashboard, description: "What waits for you, and every Purchasing page", match: (p) => p === "/purchasing/overview" },
     { href: "/purchasing", label: "Orders", icon: ReceiptText, description: "Purchase orders at the sites you cover, from draft to received", match: (p) => p === "/purchasing" || /^\/purchasing\/(?!new|suppliers|overview)/.test(p) },
     ...(who.request ? [{ href: "/purchasing/new", label: "New order", icon: FilePlus2, description: "Raise an order for approved products from an approved supplier", match: (p: string) => p.startsWith("/purchasing/new") }] : []),
-    { href: "/purchasing/suppliers", label: "Suppliers", icon: Truck, description: "Approved suppliers, their products and agreed prices", match: (p) => p.startsWith("/purchasing/suppliers") },
+    { href: "/purchasing/suppliers", label: "Suppliers", place: "setup" as const, icon: Truck, description: "Approved suppliers, their products and agreed prices", match: (p) => p.startsWith("/purchasing/suppliers") },
   ];
 }

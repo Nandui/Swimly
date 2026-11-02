@@ -10,7 +10,7 @@ import { maintenancePages } from '@/modules/maintenance/features/workspace/pages
 export function MaintenanceShell({ who, children }: { who: { id: string; name: string }; children: ReactNode }) {
   const pathname = usePathname(), query = useSearchParams();
   const view = pathname === '/maintenance/overview' ? 'overview' : pathname === '/maintenance/new' ? 'new' : pathname === '/maintenance' && query.get('show') === 'mine' ? 'mine' : 'requests';
-  const links = maintenancePages().map(({ href, label, icon, view: page }) => ({ href, label, icon, active: page === view }));
+  const links = maintenancePages().map(({ href, label, icon, place, view: page }) => ({ href, label, icon, place, active: page === view }));
   return (
     <ModuleShell module="Maintenance" id="maintenance" who={who} scopeNote="Your sites" links={links} scrollKey={query.toString()}>
       {children}

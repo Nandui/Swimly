@@ -4,6 +4,17 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.0.0 · 2 November 2026 · Turnfin 3: one place to find your way
+
+- **The list on the left now follows you.** On Home it shows your apps. Open an app and it changes to that app's pages, with **‹ Home** at the top to go back. The row of tabs across the top of each page is gone.
+- **Each app shows its main pages** in the list, five at most. The rest are on the app's **Overview**, which lists every page.
+- **Set up** sits at the bottom of the list for managers. Open it to reach the lists and settings, such as Training's courses and rules.
+- **Home puts your work first**: one list of everything waiting for you, from every app, then today's figures, the day's timetable and what's next.
+- **Search** is at the top of the list, or press **Ctrl K**. Type a page, an app, a colleague's name or a swimmer, and choose to go straight there. On your phone it's the round button beside the bar at the bottom.
+- **If your job uses one app**, such as the pool deck, Turnfin opens straight into it.
+- **On your phone**, the page title sits on the blue at the top. Tap the app's name in the bottom bar to see its pages.
+- **The pool deck** now looks and works like every other app.
+
 ## 2.35.0 · 2 November 2026 · Turnfin's new look
 
 - **Turnfin wears its own colour now**: the blue of the Turnfin logo runs down the side of every screen, with the fin drawn large behind your list of apps.

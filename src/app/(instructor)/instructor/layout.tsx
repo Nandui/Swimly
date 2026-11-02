@@ -6,5 +6,5 @@ import { getCurrentClub } from "@/lib/clubs/current";
 export default async function InstructorLayout({ children }: { children: ReactNode }) {
   const session = await screenPage("instructor", "attendance.mark");
   const { club, clubs } = await getCurrentClub();
-  return <InstructorShell userName={session.user.name ?? "Instructor"} club={club} clubs={clubs}>{children}</InstructorShell>;
+  return <InstructorShell who={{ id: session.user.id, name: session.user.name ?? "Instructor" }} club={club} clubs={clubs}>{children}</InstructorShell>;
 }

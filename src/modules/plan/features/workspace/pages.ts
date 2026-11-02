@@ -9,6 +9,6 @@ export function planPages(): (ModulePage & { match: (pathname: string) => boolea
     { href: "/plan", label: "Week", icon: CalendarDays, description: "A department's people across the week: add shifts, copy last week", match: (p) => p === "/plan", site: true },
     { href: "/plan/day", label: "Day", icon: CalendarCheck, description: "What's on and its gaps, and each person's duties, breaks and tasks; run today from here", match: (p) => p.startsWith("/plan/day"), site: true },
     { href: "/plan/off", label: "Off", icon: CalendarOff, description: "Who is off, so nobody plans them", match: (p) => p.startsWith("/plan/off"), site: true },
-    { href: "/plan/setup", label: "Setup", icon: Settings2, description: "Duties, areas and what's on, with what each needs", match: (p) => p.startsWith("/plan/setup"), site: true },
+    { href: "/plan/setup", label: "Setup", place: "setup" as const, icon: Settings2, description: "Duties, areas and what's on, with what each needs", match: (p) => p.startsWith("/plan/setup"), site: true },
   ];
 }

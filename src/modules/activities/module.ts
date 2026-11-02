@@ -3,7 +3,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import { visibleScreens, type ScreenKey } from "@/lib/staff/screens";
-import { registerAreaRename, registerCommitments, registerHomeCard, registerMemberDirectory, registerSiteSummary, type Commitment, type HomeIcon, type HomeItem, type HomeSession } from "@/modules/contributions";
+import { registerAreaRename, registerCommitments, registerHomeCard, registerMemberDirectory, registerSiteSummary, type Commitment, type HomeIcon, type HomeItem, type HomeSession, registerSearch } from "@/modules/contributions";
 import { formatTime, isDateOnly, minutesNow, parseDateOnly, plural, today } from "@/lib/format";
 import { logAudit } from "@/lib/audit";
 import { staffByIds } from "@/lib/directory";
@@ -214,3 +214,18 @@ registerAreaRename({
 /** The swimmer records other modules book people from (owner request, 21 October 2026): Short
  *  courses and the Academy search, read and add swimmers here, and keep only the id. */
 registerMemberDirectory(memberDirectory);
+
+/** Search finds swimmers by name or member number for those who can open Swimmers; the hit names
+ *  the swimmer and their number, nothing more. */
+registerSearch({
+  app: "swim-school",
+  async search(q, viewer) {
+    if (!viewer.permissions.includes("swimschool.desk")) return [];
+    const hits = await memberDirectory.search(q);
+    return hits.slice(0, 8).map((m) => ({
+      label: `${m.firstName} ${m.lastName}`.trim(),
+      hint: m.memberNumber ? `Swimmer · ${m.memberNumber}` : "Swimmer",
+      href: `/students/${encodeURIComponent(m.id)}`,
+    }));
+  },
+});

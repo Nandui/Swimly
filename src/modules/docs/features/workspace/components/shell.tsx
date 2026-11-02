@@ -21,7 +21,7 @@ export function Shell({
     { href: '/docs/library', label: 'Document library', icon: Library, active: pathname.startsWith('/docs/library') || pathname.startsWith('/docs/documents') },
     { href: '/docs/work', label: 'My work', icon: ClipboardCheck, active: pathname.startsWith('/docs/work') },
     ...((w.canReport ?? canManage(w.member)) ? [{ href: '/docs/reports', label: 'Reading reports', icon: ChartNoAxesCombined, active: pathname.startsWith('/docs/reports') }] : []),
-    ...(canManage(w.member) ? [{ href: '/docs/admin', label: 'Administration', icon: Settings, active: pathname.startsWith('/docs/admin') }] : []),
+    ...(canManage(w.member) ? [{ href: '/docs/admin', label: 'Administration', icon: Settings, place: 'setup' as const, active: pathname.startsWith('/docs/admin') }] : []),
   ];
   return (
     <ModuleShell module="Docs" id="docs" who={{ id: w.member.id, name: w.member.name }} links={links}

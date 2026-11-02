@@ -1,6 +1,6 @@
 import { CalendarDays, CalendarRange, LayoutDashboard, Sun, UserX, type LucideIcon } from "lucide-react";
 
-export type RotaPage = { href: string; label: string; icon: LucideIcon; description: string; match: (pathname: string) => boolean };
+export type RotaPage = { href: string; label: string; icon: LucideIcon; description: string; place?: "setup" | "overview"; match: (pathname: string) => boolean };
 
 /** Rota's pages, once: the page bar (RotaShell) and "Everything in Rota" on the overview are
  *  built from this list, so neither can leave a page out. Absences are for people who run the

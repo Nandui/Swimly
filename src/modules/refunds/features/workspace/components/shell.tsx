@@ -15,7 +15,7 @@ export function RefundShell({ who, children }: {
   const pathname = usePathname(), query = useSearchParams();
   // A request page, the new-request form and every status view sit under "Refund requests".
   const view = pathname === '/refunds/overview' ? 'overview' : pathname === '/refunds' ? refundListView(query, who.id) : 'requests';
-  const requests = refundPages(who).map(({ href, label, icon, view: page }) => ({ href, label, icon, active: page === view }));
+  const requests = refundPages(who).map(({ href, label, icon, place, view: page }) => ({ href, label, icon, place, active: page === view }));
   return (
     <ModuleShell module="Refunds" id="refunds" who={who} scopeNote="Your team's space"
       links={requests}

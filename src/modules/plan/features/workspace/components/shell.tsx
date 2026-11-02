@@ -12,8 +12,8 @@ export function PlanShell({ who, sites, children }: { who: { id: string; name: s
   const pathname = usePathname();
   const site = useSearchParams().get('site');
   const pages = planPages();
-  const links = pages.map(({ href, label, icon, match, site: oneSite }) => ({
-    href: site && oneSite ? `${href}?${new URLSearchParams({ site })}` : href, label, icon, active: match(pathname),
+  const links = pages.map(({ href, label, icon, place, match, site: oneSite }) => ({
+    href: site && oneSite ? `${href}?${new URLSearchParams({ site })}` : href, label, icon, place, active: match(pathname),
   }));
   const onSitePage = pages.some((p) => p.site && p.match(pathname));
   return (

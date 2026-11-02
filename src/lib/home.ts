@@ -45,7 +45,7 @@ function turnfinMeUrl(): string | null {
   try { return staffApiConfig().meUrl || null; } catch { return null; }
 }
 
-function viewerOf(user: Session["user"]): HomeViewer {
+export function viewerOf(user: Session["user"]): HomeViewer {
   return {
     id: user.id,
     name: user.name ?? "Staff member",

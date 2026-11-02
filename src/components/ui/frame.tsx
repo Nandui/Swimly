@@ -27,7 +27,12 @@ export type FrameSetup = {
   version?: string;
   /** Top-bar controls the app adds to every frame, before the account menu. */
   tools?: ReactNode;
+  /** The records behind a search (people, swimmers): each says what it is and where it opens.
+   *  Pages and apps are matched by the frame itself. */
+  search?: (query: string) => Promise<FrameSearchHit[]>;
 };
+
+export type FrameSearchHit = { label: string; hint: string; href: string };
 
 const FrameContext = createContext<FrameSetup>({
   modules: [], groups: [], role: '', site: '', signOut: async () => {},
