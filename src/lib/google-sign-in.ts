@@ -80,6 +80,25 @@ export function googleIdentity(profile: GoogleProfile) {
   };
 }
 
+const GOOGLE_USERINFO = "https://openidconnect.googleapis.com/v1/userinfo";
+
+/** Google does not promise the picture in the sign-in token, and for some work
+ *  accounts leaves it out (2 November 2026: no picture had reached most staff).
+ *  Its userinfo endpoint is the place for the profile, so when the token has no
+ *  picture the sign-in's own access token asks there. Only the picture is
+ *  taken, only for the same person, and a slow or failed answer changes nothing. */
+export async function withGooglePicture(profile: GoogleProfile, accessToken: string | undefined, fetcher: typeof fetch = fetch): Promise<GoogleProfile> {
+  if (!profile || text(profile.picture) || !accessToken) return profile;
+  try {
+    const response = await fetcher(GOOGLE_USERINFO, { headers: { Authorization: `Bearer ${accessToken}` }, signal: AbortSignal.timeout(3000) });
+    if (!response.ok) return profile;
+    const info = (await response.json()) as { sub?: unknown; picture?: unknown } | null;
+    return info && info.sub === profile.sub && text(info.picture) ? { ...profile, picture: info.picture } : profile;
+  } catch {
+    return profile;
+  }
+}
+
 /** Google is asked to check the password at every sign-in (`max_age=0` in
  *  src/auth.ts), because desk and pool deck PCs are shared: a Google session
  *  someone left open in the browser must never let the next person in with
@@ -136,12 +155,13 @@ async function makeAccount(identity: GoogleIdentity): Promise<Found | null> {
 }
 
 /** Keeps the account in step with Google: links the Google id, and takes the
- *  current name, picture and (when nobody else has it) a changed address. */
+ *  current name, picture and (when nobody else has it) a changed address. A
+ *  sign-in that brings no picture keeps the one already there. */
 async function refreshAccount(account: Found, identity: GoogleIdentity): Promise<Found> {
   const changes: { name?: string; email?: string; googleId?: string; avatarUrl?: string | null } = {};
   if (account.googleId !== identity.googleId) changes.googleId = identity.googleId;
   if (account.name !== identity.name) changes.name = identity.name;
-  if (account.avatarUrl !== identity.avatarUrl) changes.avatarUrl = identity.avatarUrl;
+  if (identity.avatarUrl && account.avatarUrl !== identity.avatarUrl) changes.avatarUrl = identity.avatarUrl;
   if (account.email !== identity.email && !(await prisma.user.findUnique({ where: { email: identity.email }, select: { id: true } }))) changes.email = identity.email;
   if (Object.keys(changes).length === 0) return account;
   const updated = await prisma.user.update({ where: { id: account.id }, data: changes, select: ACCOUNT });
@@ -155,9 +175,9 @@ async function refreshAccount(account: Found, identity: GoogleIdentity): Promise
 
 /** Signs a Google profile in: finds or makes the account, refreshes it from
  *  Google, then says whether it may come in. Called once per sign-in, before
- *  the session is issued. */
-export async function googleSignIn(profile: GoogleProfile): Promise<{ user: { id: string; name: string; email: string } } | { refused: GoogleRefusal }> {
-  const identity = googleIdentity(profile);
+ *  the session is issued. The access token only fetches a missing picture. */
+export async function googleSignIn(profile: GoogleProfile, accessToken?: string, fetcher: typeof fetch = fetch): Promise<{ user: { id: string; name: string; email: string } } | { refused: GoogleRefusal }> {
+  const identity = googleIdentity(await withGooglePicture(profile, accessToken, fetcher));
   if (!identity) return { refused: "google_no_account" };
   // Not enforced (23 October 2026): turning stale sign-ins away shut everyone
   // out on turnfin.app. Logged until we know what Google sends back.

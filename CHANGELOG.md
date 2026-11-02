@@ -4,6 +4,11 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.0.4 · 2 November 2026 · Your Google picture
+
+- **Your picture** from your work Google account now appears in Turnfin, at the top right and on the Staff page, the next time you sign in with Google. Most people's pictures were not coming through before.
+- If your work Google account has no picture, Turnfin keeps showing your initials, or the letter Google uses for you. Add a picture to your work Google account and it appears after your next sign-in.
+
 ## 3.0.3 · 2 November 2026 · A sharp fin
 
 - **The Turnfin fin** behind the list on the left now has a sharp, clean edge on every screen, including high-resolution laptops and monitors, where it looked soft before.

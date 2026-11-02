@@ -130,7 +130,7 @@ const {
     // sign-in page with its reason.
     async signIn({ account, profile }) {
       if (account?.provider !== "google") return true;
-      const found = await googleSignIn(profile);
+      const found = await googleSignIn(profile, account.access_token);
       return "refused" in found ? `/sign-in?error=${found.refused}` : true;
     },
     // The token carries who, and how and when they proved it: never what they
