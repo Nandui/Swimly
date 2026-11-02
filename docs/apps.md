@@ -56,6 +56,20 @@ Coins for the tills, requested at the desk and ordered by accounts.
 | Use | request coinage for a till and follow it |
 | Manage | decide requests and record the orders. Nobody decides their own |
 
+### Payments
+*Module `payments` · `/payments/overview` · reach: sites · data: `payments.prisma`*
+
+The direct debits that failed each month, followed up by reception until each is recovered. Legend stays the billing system: money is taken there, never in Turnfin ([D21](decisions.md)).
+
+| Level | Gives |
+| --- | --- |
+| Use | see the failed payments at their sites, log each contact and record how it ended: paid at the desk, new mandate set up, or place cancelled |
+| Manage | also upload the bank's monthly failure sheet, open closed payments again, and remove payments that aren't swimmers |
+
+A failure is **To contact**, **Contacted**, **Paid at the desk**, **New mandate set up** or **Place cancelled**. Only rows whose member number belongs to a swimmer on Turnfin are tracked; gym memberships and unknown numbers are left out.
+
+Connects: matches member numbers through the swim school's member directory; puts a "Payment failed" notice on the swimmer's profile while one is open (member notices); home items.
+
 ## Poolside
 
 ### Pool deck
@@ -120,7 +134,7 @@ The rota started again, on test at one site beside Rota ([D17](decisions.md)): s
 | Plan | plan shifts and duties for the departments they belong to, and mark people off |
 | Manage | plan every department, run today, and keep the duties, areas and what's on |
 
-Connects: reads people, departments and qualifications; reads swim classes and plans their teachers through Swim school's commitments. No Turnfin Me, home card or person file while it is on test.
+Connects: reads people, departments, qualifications and the site's areas (Admin › Areas, shared with Swim school and Rota); reads swim classes and plans their teachers through Swim school's commitments. No Turnfin Me, home card or person file while it is on test.
 
 ### Training
 *Module `training` · `/training/overview` · reach: sites · data: `training.prisma`*

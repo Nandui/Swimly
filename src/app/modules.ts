@@ -7,6 +7,7 @@ import { incidentsModule } from "@/modules/incidents/manifest";
 import { maintenanceModule } from "@/modules/maintenance/manifest";
 import { purchasingModule } from "@/modules/purchasing/manifest";
 import { refundsModule } from "@/modules/refunds/manifest";
+import { paymentsModule } from "@/modules/payments/manifest";
 import { planModule } from "@/modules/plan/manifest";
 import { rotaModule } from "@/modules/rota/manifest";
 import { siteMonitoringModule } from "@/modules/site-monitoring/manifest";
@@ -25,6 +26,7 @@ export const modules = [
   shortCoursesModule,
   refundsModule,
   coinageModule,
+  paymentsModule,
   poolDeckModule,
   tasksModule,
   incidentsModule,

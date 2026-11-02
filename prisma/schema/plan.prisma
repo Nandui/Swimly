@@ -5,6 +5,8 @@
 // these tables keep plain ids and carry the module prefix (AGENTS.md, Data and writes). Days are
 // the site's own dates as "YYYY-MM-DD"; times are minutes after midnight.
 
+/// Retired (owner, 2 November 2026): Plan reads Admin › Areas (Core's `SiteArea`), the one list
+/// Swim school and Rota use too. Left unread until one migration removes it, with the owner's yes.
 /// A place at a site where sessions happen: "Pool", or one of its parts, "Main pool" (one level
 /// of parts only). Lanes, when it has them, let a session take some and not others.
 model PlanArea {
@@ -86,7 +88,10 @@ model PlanSession {
   orgId         String
   siteId        String
   title         String
+  /// Retired with `PlanArea`; `siteAreaId` is read instead.
   areaId        String?
+  /// Where it is: Admin › Areas (Core's `SiteArea`), read through `src/lib/directory.ts`.
+  siteAreaId    String?
   /// The area's lanes it takes, 1 up; empty for the whole area.
   lanes         Int[]     @default([])
   startMinutes  Int

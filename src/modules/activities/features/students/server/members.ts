@@ -83,6 +83,18 @@ async function byIds(ids: readonly string[], { medical }: { medical: boolean }):
   }));
 }
 
+/** A member number as Legend's exports match it: capitals, no spaces. */
+export const memberNumberKey = (n: string) => n.replace(/\s+/g, "").toUpperCase();
+
+/** Swimmers by member number, for a list another module received from Legend (Payments' failed
+ *  direct debits). Matched as the Legend list upload matches them: capitals, no spaces. */
+async function byNumbers(numbers: readonly string[]): Promise<Map<string, MemberHit>> {
+  const keys = [...new Set(numbers.map(memberNumberKey).filter(Boolean))];
+  if (keys.length === 0) return new Map();
+  const rows = await prisma.student.findMany({ where: { memberNumber: { in: keys } }, select: HIT });
+  return new Map(rows.map((row) => [memberNumberKey(row.memberNumber ?? ""), hitOf(row)]));
+}
+
 /** The same checks as adding a swimmer in the swim school, kept short for a booking desk. */
 function problemWith(input: NewMember): string | null {
   if (!input.firstName.trim()) return "Give their first name.";
@@ -126,4 +138,4 @@ async function create(raw: NewMember, { siteId, by, via }: { siteId: string; by:
   return result.ok ? result : { ok: false as const, error: result.error };
 }
 
-export const memberDirectory: MemberDirectory = { app: "swim-school", search, byIds, create };
+export const memberDirectory: MemberDirectory = { app: "swim-school", search, byIds, byNumbers, create };

@@ -1,5 +1,6 @@
 import "server-only";
 import { notFound } from "next/navigation";
+import { canSee, requireSession } from "@/lib/authz";
 import { departmentsForSite } from "@/lib/directory";
 import { today } from "@/lib/format";
 import { qualificationTypesOf } from "@/lib/qualifications";
@@ -19,7 +20,7 @@ export async function planSetup(params: { site?: string }) {
   if (!site) notFound();
   const from = today();
   const [duties, areas, departments, qualifications, manage, sessions] = await Promise.all([
-    dutiesOf(site.orgId), areasOf(site.orgId, site.id), departmentsForSite(site.orgId, site.id), qualificationTypesOf(site.orgId),
+    dutiesOf(site.orgId), areasOf(site.id), departmentsForSite(site.orgId, site.id), qualificationTypesOf(site.orgId),
     mayManage(site.id, site.orgId),
     prisma.planSession.findMany({
       where: { orgId: site.orgId, siteId: site.id, cancelledAt: null, lastDay: { gte: from } },
@@ -28,9 +29,11 @@ export async function planSetup(params: { site?: string }) {
   ]);
   return {
     who, sites, site, today: from, manage, duties, areas, departments,
+    // The link to Admin › Areas only for those who can open it; the page checks again.
+    canOpenAreas: canSee(await requireSession(), "areas"),
     qualifications: qualifications.filter((q) => !q.archivedAt).map((q) => ({ id: q.id, name: q.name })),
     sessions: sessions.map((s) => ({
-      id: s.id, title: s.title, areaId: s.areaId, lanes: s.lanes, start: s.startMinutes, end: s.endMinutes, weekdays: s.weekdays,
+      id: s.id, title: s.title, areaId: s.siteAreaId, lanes: s.lanes, start: s.startMinutes, end: s.endMinutes, weekdays: s.weekdays,
       firstDay: s.firstDay, lastDay: s.lastDay, skipDays: s.skipDays, note: s.note, needs: s.needs.map((n) => ({ dutyId: n.dutyId, count: n.count })),
     })),
   } as const;

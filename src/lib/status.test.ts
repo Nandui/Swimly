@@ -13,6 +13,7 @@ import { coinageStatuses } from "@/modules/coinage";
 import { MONITORING_STATUS_META } from "@/modules/site-monitoring";
 import { MAINTENANCE_STATUS_META, MAINTENANCE_URGENCY_META } from "@/modules/maintenance";
 import { OFF_REASON_META } from "@/modules/plan";
+import { PAYMENT_STATUS_META } from "@/modules/payments";
 import * as shortCourses from "@/modules/short-courses";
 import { STOCK_CATEGORY_TONE_META, STOCK_CHANGE_META, STOCK_TAKE_META } from "@/modules/stock";
 import { CCTV_REASON_META } from "@/modules/cctv";
@@ -36,6 +37,7 @@ const MAPS: Record<string, Record<string, StatusMeta>> = {
   MONITORING_STATUS_META,
   MAINTENANCE_STATUS_META, MAINTENANCE_URGENCY_META,
   OFF_REASON_META,
+  PAYMENT_STATUS_META,
   ABSENCE_REASON_META: rota.ABSENCE_REASON_META, ROTA_CHANGE_REASON_META: rota.ROTA_CHANGE_REASON_META, BOOKING_KIND_META: rota.BOOKING_KIND_META,
   RETURN_FIT_META: rota.RETURN_FIT_META, ROTA_DAY_META: rotaMeta.ROTA_DAY_META, ROTA_WEEK_META: rotaMeta.ROTA_WEEK_META, ROTA_FIT_META: rotaMeta.ROTA_FIT_META,
   ROTA_SHIFT_NOTE_META: rotaMeta.ROTA_SHIFT_NOTE_META, ROTA_TIMEPOINT_META: rotaMeta.ROTA_TIMEPOINT_META, ROTA_CLASS_META: rotaMeta.ROTA_CLASS_META,

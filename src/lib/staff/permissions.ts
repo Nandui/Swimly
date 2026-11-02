@@ -339,6 +339,24 @@ export const PERMISSIONS = [
     description: "Put requests in Trackplan, correct them, mark them fixed, close them not fixed and open them again, at the sites this role covers. Includes reporting.",
   },
   {
+    key: "payments.read",
+    group: "Payments",
+    label: "See failed payments",
+    description: "See the direct debits that failed at the sites this role covers, with who was contacted and how each ended.",
+  },
+  {
+    key: "payments.follow",
+    group: "Payments",
+    label: "Follow up failed payments",
+    description: "Log each contact with the member and record that they paid at the desk, set up a new mandate or cancelled, at the sites this role covers. Includes seeing them.",
+  },
+  {
+    key: "payments.manage",
+    group: "Payments",
+    label: "Manage failed payments",
+    description: "Upload the monthly failure sheet, open closed payments again and remove payments that aren't swimmers, at the sites this role covers. Includes following them up.",
+  },
+  {
     key: "plan.view",
     group: "Plan (test)",
     label: "See the plan",
@@ -497,6 +515,8 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "cctv.review": ["cctv.record"],
   "site-monitoring.act": ["site-monitoring.read"],
   "maintenance.manage": ["maintenance.report"],
+  "payments.manage": ["payments.follow", "payments.read"],
+  "payments.follow": ["payments.read"],
   "plan.manage": ["plan.plan"],
   "plan.plan": ["plan.view"],
   "hr.notes.write": ["hr.records.read"],

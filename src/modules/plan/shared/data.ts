@@ -1,5 +1,5 @@
 import "server-only";
-import { activePlacedStaff, activeStaffAtSite, staffByIds } from "@/lib/directory";
+import { activePlacedStaff, activeStaffAtSite, areasAt, staffByIds } from "@/lib/directory";
 import { qualificationsHeldBy, qualificationTypesOf } from "@/lib/qualifications";
 import { prisma } from "@/lib/prisma";
 import { commitmentsFor } from "@/modules/contributions";
@@ -23,10 +23,10 @@ export async function dutiesOf(orgId: string): Promise<PlanDutyRow[]> {
     color: d.color, defaultMinutes: d.defaultMinutes, forClasses: d.forClasses, tasks: d.tasks.map((t) => ({ name: t.name, when: t.when, atMinutes: t.atMinutes })) }));
 }
 
-/** A site's live areas, wholes first then their parts, each in order. */
-export async function areasOf(orgId: string, siteId: string): Promise<PlanAreaRow[]> {
-  const rows = await prisma.planArea.findMany({ where: { orgId, siteId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    select: { id: true, name: true, parentId: true, lanes: true, departmentId: true } });
+/** A site's live areas from Admin › Areas, the one list Swim school and Rota use too (owner, 2
+ *  November 2026), wholes first then their parts, each in Admin's order. */
+export async function areasOf(siteId: string): Promise<PlanAreaRow[]> {
+  const rows = (await areasAt(siteId)).map((a) => ({ id: a.id, name: a.name, parentId: a.parentId, lanes: a.lanes, departmentId: a.departmentId }));
   const wholes = rows.filter((a) => !a.parentId);
   return wholes.flatMap((w) => [w, ...rows.filter((p) => p.parentId === w.id)]);
 }
@@ -39,7 +39,7 @@ export async function sessionsOf(orgId: string, siteId: string, from: string, to
     include: { needs: true, days: { where: { date: { gte: from, lte: to } } } },
   });
   return rows.map((s) => ({
-    id: s.id, title: s.title, areaId: s.areaId, lanes: s.lanes, start: s.startMinutes, end: s.endMinutes, weekdays: s.weekdays,
+    id: s.id, title: s.title, areaId: s.siteAreaId, lanes: s.lanes, start: s.startMinutes, end: s.endMinutes, weekdays: s.weekdays,
     firstDay: s.firstDay, lastDay: s.lastDay, skipDays: s.skipDays, note: s.note,
     needs: s.needs.map((n) => ({ dutyId: n.dutyId, count: n.count })),
     days: s.days.map((d) => ({ date: d.date, cancelled: d.cancelled, start: d.startMinutes, end: d.endMinutes })),

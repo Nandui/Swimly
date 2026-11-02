@@ -1,10 +1,11 @@
+import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Notice } from "@/components/ui-kit/notice";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDateRange, formatTimeRange } from "@/lib/format";
-import { AreaDialog, DutyDialog, RetireDialog, SessionDialog } from "@/modules/plan/features/setup/components/setup-dialogs";
+import { DutyDialog, RetireDialog, SessionDialog } from "@/modules/plan/features/setup/components/setup-dialogs";
 import type { PlanSetupData } from "@/modules/plan/features/setup/server/data";
 import { dutyColor, WEEKDAYS } from "@/modules/plan/shared/rules";
 import { Circle } from "lucide-react";
@@ -17,7 +18,6 @@ export function SetupView({ data }: { data: PlanSetupData }) {
   const dName = (id: string | null) => departments.find((d) => d.id === id)?.name;
   const dutyName = (id: string) => duties.find((d) => d.id === id)?.name ?? "A duty no longer on the list";
   const areaName = (id: string | null) => areas.find((a) => a.id === id)?.name;
-  const wholes = areas.filter((a) => !a.parentId);
   const days = (w: number[]) => w.length === 7 ? "Every day" : w.length === 5 && w.every((d) => d < 5) ? "Weekdays" : w.map((d) => WEEKDAYS[d].slice(0, 3)).join(", ");
   const newSession = { title: "", areaId: "", lanes: [], start: 9 * 60, end: 10 * 60, weekdays: [0, 1, 2, 3, 4], firstDay: data.today, lastDay: data.today, skipDays: [], note: "", needs: [] };
 
@@ -55,22 +55,17 @@ export function SetupView({ data }: { data: PlanSetupData }) {
 
       <section aria-labelledby="plan-areas" className="flex min-w-0 flex-col">
         <div className="pc-section-head"><h2 id="plan-areas">Areas at {site.name}</h2>
-          {manage ? <AreaDialog siteId={site.id} draft={{ name: "", parentId: "", lanes: 0, departmentId: "" }} wholes={wholes} departments={departments}
-            trigger={<Button variant="outline" className="min-h-11"><Plus aria-hidden="true" />Add an area</Button>} /> : null}
+          {data.canOpenAreas ? <Button asChild variant="outline" className="min-h-11"><Link href="/areas">Admin › Areas</Link></Button> : null}
         </div>
-        {areas.length === 0 ? <EmptyState compact icon="building" title="No areas yet" hint="Add the whole areas first (Pool), then their parts (Main pool, Learner pool)." /> : (
+        <p className="pc-section-note">One list for Plan, Swim school and Rota, kept in Admin › Areas: each area, its parts and its lanes. Swim classes show in the area they are in.</p>
+        {areas.length === 0 ? <EmptyState compact icon="building" title="No areas yet" hint="Add the pools, gym and reception in Admin › Areas." /> : (
           <ul className="pc-list">
             {areas.map((a) => (
-              <li key={a.id} className="pc-row">
+              <li key={a.id} className={a.parentId ? "pc-row pl-10" : "pc-row"}>
                 <span className="pc-row-body">
-                  <span className="pc-row-title">{a.parentId ? `${areaName(a.parentId)} › ${a.name}` : a.name}</span>
-                  <span className="pc-row-hint">{[a.lanes ? `${a.lanes} lanes` : null, dName(a.departmentId) ?? "Shared"].filter(Boolean).join(" · ")}</span>
+                  <span className="pc-row-title">{a.name}</span>
+                  <span className="pc-row-hint">{[a.parentId ? `Part of ${areaName(a.parentId)}` : null, a.lanes ? `${a.lanes} lanes` : null, dName(a.departmentId) ?? "Shared"].filter(Boolean).join(" · ")}</span>
                 </span>
-                {manage ? <span className="pc-row-trail">
-                  <AreaDialog siteId={site.id} draft={{ ...a, parentId: a.parentId ?? "", departmentId: a.departmentId ?? "" }} wholes={wholes} departments={departments}
-                    trigger={<Button variant="outline" className="min-h-11">Change</Button>} />
-                  <RetireDialog kind="area" id={a.id} name={a.name} />
-                </span> : null}
               </li>
             ))}
           </ul>
