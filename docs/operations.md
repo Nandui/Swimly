@@ -95,7 +95,7 @@ Set in Vercel per environment; locally in `.env` (copy `.env.example`). Secrets 
 | --- | --- |
 | `DOCS_DATABASE_URL`, `DOCS_DIRECT_URL` | Docs' own database; never the main one |
 | `DATABASE_POOL_MAX` | optional: the most connections each database pool opens. Leave unset; the sandbox sets it to 1 |
-| `HR_DATABASE_URL`, `HR_DIRECT_URL` (or Vercel's `HR_DB_DATABASE_URL`, `HR_DB_DATABASE_URL_UNPOOLED`) | HR's own database; unset, HR is off |
+| `HR_DATABASE_URL`, `HR_DIRECT_URL` (or Vercel's `HR_DB_DATABASE_URL`, `HR_DB_DATABASE_URL_UNPOOLED`) | the old separate HR database, read only by the production build's one-time copy into the main database ([D23](decisions.md)). Remove once the copy is confirmed |
 
 **Email and files**
 
