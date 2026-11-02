@@ -56,6 +56,20 @@ Coins for the tills, requested at the desk and ordered by accounts.
 | Use | request coinage for a till and follow it |
 | Manage | decide requests and record the orders. Nobody decides their own |
 
+### Payments
+*Module `payments` · `/payments/overview` · reach: sites · data: `payments.prisma`*
+
+The direct debits that failed each month, followed up by reception until each is recovered. Legend stays the billing system: money is taken there, never in Turnfin ([D21](decisions.md)).
+
+| Level | Gives |
+| --- | --- |
+| Use | see the failed payments at their sites, log each contact and record how it ended: paid at the desk, new mandate set up, or place cancelled |
+| Manage | also upload the bank's monthly failure sheet and open closed payments again |
+
+A failure is **To contact**, **Contacted**, **Paid at the desk**, **New mandate set up** or **Place cancelled**. Every row on the sheet is kept, swim lessons and gym memberships alike; a member number that belongs to a swimmer links the two.
+
+Connects: matches member numbers through the swim school's member directory; puts a "Payment failed" notice on the swimmer's profile while one is open (member notices); home items.
+
 ## Poolside
 
 ### Pool deck

@@ -41,10 +41,11 @@ function platform() {
     });
     contributions.registerDeskMeasures({ id: `${app}.desk`, app, list: async () => [{ kind: `${app}.job`, label: app, module: app, siteId: RIVERSIDE, userId: null, userName: null, at: "2026-10-26T10:00:00Z", minutes: 5, onTime: null, open: true }] });
     contributions.registerMemberHistory({ id: `${app}.history`, app, list: async () => [{ id: app, title: app, detail: "", on: "2026-10-01", module: app }] });
+    contributions.registerMemberNotices({ id: `${app}.notices`, app, list: async () => [{ id: app, label: app, hint: "", href: "/", module: app }] });
     contributions.registerHomeCard({ moduleId: app, items: async () => [{ kind: "today", label: app, href: "/", count: 1 }] });
     events.on("tasks.reading.out_of_range", () => { heard.push(app); }, { app });
   }
-  contributions.registerMemberDirectory({ app: "swim-school", search: async () => [], byIds: async () => new Map(), create: async () => ({ ok: false, error: "Synthetic" }) });
+  contributions.registerMemberDirectory({ app: "swim-school", search: async () => [], byIds: async () => new Map(), byNumbers: async () => new Map(), create: async () => ({ ok: false, error: "Synthetic" }) });
   const course = (siteId: string) => ({ id: siteId, name: "Synthetic course", description: "", site: { id: siteId, name: siteId, phone: "" }, minAge: null, priceCents: 0, price: "Free", placesLeft: 1, firstDay: "2026-11-02", lastDay: "2026-12-07", sessions: [] });
   contributions.registerAppCourses({ app: "short-courses", list: async () => [course(RIVERSIDE), course(HILLTOP)], one: async (id) => course(id), hold: async () => { throw new Error("not in this test"); }, bookingsFor: async () => [] });
 
@@ -108,6 +109,7 @@ for (const off of APPS) {
     for (const app of others(off)) assert.deepEqual(await contributions.planCommitment(`${app}.busy`, { ref: "x", siteId: RIVERSIDE, date: "2026-10-26", userId: null, by: { id: "u1", name: "Synthetic" } }), { ok: true });
     assert.deepEqual(sorted((await contributions.deskMeasuresFor({ siteIds: null, from: "2026-10-26", to: "2026-10-26", now: new Date() })).items.map((i) => i.label)), sorted(others(off)));
     assert.deepEqual(sorted((await contributions.memberHistoryFor("m1")).map((e) => e.module)), sorted(others(off)));
+    assert.deepEqual(sorted((await contributions.memberNoticesFor("m1")).map((e) => e.module)), sorted(others(off)));
     assert.equal((await contributions.members()) === null, off === "swim-school", "the member directory is null only when the swim school is off");
     assert.equal((await contributions.appCourses()) === null, off === "short-courses", "the parents app's courses are null only when Short courses is off");
 

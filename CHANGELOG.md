@@ -4,6 +4,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.33.0 · 2 November 2026 · Payments: chase failed direct debits
+
+- **Payments** is a new app for the direct debits that fail each month.
+- **Upload the sheet**: a manager uploads the bank's failure sheet. Turnfin reads the month from the file's name and shows how many payments it will add at each site before anything is saved. Uploading the same sheet twice adds nothing.
+- **Failed payments** lists who to contact first, then who you are waiting on, then the ones that are closed. Search by name, member number or reference, or pick a site or month.
+- **On each payment**: see who to call (the parent's phone and email when they are a swimmer), why the bank refused it and what to ask for. Choose **Log a contact** each time you call, text or email, then record how it ended: **Paid at the desk**, **New mandate set up** or **Place cancelled**.
+- **Take the money in Legend** as usual. Turnfin only keeps track of who was contacted and how it ended.
+- **Swimmer profiles** show a **Payment failed** badge while one of their payments is still open.
+
 ## 2.32.1 · 31 October 2026 · Assessments only for the right programme
 
 - **Assessments** can no longer be booked for a programme a swimmer has already moved past. A swimmer in a Water Safety and Fun class can book Water Safety and Fun, Swimming Skills or Rookie Lifesaving. A swimmer in Swimming Skills can book Swimming Skills or Rookie Lifesaving. A swimmer in Rookie Lifesaving can book Rookie Lifesaving.

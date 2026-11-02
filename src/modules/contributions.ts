@@ -414,6 +414,9 @@ export type MemberDirectory = {
    *  date of birth (2015-03-04 or 4/3/2015). At most 20, best first. */
   search(q: string): Promise<MemberHit[]>;
   byIds(ids: readonly string[], options: { medical: boolean }): Promise<Map<string, Member>>;
+  /** The people holding these member numbers, keyed by the number in capitals without spaces (as
+   *  Legend's exports match them). Numbers nobody holds are left out. */
+  byNumbers(numbers: readonly string[]): Promise<Map<string, MemberHit>>;
   /** Adds them at a site, audited as added from the calling module. Refuses a person already on
    *  the records with the same name and date of birth, or a member number in use. */
   create(input: NewMember, context: { siteId: string; by: { id: string; name: string }; via: string }): Promise<{ ok: true; id: string } | { ok: false; error: string }>;
@@ -453,6 +456,30 @@ export async function memberHistoryFor(memberId: string): Promise<MemberHistoryE
     return [] as MemberHistoryEntry[];
   })));
   return lists.flat().sort((a, b) => b.on.localeCompare(a.on));
+}
+
+/** Something another module needs the desk to raise with a member the next time they are in touch,
+ *  shown as a badge on their swimmer profile: "Payment failed", "September direct debit not
+ *  recovered yet". A short label and hint only, never amounts or notes; the link opens the record
+ *  in its own module, which checks permission again. */
+export type MemberNotice = { id: string; label: string; hint: string; href: string; module: string };
+export type MemberNoticeSource = { id: string; /** The app it belongs to (its manifest id). */ app: string; list(memberId: string): Promise<MemberNotice[]> };
+const memberNoticeSources: MemberNoticeSource[] = [];
+
+export function registerMemberNotices(source: MemberNoticeSource) {
+  const at = memberNoticeSources.findIndex((s) => s.id === source.id);
+  if (at >= 0) memberNoticeSources[at] = source;
+  else memberNoticeSources.push(source);
+}
+
+/** Every module's notices for this member. A failing source, or one whose app is off, is left out. */
+export async function memberNoticesFor(memberId: string): Promise<MemberNotice[]> {
+  await modulesLoaded();
+  const lists = await Promise.all(memberNoticeSources.map(async (s) => !(await appOn(s.app)) ? [] : s.list(memberId).catch((error) => {
+    console.error(`Member notices from ${s.id} failed`, error);
+    return [] as MemberNotice[];
+  })));
+  return lists.flat();
 }
 
 // ---------------------------------------------------------------------------

@@ -27,7 +27,7 @@ import { ENROLMENT_STATUS_META } from "@/modules/activities/shared/enrolment/con
 import { ageInYears, formatDate, parseDateOnly, toDateOnlyString } from "@/lib/format";
 import { lastLessonBefore } from "@/modules/activities/shared/enrolment/last-lesson";
 import { formatSlotShort, formatTime } from "@/modules/activities/shared/courses/constants";
-import { fullName, STUDENT_STATUS_META } from "@/modules/activities/shared/students/constants";
+import { fullName, MEMBER_NOTICE_META, STUDENT_STATUS_META } from "@/modules/activities/shared/students/constants";
 import { swimmerProfileHref } from "@/modules/activities/features/students/server/directory";
 import { chapterOrder, HISTORY_KINDS, HISTORY_META, nextLesson, type HistoryKind, type HistoryPage } from "@/modules/activities/features/students/server/history";
 import { AddSwimmer } from "@/modules/activities/features/students/components/add-swimmer";
@@ -36,20 +36,20 @@ import { ManageProfileEnrolments } from "@/modules/activities/features/students/
 import { ProfileCompetencies } from "@/modules/activities/features/students/components/profile-competencies";
 import { HistoryFeed } from "@/modules/activities/features/students/components/profile-history";
 import { GuardianAccessPanel } from "@/modules/activities/shared/parents/components/guardian-access";
-import type { MemberHistoryEntry } from "@/modules/contributions";
+import type { MemberHistoryEntry, MemberNotice } from "@/modules/contributions";
 import styles from "@/modules/activities/features/students/components/swimmer-profile.module.css";
 
 type Tab = "journey" | "competencies" | "attendance" | "assessments" | "details" | "parents";
 const JOURNEY_MODES = [{ value: "milestones", label: "Milestones" }, { value: "activity", label: "All activity" }];
 type ProfileAccess = { edit: boolean; enrol: boolean; assess: boolean; complete: boolean; override: boolean; courses: boolean; assessments: boolean; audit: boolean; parents?: boolean };
-export type SwimmerProfileProps = { student: StudentDetail; enrolments: StudentEnrolment[]; programmes: ProgrammeProgress[]; assessments: StudentAssessment[]; targets: TransferTarget[]; history: HistoryPage; otherCourses?: MemberHistoryEntry[]; access: ProfileAccess; initialTab?: string; returnTo: string; instant: string };
+export type SwimmerProfileProps = { student: StudentDetail; enrolments: StudentEnrolment[]; programmes: ProgrammeProgress[]; assessments: StudentAssessment[]; targets: TransferTarget[]; history: HistoryPage; otherCourses?: MemberHistoryEntry[]; notices?: MemberNotice[]; access: ProfileAccess; initialTab?: string; returnTo: string; instant: string };
 function profileTab(value?: string, parents = false): Tab {
   if (value === "progress") return "competencies";
   if (value === "parents" && parents) return "parents";
   return ["competencies", "attendance", "assessments", "details"].includes(value ?? "") ? value as Tab : "journey";
 }
 
-export function SwimmerProfile({ student, enrolments, programmes, assessments, targets, history, otherCourses = [], access, initialTab, returnTo, instant }: SwimmerProfileProps) {
+export function SwimmerProfile({ student, enrolments, programmes, assessments, targets, history, otherCourses = [], notices = [], access, initialTab, returnTo, instant }: SwimmerProfileProps) {
   const [tab, setTab] = useState<Tab>(profileTab(initialTab, access.parents)), [mode, setMode] = useState("milestones");
   const [programme, setProgramme] = useState("all"), [kind, setKind] = useState<HistoryKind>("all");
   const [search, setSearch] = useState(""), [level, setLevel] = useState<string | null>(null);
@@ -63,8 +63,9 @@ export function SwimmerProfile({ student, enrolments, programmes, assessments, t
   return <PageShell className={styles.profile} data-swimmer-profile header={<PageHeader back={{ href: returnTo, label: "Swimmers" }} title={name}
       leading={<Avatar size="xl" aria-hidden="true"><AvatarFallback>{student.firstName.slice(0, 1)}{student.lastName.slice(0, 1)}</AvatarFallback></Avatar>}
       description={`${student.dateOfBirth ? `Age ${ageInYears(student.dateOfBirth, new Date(instant))} · ` : ""}${student.memberNumber ? `Member ${student.memberNumber} · ` : ""}Joined ${formatDate(student.joinedOn)}`}
-      status={student.status !== "ACTIVE" ? <Tag meta={STUDENT_STATUS_META[student.status]} /> : null}
+      status={student.status !== "ACTIVE" || notices.length ? <>{student.status !== "ACTIVE" ? <Tag meta={STUDENT_STATUS_META[student.status]} /> : null}{[...new Set(notices.map(n => n.label))].map(label => <Tag key={label} meta={MEMBER_NOTICE_META.notice} label={label} />)}</> : null}
       actions={<><FollowUpHistory studentId={student.id} name={fullName(student)} canRecord={access.enrol} />{access.edit ? <AddSwimmer student={student} /> : null}{access.enrol ? <ManageProfileEnrolments studentId={student.id} active={student.status === "ACTIVE"} enrolments={enrolments} targets={targets} /> : null}</>} />}>
+    {notices.map(n => <Notice key={n.id} tone="warning" title={n.label} description={n.hint} actions={<Button asChild variant="outline"><a href={n.href}>Open in {n.module}</a></Button>} />)}
     {student.medicalNotes ? <Notice tone="error" icon={TriangleAlert} title="Medical notes: read before swimming"><p className="whitespace-pre-wrap">{student.medicalNotes}</p></Notice> : student.hasMedicalNotes ? <Notice title="Medical notes on file" description="Reception, swim school managers and the instructors teaching this swimmer can read them." /> : null}
     <Tabs value={tab} onValueChange={value => navigate(value as Tab)} className="gap-0">
       <TabsList aria-label="Swimmer profile sections"><TabsTrigger value="journey">Journey</TabsTrigger><TabsTrigger value="competencies">Competencies</TabsTrigger><TabsTrigger value="attendance">Attendance</TabsTrigger><TabsTrigger value="assessments">Assessments</TabsTrigger><TabsTrigger value="details">Details</TabsTrigger>{access.parents ? <TabsTrigger value="parents">Parent access</TabsTrigger> : null}</TabsList>
