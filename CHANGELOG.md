@@ -4,6 +4,10 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.0.2 · 2 November 2026 · Rounded corners all round
+
+- **Your page's top corners** are now rounded like its bottom ones, in every app.
+
 ## 3.0.1 · 2 November 2026 · The fin sits at the bottom
 
 - **The Turnfin fin** behind the list on the left now sits at the bottom of the screen, drawn larger, and runs off the edge and behind your page, as in the approved design. Before, it floated in the middle of the list on tall screens.
