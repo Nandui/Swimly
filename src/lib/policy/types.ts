@@ -3,7 +3,7 @@ import type { PermissionKey } from "@/lib/staff/permissions";
 /** Where part of a role applies (docs/apps.md):
  *  - `all`: everywhere in the organisation.
  *  - `site`: one site the person works at, and the people who work there.
- *  - `reports`: the people they manage, directly or indirectly (HR "Their team"). */
+ *  - `reports`: the people they manage, directly or indirectly (HR Report). */
 export type Scope = { kind: "all" } | { kind: "site"; id: string } | { kind: "reports" };
 
 export function scopeFrom(kind: string, id: string): Scope | null {

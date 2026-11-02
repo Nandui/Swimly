@@ -22,7 +22,7 @@ export type ModuleContext = {
 };
 
 /** Where a level applies. Swim school, Training and Rota work at the sites
- *  a person works at; HR "Their team" reaches the people they manage;
+ *  a person works at; HR Report reaches the people they manage;
  *  everything else applies everywhere. See docs/apps.md. */
 export type Reach = "sites" | "team" | "everywhere";
 
@@ -35,7 +35,7 @@ type ModuleLevel = {
   /** One plain sentence, shown where the level is set. */
   help: string;
   permissions: readonly PermissionKey[];
-  /** Overrides the module's reach (HR "Their team"). */
+  /** Overrides the module's reach (HR Report and Their sites). */
   reach?: Reach;
 };
 

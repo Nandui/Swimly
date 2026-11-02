@@ -1,4 +1,4 @@
-import { expandPermissions, isRestrictedPermission, type PermissionKey } from "@/lib/staff/permissions";
+import { expandPermissions, isRestrictedPermission, skipsStepUp, type PermissionKey } from "@/lib/staff/permissions";
 import type { Actor, Directory, Grant, Resource, Scope, SiteFilter, SubjectFilter } from "./types";
 
 /** The platform's single answer to "may this person do this, here, to them?".
@@ -36,9 +36,10 @@ export function recentlyConfirmed(actor: Actor, now = Date.now()): boolean {
   return (actor.authMethod === "password" || actor.authMethod === "google") && actor.authAt !== null && now - actor.authAt <= STEP_UP_MS;
 }
 
-/** Restricted capabilities also need a fresh Google or password (not a PIN) session. */
+/** Restricted capabilities also need a fresh Google or password (not a PIN) session,
+ *  except the few that read nothing (filing an HR report, D22). */
 export function needsStepUp(actor: Actor, cap: PermissionKey, now = Date.now()): boolean {
-  if (!isRestrictedPermission(cap)) return false;
+  if (!isRestrictedPermission(cap) || skipsStepUp(cap)) return false;
   return !recentlyConfirmed(actor, now);
 }
 
