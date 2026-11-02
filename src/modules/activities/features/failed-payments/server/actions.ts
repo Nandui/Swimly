@@ -77,7 +77,7 @@ export async function removeNonSwimmers(): Promise<ActionResult> {
   // Swimmers are looked up through the swim school first; inside the transaction only the payments
   // still unlinked are changed, so anything another person changed since is left as it is.
   const planned = await nonSwimmerPlan(who.orgId);
-  if (!planned) return fail("Swimmers can’t be checked while the Swim school app is switched off.");
+  if (!planned) return fail("Swimmers can’t be checked while the Classes app is switched off.");
   await prisma.$transaction(async (tx) => {
     const still = new Set((await tx.paymentFailure.findMany({ where: { id: { in: [...planned.link, ...planned.remove].map((f) => f.id) }, memberId: null }, select: { id: true } })).map((f) => f.id));
     const plan = { link: planned.link.filter((f) => still.has(f.id)), remove: planned.remove.filter((f) => still.has(f.id)) };

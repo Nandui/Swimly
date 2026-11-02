@@ -20,6 +20,11 @@ test("only the desk's own work counts: teaching and set-up are left out", () => 
   assert.equal(workKind("Swim school", "ParentAccessRequest", "approve"), "parent");
   assert.equal(workKind("Short courses", "AcademyCall", "call"), "academy");
   assert.equal(workKind("Refunds", "RefundRequest", "submit"), "refund");
+  // Logged under the apps' names since D24; the older names above still count.
+  assert.equal(workKind("Finance requests", "RefundRequest", "submit"), "refund");
+  assert.equal(workKind("Finance requests", "CoinageRequest", "submit"), null);
+  assert.equal(workKind("Academy", "AcademyCandidate", "create"), "academy");
+  assert.equal(workKind("Swim school", "ShortCourseParticipant", "create"), "short");
   assert.equal(workKind("Swim school", "AttendanceRecord", "mark"), null);
   assert.equal(workKind("Swim school", "Level", "create"), null);
   assert.equal(workKind("Rota", "Shift", "create"), null);

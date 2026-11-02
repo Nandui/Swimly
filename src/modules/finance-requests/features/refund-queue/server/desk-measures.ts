@@ -17,7 +17,7 @@ export async function refundsSent(query: DeskMeasureQuery): Promise<DeskMeasure[
   });
   const minutes = (a: Date, b: Date) => Math.max(0, Math.round((b.getTime() - a.getTime()) / 60_000));
   return rows.map((row): DeskMeasure => {
-    const base = { kind: "refunds.sent", label: "Refund requests sent", module: "Refunds", siteId: row.clubId, onTime: null };
+    const base = { kind: "refunds.sent", label: "Refund requests sent", module: "Finance requests", siteId: row.clubId, onTime: null };
     return row.submittedAt
       ? { ...base, userId: row.creatorId, userName: row.creatorName, at: row.submittedAt.toISOString(), minutes: minutes(row.createdAt, row.submittedAt), open: false }
       : { ...base, userId: row.creatorId, userName: row.creatorName, at: row.createdAt.toISOString(), minutes: minutes(row.createdAt, query.now), open: true };

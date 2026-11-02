@@ -30,7 +30,7 @@ export function AuthFrame({ welcome = false, fin, children }: { welcome?: boolea
             </span>
             <div className="flex flex-col gap-2">
               <p className="text-2xl font-semibold">People. Places. Progress.</p>
-              <p className="max-w-md">The swim school, the rota, training, documents and refunds for your pools, in one place.</p>
+              <p className="max-w-md">Classes, the rota, training, documents and finance requests for your centres, in one place.</p>
             </div>
             <p className="text-xs">Turnfin · for work computers</p>
           </div>

@@ -11,7 +11,6 @@ import { maintenancePages } from "@/modules/maintenance/features/workspace/pages
 import { planPages } from "@/modules/plan/features/workspace/pages";
 import { purchasingPages } from "@/modules/purchasing/features/workspace/pages";
 import { rotaPages } from "@/modules/rota/shared/components/pages";
-import { shortCoursesPages } from "@/modules/short-courses/features/workspace/pages";
 import { monitoringPages } from "@/modules/site-monitoring/features/workspace/pages";
 import { stockPages } from "@/modules/stock/features/workspace/pages";
 import { tasksPages } from "@/modules/tasks/features/workspace/pages";
@@ -24,7 +23,7 @@ const everything = new Proxy({}, { get: (_target, key) => (key === "id" ? "someo
  *  by its frame, as it is not in its nav list. */
 const APPS: [string, { label: string; place?: "setup" | "overview" }[]][] = [
   ["Admin", ADMIN_GROUPS.flatMap((group) => group.links)],
-  ["Swim school", [{ label: "Overview" }, ...NAV_ITEMS]],
+  ["Classes", [{ label: "Overview" }, ...NAV_ITEMS]],
   ["Academy", academyPages()],
   ["CCTV log", cctvPages()],
   ["Finance requests", financePages({ id: "someone", refunds: everything, coinage: everything })],
@@ -34,7 +33,6 @@ const APPS: [string, { label: string; place?: "setup" | "overview" }[]][] = [
   ["Plan (test)", planPages()],
   ["Purchasing", purchasingPages(everything)],
   ["Rota", rotaPages(true)],
-  ["Short courses", shortCoursesPages()],
   ["Site Monitoring", monitoringPages()],
   ["Stock", stockPages()],
   ["Tasks", tasksPages(everything)],

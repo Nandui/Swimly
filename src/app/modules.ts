@@ -10,7 +10,6 @@ import { purchasingModule } from "@/modules/purchasing/manifest";
 import { planModule } from "@/modules/plan/manifest";
 import { rotaModule } from "@/modules/rota/manifest";
 import { siteMonitoringModule } from "@/modules/site-monitoring/manifest";
-import { shortCoursesModule } from "@/modules/short-courses/manifest";
 import { stockModule } from "@/modules/stock/manifest";
 import { tasksModule } from "@/modules/tasks/manifest";
 import { trainingModule } from "@/modules/training/manifest";
@@ -22,7 +21,6 @@ import { trainingModule } from "@/modules/training/manifest";
  *  module.ts, is loaded by src/modules/server.ts. */
 export const modules = [
   swimSchoolModule,
-  shortCoursesModule,
   financeRequestsModule,
   poolDeckModule,
   tasksModule,

@@ -71,7 +71,7 @@ export const MODULE_OF_ENTITY: Readonly<Record<string, string>> = {
   PlanShift: "Plan (test)",
   PlanBlock: "Plan (test)",
   PlanOff: "Plan (test)",
-  ShortCourseType: "Short courses", ShortCourse: "Short courses", ShortCourseSession: "Short courses", ShortCourseParticipant: "Short courses",
+  ShortCourseType: "Swim school", ShortCourse: "Swim school", ShortCourseSession: "Swim school", ShortCourseParticipant: "Swim school",
   ActivityType: "Admin", SiteArea: "Admin", Position: "Admin",
   RotaShift: "Rota", RotaDayNote: "Rota", RotaActivity: "Rota", RotaAbsence: "Rota", RotaImport: "Rota", RotaDepartment: "Rota",
   RotaNeed: "Rota", RotaAssignment: "Rota", RotaAreaAssignment: "Rota", RotaWeekShare: "Rota", RotaLog: "Rota", RotaRepeat: "Rota", RotaActivityType: "Rota", RotaPlanShift: "Rota", RotaBreak: "Rota", RotaBookingKind: "Rota",

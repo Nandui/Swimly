@@ -253,7 +253,7 @@ test("the desk measure times each request from draft to sent, keeps unsent draft
   await create({ clubId: 'refund-site-c' }, 'save');
   const draftOnly = await query(['refund-site-c']);
   assert.equal(draftOnly.length, 1);
-  assert.deepEqual([draftOnly[0].open, draftOnly[0].userId, draftOnly[0].onTime, draftOnly[0].module], [true, reception.id, null, 'Refunds'], 'an unsent draft is still waiting');
+  assert.deepEqual([draftOnly[0].open, draftOnly[0].userId, draftOnly[0].onTime, draftOnly[0].module], [true, reception.id, null, 'Finance requests'], 'an unsent draft is still waiting');
   await create({ clubId: 'refund-site-c' });
   const both = await query(['refund-site-c']);
   assert.equal(both.length, 2);

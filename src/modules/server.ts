@@ -11,7 +11,6 @@ import "@/modules/plan/module";
 import "@/modules/purchasing/module";
 import "@/modules/incidents/module";
 import "@/modules/tasks/module";
-import "@/modules/short-courses/module";
 import "@/modules/academy/module";
 import "@/modules/stock/module";
 import "@/modules/cctv/module";

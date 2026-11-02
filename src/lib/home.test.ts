@@ -73,6 +73,12 @@ function swimSchool() {
     "@/modules/activities/features/enrolment/server/data/awaiting-enrolment": { getAwaitingEnrolment: async () => ({ total: 0 }) },
     "@/modules/activities/features/failed-payments/server/data": { memberPaymentNotices: async () => [] },
     "@/modules/activities/features/failed-payments/server/home": { paymentsHomeItems: async () => [] },
+    "@/modules/activities/features/short-courses/server/parents-app": { parentsAppCourses: { app: "swim-school" } },
+    "@/modules/activities/features/short-courses/server/email-bookings": { shortCourseEmailBookings: async () => [] },
+    "@/modules/activities/features/short-courses/server/contributions": {
+      SHORT_COURSE_SESSIONS: "short-courses.sessions", shortCourseCommitments: async () => [], renameShortCoursePlaces: async () => 0,
+      shortCourseMemberHistory: async () => [], shortCourseHomeItems: async () => [], shortCourseRegisterItems: async () => [],
+    },
   });
   return async (levels: Record<string, string>, extras: string[] = [], id = "swim-school") =>
     (await contributions.homeCardItems([id], viewer({ name: "R", homeName: null, levels, extras }))).get(id) ?? [];

@@ -50,7 +50,7 @@ export default async function ClubsPage() {
       ) : (
         <section className="flex min-w-0 flex-col" aria-label="Sites">
           <p className="pc-section-note">
-            {plural(live.length, "site")}. You are working at {current.name}; the site picker on Home and in Swim school changes that.
+            {plural(live.length, "site")}. You are working at {current.name}; the site picker on Home and in Classes changes that.
           </p>
           <ClubList clubs={live} currentId={current.id} summaries={summaries} />
         </section>

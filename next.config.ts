@@ -27,6 +27,8 @@ const nextConfig: NextConfig = {
   /** Old links and bookmarks land on the same page in the app that holds it now (D24). */
   async redirects() {
     return [
+      // Short courses joined the swim school; their own overview went with their frame.
+      { source: "/short-courses/overview", destination: "/short-courses", permanent: false },
       // The Academy left Short courses for its own app, at /academy again.
       { source: "/short-courses/academy", destination: "/academy", permanent: false },
       { source: "/short-courses/academy/:path*", destination: "/academy/:path*", permanent: false },

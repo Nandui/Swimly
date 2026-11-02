@@ -83,8 +83,9 @@ async function main() {
   const doubles = { "@/lib/prisma": { prisma: db }, "next/cache": { revalidatePath() {} }, "server-only": {},
     "@/lib/clubs/current": { currentClubId: async () => "club_bishopstown" } };
   const contributions = serverModule<typeof import("../src/modules/contributions")>("src/modules/contributions.ts", { ...doubles, "@/modules/server": {} });
-  serverModule("src/modules/short-courses/module.ts", { ...doubles, "@/modules/contributions": contributions,
-    "@/lib/authz": { AuthorizationError: class extends Error {}, requirePermission: async () => ({}), canSee: () => true } });
+  // Short courses' parents-app plug, as the swim school's module.ts registers it.
+  contributions.registerAppCourses(serverModule<typeof import("../src/modules/activities/features/short-courses/server/parents-app")>("src/modules/activities/features/short-courses/server/parents-app.ts", { ...doubles, "@/modules/contributions": contributions,
+    "@/lib/authz": { AuthorizationError: class extends Error {}, requirePermission: async () => ({}), canSee: () => true } }).parentsAppCourses);
   const router = serverModule<typeof import("../src/modules/activities/features/parents/server/router")>("src/modules/activities/features/parents/server/router.ts", {
     ...doubles, "@/modules/contributions": contributions,
   });

@@ -137,7 +137,7 @@ export async function uploadFailureSheet(formData: FormData): Promise<{ ok: true
   const before = await uploadedBefore(orgId, read.rows);
   if (before) return { ok: false, error: `This sheet was already ${before}, so nothing was added again.` };
   const p = await plan(who, read.month, read.rows);
-  if (!p.fresh.length) return { ok: false, error: p.swimSchoolOff ? "Swimmers can’t be matched while the Swim school app is switched off, so nothing was added."
+  if (!p.fresh.length) return { ok: false, error: p.swimSchoolOff ? "Swimmers can’t be matched while the Classes app is switched off, so nothing was added."
     : p.already ? "Every swimmer’s debit on this sheet is already in for that month."
     : p.notSwimmers === read.rows.length ? "None of the member numbers on this sheet belong to a swimmer on Turnfin, so there is nothing to add."
     : p.unknown.length ? `No site matches ${p.unknown.map((u) => u.club).join(", ")}, so nothing could be added. Check the site names in Admin › Sites.`
