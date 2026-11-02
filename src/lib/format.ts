@@ -199,6 +199,25 @@ export function isDateOnly(value: unknown): value is string {
   return Number.isFinite(date.getTime()) && toDateOnlyString(date) === value;
 }
 
+const WALL_CLOCK_IN_SCHOOL_TIME = new Intl.DateTimeFormat("en-GB", {
+  timeZone: SCHOOL_TIMEZONE, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+});
+
+/** A day and minutes past midnight at the pool → the instant, without the server's
+ *  timezone. Ambiguous autumn times use the earlier occurrence; nonexistent
+ *  spring times are null. */
+export function dublinInstant(date: string, minutes: number): Date | null {
+  if (!isDateOnly(date) || !Number.isInteger(minutes) || minutes < 0 || minutes >= 1440) return null;
+  const desired = new Date(`${date}T00:00:00Z`).getTime() + minutes * 60_000;
+  // Dublin's civil time is UTC or UTC+1. Match the wall time explicitly.
+  for (const offset of [60, 0]) {
+    const instant = new Date(desired - offset * 60_000);
+    const parts = Object.fromEntries(WALL_CLOCK_IN_SCHOOL_TIME.formatToParts(instant).map((p) => [p.type, p.value]));
+    if (`${parts.year}-${parts.month}-${parts.day}` === date && Number(parts.hour) * 60 + Number(parts.minute) === minutes) return instant;
+  }
+  return null;
+}
+
 /** `YYYY-MM-DD` moved by whole days, in UTC so it never crosses a clock change. */
 export function addDaysIso(iso: string, days: number): string {
   const date = parseDateOnly(iso);
