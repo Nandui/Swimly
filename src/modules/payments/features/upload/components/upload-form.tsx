@@ -90,7 +90,7 @@ export function UploadForm({ today }: { today: string }) {
               {[
                 `${preview.monthLabel}, ${euro(preview.addedCents)} in all`,
                 preview.bySite.map((s) => `${s.name}: ${formatCount(s.added)} (${s.cents})`).join(" · "),
-                preview.swimmers ? `${plural(preview.swimmers, "is a swimmer", "are swimmers")} on the swim school’s records` : null,
+                preview.notSwimmers ? `${plural(preview.notSwimmers, "other debit")} on the sheet ${preview.notSwimmers === 1 ? "isn’t a swimmer" : "aren’t swimmers"} on Turnfin, so ${preview.notSwimmers === 1 ? "it’s" : "they’re"} not tracked` : null,
               ].filter(Boolean).join(". ")}.
             </p>
             {preview.already || preview.elsewhere ? (
@@ -101,7 +101,7 @@ export function UploadForm({ today }: { today: string }) {
             ) : null}
           </div>
           {preview.uploadedBefore ? (
-            <Notice tone="error" title="This sheet is already in" description={`It was ${preview.uploadedBefore}. Uploading it again would add every payment twice, so it can’t be added. If the month was wrong, change it on the payments themselves.`} />
+            <Notice tone="error" title="This sheet is already in" description={`It was ${preview.uploadedBefore}. Uploading it again would add every payment twice, so it can’t be added.`} />
           ) : null}
           {preview.unknownClubs.length ? (
             <Notice tone="warning" title={`Left out: ${preview.unknownClubs.map((u) => `${plural(u.rows, "debit")} at ${u.club} (${u.cents})`).join(", ")}`}

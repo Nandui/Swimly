@@ -4,6 +4,10 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.34.3 · 2 November 2026 · Payments: swimmers only
+
+- **Upload the sheet** now adds only the payments whose member number belongs to a swimmer on Turnfin. Gym memberships and anyone else on the bank's sheet are left out, and the page says how many.
+
 ## 2.34.2 · 2 November 2026 · Payments: Gus Healy, and no sheet added twice
 
 - **LW Douglas** on the bank's sheet now goes to the **Gus Healy Swimming Pool**.
