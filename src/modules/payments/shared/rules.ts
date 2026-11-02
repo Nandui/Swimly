@@ -68,17 +68,32 @@ export function parseFailureSheets(sheets: { sheet: string; data: unknown[][] }[
 
 const siteWords = (name: string) => name.toLowerCase().replace(/leisure\s*world/g, "").replace(/\blw\b/g, "").replace(/[^a-z]/g, "");
 
+/** Clubs the bank names differently from the site (owner, 2 November 2026): its "LW Douglas" is
+ *  the Gus Healy Swimming Pool. Each is the bank's words and the words of the site's name, both
+ *  without "LW", spaces or punctuation. */
+const CLUB_ALIASES: Record<string, string> = { douglas: "gushealy" };
+
 /** The site a sheet's club name means: "LW Churchfield" is Churchfield. The site's name without
- *  "LW" or "LeisureWorld", in either direction, or its short code. Null when none or two match. */
+ *  "LW" or "LeisureWorld", in either direction, or its short code; a club the bank names
+ *  differently goes by its alias ("LW Douglas" is Gus Healy). Null when none or two match. */
 export function siteForClub<S extends { id: string; name: string; code?: string | null }>(club: string, sites: readonly S[]): S | null {
   const words = siteWords(club);
   if (!words) return null;
   const code = club.trim().toUpperCase();
+  const alias = CLUB_ALIASES[words];
+  const aliased = alias ? sites.filter((s) => siteWords(s.name).includes(alias)) : [];
+  if (aliased.length === 1) return aliased[0];
   const matches = sites.filter((s) => {
     const own = siteWords(s.name);
     return (own && (own === words || words.includes(own) || own.includes(words))) || (!!s.code && s.code.toUpperCase() === code);
   });
   return matches.length === 1 ? matches[0] : null;
+}
+
+/** What makes two uploads the same sheet, whatever month they were given: its debits (reference,
+ *  amount and copy), in order. Uploading it again under another month would add every row twice. */
+export function sheetFingerprintSource(rows: readonly Pick<SheetRow, "reference" | "amountCents" | "copy">[]) {
+  return rows.map((r) => `${r.reference}|${r.amountCents}|${r.copy}`).sort().join("\n");
 }
 
 export const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;

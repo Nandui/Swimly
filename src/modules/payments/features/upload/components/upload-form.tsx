@@ -67,7 +67,7 @@ export function UploadForm({ today }: { today: string }) {
       router.push(`/payments?show=to_contact&month=${result.month}`);
     });
   }
-  const blocked = !!preview && preview.added === 0;
+  const blocked = !!preview && (preview.added === 0 || !!preview.uploadedBefore);
 
   return (
     <div className="flex max-w-2xl min-w-0 flex-col gap-6">
@@ -100,6 +100,9 @@ export function UploadForm({ today }: { today: string }) {
               </p>
             ) : null}
           </div>
+          {preview.uploadedBefore ? (
+            <Notice tone="error" title="This sheet is already in" description={`It was ${preview.uploadedBefore}. Uploading it again would add every payment twice, so it can’t be added. If the month was wrong, change it on the payments themselves.`} />
+          ) : null}
           {preview.unknownClubs.length ? (
             <Notice tone="warning" title={`Left out: ${preview.unknownClubs.map((u) => `${plural(u.rows, "debit")} at ${u.club} (${u.cents})`).join(", ")}`}
               description={`No site in Turnfin matches ${preview.unknownClubs.length === 1 ? "that club" : "those clubs"}, so ${preview.unknownClubs.length === 1 ? "its" : "their"} debits are not added. The rest are. To bring them in, add or rename the site in Admin › Sites, then upload the sheet again: only the missing ones are added.`} />

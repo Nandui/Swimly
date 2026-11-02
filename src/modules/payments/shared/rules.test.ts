@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { closeChange, contactChange, monthFromFileName, parseFailureSheets, PaymentError, reopenChange, siteForClub } from "./rules";
+import { closeChange, contactChange, monthFromFileName, parseFailureSheets, PaymentError, reopenChange, sheetFingerprintSource, siteForClub } from "./rules";
 
 /** The failure sheet as the bank sends it, with invented people: a heading row, the debits, blank
  *  rows and the totals underneath, and a second tab where one reference fails again for another
@@ -44,7 +44,16 @@ test("club names find their site, by name without LW or by code; two or none is 
   assert.equal(siteForClub("bishopstown", sites)?.id, "b");
   assert.equal(siteForClub("BT", sites)?.id, "b");
   assert.equal(siteForClub("LW Riverside", sites), null);
+  const cork = [...sites.slice(0, 2), { id: "g", name: "Gus Healy Swimming Pool", code: null }];
+  assert.equal(siteForClub("LW Douglas", cork)?.id, "g", "the bank's Douglas is the Gus Healy pool");
+  assert.equal(siteForClub("LW Douglas", sites.slice(0, 2)), null, "and nothing without one");
   assert.equal(siteForClub("LW", sites), null);
+});
+
+test("a sheet's fingerprint is its debits, in any order, whatever the month", () => {
+  const rows = parseFailureSheets(workbook);
+  assert.equal(sheetFingerprintSource(rows), sheetFingerprintSource([...rows].reverse()));
+  assert.notEqual(sheetFingerprintSource(rows), sheetFingerprintSource(rows.slice(1)));
 });
 
 test("the month comes from the file's name: this year, or last year for a month still to come", () => {
