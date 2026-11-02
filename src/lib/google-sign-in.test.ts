@@ -117,6 +117,41 @@ test("only an https picture is kept, and a missing name falls back", () => {
   assert.equal(f.googleIdentity(profile({ name: undefined }))?.name, "manager");
 });
 
+/** A stand-in for Google's userinfo endpoint, recording what it was asked. */
+function userinfo(answer: unknown, ok = true) {
+  const asked: { url: string; auth: string | null }[] = [];
+  const fetcher = (async (url: string, init?: RequestInit) => {
+    asked.push({ url, auth: new Headers(init?.headers).get("Authorization") });
+    if (answer instanceof Error) throw answer;
+    return new Response(JSON.stringify(answer), { status: ok ? 200 : 401 });
+  }) as unknown as typeof fetch;
+  return { fetcher, asked };
+}
+
+test("a token without a picture asks Google's userinfo for it, with the sign-in's access token", async () => {
+  const f = fixture({ rows: [{ ...staff }] });
+  const google = userinfo({ sub: "g-100", picture: "https://lh3.googleusercontent.com/a/from-userinfo" });
+  assert.ok("user" in await f.googleSignIn(profile({ picture: undefined }), "access-1", google.fetcher));
+  assert.deepEqual(google.asked, [{ url: "https://openidconnect.googleapis.com/v1/userinfo", auth: "Bearer access-1" }]);
+  assert.equal(f.rows[0].avatarUrl, "https://lh3.googleusercontent.com/a/from-userinfo");
+});
+
+test("userinfo is not asked when the token has a picture, and another person's answer is ignored", async () => {
+  const present = userinfo({ sub: "g-100", picture: "https://lh3.googleusercontent.com/a/other" });
+  assert.equal((await fixture().withGooglePicture(profile(), "access-1", present.fetcher))?.picture, "https://lh3.googleusercontent.com/a/synthetic");
+  assert.equal(present.asked.length, 0);
+  const someoneElse = userinfo({ sub: "g-999", picture: "https://lh3.googleusercontent.com/a/other" });
+  assert.equal((await fixture().withGooglePicture(profile({ picture: undefined }), "access-1", someoneElse.fetcher))?.picture, undefined);
+});
+
+test("a failed userinfo answer, or none at all, keeps the picture already stored", async () => {
+  for (const google of [userinfo({}, false), userinfo(new Error("offline")), userinfo({ sub: "g-100" })]) {
+    const f = fixture({ rows: [{ ...staff, googleId: "g-100", avatarUrl: "https://lh3.googleusercontent.com/a/kept" }] });
+    assert.ok("user" in await f.googleSignIn(profile({ picture: undefined }), "access-1", google.fetcher));
+    assert.equal(f.rows[0].avatarUrl, "https://lh3.googleusercontent.com/a/kept");
+  }
+});
+
 test("the work-computer rule applies to Google as to a password", async () => {
   assert.deepEqual(await fixture({ rows: [{ ...staff }], workDevice: true }).googleSignIn(profile()), { refused: "work_device" });
   assert.ok("user" in await fixture({ rows: [{ ...staff }], workDevice: true, anywhere: true }).googleSignIn(profile()));
