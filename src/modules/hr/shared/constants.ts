@@ -1,4 +1,4 @@
-import { CircleCheck, Clock3, EyeOff, FolderLock, Pencil, Share2 } from "lucide-react";
+import { CalendarX, CircleCheck, Clock3, EyeOff, FolderLock, Gauge, MessageSquareWarning, Pencil, Share2, ShieldAlert, StickyNote } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 
 /** Who can read a note. Tone and icon come from here, never a call site. */
@@ -9,6 +9,19 @@ export const NOTE_VISIBILITY_META = {
 } as const satisfies Record<string, StatusMeta & { hint: string }>;
 export type NoteVisibility = keyof typeof NOTE_VISIBILITY_META;
 export const NOTE_VISIBILITIES = Object.keys(NOTE_VISIBILITY_META) as NoteVisibility[];
+
+/** What a note is about (D22). All one neutral tone: a kind sorts the file, it is never an alarm. */
+export const NOTE_KIND_META = {
+  general: { label: "General", color: "gray", icon: StickyNote },
+  conduct: { label: "Conduct", color: "gray", icon: MessageSquareWarning },
+  performance: { label: "Performance", color: "gray", icon: Gauge },
+  attendance: { label: "Attendance", color: "gray", icon: CalendarX },
+  safety: { label: "Safety", color: "gray", icon: ShieldAlert },
+} as const satisfies Record<string, StatusMeta>;
+export type NoteKind = keyof typeof NOTE_KIND_META;
+export const NOTE_KINDS = Object.keys(NOTE_KIND_META) as NoteKind[];
+/** The kinds a report can be: every kind but General. */
+export const REPORT_KINDS: readonly NoteKind[] = NOTE_KINDS.filter((k) => k !== "general");
 
 export const REVIEW_STATUS_META = {
   draft: { label: "Draft", color: "gray", icon: Pencil },

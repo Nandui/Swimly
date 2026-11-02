@@ -42,6 +42,9 @@ export const GUIDE_SCREENSHOTS: Record<string, Placement[]> = {
   "report-absence": [
     { image: "rota-absence", step: "Fill in who and when", caption: "Choose who is off, from when and why; the last day can wait until you know it.", alt: "Report an absence dialog with Who is off, First day off, Reason, an optional Last day off and Note." },
   ],
+  "hr-report": [
+    { image: "hr-report", step: "Fill it in", caption: "A report asks what it is about, what happened and when, and nothing else.", alt: "Report dialog for a fictional colleague with the choices Conduct, Performance, Attendance and Safety, the What happened field, and the day and time." },
+  ],
   "hr-note": [
     { image: "hr-note", step: "Choose who can read it", caption: "Each note says who can read it: only you, anyone with their HR record, or the person too.", alt: "Add a note dialog for a fictional colleague with the note field and Who can read it choices: Only me, On their record and Shared with them." },
   ],

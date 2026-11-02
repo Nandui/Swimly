@@ -375,6 +375,14 @@ export const PERMISSIONS = [
     description: "Plan every department, run today, and keep the duties, areas and what's on, at the sites this role covers. Includes planning.",
   },
   {
+    key: "hr.reports.write",
+    group: "HR",
+    label: "Report on staff",
+    description: "File a quick report (conduct, performance, attendance or safety) on the people this role covers. It goes on their HR record; the reporter cannot read it back. Restricted, but needs no password again, because it reads nothing.",
+    restricted: true,
+    stepUp: false,
+  },
+  {
     key: "hr.records.read",
     group: "HR",
     label: "Read HR records",
@@ -523,6 +531,12 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "hr.reviews.write": ["hr.records.read"],
   "hr.details.write": ["hr.records.read"],
 };
+
+/** Restricted capabilities that read nothing, so need no fresh sign-in (D22). */
+export function skipsStepUp(key: string): boolean {
+  const meta = PERMISSIONS.find((p) => p.key === key);
+  return !!meta && "stepUp" in meta && meta.stepUp === false;
+}
 
 /** Restricted capabilities (HR, performance): never inherited by
  *  administrators. They reach a person only through a role a superadmin

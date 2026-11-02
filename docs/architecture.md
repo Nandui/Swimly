@@ -156,7 +156,7 @@ The switched-off test (`src/lib/apps/switched-off.test.ts`) switches each app of
 
 1. **Roles with levels.** A role (`StaffRole`) holds one level per app plus at most two extras (`StaffRole.levels`, `StaffRole.extras`). Levels include the ones before them.
 2. **Levels become permissions.** `src/lib/staff/levels.ts` turns levels into named permissions (`refunds.review`, `hr.details.write`). Permissions are the only access language: pages, menus and actions ask for a permission, never a level or a role name. The catalogue is code (`src/lib/staff/permissions.ts`); each permission is given by exactly one level or extra in one manifest, and a test checks it.
-3. **Where a level reaches.** Each manifest says whether its levels apply at the person's sites, over the people they manage (HR "Their team", via `User.managerId`), or everywhere ([apps.md](apps.md)).
+3. **Where a level reaches.** Each manifest says whether its levels apply at the person's sites, over the people they manage (HR Report, via `User.managerId`), or everywhere ([apps.md](apps.md)).
 4. **The working site.** A person works at one site at a time (`getCurrentClub`, `src/lib/clubs/current.ts`): their chosen site if valid, else their main one, else their first. The session's flat permissions are what they hold **at that site**.
 5. **Restricted permissions** (HR) are never given to administrators; only a superadmin gives a role that holds them (`StaffRole.restricted`).
 

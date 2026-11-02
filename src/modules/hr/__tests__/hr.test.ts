@@ -221,6 +221,47 @@ test("HR's front door gives Turnfin Me only the person's own shared records, in 
   assert.equal((await hr.db.query("SELECT 1 FROM access_events WHERE actor_id='ava'")).length, reads + 1);
 });
 
+test("a manager on duty files a report on someone they manage, without a fresh sign-in, and reads nothing back", async () => {
+  await fixture.prisma.user.update({ where: { id: "ava" }, data: { managerId: "liam" } });
+  const d = { ...doubles(), "@/lib/clubs/current": { currentClubId: async () => "club_churchfield", currentClubIdIfAny: async () => "club_churchfield" } };
+  const report = serverModule<typeof import("../features/report/server/actions")>("src/modules/hr/features/report/server/actions.ts", d);
+  const people = serverModule<typeof import("../features/report/server/data")>("src/modules/hr/features/report/server/data.ts", d);
+  const REPORTER: GrantRow = { roleName: "Duty manager", permissions: ["hr.reports.write"], scopeKind: "reports", scopeId: "" };
+  const input = { kind: "conduct", body: "Synthetic: left the poolside unattended", date: "2026-10-20", time: "14:30" };
+  as("liam", { grants: [REPORTER], authMethod: "pin" });
+  assert.deepEqual((await people.reportablePeople()).people.map((p) => p.id), ["ava"], "only the people they manage");
+  assert.equal((await report.fileReport("noah", input)).ok, false, "not someone they manage");
+  assert.equal((await report.fileReport("ava", { ...input, kind: "general" })).ok, false, "a report has a kind other than General");
+  assert.equal((await report.fileReport("ava", { ...input, date: "2099-01-01" })).ok, false, "not in the future");
+  assert.equal((await report.fileReport("ava", input)).ok, true, "a PIN session may file: it reads nothing");
+  await assert.rejects(records.hrPerson("ava"), NotFound, "a reporter cannot open the file");
+  const [row] = await hr.db.query<{ visibility: string; kind: string; via: string; site_id: string; occurred_at: Date }>("SELECT visibility, kind, via, site_id, occurred_at FROM notes WHERE via='report'");
+  assert.deepEqual([row.visibility, row.kind, row.via, row.site_id], ["record", "conduct", "report", "club_churchfield"]);
+  assert.equal(new Date(row.occurred_at).toISOString(), "2026-10-20T13:30:00.000Z", "Ireland summer time");
+  as("ava");
+  assert.ok((await mine.mySharedHr("ava", ORG)).notes.every((n) => n.via !== "report"), "never shown to the person");
+});
+
+test("the centre managers of the report's site see it under Needs you until one opens the file, and may withdraw it", async () => {
+  const d = doubles();
+  const home = serverModule<typeof import("../features/report/server/home")>("src/modules/hr/features/report/server/home.ts", d);
+  const viewer = (anywhere: string[], isSuperadmin = false) => ({ id: state.id, name: state.id, permissions: anywhere, anywhere, isSuperadmin });
+  const CENTRE: GrantRow = { roleName: "Centre manager", permissions: ["hr.notes.write"], scopeKind: "site", scopeId: "club_churchfield" };
+  as("alex", { superadmin: true });
+  assert.deepEqual(await home.reportHomeItems(viewer([], true)), [], "readers of everyone are not alerted");
+  as("noah", { grants: [{ ...CENTRE, scopeId: "club_bishopstown" }] });
+  assert.deepEqual(await home.reportHomeItems(viewer(["hr.notes.write"])), [], "another site's centre manager is not alerted");
+  as("riley", { grants: [CENTRE] });
+  const [item] = await home.reportHomeItems(viewer(["hr.notes.write"]));
+  assert.deepEqual([item.count, item.href, item.attention], [1, "/hr/people/ava", true]);
+  assert.equal((await records.hrPeople()).people.find((p) => p.id === "ava")?.unreadReports, 1);
+  const file = await records.hrPerson("ava");
+  const filed = file.notes.find((n) => n.via === "report")!;
+  assert.equal(filed.kind, "conduct");
+  assert.deepEqual(await home.reportHomeItems(viewer(["hr.notes.write"])), [], "read once the file is opened");
+  assert.equal((await actions.withdrawNote(filed.id, "Synthetic: wrong person")).ok, true, "a reporter can't, so the file's keeper withdraws it");
+});
+
 test("HR is on only when its own database is set, and refuses one shared with Turnfin", () => {
   const { hrConfigured } = serverModule<typeof import("@/modules/hr")>("src/modules/hr/shared/database.ts", { "server-only": {} });
   const keys = ["HR_DATABASE_URL", "HR_DIRECT_URL", "HR_DB_DATABASE_URL", "HR_DB_DATABASE_URL_UNPOOLED", "DATABASE_URL", "DIRECT_URL", "DATABASE_URL_UNPOOLED", "DOCS_DATABASE_URL", "DOCS_DIRECT_URL"] as const;

@@ -7,7 +7,7 @@ import { SCREENS, isScreenKey } from "@/lib/staff/screens";
  *
  *  Levels are translated here into the named permissions the app checks, so
  *  no page or action ever asks for a level. The role row keeps the
- *  translation in `permissions` (everything except HR "Their team", which only
+ *  translation in `permissions` (everything except HR Report, which only
  *  the policy engine reads), so every reader of that column works as is. */
 
 /** Module id → level key. A missing module means None. */
@@ -108,8 +108,8 @@ export function siteBoundAppNames(): string[] {
   return allModules().filter((mod) => mod.access.levels.some((level) => (level.reach ?? mod.access.reach) === "sites")).map((mod) => mod.name);
 }
 
-/** What the role row stores in `permissions`: everything except HR "Their
- *  team", which reaches only the holder's reports. */
+/** What the role row stores in `permissions`: everything except HR Report,
+ *  which reaches only the holder's reports. */
 export function storedPermissions(role: RoleLevels): PermissionKey[] {
   const { everywhere, sites } = accessByReach(role);
   return tidy([...everywhere, ...sites]);
@@ -160,10 +160,11 @@ export function levelsFromAccess(permissions: readonly string[], screens: readon
         chosen = Math.max(chosen, rankOf(mod, extra.from));
       }
     }
-    // The role's own keys applied everywhere, so a level that reaches only
-    // the holder's team (HR "Their team") would narrow it: take the next
-    // level that applies everywhere instead.
-    while (chosen >= 0 && mod.access.levels[chosen].reach === "team" && chosen < mod.access.levels.length - 1) chosen += 1;
+    // The role's own keys applied everywhere, so a level that reaches less
+    // than its module (HR Report and Their sites) would narrow it: take the
+    // next level that applies as widely as the module instead.
+    const narrower = (index: number) => (mod.access.levels[index].reach ?? mod.access.reach) !== mod.access.reach;
+    while (chosen >= 0 && narrower(chosen) && chosen < mod.access.levels.length - 1) chosen += 1;
     if (chosen >= 0) levels[mod.id] = mod.access.levels[chosen].key;
   }
   if (before.has("work.anywhere") && !administrator) extras.push(WORK_ANYWHERE);

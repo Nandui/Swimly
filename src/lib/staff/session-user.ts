@@ -48,7 +48,7 @@ type Grant = { roleName: string; permissions: string[]; scopeKind: string; scope
  *
  *  `permissions` is the flat view pages and actions check: what this person
  *  may do **at the site they are working in**. `grants` carry what applies
- *  only at their other sites or over their team (HR "Their team"), which only
+ *  only at their other sites or over their team (HR Report), which only
  *  the policy engine (`src/lib/policy`) reads, against a specific person or
  *  record. One role each (docs/architecture.md). */
 export function sessionUserFor(account: Account, currentSiteId: string | null) {

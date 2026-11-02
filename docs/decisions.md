@@ -6,6 +6,13 @@ The decisions Turnfin 2.0 stands on, newest first. Each says what was decided, w
 
 ---
 
+### D22 · 2 November 2026 · Managers report on staff; HR notes have a kind
+
+Managers on duty file a quick **report** about someone they line-manage: the person, the kind (Conduct, Performance, Attendance or Safety), what happened and when. It goes on that person's HR file as a note on their record, never shared with them, and the reporter sees nothing afterwards, not even their own report. Every HR note now has a kind, with General for the rest; a report is a note filed through the quick form. HR's levels become **Report** (file reports on the people they line-manage), **Their sites** (read and write the files of everyone who works at their sites) and **Everyone**. "Their team" is relabelled Report (it keeps its stored key, so the roles that held it move with no data change). The "Their sites" holders at the reporter's working site see the report under Needs you on Home until one of them opens that person's file. A wrong report is withdrawn, with a reason, by someone who can write notes on that file. Only a superadmin gives any HR level.
+**Exception to AGENTS.md** ("Restricted reads and writes need a fresh sign-in"): filing a report (`hr.reports.write`) needs no fresh sign-in, because it reads nothing. It stays restricted, so administrators never inherit it.
+**Why:** centre managers had nowhere quick to put an issue with a staff member on file, and managers on duty should not need to open whole files to do it.
+**Follows:** [apps.md](apps.md#hr) and `src/modules/hr/README.md`. Additive HR migration `002_note_kinds.sql`: a kind on every note, and when it happened, the site, how it was filed and who first read it for reports.
+
 ### D21 · 2 November 2026 · Payments: failed direct debits, followed up at the desk
 
 **Payments** is a new app in Front of house. Each month the bank's failure sheet is uploaded (Manage) and every failed direct debit on it whose member number belongs to a swimmer on Turnfin goes on a list per site; the rest (gym memberships, unknown numbers) are ignored (changed the same day from "every row"). Reception contacts each member, logs every attempt, and closes it as **Paid at the desk**, **New mandate set up** or **Place cancelled**; there is no write-off. A failure whose member number belongs to a swimmer shows "Payment failed" on that swimmer's profile until it is closed. Legend stays the billing system: the money and the mandate are handled there, never in Turnfin.

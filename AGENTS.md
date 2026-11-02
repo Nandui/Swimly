@@ -136,7 +136,7 @@ The model is in [docs/architecture.md](docs/architecture.md#access-who-can-do-wh
 - Pages and actions ask for a **permission**, never a level or a role name. Nothing in code, menus or seed refers to a role by name.
 - Code that reads or changes **other people's records** uses the policy engine (`src/lib/policy`) with a resource, and filters lists with `subjectsFor` or `sitesFor`.
 - Home, menus, cards and hidden buttons are presentation, **never security**: every page and action checks again.
-- Administrators never inherit restricted permissions; only a superadmin gives HR. Restricted reads and writes need a fresh sign-in and are logged.
+- Administrators never inherit restricted permissions; only a superadmin gives HR. Restricted reads and writes need a fresh sign-in and are logged; filing an HR report, which reads nothing, is the one exception ([D22](docs/decisions.md)).
 - Never copy permissions into an app's own database; read identity through the directory and decide with the engine.
 - No raw rows reach the browser or an API: map records through an allowlist, with tests.
 - Self-service code (`*/mine.ts`, `*/self.ts`) serves only the signed-in person's own records, through the staff API. Turnfin gains no personal pages; they belong in Turnfin Me.

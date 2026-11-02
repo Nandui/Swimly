@@ -43,12 +43,16 @@ test("Admin Manage is today's administrator: every module except HR", () => {
   assert.equal(isRestrictedRole(cleanLevels({ admin: "manage" })), false);
 });
 
-test("HR is restricted, and Their team reaches only the holder's reports", () => {
-  const team = cleanLevels({ hr: "team" });
-  assert.equal(isRestrictedRole(team), true);
-  assert.deepEqual(storedPermissions(team), [], "team HR never lands in the everywhere columns");
-  assert.ok(accessByReach(team).team.includes("hr.records.read"));
+test("HR is restricted: Report files on the holder's reports only, Their sites reads files at their sites", () => {
+  const report = cleanLevels({ hr: "team" });
+  assert.equal(isRestrictedRole(report), true);
+  assert.deepEqual(storedPermissions(report), [], "Report never lands in the everywhere columns");
+  assert.deepEqual(accessByReach(report).team, ["hr.reports.write"], "the former Their team key now only files reports");
+  const sites = accessByReach(cleanLevels({ hr: "sites" }));
+  assert.deepEqual(sites.team, []);
+  for (const key of ["hr.reports.write", "hr.records.read", "hr.notes.write"] as const) assert.ok(sites.sites.includes(key), key);
   assert.ok(at({ hr: "all" }).includes("hr.reviews.write"));
+  assert.ok(at({ hr: "all" }).includes("hr.reports.write"));
 });
 
 test("Swim school, Pool deck, Training and Rota apply at the person's sites; the rest everywhere", () => {
@@ -97,7 +101,7 @@ test("old roles convert without losing anything, and every gain is reported", ()
   assert.deepEqual(admin.gains, []);
 });
 
-test("a legacy role holding HR everywhere converts to HR Everyone, not Their team", () => {
+test("a legacy role holding HR everywhere converts to HR Everyone, not Report or Their sites", () => {
   const hr = levelsFromAccess(["hr.records.read", "hr.notes.write"], ["hr"]);
   assert.deepEqual(hr.role.levels, { hr: "all" });
   assert.deepEqual(hr.losses, []);

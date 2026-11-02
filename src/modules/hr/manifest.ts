@@ -16,11 +16,14 @@ export const hrModule: ModuleManifest = {
     reach: "everywhere",
     restricted: true,
     levels: [
+      // "team" is the stored key of the former "Their team" level, kept so the roles that held it
+      // move to Report with no data change (D22).
+      { key: "team", label: "Report", help: "File reports on the people they manage. They cannot read files, or their own reports.", reach: "team", permissions: ["hr.reports.write"] },
       {
-        key: "team", label: "Their team", help: "Staff files, notes and reviews for the people they manage.", reach: "team",
+        key: "sites", label: "Their sites", help: "Staff files, notes, reports and reviews for everyone who works at their sites.", reach: "sites",
         permissions: ["hr.records.read", "hr.details.write", "hr.notes.write", "hr.reviews.write"],
       },
-      { key: "all", label: "Everyone", help: "Staff files, notes and reviews for everyone.", permissions: [] },
+      { key: "all", label: "Everyone", help: "Staff files, notes, reports and reviews for everyone.", permissions: [] },
     ],
   },
 };
