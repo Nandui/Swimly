@@ -5,6 +5,7 @@ import { mayFor, sitesFor } from "@/lib/policy/session";
 import { prisma } from "@/lib/prisma";
 import { members } from "@/modules/contributions";
 import { covers, inSites, requirePaymentsActor } from "@/modules/payments/shared/access";
+import { nonSwimmerCounts } from "@/modules/payments/features/failures/server/non-swimmers";
 import { MONTH, PaymentError } from "@/modules/payments/shared/rules";
 import { paymentView } from "@/modules/payments/shared/service";
 import { monthLabel, OPEN_STATUSES, type PaymentAction, type PaymentHistory } from "@/modules/payments/shared/types";
@@ -40,16 +41,17 @@ export async function paymentLists(params: { show?: string; site?: string; month
   const orderBy: Record<View, Prisma.PaymentFailureOrderByWithRelationInput[]> = {
     to_contact: [{ month: "asc" }, { name: "asc" }], contacted: [{ lastContactAt: "asc" }], closed: [{ closedAt: "desc" }],
   };
-  const [counts, owed] = await Promise.all([
+  const [counts, owed, nonSwimmers] = await Promise.all([
     Promise.all(VIEWS.map(async (v) => [v, await prisma.paymentFailure.count({ where: where[v] })] as const)).then((c) => Object.fromEntries(c) as Record<View, number>),
     prisma.paymentFailure.aggregate({ where: { ...base, status: { in: [...OPEN_STATUSES] } }, _sum: { amountCents: true } }),
+    who.manage ? nonSwimmerCounts(who.orgId) : null,
   ]);
   const pages = Math.max(1, Math.ceil(counts[show] / PAGE));
   const page = Math.min(pages, Math.max(1, Number.parseInt(params.page || "1", 10) || 1));
   const rows = await prisma.paymentFailure.findMany({ where: where[show], orderBy: [...orderBy[show], { id: "asc" }], skip: (page - 1) * PAGE, take: PAGE });
   const named = await withSites(rows, "siteId", "site");
   return {
-    who, show, counts, page, pages, site, month, q, sites: mySites, owedCents: owed._sum.amountCents ?? 0,
+    who, show, counts, page, pages, site, month, q, sites: mySites, owedCents: owed._sum.amountCents ?? 0, nonSwimmers,
     months: months.map((m) => ({ value: m.month, label: monthLabel(m.month) })),
     rows: named.map((r) => paymentView(r, r.site.name)),
   };
