@@ -79,7 +79,7 @@ const JOB_KINDS: Record<string, { label: string; hint: string; target: number | 
   "billing.agreement": { label: "Billing agreement checks", hint: "From a new place to its Legend agreement marked done", target: 7 * 24 * 60, href: "/legend-agreements" },
   "billing.cancellation": { label: "Cancelled classes to billing", hint: "From a class being cancelled to billing being told", target: 2 * 24 * 60, href: "/cancellations" },
   // Reported by other modules (registerDeskMeasures); they time themselves.
-  "academy.call-back": { label: "Academy call backs", hint: "From a place held online to the first phone call, promised within 72 hours", target: 72 * 60, href: "/short-courses" },
+  "academy.call-back": { label: "Academy call backs", hint: "From a place held online to the first phone call, promised within 72 hours", target: 72 * 60, href: "/academy/calls" },
   "refunds.sent": { label: "Refund requests sent", hint: "From starting a refund request to sending it for review", target: null, href: "/refunds" },
 };
 

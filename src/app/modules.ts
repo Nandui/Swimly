@@ -1,4 +1,5 @@
 import { analyticsModule, poolDeckModule, swimSchoolModule } from "@/modules/activities/manifest";
+import { academyModule } from "@/modules/academy/manifest";
 import { cctvModule } from "@/modules/cctv/manifest";
 import { financeRequestsModule } from "@/modules/finance-requests/manifest";
 import { docsModule } from "@/modules/docs/manifest";
@@ -29,6 +30,7 @@ export const modules = [
   rotaModule,
   planModule,
   trainingModule,
+  academyModule,
   docsModule,
   hrModule,
   cctvModule,

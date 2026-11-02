@@ -33,7 +33,8 @@ const otherModules = {
   plan: moduleArea("plan"),
   purchasing: moduleArea("purchasing"),
   tasks: moduleArea("tasks", "src/app/api/cron/tasks/**"),
-  "short-courses": moduleArea("short-courses", "src/app/api/academy/**"),
+  "short-courses": moduleArea("short-courses"),
+  academy: moduleArea("academy", "src/app/api/academy/**"),
   stock: moduleArea("stock"),
   cctv: moduleArea("cctv"),
   "site-monitoring": moduleArea("site-monitoring"),
@@ -109,7 +110,8 @@ const coreThroughFunctions = {
   purchasing: ["role", "site"],
   tasks: ["site"],
   incidents: [],
-  "short-courses": ["organisation", "qualificationType", "qualification", "site", "tutor", "assessor", "user"],
+  "short-courses": ["organisation", "site", "user"],
+  academy: ["organisation", "qualificationType", "qualification", "site", "tutor", "assessor", "user"],
   stock: [],
   cctv: [],
   "site-monitoring": [],
@@ -136,7 +138,7 @@ const moduleData = (self) => [
 // public-API kit, the email sender) lives in Core: src/lib/public-api and
 // src/lib/email. A module never imports another module's copy.
 const modulePlumbing = [
-  { owner: ["src/modules/short-courses/features/booking/**", "src/app/api/academy/**"], from: ["./src/modules/short-courses/features/booking/server"] },
+  { owner: ["src/modules/academy/features/booking/**", "src/app/api/academy/**"], from: ["./src/modules/academy/features/booking/server"] },
   { owner: ["src/lib/staff-api/**", "src/app/api/staff/**"], from: ["./src/lib/staff-api/email.ts", "./src/lib/staff-api/http.ts"] },
   { owner: activitiesFiles, from: ["./src/modules/activities/shared/parents/email.ts", "./src/modules/activities/shared/parents/http.ts", "./src/modules/activities/shared/parents/sign-in-email.ts"] },
 ];

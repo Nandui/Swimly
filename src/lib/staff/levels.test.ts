@@ -68,11 +68,19 @@ test("extras need their starting level, and unknown modules or levels are droppe
   assert.ok(at({}, [WORK_ANYWHERE]).includes("work.anywhere"));
 });
 
-test("a level stored for the Academy counts for Short courses, which it joined; the higher wins", () => {
-  assert.deepEqual(cleanLevels({ academy: "run" }).levels, { "short-courses": "run" });
-  assert.deepEqual(cleanLevels({ academy: "manage", "short-courses": "view" }).levels, { "short-courses": "manage" });
-  assert.deepEqual(cleanLevels({ "short-courses": "manage", academy: "view" }).levels, { "short-courses": "manage" });
-  assert.ok(at({ academy: "view" }).includes("academy.read"), "Academy pages still open");
+test("Short courses' Instructor and Manage carry to the Academy as Tutor and Manage; View gives no Academy level", () => {
+  assert.deepEqual(cleanLevels({ "short-courses": "view" }).levels.academy, undefined);
+  assert.equal(cleanLevels({ "short-courses": "run" }).levels.academy, "tutor");
+  assert.equal(cleanLevels({ "short-courses": "manage" }).levels.academy, "manage");
+  assert.ok(!at({ "short-courses": "view" }).includes("academy.read"), "the desk's View never opens the Academy");
+  for (const key of ["academy.read", "academy.run"]) assert.ok(at({ "short-courses": "run" }).includes(key as never), key);
+});
+
+test("a level stored for the old Academy app (before 15 October) counts the same way; the higher wins", () => {
+  assert.deepEqual(cleanLevels({ academy: "run" }).levels, { academy: "tutor" });
+  assert.deepEqual(cleanLevels({ academy: "view" }).levels, {});
+  assert.deepEqual(cleanLevels({ academy: "tutor", "short-courses": "manage" }).levels.academy, "manage");
+  assert.deepEqual(cleanLevels({ academy: "manage", "short-courses": "run" }).levels.academy, "manage");
 });
 
 test("Refunds and Coinage levels count for Finance requests, which they joined; the higher wins", () => {

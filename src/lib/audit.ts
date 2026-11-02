@@ -56,7 +56,7 @@ export const MODULE_OF_ENTITY: Readonly<Record<string, string>> = {
   // Finance requests (Refunds and Coinage, D24) and Rota.
   RefundRequest: "Finance requests", RefundNotification: "Finance requests",
   CoinageRequest: "Finance requests", CoinageNotification: "Finance requests",
-  AcademyCourseType: "Short courses", AcademyCourse: "Short courses", AcademySession: "Short courses", AcademyCandidate: "Short courses", AcademyCall: "Short courses",
+  AcademyCourseType: "Academy", AcademyCourse: "Academy", AcademySession: "Academy", AcademyCandidate: "Academy", AcademyCall: "Academy",
   Supplier: "Purchasing", PurchaseProduct: "Purchasing", PurchaseApprovalRule: "Purchasing", PurchaseOrder: "Purchasing", PurchasingSettings: "Purchasing",
   TaskTemplate: "Tasks", Task: "Tasks", TaskAction: "Tasks", TaskSite: "Tasks",
   IncidentReport: "Incidents", IncidentsSettings: "Incidents",

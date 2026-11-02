@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { serverModule } from "@/test/server-module";
 import { SCREENS, visibleScreens } from "@/lib/staff/screens";
 import type { PermissionKey } from "@/lib/staff/permissions";
-import { allModules, appPermissions, switchableApps } from "@/modules/registry";
+import { allModules, appPermissions, switchableApps, switchHeirs } from "@/modules/registry";
 
 /** The pillar "tests pass with any one app switched off" (PRODUCT.md): each app in
  *  src/app/modules.ts is switched off in turn, and Home, the menus, the screens and every other
@@ -84,7 +84,9 @@ const appOfScreen = (requires: PermissionKey) => APPS.find((app) => appPermissio
 
 for (const off of APPS) {
   test(`with ${off} switched off, Home, the menus and every other app still work`, async () => {
-    rows = [{ appId: off, state: "off", siteIds: [] }];
+    // A new app follows its former apps' switches until it has its own (switches.test.ts); here
+    // each has its own, so only the one app goes.
+    rows = [{ appId: off, state: "off", siteIds: [] }, ...switchHeirs().filter((h) => h.appId !== off).map((h) => ({ appId: h.appId, state: "on", siteIds: [] }))];
     const { authz, contributions, home, announce } = platform();
     const { session, menus, home: h } = await home(RIVERSIDE);
 

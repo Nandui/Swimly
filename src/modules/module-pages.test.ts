@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { ADMIN_GROUPS } from "@/components/core/pages";
 import { NAV_ITEMS } from "@/modules/activities/features/workspace/server/nav";
+import { academyPages } from "@/modules/academy/features/workspace/pages";
 import { cctvPages } from "@/modules/cctv/features/workspace/pages";
 import { financePages } from "@/modules/finance-requests/features/workspace/pages";
 import { hrPages } from "@/modules/hr/features/workspace/pages";
@@ -24,6 +25,7 @@ const everything = new Proxy({}, { get: (_target, key) => (key === "id" ? "someo
 const APPS: [string, { label: string; place?: "setup" | "overview" }[]][] = [
   ["Admin", ADMIN_GROUPS.flatMap((group) => group.links)],
   ["Swim school", [{ label: "Overview" }, ...NAV_ITEMS]],
+  ["Academy", academyPages()],
   ["CCTV log", cctvPages()],
   ["Finance requests", financePages({ id: "someone", refunds: everything, coinage: everything })],
   ["HR", hrPages(everything)],

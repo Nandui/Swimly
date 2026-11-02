@@ -5,14 +5,13 @@ import type { ModuleManifest } from "@/modules/registry";
  *  levels and the permissions each level gives (docs/apps.md). Listed
  *  in src/app/modules.ts. Client-safe: menus and the role editor read it. */
 // Short courses (owner decision, 13 October 2026): six and eight
-// week courses at the pool, the gym, the studio or anywhere else. The Academy's lifeguard and
-// swim teacher courses joined it (owner decision, 15 October 2026).
-// Each level gives both kinds of course their own permissions, so each keeps its rules.
+// week courses at the pool, the gym, the studio or anywhere else. The Academy, which joined it on
+// 15 October 2026, is its own app again (D24).
 export const shortCoursesModule: ModuleManifest = {
   id: "short-courses",
   group: "front-of-house",
   name: "Short courses",
-  description: "Six and eight week courses and the Academy's lifeguard and swim teacher courses: places, payment, registers and results",
+  description: "Six and eight week courses at the pool, the gym or the studio: places, payment, waiting lists and registers",
   icon: CalendarRange,
   href: "/short-courses/overview",
   logName: "Short courses",
@@ -20,12 +19,11 @@ export const shortCoursesModule: ModuleManifest = {
     reach: "sites",
     levels: [
       { key: "view", label: "View", help: "See the courses at their sites. Book people on short courses: add them, record payment and keep the waiting list.",
-        permissions: ["short-courses.read", "academy.read"] },
-      { key: "run", label: "Instructor or tutor", help: "Also take registers, and on Academy courses add candidates, record checks and payment, and record results.",
-        permissions: ["short-courses.run", "academy.run"] },
-      { key: "manage", label: "Manage", help: "Also keep both course lists, and put courses on with their sessions, instructor or tutor, places and price.",
-        permissions: ["short-courses.manage", "academy.manage"] },
+        permissions: ["short-courses.read"] },
+      { key: "run", label: "Instructor", help: "Also take registers.",
+        permissions: ["short-courses.run"] },
+      { key: "manage", label: "Manage", help: "Also keep the course list, and put courses on with their sessions, instructor, places and price.",
+        permissions: ["short-courses.manage"] },
     ],
-    formerly: [{ id: "academy" }],
   },
 };

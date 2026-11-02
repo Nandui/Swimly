@@ -137,7 +137,8 @@ export const SCREENS = [
   { key: "purchasing", label: "Purchasing", path: "/purchasing", description: "A separate workspace for purchase orders: approved suppliers and products, approval by role and amount, and numbered orders per site.", requires: "purchasing.read" },
   { key: "incidents", label: "Incidents", path: "/incidents", description: "A separate workspace for accidents, incidents and near misses: reported in two minutes, triaged by a duty manager, serious ones signed off.", requires: "incidents.reports.create" },
   { key: "tasks", label: "Tasks", path: "/tasks", description: "A separate workspace for each site's daily checks and logs: tasks from templates on a schedule, readings with acceptable ranges, approval, follow-up actions and scores.", requires: "tasks.complete" },
-  { key: "short-courses", label: "Short courses", path: "/short-courses", description: "A separate workspace for six and eight week courses at the pool, the gym or the studio, and the Academy's lifeguard and swim teacher courses: places, payment, waiting lists, registers and results.", requires: "short-courses.read" },
+  { key: "short-courses", label: "Short courses", path: "/short-courses", description: "A separate workspace for six and eight week courses at the pool, the gym or the studio: places, payment, waiting lists and registers.", requires: "short-courses.read" },
+  { key: "academy", label: "Academy", path: "/academy", description: "A separate workspace for the Academy's lifeguard and swim teacher courses: candidates, checks, payment, registers and results.", requires: "academy.read" },
   { key: "stock", label: "Stock", path: "/stock", description: "A separate workspace for stock taking: count what is on the shelf at each site on a phone or tablet, keep the product list and compare two counts.", requires: "stock.read" },
   { key: "cctv", label: "CCTV log", path: "/cctv", description: "A separate workspace for managers: a record of every time CCTV footage is checked, who checked it, why, what they looked for and what they saw.", requires: "cctv.record" },
   { key: "site-monitoring", label: "Site Monitoring", path: "/site-monitoring", description: "A separate workspace for managers: actions raised automatically at their sites, such as a task completed with a reading out of range, each closed by saying what was done.", requires: "site-monitoring.read" },
@@ -186,7 +187,7 @@ export const ACTIVITIES_SCREENS = [
   "analytics", "duty", "cancellations", "calendar", "instructor", "students", "courses",
   "together", "assessments", "awaiting-enrolment", "legend-agreements", "programmes", "payments",
 ] as const satisfies readonly ScreenKey[];
-export const OTHER_APP_SCREENS = ["docs", "refunds", "coinage", "training", "hr", "rota", "purchasing", "stock", "short-courses", "tasks", "incidents", "cctv", "site-monitoring", "maintenance", "plan"] as const satisfies readonly ScreenKey[];
+export const OTHER_APP_SCREENS = ["docs", "refunds", "coinage", "training", "hr", "rota", "purchasing", "stock", "short-courses", "academy", "tasks", "incidents", "cctv", "site-monitoring", "maintenance", "plan"] as const satisfies readonly ScreenKey[];
 
 const CORE = new Set<string>(CORE_SCREENS);
 const SWIM_SCHOOL = new Set<string>(ACTIVITIES_SCREENS);

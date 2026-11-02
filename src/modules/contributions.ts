@@ -495,6 +495,55 @@ export async function memberHistoryFor(memberId: string): Promise<MemberHistoryE
   return lists.flat().sort((a, b) => b.on.localeCompare(a.on));
 }
 
+/** One place booked under an email address, as the public see it in "My bookings" on the
+ *  Academy booking site (owner decision, 8 October 2026). The Academy keeps the site's API and its
+ *  own courses; another app adds the places it holds under that email through this plug (D24:
+ *  short courses booked at the desk), so the Academy never reads its tables. Never staff names,
+ *  other people or notes. */
+export type EmailBooking = {
+  id: string;
+  /** Which kind: "academy" or "short-courses". */
+  source: string;
+  reference: string | null;
+  courseId: string;
+  name: string;
+  /** The name it was booked under (one email can book for several people). */
+  person: string;
+  categoryLabel: string;
+  site: string;
+  firstDay: string | null;
+  lastDay: string | null;
+  sessions: number;
+  next: { date: string; start: string; end: string; place: string } | null;
+  /** Where it stands. */
+  state: "to-pay" | "booked" | "waiting" | "done" | "withdrawn" | "cancelled";
+  /** A result or finer detail, e.g. "Passed", "Deposit paid". */
+  detail: string;
+  priceCents: number;
+  paidCents: number;
+  owedCents: number;
+  callBy: string | null;
+};
+export type EmailBookingSource = { id: string; /** The app it belongs to (its manifest id). */ app: string; list(email: string): Promise<EmailBooking[]> };
+const emailBookingSources: EmailBookingSource[] = [];
+
+export function registerEmailBookings(source: EmailBookingSource) {
+  const at = emailBookingSources.findIndex((s) => s.id === source.id);
+  if (at >= 0) emailBookingSources[at] = source;
+  else emailBookingSources.push(source);
+}
+
+/** Every other app's places under this (checked) email, so a customer still sees a place the
+ *  desk booked. An app switched off is left out; a failing source is left out and logged. */
+export async function emailBookingsFor(email: string): Promise<EmailBooking[]> {
+  await modulesLoaded();
+  const lists = await Promise.all(emailBookingSources.map(async (s) => !(await appOn(s.app)) ? [] : s.list(email).catch((error) => {
+    console.error(`Bookings by email from ${s.id} failed`, error);
+    return [] as EmailBooking[];
+  })));
+  return lists.flat();
+}
+
 /** Something another module needs the desk to raise with a member the next time they are in touch,
  *  shown as a badge on their swimmer profile: "Payment failed", "September direct debit not
  *  recovered yet". A short label and hint only, never amounts or notes; the link opens the record
