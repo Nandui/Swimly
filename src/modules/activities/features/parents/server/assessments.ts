@@ -8,6 +8,7 @@ import { readSharedCurriculum, type SharedCurriculum } from "@/modules/activitie
 import { HOLDS_A_PLACE } from "@/modules/activities/shared/assessments/constants";
 import { sendAssessmentConfirmation } from "@/modules/activities/shared/assessments/confirmation-email";
 import { ageRangeError } from "@/modules/activities/shared/assessments/age";
+import { currentProgrammeIds, programmeRuleError } from "@/modules/activities/shared/assessments/programme-rule";
 import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { parentAudit, profileMissing, withParent, type ParentIdentity } from "@/modules/activities/shared/parents/auth";
 import { childScope, requireChild } from "@/modules/activities/shared/parents/children";
@@ -139,6 +140,8 @@ export async function reserveAssessment(tx: Prisma.TransactionClient, parent: Pa
     student = await requireChild(tx, parent, input.childId);
     if (student.status !== "ACTIVE") throw new ParentApiError(409, "CHILD_INACTIVE", "Contact the team to book an assessment for this child.");
     checkAge(student);
+    const earlier = programmeRuleError(curriculum, await currentProgrammeIds(tx, student.id), session.programmeId, student.firstName);
+    if (earlier) throw new ParentApiError(409, "EARLIER_PROGRAMME", `${earlier} Please choose another assessment.`);
   } else {
     // Before the swimmer is created, so a refused booking registers no one.
     checkAge({ ...input.newChild, dateOfBirth: parseDateOnly(input.newChild.dateOfBirth) });
@@ -158,6 +161,27 @@ export async function reserveAssessment(tx: Prisma.TransactionClient, parent: Pa
   await tx.parentBookingRequest.create({ data: { parentId: parent.id, key, requestHash, bookingId: booking.id } });
   await parentAudit(tx, parent, "book", "AssessmentBooking", booking.id, "Parent booked an assessment", { studentId: student.id, sessionId: session.id }, session.clubId);
   return { booking: { id: booking.id, childId: student.id, sessionId: session.id, status: booking.status }, replayed: false };
+}
+
+/** For the booking screen: which of the parent's children this session is open
+ *  to, and in plain words why not. Booking checks the same rules again. */
+export async function sessionChildren(tx: Prisma.TransactionClient, parent: ParentAccount, sessionId: string) {
+  const found = await tx.assessmentSession.findUnique({ where: { id: sessionId }, select: SESSION_SELECT });
+  if (!found) notFound();
+  const [session] = await withSessionSites([found], tx);
+  const curriculum = await readSharedCurriculum(tx);
+  if (!sessionAvailability(session, curriculum, new Date()).open) notFound();
+  const children = await tx.student.findMany({ where: childScope(parent), select: { id: true, firstName: true, dateOfBirth: true, status: true },
+    orderBy: [{ firstName: "asc" }, { id: "asc" }] });
+  const items = [];
+  for (const child of children) {
+    const outside = ageRangeError(session, { name: child.firstName, dateOfBirth: child.dateOfBirth }, session.date);
+    const reason = child.status !== "ACTIVE" ? "Contact the team to book an assessment for this child."
+      : outside ? (child.dateOfBirth ? outside : "Contact the team to book this assessment. They need your child's date of birth first.")
+      : programmeRuleError(curriculum, await currentProgrammeIds(tx, child.id), session.programmeId, child.firstName);
+    items.push({ childId: child.id, canBook: !reason, reason: reason ?? null });
+  }
+  return { items };
 }
 
 export async function bookAssessment(request: Request, identity: ParentIdentity) {

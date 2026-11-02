@@ -8,7 +8,7 @@ Turnfin is the staff product for LeisureWorld's leisure centres in Cork. Recepti
 
 Turnfin 2.0 is a **platform of apps**: one product, one sign-in and one set of records, with each area of the business (Swim school, Rota, HR, Incidents, Purchasing and whatever comes next) built as an app on a shared platform. An app can grow as big as a product another company sells on its own and still never break the others.
 
-2.0 also brings a **new look and feel**, Turnfin Glass, approved on 25 October 2026 and written in [DESIGN.md](DESIGN.md).
+2.0 also brings a **new look and feel**, Turnfin Sheet, approved on 1 November 2026 and written in [DESIGN.md](DESIGN.md).
 
 The repository is named Swimly. That is a working name only; never show it to staff.
 
@@ -31,7 +31,7 @@ Turnfin Me, the parent app and the Academy booking site are **connected products
 
 1. **Apps.** Turnfin is a set of apps on one platform. Each app is one area of the business and keeps its own information to itself.
 2. **Jobs.** A person holds one or more jobs; a job is a role at the sites it covers. For each app a role has a level, such as None, Use or Manage, and each level includes the ones before it.
-3. **Home.** When you sign in you see Home for the job you are doing at your site: your apps, and everything waiting for you across them.
+3. **Home.** When you sign in you see Home for the job you are doing at your site: everything waiting for you across your apps. The frame around it shows only your apps, one at a time, worked out from your job and your screen.
 4. **Aimed at roles.** Inside an app, things can be aimed at roles: this document is for receptionists, that course is for instructors.
 5. **Connected products.** Your own records are in Turnfin Me on your phone; parents and the public use their own products; all of them reach Turnfin only through its APIs.
 

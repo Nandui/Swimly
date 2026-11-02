@@ -11,6 +11,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - **Needs someone**, under the timeline, lists everything still short of people, with a **Fill** button for each.
 - **One list of areas**: Plan (test) now uses the areas in **Admin › Areas**, the same ones swim classes use, so classes show in the right area by themselves. Plan (test)'s own area list has gone.
 - **Admin › Areas** keeps each area's name, what it is part of, its department and its lanes. The old Rota's opening hours, minimum staff and "covered from" settings are no longer changed here, and Rota keeps the ones already saved.
+## 2.32.1 · 31 October 2026 · Assessments only for the right programme
+
+- **Assessments** can no longer be booked for a programme a swimmer has already moved past. A swimmer in a Water Safety and Fun class can book Water Safety and Fun, Swimming Skills or Rookie Lifesaving. A swimmer in Swimming Skills can book Swimming Skills or Rookie Lifesaving. A swimmer in Rookie Lifesaving can book Rookie Lifesaving.
+- **Rookie Lifesaving** still needs the swimmer to fit the session's ages.
+- **At the desk**, Turnfin says why when it refuses a booking. **In the parents app**, a child who can't book that assessment is greyed out, with the reason beside their name.
+- **The order** follows the order of programmes on the Programmes page.
+
 ## 2.32.0 · 30 October 2026 · One place to put content in a lesson
 
 - **Training › Courses**: **Add a lesson** now asks only for its name. The lesson opens as an empty page with tiles to start from: Text, Video, Audio, Slides, a PDF or picture, or an activity. After that, everything goes in with **Add**, in any order.
