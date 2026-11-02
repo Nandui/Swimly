@@ -742,7 +742,10 @@ body.turnfin-app:has(> .tf-shell, > * > .tf-shell) { background: var(--ground); 
   rotate: -4deg;
   pointer-events: none;
 }
-.turnfin-app .tf-frame { position: relative; z-index: 1; display: flex; flex-direction: column; min-width: 0; min-height: calc(100dvh - 20px); margin: 10px; padding: 0 var(--space-8) 48px; border-radius: var(--radius-panel); background: var(--sheet); box-shadow: var(--shadow-sheet); }
+/* The sheet clips what it holds to its own rounded corners, top and bottom alike: the toolbar's
+   fade and anything wider stay inside them. clip, not hidden, so the sticky toolbar still sticks;
+   menus, dialogs and the save bar sit outside the sheet and are not cut. */
+.turnfin-app .tf-frame { position: relative; z-index: 1; display: flex; flex-direction: column; min-width: 0; min-height: calc(100dvh - 20px); margin: 10px; padding: 0 var(--space-8) 48px; overflow: clip; border-radius: var(--radius-panel); background: var(--sheet); box-shadow: var(--shadow-sheet); }
 @media (prefers-contrast: more) {
   .turnfin-app .tf-shell::before { display: none; }
   .turnfin-app .tf-frame { box-shadow: 0 0 0 1px var(--label-2); }
