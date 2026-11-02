@@ -1,15 +1,17 @@
 "use server";
 
+import { createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { logAudit } from "@/lib/audit";
 import { liveSitesOf } from "@/lib/directory";
+import { formatDate } from "@/lib/format";
 import { today } from "@/lib/format";
 import { sitesFor } from "@/lib/policy/session";
 import { prisma } from "@/lib/prisma";
 import { readWorkbook } from "@/lib/xlsx";
 import { members, type MemberHit } from "@/modules/contributions";
 import { covers, requirePaymentsActor, type PaymentsActor } from "@/modules/payments/shared/access";
-import { MONTH, monthFromFileName, parseFailureSheets, PaymentError, siteForClub, type SheetRow } from "@/modules/payments/shared/rules";
+import { MONTH, monthFromFileName, parseFailureSheets, PaymentError, sheetFingerprintSource, siteForClub, type SheetRow } from "@/modules/payments/shared/rules";
 import { failureLabel } from "@/modules/payments/shared/service";
 import { euro, monthLabel, PAYMENT_ACTIONS } from "@/modules/payments/shared/types";
 
@@ -17,7 +19,8 @@ import { euro, monthLabel, PAYMENT_ACTIONS } from "@/modules/payments/shared/typ
  *  failed, one tab per site. A count first, which writes nothing; then the upload, which reads the
  *  file again and adds each debit not already in for that month, at the sites where this person
  *  holds `payments.manage`. A club matching no site is left out and named; the rest are added.
- *  Uploading the same sheet twice adds nothing the second time. */
+ *  The same sheet uploaded again is refused, whatever month it is given, and within a month a
+ *  debit already in is never added twice. */
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
@@ -31,7 +34,19 @@ export type SheetPreview = {
   unknownClubs: { club: string; rows: number; cents: string }[];
   /** Debits at sites this person does not manage, left for someone who does. */
   elsewhere: number;
+  /** When this exact sheet was uploaded before, under any month: it is refused, so nothing is added twice. */
+  uploadedBefore: string | null;
 };
+
+const fingerprintOf = (rows: SheetRow[]) => createHash("sha256").update(sheetFingerprintSource(rows)).digest("hex");
+
+/** The earlier upload of this exact sheet, in words: "uploaded for September 2026 by Maya on 2 Nov
+ *  2026". Null when it is new. */
+async function uploadedBefore(orgId: string | null, rows: SheetRow[]) {
+  const earlier = await prisma.paymentImport.findFirst({ where: { orgId: orgId ?? "", fingerprint: fingerprintOf(rows) }, orderBy: { createdAt: "asc" },
+    select: { month: true, uploadedByName: true, createdAt: true } });
+  return earlier ? `uploaded for ${monthLabel(earlier.month)} by ${earlier.uploadedByName} on ${formatDate(earlier.createdAt)}` : null;
+}
 
 async function readSheet(formData: FormData): Promise<{ ok: true; fileName: string; month: string; rows: SheetRow[] } | { ok: false; error: string }> {
   const file = formData.get("file");
@@ -85,7 +100,7 @@ export async function previewFailureSheet(formData: FormData): Promise<{ ok: tru
   if (!who.manage) return { ok: false, error: "Uploading the failure sheet needs Payments: Manage." };
   const read = await readSheet(formData);
   if (!read.ok) return read;
-  const p = await plan(who, read.month, read.rows);
+  const [p, before] = await Promise.all([plan(who, read.month, read.rows), uploadedBefore(who.orgId, read.rows)]);
   const bySite = new Map<string, { name: string; added: number; cents: number }>();
   for (const { row, site } of p.fresh) {
     const s = bySite.get(site.id) ?? { name: site.name, added: 0, cents: 0 };
@@ -96,7 +111,7 @@ export async function previewFailureSheet(formData: FormData): Promise<{ ok: tru
     rows: read.rows.length, added: p.fresh.length, already: p.already, addedCents: p.fresh.reduce((t, f) => t + f.row.amountCents, 0),
     swimmers: p.fresh.filter((f) => p.swimmers.has(f.row.memberNumber)).length,
     bySite: [...bySite.values()].map((s) => ({ name: s.name, added: s.added, cents: euro(s.cents) })),
-    unknownClubs: p.unknown.map((u) => ({ club: u.club, rows: u.rows, cents: euro(u.cents) })), elsewhere: p.elsewhere,
+    unknownClubs: p.unknown.map((u) => ({ club: u.club, rows: u.rows, cents: euro(u.cents) })), elsewhere: p.elsewhere, uploadedBefore: before,
   } };
 }
 
@@ -112,6 +127,8 @@ export async function uploadFailureSheet(formData: FormData): Promise<{ ok: true
   // The same press twice (a retry) saves once: the import's id is the form's operation.
   const done = await prisma.paymentImport.findUnique({ where: { id: operationId }, select: { added: true, month: true, uploadedById: true } });
   if (done) return done.uploadedById === who.id ? { ok: true, added: done.added, month: done.month } : { ok: false, error: "Refresh the page and upload the sheet again." };
+  const before = await uploadedBefore(orgId, read.rows);
+  if (before) return { ok: false, error: `This sheet was already ${before}, so nothing was added again.` };
   const p = await plan(who, read.month, read.rows);
   if (!p.fresh.length) return { ok: false, error: p.already ? "Every debit on this sheet is already in for that month."
     : p.unknown.length ? `No site matches ${p.unknown.map((u) => u.club).join(", ")}, so nothing could be added. Check the site names in Admin › Sites.`
@@ -121,7 +138,7 @@ export async function uploadFailureSheet(formData: FormData): Promise<{ ok: true
     const since = new Set((await tx.paymentFailure.findMany({ where: { orgId, month: read.month, reference: { in: p.fresh.map((f) => f.row.reference) } }, select: { reference: true, amountCents: true, copy: true } })).map(debitKey));
     const rows = p.fresh.filter((f) => !since.has(debitKey(f.row)));
     await tx.paymentImport.create({ data: {
-      id: operationId, orgId, month: read.month, fileName: read.fileName.slice(0, 200), rows: read.rows.length, added: rows.length,
+      id: operationId, orgId, month: read.month, fileName: read.fileName.slice(0, 200), rows: read.rows.length, added: rows.length, fingerprint: fingerprintOf(read.rows),
       totalCents: rows.reduce((t, f) => t + f.row.amountCents, 0), uploadedById: who.id, uploadedByName: who.name,
     } });
     for (const { row, site } of rows) {

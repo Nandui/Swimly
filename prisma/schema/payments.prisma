@@ -15,11 +15,15 @@ model PaymentImport {
   rows           Int
   added          Int
   totalCents     Int
+  /// The sheet's debits as a hash (`sheetFingerprintSource`): the same sheet uploaded again, under
+  /// any month, is refused. "" on uploads from before it was kept.
+  fingerprint    String   @default("")
   uploadedById   String
   uploadedByName String
   createdAt      DateTime @default(now())
 
   @@index([orgId, month])
+  @@index([orgId, fingerprint])
   @@map("payment_imports")
 }
 

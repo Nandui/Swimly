@@ -97,6 +97,13 @@ test("the sheet is counted first, then added once, at the uploader's sites only,
   assert.deepEqual(added, { ok: true, added: 2, month: "2026-09" });
   assert.deepEqual(await upload.uploadFailureSheet(form({ file: file(), month: "2026-09", operationId })), { ok: true, added: 2, month: "2026-09" }, "a second press of Add");
   assert.equal((await upload.uploadFailureSheet(form({ file: file(), month: "2026-09", operationId: uuid() }))).ok, false, "the same sheet again adds nothing");
+  const again = await upload.previewFailureSheet(form({ file: file(), month: "2026-08" }));
+  assert.ok(again.ok);
+  assert.match(again.preview.uploadedBefore ?? "", /September 2026 by mia/, "the same sheet under another month is recognised");
+  const otherMonth = await upload.uploadFailureSheet(form({ file: file(), month: "2026-08", operationId: uuid() }));
+  assert.equal(otherMonth.ok, false, "and refused, so nothing is added twice");
+  assert.match(otherMonth.ok ? "" : otherMonth.error, /already uploaded for September 2026/);
+  assert.equal(await fixture.prisma.paymentFailure.count(), 2);
   assert.equal(await fixture.prisma.paymentFailure.count(), 2);
   const matched = await failure("A/LWC1001");
   assert.deepEqual([matched.siteId, matched.memberId, matched.amountCents, matched.status, matched.orgId], [churchfield, "swimmer-1", 5400, "to_contact", ORG]);
