@@ -24,7 +24,7 @@ HR keeps its records in its own schema, `turnfin_hr`, in the main database ([D23
 - `acknowledgeReviewFor(me, id, comment)` — a person acknowledges a shared review.
 
 ## Data owned
-In the `turnfin_hr` schema (plain SQL, not Prisma): `notes`, `reviews`, `access_events`, `audit_events`, `storage_imports` (the one-time copy from the old HR database).
+In the `turnfin_hr` schema (plain SQL, not Prisma): `notes`, `reviews`, `access_events`, `audit_events`, `storage_imports` (the record of the one-time copy from the old HR database, 2 November 2026).
 
 HR's starter-page item counts Core's `StaffDetailChangeRequest`, and a person's file reads Core's people and other modules' records through the `personFile` and `subjectRecords` seams.
 
