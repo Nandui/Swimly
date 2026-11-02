@@ -1,6 +1,5 @@
 import "dotenv/config";
 import { docsStorageConfig } from '../src/modules/docs/shared/storage-config';
-import { hrStorageConfig } from '../src/modules/hr/shared/storage-config';
 import { databasePlan } from '../src/lib/database-environment';
 
 /** Run before every build. A deployment that boots without a database and
@@ -10,9 +9,7 @@ const errors: string[] = [];
 const warnings: string[] = [];
 try { docsStorageConfig(process.env); }
 catch (error) { errors.push(error instanceof Error && error.name !== 'TypeError' ? error.message : 'Check the Docs database URLs.'); }
-// HR is optional until its database is provisioned, but never in a shared one.
-try { if (!hrStorageConfig(process.env)) warnings.push('No HR database is set (HR_DATABASE_URL or HR_DB_DATABASE_URL), so HR and performance stays switched off.'); }
-catch (error) { errors.push(error instanceof Error && error.name !== 'TypeError' ? error.message : 'Check the HR database URLs.'); }
+// HR is the turnfin_hr schema in the main database (D23): nothing of its own to check.
 
 // Production and dev must not share a database; see src/lib/database-environment.ts.
 const plan = databasePlan(process.env);

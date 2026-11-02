@@ -2,7 +2,7 @@
 
 **Purpose:** keeps each person's HR record (notes, reports and performance reviews) private to the people allowed to see it.
 
-HR keeps its records in its own database (`HR_DATABASE_URL`, migrations in `hr-database/migrations`); unset, HR stays switched off. Its levels and restrictions are in [docs/apps.md](../../../docs/apps.md).
+HR keeps its records in its own schema, `turnfin_hr`, in the main database ([D23](../../../docs/decisions.md); plain SQL, migrations in `hr-database/migrations`). Its levels and restrictions are in [docs/apps.md](../../../docs/apps.md).
 
 ## Features
 - `team` — the people this person may see in HR, with their latest review (`/hr`).
@@ -18,13 +18,13 @@ HR keeps its records in its own database (`HR_DATABASE_URL`, migrations in `hr-d
 `shared/` holds what two or more features use: the HR database and its configuration, the access check, statuses and note kinds, the reports waiting to be read (`reports.ts`), the column lists, the access log and the subject check (`records.ts`), write helpers (`writes.ts`) and the dialogs' kit.
 
 ## Front door (index.ts)
-- `hrConfigured()` — whether the HR database is set up.
+- `hrConfigured()` — whether the database is set up.
 - `mySharedHr(userId, orgId)` — notes and reviews shared with a person.
 - `logOwnHrRead(me)` — logs a person reading their own record (moved here from the staff API, which used to write HR's `access_events` itself).
 - `acknowledgeReviewFor(me, id, comment)` — a person acknowledges a shared review.
 
 ## Data owned
-In the HR database (not Prisma): `notes`, `reviews`, `access_events`, `audit_events`.
+In the `turnfin_hr` schema (plain SQL, not Prisma): `notes`, `reviews`, `access_events`, `audit_events`, `storage_imports` (the one-time copy from the old HR database).
 
 HR's starter-page item counts Core's `StaffDetailChangeRequest`, and a person's file reads Core's people and other modules' records through the `personFile` and `subjectRecords` seams.
 

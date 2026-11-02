@@ -6,6 +6,12 @@ The decisions Turnfin 2.0 stands on, newest first. Each says what was decided, w
 
 ---
 
+### D23 · 2 November 2026 · HR moves into the main database
+
+HR's tables live in the main Turnfin database as their own schema, `turnfin_hr`, instead of a separate Neon database. Nothing else changes: HR's tables are still plain SQL that only HR's code reads and writes, they still hold ids only, and access is still decided by the policy engine and logged. The production build migrates `turnfin_hr` wherever it migrates the main database (production and development previews). Once, in production, it copies every HR row from the old HR database into `turnfin_hr` while those tables are empty, logging counts only.
+**Why:** the separate HR database's Vercel connection made production deploys fail (its per-deployment branch step timed out three times on 2 November 2026), and one database is simpler to run, back up and audit.
+**Follows:** replaces "HR keeps its own database" in D3 and AGENTS.md. Anyone who can read the main database can now read HR's tables, so access to production database credentials is HR access. After the copy is confirmed, the old HR database's connection is removed from Vercel, and then the old `HR_DATABASE_URL` settings and the copy step go (owner's yes for each).
+
 ### D22 · 2 November 2026 · Managers report on staff; HR notes have a kind
 
 Managers on duty file a quick **report** about someone they line-manage: the person, the kind (Conduct, Performance, Attendance or Safety), what happened and when. It goes on that person's HR file as a note on their record, never shared with them, and the reporter sees nothing afterwards, not even their own report. Every HR note now has a kind, with General for the rest; a report is a note filed through the quick form. HR's levels become **Report** (file reports on the people they line-manage), **Their sites** (read and write the files of everyone who works at their sites) and **Everyone**. "Their team" is relabelled Report (it keeps its stored key, so the roles that held it move with no data change). The "Their sites" holders at the reporter's working site see the report under Needs you on Home until one of them opens that person's file. A wrong report is withdrawn, with a reason, by someone who can write notes on that file. Only a superadmin gives any HR level.
@@ -129,7 +135,7 @@ Turnfin is the job, on work computers, with no personal pages. A person's own tr
 
 ### D3 · Apps own their data
 
-Every table has one owner, named by its schema file. Existing tables keep their names; new ones take the app's prefix. Docs and HR keep their own databases. Database changes only add.
+Every table has one owner, named by its schema file. Existing tables keep their names; new ones take the app's prefix. Docs keeps its own database; HR is the `turnfin_hr` schema in the main database ([D23](#d23--2-november-2026--hr-moves-into-the-main-database)). Database changes only add.
 **Why:** an app that owns its data can be changed, switched off or lifted out without touching the others; renaming live tables risks the running app.
 
 ### D2 · The platform is `src/lib` and the module wiring; the UI kit stays in `src/components`

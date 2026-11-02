@@ -1,19 +1,23 @@
 import { databaseIdentity } from '@/lib/postgres-connection';
 
-/** HR and performance live in their own database, never the Turnfin/Aquatics
- *  or Docs database. Set `HR_DATABASE_URL` (and `HR_DIRECT_URL`, unpooled, for
- *  migrations), or attach the database through Vercel's Neon integration with
- *  the prefix `HR_DB`, which provides `HR_DB_DATABASE_URL` and
- *  `HR_DB_DATABASE_URL_UNPOOLED`. Unset means HR is not provisioned yet: the
- *  module says so and nothing else is affected. A misconfiguration that would
- *  put HR records in a shared database is an error. */
+/** HR lives in the main Turnfin database as its own schema, `turnfin_hr` (D23),
+ *  reached with the main database's URLs (`DIRECT_URL`, unpooled, for
+ *  migrations). Unset means there is no database at all: HR says it is not set
+ *  up and nothing else is affected. */
 export function hrStorageConfig(env: Record<string, string | undefined>) {
-  const runtime = env.HR_DATABASE_URL || env.HR_DB_DATABASE_URL;
+  const runtime = env.DATABASE_URL;
   if (!runtime) return null;
-  const direct = env.HR_DIRECT_URL || env.HR_DB_DATABASE_URL_UNPOOLED || runtime;
-  if (databaseIdentity(runtime) !== databaseIdentity(direct)) throw new Error('The HR direct URL must point to the same database as the HR database URL.');
-  for (const shared of [env.DATABASE_URL, env.DIRECT_URL, env.DATABASE_URL_UNPOOLED, env.DOCS_DATABASE_URL, env.DOCS_DIRECT_URL]) {
-    if (shared && databaseIdentity(shared) === databaseIdentity(runtime)) throw new Error('HR must use its own database, separate from Turnfin and Docs.');
-  }
+  const direct = env.DIRECT_URL || env.DATABASE_URL_UNPOOLED || runtime;
   return { runtime, direct };
+}
+
+/** The separate HR database HR used before D23, while its settings remain, for
+ *  the production build's one-time copy into `turnfin_hr`. Null when unset or
+ *  when it is the main database itself. */
+export function legacyHrSource(env: Record<string, string | undefined>) {
+  const url = env.HR_DIRECT_URL || env.HR_DB_DATABASE_URL_UNPOOLED || env.HR_DATABASE_URL || env.HR_DB_DATABASE_URL;
+  if (!url) return null;
+  const main = env.DIRECT_URL || env.DATABASE_URL_UNPOOLED || env.DATABASE_URL;
+  if (main && databaseIdentity(main) === databaseIdentity(url)) return null;
+  return url;
 }
