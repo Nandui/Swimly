@@ -1,11 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { fail, ok, type ActionResult } from "@/lib/action-result";
+import { logAudit } from "@/lib/audit";
 import { mayFor } from "@/lib/policy/session";
 import { prisma } from "@/lib/prisma";
 import { requirePaymentsActor, type PaymentsActor } from "@/modules/payments/shared/access";
 import { closeChange, closeSchema, contactChange, contactSchema, PaymentError, problemOf, reopenChange, reopenSchema, type CloseInput, type ContactInput, type ReopenInput } from "@/modules/payments/shared/rules";
-import { alreadyDone, guardVersion, lockFailure, recordStep } from "@/modules/payments/shared/service";
+import { alreadyDone, failureLabel, guardVersion, lockFailure, recordStep } from "@/modules/payments/shared/service";
+import { nonSwimmerPlan } from "@/modules/payments/features/failures/server/non-swimmers";
 import { METHOD_LABEL, RESULT_LABEL, type PaymentAction, type PaymentResult, type PaymentStatus } from "@/modules/payments/shared/types";
 import type { PaymentFailure } from "@/generated/prisma/client";
 
@@ -63,4 +66,35 @@ export async function reopenFailure(input: ReopenInput): Promise<PaymentResult> 
   if (!parsed.success) return { ok: false, error: problemOf(parsed.error) };
   const { id, operationId, version, note } = parsed.data;
   return step(id, operationId, version, "reopen", "payments.manage", (row) => ({ data: reopenChange(row.status as PaymentStatus, row.attempts), extra: { note } }));
+}
+
+/** Manage takes the payments with no swimmer behind them off the list, at the sites they manage:
+ *  those whose member number is a swimmer's now are linked to them instead. Each removal takes its
+ *  history with it and leaves an audit row, all in one transaction. */
+export async function removeNonSwimmers(): Promise<ActionResult> {
+  const who = await requirePaymentsActor();
+  if (!who.manage) return fail("Removing payments needs Payments: Manage.");
+  // Swimmers are looked up through the swim school first; inside the transaction only the payments
+  // still unlinked are changed, so anything another person changed since is left as it is.
+  const planned = await nonSwimmerPlan(who.orgId);
+  if (!planned) return fail("Swimmers can’t be checked while the Swim school app is switched off.");
+  await prisma.$transaction(async (tx) => {
+    const still = new Set((await tx.paymentFailure.findMany({ where: { id: { in: [...planned.link, ...planned.remove].map((f) => f.id) }, memberId: null }, select: { id: true } })).map((f) => f.id));
+    const plan = { link: planned.link.filter((f) => still.has(f.id)), remove: planned.remove.filter((f) => still.has(f.id)) };
+    for (const f of plan.link) {
+      await tx.paymentFailure.update({ where: { id: f.id }, data: { memberId: f.memberId, version: { increment: 1 } } });
+      await logAudit({ actorId: who.id, actorName: who.name, action: "update", entity: "PaymentFailure", entityId: f.id, clubId: f.siteId,
+        summary: `${failureLabel(f)}. Linked to the swimmer with member number ${f.memberNumber}` }, tx);
+    }
+    for (const f of plan.remove) {
+      await tx.paymentFailureEvent.deleteMany({ where: { failureId: f.id } });
+      await tx.paymentFailure.delete({ where: { id: f.id } });
+      await logAudit({ actorId: who.id, actorName: who.name, action: "delete", entity: "PaymentFailure", entityId: f.id, clubId: f.siteId,
+        summary: `${failureLabel(f)}. Removed: member number ${f.memberNumber || "none"} is not a swimmer on Turnfin` }, tx);
+    }
+    return plan;
+  }, { timeout: 120_000 });
+  revalidatePath("/payments", "layout");
+  revalidatePath("/students/[id]", "page");
+  return ok();
 }

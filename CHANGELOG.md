@@ -4,6 +4,10 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.34.4 · 2 November 2026 · Payments: remove the non-swimmers
+
+- **Failed payments**: managers see **Remove non-swimmers** while the list still holds payments from before Payments tracked swimmers only. It asks first, then takes them off the list. Anyone who has become a swimmer since stays and is linked to their swimmer.
+
 ## 2.34.3 · 2 November 2026 · Payments: swimmers only
 
 - **Upload the sheet** now adds only the payments whose member number belongs to a swimmer on Turnfin. Gym memberships and anyone else on the bank's sheet are left out, and the page says how many.

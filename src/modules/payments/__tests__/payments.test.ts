@@ -197,3 +197,26 @@ test("the lists, Home and the swimmer's notices show what is still open at the p
   assert.deepEqual((await data.paymentLists({})).counts, { to_contact: 0, contacted: 0, closed: 0 }, "another site's payments stay out");
   await assert.rejects(data.getPaymentFailure((await failure("A/LWC1001")).id), /not available/);
 });
+
+test("Manage removes payments with no swimmer behind them, at their sites only, linking any that are swimmers now", async () => {
+  const db = fixture.prisma;
+  const old = (reference: string, memberNumber: string, siteId: string) => db.paymentFailure.create({ data: {
+    orgId: ORG, siteId, importId: "before-swimmers-only", month: "2026-08", reference, memberNumber, name: "Synthetic Old", amountCents: 4000 } });
+  const gym = await old("A/GYM7007", "GYM7007", churchfield);
+  await db.paymentFailureEvent.create({ data: { orgId: ORG, failureId: gym.id, operationId: uuid(), actorId: "lena", actorName: "lena", action: "contact" } });
+  const now = await old("A/LWC4004", "LWC4004", churchfield);
+  const elsewhere = await old("A/GYM8008", "GYM8008", bishopstown);
+
+  reception();
+  assert.equal((await steps.removeNonSwimmers()).ok, false, "Use cannot remove");
+  manager();
+  assert.deepEqual((await data.paymentLists({})).nonSwimmers, { remove: 1, worked: 0, link: 1 });
+  assert.deepEqual(await steps.removeNonSwimmers(), { ok: true });
+  assert.equal(await db.paymentFailure.count({ where: { id: gym.id } }), 0, "the gym member's payment is gone");
+  assert.equal(await db.paymentFailureEvent.count({ where: { failureId: gym.id } }), 0, "with its history");
+  assert.equal((await db.paymentFailure.findUniqueOrThrow({ where: { id: now.id } })).memberId, "swimmer-5", "a swimmer now is linked instead");
+  assert.equal(await db.paymentFailure.count({ where: { id: elsewhere.id } }), 1, "another site's is left for its managers");
+  const audit = await db.auditLog.findMany({ where: { entityId: { in: [gym.id, now.id] } } });
+  assert.deepEqual(audit.map((a) => a.action).sort(), ["delete", "update"]);
+  assert.deepEqual((await data.paymentLists({})).nonSwimmers, { remove: 0, worked: 0, link: 0 });
+});

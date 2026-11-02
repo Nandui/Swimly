@@ -354,7 +354,7 @@ export const PERMISSIONS = [
     key: "payments.manage",
     group: "Payments",
     label: "Manage failed payments",
-    description: "Upload the monthly failure sheet and open closed payments again, at the sites this role covers. Includes following them up.",
+    description: "Upload the monthly failure sheet, open closed payments again and remove payments that aren't swimmers, at the sites this role covers. Includes following them up.",
   },
   {
     key: "plan.view",

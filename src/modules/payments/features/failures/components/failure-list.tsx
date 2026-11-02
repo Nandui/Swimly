@@ -12,6 +12,7 @@ import { SearchField } from "@/components/ui-kit/search-field";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDate, plural } from "@/lib/format";
+import { RemoveNonSwimmers } from "@/modules/payments/features/failures/components/remove-non-swimmers";
 import type { paymentLists, View } from "@/modules/payments/features/failures/server/data";
 import { euro, monthLabel, PAYMENT_STATUS_META, type PaymentView } from "@/modules/payments/shared/types";
 
@@ -42,7 +43,10 @@ export function FailureList({ data }: { data: Data }) {
   return (
     <PageShell spacing="roomy" header={<PageHeader title="Failed payments"
         description="Direct debits that failed at your sites. Contact each member and record how it ended; the money itself is taken in Legend."
-        actions={data.who.manage ? <Button asChild><Link href="/payments/upload"><FileUp aria-hidden="true" />Upload the sheet</Link></Button> : null} />}>
+        actions={data.who.manage ? <>
+          {data.nonSwimmers?.remove ? <RemoveNonSwimmers remove={data.nonSwimmers.remove} worked={data.nonSwimmers.worked} /> : null}
+          <Button asChild><Link href="/payments/upload"><FileUp aria-hidden="true" />Upload the sheet</Link></Button>
+        </> : null} />}>
       <Figures label="Failed payments at a glance">
         <Figure href={href("to_contact")} value={data.counts.to_contact} label="To contact" hint={data.counts.to_contact ? "Nobody has chased these yet" : "Everyone has been contacted"} tone={data.counts.to_contact ? "orange" : undefined} current={data.show === "to_contact"} />
         <Figure href={href("contacted")} value={data.counts.contacted} label="Waiting on the member" hint="Contacted, not recovered yet" current={data.show === "contacted"} />
