@@ -11,6 +11,11 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - **HR notes** now say what they are about: General, Conduct, Performance, Attendance or Safety.
 - **HR access** has new levels: Report, Their sites (the files of everyone who works at your sites) and Everyone. Anyone who had Their team now has Report; ask a superadmin if you still need to read files.
 
+## 3.0.4 · 2 November 2026 · Your Google picture
+
+- **Your picture** from your work Google account now appears in Turnfin, at the top right and on the Staff page, the next time you sign in with Google. Most people's pictures were not coming through before.
+- If your work Google account has no picture, Turnfin keeps showing your initials, or the letter Google uses for you. Add a picture to your work Google account and it appears after your next sign-in.
+
 ## 3.0.3 · 2 November 2026 · A sharp fin
 
 - **The Turnfin fin** behind the list on the left now has a sharp, clean edge on every screen, including high-resolution laptops and monitors, where it looked soft before.
