@@ -4,6 +4,10 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.0.3 · 2 November 2026 · A sharp fin
+
+- **The Turnfin fin** behind the list on the left now has a sharp, clean edge on every screen, including high-resolution laptops and monitors, where it looked soft before.
+
 ## 3.0.2 · 2 November 2026 · Rounded corners all round
 
 - **Your page's top corners** are now rounded like its bottom ones, in every app.

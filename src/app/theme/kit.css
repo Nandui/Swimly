@@ -735,10 +735,10 @@ body.turnfin-app:has(> .tf-shell, > * > .tf-shell) { background: var(--ground); 
   height: 1100px;
   background: var(--on-ground);
   opacity: var(--fin-opacity);
-  /* The logo file has wide clear margins: scaled and shifted, the fin fills the box as on the
-     approved canvas (DESIGN.md, The fin). */
-  -webkit-mask: url("/brand/turnfin.png") 4.5% 21.7% / 114.3% no-repeat;
-  mask: url("/brand/turnfin.png") 4.5% 21.7% / 114.3% no-repeat;
+  /* A sharp 2560px silhouette of the logo, cropped as on the approved canvas (DESIGN.md, The fin),
+     so the edge stays crisp on high-density screens. */
+  -webkit-mask: url("/brand/turnfin-fin-mask.png") center / contain no-repeat;
+  mask: url("/brand/turnfin-fin-mask.png") center / contain no-repeat;
   rotate: -4deg;
   pointer-events: none;
 }
