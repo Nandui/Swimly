@@ -30,6 +30,9 @@ before(async () => {
   await place("elsewhere", "club_bishopstown", "other", "Stranger");
   await place("far", "club_churchfield", "teacher", "Farsite");
   await db.classCover.create({ data: { courseId: "covered", date: parseDateOnly(today()), coverById: "cover", coverByName: "cover", instructorId: "other", instructorName: "other" } });
+  // Who teaches is planned day by day (owner, 16 October 2026); the instructor stored on a class
+  // only counted until USUAL_INSTRUCTOR_UNTIL, so "teacher" is planned on their classes today.
+  for (const courseId of ["taught", "far"]) await db.classPlannedTeacher.create({ data: { courseId, date: parseDateOnly(today()), teacherId: "teacher", teacherName: "teacher", setByName: "Synthetic plan" } });
   lookup = serverModule<typeof import("@/modules/activities/features/instructor/server/swimmers")>("src/modules/activities/features/instructor/server/swimmers.ts", {
     "@/lib/prisma": { prisma: db },
     "@/lib/clubs/current": { currentClubId: async () => "club_bishopstown" },
