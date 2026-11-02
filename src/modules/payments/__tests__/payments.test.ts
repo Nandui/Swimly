@@ -106,15 +106,26 @@ test("the sheet is counted first, then added once, at the uploader's sites only,
   assert.ok(audit.every((a) => a.module === "Payments" && a.clubId === churchfield));
 });
 
-test("a club name that matches no site stops the upload, with the name", async () => {
+test("a club name that matches no site is left out and named; the rest are added", async () => {
   manager();
-  workbook(["LW Riverside", "Synthetic", 20, "A/X1", "AM04", "", "X1", null]);
+  workbook(
+    ["LW Riverside", "Synthetic", 20.5, "A/X1", "AM04", "", "X1", null],
+    ["LW Churchfield", "Synthetic Other", 46, "A/LWC4004", "AM04", "", "LWC4004", null],
+  );
   const preview = await upload.previewFailureSheet(form({ file: file(), month: "2026-10" }));
   assert.ok(preview.ok);
-  assert.deepEqual(preview.preview.unknownClubs, ["LW Riverside"]);
-  const sent = await upload.uploadFailureSheet(form({ file: file(), month: "2026-10", operationId: uuid() }));
-  assert.equal(sent.ok, false);
-  assert.match(sent.ok ? "" : sent.error, /LW Riverside/);
+  assert.deepEqual(preview.preview.unknownClubs, [{ club: "LW Riverside", rows: 1, cents: "€20.50" }]);
+  assert.equal(preview.preview.added, 1);
+  assert.deepEqual(await upload.uploadFailureSheet(form({ file: file(), month: "2026-10", operationId: uuid() })), { ok: true, added: 1, month: "2026-10" });
+  assert.equal(await fixture.prisma.paymentFailure.count({ where: { month: "2026-10" } }), 1);
+
+  workbook(["LW Riverside", "Synthetic", 20.5, "A/X1", "AM04", "", "X1", null]);
+  const none = await upload.uploadFailureSheet(form({ file: file(), month: "2026-10", operationId: uuid() }));
+  assert.equal(none.ok, false, "a sheet with only unmatched clubs adds nothing");
+  assert.match(none.ok ? "" : none.error, /LW Riverside/);
+  await fixture.prisma.auditLog.deleteMany({ where: { entity: "PaymentFailure", summary: { contains: "October" } } });
+  await fixture.prisma.paymentFailureEvent.deleteMany({ where: { failure: { month: "2026-10" } } });
+  await fixture.prisma.paymentFailure.deleteMany({ where: { month: "2026-10" } });
 });
 
 test("reception logs contacts and records how it ended, at their sites only, once per press", async () => {

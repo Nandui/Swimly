@@ -4,6 +4,11 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 2.34.1 · 2 November 2026 · Payments: a club Turnfin doesn't know no longer stops the upload
+
+- **Upload the sheet**: if a club on the sheet doesn't match one of your sites (such as LW Douglas), its payments are left out and named, and the rest are still added. Add or rename the site in **Admin › Sites** and upload the sheet again to bring in only the ones left out.
+- **The month** is read correctly from a downloaded copy of the file, such as "Failed Lessons 09 (1)", which is September, not January.
+
 ## 2.34.0 · 2 November 2026 · Payments: chase failed direct debits
 
 - **Payments** is a new app for the direct debits that fail each month.
