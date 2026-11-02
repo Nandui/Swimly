@@ -10,7 +10,7 @@ import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { Textarea } from "@/components/shadcn/textarea";
 import { Field, FormDialog } from "@/components/form-dialog";
-import { archiveArea, archiveDuty, cancelSession, saveArea, saveDuty, saveSession } from "@/modules/plan/features/setup/server/actions";
+import { archiveDuty, cancelSession, saveDuty, saveSession } from "@/modules/plan/features/setup/server/actions";
 import { ChoiceField, TimeField } from "@/modules/plan/shared/components/fields";
 import { DUTY_COLOR_LABEL, DUTY_COLORS, TASK_WHEN, TASK_WHEN_LABEL, WEEKDAYS, dutyColor, type DutyColor } from "@/modules/plan/shared/rules";
 
@@ -77,30 +77,6 @@ export function DutyDialog({ trigger, draft, departments, qualifications }: { tr
         ))}
         <div><Button type="button" variant="outline" className="min-h-11" onClick={() => set("tasks", [...f.tasks, { name: "", when: "start", atMinutes: null }])}><Plus aria-hidden="true" />Add a task</Button></div>
       </fieldset>
-    </FormDialog>
-  );
-}
-
-export type AreaDraft = { id?: string; name: string; parentId: string; lanes: number; departmentId: string };
-
-/** Add or change an area: a whole area or one of its parts, with its lanes. */
-export function AreaDialog({ trigger, siteId, draft, wholes, departments }: { trigger: React.ReactNode; siteId: string; draft: AreaDraft; wholes: Ref[]; departments: Ref[] }) {
-  const router = useRouter();
-  const [f, setF] = useState(draft);
-  const set = <K extends keyof AreaDraft>(key: K, value: AreaDraft[K]) => setF((x) => ({ ...x, [key]: value }));
-  return (
-    <FormDialog portalClassName={P} trigger={trigger} title={draft.id ? `Change ${draft.name}` : "Add an area"}
-      description="Where sessions happen: a whole area such as Pool, or a part of one such as Main pool."
-      submitLabel={draft.id ? "Save area" : "Add area"} successMessage="Area saved" onOpen={() => setF(draft)} onSuccess={() => router.refresh()}
-      submit={() => saveArea({ siteId, name: f.name, parentId: f.parentId || null, lanes: f.lanes, departmentId: f.departmentId || null }, draft.id)}>
-      <Field label="Name" htmlFor="plan-area-name"><Input id="plan-area-name" required maxLength={60} className="min-h-11" value={f.name} onChange={(e) => set("name", e.target.value)} /></Field>
-      <ChoiceField id="plan-area-parent" label="Part of" value={f.parentId} onChange={(v) => set("parentId", v)} options={wholes.filter((w) => w.id !== draft.id)} empty="Nothing: a whole area" optional />
-      <div className="grid grid-cols-2 gap-4">
-        <Field label="Lanes" htmlFor="plan-area-lanes" hint="0 for none.">
-          <Input id="plan-area-lanes" type="number" min={0} max={20} className="min-h-11" value={f.lanes} onChange={(e) => set("lanes", Number(e.target.value) || 0)} />
-        </Field>
-        <ChoiceField id="plan-area-dept" label="Department" value={f.departmentId} onChange={(v) => set("departmentId", v)} options={departments} empty="Shared" optional />
-      </div>
     </FormDialog>
   );
 }
@@ -176,12 +152,11 @@ export function SessionDialog({ trigger, siteId, draft, areas, duties }: {
   );
 }
 
-/** Take a duty or area off the list, or call off what's on from today; past days keep them. */
-export function RetireDialog({ kind, id, name }: { kind: "duty" | "area" | "session"; id: string; name: string }) {
+/** Take a duty off the list, or call off what's on from today; past days keep them. */
+export function RetireDialog({ kind, id, name }: { kind: "duty" | "session"; id: string; name: string }) {
   const router = useRouter();
   const words = {
     duty: { title: `Take ${name} off the duties?`, description: "Days already planned keep it. It can't be chosen again.", submit: "Take off", run: () => archiveDuty(id) },
-    area: { title: `Take ${name} off the areas?`, description: "What's on there keeps its days. It can't be chosen again.", submit: "Take off", run: () => archiveArea(id) },
     session: { title: `Call off ${name} from today?`, description: "Its days so far stay as they were. Anyone planned on it from today keeps the duty, without the session.", submit: "Call off", run: () => cancelSession(id) },
   }[kind];
   return (

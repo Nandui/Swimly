@@ -58,15 +58,6 @@ export const dutySchema = z.object({
 }).refine((d) => !(d.isBreak && d.forClasses), { message: "A break can't be the duty classes need.", path: ["forClasses"] });
 export type DutyInput = z.input<typeof dutySchema>;
 
-export const areaSchema = z.object({
-  siteId: id,
-  name: z.string().trim().min(2, "Name the area.").max(60),
-  parentId: optionalId,
-  lanes: z.number().int().min(0).max(20).default(0),
-  departmentId: optionalId,
-});
-export type AreaInput = z.input<typeof areaSchema>;
-
 export const sessionSchema = z.object({
   siteId: id,
   title: z.string().trim().min(2, "Say what's on.").max(80),

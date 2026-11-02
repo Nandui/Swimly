@@ -4,7 +4,7 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 2.33.0 · 2 November 2026 · Payments: chase failed direct debits
+## 2.34.0 · 2 November 2026 · Payments: chase failed direct debits
 
 - **Payments** is a new app for the direct debits that fail each month.
 - **Upload the sheet**: a manager uploads the bank's failure sheet. Turnfin reads the month from the file's name and shows how many payments it will add at each site before anything is saved. Uploading the same sheet twice adds nothing.
@@ -12,6 +12,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - **On each payment**: see who to call (the parent's phone and email when they are a swimmer), why the bank refused it and what to ask for. Choose **Log a contact** each time you call, text or email, then record how it ended: **Paid at the desk**, **New mandate set up** or **Place cancelled**.
 - **Take the money in Legend** as usual. Turnfin only keeps track of who was contacted and how it ended.
 - **Swimmer profiles** show a **Payment failed** badge while one of their payments is still open.
+
+## 2.33.0 · 2 November 2026 · Plan (test): what's on, area by area
+
+- **Plan (test) › Day**: **What's on** now has one row for each area, such as Main pool, Learner pool and Gym. Each class or session is one block, with who is on it, or how many are still needed, in orange.
+- Pick a block to see each duty it needs, who is on it, and **Fill** for any gap.
+- **Needs someone**, under the timeline, lists everything still short of people, with a **Fill** button for each.
+- **One list of areas**: Plan (test) now uses the areas in **Admin › Areas**, the same ones swim classes use, so classes show in the right area by themselves. Plan (test)'s own area list has gone.
+- **Admin › Areas** keeps each area's name, what it is part of, its department and its lanes. The old Rota's opening hours, minimum staff and "covered from" settings are no longer changed here, and Rota keeps the ones already saved.
 
 ## 2.32.1 · 31 October 2026 · Assessments only for the right programme
 
