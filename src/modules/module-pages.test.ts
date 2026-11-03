@@ -21,7 +21,7 @@ const everything = new Proxy({}, { get: (_target, key) => (key === "id" ? "someo
 
 /** Every app's pages as the most capable person sees them. The swim school's Overview is added
  *  by its frame, as it is not in its nav list. */
-const APPS: [string, { label: string; place?: "setup" | "overview" }[]][] = [
+const APPS: [string, { label: string; place?: "setup" | "overview"; under?: string }[]][] = [
   ["Admin", ADMIN_GROUPS.flatMap((group) => group.links)],
   ["Classes", [{ label: "Overview" }, ...NAV_ITEMS]],
   ["Academy", academyPages()],
@@ -39,9 +39,9 @@ const APPS: [string, { label: string; place?: "setup" | "overview" }[]][] = [
   ["Training", trainingPages(everything)],
 ];
 
-test("every app lists at most five work pages in the sidebar, then Set up (DESIGN.md, D19)", () => {
+test("every app lists at most five work pages in the sidebar, then Set up; nested pages do not count (DESIGN.md, D19)", () => {
   for (const [app, pages] of APPS) {
-    const work = pages.filter((page) => !page.place).map((page) => page.label);
+    const work = pages.filter((page) => !page.place && !page.under).map((page) => page.label);
     assert.ok(work.length <= 5, `${app} lists ${work.length} work pages in the sidebar: ${work.join(", ")}. Move the rest under Set up or onto its Overview.`);
   }
 });

@@ -18,8 +18,8 @@ import { SearchDialog } from '@/components/ui/search-dialog';
  *  the app's one Set up item, which only shows when the person may open one of them; `overview`
  *  pages are reached from the app's Overview page, which lists every page. The icon shows in
  *  menus; links handed over by a server page have none, because a component cannot cross to
- *  the client. */
-export type ModuleLink = { href: string; label: string; icon?: LucideIcon; active: boolean; place?: 'setup' | 'overview' };
+ *  the client. A page `under` another nests beneath it in the sidebar, like a folder. */
+export type ModuleLink = { href: string; label: string; icon?: LucideIcon; active: boolean; place?: 'setup' | 'overview'; under?: string };
 export type ModuleLinkGroup = { label: string; links: ModuleLink[] };
 
 /** The one frame every app opens in (DESIGN.md, The frame and navigation; D19). One level of
@@ -112,6 +112,17 @@ function currentFor(page: ModuleLink, pages: ModuleLink[], pathname: string): 'p
   return openElsewhere && page === pages.find((p) => !p.place) ? 'true' : undefined;
 }
 
+/** Whether the page or one of the pages nested under it is open, so its folder starts open. */
+function within(page: ModuleLink, pages: ModuleLink[]): boolean {
+  return page.active || pages.some((p) => p.under === page.href && within(p, pages));
+}
+
+/** How many folders deep a page sits; the phone's page list indents it by this (kit.css). */
+function depth(page: ModuleLink, pages: ModuleLink[]): number {
+  const parent = pages.find((p) => p.href === page.under);
+  return parent ? 1 + depth(parent, pages) : 0;
+}
+
 /** The page's large title, watched: once its H1 (every page has exactly one, in PageHeader) has
  *  scrolled up under the toolbar, its words and the header's way back (BackLink's `data-back`),
  *  else null. It looks for the H1 again whenever the page's content changes, as a page may draw
@@ -158,8 +169,22 @@ function Sidebar({ current, name, app, scopeNote, pathname, onSearch }: { curren
       {Icon ? <Icon aria-hidden="true" /> : null}<span className="tf-side-label">{label}</span>
     </Link>
   );
-  const work = app?.pages.filter((p) => !p.place) ?? [];
+  const work = app?.pages.filter((p) => !p.place && !p.under) ?? [];
   const setup = app?.pages.filter((p) => p.place === 'setup') ?? [];
+  const page = (p: ModuleLink): ReactNode => {
+    const subPages = app?.pages.filter((s) => s.under === p.href) ?? [];
+    const link = item(p.href, p.href, p.label, p.icon, currentFor(p, app?.pages ?? [], pathname));
+    if (!subPages.length) return link;
+    return (
+      <Collapsible key={p.href} className="tf-side-folder" defaultOpen={within(p, app?.pages ?? [])}>
+        <div className="tf-side-folder-row">
+          {link}
+          <CollapsibleTrigger className="tf-side-folder-toggle" aria-label={`${p.label} pages`}><ChevronRight aria-hidden="true" className="tf-side-chevron" /></CollapsibleTrigger>
+        </div>
+        <CollapsibleContent className="tf-side-tree">{subPages.map(page)}</CollapsibleContent>
+      </Collapsible>
+    );
+  };
   return (
     <Glass as="nav" shape="panel" className="tf-side" aria-label={app ? `${app.name} pages` : 'Apps'}>
       <Link href="/" className="tf-side-brand" aria-label="Turnfin home">
@@ -176,7 +201,7 @@ function Sidebar({ current, name, app, scopeNote, pathname, onSearch }: { curren
               <Link href="/" className="tf-side-item tf-side-back"><ChevronLeft aria-hidden="true" /><span className="tf-side-label">Home</span></Link>
             )}
             <p className="tf-side-app">{app.name}<span className="sr-only">. {scopeNote}</span></p>
-            {work.map((page) => item(page.href, page.href, page.label, page.icon, currentFor(page, app.pages, pathname)))}
+            {work.map(page)}
             {setup.length ? (
               <Collapsible className="tf-side-setup" defaultOpen={setup.some((p) => p.active)}>
                 <CollapsibleTrigger className="tf-side-item" data-current={setup.some((p) => p.active) || undefined}>
@@ -219,12 +244,14 @@ function TabBar({ current, app, pathname, onSearch }: { current: string; app: Op
     </Link>
   );
   const pageItem = (page: ModuleLink) => (
-    <DropdownMenuItem key={page.href} asChild className="min-h-11">
+    <DropdownMenuItem key={page.href} asChild className="min-h-11" data-depth={depth(page, app?.pages ?? []) || undefined}>
       <Link href={page.href} aria-current={currentFor(page, app?.pages ?? [], pathname)}>{page.icon ? <page.icon aria-hidden="true" /> : null}{page.label}</Link>
     </DropdownMenuItem>
   );
-  const work = app?.pages.filter((p) => p.place !== 'setup') ?? [];
-  const setup = app?.pages.filter((p) => p.place === 'setup') ?? [];
+  const all = app?.pages ?? [];
+  const inOrder = (p: ModuleLink): ModuleLink[] => [p, ...all.filter((s) => s.under === p.href).flatMap(inOrder)];
+  const work = all.filter((p) => p.place !== 'setup' && !p.under).flatMap(inOrder);
+  const setup = all.filter((p) => p.place === 'setup');
   return (
     <div className="tf-bottom-wrap">
     <Glass as="nav" className="tf-bottom" aria-label="Apps">
