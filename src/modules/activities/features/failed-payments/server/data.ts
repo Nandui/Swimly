@@ -1,14 +1,17 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import { liveSitesOf, siteName, withSites } from "@/lib/directory";
+import { today } from "@/lib/format";
 import { mayFor, sitesFor } from "@/lib/policy/session";
 import { prisma } from "@/lib/prisma";
 import { members } from "@/modules/contributions";
+import { emailPlan } from "@/modules/activities/features/failed-payments/server/email";
+import { nextEmail } from "@/modules/activities/shared/payments/emails";
 import { covers, inSites, requirePaymentsActor } from "@/modules/activities/shared/payments/access";
 import { nonSwimmerCounts } from "@/modules/activities/features/failed-payments/server/non-swimmers";
 import { MONTH, PaymentError } from "@/modules/activities/shared/payments/rules";
 import { paymentView } from "@/modules/activities/shared/payments/service";
-import { monthLabel, OPEN_STATUSES, type PaymentAction, type PaymentHistory } from "@/modules/activities/shared/payments/types";
+import { monthLabel, OPEN_STATUSES, type PaymentAction, type PaymentHistory, type PaymentStatus } from "@/modules/activities/shared/payments/types";
 
 export const VIEWS = ["to_contact", "contacted", "closed"] as const;
 export type View = (typeof VIEWS)[number];
@@ -51,7 +54,7 @@ export async function paymentLists(params: { show?: string; site?: string; month
   const rows = await prisma.paymentFailure.findMany({ where: where[show], orderBy: [...orderBy[show], { id: "asc" }], skip: (page - 1) * PAGE, take: PAGE });
   const named = await withSites(rows, "siteId", "site");
   return {
-    who, show, counts, page, pages, site, month, q, sites: mySites, owedCents: owed._sum.amountCents ?? 0, nonSwimmers,
+    who, show, counts, page, pages, site, month, q, sites: mySites, owedCents: owed._sum.amountCents ?? 0, nonSwimmers, today: today(),
     months: months.map((m) => ({ value: m.month, label: monthLabel(m.month) })),
     rows: named.map((r) => paymentView(r, r.site.name)),
   };
@@ -82,6 +85,7 @@ export async function getPaymentFailure(id: string) {
       contactName: member.contactName, contactPhone: member.contactPhone, contactEmail: member.contactEmail } : null,
     others: (await withSites(seen, "siteId", "site")).map((o) => paymentView(o, o.site.name)),
     can: { follow, manage },
+    email: follow ? await emailPlan(row, member) : null,
   };
 }
 
@@ -89,11 +93,15 @@ export async function getPaymentFailure(id: string) {
 export async function followUpCounts(orgId: string | null) {
   const sites = await sitesFor("payments.follow");
   const where = { orgId: orgId ?? undefined, ...inSites(sites) };
-  const [toContact, contacted] = await Promise.all([
+  const [toContact, contacted, emailable] = await Promise.all([
     prisma.paymentFailure.count({ where: { ...where, status: "to_contact" } }),
     prisma.paymentFailure.count({ where: { ...where, status: "contacted" } }),
+    prisma.paymentFailure.findMany({ where: { ...where, status: { in: [...OPEN_STATUSES] }, memberId: { not: null }, emailsSent: { lt: 3 } },
+      select: { status: true, emailsSent: true, firstEmailAt: true } }),
   ]);
-  return { toContact, contacted };
+  const day = today();
+  const emailsDue = emailable.filter((r) => nextEmail({ status: r.status as PaymentStatus, emailsSent: r.emailsSent, firstEmailOn: r.firstEmailAt ? today(r.firstEmailAt) : null }, day)?.due).length;
+  return { toContact, contacted, emailsDue };
 }
 
 /** A swimmer's failures still open, as badges on their profile (the member notices plug). The

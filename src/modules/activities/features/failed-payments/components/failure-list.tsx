@@ -11,10 +11,11 @@ import { PageShell } from "@/components/ui-kit/page-shell";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { Tag } from "@/components/ui-kit/tag";
-import { formatDate, plural } from "@/lib/format";
+import { formatDate, plural, today } from "@/lib/format";
 import { RemoveNonSwimmers } from "@/modules/activities/features/failed-payments/components/remove-non-swimmers";
 import type { paymentLists, View } from "@/modules/activities/features/failed-payments/server/data";
 import { euro, monthLabel, PAYMENT_STATUS_META, type PaymentView } from "@/modules/activities/shared/payments/types";
+import { EMAIL_STEP_LABEL, EMAIL_READY_META, nextEmail } from "@/modules/activities/shared/payments/emails";
 
 type Data = Awaited<ReturnType<typeof paymentLists>>;
 const LABEL: Record<View, string> = { to_contact: "To contact", contacted: "Contacted", closed: "Closed" };
@@ -31,6 +32,14 @@ const tone = (r: PaymentView) => (r.status === "to_contact" ? "orange" : r.statu
 function hint(r: PaymentView) {
   const contact = r.attempts ? `${plural(r.attempts, "contact")}${r.lastContactAt ? `, last ${formatDate(new Date(r.lastContactAt))}` : ""}` : null;
   return [r.memberNumber || null, r.siteName, monthLabel(r.month), r.returnReason || r.returnCode || null, contact].filter(Boolean).join(" · ");
+}
+
+/** The next warning email when it is due today, as a tag on the row: "Reminder ready". Only for
+ *  payments linked to a swimmer, as only they can be emailed. */
+function emailReady(r: PaymentView, todayIso: string) {
+  if (!r.memberId) return null;
+  const next = nextEmail({ status: r.status, emailsSent: r.emailsSent, firstEmailOn: r.firstEmailAt ? today(new Date(r.firstEmailAt)) : null }, todayIso);
+  return next?.due ? `${EMAIL_STEP_LABEL[next.step]} ready` : null;
 }
 
 /** The failed direct debits at the person's sites, one view at a time: those nobody has contacted
@@ -95,7 +104,7 @@ export function FailureList({ data }: { data: Data }) {
                     <span className="pc-row-body">
                       <span className="pc-row-title break-words">{r.name}</span>
                       <span className="pc-row-hint tabular-nums">{hint(r)}</span>
-                      <span className="mt-2 flex flex-wrap gap-1.5"><Tag meta={PAYMENT_STATUS_META[r.status]} /></span>
+                      <span className="mt-2 flex flex-wrap gap-1.5"><Tag meta={PAYMENT_STATUS_META[r.status]} />{emailReady(r, data.today) ? <Tag meta={EMAIL_READY_META} label={emailReady(r, data.today)} /> : null}</span>
                     </span>
                     <span className="pc-row-trail">
                       <span className="pc-row-value tabular-nums">{euro(r.amountCents)}</span>

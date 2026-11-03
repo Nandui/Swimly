@@ -4,9 +4,18 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 3.3.2 · 3 November 2026 · Failed payments: the short Failed DDs sheet
+## 3.4.1 · 3 November 2026 · Failed payments: the short Failed DDs sheet
 
 - **Upload the sheet** now also takes the short Failed DDs sheet (Contact Name, Amount, Return Description and Membership Number, a tab per site). Each tab's name says the site, such as CF for Churchfield, and each payment still shows what to ask the member for.
+
+## 3.4.0 · 3 November 2026 · Failed payments: warning emails to families
+
+- **On each failed payment** there is now a button to email the family: **Send first email**, then **Send reminder** from 3 days later, then **Send final notice** from 7 days after the first.
+- **Before it goes** you see the email exactly as the family will get it, and who it is going to. Nothing is sent until you press **Send email**.
+- **The final notice** tells the family their place may be cancelled if they don't pay within 3 days. Turnfin doesn't cancel anything itself.
+- **Emails to the family** on the payment shows which emails went, when and who sent them. Each one counts as a contact.
+- **Failed payments** tags the payments whose next email is ready, and **Home** shows how many are ready to send.
+- Emails go to the contact email on the swimmer's record. If there isn't one, Turnfin says so: add it on their profile, or contact the family another way.
 
 ## 3.3.1 · 3 November 2026 · Failed payments: undo a wrong upload
 

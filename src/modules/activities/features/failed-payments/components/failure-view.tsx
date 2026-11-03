@@ -5,6 +5,8 @@ import { RecordFacts, RecordHistory, RecordNext, RecordSection, RecordSteps, typ
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDate, formatDateTime, plural } from "@/lib/format";
 import { FollowUpActions } from "@/modules/activities/features/failed-payments/components/follow-up-actions";
+import { SendEmail } from "@/modules/activities/features/failed-payments/components/send-email";
+import { EMAIL_STEP_LABEL, EMAIL_STEPS, type EmailStep } from "@/modules/activities/shared/payments/emails";
 import type { getPaymentFailure } from "@/modules/activities/features/failed-payments/server/data";
 import { euro, METHOD_LABEL, monthLabel, PAYMENT_ACTIONS, PAYMENT_STATUS_META, RESULT_LABEL, RETURN_ADVICE, type ContactMethod, type ContactResult, type PaymentAction, type PaymentView } from "@/modules/activities/shared/payments/types";
 
@@ -46,6 +48,7 @@ export function FailureView({ data }: { data: Data }) {
         description={`${euro(r.amountCents)} · ${monthLabel(r.month)} direct debit · ${r.siteName}`} />}>
       <div className="rec-layout">
         <RecordNext act={act} label={act ? "Your move" : "Where it stands"} body={nextStep(r, data.can.follow)}>
+          {data.email ? <SendEmail failure={r} plan={data.email} /> : null}
           {data.can.follow || data.can.manage ? <FollowUpActions failure={r} follow={data.can.follow} manage={data.can.manage} /> : null}
           <RecordSteps steps={steps(r)} label="Where the payment has got to" />
         </RecordNext>
@@ -85,6 +88,15 @@ export function FailureView({ data }: { data: Data }) {
               ]} />
             </div>
           </RecordSection>
+          <RecordSection id="pay-emails-h" title="Emails to the family" aside={<p>{r.emailsSent} of 3</p>}>
+            <div className="rec-card">
+              <RecordFacts items={EMAIL_STEPS.map((step: EmailStep) => {
+                const sent = [...data.history].reverse().find((h) => h.action === "email" && h.result === String(step));
+                return [EMAIL_STEP_LABEL[step], sent ? `Sent ${formatDateTime(new Date(sent.createdAt))} by ${sent.actorName}`
+                  : data.email?.step === step ? (data.email.due ? "Ready to send" : `Due on ${formatDate(new Date(`${data.email.dueOn}T12:00:00Z`))}`) : "Not sent"] as [string, string];
+              })} />
+            </div>
+          </RecordSection>
           {data.others.length ? (
             <RecordSection id="pay-others-h" title="Their other failed payments" aside={<p>{data.others.length}</p>}>
               <ul className="pc-list">
@@ -108,7 +120,8 @@ export function FailureView({ data }: { data: Data }) {
           <RecordSection id="pay-history-h" title="History">
             <RecordHistory items={data.history.map((h) => ({
               key: h.id, tone: historyTone(h.action),
-              title: h.action === "contact" ? `${METHOD_LABEL[h.method as ContactMethod] ?? "Contacted"}: ${RESULT_LABEL[h.result as ContactResult]?.toLowerCase() ?? ""}` : PAYMENT_ACTIONS[h.action] ?? h.action,
+              title: h.action === "contact" ? `${METHOD_LABEL[h.method as ContactMethod] ?? "Contacted"}: ${RESULT_LABEL[h.result as ContactResult]?.toLowerCase() ?? ""}`
+                : h.action === "email" ? `${EMAIL_STEP_LABEL[Number(h.result) as EmailStep] ?? "Email"} to the family` : PAYMENT_ACTIONS[h.action] ?? h.action,
               meta: `${h.actorName} · ${formatDateTime(new Date(h.createdAt))}`, note: h.action === "import" ? null : h.note,
             }))} />
           </RecordSection>

@@ -1,14 +1,19 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
+import { formatDay } from "@/lib/format";
 import { mayFor } from "@/lib/policy/session";
 import { prisma } from "@/lib/prisma";
 import { requirePaymentsActor, type PaymentsActor } from "@/modules/activities/shared/payments/access";
 import { closeChange, closeSchema, contactChange, contactSchema, PaymentError, problemOf, reopenChange, reopenSchema, type CloseInput, type ContactInput, type ReopenInput } from "@/modules/activities/shared/payments/rules";
 import { alreadyDone, failureLabel, guardVersion, lockFailure, recordStep } from "@/modules/activities/shared/payments/service";
+import { emailPlan } from "@/modules/activities/features/failed-payments/server/email";
 import { nonSwimmerPlan } from "@/modules/activities/features/failed-payments/server/non-swimmers";
+import { sendFamilyEmail } from "@/modules/activities/shared/parents/family-email";
+import { EMAIL_STEP_LABEL } from "@/modules/activities/shared/payments/emails";
 import { METHOD_LABEL, RESULT_LABEL, type PaymentAction, type PaymentResult, type PaymentStatus } from "@/modules/activities/shared/payments/types";
 import type { PaymentFailure } from "@/generated/prisma/client";
 
@@ -97,4 +102,58 @@ export async function removeNonSwimmers(): Promise<ActionResult> {
   revalidatePath("/payments", "layout");
   revalidatePath("/students/[id]", "page");
   return ok();
+}
+
+const sendEmailSchema = z.object({ id: z.string().min(1), operationId: z.uuid(), version: z.number().int().positive(), step: z.union([z.literal(1), z.literal(2), z.literal(3)]) });
+type SendEmailInput = z.input<typeof sendEmailSchema>;
+
+/** Reception sends the next warning email to the family (owner, 2 November 2026). The swimmer's
+ *  email and the site's phone are read first; then, under the payment's lock, it checks this is
+ *  still the next step and due, sends, and records it (the history, an audit row, the payment now
+ *  Contacted) in the same transaction, so a failed send records nothing. Only the live site emails
+ *  anyone (previews run on copies of real families' records); elsewhere the step is recorded as not
+ *  sent, so the flow can be tried. */
+export async function sendPaymentEmail(input: SendEmailInput): Promise<PaymentResult> {
+  const parsed = sendEmailSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Refresh the page and try again." };
+  const { id, operationId, version, step: wanted } = parsed.data;
+  const who = await requirePaymentsActor();
+  // Read here, never from the caller: a server action's arguments come from the browser.
+  const live = process.env.VERCEL_ENV === "production";
+  try {
+    const before = await prisma.paymentFailure.findFirst({ where: { id, orgId: who.orgId ?? undefined } });
+    if (!before || !(await mayFor("payments.read", { siteId: before.siteId, orgId: who.orgId }))) throw new PaymentError("This payment is not available.");
+    if (!(await mayFor("payments.follow", { siteId: before.siteId, orgId: who.orgId }))) throw new PaymentError("Following up payments needs Payments: Use at this site.");
+    const plan = await emailPlan(before);
+    await prisma.$transaction(async (tx) => {
+      await lockFailure(tx, id);
+      if (await alreadyDone(tx, id, operationId, who, "email")) return;
+      const row = await tx.paymentFailure.findUniqueOrThrow({ where: { id } });
+      guardVersion(row, version);
+      if (!plan || plan.step !== wanted) throw new PaymentError("That email has already gone, or the payment is closed. Refresh the page.");
+      if (plan.blocked) throw new PaymentError(plan.blocked);
+      if (!plan.due) throw new PaymentError(`The ${EMAIL_STEP_LABEL[plan.step].toLowerCase()} is due on ${formatDay(plan.dueOn)}.`);
+      if (live) {
+        try {
+          await sendFamilyEmail(plan.to, plan.subject, plan.email);
+        } catch {
+          // Provider responses can contain credentials: log the payment, not the error.
+          console.error("Failed payments: a warning email was not sent", { failureId: id, step: plan.step });
+          throw new PaymentError("The email couldn't be sent, so nothing was recorded. Try again in a few minutes.");
+        }
+      }
+      const now = new Date();
+      const saved = await tx.paymentFailure.update({ where: { id }, data: {
+        ...contactChange(row.status as PaymentStatus, now), emailsSent: plan.step, firstEmailAt: row.firstEmailAt ?? now, lastEmailAt: now, version: { increment: 1 },
+      } });
+      await recordStep(tx, saved, who, "email", operationId, { method: "email", result: String(plan.step),
+        note: live ? `${EMAIL_STEP_LABEL[plan.step]} sent to ${plan.to}` : `${EMAIL_STEP_LABEL[plan.step]} recorded, not sent: emails only go from the live site`,
+        words: EMAIL_STEP_LABEL[plan.step].toLowerCase() });
+    });
+  } catch (error) {
+    if (error instanceof PaymentError) return { ok: false, error: error.message };
+    throw error;
+  }
+  revalidatePath("/payments", "layout");
+  return { ok: true, id };
 }
