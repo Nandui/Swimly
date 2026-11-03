@@ -13,7 +13,7 @@ import { requireTrainingActor, type TrainingActor } from "@/modules/training/sha
 import { trainingState } from "@/modules/training/shared/constants";
 import { readOutline } from "@/modules/training/shared/lessons";
 import { readObservationRecord } from "@/modules/training/shared/on-the-job";
-import { hoursOf, sessionsOf } from "@/modules/training/shared/on-the-job-reads";
+import { sessionsOf } from "@/modules/training/shared/on-the-job-reads";
 import { audienceInWords, timingInWords } from "@/modules/training/shared/rules";
 import {
   bestScore, daysBetween, dropOff, examStats, funnel, groupBy, isOverdue, lastActivity, percentOf, stageOf, summaryOf, timing, type LearnerFacts,
@@ -180,7 +180,7 @@ export type TrainingReport = Awaited<ReturnType<typeof trainingReport>>;
 
 /** A person's audit pack: every course they were given with the version taught, each lesson they
  *  finished and when, every exam sitting, the practical sign-off, certificates and qualifications,
- *  hours and sessions, and the audit trail behind it. A 404 for anyone the reader does not cover. */
+ *  sessions, and the audit trail behind it (in-service hours are Qualifications', D26). A 404 for anyone the reader does not cover. */
 export async function personAuditPack(userId: string) {
   const who = await requireTrainingActor();
   const person = await staffMember(userId, who.orgId);
@@ -190,7 +190,7 @@ export async function personAuditPack(userId: string) {
   } catch {
     notFound();
   }
-  const [assignments, qualifications, hours, sessions, placed, chart] = await Promise.all([
+  const [assignments, qualifications, sessions, placed, chart] = await Promise.all([
     prisma.trainingAssignment.findMany({
       where: { userId }, orderBy: { assignedAt: "asc" },
       select: {
@@ -201,7 +201,6 @@ export async function personAuditPack(userId: string) {
       },
     }),
     qualificationsOf(userId),
-    hoursOf(userId, who.orgId),
     sessionsOf(userId),
     activePlacedStaff(who.orgId, { kind: "some", userIds: new Set([userId]) }),
     organisationChart(),
@@ -231,7 +230,7 @@ export async function personAuditPack(userId: string) {
       };
     }),
     qualifications: qualifications.map((q) => ({ ...q, state: qualificationState(q, on) })),
-    hours, sessions,
+    sessions,
     trail: [...trail.map((t) => ({ ...t, about: titleOf.get(t.entityId ?? "") ?? "Training" })), ...qualificationTrail.map((t) => ({ ...t, about: "Qualification" }))]
       .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime()),
   };

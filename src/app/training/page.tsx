@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight, CircleCheck, ClipboardCheck, GraduationCap, TriangleAlert } from "lucide-react";
+import { ChevronRight, CircleCheck, ClipboardCheck, TriangleAlert } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
 import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
-import { assignablePeople, AssignTraining, EXPIRY_WARNING_DAYS, OVERVIEW_VIEWS, TRAINING_STATUS_META, trainingOverview } from "@/modules/training/features/assignments";
+import { assignablePeople, AssignTraining, OVERVIEW_VIEWS, TRAINING_STATUS_META, trainingOverview } from "@/modules/training/features/assignments";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Figure, Figures } from "@/components/ui-kit/figure";
 import { PageHeader } from "@/components/ui-kit/page-header";
@@ -25,7 +25,6 @@ export default async function TrainingPeoplePage({ searchParams }: { searchParam
   const tiles = [
     { view: "overdue", label: "Overdue", hint: "Past their due date", value: data.counts.overdue, icon: TriangleAlert, href: "/training?view=overdue", tone: "orange" as const },
     { view: "submitted", label: "Awaiting sign-off", hint: "Ready to be watched", value: data.counts.submitted, icon: ClipboardCheck, href: data.who.signoff ? "/training/sign-off" : "/training?view=submitted", tone: "orange" as const },
-    { view: null, label: "Qualifications expiring", hint: `In the next ${EXPIRY_WARNING_DAYS} days`, value: data.counts.expiring, icon: GraduationCap, href: "/training/expiring", tone: "orange" as const },
     { view: "completed", label: "Completed in 30 days", hint: "By the people you cover", value: data.counts.completed, icon: CircleCheck, href: "/training?view=completed", tone: undefined },
   ];
   const filtered = Boolean(input.q?.trim() || input.course);

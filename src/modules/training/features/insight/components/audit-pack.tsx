@@ -4,7 +4,6 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import { QUALIFICATION_STATE_META } from "@/lib/people/constants";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { PLACE_STATUS_META, TRAINING_STATUS_META } from "@/modules/training/shared/constants";
-import { hoursInWords } from "@/modules/training/shared/on-the-job";
 import type { CourseAuditPack, PersonAuditPack } from "@/modules/training/features/insight/server/data";
 
 const RESULT_WORDS = { met: "Met", "not-yet": "Not yet", na: "Not needed" } as const;
@@ -136,15 +135,6 @@ export function PersonAuditPackView({ data }: { data: PersonAuditPack }) {
           {c.evidence.length ? <p className="text-sm">Evidence kept: {c.evidence.map((e) => `${e.name} (${formatDate(e.createdAt)})`).join(", ")}</p> : null}
         </Section>
       ))}
-
-      {data.hours.progress.length || data.hours.log.length ? (
-        <Section id="pack-hours" title="In-service hours" hint="The latest 30 entries.">
-          {data.hours.progress.map((p) => <p key={p.typeId} className="text-sm">{p.typeName}: {hoursInWords(p.minutes)} of {p.hours} hours{p.met ? ", target met" : ""}.</p>)}
-          <ul className="grid gap-1 text-sm">
-            {data.hours.log.map((l) => <li key={l.id} className="tabular-nums">{formatDate(l.on)} · {hoursInWords(l.minutes)} · {l.topic}{l.typeName ? ` · ${l.typeName}` : ""} · recorded by {l.recordedByName}</li>)}
-          </ul>
-        </Section>
-      ) : null}
 
       {data.sessions.length ? (
         <Section id="pack-sessions" title="Sessions">

@@ -1,14 +1,12 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import { activeStaffWithRoles } from "@/lib/directory";
-import { addDaysIso, parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { subjectsFor } from "@/lib/policy/session";
 import type { SubjectFilter } from "@/lib/policy/types";
-import { qualificationsExpiringBy, type StaffFilters, withQualificationTypes } from "@/lib/qualifications";
+import { withQualificationTypes } from "@/lib/qualifications";
 import type { PermissionKey } from "@/lib/staff/permissions";
 import { requireTrainingActor } from "@/modules/training/shared/access";
-import { EXPIRY_WARNING_DAYS } from "@/modules/training/shared/constants";
 
 /** Training reads. Every list of people's records is limited to the people
  *  the capability covers, resolved by the policy engine; the course catalogue
@@ -49,17 +47,4 @@ export async function assignablePeople() {
   if (!who.assign) return [];
   // Their role, so a course can be given to everyone on a role at once.
   return activeStaffWithRoles(who.orgId ?? null, await subjectsFor("training.assign"));
-}
-
-// ---------------------------------------------------------------------------
-// Expiring qualifications, with the course that renews each
-// ---------------------------------------------------------------------------
-
-/** Who a filtered list covers: at a site (or every site), in a position. */
-export type ExpiringFilters = StaffFilters;
-
-/** Qualifications expired or expiring within the warning window; a newer certificate of the
- *  same type replaces an expiring one. */
-export async function expiringQualificationRows(orgId: string | null, reach: SubjectFilter, on: string, filters: ExpiringFilters = {}) {
-  return qualificationsExpiringBy(orgId, reach, parseDateOnly(addDaysIso(on, EXPIRY_WARNING_DAYS)), filters);
 }

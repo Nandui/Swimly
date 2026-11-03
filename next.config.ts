@@ -27,6 +27,11 @@ const nextConfig: NextConfig = {
   /** Old links and bookmarks land on the same page in the app that holds it now (D24). */
   async redirects() {
     return [
+      // Checking certificates, what is expiring and in-service hours left Training for Qualifications (D26).
+      { source: "/training/expiring", destination: "/staff-qualifications", permanent: false },
+      { source: "/training/certificates", destination: "/staff-qualifications/certificates", permanent: false },
+      { source: "/training/certificates/:path*", destination: "/staff-qualifications/certificates/:path*", permanent: false },
+      { source: "/training/hours", destination: "/staff-qualifications/hours", permanent: false },
       // Short courses joined the swim school; their own overview went with their frame.
       { source: "/short-courses/overview", destination: "/short-courses", permanent: false },
       // The Academy left Short courses for its own app, at /academy again.

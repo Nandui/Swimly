@@ -19,11 +19,11 @@ import { PeopleChooser, type ChoosablePerson } from "@/modules/training/shared/c
  *  booking people on, taking the register and closing it. */
 
 type Option = { id: string; title?: string; name?: string };
-type Existing = { id: string; title: string; courseId: string | null; siteId: string | null; location: string; date: string; start: string; minutes: number; capacity: number | null; trainerName: string; hoursTypeId: string | null; note: string };
+type Existing = { id: string; title: string; courseId: string | null; siteId: string | null; location: string; date: string; start: string; minutes: number; capacity: number | null; trainerName: string; note: string };
 
 const pick = (formData: FormData, name: string) => { const v = String(formData.get(name) ?? ""); return v || null; };
 
-export function SessionDialog({ session, courses, sites, types }: { session?: Existing; courses: Option[]; sites: Option[]; types: Option[] }) {
+export function SessionDialog({ session, courses, sites }: { session?: Existing; courses: Option[]; sites: Option[] }) {
   const router = useRouter();
   return (
     <FormDialog
@@ -33,7 +33,7 @@ export function SessionDialog({ session, courses, sites, types }: { session?: Ex
         ? <Button variant="outline" className="min-h-11"><Pencil aria-hidden="true" />Change</Button>
         : <Button className="min-h-11"><Plus aria-hidden="true" />Plan a session</Button>}
       title={session ? `Change ${session.title}` : "Plan a session"}
-      description="A classroom or poolside session people are booked on. Closing its register gives everyone who came the hours and, when it teaches a course, that course completed."
+      description="A classroom or poolside session people are booked on. When it teaches a course, closing its register completes that course for everyone who came."
       submitLabel={session ? "Save session" : "Plan session"}
       successMessage={session ? "Session saved" : "Session planned"}
       onSuccess={() => router.refresh()}
@@ -43,7 +43,7 @@ export function SessionDialog({ session, courses, sites, types }: { session?: Ex
           title: String(formData.get("title") ?? ""), courseId: pick(formData, "courseId"), siteId: pick(formData, "siteId"),
           location: String(formData.get("location") ?? ""), date: String(formData.get("date") ?? ""), start: String(formData.get("start") ?? ""),
           minutes: Number(formData.get("minutes") ?? 0), capacity: capacity ? Number(capacity) : null, trainerName: String(formData.get("trainerName") ?? ""),
-          hoursTypeId: pick(formData, "hoursTypeId"), note: String(formData.get("note") ?? ""),
+          note: String(formData.get("note") ?? ""),
         });
         if (result.ok && !session) router.push(`/training/sessions/${result.id}`);
         return result.ok ? { ok: true } : result;
@@ -70,12 +70,6 @@ export function SessionDialog({ session, courses, sites, types }: { session?: Ex
         <NativeSelect id="session-course" name="courseId" defaultValue={session?.courseId ?? ""} className="min-h-11 w-full">
           <NativeSelectOption value="">None</NativeSelectOption>
           {courses.map((c) => <NativeSelectOption key={c.id} value={c.id}>{c.title}</NativeSelectOption>)}
-        </NativeSelect>
-      </Field>
-      <Field label="Counts towards hours for" htmlFor="session-type" optional hint="For in-service hours, such as the 20 hours a lifeguard needs each year.">
-        <NativeSelect id="session-type" name="hoursTypeId" defaultValue={session?.hoursTypeId ?? ""} className="min-h-11 w-full">
-          <NativeSelectOption value="">General training hours</NativeSelectOption>
-          {types.map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.name}</NativeSelectOption>)}
         </NativeSelect>
       </Field>
       <Field label="Note for people booked" htmlFor="session-note" optional>

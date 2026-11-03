@@ -1,20 +1,19 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import { hoursOf, pathsOf, sessionsOf } from "@/modules/training/shared/on-the-job-reads";
+import { pathsOf, sessionsOf } from "@/modules/training/shared/on-the-job-reads";
 import { myTraining } from "@/modules/training/features/me/server/mine";
 
 /** My record (e-learning phase 6): every course they have had, with scores
- *  and certificates, their sessions, paths and in-service hours, for Turnfin
- *  Me to show, print and download. Only ever the signed-in person's own. */
-export async function myRecord(userId: string, orgId: string | null) {
+ *  and certificates, their sessions and paths, for Turnfin Me to show, print
+ *  and download (their hours come from Qualifications, D26). Only ever the signed-in person's own. */
+export async function myRecord(userId: string) {
   const rows = await myTraining(userId);
   const ids = rows.map((r) => r.id);
-  const [assignments, attempts, sessions, paths, hours] = await Promise.all([
+  const [assignments, attempts, sessions, paths] = await Promise.all([
     prisma.trainingAssignment.findMany({ where: { id: { in: ids } }, select: { id: true, versionId: true, certificateCode: true } }),
     prisma.trainingExamAttempt.findMany({ where: { assignmentId: { in: ids }, submittedAt: { not: null } }, select: { assignmentId: true, percent: true, passed: true } }),
     sessionsOf(userId),
     pathsOf(userId),
-    hoursOf(userId, orgId),
   ]);
   const versionIds = [...new Set(assignments.map((a) => a.versionId).filter((id): id is string => !!id))];
   const versions = new Map((versionIds.length ? await prisma.trainingCourseVersion.findMany({ where: { id: { in: versionIds } }, select: { id: true, number: true } }) : []).map((v) => [v.id, v.number]));
@@ -35,6 +34,5 @@ export async function myRecord(userId: string, orgId: string | null) {
     }),
     sessions: sessions.filter((s) => s.status === "ATTENDED"),
     paths: paths.map((p) => ({ title: p.title, startsOn: p.startsOn, done: p.done, total: p.total, finishedOn: p.finishedOn })),
-    hours,
   };
 }

@@ -131,7 +131,8 @@ export const SCREENS = [
     description: "The log of every change. Needs the permission to read it.",
     requires: "activity.view",
   },
-  { key: "training", label: "Training", path: "/training", description: "A separate workspace for the training catalogue, assigning courses, trainer sign-off and expiring qualifications. Everyone completes their own training in Turnfin Me without it.", requires: "training.records.read" },
+  { key: "training", label: "Training", path: "/training", description: "A separate workspace for the training catalogue, assigning courses and trainer sign-off. Everyone completes their own training in Turnfin Me without it.", requires: "training.records.read" },
+  { key: "staff-qualifications", label: "Qualifications", path: "/staff-qualifications", description: "A separate workspace for staff qualifications: certificates uploaded in Turnfin Me to check, what is expiring and in-service hours.", requires: "qualifications.manage" },
   { key: "rota", label: "Rota", path: "/rota", description: "Plan who is on which activity at a site, day by day, with every gap in cover counted; run today and record absences. Staff see their own days in Turnfin Me.", requires: "rota.view" },
   { key: "plan", label: "Plan (test)", path: "/plan", description: "The rota started again, on test beside Rota: shifts first, the duties in them, what's on and the gaps.", requires: "plan.view" },
   { key: "purchasing", label: "Purchasing", path: "/purchasing", description: "A separate workspace for purchase orders: approved suppliers and products, approval by role and amount, and numbered orders per site.", requires: "purchasing.read" },
@@ -187,7 +188,7 @@ export const ACTIVITIES_SCREENS = [
   "analytics", "duty", "cancellations", "calendar", "instructor", "students", "courses",
   "together", "assessments", "awaiting-enrolment", "legend-agreements", "programmes", "payments", "short-courses",
 ] as const satisfies readonly ScreenKey[];
-export const OTHER_APP_SCREENS = ["docs", "refunds", "coinage", "training", "hr", "rota", "purchasing", "stock", "academy", "tasks", "incidents", "cctv", "site-monitoring", "maintenance", "plan"] as const satisfies readonly ScreenKey[];
+export const OTHER_APP_SCREENS = ["docs", "refunds", "coinage", "training", "staff-qualifications", "hr", "rota", "purchasing", "stock", "academy", "tasks", "incidents", "cctv", "site-monitoring", "maintenance", "plan"] as const satisfies readonly ScreenKey[];
 
 const CORE = new Set<string>(CORE_SCREENS);
 const SWIM_SCHOOL = new Set<string>(ACTIVITIES_SCREENS);

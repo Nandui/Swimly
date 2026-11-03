@@ -17,8 +17,6 @@ export type TrainingActor = {
   assign: boolean;
   signoff: boolean;
   records: boolean;
-  /** May check certificates uploaded in Turnfin Me (qualifications.manage). */
-  qualifications: boolean;
 };
 
 export function trainingAccess(session: Session): TrainingActor | null {
@@ -34,7 +32,6 @@ export function trainingAccess(session: Session): TrainingActor | null {
     assign: holdsAnywhere(actor, "training.assign"),
     signoff: holdsAnywhere(actor, "training.signoff"),
     records: true,
-    qualifications: holdsAnywhere(actor, "qualifications.manage"),
   };
 }
 

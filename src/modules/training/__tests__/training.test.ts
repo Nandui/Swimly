@@ -12,7 +12,7 @@ import { today } from "@/lib/format";
  *  qualification the course grants. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let actions: typeof import("../features/courses/server/actions") & typeof import("../features/assignments/server/actions") & typeof import("../features/sign-off/server/actions");
-let data: typeof import("../shared/data") & typeof import("../features/courses/server/data") & typeof import("../features/assignments/server/data") & typeof import("../features/sign-off/server/data") & typeof import("../features/expiring/server/data");
+let data: typeof import("../shared/data") & typeof import("../features/courses/server/data") & typeof import("../features/assignments/server/data") & typeof import("../features/sign-off/server/data") & typeof import("../features/assignments/server/renewal");
 let self: typeof import("../features/me/server/mine");
 let own: typeof import("../features/me/server/self");
 const ORG = "org_leisureworld";
@@ -56,7 +56,7 @@ before(async () => {
   await db.qualificationType.create({ data: { id: "qt-rescue", orgId: ORG, name: "Synthetic rescue award", validityMonths: 24 } });
   await db.qualificationType.create({ data: { id: "qt-safe", orgId: ORG, name: "Synthetic safeguarding", validityMonths: 12 } });
   actions = Object.assign({}, ...["courses", "assignments", "sign-off"].map((f) => serverModule<object>(`src/modules/training/features/${f}/server/actions.ts`, doubles())));
-  data = Object.assign(serverModule<object>("src/modules/training/shared/data.ts", doubles()), ...["courses", "assignments", "sign-off", "expiring"].map((f) => serverModule<object>(`src/modules/training/features/${f}/server/data.ts`, doubles())));
+  data = Object.assign(serverModule<object>("src/modules/training/shared/data.ts", doubles()), ...["courses", "assignments", "sign-off"].map((f) => serverModule<object>(`src/modules/training/features/${f}/server/data.ts`, doubles())), serverModule<object>("src/modules/training/features/assignments/server/renewal.ts", doubles()));
   self = serverModule("src/modules/training/features/me/server/mine.ts", doubles());
   own = serverModule("src/modules/training/features/me/server/self.ts", doubles());
 });
@@ -140,29 +140,12 @@ test("a practical waits for someone else's sign-off; it can be sent back, then s
   assert.ok(await fixture.prisma.auditLog.count({ where: { entity: "TrainingAssignment", action: "sign-off" } }) === 1);
 });
 
-test("expiring qualifications list the renewal course, and a newer certificate takes a person off", async () => {
-  const soon = new Date(); soon.setUTCDate(soon.getUTCDate() + 10);
-  await fixture.prisma.qualification.create({ data: { orgId: ORG, userId: "riley", typeId: "qt-rescue", issuedOn: new Date("2024-01-01"), expiresOn: soon } });
-  await fixture.prisma.qualification.create({ data: { orgId: ORG, userId: "ava", typeId: "qt-rescue", issuedOn: new Date("2024-01-01"), expiresOn: soon } });
-  await fixture.prisma.qualification.create({ data: { orgId: ORG, userId: "noah", typeId: "qt-rescue", issuedOn: new Date("2024-01-01"), expiresOn: soon } });
+test("the course that renews a qualification, for Qualifications' expiring list (D26)", async () => {
   as("liam", [], [TRAINER]);
-  const { rows } = await data.expiringQualifications();
-  assert.deepEqual(rows.map((r) => r.userId), ["riley"], "ava renewed today; noah is outside the department");
-  assert.equal(rows[0].renewal?.courseId, practical);
-  assert.equal(rows[0].renewal?.assigned, true, "riley already has the practical open");
-});
-
-test("the expiring list filters by position and lists who has never held what their position needs", async () => {
-  const db = fixture.prisma;
-  await db.position.create({ data: { id: "pos-guard", orgId: ORG, name: "Synthetic lifeguard", requires: { create: [{ typeId: "qt-rescue" }, { typeId: "qt-safe" }] } } });
-  await db.user.update({ where: { id: "riley" }, data: { positionId: "pos-guard", siteIds: ["club_churchfield"] } });
-  as("liam", [], [TRAINER]);
-  const all = await data.expiringQualifications();
-  assert.deepEqual(all.missing.map((m) => [m.userId, m.lacking]), [["riley", ["Synthetic safeguarding"]]], "expiring rescue is listed above, not as missing");
-  assert.deepEqual((await data.expiringQualifications({ position: "pos-guard" })).rows.map((r) => r.userId), ["riley"]);
-  const elsewhere = await data.expiringQualifications({ site: "club_bishopstown" });
-  assert.equal(elsewhere.rows.length + elsewhere.missing.length, 0, "riley works only at Churchfield");
-  await db.user.update({ where: { id: "riley" }, data: { positionId: null, siteIds: [] } });
+  const renewal = await data.renewalCourses(ORG, [{ userId: "riley", typeId: "qt-rescue" }, { userId: "noah", typeId: "qt-rescue" }, { userId: "riley", typeId: "qt-none" }]);
+  assert.deepEqual(renewal({ userId: "riley", typeId: "qt-rescue" }), { courseId: practical, title: "Pool rescue", assigned: true, canAssign: true }, "riley already has the practical open");
+  assert.equal(renewal({ userId: "noah", typeId: "qt-rescue" })?.canAssign, false, "noah is outside the department");
+  assert.equal(renewal({ userId: "riley", typeId: "qt-none" }), null, "no course gives it");
 });
 
 test("self-service reads return only the person's own training", async () => {

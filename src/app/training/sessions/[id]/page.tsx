@@ -8,7 +8,6 @@ import { PageShell } from "@/components/ui-kit/page-shell";
 import { RecordFact, RecordFacts, RecordSection } from "@/components/ui-kit/record";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDate } from "@/lib/format";
-import { hoursInWords } from "@/modules/training/features/hours";
 import {
   AddToSession, CancelSession, CloseRegister, MarkEveryoneAttended, PLACE_STATUS_META, RegisterToggle, RemoveFromSession, SESSION_STATUS_META, SessionDialog, sessionDetail,
 } from "@/modules/training/features/sessions";
@@ -20,7 +19,7 @@ export const metadata: Metadata = { title: "Session" };
 export default async function SessionPage({ params }: { params: Promise<{ id: string }> }) {
   const data = await sessionDetail((await params).id);
   if (!data) notFound();
-  const { who, session: s, places, hidden, booked, attended, absent, assignable, canClose, closeBlock, courses, sites, types } = data;
+  const { who, session: s, places, hidden, booked, attended, absent, assignable, canClose, closeBlock, courses, sites } = data;
   const state = s.cancelled ? "cancelled" : s.closedAt ? "closed" : s.registerOpen ? "register" : "upcoming";
   const left = s.capacity ? Math.max(0, s.capacity - booked) : null;
   const facts = [
@@ -29,7 +28,6 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
     ["Trainer", s.trainerName || "Not set"],
     ["Places", s.capacity ? `${booked} of ${s.capacity} booked` : `${booked} booked, no limit`],
     ["Completes", s.course ?? "No course"],
-    ["Hours", `${hoursInWords(s.minutes)} towards ${s.typeName ?? "general training hours"}`],
   ];
   return (
     <PageShell spacing="roomy" header={<PageHeader back={{ href: "/training/sessions", label: "Sessions" }} title={s.title}
@@ -37,7 +35,7 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
         status={<Tag meta={SESSION_STATUS_META[state]} />}
         actions={s.open ? (
           <>
-            {who.assign ? <SessionDialog courses={courses} sites={sites} types={types} session={{ id: s.id, title: s.title, courseId: s.courseId, siteId: s.siteId, location: s.location, date: s.date, start: s.start, minutes: s.minutes, capacity: s.capacity, trainerName: s.trainerName, hoursTypeId: s.hoursTypeId, note: s.note }} /> : null}
+            {who.assign ? <SessionDialog courses={courses} sites={sites} session={{ id: s.id, title: s.title, courseId: s.courseId, siteId: s.siteId, location: s.location, date: s.date, start: s.start, minutes: s.minutes, capacity: s.capacity, trainerName: s.trainerName, note: s.note }} /> : null}
             {who.assign ? <CancelSession id={s.id} title={s.title} /> : null}
             {who.assign ? <AddToSession id={s.id} title={s.title} people={assignable} left={left} /> : null}
           </>

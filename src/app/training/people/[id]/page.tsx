@@ -13,7 +13,6 @@ import { QUALIFICATION_STATE_META } from "@/lib/people/constants";
 import { formatDate } from "@/lib/format";
 import { AuthorizationError } from "@/lib/authz";
 import { Progress } from "@/components/shadcn/progress";
-import { hoursInWords, hoursOf } from "@/modules/training/features/hours";
 import { pathsOf } from "@/modules/training/features/paths";
 import { PLACE_STATUS_META, sessionsOf } from "@/modules/training/features/sessions";
 
@@ -37,9 +36,9 @@ export default async function TrainingPersonPage({ params }: { params: Promise<{
   const { id } = await params;
   const data = await load(id);
   // personTraining (above) has checked the reader covers this person.
-  const [courses, hours, sessions, paths] = await Promise.all([
+  const [courses, sessions, paths] = await Promise.all([
     data.canAssign ? listCourses().then((r) => r.courses) : Promise.resolve([]),
-    hoursOf(id, data.who.orgId), sessionsOf(id), pathsOf(id),
+    sessionsOf(id), pathsOf(id),
   ]);
   const person = { id: data.person.id, name: data.person.name, jobTitle: data.person.jobTitle };
   return (
@@ -145,35 +144,6 @@ export default async function TrainingPersonPage({ params }: { params: Promise<{
             </ul>
           )}
         </RecordSection>
-        {hours.progress.length || hours.log.length ? (
-          <RecordSection id="training-hours" title="In-service hours">
-            {hours.progress.length ? (
-              <ul className="pc-list">
-                {hours.progress.map((h) => (
-                  <li key={h.typeId} className="pc-row flex-wrap">
-                    <div className="pc-row-body">
-                      <span className="pc-row-title">{h.typeName}</span>
-                      <p className="pc-row-hint tabular-nums">{hoursInWords(h.minutes)} of {h.hours} h since {formatDate(h.since)}{h.met ? " · done" : ` · ${hoursInWords(h.needed - h.minutes)} to go`}</p>
-                    </div>
-                    <div className="pc-row-trail min-w-(--tile-min)"><Progress value={h.percent} aria-label={`${h.percent}% of the hours for ${h.typeName}`} /></div>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            {hours.log.length ? (
-              <ul className="pc-list mt-(--space-3)" aria-label="Hours logged">
-                {hours.log.slice(0, 10).map((l) => (
-                  <li key={l.id} className="pc-row">
-                    <div className="pc-row-body">
-                      <span className="pc-row-title">{hoursInWords(l.minutes)} · {l.topic}</span>
-                      <p className="pc-row-hint">{formatDate(l.on)}{l.typeName ? ` · ${l.typeName}` : " · general"} · logged by {l.recordedByName}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </RecordSection>
-        ) : null}
         </div>
       </div>
     </PageShell>

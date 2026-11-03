@@ -15,6 +15,7 @@ import { monitoringPages } from "@/modules/site-monitoring/features/workspace/pa
 import { stockPages } from "@/modules/stock/features/workspace/pages";
 import { tasksPages } from "@/modules/tasks/features/workspace/pages";
 import { trainingPages } from "@/modules/training/features/workspace/pages";
+import { qualificationsPages } from "@/modules/qualifications/features/workspace/pages";
 
 /** Someone who can do everything in an app: every flag a page list asks about is true. */
 const everything = new Proxy({}, { get: (_target, key) => (key === "id" ? "someone" : true) }) as never;
@@ -37,6 +38,7 @@ const APPS: [string, { href: string; label: string; place?: "setup"; under?: str
   ["Stock", stockPages()],
   ["Tasks", tasksPages(everything)],
   ["Training", trainingPages(everything)],
+  ["Qualifications", qualificationsPages()],
 ];
 
 test("every app lists at most five work pages in the sidebar, then Set up; nested pages do not count (DESIGN.md, D19)", () => {

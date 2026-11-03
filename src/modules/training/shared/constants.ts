@@ -12,13 +12,6 @@ export const TRAINING_STATUS_META = {
 } as const satisfies Record<string, StatusMeta>;
 export type TrainingState = keyof typeof TRAINING_STATUS_META;
 
-/** A certificate staff uploaded in Turnfin Me, on its way to their record. */
-export const CERTIFICATE_STATUS_META = {
-  PENDING: { label: "Waiting to be checked", color: "orange", icon: Clock3 },
-  VERIFIED: { label: "Recorded", color: "green", icon: CircleCheck },
-  DECLINED: { label: "Declined", color: "gray", icon: XCircle },
-} as const satisfies Record<string, StatusMeta>;
-
 /** A classroom or poolside session (phase 5). */
 export const SESSION_STATUS_META = {
   upcoming: { label: "Coming up", color: "blue", icon: CircleDot },
@@ -47,10 +40,6 @@ export function trainingState(row: { status: string; dueOn: Date | null }, on: s
     default: return row.dueOn && row.dueOn.toISOString().slice(0, 10) < on ? "overdue" : "assigned";
   }
 }
-
-/** Days before expiry that a qualification counts as "expiring" (matches the
- *  People core's `qualificationState`). */
-export const EXPIRY_WARNING_DAYS = 60;
 
 /** `YYYY-MM-DD` plus whole months, clamped to the month's last day. */
 export function addMonthsIso(iso: string, months: number) {

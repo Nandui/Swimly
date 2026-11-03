@@ -683,3 +683,36 @@ export async function appCourses(): Promise<AppCourses | null> {
     one,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Renewing a qualification
+// ---------------------------------------------------------------------------
+
+/** The course that renews a qualification someone holds, for one person and qualification type:
+ *  whether they already have it open, and whether the reader may assign it to them. */
+export type QualificationRenewal = { courseId: string; title: string; assigned: boolean; canAssign: boolean };
+/** An app whose courses give qualifications (Training) says which of them renews each, and assigns
+ *  one. The expiring list asks (D26); the app checks its own permission to assign, writes and
+ *  audits, and never learns why it was asked. */
+export type QualificationRenewals = {
+  /** The app it belongs to (its manifest id). */
+  app: string;
+  find(orgId: string | null, rows: readonly { userId: string; typeId: string }[]): Promise<(row: { userId: string; typeId: string }) => QualificationRenewal | null>;
+  /** Assigns the course to one person, due on `dueOn` (YYYY-MM-DD) or with no due date (""). */
+  assign(courseId: string, userId: string, dueOn: string): Promise<{ ok: true } | { ok: false; error: string }>;
+};
+
+let qualificationRenewalSource: QualificationRenewals | null = null;
+
+export function registerQualificationRenewals(source: QualificationRenewals) {
+  qualificationRenewalSource = source;
+}
+
+/** The courses that renew qualifications, or null when no app offers them or it is switched off:
+ *  the expiring list then offers no course. The caller has already checked its own permission for
+ *  the people it asks about. */
+export async function qualificationRenewals(): Promise<QualificationRenewals | null> {
+  await modulesLoaded();
+  const source = qualificationRenewalSource;
+  return source && (await appOn(source.app)) ? source : null;
+}
