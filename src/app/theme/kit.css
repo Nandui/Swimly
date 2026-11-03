@@ -396,6 +396,9 @@ body.turnfin-app { background: var(--bg); }
 .turnfin-app :is([data-slot='select-item'], [data-slot='command-item'], [data-slot='dropdown-menu-item'], [data-slot='dropdown-menu-checkbox-item'], [data-slot='dropdown-menu-radio-item'], [data-slot='dropdown-menu-sub-trigger']):is(:focus, [data-highlighted]) { background: var(--glass-sel); color: var(--label); }
 .turnfin-app [data-slot='select-item'] { padding-right: 36px; }
 .turnfin-app :is([data-slot='dropdown-menu-checkbox-item'], [data-slot='dropdown-menu-radio-item'], [data-slot='dropdown-menu-item'][data-inset], [data-slot='dropdown-menu-sub-trigger'][data-inset]) { padding-left: 36px; }
+/* A page nested under another in the phone's page list (ModuleShell), one step in per level. */
+.turnfin-app [data-slot='dropdown-menu-item'][data-depth='1'] { padding-left: 36px; }
+.turnfin-app [data-slot='dropdown-menu-item'][data-depth='2'] { padding-left: 58px; }
 .turnfin-app [data-slot='select-item-indicator'] { right: 12px; }
 .turnfin-app :is([data-slot='dropdown-menu-checkbox-item'], [data-slot='dropdown-menu-radio-item']) > span:first-child { left: 12px; }
 .turnfin-app :is([data-slot='select-item'], [data-slot='command-item'], [data-slot='dropdown-menu-item'], [data-slot='dropdown-menu-checkbox-item'], [data-slot='dropdown-menu-radio-item']) .text-xs { font-weight: 400; }
@@ -1057,4 +1060,25 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
   .turnfin-app .tf-shell:has(> .tf-side) > .tf-frame { margin-left: 0; }
   /* A printed guide keeps its words, not its links back or its tools. */
   .turnfin-app .tf-help .tf-main a[data-slot='button'] { display: none; }
+}
+/* A page with pages nested under it (ModuleLink `under`) opens like a folder: its link, a chevron
+   to open it, and its pages indented on a hairline guide, which nest the same way again. */
+.turnfin-app .tf-side-folder { display: flex; flex-direction: column; gap: var(--space-hair); }
+.turnfin-app .tf-side-folder-row { position: relative; display: flex; align-items: center; }
+.turnfin-app .tf-side-folder-row > .tf-side-item { flex: 1 1 auto; min-width: 0; padding-right: 40px; }
+.turnfin-app .tf-side-folder-toggle { position: absolute; right: 2px; display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: var(--radius-md); background: transparent; color: var(--on-ground-2); cursor: pointer; z-index: 1; }
+.turnfin-app .tf-side-folder-toggle:hover { background: var(--ground-fill); }
+.turnfin-app .tf-side-folder-toggle:focus-visible { outline: 2px solid var(--on-ground); outline-offset: 2px; }
+.turnfin-app .tf-side-folder-toggle > svg { width: 16px; height: 16px; }
+.turnfin-app .tf-side-folder-row:has(> [aria-current]) > .tf-side-folder-toggle { color: var(--ground); }
+.turnfin-app .tf-side-folder-row:has(> [aria-current]) > .tf-side-folder-toggle:hover { background: transparent; }
+.turnfin-app .tf-side-folder-toggle[data-state='open'] .tf-side-chevron { rotate: 90deg; }
+.turnfin-app .tf-side-tree { display: flex; flex-direction: column; gap: var(--space-hair); margin-left: 18px; padding-left: 6px; border-left: 1px solid var(--ground-fill); }
+/* Nested names wrap rather than cut off, as each level takes width from the sidebar. */
+.turnfin-app .tf-side-tree .tf-side-item { height: auto; min-height: 38px; padding-block: 6px; font-weight: 600; }
+.turnfin-app .tf-side-tree .tf-side-label { white-space: normal; overflow-wrap: anywhere; }
+@media (min-width: 768px) and (max-width: 1099px) {
+  .turnfin-app .tf-side-folder-toggle { width: 44px; height: 44px; }
+  .turnfin-app .tf-side-tree .tf-side-item { min-height: 48px; }
+  .turnfin-app .tf-side-folder-row > .tf-side-item { padding-right: 50px; }
 }

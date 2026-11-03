@@ -117,6 +117,9 @@ export type ModulePage = {
    *  in the sidebar, five at most; `setup` under the app's one Set up item; `overview` only on the
    *  app's Overview page, which lists every page. */
   place?: "setup" | "overview";
+  /** A work page's sub-page: the href of the page it nests under in the sidebar, which opens like
+   *  a folder. Sub-pages can nest in turn, and do not count towards the five work pages. */
+  under?: string;
 };
 
 const groupRank = (mod: ModuleManifest) => MODULE_GROUPS.findIndex((g) => g.key === mod.group);
