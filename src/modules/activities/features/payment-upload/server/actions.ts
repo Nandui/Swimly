@@ -2,15 +2,15 @@
 
 import { createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
+import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
 import { liveSitesOf } from "@/lib/directory";
-import { formatDate } from "@/lib/format";
-import { today } from "@/lib/format";
+import { formatDate, today } from "@/lib/format";
 import { sitesFor } from "@/lib/policy/session";
 import { prisma } from "@/lib/prisma";
 import { readWorkbook } from "@/lib/xlsx";
 import { members, type MemberHit } from "@/modules/contributions";
-import { covers, requirePaymentsActor, type PaymentsActor } from "@/modules/activities/shared/payments/access";
+import { covers, inSites, requirePaymentsActor, type PaymentsActor } from "@/modules/activities/shared/payments/access";
 import { MONTH, monthFromFileName, parseFailureSheets, PaymentError, sheetFingerprintSource, siteForClub, type SheetRow } from "@/modules/activities/shared/payments/rules";
 import { failureLabel } from "@/modules/activities/shared/payments/service";
 import { euro, monthLabel, PAYMENT_ACTIONS } from "@/modules/activities/shared/payments/types";
@@ -165,4 +165,31 @@ export async function uploadFailureSheet(formData: FormData): Promise<{ ok: true
   revalidatePath("/payments", "layout");
   revalidatePath("/students/[id]", "page");
   return { ok: true, added, month: read.month };
+}
+
+/** Undo an upload (owner, 3 November 2026: a wrong sheet was uploaded): every payment it added at
+ *  the sites this person manages comes off the list with its history, one audit row each. Once
+ *  none of its payments are left anywhere, the upload's own record goes too, so the same file can
+ *  be uploaded again. */
+export async function removeUpload(importId: string): Promise<ActionResult> {
+  const who = await requirePaymentsActor();
+  if (!who.manage) return fail("Removing an upload needs Payments: Manage.");
+  const upload = await prisma.paymentImport.findFirst({ where: { id: importId, orgId: who.orgId ?? undefined }, select: { id: true, fileName: true } });
+  if (!upload) return fail("That upload is no longer there. Refresh the page.");
+  const sites = await sitesFor("payments.manage");
+  const removed = await prisma.$transaction(async (tx) => {
+    const rows = await tx.paymentFailure.findMany({ where: { importId, ...inSites(sites) } });
+    for (const f of rows) {
+      await tx.paymentFailureEvent.deleteMany({ where: { failureId: f.id } });
+      await tx.paymentFailure.delete({ where: { id: f.id } });
+      await logAudit({ actorId: who.id, actorName: who.name, action: "delete", entity: "PaymentFailure", entityId: f.id, clubId: f.siteId,
+        summary: `${failureLabel(f)}. Removed with its upload, ${upload.fileName}` }, tx);
+    }
+    if (!(await tx.paymentFailure.count({ where: { importId } }))) await tx.paymentImport.delete({ where: { id: importId } });
+    return rows.length;
+  }, { timeout: 120_000 });
+  if (!removed) return fail("None of this upload’s payments are at a site you manage.");
+  revalidatePath("/payments", "layout");
+  revalidatePath("/students/[id]", "page");
+  return ok();
 }
