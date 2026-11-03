@@ -6,6 +6,7 @@ import { acknowledgeReviewFor, hrConfigured, logOwnHrRead, mySharedHr } from "@/
 import { myQualifications } from "@/lib/people/mine";
 import { myDays } from "@/modules/rota";
 import { docsReading } from "@/modules/docs";
+import { myHours } from "@/modules/qualifications";
 import {
   checkQuizAnswer, completeLessonFor, completeTrainingFor, myCertificate, myCourse, myCourseFile, myExam, myExamPaper, myExamResult, myLesson, myPlan, myPractical, myTraining,
   saveExamAnswer, startExam, submitExam, trainingFileResponse,
@@ -177,9 +178,10 @@ const practicalDto = (p: NonNullable<Awaited<ReturnType<typeof myPractical>>>) =
   last: p.last && { observedBy: p.last.observedByName, observedAt: p.last.observedAt, steps: p.last.steps.map((s) => ({ id: s.id, text: s.text, result: s.result, note: s.note })) },
 });
 
-/** Their learning paths, sessions and in-service hours (phase 5). */
+/** Their learning paths and sessions (phase 5), and their in-service hours from Qualifications
+ *  (D26; none while it is switched off). */
 export async function trainingPlan(identity: StaffIdentity) {
-  const plan = await myPlan(identity.user.id, identity.user.orgId);
+  const [plan, hours] = await Promise.all([myPlan(identity.user.id), hoursFor(identity)]);
   return {
     paths: plan.paths.map((p) => ({
       id: p.id, title: p.title, summary: p.summary, startsOn: date(p.startsOn), done: p.done, total: p.total, finishedOn: date(p.finishedOn), overdue: p.overdue,
@@ -188,10 +190,16 @@ export async function trainingPlan(identity: StaffIdentity) {
     })),
     sessions: plan.sessions.map((s) => ({ id: s.id, title: s.title, when: s.when, startsAt: s.startsAt.toISOString(), upcoming: !s.closed && s.startsAt.getTime() > Date.now() - 12 * 3600_000, course: s.course, site: s.site, location: s.location, trainer: s.trainerName, status: s.status, closed: s.closed })),
     hours: {
-      progress: plan.hours.progress.map((h) => ({ qualification: h.typeName, hours: h.hours, windowMonths: h.windowMonths, minutes: h.minutes, since: date(h.since), met: h.met, percent: h.percent })),
-      log: plan.hours.log.map((l) => ({ id: l.id, on: date(l.on), minutes: l.minutes, topic: l.topic, qualification: l.typeName })),
+      progress: hours.progress.map((h) => ({ qualification: h.typeName, hours: h.hours, windowMonths: h.windowMonths, minutes: h.minutes, since: date(h.since), met: h.met, percent: h.percent })),
+      log: hours.log.map((l) => ({ id: l.id, on: date(l.on), minutes: l.minutes, topic: l.topic, qualification: l.typeName })),
     },
   };
+}
+
+const NO_HOURS: Awaited<ReturnType<typeof myHours>> = { progress: [], log: [] };
+/** Their own in-service hours, kept by Qualifications. */
+async function hoursFor(identity: StaffIdentity) {
+  return (await appOn("qualifications", { orgId: identity.user.orgId })) ? myHours(identity.user.id, identity.user.orgId) : NO_HOURS;
 }
 
 const me = (identity: StaffIdentity) => ({ id: identity.user.id, name: identity.user.name });
@@ -402,7 +410,7 @@ export async function trainingSaved(identity: StaffIdentity) {
 
 /** Everything on their training record, to read, print or download. */
 export async function trainingRecord(identity: StaffIdentity) {
-  const record = await myRecord(identity.user.id, identity.user.orgId);
+  const [record, hours] = await Promise.all([myRecord(identity.user.id), hoursFor(identity)]);
   return {
     name: identity.user.name,
     courses: record.courses.map((c) => ({ id: c.id, title: c.title, category: c.category, state: c.state, assignedAt: c.assignedAt.toISOString(), assignedBy: c.assignedBy, dueOn: date(c.dueOn),
@@ -410,8 +418,8 @@ export async function trainingRecord(identity: StaffIdentity) {
     sessions: record.sessions.map((s) => ({ title: s.title, when: s.when, course: s.course, trainer: s.trainerName })),
     paths: record.paths.map((p) => ({ title: p.title, startsOn: date(p.startsOn), done: p.done, total: p.total, finishedOn: date(p.finishedOn) })),
     hours: {
-      progress: record.hours.progress.map((h) => ({ qualification: h.typeName, hours: h.hours, windowMonths: h.windowMonths, minutes: h.minutes, since: date(h.since), met: h.met })),
-      log: record.hours.log.map((l) => ({ on: date(l.on), minutes: l.minutes, topic: l.topic, qualification: l.typeName })),
+      progress: hours.progress.map((h) => ({ qualification: h.typeName, hours: h.hours, windowMonths: h.windowMonths, minutes: h.minutes, since: date(h.since), met: h.met })),
+      log: hours.log.map((l) => ({ on: date(l.on), minutes: l.minutes, topic: l.topic, qualification: l.typeName })),
     },
   };
 }
@@ -450,7 +458,7 @@ export async function rateTraining(request: Request, identity: StaffIdentity, id
 
 /** Today's refresher questions, their streak and badges. */
 export async function trainingRefresher(identity: StaffIdentity) {
-  const r = await myRefresher(identity.user.id, identity.user.orgId);
+  const r = await myRefresher(identity.user.id);
   return {
     on: r.on, goal: r.goal, answered: r.answered, correct: r.correct, streak: r.streak,
     questions: r.questions.map((q) => ({ cardId: q.cardId, assignmentId: q.assignmentId, course: q.course, question: questionDto(q.question) })),

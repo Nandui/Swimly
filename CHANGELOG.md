@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.5.0 · 3 November 2026 · Qualifications, its own app
+
+- **Qualifications** is a new app in Team for the people who keep staff qualifications in date. It has three pages: **Expiring**, **Certificates to check** and **In-service hours**. They used to be in Training, and old links still work.
+- **Whoever had Manage in Training** has Keep in Qualifications, so you can still check certificates and see what is expiring.
+- **On Expiring**, each qualification shows the course that renews it. Choose **Assign the course** to give it to that person, due on the day their qualification runs out.
+- **In-service hours** are now logged only in Qualifications. Closing a session's register in Training no longer adds hours, so log them there for the people who came.
+- **Training** is now only about setting up courses and taking them. Home shows certificates to check and qualifications expiring under Qualifications.
+
 ## 3.4.1 · 3 November 2026 · Failed payments: the short Failed DDs sheet
 
 - **Upload the sheet** now also takes the short Failed DDs sheet (Contact Name, Amount, Return Description and Membership Number, a tab per site). Each tab's name says the site, such as CF for Churchfield, and each payment still shows what to ask the member for.

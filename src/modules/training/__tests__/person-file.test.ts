@@ -24,7 +24,6 @@ before(async () => {
   await assign(firstAid.id, "ava", { status: "SUBMITTED", dueOn: parseDateOnly(addDaysIso(today(), 7)) });
   await assign(manual.id, "ava", { status: "COMPLETED", completedAt: new Date() });
   await assign(cpr.id, "noah", { dueOn: null });
-  await db.trainingHours.create({ data: { orgId: ORG, userId: "ava", on: parseDateOnly(today()), minutes: 45, topic: "Synthetic spinal board drill", recordedByName: "Maya" } });
   await db.trainingRefresherDay.create({ data: { userId: "ava", on: parseDateOnly(today()) } });
   file = serverModule("src/modules/training/features/person-file/server/file.ts", { "@/lib/prisma": { prisma: db }, "server-only": {} });
 });
@@ -46,12 +45,10 @@ test("HR's subject export gets every assignment, the on-the-job record and the l
   const records = await file.trainingRecords("ava");
   assert.deepEqual(records.map((r) => r.course.title).sort(), ["Synthetic first aid", "Synthetic manual handling", "Synthetic safeguarding"], "Noah's course is not Ava's");
   const onTheJob = await file.trainingOnTheJobRecords("ava");
-  assert.deepEqual(onTheJob.hours.map((h) => [h.topic, h.minutes]), [["Synthetic spinal board drill", 45]]);
   assert.deepEqual([onTheJob.sessions, onTheJob.paths, onTheJob.evidence], [[], [], []]);
   assert.ok(onTheJob.evidence.every((e) => !("bytes" in e)), "photo evidence is listed by name, never sent");
   const learner = await file.trainingLearnerRecords("ava");
   assert.equal(learner.refresherDays.length, 1);
   assert.deepEqual([learner.notes, learner.feedback, learner.refresherCards], [[], [], []]);
-  const noah = await file.trainingOnTheJobRecords("noah");
-  assert.equal(noah.hours.length, 0);
+  assert.ok(!("hours" in onTheJob), "in-service hours are Qualifications' records (D26)");
 });

@@ -37,11 +37,11 @@ function Rows({ rows, label }: { rows: SessionRow[]; label: string }) {
 /** Classroom and poolside sessions (e-learning phase 5): in-service training,
  *  practical courses and refreshers people are booked on, with a register. */
 export default async function SessionsPage() {
-  const { who, upcoming, register, past, courses, sites, types } = await listSessions();
+  const { who, upcoming, register, past, courses, sites } = await listSessions();
   const none = !upcoming.length && !register.length && !past.length;
   return (
     <PageShell spacing="roomy" header={<PageHeader title="Sessions" description="Classroom and poolside training with places and a register. Closing the register counts everyone's hours and completes the course it teaches."
-        actions={who.assign ? <SessionDialog courses={courses} sites={sites} types={types} /> : null} />}>
+        actions={who.assign ? <SessionDialog courses={courses} sites={sites} /> : null} />}>
       {none ? (
         <EmptyState as="h2" icon="calendarDays" title="No sessions yet" hint={who.assign ? "Plan your next in-service, for example a monthly lifeguard training hour." : "Someone who assigns training can plan them."} />
       ) : null}

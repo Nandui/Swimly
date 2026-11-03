@@ -18,7 +18,8 @@ export const trainingModule: ModuleManifest = {
       { key: "trainer", label: "Trainer", help: "Sign off practical training for people at their sites.", permissions: ["training.records.read", "training.signoff"] },
       // Author (owner request, 15 October 2026): builds courses without assigning them.
       { key: "author", label: "Author", help: "Also build courses: write lessons, add videos and files, preview and publish them.", permissions: ["training.manage"] },
-      { key: "manage", label: "Manage", help: "Also assign courses to the people they cover and check certificates.", permissions: ["training.assign", "qualifications.manage"] },
+      // Checking certificates moved to Qualifications (D26), where this level counts as Keep.
+      { key: "manage", label: "Manage", help: "Also assign courses to the people they cover.", permissions: ["training.assign"] },
     ],
   },
 };

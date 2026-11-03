@@ -22,7 +22,8 @@ import * as rota from "@/modules/rota/shared/constants";
 import * as rotaMeta from "@/modules/rota/shared/meta";
 import { REACH_META, STAFF_STATUS_META } from "@/lib/staff/constants";
 import { ARCHIVAL_STATUS_META, type StatusMeta } from "@/lib/status";
-import { CERTIFICATE_STATUS_META, TRAINING_STATUS_META } from "@/modules/training/shared/constants";
+import { TRAINING_STATUS_META } from "@/modules/training/shared/constants";
+import { CERTIFICATE_STATUS_META } from "@/modules/qualifications/shared/constants";
 
 const TONES = new Set(["green", "blue", "orange", "red", "purple", "gray"]);
 

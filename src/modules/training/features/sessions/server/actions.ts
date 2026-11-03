@@ -8,10 +8,8 @@ import { isDateOnly, parseDateOnly, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { filterAllows } from "@/lib/policy/engine";
 import { subjectsFor } from "@/lib/policy/session";
-import { liveQualificationTypeById } from "@/lib/qualifications";
 import { requireTrainingActor } from "@/modules/training/shared/access";
 import { grantQualification } from "@/modules/training/shared/grant";
-import { creditHours } from "@/modules/training/shared/hours";
 import { MAX_SESSION_PLACES, readClock, sessionWhen, wallClockInstant } from "@/modules/training/shared/on-the-job";
 import { refresh, text } from "@/modules/training/shared/writes";
 
@@ -31,7 +29,6 @@ const sessionSchema = z.object({
   minutes: z.number().int().min(5, "A session lasts at least 5 minutes.").max(1440, "A session lasts at most a day."),
   capacity: z.number().int().min(1, "Allow at least one place.").max(MAX_SESSION_PLACES).nullable().default(null),
   trainerName: z.string().trim().max(120).default(""),
-  hoursTypeId: z.string().max(64).nullable().default(null),
   note: z.string().trim().max(1000).default(""),
 });
 export type SessionInput = z.input<typeof sessionSchema>;
@@ -52,10 +49,9 @@ export async function saveSession(sessionId: string | null, input: SessionInput)
   const startsAt = wallClockInstant(s.date, readClock(s.start)!);
   if (!startsAt) return fail("That time doesn't exist on that day (the clocks change). Choose another.");
   if (s.siteId && !(await organisationChart()).sites.some((site) => site.id === s.siteId)) return fail("That site has been removed. Choose another.");
-  if (s.hoursTypeId && !(await liveQualificationTypeById(s.hoursTypeId, who.orgId))) return fail("That qualification has been removed. Choose another.");
   const result = await prisma.$transaction(async (tx) => {
     if (s.courseId && !(await tx.trainingCourse.findFirst({ where: { id: s.courseId, orgId: who.orgId, archivedAt: null }, select: { id: true } }))) return fail("That course is no longer offered.");
-    const data = { title: s.title, courseId: s.courseId, siteId: s.siteId, location: s.location, startsAt, minutes: s.minutes, capacity: s.capacity, trainerName: s.trainerName, hoursTypeId: s.hoursTypeId, note: s.note };
+    const data = { title: s.title, courseId: s.courseId, siteId: s.siteId, location: s.location, startsAt, minutes: s.minutes, capacity: s.capacity, trainerName: s.trainerName, note: s.note };
     let id = sessionId;
     if (sessionId) {
       const existing = await tx.trainingSession.findFirst({ where: { id: sessionId, orgId: who.orgId }, select: { registerClosedAt: true, cancelledAt: true, _count: { select: { places: true } } } });
@@ -161,8 +157,8 @@ export async function markPlace(placeId: string, status: "ATTENDED" | "ABSENT" |
   return result;
 }
 
-/** Closes the register: everyone who attended gets the hours and, when the
- *  session teaches a course, that course completed and its qualification. */
+/** Closes the register: when the session teaches a course, everyone who attended has that course
+ *  completed and its qualification. In-service hours are logged in Qualifications (D26). */
 export async function closeRegister(sessionId: string): Promise<{ ok: true; attended: number } | Extract<ActionResult, { ok: false }>> {
   const who = await requireTrainingActor();
   if (!who.signoff || !who.orgId) return fail("Closing a register needs the Sign off training permission.");
@@ -171,7 +167,7 @@ export async function closeRegister(sessionId: string): Promise<{ ok: true; atte
   const result = await prisma.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM "training_sessions" WHERE id = ${sessionId} FOR UPDATE`;
     const session = await tx.trainingSession.findFirst({ where: { id: sessionId, orgId }, select: {
-      title: true, courseId: true, startsAt: true, minutes: true, hoursTypeId: true, cancelledAt: true, registerClosedAt: true,
+      title: true, courseId: true, startsAt: true, minutes: true, cancelledAt: true, registerClosedAt: true,
       course: { select: { title: true } }, places: { select: { userId: true, status: true } },
     } });
     if (!session) return fail("That session no longer exists.");
@@ -182,11 +178,9 @@ export async function closeRegister(sessionId: string): Promise<{ ok: true; atte
     const attended = session.places.filter((p) => p.status === "ATTENDED").map((p) => p.userId);
     if (attended.some((id) => !filterAllows(scope, id) || id === who.id)) return fail("Someone else has to close this register: it includes people you can't sign off, or you.");
     const names = await staffByIds(attended, tx);
-    const type = session.hoursTypeId ? await liveQualificationTypeById(session.hoursTypeId, orgId, tx) : null;
     const on = parseDateOnly(new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Dublin" }).format(session.startsAt));
     for (const userId of attended) {
       const personName = names.get(userId)?.name ?? "former staff";
-      await creditHours(tx, { orgId, userId, personName, typeId: type?.id ?? null, typeName: type?.name ?? null, on, minutes: session.minutes, topic: session.title, sessionId }, who);
       if (!session.courseId) continue;
       const note = `Attended ${session.title} on ${today() === on.toISOString().slice(0, 10) ? "today" : on.toISOString().slice(0, 10)}`;
       const open = await tx.trainingAssignment.findFirst({ where: { courseId: session.courseId, userId, status: { in: ["ASSIGNED", "SUBMITTED"] } }, select: { id: true } });
@@ -200,6 +194,6 @@ export async function closeRegister(sessionId: string): Promise<{ ok: true; atte
     await logAudit({ actorId: who.id, actorName: who.name, action: "close", entity: "TrainingSession", entityId: sessionId, summary: `Closed the register of ${session.title}: ${attended.length} attended, ${session.places.length - attended.length} absent` }, tx);
     return { ok: true as const, attended: attended.length };
   });
-  if (result.ok) refresh("/training/sessions", `/training/sessions/${sessionId}`, "/training/hours");
+  if (result.ok) refresh("/training/sessions", `/training/sessions/${sessionId}`);
   return result;
 }

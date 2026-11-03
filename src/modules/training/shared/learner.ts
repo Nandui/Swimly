@@ -45,7 +45,7 @@ export function streakOf(days: Iterable<string>, on: string) {
 
 export type LearnerStats = {
   coursesDone: number; perfectExam: boolean; firstTimePass: boolean; bestStreak: number;
-  refresherAnswers: number; hoursMet: boolean; pathDone: boolean;
+  refresherAnswers: number; pathDone: boolean;
 };
 
 const BADGES = [
@@ -58,7 +58,6 @@ const BADGES = [
   { id: "streak-7", title: "A week in a row", hint: "Learn something seven days in a row.", earned: (s: LearnerStats) => s.bestStreak >= 7 },
   { id: "streak-30", title: "A month in a row", hint: "Learn something thirty days in a row.", earned: (s: LearnerStats) => s.bestStreak >= 30 },
   { id: "refresher-50", title: "Sharp memory", hint: "Answer 50 refresher questions.", earned: (s: LearnerStats) => s.refresherAnswers >= 50 },
-  { id: "hours-met", title: "Hours done", hint: "Reach the in-service hours a qualification needs.", earned: (s: LearnerStats) => s.hoursMet },
   { id: "path-done", title: "Path finished", hint: "Finish every course on a learning path.", earned: (s: LearnerStats) => s.pathDone },
 ] as const;
 

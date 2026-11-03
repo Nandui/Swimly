@@ -4,19 +4,17 @@ import { isolatedPrisma } from "@/test/pglite-prisma";
 import { serverModule } from "@/test/server-module";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import {
-  cleanObservation, hoursInWords, hoursProgress, observationPasses, observeSteps, pathProgress, practiseList, readClock, readObservationRecord, wallClockInstant, windowStart,
+  cleanObservation, observationPasses, observeSteps, pathProgress, practiseList, readClock, readObservationRecord, wallClockInstant,
 } from "../shared/on-the-job";
 
 /** Skills on the job (e-learning phase 5): practical
- *  checklists, learning paths, sessions with a register, and in-service
- *  hours. Pure rules first, then against a real in-memory Postgres. */
+ *  checklists, learning paths and sessions with a register (in-service hours
+ *  are Qualifications', D26). Pure rules first, then against a real in-memory Postgres. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let signOff: typeof import("../features/sign-off/server/actions");
 let paths: typeof import("../features/paths/server/actions");
 let sessions: typeof import("../features/sessions/server/actions");
 let sessionData: typeof import("../features/sessions/server/data");
-let hours: typeof import("../features/hours/server/actions");
-let hoursData: typeof import("../features/hours/server/data");
 let me: typeof import("../features/me/server/on-the-job");
 const ORG = "org_leisureworld";
 const state = { id: "maya", permissions: [] as string[] };
@@ -65,8 +63,6 @@ before(async () => {
   paths = serverModule("src/modules/training/features/paths/server/actions.ts", mods);
   sessions = serverModule("src/modules/training/features/sessions/server/actions.ts", mods);
   sessionData = serverModule("src/modules/training/features/sessions/server/data.ts", mods);
-  hours = serverModule("src/modules/training/features/hours/server/actions.ts", mods);
-  hoursData = serverModule("src/modules/training/features/hours/server/data.ts", mods);
   me = serverModule("src/modules/training/features/me/server/on-the-job.ts", mods);
 });
 after(async () => { await fixture?.close(); });
@@ -97,24 +93,6 @@ test("every step must be marked, a must-see step can't be skipped, and any 'not 
   assert.ok(!observationPasses(notYet));
   assert.equal(practiseList(notYet), "Scene safe (too slow)");
   assert.equal(readObservationRecord({ steps: [{ id: "a", text: "x", result: "bogus" }] })!.steps.length, 0, "stored records are not trusted");
-});
-
-test("hours count over a rolling window ending today", () => {
-  const on = new Date("2026-10-15T00:00:00Z");
-  assert.equal(iso(windowStart(on, 12)), "2025-10-15");
-  assert.equal(iso(windowStart(new Date("2026-03-31T00:00:00Z"), 1)), "2026-02-28");
-  const entries = [
-    { on: new Date("2025-10-14T00:00:00Z"), minutes: 600 }, // a day too old
-    { on: new Date("2025-10-15T00:00:00Z"), minutes: 60 },
-    { on: new Date("2026-10-15T00:00:00Z"), minutes: 90 },
-    { on: new Date("2026-10-16T00:00:00Z"), minutes: 600 }, // not yet
-  ];
-  const p = hoursProgress(entries, { hours: 20, windowMonths: 12 }, on);
-  assert.deepEqual({ minutes: p.minutes, needed: p.needed, met: p.met, percent: p.percent }, { minutes: 150, needed: 1200, met: false, percent: 12 });
-  assert.ok(hoursProgress([{ on, minutes: 1200 }], { hours: 20, windowMonths: 12 }, on).met);
-  assert.equal(hoursInWords(90), "1 h 30 min");
-  assert.equal(hoursInWords(45), "45 min");
-  assert.equal(hoursInWords(1200), "20 h");
 });
 
 test("a path shows each course done, open, overdue or missing", () => {
@@ -197,16 +175,15 @@ test("a path assigns each course not already done, due from the start date, and 
   assert.ok(!(await paths.savePath(null, { title: "Nope", summary: "", steps: [{ courseId: reading, dueDays: 0 }] })).ok, "building paths is the Author level");
 });
 
-test("a session's register gives hours to who came, completes its course and records the qualification", async () => {
+test("a session's register completes its course for who came and records the qualification, but logs no hours", async () => {
   const db = fixture.prisma;
   as("maya", ALL);
   const yesterday = dublinDay(new Date(Date.now() - 86_400_000));
-  await hours.saveHourTarget("qt-life", { hours: 20, windowMonths: 12 });
-  const saved = await sessions.saveSession(null, { title: "Synthetic in-service", courseId: practical, siteId: "site-b", date: yesterday, start: "18:00", minutes: 90, capacity: 1, hoursTypeId: "qt-life" });
+  const saved = await sessions.saveSession(null, { title: "Synthetic in-service", courseId: practical, siteId: "site-b", date: yesterday, start: "18:00", minutes: 90, capacity: 1 });
   assert.ok(saved.ok, saved.ok ? "" : saved.error);
   const id = saved.ok ? saved.id : "";
   assert.match((await sessions.addToSession(id, ["riley", "noah"]) as { error: string }).error, /Only 1 place/);
-  assert.ok((await sessions.saveSession(id, { title: "Synthetic in-service", courseId: practical, siteId: "site-b", date: yesterday, start: "18:00", minutes: 90, capacity: 2, hoursTypeId: "qt-life" })).ok);
+  assert.ok((await sessions.saveSession(id, { title: "Synthetic in-service", courseId: practical, siteId: "site-b", date: yesterday, start: "18:00", minutes: 90, capacity: 2 })).ok);
   assert.deepEqual(await sessions.addToSession(id, ["riley", "noah"]), { ok: true, added: 2 });
   assert.ok(!(await sessions.closeRegister(id)).ok, "everyone must be marked first");
 
@@ -217,8 +194,7 @@ test("a session's register gives hours to who came, completes its course and rec
   assert.ok(!(await sessions.removeFromSession(noah.id)).ok, "someone on the register isn't just taken off");
 
   assert.deepEqual(await sessions.closeRegister(id), { ok: true, attended: 1 });
-  const credited = await db.trainingHours.findMany({ where: { sessionId: id } });
-  assert.deepEqual(credited.map((h) => [h.userId, h.minutes, h.typeId]), [["riley", 90, "qt-life"]]);
+  assert.equal(await db.trainingHours.count(), 0, "hours are logged in Qualifications (D26)");
   const done = await db.trainingAssignment.findFirstOrThrow({ where: { userId: "riley", courseId: practical } });
   assert.equal(done.status, "COMPLETED");
   assert.ok(await db.qualification.findFirst({ where: { userId: "riley", typeId: "qt-life" } }));
@@ -230,37 +206,12 @@ test("a session's register gives hours to who came, completes its course and rec
   assert.equal(detail!.session.open, false);
 });
 
-test("hours are logged for others, never yourself, count against the target and can be taken off", async () => {
-  const db = fixture.prisma;
-  as("maya", ALL);
-  assert.ok(!(await hours.logHours(["maya"], { on: dublinDay(new Date()), minutes: 60, topic: "Drill" })).ok);
-  assert.ok(!(await hours.logHours(["riley"], { on: "2099-01-01", minutes: 60, topic: "Drill" })).ok, "not for a day to come");
-  const logged = await hours.logHours(["riley"], { typeId: "qt-life", on: dublinDay(new Date()), minutes: 60, topic: "Synthetic deep-end drill" });
-  assert.deepEqual(logged, { ok: true, logged: 1 });
-
-  const overview = await hoursData.hoursOverview();
-  const target = overview.summaries.find((s) => s.typeId === "qt-life")!;
-  const rileyRow = target.rows.find((r) => r.userId === "riley")!;
-  assert.equal(rileyRow.minutes, 150, "90 from the session and 60 logged");
-  assert.ok(target.rows.some((r) => r.userId === "ava"), "ava holds it from her sign-off");
-
-  const entry = await db.trainingHours.findFirstOrThrow({ where: { userId: "riley", sessionId: null } });
-  assert.ok(!(await hours.removeHours(entry.id, "")).ok, "a reason is needed");
-  assert.ok((await hours.removeHours(entry.id, "Logged twice")).ok);
-  assert.ok((await db.trainingHours.findUniqueOrThrow({ where: { id: entry.id } })).removedAt);
-
-  as("noah", ["training.records.read"]);
-  assert.ok(!(await hours.saveHourTarget("qt-life", { hours: 5, windowMonths: 12 })).ok);
-  assert.ok(!(await hours.logHours(["riley"], { on: dublinDay(new Date()), minutes: 60, topic: "Drill" })).ok);
-});
-
-test("Turnfin Me shows a person their own paths, sessions, hours and practical", async () => {
-  const plan = await me.myPlan("riley", ORG);
+test("Turnfin Me shows a person their own paths, sessions and practical", async () => {
+  const plan = await me.myPlan("riley");
   assert.equal(plan.paths.length, 1);
   assert.equal(plan.paths[0].done, 1);
   assert.equal(plan.sessions[0].status, "ATTENDED");
   assert.equal(plan.sessions[0].site, "Bishopstown");
-  assert.equal(plan.hours.progress[0].minutes, 90);
   const ava = await fixture.prisma.trainingAssignment.findFirstOrThrow({ where: { userId: "ava", courseId: practical } });
   const mine = await me.myPractical("ava", ava.id);
   assert.equal(mine!.steps.length, 2);

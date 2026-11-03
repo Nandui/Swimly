@@ -2,16 +2,16 @@ import "server-only";
 import { organisationChart } from "@/lib/directory";
 import { prisma } from "@/lib/prisma";
 import { readObservation, readObservationRecord } from "@/modules/training/shared/on-the-job";
-import { hoursOf, pathsOf, sessionsOf } from "@/modules/training/shared/on-the-job-reads";
+import { pathsOf, sessionsOf } from "@/modules/training/shared/on-the-job-reads";
 
 /** The signed-in person's own skills on the job (phase 5), for Turnfin Me:
- *  their learning paths, sessions and in-service hours, and what a trainer
- *  watches for on their practical. Only ever their own records. */
+ *  their learning paths and sessions, and what a trainer watches for on their
+ *  practical. Only ever their own records. Their hours are Qualifications' (D26). */
 
-export async function myPlan(userId: string, orgId: string | null) {
-  const [paths, sessions, hours, chart] = await Promise.all([pathsOf(userId), sessionsOf(userId), hoursOf(userId, orgId), organisationChart()]);
+export async function myPlan(userId: string) {
+  const [paths, sessions, chart] = await Promise.all([pathsOf(userId), sessionsOf(userId), organisationChart()]);
   const site = new Map(chart.sites.map((s) => [s.id, s.name]));
-  return { paths, hours, sessions: sessions.map((s) => ({ ...s, site: s.siteId ? site.get(s.siteId) ?? null : null })) };
+  return { paths, sessions: sessions.map((s) => ({ ...s, site: s.siteId ? site.get(s.siteId) ?? null : null })) };
 }
 
 /** A practical course's checklist and the last time a trainer marked it, for

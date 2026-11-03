@@ -6,6 +6,7 @@ import "@/modules/activities/module";
 import "@/modules/finance-requests/module";
 import "@/modules/docs/module";
 import "@/modules/training/module";
+import "@/modules/qualifications/module";
 import "@/modules/rota/module";
 import "@/modules/plan/module";
 import "@/modules/purchasing/module";

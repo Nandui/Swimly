@@ -28,6 +28,8 @@ const otherModules = {
   docs: moduleArea("docs", "src/app/api/docs/**"),
   "finance-requests": moduleArea("finance-requests", "src/app/(finance-requests)/**", "src/app/api/refunds/**"),
   training: moduleArea("training", "src/app/api/cron/training/**"),
+  // Its pages are at /staff-qualifications: Admin's list of qualification types keeps /qualifications.
+  qualifications: moduleArea("qualifications", "src/app/staff-qualifications/**"),
   hr: moduleArea("hr"),
   rota: moduleArea("rota"),
   plan: moduleArea("plan"),
@@ -117,6 +119,7 @@ const coreThroughFunctions = {
   payments: [],
   hr: [],
   training: ["grantsType", "organisation", "user"],
+  qualifications: [],
   rota: ["department", "organisation", "requiredType", "site", "type", "user"],
   plan: [],
 };

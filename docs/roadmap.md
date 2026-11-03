@@ -18,6 +18,7 @@ What is being built for 2.0, in order, and how each step is known to be done. Th
 | 6 | Events between apps | no | |
 | 7 | New apps | yes | yes: each new app |
 | 8 | Fewer front-of-house apps | yes | yes: each data copy and table drop |
+| 9 | Training sets up learning; Qualifications keeps qualifications | yes | yes: the rules change on Production |
 
 Step 1 comes first, because nothing else is safe without it. Step 5 can start as soon as step 1 is done and the design is approved, and runs alongside steps 2 to 4.
 
@@ -98,6 +99,15 @@ Swim school, Short courses, Refunds, Coinage and Payments become **Classes**, **
 Every copy is a script, dry-run until `--confirm`, run on Production only with the owner's yes. Old tables stop receiving rows and stay readable; each is dropped a month later, with the owner's yes. A merged app that has not been re-themed yet (step 5) gets the 2.0 design in its merge, so nothing is designed twice.
 
 **Done when** reception works in two apps, Classes and Finance requests; Payments, Refunds, Coinage and Short courses are gone from the catalogue; and finance decides requests without any swimmer level.
+
+## 9. Training sets up learning; Qualifications keeps qualifications
+
+Training stops tracking compliance; a new app, Qualifications, keeps it ([D26](decisions.md)). Two releases, the second only after the first has run on `main`:
+
+1. **Qualifications** (built 3 November 2026). Certificates to check, Expiring and In-service hours move from Training into the new app at `/staff-qualifications`, with its own home items; old Training links redirect. Each expiring row has **Assign the course**, through the `registerQualificationRenewals` plug Training provides. Training's Manage counts as Keep and the app follows Training's switch until it has its own. The hours tables move to `qualifications.prisma` with their names (no migration); session registers stop logging hours, and Turnfin Me reads a person's hours from Qualifications.
+2. **Training cut down.** A course is sections of steps, with live session and trainer sign-off as kinds of step. Assigning is by hand (people, a job or a site, an optional due date) or on joining a job, never repeating. **Progress** per course and per person replaces Matrix and Reports. Each rule becomes "assign on joining this job" by a script, dry-run until `--confirm`; repeats and the old expiry and due-again dates stop being read, done dates stay, and the 05:30 job stops assigning "due again". Completion certificates and Check a certificate go: Turnfin Me's certificate endpoint answers "not available" first, and is removed a release later.
+
+**Done when** Qualifications keeps every certificate check, expiry and hour with nothing lost, Training has no expiry, certificate or compliance page, and a course finished in Turnfin Me adds its qualification for Qualifications to track.
 
 ## Decisions the owner still holds
 

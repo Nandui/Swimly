@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { readOutline, type Outline } from "@/modules/training/shared/lessons";
 import { cleanAnswer, isCorrect, learnerQuestion, seeded, shuffle, type Question } from "@/modules/training/shared/questions";
 import { badgesFor, nextCard, REFRESHER_DAILY, streakOf } from "@/modules/training/shared/learner";
-import { hoursOf, pathsOf } from "@/modules/training/shared/on-the-job-reads";
+import { pathsOf } from "@/modules/training/shared/on-the-job-reads";
 import type { Db } from "@/modules/training/features/me/server/course";
 
 /** Daily two-minute refreshers, streaks and badges (e-learning phase 6), for
@@ -87,11 +87,11 @@ async function learningDays(userId: string, on: string) {
 }
 
 /** Today's refresher, the streak and every badge with whether it is earned. */
-export async function myRefresher(userId: string, orgId: string | null) {
+export async function myRefresher(userId: string) {
   const on = today();
   const day = await dayRow(userId, on);
   const answered = day?.answered ?? 0;
-  const [picks, days, stats] = await Promise.all([todaysPicks(userId, on, REFRESHER_DAILY - answered), learningDays(userId, on), learnerStats(userId, orgId)]);
+  const [picks, days, stats] = await Promise.all([todaysPicks(userId, on, REFRESHER_DAILY - answered), learningDays(userId, on), learnerStats(userId)]);
   const streak = streakOf(days, on);
   return {
     on, goal: REFRESHER_DAILY, answered, correct: day?.correct ?? 0, streak: { current: streak.current, best: Math.max(streak.best, 0), today: streak.today },
@@ -154,12 +154,11 @@ export async function answerRefresher(userId: string, ref: { cardId?: string; as
 const daysBetween = (from: string, to: string) => Math.round((parseDateOnly(to).getTime() - parseDateOnly(from).getTime()) / 86_400_000);
 
 /** What the badges are worked out from. */
-async function learnerStats(userId: string, orgId: string | null) {
-  const [done, attempts, answers, hours, paths] = await Promise.all([
+async function learnerStats(userId: string) {
+  const [done, attempts, answers, paths] = await Promise.all([
     prisma.trainingAssignment.count({ where: { userId, status: "COMPLETED" } }),
     prisma.trainingExamAttempt.findMany({ where: { assignment: { userId }, submittedAt: { not: null } }, select: { number: true, passed: true, percent: true } }),
     prisma.trainingRefresherDay.aggregate({ where: { userId }, _sum: { answered: true } }),
-    hoursOf(userId, orgId),
     pathsOf(userId),
   ]);
   return {
@@ -167,7 +166,6 @@ async function learnerStats(userId: string, orgId: string | null) {
     perfectExam: attempts.some((a) => a.passed && a.percent === 100),
     firstTimePass: attempts.some((a) => a.passed && a.number === 1),
     refresherAnswers: answers._sum.answered ?? 0,
-    hoursMet: hours.progress.some((h) => h.met),
     pathDone: paths.some((p) => !!p.finishedOn),
   };
 }

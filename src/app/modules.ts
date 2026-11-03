@@ -13,6 +13,7 @@ import { siteMonitoringModule } from "@/modules/site-monitoring/manifest";
 import { stockModule } from "@/modules/stock/manifest";
 import { tasksModule } from "@/modules/tasks/manifest";
 import { trainingModule } from "@/modules/training/manifest";
+import { qualificationsModule } from "@/modules/qualifications/manifest";
 
 /** The one list of Turnfin's modules (AGENTS.md, The app contract). Core's registry
  *  (src/modules/registry.ts) builds menus, the home page and the role editor
@@ -28,6 +29,7 @@ export const modules = [
   rotaModule,
   planModule,
   trainingModule,
+  qualificationsModule,
   academyModule,
   docsModule,
   hrModule,

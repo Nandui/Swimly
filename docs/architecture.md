@@ -22,7 +22,7 @@ flowchart TB
     subgraph Apps["Apps (src/modules/&lt;id&gt;)"]
       a1["Classes · Pool deck · Analytics"]
       a2["Finance requests · Academy"]
-      a3["Tasks · Incidents · Rota · Training"]
+      a3["Tasks · Incidents · Rota · Training · Qualifications"]
       a4["Docs · HR · CCTV log · Site Monitoring · Maintenance"]
       a5["Purchasing · Stock · next app"]
     end
@@ -110,6 +110,7 @@ An app must keep working when any other app is switched off: a missing front doo
 | `registerAppCourses` | the short courses the parent app offers |
 | `registerEmailBookings` | the places another app holds under a customer's email, for "My bookings" on the Academy booking site (the swim school's short courses, D24) |
 | `registerSearch` | what an app can be searched for, for the one search ([The frame](#the-frame)) |
+| `registerQualificationRenewals` | the course that renews a qualification and assigning it (Training), for Qualifications' expiring list ([D26](decisions.md)) |
 
 Every registration names its `app` (the manifest id), so a switched-off app's plugs answer "not available". A plug that fails is named on the page, never fatal. Other seams: **session hooks** (`src/modules/session-hooks.ts`, per-request work such as applying due scheduled unenrolments) and **links** by URL.
 
@@ -142,7 +143,7 @@ Where an app is off, here is what happens and where:
 | --- | --- |
 | pages ("not found"), actions, session API routes | `auth()` applies the switches at the working site: the session lists `appsOff`, and their permissions leave the flat permissions, each site's grant and what an administrator or superadmin expands to (`permissionsOf`, the policy engine). Each permission belongs to exactly one app |
 | menu entry and Home items | `modulesFor` leaves out `appsOff`; Home asks only the apps it shows |
-| plugs | `src/modules/contributions.ts` skips a plug whose app is off where the question is about: site summaries per site, commitments and desk measures by their site, planning refused, member directory and parents app's courses `null`, member history and person-file sections left out |
+| plugs | `src/modules/contributions.ts` skips a plug whose app is off where the question is about: site summaries per site, commitments and desk measures by their site, planning refused, member directory, parents app's courses and qualification renewals `null`, member history and person-file sections left out |
 | event listeners | `announce` skips a listener whose app is off at the payload's `siteId` |
 | front doors | the composition roots that call them (Turnfin Me's API, `session-hooks.ts`) ask first and answer "not available" |
 | API routes | each app's route file wraps its handlers in `appRoute(appId, …)`: `404 NOT_AVAILABLE` while the app is off everywhere |
@@ -203,7 +204,7 @@ Only a superadmin makes another; the last active superadmin cannot be removed. T
 **One person record and one organisation chart**, which apps read only through `src/lib/directory.ts`:
 - `Organisation` (the operator). Every new table carries `orgId`, so Turnfin can serve other operators without a rewrite.
 - Sites are `Club` rows. `Department` (optionally tied to a site) and `UserDepartment` (with a main one). `User.managerId` is the reporting line (loops refused).
-- `QualificationType` and `Qualification`: Training writes them, Rota reads them, Turnfin Me shows each person theirs.
+- `QualificationType` and `Qualification`: Qualifications checks and records them, Training and the Academy add the ones their courses give, Rota reads them, Turnfin Me shows each person theirs.
 
 **Signing in** (`src/auth.ts`, `src/lib/google-sign-in.ts`): email and password, and Sign in with Google where `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` are set.
 - Google matches `User.googleId` first, then the Google-verified email; an unverified email is never used.

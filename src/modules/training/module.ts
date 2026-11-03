@@ -1,20 +1,24 @@
 import "server-only";
 import { expandPermissions } from "@/lib/staff/permissions";
-import { registerHomeCard, registerPersonFileSection, registerSubjectRecords, type HomeItem } from "@/modules/contributions";
-import { certificateQueue } from "@/modules/training/features/certificates/server/queue";
-import { expiringQualifications } from "@/modules/training/features/expiring/server/data";
+import { registerHomeCard, registerPersonFileSection, registerQualificationRenewals, registerSubjectRecords, type HomeItem } from "@/modules/contributions";
+import { assignTraining } from "@/modules/training/features/assignments/server/actions";
+import { renewalCourses } from "@/modules/training/features/assignments/server/renewal";
 import { trainingFile, trainingLearnerRecords, trainingOnTheJobRecords, trainingRecords } from "@/modules/training/features/person-file/server/file";
 import { registersToClose } from "@/modules/training/features/sessions/server/data";
 import { signoffCount } from "@/modules/training/features/sign-off/server/data";
 
 /** Training's registration plug (AGENTS.md, The app contract), loaded by
- *  src/modules/server.ts: its home card, its part of a person's file and its
- *  records for HR's subject export. Its menu entry, levels and permissions are in manifest.ts. */
+ *  src/modules/server.ts: its home card, its part of a person's file, its
+ *  records for HR's subject export and the course that renews a qualification. Its menu entry, levels and permissions are in manifest.ts. */
 
 registerPersonFileSection({ id: "training.open", app: "training", heading: "Training", load: trainingFile });
 registerSubjectRecords({ key: "training", load: trainingRecords });
 registerSubjectRecords({ key: "trainingOnTheJob", load: trainingOnTheJobRecords });
 registerSubjectRecords({ key: "trainingLearner", load: trainingLearnerRecords });
+
+/** The course that renews a qualification, for Qualifications' expiring list (D26). Assigning goes
+ *  through Training's own assign, which checks `training.assign` for the person. */
+registerQualificationRenewals({ app: "training", find: renewalCourses, assign: (courseId, userId, dueOn) => assignTraining(courseId, [userId], dueOn) });
 
 /** Training on the home page, for trainers and training managers. Everyone
  *  completes their own training in Turnfin Me. */
@@ -28,11 +32,6 @@ registerHomeCard({
       items.push({ label: "Practical sign-offs", hint: "Confirm skills shown in person", href: "/training/sign-off", count: waiting, attention: waiting > 0 });
       const registers = await registersToClose();
       if (registers) items.push({ label: "Registers to close", hint: "Sessions that have started", href: "/training/sessions", count: registers, attention: true });
-    }
-    if (held.has("qualifications.manage")) {
-      const [pending, expiring] = await Promise.all([certificateQueue("PENDING"), expiringQualifications()]);
-      items.push({ label: "Certificates to check", hint: "Uploaded in Turnfin Me", href: "/training/certificates", count: pending.rows.length, attention: pending.rows.length > 0 });
-      items.push({ label: "Qualifications expiring", hint: "Expired or due soon", href: "/training/expiring", count: expiring.rows.length, attention: expiring.rows.length > 0 });
     }
     return items;
   },

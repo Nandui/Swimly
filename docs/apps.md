@@ -114,9 +114,22 @@ Training for the people you cover: what is due, waiting for sign-off and done. P
 | --- | --- |
 | Trainer | sign off practical training at their sites |
 | Author | also build and publish courses |
-| Manage | also assign courses and check certificates |
+| Manage | also assign courses |
 
-Connects: writes qualifications; person file, subject records, Turnfin Me.
+Connects: adds the qualification a finished course gives; the course that renews a qualification, for Qualifications' expiring list; person file, subject records, Turnfin Me. Being cut down to setting up learning only ([D26](decisions.md), roadmap step 9).
+
+### Qualifications
+*Module `qualifications` · `/staff-qualifications/overview` · reach: sites · data: `qualifications.prisma` (in-service hours); the qualifications themselves are the platform's*
+
+Staff qualifications for the people you cover: certificates uploaded in Turnfin Me to check, what is expiring, and in-service hours ([D26](decisions.md)).
+
+| Level | Gives |
+| --- | --- |
+| Keep | check and record certificates, see what is expiring and assign the course that renews it (with Training's Manage for that person), log in-service hours and set what each qualification needs, for people at their sites |
+
+Training's Manage counts as Keep. Nobody checks or logs their own.
+
+Connects: reads and records the platform's qualifications; asks Training, through a plug, which course renews a qualification and to assign it; Turnfin Me's hours; subject records.
 
 ### Academy
 *Module `academy` · `/academy/overview` · reach: sites · data: `academy.prisma`*

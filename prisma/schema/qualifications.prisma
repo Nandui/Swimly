@@ -1,0 +1,40 @@
+// Qualifications (main database). Its tables keep the names they had in
+// Training, so moving them here (D26) needed no migration.
+
+/// In-service hours, logged in Qualifications. Rows from before D26 may come
+/// from a Training session's register (sessionId). Never deleted: removing one
+/// stamps removedAt.
+model TrainingHours {
+  id             String    @id @default(cuid())
+  orgId          String
+  userId         String
+  typeId         String?
+  on             DateTime  @db.Date
+  minutes        Int
+  topic          String
+  sessionId      String?
+  recordedById   String?
+  recordedByName String
+  createdAt      DateTime  @default(now())
+  removedAt      DateTime?
+  removedByName  String?
+
+  session TrainingSession? @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+
+  @@index([userId, on])
+  @@index([orgId, typeId])
+  @@map("training_hours")
+}
+
+/// How many in-service hours a qualification needs over how many months.
+model TrainingHourTarget {
+  id           String   @id @default(cuid())
+  orgId        String
+  typeId       String   @unique
+  hours        Int
+  windowMonths Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("training_hour_targets")
+}

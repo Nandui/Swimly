@@ -87,10 +87,10 @@ test("a streak runs to today, or to yesterday while today is still open, and the
 });
 
 test("badges are worked out from the record", () => {
-  const none = badgesFor({ coursesDone: 0, perfectExam: false, firstTimePass: false, bestStreak: 0, refresherAnswers: 0, hoursMet: false, pathDone: false });
+  const none = badgesFor({ coursesDone: 0, perfectExam: false, firstTimePass: false, bestStreak: 0, refresherAnswers: 0, pathDone: false });
   assert.ok(none.every((b) => !b.earned));
-  const some = badgesFor({ coursesDone: 5, perfectExam: true, firstTimePass: false, bestStreak: 7, refresherAnswers: 50, hoursMet: true, pathDone: false });
-  assert.deepEqual(some.filter((b) => b.earned).map((b) => b.id), ["first-course", "five-courses", "full-marks", "streak-3", "streak-7", "refresher-50", "hours-met"]);
+  const some = badgesFor({ coursesDone: 5, perfectExam: true, firstTimePass: false, bestStreak: 7, refresherAnswers: 50, pathDone: false });
+  assert.deepEqual(some.filter((b) => b.earned).map((b) => b.id), ["first-course", "five-courses", "full-marks", "streak-3", "streak-7", "refresher-50"]);
 });
 
 test("search needs every word, ranks the title higher and shows the text around the match", () => {
@@ -135,10 +135,10 @@ test("a missed practice question comes back in the refresher, and moves on when 
   const card = await fixture.prisma.trainingRefresherCard.findFirstOrThrow({ where: { userId: "ava", questionId: "q1" } });
   assert.equal(card.box, 1);
   // Not due until tomorrow.
-  assert.equal((await refresher.myRefresher("ava", ORG)).questions.length, 0);
+  assert.equal((await refresher.myRefresher("ava")).questions.length, 0);
   assert.equal(await refresher.refresherWaiting("ava"), 0, "nothing waiting on Me's home yet");
   await fixture.prisma.trainingRefresherCard.update({ where: { id: card.id }, data: { dueOn: new Date("2026-01-01") } });
-  const today = await refresher.myRefresher("ava", ORG);
+  const today = await refresher.myRefresher("ava");
   assert.deepEqual(today.questions.map((q) => q.questionId), ["q1"]);
   assert.equal(await refresher.refresherWaiting("ava"), 1);
   assert.equal(await refresher.refresherWaiting("noah"), 0, "never another person's card");
@@ -150,7 +150,7 @@ test("a missed practice question comes back in the refresher, and moves on when 
   // Once a day only.
   assert.deepEqual(await refresher.answerRefresher("ava", { cardId: card.id }, "a"), { done: true });
   assert.equal((await refresher.answerRefresher("noah", { cardId: card.id }, "a")), null);
-  const after = await refresher.myRefresher("ava", ORG);
+  const after = await refresher.myRefresher("ava");
   assert.equal(after.answered, 1);
   assert.equal(after.streak.current, 1);
   assert.equal(after.questions.length, 0);
@@ -205,13 +205,13 @@ test("the catalogue shows only open, published courses, and enrolling assigns on
 });
 
 test("my record lists every course with its best exam score, and badges count it", async () => {
-  const mine = await record.myRecord("ava", ORG);
+  const mine = await record.myRecord("ava");
   const chem = mine.courses.find((c) => c.id === open)!;
   assert.equal(chem.state, "completed");
   assert.deepEqual(chem.exam, { attempts: 2, best: 50, passed: true });
   assert.equal(chem.version, 1);
   assert.ok(mine.courses.some((c) => c.id === done));
-  const today = await refresher.myRefresher("ava", ORG);
+  const today = await refresher.myRefresher("ava");
   const earned = today.badges.filter((b) => b.earned).map((b) => b.id);
   assert.ok(earned.includes("first-course") && !earned.includes("first-time"));
 });

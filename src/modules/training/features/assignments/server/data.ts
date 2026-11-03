@@ -10,7 +10,7 @@ import { requireCapFor, subjectsFor } from "@/lib/policy/session";
 import { qualificationsOf } from "@/lib/qualifications";
 import { requireTrainingActor } from "@/modules/training/shared/access";
 import { OPEN_TRAINING_STATUSES, trainingState } from "@/modules/training/shared/constants";
-import { expiringQualificationRows, people } from "@/modules/training/shared/data";
+import { people } from "@/modules/training/shared/data";
 import { readExam } from "@/modules/training/shared/questions";
 import { readObservationRecord } from "@/modules/training/shared/on-the-job";
 
@@ -48,7 +48,7 @@ export async function trainingOverview(input: { view?: string; course?: string; 
     ...(input.course ? { courseId: input.course } : {}),
     ...(q ? { AND: [{ userId: { in: await staffIdsNamed(who.orgId, q) } }] } : {}),
   };
-  const [rows, total, overdue, submitted, completed, expiring, courses] = await Promise.all([
+  const [rows, total, overdue, submitted, completed, courses] = await Promise.all([
     prisma.trainingAssignment.findMany({
       where, take: 100,
       orderBy: view === "completed" ? [{ completedAt: "desc" }] : [{ dueOn: { sort: "asc", nulls: "last" } }, { assignedAt: "asc" }],
@@ -61,12 +61,11 @@ export async function trainingOverview(input: { view?: string; course?: string; 
     prisma.trainingAssignment.count({ where: { ...scope, status: "ASSIGNED", dueOn: { lt: parseDateOnly(on) } } }),
     prisma.trainingAssignment.count({ where: { ...scope, status: "SUBMITTED" } }),
     prisma.trainingAssignment.count({ where: { ...scope, status: "COMPLETED", completedAt: { gte: since } } }),
-    expiringQualificationRows(who.orgId, reach, on).then((r) => r.length),
     prisma.trainingCourse.findMany({ where: { orgId: who.orgId ?? undefined }, orderBy: { title: "asc" }, select: { id: true, title: true, archivedAt: true } }),
   ]);
   return {
     who, view, courses, total,
-    counts: { overdue, submitted, completed, expiring },
+    counts: { overdue, submitted, completed },
     rows: rows.map((row) => ({ ...row, state: trainingState(row, on) })),
   };
 }
