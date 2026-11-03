@@ -26,28 +26,43 @@ const COLUMNS = {
   club: "club name", name: "contact name", amount: "amount", reference: "reference",
   returnCode: "return code", returnReason: "return description", memberNumber: "membership number", message: "message",
 } as const;
-const REQUIRED = ["club", "amount", "reference"] as const;
+/** The bank's sheet has Club Name, Amount and Reference. The short sheet (owner, 3 November 2026,
+ *  "Failed DDs Oct.xlsx") has only Contact Name, Amount, Return Description and Membership Number,
+ *  a tab per site: its tab is the club, its member number the reference, and its return code is
+ *  read from the description. */
+const FORMATS = [["club", "amount", "reference"], ["amount", "memberNumber"]] as const;
+
+/** The return code a description means, for a sheet without the Return Code column: the bank's
+ *  words for its codes, without case, spaces or punctuation. Others stay without a code. */
+const CODE_FOR_REASON: Record<string, string> = {
+  insufficientfunds: "AM04", nomandate: "MD01", accountblocked: "AC06", accountclosed: "AC04",
+  transactionforbidden: "AG01", byorderofthebeneficiaryreasonnotspecified: "MS02", unspecifiedreason: "MS03",
+};
+const reasonKey = (reason: string) => reason.toLowerCase().replace(/[^a-z]/g, "");
 
 const cell = (value: unknown) => (value === null || value === undefined ? "" : String(value).trim());
 const heading = (value: unknown) => cell(value).toLowerCase().replace(/\s+/g, " ");
 
 /** The failed debits on every sheet of the workbook, every row kept: each tab lists different
- *  debits. A sheet without the headings is skipped (a notes tab); rows without a reference are the
- *  totals under the list and are skipped too. */
+ *  debits. A sheet without either format's headings is skipped (a notes tab); rows without a
+ *  reference (on the short sheet, a member number) are the totals under the list and are skipped
+ *  too. */
 export function parseFailureSheets(sheets: { sheet: string; data: unknown[][] }[]): SheetRow[] {
   const out: SheetRow[] = [];
   const copies = new Map<string, number>();
   let found = false;
   for (const { sheet, data } of sheets) {
-    const head = data.findIndex((row) => REQUIRED.every((k) => row.some((c) => heading(c) === COLUMNS[k])));
+    const head = data.findIndex((row) => FORMATS.some((format) => format.every((k) => row.some((c) => heading(c) === COLUMNS[k]))));
     if (head < 0) continue;
     found = true;
     const at = Object.fromEntries(Object.entries(COLUMNS).map(([k, label]) => [k, data[head].findIndex((c) => heading(c) === label)])) as Record<keyof typeof COLUMNS, number>;
     const get = (row: unknown[], k: keyof typeof COLUMNS) => (at[k] < 0 ? "" : cell(row[at[k]]));
     for (let i = head + 1; i < data.length; i++) {
       const row = data[i];
-      const reference = get(row, "reference");
-      if (!reference || !get(row, "club")) continue;
+      const memberNumber = get(row, "memberNumber").replace(/\s+/g, "").toUpperCase();
+      const reference = at.reference < 0 ? memberNumber : get(row, "reference");
+      const club = at.club < 0 ? sheet : get(row, "club");
+      if (!reference || !club) continue;
       const amount = Number(get(row, "amount").replace(/[€,\s]/g, ""));
       if (!Number.isFinite(amount) || amount <= 0) throw new PaymentError(`Row ${i + 1} on ${sheet} (${reference}) has no amount. Check the sheet and upload it again.`);
       const message = get(row, "message");
@@ -56,13 +71,13 @@ export function parseFailureSheets(sheets: { sheet: string; data: unknown[][] }[
       const copy = (copies.get(`${reference}|${amountCents}`) ?? 0) + 1;
       copies.set(`${reference}|${amountCents}`, copy);
       out.push({
-        line: i + 1, sheet, club: get(row, "club"), name: get(row, "name") || "Name not given", amountCents, reference, copy,
-        returnCode: get(row, "returnCode").toUpperCase(), returnReason: [reason, message && message !== reason ? message : ""].filter(Boolean).join(". "),
-        memberNumber: get(row, "memberNumber").replace(/\s+/g, "").toUpperCase(),
+        line: i + 1, sheet, club, name: get(row, "name") || "Name not given", amountCents, reference, copy,
+        returnCode: at.returnCode < 0 ? CODE_FOR_REASON[reasonKey(reason)] ?? "" : get(row, "returnCode").toUpperCase(),
+        returnReason: [reason, message && message !== reason ? message : ""].filter(Boolean).join(". "), memberNumber,
       });
     }
   }
-  if (!found) throw new PaymentError("This doesn't look like the failure sheet: no tab has the Club Name, Amount and Reference columns.");
+  if (!found) throw new PaymentError("This doesn't look like the failure sheet: no tab has the Club Name, Amount and Reference columns, or Amount and Membership Number.");
   return out;
 }
 

@@ -71,7 +71,7 @@ export function UploadForm({ today }: { today: string }) {
 
   return (
     <div className="flex max-w-2xl min-w-0 flex-col gap-6">
-      <FileField id="payments-sheet" label="Failure sheet" description="The .xlsx the bank sends each month, with a tab per site."
+      <FileField id="payments-sheet" label="Failure sheet" description="The .xlsx the bank sends each month, or the short Failed DDs sheet, with a tab per site."
         accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" pending={checking} pendingLabel="Reading the sheet…"
         onChange={(e) => choose(e.target.files?.[0] ?? null)} />
       <Field label="Month collected" htmlFor="payments-month" hint="Read from the file’s name when it has one. Change it if it is wrong.">

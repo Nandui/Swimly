@@ -32,6 +32,21 @@ test("the sheet: every row is a debit, amounts in cents, totals and blank rows l
   assert.equal(rows[0].club, "LW Churchfield");
 });
 
+test("the short sheet: its tab is the club, its member number the reference, and its code comes from the description", () => {
+  const SHORT = ["Contact Name", "Amount", "Return Description", "Membership Number"];
+  const rows = parseFailureSheets([
+    { sheet: "CF", data: [SHORT, [null, null, null, null], ["Synthetic Parent", 108, "No Mandate", "lwc 1001"], ["Example Person", 54, "Insufficient Funds", "LWB2002"]] },
+    { sheet: "BT", data: [SHORT, ["Another Example", 46, "By order of the beneficiary - reason not specified", "LWB3003"],
+      ["Another Example", 46, "Something new", "LWB3003"], [null, 154, null, null]] },
+  ]);
+  assert.deepEqual(rows.map((r) => [r.club, r.reference, r.memberNumber, r.amountCents, r.copy]), [
+    ["CF", "LWC1001", "LWC1001", 10800, 1], ["CF", "LWB2002", "LWB2002", 5400, 1], ["BT", "LWB3003", "LWB3003", 4600, 1], ["BT", "LWB3003", "LWB3003", 4600, 2]]);
+  assert.deepEqual(rows.map((r) => r.returnCode), ["MD01", "AM04", "MS02", ""], "a description it doesn't know keeps no code");
+  assert.equal(rows[3].returnReason, "Something new");
+  const sites = [{ id: "b", name: "Bishopstown", code: "BT" }, { id: "c", name: "Churchfield", code: "CF" }];
+  assert.deepEqual(rows.map((r) => siteForClub(r.club, sites)?.id), ["c", "c", "b", "b"], "the tab is the site's code");
+});
+
 test("the sheet: a file without the columns, or a debit without an amount, is refused in words", () => {
   assert.throws(() => parseFailureSheets([{ sheet: "Data", data: [["Name", "Total"], ["x", 1]] }]), PaymentError);
   assert.throws(() => parseFailureSheets([{ sheet: "CF", data: [HEAD, debit("LW Churchfield", "Synthetic", 0, "A/1", "AM04", "", "1")] }]), /Row 2 on CF/);
