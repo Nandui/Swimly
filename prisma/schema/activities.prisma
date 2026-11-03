@@ -920,6 +920,11 @@ model PaymentFailure {
   status        String                @default("to_contact")
   attempts      Int                   @default(0)
   lastContactAt DateTime?
+  /// The warning emails sent to the family, 0 to 3 (`shared/payments/emails.ts`), and when the first
+  /// and the latest went: the reminder and final notice fall due from the first.
+  emailsSent    Int                   @default(0)
+  firstEmailAt  DateTime?
+  lastEmailAt   DateTime?
   /// What the last close said.
   outcome       String                @default("")
   version       Int                   @default(1)

@@ -33,6 +33,7 @@ const workbook = (...rows: unknown[][]) => { sheet.current = [{ sheet: "CF", dat
 const file = (name = "Failed Lessons 09.xlsx") => new File([new Uint8Array([80, 75, 3, 4])], name);
 const form = (fields: Record<string, string | File>) => { const f = new FormData(); for (const [k, v] of Object.entries(fields)) f.set(k, v); return f; };
 
+const mailbox = { sent: [] as { to: string; subject: string }[], failing: false };
 const swimmer = (n: number, memberNumber: string) => [memberNumber, { id: `swimmer-${n}`, memberNumber, firstName: "Synthetic", lastName: `Swimmer ${n}`, dateOfBirth: null, active: true, contactName: "Synthetic Parent" }] as const;
 const swimmers = new Map([swimmer(1, "LWC1001"), swimmer(2, "LWC2002"), swimmer(3, "LWB3003"), swimmer(4, "X1"), swimmer(5, "LWC4004")]);
 const directory = {
@@ -63,6 +64,10 @@ before(async () => {
     "@/lib/clubs/current": { currentClubId: async () => churchfield, currentClubIdIfAny: async () => churchfield },
     "@/lib/xlsx": { readWorkbook: async () => sheet.current },
     "@/modules/contributions": { members: async () => directory },
+    "@/modules/activities/shared/parents/family-email": {
+      familyEmailText: (e: { before: string[]; after: string[] }) => [...e.before, ...e.after].join(" "),
+      sendFamilyEmail: async (to: string, subject: string) => { if (mailbox.failing) throw new Error("provider down"); mailbox.sent.push({ to, subject }); },
+    },
     "next/cache": { revalidatePath() {} },
     "server-only": {},
     react: { cache: <T,>(fn: T) => fn },
@@ -186,7 +191,7 @@ test("the lists, Home and the swimmer's notices show what is still open at the p
   assert.deepEqual(one.can, { follow: true, manage: false });
 
   const items = await home.paymentsHomeItems({ id: "lena", name: "lena", permissions: ["payments.follow"], anywhere: ["payments.follow"], isSuperadmin: false });
-  assert.deepEqual(items.map((i) => [i.label, i.count]), [["Failed payments to contact", 1], ["Failed payments waiting on the member", 1]]);
+  assert.deepEqual(items.map((i) => [i.label, i.count]), [["Payment emails ready to send", 2], ["Failed payments to contact", 1], ["Failed payments waiting on the member", 1]], "both linked to a swimmer, neither emailed yet");
 
   const notices = await data.memberPaymentNotices("swimmer-1");
   assert.equal(notices.length, 1);
@@ -254,4 +259,69 @@ test("Manage removes a wrong upload: its payments and their history go, and the 
   assert.equal((await upload.removeUpload(wrong.id)).ok, false, "a second press finds nothing");
   assert.deepEqual(await upload.uploadFailureSheet(form({ file: file("Wrong sheet 07.xlsx"), month: "2026-07", operationId: uuid() })), { ok: true, added: 2, month: "2026-07" },
     "the same sheet goes in again once its upload is removed");
+});
+
+test("reception sends the three warning emails in turn, each when due; only the live site emails, and a failed send records nothing", async () => {
+  const db = fixture.prisma;
+  manager();
+  workbook(["LW Churchfield", "Synthetic Parent", 54, "E/LWC1001", "AM04", "Insufficient Funds", "LWC1001", null]);
+  assert.equal((await upload.uploadFailureSheet(form({ file: file("Email test 06.xlsx"), month: "2026-06", operationId: uuid() }))).ok, true);
+  const id = (await failure("E/LWC1001")).id;
+  const send = async (step: 1 | 2 | 3) => { const row = await db.paymentFailure.findUniqueOrThrow({ where: { id } }); return steps.sendPaymentEmail({ id, operationId: uuid(), version: row.version, step }); };
+
+  reception();
+  let page = await data.getPaymentFailure(id);
+  assert.deepEqual([page.email?.step, page.email?.due, page.email?.to, page.email?.blocked], [1, true, "parent@example.invalid", null]);
+  assert.match(page.email?.subject ?? "", /payment didn't go through/);
+
+  // Not the live site: recorded, nothing emailed.
+  const before = process.env.VERCEL_ENV;
+  delete process.env.VERCEL_ENV;
+  assert.deepEqual(await send(1), { ok: true, id });
+  assert.equal(mailbox.sent.length, 0);
+  let row = await db.paymentFailure.findUniqueOrThrow({ where: { id } });
+  assert.deepEqual([row.emailsSent, row.status, row.attempts], [1, "contacted", 1]);
+  assert.ok(row.firstEmailAt);
+  assert.match((await db.paymentFailureEvent.findFirstOrThrow({ where: { failureId: id, action: "email" } })).note, /not sent/);
+
+  // The reminder waits 3 days after the first.
+  const tooSoon = await send(2);
+  assert.equal(tooSoon.ok, false);
+  assert.match(tooSoon.ok ? "" : tooSoon.error, /reminder is due on/);
+  await db.paymentFailure.update({ where: { id }, data: { firstEmailAt: new Date(Date.now() - 8 * 86_400_000) } });
+
+  process.env.VERCEL_ENV = "production";
+  try {
+    mailbox.failing = true;
+    const failed = await send(2);
+    assert.equal(failed.ok, false, "a send the provider refuses");
+    assert.equal((await db.paymentFailure.findUniqueOrThrow({ where: { id } })).emailsSent, 1, "records nothing");
+    mailbox.failing = false;
+    assert.deepEqual(await send(2), { ok: true, id });
+    assert.deepEqual(await send(3), { ok: true, id });
+    assert.deepEqual(mailbox.sent.map((m) => m.to), ["parent@example.invalid", "parent@example.invalid"]);
+    assert.match(mailbox.sent[1].subject, /^Final notice/);
+  } finally {
+    if (before === undefined) delete process.env.VERCEL_ENV; else process.env.VERCEL_ENV = before;
+  }
+  row = await db.paymentFailure.findUniqueOrThrow({ where: { id } });
+  assert.deepEqual([row.emailsSent, row.attempts], [3, 3]);
+  page = await data.getPaymentFailure(id);
+  assert.equal(page.email, null, "all three sent");
+  assert.equal((await send(3)).ok, false, "a fourth is refused");
+  assert.equal(await db.auditLog.count({ where: { entityId: id, action: "email" } }), 3);
+
+  // A payment whose swimmer has no email can't be emailed, and says why.
+  workbook(["LW Churchfield", "Example Person", 31, "E/LWC2002", "MD01", "No Mandate", "LWC2002", null]);
+  manager();
+  await upload.uploadFailureSheet(form({ file: file("Email test 05.xlsx"), month: "2026-05", operationId: uuid() }));
+  reception();
+  const original = directory.byIds;
+  directory.byIds = (async (ids: readonly string[]) => new Map([...(await original(ids))].map(([k, v]) => [k, { ...v, contactEmail: null }]))) as unknown as typeof original;
+  try {
+    const other = await data.getPaymentFailure((await failure("E/LWC2002")).id);
+    assert.match(other.email?.blocked ?? "", /no valid email address/);
+  } finally {
+    directory.byIds = original;
+  }
 });

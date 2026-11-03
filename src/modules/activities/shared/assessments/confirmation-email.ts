@@ -8,6 +8,7 @@ import { formatDay, formatTimeRange } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { readSharedCurriculum } from "@/modules/activities/shared/curriculum/data/shared";
 import { parentEmailConfig } from "@/modules/activities/shared/parents/email";
+import { familyEmailHtml, familyEmailText, type FamilyEmail } from "@/modules/activities/shared/parents/family-email";
 import { PARENT_EMAIL_LOGO_CID } from "@/modules/activities/shared/parents/sign-in-email";
 
 /** "Your assessment is booked": emailed to the family after any assessment
@@ -27,8 +28,6 @@ export type AssessmentConfirmation = {
   assessment: string; phone: string; bookedInApp: boolean;
 };
 
-const escape = (value: string) => value.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
-
 export function assessmentConfirmationEmail(d: AssessmentConfirmation) {
   const where = d.location ? `${d.site} (${d.location})` : d.site;
   const details: [string, string][] = [["Swimmer", d.child], ["Assessment", d.assessment], ["Day", d.day], ["Time", d.time], ["Where", where]];
@@ -38,68 +37,12 @@ export function assessmentConfirmationEmail(d: AssessmentConfirmation) {
     : `If you need to change or cancel, please contact reception at ${d.site}.`;
   const app = d.bookedInApp ? "You can also see this booking in the parents app under Bookings." : "";
   const lead = `${d.child}'s swimming assessment is booked. Here are the details.`;
-  const text = [lead, details.map(([k, v]) => `${k}: ${v}`).join("\r\n"), arrive, change, app, "See you at the pool,\r\nThe LeisureWorld Aquatics team"]
-    .filter(Boolean).join("\r\n\r\n");
-  const rows = details.map(([k, v]) => `<tr><td class="email-muted" style="padding:6px 16px 6px 0;color:#475569;font-size:14px;line-height:22px;vertical-align:top;white-space:nowrap;">${k}</td>` +
-    `<td class="email-copy" style="padding:6px 0;color:#111827;font-size:16px;line-height:22px;font-weight:600;">${escape(v)}</td></tr>`).join("\n");
-  const para = (line: string) => `<p class="email-copy" style="margin:0 0 16px;color:#111827;font-size:16px;line-height:25px;">${escape(line)}</p>`;
-  // Matches the parent sign-in email (sign-in-email.ts): email clients need
-  // inline styles and literal colours rather than the app's CSS variables.
-  const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light dark">
-  <meta name="supported-color-schemes" content="light dark">
-  <title>Assessment booked</title>
-  <style>
-    @media (max-width: 480px) {
-      .email-outer { padding: 16px 12px !important; }
-      .email-body { padding: 28px 24px !important; }
-    }
-    @media (prefers-color-scheme: dark) {
-      .email-page, .email-card { background-color: #111827 !important; }
-      .email-card { border-color: #475569 !important; }
-      .email-heading, .email-copy { color: #E5F0F8 !important; }
-      .email-muted { color: #D8E1E8 !important; }
-      .email-panel { background-color: #07345E !important; }
-    }
-  </style>
-  <!--[if mso]><style>body, table, td, h1, p { font-family: Arial, sans-serif !important; }</style><![endif]-->
-</head>
-<body class="email-page" style="margin:0;padding:0;background-color:#F8FAFC;font-family:Manrope,-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;color:#111827;-webkit-text-size-adjust:100%;">
-  <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">${escape(`${d.day}, ${d.time} at ${d.site}`)}</div>
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" class="email-page" bgcolor="#F8FAFC" style="background-color:#F8FAFC;">
-    <tr><td align="center" class="email-outer" style="padding:40px 16px;">
-      <!--[if mso]><table role="presentation" width="560" cellspacing="0" cellpadding="0" border="0"><tr><td><![endif]-->
-      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" class="email-card" bgcolor="#FFFFFF" style="max-width:560px;background-color:#FFFFFF;border:1px solid #D8E1E8;border-radius:16px;">
-        <tr><td align="center" bgcolor="#07345E" style="padding:24px;background-color:#07345E;border-radius:15px 15px 0 0;">
-          <img src="cid:${PARENT_EMAIL_LOGO_CID}" width="144" height="72" alt="LeisureWorld" style="display:block;width:144px;height:72px;border:0;color:#FFFFFF;font-size:20px;">
-          <p style="margin:8px 0 0;color:#FFFFFF;font-size:16px;line-height:24px;font-weight:600;">Aquatics</p>
-        </td></tr>
-        <tr><td class="email-body" style="padding:36px 40px;">
-          <h1 class="email-heading" style="margin:0 0 16px;color:#0B4F8A;font-size:28px;line-height:36px;font-weight:700;letter-spacing:-0.5px;">Assessment booked</h1>
-          ${para(lead)}
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 24px;">
-            <tr><td class="email-panel" bgcolor="#E5F0F8" style="padding:16px 20px;background-color:#E5F0F8;border-radius:12px;">
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
-${rows}
-              </table>
-            </td></tr>
-          </table>
-          ${para(arrive)}
-          ${para(change)}
-          ${app ? para(app) : ""}
-          <p class="email-copy" style="margin:8px 0 0;color:#111827;font-size:16px;line-height:25px;">See you at the pool,<br><strong>The LeisureWorld Aquatics team</strong></p>
-        </td></tr>
-      </table>
-      <!--[if mso]></td></tr></table><![endif]-->
-      <p class="email-muted" style="margin:20px 0 0;color:#475569;font-size:14px;line-height:21px;">LeisureWorld Aquatics · Swimming assessments</p>
-    </td></tr>
-  </table>
-</body>
-</html>`;
+  const email: FamilyEmail = {
+    title: "Assessment booked", preheader: `${d.day}, ${d.time} at ${d.site}`,
+    before: [lead], details, after: [arrive, change, app], signOff: "See you at the pool,", footer: "LeisureWorld Aquatics · Swimming assessments",
+  };
+  const text = familyEmailText(email);
+  const html = familyEmailHtml(email);
   return { subject: `Assessment booked: ${d.child}, ${d.day}`, text, html };
 }
 

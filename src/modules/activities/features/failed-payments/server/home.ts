@@ -13,7 +13,8 @@ export async function paymentsHomeItems(viewer: HomeViewer): Promise<HomeItem[]>
   const who = await requirePaymentsActor();
   const items: HomeItem[] = [];
   if (who.follow) {
-    const { toContact, contacted } = await followUpCounts(who.orgId);
+    const { toContact, contacted, emailsDue } = await followUpCounts(who.orgId);
+    if (emailsDue) items.push({ label: "Payment emails ready to send", hint: "First emails, reminders and final notices due today", href: "/payments", count: emailsDue, attention: true });
     items.push({ label: "Failed payments to contact", hint: "Direct debits nobody has chased yet", href: "/payments?show=to_contact", count: toContact, attention: toContact > 0 });
     if (contacted) items.push({ label: "Failed payments waiting on the member", hint: "Contacted, not recovered yet", href: "/payments?show=contacted", count: contacted });
   }

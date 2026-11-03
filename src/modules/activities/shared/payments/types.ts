@@ -41,6 +41,7 @@ export const PAYMENT_ACTIONS = {
   new_mandate: "Marked new mandate set up",
   cancelled: "Marked place cancelled",
   reopen: "Opened again",
+  email: "Emailed the family",
 } as const;
 export type PaymentAction = keyof typeof PAYMENT_ACTIONS;
 
@@ -67,6 +68,7 @@ export type PaymentView = {
   siteId: string; siteName: string; month: string; reference: string; memberNumber: string; memberId: string | null;
   name: string; amountCents: number; returnCode: string; returnReason: string;
   attempts: number; lastContactAt: string | null; outcome: string;
+  emailsSent: number; firstEmailAt: string | null; lastEmailAt: string | null;
   closedByName: string | null; closedAt: string | null; createdAt: string;
 };
 export type PaymentHistory = { id: string; action: PaymentAction; actorName: string; method: string; result: string; note: string; createdAt: string };
