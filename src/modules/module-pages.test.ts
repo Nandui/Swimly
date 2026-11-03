@@ -22,9 +22,9 @@ const everything = new Proxy({}, { get: (_target, key) => (key === "id" ? "someo
 
 /** Every app's pages as the most capable person sees them. The swim school's Overview is added
  *  by its frame, as it is not in its nav list. */
-const APPS: [string, { label: string; place?: "setup" | "overview"; under?: string }[]][] = [
+const APPS: [string, { href: string; label: string; place?: "setup"; under?: string }[]][] = [
   ["Admin", ADMIN_GROUPS.flatMap((group) => group.links)],
-  ["Classes", [{ label: "Overview" }, ...NAV_ITEMS]],
+  ["Classes", [{ href: "/swim-school", label: "Overview" }, ...NAV_ITEMS]],
   ["Academy", academyPages()],
   ["CCTV log", cctvPages()],
   ["Finance requests", financePages({ id: "someone", refunds: everything, coinage: everything })],
@@ -44,7 +44,17 @@ const APPS: [string, { label: string; place?: "setup" | "overview"; under?: stri
 test("every app lists at most five work pages in the sidebar, then Set up; nested pages do not count (DESIGN.md, D19)", () => {
   for (const [app, pages] of APPS) {
     const work = pages.filter((page) => !page.place && !page.under).map((page) => page.label);
-    assert.ok(work.length <= 5, `${app} lists ${work.length} work pages in the sidebar: ${work.join(", ")}. Move the rest under Set up or onto its Overview.`);
+    assert.ok(work.length <= 5, `${app} lists ${work.length} work pages in the sidebar: ${work.join(", ")}. Move the rest under Set up or under a work page.`);
+  }
+});
+
+test("every page nested under another names a page of its own app, and is not also under Set up", () => {
+  for (const [app, pages] of APPS) {
+    const hrefs = new Set(pages.filter((page) => !page.place).map((page) => page.href));
+    for (const page of pages.filter((p) => p.under)) {
+      assert.ok(!page.place, `${app}: ${page.label} is both nested and under Set up`);
+      assert.ok(hrefs.has(page.under!), `${app}: ${page.label} nests under ${page.under}, which is not one of its pages`);
+    }
   }
 });
 

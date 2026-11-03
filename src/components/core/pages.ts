@@ -3,7 +3,7 @@ import { BadgeCheck, Building2, GraduationCap, History, KeyRound, LayoutDashboar
 /** Admin's pages, once, grouped by topic (owner decision, 7 October 2026): the page bar
  *  (CoreShell) and the overview are built from this list. A plain module, so server pages read it. */
 export type CoreLinkKey = "staff" | "roles" | "departments" | "positions" | "clubs" | "areas" | "apps" | "activity-list" | "qualifications" | "activity";
-export type AdminPage = { key: CoreLinkKey | "overview"; href: string; label: string; icon: LucideIcon; description: string; place?: "setup" | "overview" };
+export type AdminPage = { key: CoreLinkKey | "overview"; href: string; label: string; icon: LucideIcon; description: string; place?: "setup"; under?: string };
 
 export const ADMIN_GROUPS: { label: string; links: AdminPage[] }[] = [
   { label: "", links: [{ key: "overview", href: "/core", label: "Overview", icon: LayoutDashboard, description: "What waits to be checked, and every Admin page" }] },

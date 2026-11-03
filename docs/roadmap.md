@@ -71,7 +71,7 @@ Comments are not unified: task comments, course reviews, incident addenda and st
 The design is approved: **Turnfin Sheet** (D20, 1 November 2026), written in [../DESIGN.md](../DESIGN.md). It replaces Turnfin Glass (D13), which is built and live (25 to 27 October 2026), so step 5 now re-themes that work rather than starting again. The build order is in DESIGN.md's "How it is built".
 
 - The theme and kit are re-themed first (the tokens in the theme file, the ground and fin, the page sheet, frame, page shell, states), then Home and the app frame, then each app's screens, one app per pull request.
-- The frame is the one worked out from the job (D19, [architecture.md](architecture.md#the-frame); built 2 November 2026, 3.0.0): Home as one list of work, a sidebar that drills in, no top tabs, one shell, and every app at five work pages plus Set up, with the rest on its Overview.
+- The frame is the one worked out from the job (D19, [architecture.md](architecture.md#the-frame); built 2 November 2026, 3.0.0): Home as one list of work, a sidebar that drills in, no top tabs, one shell, and every app at five work pages plus Set up, with the rest nested under them.
 - The old look is removed as each part is replaced: no two designs in one screen, and none left at the end. Turnfin Me and the Academy booking site follow with their own pull requests.
 - The help centre's guides and screenshots are redone for the new screens.
 
@@ -91,7 +91,7 @@ Each follows "Adding an app" in [apps.md](apps.md) and the checklist in [../AGEN
 
 Swim school, Short courses, Refunds, Coinage and Payments become **Classes**, **Finance requests** and **Academy** ([D24](decisions.md)). Smallest first, each shipped and checked on `main` before the next starts:
 
-1. **Payments into Classes** (built 2 November 2026, 3.2.0). Its pages and home items moved into the swim school's module and frame (Failed payments on its Overview); Payments' Use went to Desk, its Manage to Manage. Its tables moved into `activities.prisma` with their names, so nothing was copied.
+1. **Payments into Classes** (built 2 November 2026, 3.2.0). Its pages and home items moved into the swim school's module and frame (Failed payments now under Swimmers); Payments' Use went to Desk, its Manage to Manage. Its tables moved into `activities.prisma` with their names, so nothing was copied.
 2. **Finance requests** (built 3 November 2026, 3.3.0). Refunds and Coinage are one app with one frame and Overview; Use and Manage carried over. They kept their tables and URLs (owner default). Still to do: one `FinanceRequest` table with a detail table per kind, one flow and one queue for finance, its rows copied from the Refunds and Coinage tables.
 3. **Academy** (built 3 November 2026, 3.3.0). Its own module in Team, levels Tutor and Manage, at `/academy`; it kept its tables and the Academy booking site's API.
 4. **Short courses into Classes** (built 3 November 2026, 3.3.0). Their pages and code joined the swim school's module, which is shown as **Classes**; they kept their own tables and registers (owner default). Still to do: short courses as an activity type on `Programme.activityType` ([architecture.md](architecture.md#activity-types)), the desk booking them as classes and instructors taking their registers on the pool deck.
