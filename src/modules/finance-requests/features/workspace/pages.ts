@@ -7,7 +7,7 @@ export type FinanceView = "overview" | `refunds:${"requests" | "mine" | "drafts"
 
 /** Finance requests' pages, once: the page bar (FinanceShell) and its starter page are built from
  *  this list. Each kind's request views are views of one list, so each names the view it shows.
- *  Drafts are on the Overview, keeping the sidebar to five work pages (D19). A plain module (no
+ *  Drafts nest under their kind, keeping the sidebar to five work pages (D19). A plain module (no
  *  "use client"), so a server page can read it. */
 export function financePages(who: Pick<FinanceActor, "id" | "refunds" | "coinage">): (ModulePage & { view: FinanceView })[] {
   const mine = encodeURIComponent(who.id);
@@ -21,7 +21,7 @@ export function financePages(who: Pick<FinanceActor, "id" | "refunds" | "coinage
       { view: "coinage:requests" as const, href: "/coinage", label: "Coinage", icon: Coins, description: "Every coinage request you can see, by status, with the queues to follow up" },
       { view: "coinage:mine" as const, href: `/coinage?creator=${mine}&status=all`, label: "My coinage", icon: UserRound, description: "The coinage requests you made, whatever their status" },
     ] : []),
-    ...(who.refunds?.request ? [{ view: "refunds:drafts" as const, href: "/refunds?status=DRAFT", label: "Refund drafts", place: "overview" as const, icon: FilePenLine, description: "Refund requests you started and have not sent yet" }] : []),
-    ...(who.coinage?.request ? [{ view: "coinage:drafts" as const, href: "/coinage?status=DRAFT", label: "Coinage drafts", place: "overview" as const, icon: FilePenLine, description: "Coinage requests you started and have not sent yet" }] : []),
+    ...(who.refunds?.request ? [{ view: "refunds:drafts" as const, href: "/refunds?status=DRAFT", label: "Refund drafts", under: "/refunds", icon: FilePenLine, description: "Refund requests you started and have not sent yet" }] : []),
+    ...(who.coinage?.request ? [{ view: "coinage:drafts" as const, href: "/coinage?status=DRAFT", label: "Coinage drafts", under: "/coinage", icon: FilePenLine, description: "Coinage requests you started and have not sent yet" }] : []),
   ];
 }

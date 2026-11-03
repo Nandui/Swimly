@@ -114,9 +114,8 @@ export type ModulePage = {
   /** One line on what the page is for, shown on the module's starter page. */
   description: string;
   /** Where the frame lists it (DESIGN.md, The frame and navigation; D19): work pages (no place)
-   *  in the sidebar, five at most; `setup` under the app's one Set up item; `overview` only on the
-   *  app's Overview page, which lists every page. */
-  place?: "setup" | "overview";
+   *  in the sidebar, five at most; `setup` under the app's one Set up item. */
+  place?: "setup";
   /** A work page's sub-page: the href of the page it nests under in the sidebar, which opens like
    *  a folder. Sub-pages can nest in turn, and do not count towards the five work pages. */
   under?: string;

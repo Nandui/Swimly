@@ -15,11 +15,11 @@ import { SearchDialog } from '@/components/ui/search-dialog';
 
 /** A page of the open app (DESIGN.md, The frame and navigation; D19). Most pages are work pages,
  *  listed in the sidebar (five at most, checked by module-pages.test.ts). `setup` pages sit under
- *  the app's one Set up item, which only shows when the person may open one of them; `overview`
- *  pages are reached from the app's Overview page, which lists every page. The icon shows in
- *  menus; links handed over by a server page have none, because a component cannot cross to
- *  the client. A page `under` another nests beneath it in the sidebar, like a folder. */
-export type ModuleLink = { href: string; label: string; icon?: LucideIcon; active: boolean; place?: 'setup' | 'overview'; under?: string };
+ *  the app's one Set up item, which only shows when the person may open one of them. Every other
+ *  page sits `under` another and nests beneath it in the sidebar, like a folder, so every page
+ *  has a place there. The icon shows in menus; links handed over by a server page have none,
+ *  because a component cannot cross to the client. */
+export type ModuleLink = { href: string; label: string; icon?: LucideIcon; active: boolean; place?: 'setup'; under?: string };
 export type ModuleLinkGroup = { label: string; links: ModuleLink[] };
 
 /** The one frame every app opens in (DESIGN.md, The frame and navigation; D19). One level of
@@ -107,11 +107,16 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
 type OpenApp = { name: string; pages: ModuleLink[] } | null;
 
 /** The open page is "page"; a page whose part of the app is open (a record under a list) is
- *  "true". A page reached only from the Overview marks the Overview as its parent. */
-function currentFor(page: ModuleLink, pages: ModuleLink[], pathname: string): 'page' | 'true' | undefined {
+ *  "true". */
+function currentFor(page: ModuleLink, pathname: string): 'page' | 'true' | undefined {
   if (page.active) return pathname === page.href.split('?')[0] ? 'page' : 'true';
-  const openElsewhere = pages.find((p) => p.active && p.place === 'overview');
-  return openElsewhere && page === pages.find((p) => !p.place) ? 'true' : undefined;
+  return undefined;
+}
+
+/** Whether a page starts a branch of the sidebar: it nests under nothing, or under a page this
+ *  person cannot open, so nobody loses a page they may open. */
+function atTop(page: ModuleLink, pages: ModuleLink[]): boolean {
+  return !page.under || !pages.some((p) => p.href === page.under);
 }
 
 /** Whether the page or one of the pages nested under it is open, so its folder starts open. */
@@ -171,11 +176,11 @@ function Sidebar({ current, name, app, scopeNote, pathname, onSearch }: { curren
       {Icon ? <Icon aria-hidden="true" /> : null}<span className="tf-side-label">{label}</span>
     </Link>
   );
-  const work = app?.pages.filter((p) => !p.place && !p.under) ?? [];
+  const work = app?.pages.filter((p) => !p.place && atTop(p, app.pages)) ?? [];
   const setup = app?.pages.filter((p) => p.place === 'setup') ?? [];
   const page = (p: ModuleLink): ReactNode => {
     const subPages = app?.pages.filter((s) => s.under === p.href) ?? [];
-    const link = item(p.href, p.href, p.label, p.icon, currentFor(p, app?.pages ?? [], pathname));
+    const link = item(p.href, p.href, p.label, p.icon, currentFor(p, pathname));
     if (!subPages.length) return link;
     return (
       <Collapsible key={p.href} className="tf-side-folder" defaultOpen={within(p, app?.pages ?? [])}>
@@ -210,7 +215,7 @@ function Sidebar({ current, name, app, scopeNote, pathname, onSearch }: { curren
                   <Settings2 aria-hidden="true" /><span className="tf-side-label">Set up</span><ChevronRight aria-hidden="true" className="tf-side-chevron" />
                 </CollapsibleTrigger>
                 <CollapsibleContent className="tf-side-setup-pages">
-                  {setup.map((page) => item(page.href, page.href, page.label, undefined, currentFor(page, app.pages, pathname)))}
+                  {setup.map((page) => item(page.href, page.href, page.label, undefined, currentFor(page, pathname)))}
                 </CollapsibleContent>
               </Collapsible>
             ) : null}
@@ -247,12 +252,12 @@ function TabBar({ current, app, pathname, onSearch }: { current: string; app: Op
   );
   const pageItem = (page: ModuleLink) => (
     <DropdownMenuItem key={page.href} asChild className="min-h-11" data-depth={depth(page, app?.pages ?? []) || undefined}>
-      <Link href={page.href} aria-current={currentFor(page, app?.pages ?? [], pathname)}>{page.icon ? <page.icon aria-hidden="true" /> : null}{page.label}</Link>
+      <Link href={page.href} aria-current={currentFor(page, pathname)}>{page.icon ? <page.icon aria-hidden="true" /> : null}{page.label}</Link>
     </DropdownMenuItem>
   );
   const all = app?.pages ?? [];
   const inOrder = (p: ModuleLink): ModuleLink[] => [p, ...all.filter((s) => s.under === p.href).flatMap(inOrder)];
-  const work = all.filter((p) => p.place !== 'setup' && !p.under).flatMap(inOrder);
+  const work = all.filter((p) => p.place !== 'setup' && atTop(p, all)).flatMap(inOrder);
   const setup = all.filter((p) => p.place === 'setup');
   return (
     <div className="tf-bottom-wrap">

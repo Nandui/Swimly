@@ -80,7 +80,7 @@ Each module folder also has a `README.md` for coders (features, front door, data
 
 There is one shell: the swim school's own nav, the instructor shell and the CCTV shell are replaced by it. A test checks every `pages.ts` against the page limit.
 
-Each page in an app's page list has a `place` (`ModulePage` in `src/modules/registry.ts`): none for a work page in the sidebar, `setup` under Set up, `overview` for a page reached from the app's Overview. `src/modules/module-pages.test.ts` holds every app to five work pages, Overview first. The frame is `ModuleShell` (`src/components/ui/module-shell.tsx`); the pool deck uses it too.
+Each page in an app's page list (`ModulePage` in `src/modules/registry.ts`) is a work page in the sidebar, nests `under` another page (its href), or has `place: "setup"` under Set up. `src/modules/module-pages.test.ts` holds every app to five work pages, Overview first, and every `under` to one of the app's own pages. The frame is `ModuleShell` (`src/components/ui/module-shell.tsx`); the pool deck uses it too.
 
 **Search** is a plug, `registerSearch` in `src/modules/contributions.ts`: each app says what it can be searched for and answers only with what the person may open, showing the least that names the result (the swim school: swimmers, for `swimschool.desk`). `searchEverything` (`src/lib/search/actions.ts`) adds people, for those who manage staff, and is handed to the frame through `FrameSetup.search`, so the UI kit never imports the platform; the frame matches apps and pages itself (`src/components/ui/search-dialog.tsx`). Results link to the record in its app, which checks permission again.
 

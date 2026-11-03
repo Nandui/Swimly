@@ -26,7 +26,7 @@ import type { ScreenKey } from "@/lib/staff/screens";
  *  role that names that screen and holds whatever it requires. That is
  *  courtesy, not security: the page declines to exist and the action
  *  refuses the call, and only the last of those three is load-bearing. */
-type NavItem = { href: string; label: string; icon: LucideIcon; description?: string; place?: "setup" | "overview" };
+type NavItem = { href: string; label: string; icon: LucideIcon; description?: string; place?: "setup"; under?: string };
 export type NavGroup = { id: string; label: string; items: NavItem[] };
 
 export type AppNavItem = NavItem & {
@@ -41,14 +41,14 @@ export const NAV_ITEMS: AppNavItem[] = [
   { href: "/schedule", label: "Schedule", description: "Classes and assessments by day, with every pool area", icon: CalendarCheck, screen: "calendar", group: "daily" },
   { href: "/students", label: "Swimmers", description: "Find a swimmer, their family, progress and enrolment", icon: Users, screen: "students", group: "daily" },
   { href: "/courses", label: "Timetable", description: "The weekly timetable: places, instructors and levels", icon: CalendarDays, screen: "courses", group: "daily" },
-  { href: "/assessments", label: "Assessments", place: "overview", description: "Assessment sessions, bookings and placements", icon: ClipboardCheck, screen: "assessments", group: "daily" },
-  { href: "/awaiting-enrolment", label: "Awaiting enrolment", place: "overview", description: "Swimmers ready for a class place, and family follow-ups", icon: UserRoundCheck, screen: "awaiting-enrolment", group: "daily" },
-  { href: "/legend-agreements", label: "Legend agreements", place: "overview", description: "Billing agreements still to confirm for class places", icon: FileCheck2, screen: "legend-agreements", group: "daily" },
-  { href: "/together", label: "Together", place: "overview", description: "A time that suits every child in one family", icon: CalendarHeart, screen: "together", group: "daily" },
-  { href: "/payments", label: "Failed payments", place: "overview", description: "Failed direct debits at your sites, to contact until each is recovered", icon: Landmark, screen: "payments", group: "daily" },
-  { href: "/short-courses", label: "Short courses", place: "overview", description: "Six and eight week courses: who is booked, who is waiting, payment and registers", icon: CalendarRange, screen: "short-courses", group: "daily" },
-  { href: "/analytics", label: "Analytics", place: "overview", description: "Enrolment, capacity and attendance reports", icon: ChartNoAxesCombined, screen: "analytics", group: "monitoring" },
-  { href: "/cancellations", label: "Cancelled classes", place: "overview", description: "Cancelled sessions whose billing needs following up", icon: CalendarX2, screen: "cancellations", group: "monitoring" },
+  { href: "/assessments", label: "Assessments", under: "/schedule", description: "Assessment sessions, bookings and placements", icon: ClipboardCheck, screen: "assessments", group: "daily" },
+  { href: "/awaiting-enrolment", label: "Awaiting enrolment", under: "/students", description: "Swimmers ready for a class place, and family follow-ups", icon: UserRoundCheck, screen: "awaiting-enrolment", group: "daily" },
+  { href: "/legend-agreements", label: "Legend agreements", under: "/courses", description: "Billing agreements still to confirm for class places", icon: FileCheck2, screen: "legend-agreements", group: "daily" },
+  { href: "/together", label: "Together", under: "/courses", description: "A time that suits every child in one family", icon: CalendarHeart, screen: "together", group: "daily" },
+  { href: "/payments", label: "Failed payments", under: "/students", description: "Failed direct debits at your sites, to contact until each is recovered", icon: Landmark, screen: "payments", group: "daily" },
+  { href: "/short-courses", label: "Short courses", under: "/courses", description: "Six and eight week courses: who is booked, who is waiting, payment and registers", icon: CalendarRange, screen: "short-courses", group: "daily" },
+  { href: "/analytics", label: "Analytics", under: "/swim-school", description: "Enrolment, capacity and attendance reports", icon: ChartNoAxesCombined, screen: "analytics", group: "monitoring" },
+  { href: "/cancellations", label: "Cancelled classes", under: "/duty", description: "Cancelled sessions whose billing needs following up", icon: CalendarX2, screen: "cancellations", group: "monitoring" },
   { href: "/short-courses/types", label: "Short course list", place: "setup", description: "The short courses we offer, with their weeks and session length", icon: ListChecks, screen: "short-courses", group: "setup" },
   { href: "/programmes", label: "Programmes", place: "setup", description: "Programmes, levels and competencies", icon: Layers, screen: "programmes", group: "setup" },
 ];
