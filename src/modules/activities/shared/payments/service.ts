@@ -45,6 +45,7 @@ export function paymentView(row: PaymentFailure, siteName: string): PaymentView 
     siteId: row.siteId, siteName, month: row.month, reference: row.reference, memberNumber: row.memberNumber, memberId: row.memberId,
     name: row.name, amountCents: row.amountCents, returnCode: row.returnCode, returnReason: row.returnReason,
     attempts: row.attempts, lastContactAt: row.lastContactAt?.toISOString() ?? null, outcome: row.outcome,
+    emailsSent: row.emailsSent, firstEmailAt: row.firstEmailAt?.toISOString() ?? null, lastEmailAt: row.lastEmailAt?.toISOString() ?? null,
     closedByName: row.closedByName, closedAt: row.closedAt?.toISOString() ?? null, createdAt: row.createdAt.toISOString(),
   };
 }

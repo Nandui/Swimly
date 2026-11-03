@@ -6,6 +6,12 @@ The decisions Turnfin 2.0 stands on, newest first. Each says what was decided, w
 
 ---
 
+### D25 · 3 November 2026 · Failed payments: three warning emails, sent by reception
+
+Each failed payment linked to a swimmer can be followed by up to three emails to the swimmer's contact email: a **first email** any time once it is on the list, a **reminder** from 3 days after the first (asking for payment within 7 days of the first), and a **final notice** from 7 days after the first, saying the place may be cancelled and offered to the waiting list if payment does not arrive within 3 days. Reception sends each from the payment's page after seeing the email exactly as the family will; nothing is sent automatically, and cancelling the place stays a person's decision. Emails go from the parents app's mailbox, only from the live site; elsewhere the step is recorded as not sent. A send the provider refuses records nothing. There are no payment links: money is still taken in Legend.
+**Why:** families were chased by phone only, with no record of what each had been told or when.
+**Follows:** `src/modules/activities/shared/payments/emails.ts` (the schedule and wording) and the family email layout shared with "Assessment booked" (`shared/parents/family-email.ts`). Additive columns `emailsSent`, `firstEmailAt`, `lastEmailAt` on `payment_failures`.
+
 ### D24 · 2 November 2026 · Five front-of-house apps become Classes, Finance requests and Academy
 
 Swim school, Short courses, Refunds, Coinage and Payments do not become one app. They become three:
