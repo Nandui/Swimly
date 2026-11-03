@@ -270,7 +270,7 @@ export const PERMISSIONS = [
     key: "short-courses.run",
     group: "Short courses",
     label: "Take short course registers",
-    description: "Take the registers on short courses at the sites this role covers. Includes seeing and booking.",
+    description: "See the short courses at the sites this role covers and take their registers. Booking people on is the desk's.",
   },
   {
     key: "short-courses.manage",
@@ -516,7 +516,7 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "tasks.manage": ["tasks.review", "tasks.complete"],
   "academy.run": ["academy.read"],
   "academy.manage": ["academy.run", "academy.read"],
-  "short-courses.run": ["short-courses.read"],
+  // Taking registers (Pool deck Teach, D24) is not booking: the desk books with Classes Desk.
   "short-courses.manage": ["short-courses.run", "short-courses.read"],
   "stock.count": ["stock.read"],
   "stock.manage": ["stock.count", "stock.read"],

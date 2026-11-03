@@ -53,10 +53,10 @@ export const MODULE_OF_ENTITY: Readonly<Record<string, string>> = {
   ParentChangeRequest: "Swim school", ParentAssessmentPublication: "Swim school",
   // Training, including the qualifications it keeps.
   TrainingCourse: "Training", TrainingAssignment: "Training", TrainingRule: "Training", TrainingEvidence: "Training", TrainingPath: "Training", TrainingPathEnrolment: "Training", TrainingSession: "Training", TrainingHours: "Training", TrainingHourTarget: "Training", Qualification: "Training", QualificationType: "Training", QualificationEvidence: "Training",
-  // Refunds and Rota.
-  RefundRequest: "Refunds", RefundNotification: "Refunds",
-  CoinageRequest: "Coinage", CoinageNotification: "Coinage",
-  AcademyCourseType: "Short courses", AcademyCourse: "Short courses", AcademySession: "Short courses", AcademyCandidate: "Short courses", AcademyCall: "Short courses",
+  // Finance requests (Refunds and Coinage, D24) and Rota.
+  RefundRequest: "Finance requests", RefundNotification: "Finance requests",
+  CoinageRequest: "Finance requests", CoinageNotification: "Finance requests",
+  AcademyCourseType: "Academy", AcademyCourse: "Academy", AcademySession: "Academy", AcademyCandidate: "Academy", AcademyCall: "Academy",
   Supplier: "Purchasing", PurchaseProduct: "Purchasing", PurchaseApprovalRule: "Purchasing", PurchaseOrder: "Purchasing", PurchasingSettings: "Purchasing",
   TaskTemplate: "Tasks", Task: "Tasks", TaskAction: "Tasks", TaskSite: "Tasks",
   IncidentReport: "Incidents", IncidentsSettings: "Incidents",
@@ -71,7 +71,7 @@ export const MODULE_OF_ENTITY: Readonly<Record<string, string>> = {
   PlanShift: "Plan (test)",
   PlanBlock: "Plan (test)",
   PlanOff: "Plan (test)",
-  ShortCourseType: "Short courses", ShortCourse: "Short courses", ShortCourseSession: "Short courses", ShortCourseParticipant: "Short courses",
+  ShortCourseType: "Swim school", ShortCourse: "Swim school", ShortCourseSession: "Swim school", ShortCourseParticipant: "Swim school",
   ActivityType: "Admin", SiteArea: "Admin", Position: "Admin",
   RotaShift: "Rota", RotaDayNote: "Rota", RotaActivity: "Rota", RotaAbsence: "Rota", RotaImport: "Rota", RotaDepartment: "Rota",
   RotaNeed: "Rota", RotaAssignment: "Rota", RotaAreaAssignment: "Rota", RotaWeekShare: "Rota", RotaLog: "Rota", RotaRepeat: "Rota", RotaActivityType: "Rota", RotaPlanShift: "Rota", RotaBreak: "Rota", RotaBookingKind: "Rota",

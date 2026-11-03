@@ -6,20 +6,22 @@ Every app inside Turnfin: what it is for, its levels, where they reach, what it 
 
 ## Front of house
 
-These apps are being regrouped into **Classes** (Swim school with failed payments and short courses), **Finance requests** (Refunds and Coinage) and **Academy** ([D24](decisions.md), [roadmap step 8](roadmap.md#8-fewer-front-of-house-apps)). This page changes as each merge ships; failed payments are already in Swim school (step 8.1).
+Reception works in two apps: **Classes** and **Finance requests** ([D24](decisions.md), [roadmap step 8](roadmap.md#8-fewer-front-of-house-apps)). The Academy is in Team.
 
-### Swim school
-*Module `activities` · starter page `/swim-school` · reach: sites · data: `activities.prisma`*
+### Classes
+*Module `activities` (app id `swim-school`) · starter page `/swim-school` · reach: sites · data: `activities.prisma`, `activities.short-courses.prisma`*
 
-Swimmers, classes, assessments and failed payments at the desk, and the swim school's set-up.
+Swimmers, classes, short courses and assessments at the desk, and their set-up. Named Swim school until D24; gym activities may follow.
 
 | Level | Gives |
 | --- | --- |
-| Desk | every swimmer, booking, move, waiting list and assessment booking; see the failed payments at their sites, log each contact and record how it ended: paid at the desk, new mandate set up, or place cancelled |
-| Manage | also programmes, levels and classes; upload the bank's monthly failure sheet, open closed payments again, and remove payments that aren't swimmers |
+| Desk | every swimmer, booking, move, waiting list and assessment booking; see the short courses at their sites, book people on, record payment and keep the waiting list; see the failed payments at their sites, log each contact and record how it ended: paid at the desk, new mandate set up, or place cancelled |
+| Manage | also programmes, levels and classes; keep the short course list and put short courses on; upload the bank's monthly failure sheet, open closed payments again, and remove payments that aren't swimmers |
 | *Extra:* Can cancel classes | cancel today's sessions on the duty manager page and pass them to billing |
 
-Connects: class commitments for Rota; the member directory and history for Short courses; site summaries; home items; the parent app's API.
+Connects: class and short course commitments for Rota; the member directory and history for the Academy; site summaries; home items; the parent app's API; short course places in "My bookings" on the Academy booking site.
+
+**Short courses** (`/short-courses`, on the Overview; the course list under Set up; D24): six- and eight-week courses at the pool, the gym or the studio. The desk books people from the swimmer records; the instructor takes the registers (Pool deck Teach, below). They keep their own tables for now; moving them onto programmes as an activity type, with their registers on the pool deck, is a later step.
 
 **Failed payments** (`/payments`, on the Overview; D21, moved here by D24): the direct debits that failed each month, followed up by reception until each is recovered. Legend stays the billing system: money is taken there, never in Turnfin. A failure is **To contact**, **Contacted**, **Paid at the desk**, **New mandate set up** or **Place cancelled**. Only rows whose member number belongs to a swimmer on Turnfin are tracked; gym memberships and unknown numbers are left out. While one is open, the swimmer's profile shows "Payment failed".
 
@@ -27,38 +29,15 @@ Who can book an assessment: programmes run in the order set on the Programmes pa
 
 After every assessment booking, the family gets an "Assessment booked" email: the parent who booked in the parent app or, for a desk booking, the swimmer's contact email (else the linked parent accounts). It gives the child's first name, the assessment, day, time, site and the site's reception phone. It is sent after the booking commits, from Production only (previews run on real records), and never for bookings by a system account.
 
-### Short courses
-*Module `short-courses` · `/short-courses/overview` · reach: sites · data: `short-courses.prisma`, `short-courses.academy.prisma`*
+### Finance requests
+*Module `finance-requests` · `/finance-requests` · reach: everywhere · data: `finance-requests.refunds.prisma`, `finance-requests.coinage.prisma`*
 
-Six- and eight-week courses, and the Academy's lifeguard and swim teacher courses: places, payment, registers and results.
-
-| Level | Gives |
-| --- | --- |
-| View | see courses; book people on, record payment, keep the waiting list |
-| Instructor or tutor | also take registers; on Academy courses add candidates, record checks, payment and results |
-| Manage | also keep both course lists and put courses on |
-
-Connects: books from the swim school's member directory; course sessions as Rota commitments; desk measures; the Academy booking site's API. A pass puts the qualification on the person's staff record.
-
-### Refunds
-*Module `refunds` · `/refunds/overview` · reach: everywhere · data: `refunds.prisma`*
-
-Customer refund requests, finance decisions and completed payments.
+Refunds and coinage for the tills, asked for at the desk and decided by finance (Refunds and Coinage until D24). Each kind keeps its own pages (`/refunds`, `/coinage`) and tables for now; one request table with a detail table per kind is a later step.
 
 | Level | Gives |
 | --- | --- |
-| Use | log a customer's refund request and follow it |
-| Manage | decide requests and record payments. Nobody decides their own |
-
-### Coinage
-*Module `coinage` · `/coinage/overview` · reach: everywhere · data: `coinage.prisma`*
-
-Coins for the tills, requested at the desk and ordered by accounts.
-
-| Level | Gives |
-| --- | --- |
-| Use | request coinage for a till and follow it |
-| Manage | decide requests and record the orders. Nobody decides their own |
+| Use | log a customer's refund request or ask for coinage for a till, and follow them |
+| Manage | decide refund and coinage requests, record payments and orders. Nobody decides their own |
 
 ## Poolside
 
@@ -69,7 +48,7 @@ Today's classes at the pool: attendance, competencies and assessments, on a tabl
 
 | Level | Gives |
 | --- | --- |
-| Teach | their own classes: attendance, competencies, assessments, covering a colleague's class |
+| Teach | their own classes: attendance, competencies, assessments, covering a colleague's class; the short courses they instruct and their registers |
 | Lead | also attendance for any class |
 
 ### Tasks
@@ -124,7 +103,7 @@ The rota started again, on test at one site beside Rota ([D17](decisions.md)): s
 | Plan | plan shifts and duties for the departments they belong to, and mark people off |
 | Manage | plan every department, run today, and keep the duties, areas and what's on |
 
-Connects: reads people, departments, qualifications and the site's areas (Admin › Areas, shared with Swim school and Rota); reads swim classes and plans their teachers through Swim school's commitments. No Turnfin Me, home card or person file while it is on test.
+Connects: reads people, departments, qualifications and the site's areas (Admin › Areas, shared with Classes and Rota); reads swim classes and plans their teachers through Classes' commitments. No Turnfin Me, home card or person file while it is on test.
 
 ### Training
 *Module `training` · `/training/overview` · reach: sites · data: `training.prisma`*
@@ -138,6 +117,18 @@ Training for the people you cover: what is due, waiting for sign-off and done. P
 | Manage | also assign courses and check certificates |
 
 Connects: writes qualifications; person file, subject records, Turnfin Me.
+
+### Academy
+*Module `academy` · `/academy/overview` · reach: sites · data: `academy.prisma`*
+
+The lifeguard and swim teacher courses the centres deliver to the public: candidates, checks, payment, registers and results. Part of Short courses from 15 October to 3 November 2026 (D24).
+
+| Level | Gives |
+| --- | --- |
+| Tutor | see the Academy courses at their sites; add candidates, record checks and payment, phone people who held a place online, take registers and record results |
+| Manage | also keep the Academy course list and put courses on |
+
+Connects: books from the swim school's member directory; course sessions as Rota commitments; call backs as desk measures; the Academy booking site's API (`/api/academy/v1`), which also shows a customer the short course places booked under their email. A pass puts the qualification on the person's staff record.
 
 ### Docs
 *Module `docs` · `/docs` · reach: everywhere · data: its own database*
@@ -256,10 +247,10 @@ These hold in every version of every screen.
 
 | Screens | Who | Medical notes |
 | --- | --- | --- |
-| Swim school office and desk | swim school managers, reception | yes |
-| Pool deck | instructors | only for swimmers in a class they teach or cover that day |
+| Classes office and desk | swim school managers, reception | yes |
+| Pool deck | instructors | only for swimmers in a class they teach or cover that day, or on a short course they instruct |
 | Parent app | linked guardians | never; they propose corrections, which staff apply or decline |
-| Anyone else | roles with no swim school level | never: no swimmer data at all |
+| Anyone else | roles with no Classes level | never: no swimmer data at all |
 
 A withheld note becomes a `hasMedicalNotes` flag, so the deck still knows to ask.
 

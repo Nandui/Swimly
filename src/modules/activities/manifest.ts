@@ -7,9 +7,11 @@ import type { ModuleManifest } from "@/modules/registry";
 export const swimSchoolModule: ModuleManifest = {
   id: "swim-school",
   group: "front-of-house",
-  name: "Swim school",
-  // Swim school is the first activity type (see src/modules/activities/shared/types.ts).
-  description: "Swimmers, classes and assessments at the desk, and the swim school's set-up",
+  // Shown as Classes since D24 (3 November 2026): gym activities may follow, so the name is not
+  // about swimming. The id stays (stored roles and switches); the log name stays Swim school so
+  // the activity log reads on. Swim school is the first activity type (src/modules/activities/shared/types.ts).
+  name: "Classes",
+  description: "Swimmers, classes, short courses and assessments at the desk, and their set-up",
   icon: WavesLadder,
   href: "/swim-school",
   logName: "Swim school",
@@ -17,12 +19,12 @@ export const swimSchoolModule: ModuleManifest = {
     reach: "sites",
     levels: [
       {
-        key: "desk", label: "Desk", help: "Every swimmer, booking, move, waitlist and assessment booking, and following up failed payments.",
-        permissions: ["swimschool.desk", "students.manage", "enrolment.manage", "parents.manage", "payments.read", "payments.follow"],
+        key: "desk", label: "Desk", help: "Every swimmer, booking, move, waitlist and assessment booking, booking people on short courses, and following up failed payments.",
+        permissions: ["swimschool.desk", "students.manage", "enrolment.manage", "parents.manage", "payments.read", "payments.follow", "short-courses.read"],
       },
       {
-        key: "manage", label: "Manage", help: "Programmes, levels and classes, and uploading the bank's failed payments sheet.",
-        permissions: ["courses.manage", "curriculum.manage", "progression.override", "payments.manage"],
+        key: "manage", label: "Manage", help: "Programmes, levels and classes, the short course list and putting short courses on, and uploading the bank's failed payments sheet.",
+        permissions: ["courses.manage", "curriculum.manage", "progression.override", "payments.manage", "short-courses.manage"],
       },
     ],
     extras: [
@@ -31,6 +33,9 @@ export const swimSchoolModule: ModuleManifest = {
         permissions: ["classes.cancel", "billing.notify"],
       },
     ],
+    // Short courses joined (D24, owner default 3 November 2026): their View is Desk and their
+    // Manage is Manage here; their Instructor is Pool deck Teach.
+    formerly: [{ id: "short-courses", levels: { view: "desk", manage: "manage" } }],
   },
 };
 
@@ -49,14 +54,16 @@ export const poolDeckModule: ModuleManifest = {
     reach: "sites",
     levels: [
       {
-        key: "teach", label: "Teach", help: "Their own classes: attendance, competencies, assessments, and covering a colleague's class.",
-        permissions: ["attendance.mark", "attendance.cover", "progression.assess", "progression.complete", "assessments.run"],
+        key: "teach", label: "Teach", help: "Their own classes: attendance, competencies, assessments, and covering a colleague's class. Short courses at their sites, and their registers.",
+        permissions: ["attendance.mark", "attendance.cover", "progression.assess", "progression.complete", "assessments.run", "short-courses.run"],
       },
       {
         key: "lead", label: "Lead", help: "Also take attendance for any class, for example copying in a paper register.",
         permissions: ["attendance.markAny"],
       },
     ],
+    // Short courses' Instructor teaches on the pool deck now (D24).
+    formerly: [{ id: "short-courses", levels: { run: "teach" } }],
   },
 };
 

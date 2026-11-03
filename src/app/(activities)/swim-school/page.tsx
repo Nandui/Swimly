@@ -5,7 +5,7 @@ import { pageSession } from "@/lib/page-guards";
 import { visibleScreens } from "@/lib/staff/screens";
 import { visibleNavGroups } from "@/modules/activities/features/workspace";
 
-export const metadata: Metadata = { title: "Swim school" };
+export const metadata: Metadata = { title: "Classes" };
 
 /** The swim school's starter page: the desk's quick actions, today's classes on a timeline,
  *  today at the working site, the follow-up queues, and every desk page it can open. */

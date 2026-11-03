@@ -1,6 +1,6 @@
 # Turnfin
 
-Turnfin is the staff product for LeisureWorld's leisure centres: a platform of apps (Swim school, Pool deck, Rota, Training, HR, Incidents, Purchasing and more) with one sign-in, where each person's job opens the apps they need and Home shows what is waiting for them. This is **Turnfin 2.0**: the platform of apps, with a new design on the way. The repository's name, Swimly, is a working name only.
+Turnfin is the staff product for LeisureWorld's leisure centres: a platform of apps (Classes, Pool deck, Finance requests, Rota, Training, HR, Incidents, Purchasing and more) with one sign-in, where each person's job opens the apps they need and Home shows what is waiting for them. This is **Turnfin 2.0**: the platform of apps, with a new design on the way. The repository's name, Swimly, is a working name only.
 
 ## Start here
 

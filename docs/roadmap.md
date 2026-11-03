@@ -91,9 +91,9 @@ Each follows "Adding an app" in [apps.md](apps.md) and the checklist in [../AGEN
 Swim school, Short courses, Refunds, Coinage and Payments become **Classes**, **Finance requests** and **Academy** ([D24](decisions.md)). Smallest first, each shipped and checked on `main` before the next starts:
 
 1. **Payments into Classes** (built 2 November 2026, 3.2.0). Its pages and home items moved into the swim school's module and frame (Failed payments on its Overview); Payments' Use went to Desk, its Manage to Manage. Its tables moved into `activities.prisma` with their names, so nothing was copied.
-2. **Finance requests.** One app with refund and coinage requests: new `FinanceRequest` tables with a detail table per kind, one flow, one queue for finance. Rows are copied from the Refunds and Coinage tables.
-3. **Academy.** Its own module, levels Tutor and Manage, in Team; it keeps its tables and the Academy booking site's API.
-4. **Short courses as an activity type** in Classes, using `Programme.activityType` ([architecture.md](architecture.md#activity-types)): the desk books them, instructors take their registers on the pool deck. Swim school is renamed Classes on screen when this lands.
+2. **Finance requests** (built 3 November 2026, 3.3.0). Refunds and Coinage are one app with one frame and Overview; Use and Manage carried over. They kept their tables and URLs (owner default). Still to do: one `FinanceRequest` table with a detail table per kind, one flow and one queue for finance, its rows copied from the Refunds and Coinage tables.
+3. **Academy** (built 3 November 2026, 3.3.0). Its own module in Team, levels Tutor and Manage, at `/academy`; it kept its tables and the Academy booking site's API.
+4. **Short courses into Classes** (built 3 November 2026, 3.3.0). Their pages and code joined the swim school's module, which is shown as **Classes**; they kept their own tables and registers (owner default). Still to do: short courses as an activity type on `Programme.activityType` ([architecture.md](architecture.md#activity-types)), the desk booking them as classes and instructors taking their registers on the pool deck.
 
 Every copy is a script, dry-run until `--confirm`, run on Production only with the owner's yes. Old tables stop receiving rows and stay readable; each is dropped a month later, with the owner's yes. A merged app that has not been re-themed yet (step 5) gets the 2.0 design in its merge, so nothing is designed twice.
 

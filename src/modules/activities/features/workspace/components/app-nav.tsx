@@ -35,7 +35,7 @@ export function AppChrome({ who, screens, club, clubs, children }: {
     })),
   ];
   return (
-    <ModuleShell module="Swim school" id="swim-school" who={who} groups={groups}
+    <ModuleShell module="Classes" id="swim-school" who={who} groups={groups}
       scopeNote={club.name} contentClass="module-content swim-school-content"
       tools={<SwimSchoolTools screens={screens} club={club} clubs={clubs} />}>
       {children}

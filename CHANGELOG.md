@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.3.0 · 3 November 2026 · Classes, Finance requests and Academy
+
+- **Swim school is now called Classes**, and **short courses** are part of it. Open Classes and choose **Short courses** on its Overview; the short course list is under **Set up**. The weekly timetable page is now called **Timetable**.
+- **Refunds and Coinage are now one app, Finance requests.** Its menu has **Refunds**, **Coinage**, **My refunds** and **My coinage**, and its Overview shows what waits in both. Links in emails still open the same request.
+- **The Academy** (lifeguard and swim teacher courses) is its own app again, under Team, with two levels: **Tutor** and **Manage**. Old links to it still work.
+- **Who can do what:** whoever booked short courses at the desk does it in Classes; anyone who used Refunds or Coinage now has both in Finance requests; instructors take the registers of the short courses they teach from **Short courses** on their Home; Academy tutors and managers keep the Academy. The desk no longer opens the Academy. If something you used is missing, ask an admin.
+
 ## 3.2.0 · 2 November 2026 · Failed payments are part of Swim school
 
 - **Failed payments** are now in Swim school instead of a separate Payments app. Open Swim school and choose **Failed payments** on its Overview; Home still shows the ones to contact.

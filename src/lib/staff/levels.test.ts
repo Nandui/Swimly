@@ -68,11 +68,39 @@ test("extras need their starting level, and unknown modules or levels are droppe
   assert.ok(at({}, [WORK_ANYWHERE]).includes("work.anywhere"));
 });
 
-test("a level stored for the Academy counts for Short courses, which it joined; the higher wins", () => {
-  assert.deepEqual(cleanLevels({ academy: "run" }).levels, { "short-courses": "run" });
-  assert.deepEqual(cleanLevels({ academy: "manage", "short-courses": "view" }).levels, { "short-courses": "manage" });
-  assert.deepEqual(cleanLevels({ "short-courses": "manage", academy: "view" }).levels, { "short-courses": "manage" });
-  assert.ok(at({ academy: "view" }).includes("academy.read"), "Academy pages still open");
+test("Short courses' levels carry: View is Classes Desk, Instructor is Pool deck Teach, Manage is Classes Manage", () => {
+  assert.deepEqual(cleanLevels({ "short-courses": "view" }).levels, { "swim-school": "desk" });
+  assert.deepEqual(cleanLevels({ "short-courses": "run" }).levels, { "pool-deck": "teach", academy: "tutor" });
+  assert.deepEqual(cleanLevels({ "short-courses": "manage" }).levels, { "swim-school": "manage", academy: "manage" });
+  assert.deepEqual(cleanLevels({ "short-courses": "view", "swim-school": "manage" }).levels, { "swim-school": "manage" }, "the higher wins");
+  const teach = at({ "pool-deck": "teach" });
+  assert.ok(teach.includes("short-courses.run") && !teach.includes("short-courses.read"), "instructors take registers; booking stays the desk's");
+  assert.ok(at({ "swim-school": "desk" }).includes("short-courses.read"));
+  assert.ok(at({ "swim-school": "manage" }).includes("short-courses.manage"));
+});
+
+test("Short courses' Instructor and Manage carry to the Academy as Tutor and Manage; View gives no Academy level", () => {
+  assert.deepEqual(cleanLevels({ "short-courses": "view" }).levels.academy, undefined);
+  assert.equal(cleanLevels({ "short-courses": "run" }).levels.academy, "tutor");
+  assert.equal(cleanLevels({ "short-courses": "manage" }).levels.academy, "manage");
+  assert.ok(!at({ "short-courses": "view" }).includes("academy.read"), "the desk's View never opens the Academy");
+  for (const key of ["academy.read", "academy.run"]) assert.ok(at({ "short-courses": "run" }).includes(key as never), key);
+});
+
+test("a level stored for the old Academy app (before 15 October) counts the same way; the higher wins", () => {
+  assert.deepEqual(cleanLevels({ academy: "run" }).levels, { academy: "tutor" });
+  assert.deepEqual(cleanLevels({ academy: "view" }).levels, {});
+  assert.deepEqual(cleanLevels({ academy: "tutor", "short-courses": "manage" }).levels.academy, "manage");
+  assert.deepEqual(cleanLevels({ academy: "manage", "short-courses": "run" }).levels.academy, "manage");
+});
+
+test("Refunds and Coinage levels count for Finance requests, which they joined; the higher wins", () => {
+  assert.deepEqual(cleanLevels({ refunds: "use" }).levels, { "finance-requests": "use" });
+  assert.deepEqual(cleanLevels({ refunds: "use", coinage: "manage" }).levels, { "finance-requests": "manage" });
+  assert.deepEqual(cleanLevels({ coinage: "use", "finance-requests": "manage" }).levels, { "finance-requests": "manage" });
+  const desk = at({ refunds: "use" });
+  for (const key of ["refunds.request", "coinage.request"]) assert.ok(desk.includes(key as never), `a refunds desk role now asks for coinage too: ${key}`);
+  assert.ok(!desk.includes("refunds.review" as never) && !desk.includes("coinage.review" as never), "Use never decides");
 });
 
 test("the receptionist from the mockup gets the desk, refunds to log, reading and the rota", () => {
@@ -92,7 +120,7 @@ test("old roles convert without losing anything, and every gain is reported", ()
   const instructor = levelsFromAccess(["attendance.mark", "attendance.cover", "progression.complete"], ["instructor"]);
   assert.deepEqual(instructor.role.levels, { "pool-deck": "teach" });
   assert.deepEqual(instructor.losses, []);
-  assert.deepEqual(instructor.gains, ["assessments.run"], "assessments are run from the instructor view");
+  assert.deepEqual(instructor.gains, ["assessments.run", "short-courses.run"], "assessments are run from the instructor view, and short course registers taken (D24)");
   const viewer = levelsFromAccess([], ["calendar", "students"]);
   assert.deepEqual(viewer.role.levels, { "swim-school": "desk" }, "an old screen counts as the permission its page needs");
   assert.ok(viewer.gains.includes("students.manage"), "there is no read-only level, so the gains are listed for review");
@@ -111,7 +139,7 @@ test("a legacy role holding HR everywhere converts to HR Everyone, not Report or
 
 test("a role is described in the owner's words, and its columns match its levels", () => {
   const role = cleanLevels({ "swim-school": "desk", refunds: "use" }, ["swim-school.cancel-classes"]);
-  assert.equal(describeLevels(role), "Swim school: Desk (can cancel classes) · Refunds: Use");
+  assert.equal(describeLevels(role), "Classes: Desk (can cancel classes) · Finance requests: Use");
   const columns = roleColumns(role);
   assert.equal(columns.restricted, false);
   assert.ok(columns.permissions.includes("classes.cancel") && screensOf(columns.permissions).has("cancellations"));
@@ -120,8 +148,8 @@ test("a role is described in the owner's words, and its columns match its levels
 test("level lines give one row per module, with the level's help and its ticks", () => {
   const role = cleanLevels({ "swim-school": "desk", refunds: "use" }, ["swim-school.cancel-classes", WORK_ANYWHERE]);
   const lines = levelLines(role);
-  assert.deepEqual(lines.map((line) => `${line.module}: ${line.level}`), ["Swim school: Desk", "Refunds: Use"]);
-  assert.equal(lines[1].help, "Log a customer's refund request and follow it.");
+  assert.deepEqual(lines.map((line) => `${line.module}: ${line.level}`), ["Classes: Desk", "Finance requests: Use"]);
+  assert.equal(lines[1].help, "Log a customer's refund request or ask for coinage for a till, and follow them.");
   assert.deepEqual(lines[0].ticks.map((tick) => tick.label), ["Can cancel classes"]);
   assert.deepEqual(levelLines(cleanLevels({})), []);
 });
@@ -137,6 +165,6 @@ test("an old screen never grants a permission its page already needed", () => {
 
 test("the Works at wording names every app that applies only at a person's sites", () => {
   const names = siteBoundAppNames();
-  for (const name of ["Swim school", "Rota", "Training", "Incidents"]) assert.ok(names.includes(name), name);
-  for (const name of ["Refunds", "Docs"]) assert.ok(!names.includes(name), `${name} applies everywhere`);
+  for (const name of ["Classes", "Rota", "Training", "Incidents", "Academy"]) assert.ok(names.includes(name), name);
+  for (const name of ["Finance requests", "Docs"]) assert.ok(!names.includes(name), `${name} applies everywhere`);
 });

@@ -3,7 +3,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import { visibleScreens, type ScreenKey } from "@/lib/staff/screens";
-import { registerAreaRename, registerCommitments, registerHomeCard, registerMemberDirectory, registerMemberNotices, registerSiteSummary, type Commitment, type HomeIcon, type HomeItem, type HomeSession, registerSearch } from "@/modules/contributions";
+import { registerAppCourses, registerAreaRename, registerCommitments, registerEmailBookings, registerHomeCard, registerMemberDirectory, registerMemberHistory, registerMemberNotices, registerSiteSummary, type Commitment, type HomeIcon, type HomeItem, type HomeSession, registerSearch } from "@/modules/contributions";
 import { formatTime, isDateOnly, minutesNow, parseDateOnly, plural, today } from "@/lib/format";
 import { logAudit } from "@/lib/audit";
 import { staffByIds } from "@/lib/directory";
@@ -18,6 +18,9 @@ import { sessionState } from "@/modules/activities/shared/today/calendar";
 import { memberDirectory } from "@/modules/activities/features/students/server/members";
 import { memberPaymentNotices } from "@/modules/activities/features/failed-payments/server/data";
 import { paymentsHomeItems } from "@/modules/activities/features/failed-payments/server/home";
+import { parentsAppCourses } from "@/modules/activities/features/short-courses/server/parents-app";
+import { shortCourseEmailBookings } from "@/modules/activities/features/short-courses/server/email-bookings";
+import { renameShortCoursePlaces, SHORT_COURSE_SESSIONS, shortCourseCommitments, shortCourseHomeItems, shortCourseMemberHistory, shortCourseRegisterItems } from "@/modules/activities/features/short-courses/server/contributions";
 
 
 /** Who teaches which class when, for the rota's plan and its clash check: each class on each
@@ -170,6 +173,7 @@ registerHomeCard({
     if (awaiting) items.push({ label: "Awaiting enrolment", hint: "Class places and family follow-ups", href: "/awaiting-enrolment", count: awaiting.total, attention: awaiting.total > 0 });
     if (parentUpdates !== null) items.push({ label: "Parent updates", hint: "Contact and medical corrections", href: "/students/parent-changes", count: parentUpdates, attention: parentUpdates > 0 });
     items.push(...await paymentsHomeItems(viewer));
+    items.push(...await shortCourseHomeItems(viewer));
     return items;
   },
 });
@@ -180,7 +184,7 @@ registerHomeCard({
   moduleId: "pool-deck",
   async items(viewer) {
     const held = expandPermissions(viewer.permissions, { superadmin: viewer.isSuperadmin });
-    if (!visibleScreens(held).has("instructor")) return [];
+    if (!visibleScreens(held).has("instructor")) return shortCourseRegisterItems(viewer);
     const iso = today(), now = minutesNow();
     const [courses, covers, cancelled] = await Promise.all([getCoursesOnDate(iso), getCoversForDay(iso), getCancellationsForDay(iso)]);
     const mine = courses.filter((c) => (c.instructorId === viewer.id || covers.get(c.id)?.coverById === viewer.id) && !cancelled.has(c.id));
@@ -191,6 +195,7 @@ registerHomeCard({
         hint: ahead.length ? `Next at ${formatTime(ahead[0].startMinutes)}` : mine.length ? "All done for today" : "Nothing on your list today",
       },
       { kind: "action", icon: "clipboardCheck", label: "Open my classes", href: "/instructor" },
+      ...await shortCourseRegisterItems(viewer),
     ];
   },
 });
@@ -235,3 +240,13 @@ registerSearch({
     }));
   },
 });
+
+/** Short courses, part of the swim school since D24 (3 November 2026), keep their own tables:
+ *  their sessions as commitments (the Rota shows them), area renames, the courses each swimmer
+ *  has been booked on for their profile, the Pool courses shown in the parents app, and places
+ *  booked under an email for "My bookings" on the Academy booking site. */
+registerCommitments({ id: SHORT_COURSE_SESSIONS, app: "swim-school", list: shortCourseCommitments });
+registerAreaRename({ id: "short-courses.places", rename: renameShortCoursePlaces });
+registerMemberHistory({ id: "short-courses.bookings", app: "swim-school", list: shortCourseMemberHistory });
+registerAppCourses(parentsAppCourses);
+registerEmailBookings({ id: "short-courses.bookings-by-email", app: "swim-school", list: shortCourseEmailBookings });

@@ -6,7 +6,7 @@
 
 Turnfin is the staff product for LeisureWorld's leisure centres in Cork. Reception, poolside, swim school, duty managers, trainers, HR, finance and the back office all work in it, across several sites, on shared computers, poolside tablets and their own phones.
 
-Turnfin 2.0 is a **platform of apps**: one product, one sign-in and one set of records, with each area of the business (Swim school, Rota, HR, Incidents, Purchasing and whatever comes next) built as an app on a shared platform. An app can grow as big as a product another company sells on its own and still never break the others.
+Turnfin 2.0 is a **platform of apps**: one product, one sign-in and one set of records, with each area of the business (Classes, Rota, HR, Incidents, Purchasing and whatever comes next) built as an app on a shared platform. An app can grow as big as a product another company sells on its own and still never break the others.
 
 2.0 also brings a **new look and feel**, Turnfin Sheet, approved on 1 November 2026 and written in [DESIGN.md](DESIGN.md).
 

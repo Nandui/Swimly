@@ -26,15 +26,14 @@ const activitiesFiles = [
 const moduleArea = (id, ...extra) => [`src/modules/${id}/**`, `src/app/${id}/**`, ...extra];
 const otherModules = {
   docs: moduleArea("docs", "src/app/api/docs/**"),
-  refunds: moduleArea("refunds", "src/app/api/refunds/**"),
-  coinage: moduleArea("coinage"),
+  "finance-requests": moduleArea("finance-requests", "src/app/(finance-requests)/**", "src/app/api/refunds/**"),
   training: moduleArea("training", "src/app/api/cron/training/**"),
   hr: moduleArea("hr"),
   rota: moduleArea("rota"),
   plan: moduleArea("plan"),
   purchasing: moduleArea("purchasing"),
   tasks: moduleArea("tasks", "src/app/api/cron/tasks/**"),
-  "short-courses": moduleArea("short-courses", "src/app/api/academy/**"),
+  academy: moduleArea("academy", "src/app/api/academy/**"),
   stock: moduleArea("stock"),
   cctv: moduleArea("cctv"),
   "site-monitoring": moduleArea("site-monitoring"),
@@ -106,12 +105,11 @@ const coreData = notTables(Object.keys(moduleFiles), "Core never queries a modul
 // names the module's relations to Core tables, so joins are caught too.
 const coreThroughFunctions = {
   docs: [],
-  refunds: [],
-  coinage: [],
+  "finance-requests": [],
   purchasing: ["role", "site"],
   tasks: ["site"],
   incidents: [],
-  "short-courses": ["organisation", "qualificationType", "qualification", "site", "tutor", "assessor", "user"],
+  academy: ["organisation", "qualificationType", "qualification", "site", "tutor", "assessor", "user"],
   stock: [],
   cctv: [],
   "site-monitoring": [],
@@ -138,7 +136,7 @@ const moduleData = (self) => [
 // public-API kit, the email sender) lives in Core: src/lib/public-api and
 // src/lib/email. A module never imports another module's copy.
 const modulePlumbing = [
-  { owner: ["src/modules/short-courses/features/booking/**", "src/app/api/academy/**"], from: ["./src/modules/short-courses/features/booking/server"] },
+  { owner: ["src/modules/academy/features/booking/**", "src/app/api/academy/**"], from: ["./src/modules/academy/features/booking/server"] },
   { owner: ["src/lib/staff-api/**", "src/app/api/staff/**"], from: ["./src/lib/staff-api/email.ts", "./src/lib/staff-api/http.ts"] },
   { owner: activitiesFiles, from: ["./src/modules/activities/shared/parents/email.ts", "./src/modules/activities/shared/parents/http.ts", "./src/modules/activities/shared/parents/sign-in-email.ts"] },
 ];

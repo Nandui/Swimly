@@ -13,8 +13,9 @@ import { teacherKey, within } from "@/modules/activities/features/analytics/serv
  * waiting for billing) says how long it took. Plain functions over lean rows, so the rules are tested
  * without a database. */
 
-/** The modules whose work the desk does, by their log names. */
-export const DESK_MODULES = ["Swim school", "Short courses", "Refunds"] as const;
+/** The modules whose work the desk does, by their log names. Short courses, Refunds and the Academy
+ *  logged under their own names before D24 (3 November 2026), so the older names stay. */
+export const DESK_MODULES = ["Swim school", "Short courses", "Refunds", "Finance requests", "Academy"] as const;
 
 /** The kinds of desk work, in the order they are shown. Teaching (registers, ticks, starts) and set-up
  *  (programmes, levels, classes) are left out: they are not the desk's. */
@@ -37,13 +38,14 @@ export type WorkKind = (typeof WORK_KINDS)[number]["key"];
 
 /** Which kind of desk work a logged action is, or null when it is not the desk's. */
 export function workKind(module: string | null, entity: string, action: string): WorkKind | null {
-  if (module === "Refunds") return entity === "RefundRequest" ? "refund" : null;
-  if (module === "Short courses") {
+  if (module === "Refunds" || module === "Finance requests") return entity === "RefundRequest" ? "refund" : null;
+  if (module === "Short courses" || module === "Academy") {
     if (entity === "AcademyCandidate" || entity === "AcademyCall") return "academy";
     if (entity === "ShortCourseParticipant") return "short";
     return null;
   }
   if (module !== "Swim school") return null;
+  if (entity === "ShortCourseParticipant") return "short";
   switch (entity) {
     case "Enrolment":
       if (action === "enrol") return "enrol";
@@ -79,7 +81,7 @@ const JOB_KINDS: Record<string, { label: string; hint: string; target: number | 
   "billing.agreement": { label: "Billing agreement checks", hint: "From a new place to its Legend agreement marked done", target: 7 * 24 * 60, href: "/legend-agreements" },
   "billing.cancellation": { label: "Cancelled classes to billing", hint: "From a class being cancelled to billing being told", target: 2 * 24 * 60, href: "/cancellations" },
   // Reported by other modules (registerDeskMeasures); they time themselves.
-  "academy.call-back": { label: "Academy call backs", hint: "From a place held online to the first phone call, promised within 72 hours", target: 72 * 60, href: "/short-courses" },
+  "academy.call-back": { label: "Academy call backs", hint: "From a place held online to the first phone call, promised within 72 hours", target: 72 * 60, href: "/academy/calls" },
   "refunds.sent": { label: "Refund requests sent", hint: "From starting a refund request to sending it for review", target: null, href: "/refunds" },
 };
 

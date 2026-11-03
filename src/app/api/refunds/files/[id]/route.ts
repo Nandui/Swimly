@@ -1,5 +1,5 @@
 import { appRoute } from "@/lib/apps/switches";
-import { readReceipt, requireRefundActor } from "@/modules/refunds/features/request";
+import { readReceipt, requireRefundActor } from "@/modules/finance-requests/features/refund-request";
 
 async function serveGet(_request: Request, { params }: RouteContext<"/api/refunds/files/[id]">) {
   try {
@@ -9,4 +9,4 @@ async function serveGet(_request: Request, { params }: RouteContext<"/api/refund
   } catch { return new Response('Receipt not available.', { status: 404, headers: { 'Cache-Control': 'no-store' } }); }
 }
 
-export const GET = appRoute("refunds", serveGet);
+export const GET = appRoute("finance-requests", serveGet);

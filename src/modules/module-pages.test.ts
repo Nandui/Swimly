@@ -2,16 +2,15 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { ADMIN_GROUPS } from "@/components/core/pages";
 import { NAV_ITEMS } from "@/modules/activities/features/workspace/server/nav";
+import { academyPages } from "@/modules/academy/features/workspace/pages";
 import { cctvPages } from "@/modules/cctv/features/workspace/pages";
-import { coinagePages } from "@/modules/coinage/features/workspace/pages";
+import { financePages } from "@/modules/finance-requests/features/workspace/pages";
 import { hrPages } from "@/modules/hr/features/workspace/pages";
 import { incidentPages } from "@/modules/incidents/features/workspace/pages";
 import { maintenancePages } from "@/modules/maintenance/features/workspace/pages";
 import { planPages } from "@/modules/plan/features/workspace/pages";
 import { purchasingPages } from "@/modules/purchasing/features/workspace/pages";
-import { refundPages } from "@/modules/refunds/features/workspace/pages";
 import { rotaPages } from "@/modules/rota/shared/components/pages";
-import { shortCoursesPages } from "@/modules/short-courses/features/workspace/pages";
 import { monitoringPages } from "@/modules/site-monitoring/features/workspace/pages";
 import { stockPages } from "@/modules/stock/features/workspace/pages";
 import { tasksPages } from "@/modules/tasks/features/workspace/pages";
@@ -24,17 +23,16 @@ const everything = new Proxy({}, { get: (_target, key) => (key === "id" ? "someo
  *  by its frame, as it is not in its nav list. */
 const APPS: [string, { label: string; place?: "setup" | "overview" }[]][] = [
   ["Admin", ADMIN_GROUPS.flatMap((group) => group.links)],
-  ["Swim school", [{ label: "Overview" }, ...NAV_ITEMS]],
+  ["Classes", [{ label: "Overview" }, ...NAV_ITEMS]],
+  ["Academy", academyPages()],
   ["CCTV log", cctvPages()],
-  ["Coinage", coinagePages(everything)],
+  ["Finance requests", financePages({ id: "someone", refunds: everything, coinage: everything })],
   ["HR", hrPages(everything)],
   ["Incidents", incidentPages(everything)],
   ["Maintenance", maintenancePages()],
   ["Plan (test)", planPages()],
   ["Purchasing", purchasingPages(everything)],
-  ["Refunds", refundPages(everything)],
   ["Rota", rotaPages(true)],
-  ["Short courses", shortCoursesPages()],
   ["Site Monitoring", monitoringPages()],
   ["Stock", stockPages()],
   ["Tasks", tasksPages(everything)],

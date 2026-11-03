@@ -8,8 +8,8 @@ export const START_GUIDES: HelpArticle[] = [
     before: ["Sign in with your staff account. Your role decides which apps, pages and actions you can use."],
     steps: [
       { title: "Check the working site", text: "The site picker is in the tools bar at the top right, beside the swimmer search and your name. On a phone it is the building button. Check it before using Schedule, Duty manager or Analytics." },
-      { title: "Move between apps", text: "Your apps are in the bar down the left: Home, Swim school, Refunds, Docs, Training, Rota, HR or Admin, depending on your role. On phones and touch screens they are in the bar along the bottom, with any others under More." },
-      { title: "Plan today’s work", text: "Each app’s pages are in the page bar at the top; pages that do not fit are under More. In Swim school, Schedule shows classes and assessments for one day, and Duty manager is today’s operational list." },
+      { title: "Move between apps", text: "Your apps are in the bar down the left: Home, Classes, Finance requests, Docs, Training, Rota, HR or Admin, depending on your role. On phones and touch screens they are in the bar along the bottom, with any others under More." },
+      { title: "Plan today’s work", text: "Each app’s pages are in the page bar at the top; pages that do not fit are under More. In Classes, Schedule shows classes and assessments for one day, and Duty manager is today’s operational list." },
       { title: "Find your account", text: "Select your name at the top right to open the account menu. It holds Appearance, Manage account and Sign out." },
       { title: "Keep this guide beside your work", text: "Help opens in a new tab from the bottom of the left bar (under More on phones), so you can read a guide while the form you are working on stays open." },
     ],

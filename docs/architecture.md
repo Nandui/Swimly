@@ -20,8 +20,8 @@ flowchart TB
   subgraph Turnfin
     front["Front: Home, Admin, the staff API"]
     subgraph Apps["Apps (src/modules/&lt;id&gt;)"]
-      a1["Swim school · Pool deck · Analytics"]
-      a2["Short courses · Refunds · Coinage"]
+      a1["Classes · Pool deck · Analytics"]
+      a2["Finance requests · Academy"]
       a3["Tasks · Incidents · Rota · Training"]
       a4["Docs · HR · CCTV log · Site Monitoring · Maintenance"]
       a5["Purchasing · Stock · next app"]
@@ -104,10 +104,11 @@ An app must keep working when any other app is switched off: a missing front doo
 | `registerSubjectRecords` | an app's full records about a person, for HR's subject export |
 | `registerCommitments` | who is busy when (classes, course sessions), which Rota shows and may plan |
 | `registerDeskMeasures` | timed desk jobs, for the swim school's Reception analytics |
-| `registerMemberDirectory`, `registerMemberHistory` | the swim school's member records, for Short courses to book people from and the swim school's failed payments to match member numbers (`byNumbers`) |
+| `registerMemberDirectory`, `registerMemberHistory` | the swim school's member records, for short courses and the Academy to book people from and the swim school's failed payments to match member numbers (`byNumbers`) |
 | `registerMemberNotices` | what another app needs raised with a member, shown as a badge on their swimmer profile (the swim school's own "Payment failed") |
 | `registerAreaRename` | renaming a site's area updates every app that stores area names |
 | `registerAppCourses` | the short courses the parent app offers |
+| `registerEmailBookings` | the places another app holds under a customer's email, for "My bookings" on the Academy booking site (the swim school's short courses, D24) |
 | `registerSearch` | what an app can be searched for, for the one search ([The frame](#the-frame)) |
 
 Every registration names its `app` (the manifest id), so a switched-off app's plugs answer "not available". A plug that fails is named on the page, never fatal. Other seams: **session hooks** (`src/modules/session-hooks.ts`, per-request work such as applying due scheduled unenrolments) and **links** by URL.
@@ -132,6 +133,7 @@ The bus is `src/platform/events`: typed and in-process. An event is emitted afte
 
 - **The setting** is the platform's table `AppSwitch` (`app_switches`, in `core.prisma`): `orgId`, `appId` (the manifest id), `state` (`on`, `off`, `sites`), `siteIds`. No row means on everywhere. Admin is the platform's own and has no switch.
 - **Who changes it:** only a superadmin (`User.isSuperadmin`, never a permission), at **Admin › Apps** (`/apps`, `src/lib/apps/actions.ts`). Each change writes the switch and one audit row in the same transaction.
+- **Merged apps:** an app that took others' place (a manifest's `formerly` entry marked `switch`, D24) follows their switches until it has its own: on wherever any was on, off only where all were off (`withCarriedSwitches`). Admin › Apps shows it that way, and a superadmin's first change gives it its own row.
 - **The one question:** `appOn(appId, { orgId?, siteId? })` in `src/lib/apps/switches.ts`. With a site, it asks whether the app is on there; without one (a person's records, the whole organisation), whether it is on anywhere. Everything asks this one function; no app checks its own switch any other way.
 
 Where an app is off, here is what happens and where:
@@ -155,7 +157,7 @@ The switched-off test (`src/lib/apps/switched-off.test.ts`) switches each app of
 ### The model
 
 1. **Roles with levels.** A role (`StaffRole`) holds one level per app plus at most two extras (`StaffRole.levels`, `StaffRole.extras`). Levels include the ones before them.
-2. **Levels become permissions.** `src/lib/staff/levels.ts` turns levels into named permissions (`refunds.review`, `hr.details.write`). Permissions are the only access language: pages, menus and actions ask for a permission, never a level or a role name. The catalogue is code (`src/lib/staff/permissions.ts`); each permission is given by exactly one level or extra in one manifest, and a test checks it.
+2. **Levels become permissions.** `src/lib/staff/levels.ts` turns levels into named permissions (`refunds.review`, `hr.details.write`). Permissions are the only access language: pages, menus and actions ask for a permission, never a level or a role name. The catalogue is code (`src/lib/staff/permissions.ts`); each permission is given by exactly one level or extra in one manifest, and a test checks it. When apps merge, a role's stored level for the old app still counts through the new manifests' `formerly` level maps (one old app can feed several, with different level keys) until the role is next saved.
 3. **Where a level reaches.** Each manifest says whether its levels apply at the person's sites, over the people they manage (HR Report, via `User.managerId`), or everywhere ([apps.md](apps.md)).
 4. **The working site.** A person works at one site at a time (`getCurrentClub`, `src/lib/clubs/current.ts`): their chosen site if valid, else their main one, else their first. The session's flat permissions are what they hold **at that site**.
 5. **Restricted permissions** (HR) are never given to administrators; only a superadmin gives a role that holds them (`StaffRole.restricted`).
@@ -232,7 +234,7 @@ Only a superadmin makes another; the last active superadmin cannot be removed. T
 | --- | --- | --- | --- | --- |
 | **Turnfin Me** | each member of staff, on their phone | `apps/me` | `/api/staff/v1` (`src/lib/staff-api`, `src/app/api/staff/v1`) | `STAFF_AUTH_SECRET`, `STAFF_API_ALLOWED_ORIGINS` |
 | **Parent app** | parents | separate repository, [Nandui/swimly-public-app](https://github.com/Nandui/swimly-public-app) | `/api/parent/v1`, contract in [parent-api.openapi.json](parent-api.openapi.json); staff controls at `/api/parent-admin/v1` | `PARENT_AUTH_SECRET`, `PARENT_API_ALLOWED_ORIGINS` |
-| **Academy booking site** | the public | `apps/academy` | `/api/academy/v1` (Short courses' booking API) | `ACADEMY_AUTH_SECRET`, `ACADEMY_API_ALLOWED_ORIGINS` |
+| **Academy booking site** | the public | `apps/academy` | `/api/academy/v1` (the Academy's booking API) | `ACADEMY_AUTH_SECRET`, `ACADEMY_API_ALLOWED_ORIGINS` |
 
 Rules for every connected product:
 - It reaches Turnfin only through its versioned API, behind an `*_API_ENABLED` switch, with email-code sign-in, Bearer tokens and an exact origin allowlist.
@@ -253,7 +255,7 @@ Prisma 7: the client is generated into `src/generated/prisma`, uses the `@prisma
 
 ## Activity types
 
-`src/modules/activities/shared/types.ts` defines `ACTIVITY_TYPES`. Swim school is the only one (features `progression`, `assessments`, `parentApp`, `waitlists`, `cover`). Short courses become the second ([D24](decisions.md)). A second type gives `Programme` an additive `activityType` column and makes screens ask `hasFeature` instead of assuming levels and competencies exist.
+`src/modules/activities/shared/types.ts` defines `ACTIVITY_TYPES`. Swim school is the only one (features `progression`, `assessments`, `parentApp`, `waitlists`, `cover`). Short courses, part of Classes since D24 but still on their own tables, become the second ([D24](decisions.md)). A second type gives `Programme` an additive `activityType` column and makes screens ask `hasFeature` instead of assuming levels and competencies exist.
 
 ## Known gaps
 

@@ -25,7 +25,7 @@ import { manrope } from "./fonts";
  *  may set `icons` (one entry would turn the file icon off on that route). */
 export const metadata: Metadata = {
   title: { default: APP_NAME, template: TITLE_TEMPLATE },
-  description: "Swim school, pool deck, refunds, documents, training, rota and HR for leisure centre teams, in one place.",
+  description: "Classes, pool deck, finance requests, documents, training, rota and HR for leisure centre teams, in one place.",
 };
 
 /** `viewportFit: cover` lets the page run under the notch and the home

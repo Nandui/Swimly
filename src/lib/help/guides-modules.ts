@@ -16,16 +16,16 @@ export const MODULE_GUIDES: HelpArticle[] = [
       { title: "Use Turnfin Me for your own things", text: "Your own training, required reading, qualifications, shifts and the HR notes shared with you are in Turnfin Me on your phone, not here. Sign in to it with your work email; it sends you a code." },
     ],
     result: "You can see what needs doing today and go straight to it, while your own records stay on your phone.",
-    troubleshooting: [{ question: "Why is my home page different from a colleague’s?", answer: "It follows your role and your sites. Someone with no Refunds level sees no refunds to decide. Ask your manager if an app you need is missing." }],
+    troubleshooting: [{ question: "Why is my home page different from a colleague’s?", answer: "It follows your role and your sites. Someone with no Finance requests level sees no refunds to decide. Ask your manager if an app you need is missing." }],
     related: ["get-started", "switch-sites", "missing-access"],
   },
   {
     slug: "log-refund", title: "Log a refund request", category: "refunds", scopes: ["desk"],
     summary: "Send a customer’s refund request to finance with the details they need to decide it.",
     keywords: ["refund", "money back", "customer", "request", "receipt", "finance", "draft", "reception"],
-    before: ["You need the Refunds: Use level. Have the customer’s details, what they paid for, the amount and the original payment reference to hand."],
+    before: ["You need the Finance requests: Use level. Have the customer’s details, what they paid for, the amount and the original payment reference to hand."],
     steps: [
-      { title: "Open Log a refund request", text: "In Refunds, choose Log a refund request at the top right of Refund requests. Home’s quick actions have the same link." },
+      { title: "Open Log a refund request", text: "In Finance requests, open Refunds and choose Log a refund request at the top right. Home’s quick actions have the same link." },
       { title: "Fill in the customer and the payment", text: "Enter the customer name, choose the site and service, and describe what was purchased. Then add the requested refund, the original payment date and its reference from Legend, a receipt or your payment system, and the reason. Never enter card or bank details." },
       { title: "Save a draft or submit it", text: "Save draft keeps it in My drafts; a draft needs only the site and service, and you must save one to add receipts. When every detail is there, choose Submit to finance." },
       { title: "Follow it in My requests", text: "My requests shows each request you logged and where it is. If finance asks for more information, it comes back to you with their question; answer it and submit again." },
@@ -38,7 +38,7 @@ export const MODULE_GUIDES: HelpArticle[] = [
     slug: "decide-refund", title: "Decide a refund request", category: "refunds", scopes: ["desk"],
     summary: "Take responsibility for a request, approve or decline it, then record the payment.",
     keywords: ["refund", "approve", "decline", "finance", "payment", "request information", "pay", "review"],
-    before: ["You need the Refunds: Manage level. Nobody decides a request they logged themselves; another finance colleague does."],
+    before: ["You need the Finance requests: Manage level. Nobody decides a request they logged themselves; another finance colleague does."],
     steps: [
       { title: "Open the request", text: "Refund requests shows what needs your team’s action, with figures for Awaiting review, Needs information, Awaiting payment and Refunded. Search by name, member or RF number, then open the request." },
       { title: "Take responsibility for it", text: "Choose Take responsibility so colleagues know you are handling it. Read the customer, service, amount, reason and any receipts." },

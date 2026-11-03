@@ -19,7 +19,7 @@ export default async function BillingPricesPage() {
   const prices = await getLegendPrices();
   const canEdit = can(session, "curriculum.manage");
   return <PageShell spacing="roomy" header={<PageHeader back={{ href: "/cancellations", label: "Cancelled classes" }} title="Billing prices" description="Each agreement price's monthly price in Legend. The price restore export puts it in NewCycleFee, to put members back on it after a cancellation." />}>
-    <RecordSection id="prices-heading" title="Agreement prices" aside={<p>{prices.length}</p>} note={canEdit ? undefined : "Swim school Manage keeps these prices."}>
+    <RecordSection id="prices-heading" title="Agreement prices" aside={<p>{prices.length}</p>} note={canEdit ? undefined : "Classes Manage keeps these prices."}>
       <ul className="pc-list">
         {prices.map((p) => (
           <li key={p.id} className="pc-row">

@@ -1,16 +1,15 @@
 import { analyticsModule, poolDeckModule, swimSchoolModule } from "@/modules/activities/manifest";
+import { academyModule } from "@/modules/academy/manifest";
 import { cctvModule } from "@/modules/cctv/manifest";
-import { coinageModule } from "@/modules/coinage/manifest";
+import { financeRequestsModule } from "@/modules/finance-requests/manifest";
 import { docsModule } from "@/modules/docs/manifest";
 import { hrModule } from "@/modules/hr/manifest";
 import { incidentsModule } from "@/modules/incidents/manifest";
 import { maintenanceModule } from "@/modules/maintenance/manifest";
 import { purchasingModule } from "@/modules/purchasing/manifest";
-import { refundsModule } from "@/modules/refunds/manifest";
 import { planModule } from "@/modules/plan/manifest";
 import { rotaModule } from "@/modules/rota/manifest";
 import { siteMonitoringModule } from "@/modules/site-monitoring/manifest";
-import { shortCoursesModule } from "@/modules/short-courses/manifest";
 import { stockModule } from "@/modules/stock/manifest";
 import { tasksModule } from "@/modules/tasks/manifest";
 import { trainingModule } from "@/modules/training/manifest";
@@ -22,15 +21,14 @@ import { trainingModule } from "@/modules/training/manifest";
  *  module.ts, is loaded by src/modules/server.ts. */
 export const modules = [
   swimSchoolModule,
-  shortCoursesModule,
-  refundsModule,
-  coinageModule,
+  financeRequestsModule,
   poolDeckModule,
   tasksModule,
   incidentsModule,
   rotaModule,
   planModule,
   trainingModule,
+  academyModule,
   docsModule,
   hrModule,
   cctvModule,

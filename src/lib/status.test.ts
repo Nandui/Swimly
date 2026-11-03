@@ -8,13 +8,14 @@ import { HOME_ITEM_META, HOME_SESSION_META } from "@/lib/home-meta";
 import { NOTE_VISIBILITY_META, REVIEW_STATUS_META } from "@/modules/hr/shared/constants";
 import { PERSON_STATUS_META, QUALIFICATION_STATE_META } from "@/lib/people/constants";
 import { incidentStatuses, seriousMeta, SEVERITY_META } from "@/modules/incidents";
-import { refundStatuses } from "@/modules/refunds";
-import { coinageStatuses } from "@/modules/coinage";
+import { refundStatuses } from "@/modules/finance-requests";
+import { coinageStatuses } from "@/modules/finance-requests";
 import { MONITORING_STATUS_META } from "@/modules/site-monitoring";
 import { MAINTENANCE_STATUS_META, MAINTENANCE_URGENCY_META } from "@/modules/maintenance";
 import { OFF_REASON_META } from "@/modules/plan";
 import { PAYMENT_STATUS_META } from "@/modules/activities/shared/payments/types";
-import * as shortCourses from "@/modules/short-courses";
+import * as shortCourses from "@/modules/activities/shared/short-courses/rules";
+import * as academy from "@/modules/academy";
 import { STOCK_CATEGORY_TONE_META, STOCK_CHANGE_META, STOCK_TAKE_META } from "@/modules/stock";
 import { CCTV_REASON_META } from "@/modules/cctv";
 import * as rota from "@/modules/rota/shared/constants";
@@ -32,6 +33,7 @@ const MAPS: Record<string, Record<string, StatusMeta>> = {
   SHORT_COURSE_PAYMENT_META: shortCourses.SHORT_COURSE_PAYMENT_META, SHORT_COURSE_PLACE_META: shortCourses.SHORT_COURSE_PLACE_META,
   SHORT_COURSE_ONLINE_META: shortCourses.SHORT_COURSE_ONLINE_META, SHORT_COURSE_CALL_DUE_META: shortCourses.SHORT_COURSE_CALL_DUE_META,
   SWIMMER_RECORD_META: shortCourses.SWIMMER_RECORD_META,
+  ...academy,
   STOCK_CATEGORY_TONE_META, STOCK_CHANGE_META, STOCK_TAKE_META,
   CCTV_REASON_META,
   MONITORING_STATUS_META,

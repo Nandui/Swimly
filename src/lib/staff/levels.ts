@@ -39,22 +39,32 @@ function rankOf(mod: ModuleManifest, level: string | undefined) {
   return mod.access.levels.findIndex((l) => l.key === level);
 }
 
-/** The module a stored module id now belongs to: itself, or the module it was merged into. */
-function currentModule(id: string) {
-  return moduleById(id) ?? allModules().find((m) => m.access.formerly?.includes(id));
+/** Where a stored level counts now: in its own module, if that module still has the level, and
+ *  in every module that took it over (`formerly`), through that module's level map. */
+function currentLevels(id: string, level: string): { mod: ModuleManifest; level: string }[] {
+  const own = moduleById(id);
+  const out = own && rankOf(own, level) >= 0 ? [{ mod: own, level }] : [];
+  for (const mod of allModules()) {
+    for (const former of mod.access.formerly ?? []) {
+      if (former.id !== id) continue;
+      const mapped = former.levels ? former.levels[level] : level;
+      if (mapped && rankOf(mod, mapped) >= 0) out.push({ mod, level: mapped });
+    }
+  }
+  return out;
 }
 
 /** Drops unknown modules, levels and extras, so a stored role never grants
  *  something the catalogue no longer describes. A level stored for a merged
- *  module counts for the module it joined (which keeps its level keys); the higher wins. */
+ *  module counts for the modules that took it over, through their level maps; the higher wins. */
 export function cleanLevels(input: unknown, extras: unknown = []): RoleLevels {
   const levels: Record<string, string> = {};
   if (input && typeof input === "object" && !Array.isArray(input)) {
-    for (const [id, level] of Object.entries(input as Record<string, unknown>)) {
-      const mod = currentModule(id);
-      if (!mod || typeof level !== "string") continue;
-      const rank = rankOf(mod, level);
-      if (rank >= 0 && rank > rankOf(mod, levels[mod.id])) levels[mod.id] = mod.access.levels[rank].key;
+    for (const [id, stored] of Object.entries(input as Record<string, unknown>)) {
+      if (typeof stored !== "string") continue;
+      for (const { mod, level } of currentLevels(id, stored)) {
+        if (rankOf(mod, level) > rankOf(mod, levels[mod.id])) levels[mod.id] = level;
+      }
     }
   }
   const kept = (Array.isArray(extras) ? extras : []).filter((key): key is string => {

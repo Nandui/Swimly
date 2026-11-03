@@ -68,7 +68,8 @@ before(async () => {
   const doubles = { "@/lib/prisma": { prisma: db }, "next/cache": { revalidatePath() {} }, "server-only": {},
     "@/lib/clubs/current": { currentClubId: async () => site }, "@/lib/authz": { AuthorizationError: class extends Error {}, requirePermission: async () => ({}), canSee: () => true } };
   const contributions = serverModule<typeof import("@/modules/contributions")>("src/modules/contributions.ts", { ...doubles, "@/modules/server": {} });
-  serverModule("src/modules/short-courses/module.ts", { ...doubles, "@/modules/contributions": contributions });
+  // Short courses' parents-app plug, as the swim school's module.ts registers it.
+  contributions.registerAppCourses(serverModule<typeof import("@/modules/activities/features/short-courses/server/parents-app")>("src/modules/activities/features/short-courses/server/parents-app.ts", { ...doubles, "@/modules/contributions": contributions }).parentsAppCourses);
   router = serverModule<Router>("src/modules/activities/features/parents/server/router.ts", { ...doubles, "@/modules/contributions": contributions });
 });
 after(async () => { globalThis.fetch = originalFetch; process.env = originalEnv; await fixture?.close(); });

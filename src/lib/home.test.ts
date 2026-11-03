@@ -34,7 +34,7 @@ async function home(role: Role) {
 test("a receptionist's home is Front of House, with exactly their modules", async () => {
   const h = await home({ name: "Receptionist", homeName: "Front of House", levels: { "swim-school": "desk", refunds: "use", docs: "read", rota: "view" } });
   assert.equal(h.homeName, "Front of House");
-  assert.deepEqual(h.moduleIds, ["swim-school", "refunds", "rota", "docs"], "group by group: front of house, then team");
+  assert.deepEqual(h.moduleIds, ["swim-school", "finance-requests", "rota", "docs"], "group by group: front of house, then team");
   assert.deepEqual(h.asked, [h.moduleIds], "cards are asked for the role's modules only");
 });
 
@@ -73,6 +73,12 @@ function swimSchool() {
     "@/modules/activities/features/enrolment/server/data/awaiting-enrolment": { getAwaitingEnrolment: async () => ({ total: 0 }) },
     "@/modules/activities/features/failed-payments/server/data": { memberPaymentNotices: async () => [] },
     "@/modules/activities/features/failed-payments/server/home": { paymentsHomeItems: async () => [] },
+    "@/modules/activities/features/short-courses/server/parents-app": { parentsAppCourses: { app: "swim-school" } },
+    "@/modules/activities/features/short-courses/server/email-bookings": { shortCourseEmailBookings: async () => [] },
+    "@/modules/activities/features/short-courses/server/contributions": {
+      SHORT_COURSE_SESSIONS: "short-courses.sessions", shortCourseCommitments: async () => [], renameShortCoursePlaces: async () => 0,
+      shortCourseMemberHistory: async () => [], shortCourseHomeItems: async () => [], shortCourseRegisterItems: async () => [],
+    },
   });
   return async (levels: Record<string, string>, extras: string[] = [], id = "swim-school") =>
     (await contributions.homeCardItems([id], viewer({ name: "R", homeName: null, levels, extras }))).get(id) ?? [];

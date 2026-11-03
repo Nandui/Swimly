@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { serverModule } from "@/test/server-module";
 import { SCREENS, visibleScreens } from "@/lib/staff/screens";
 import type { PermissionKey } from "@/lib/staff/permissions";
-import { allModules, appPermissions, switchableApps } from "@/modules/registry";
+import { allModules, appPermissions, switchableApps, switchHeirs } from "@/modules/registry";
 
 /** The pillar "tests pass with any one app switched off" (PRODUCT.md): each app in
  *  src/app/modules.ts is switched off in turn, and Home, the menus, the screens and every other
@@ -47,7 +47,7 @@ function platform() {
   }
   contributions.registerMemberDirectory({ app: "swim-school", search: async () => [], byIds: async () => new Map(), byNumbers: async () => new Map(), create: async () => ({ ok: false, error: "Synthetic" }) });
   const course = (siteId: string) => ({ id: siteId, name: "Synthetic course", description: "", site: { id: siteId, name: siteId, phone: "" }, minAge: null, priceCents: 0, price: "Free", placesLeft: 1, firstDay: "2026-11-02", lastDay: "2026-12-07", sessions: [] });
-  contributions.registerAppCourses({ app: "short-courses", list: async () => [course(RIVERSIDE), course(HILLTOP)], one: async (id) => course(id), hold: async () => { throw new Error("not in this test"); }, bookingsFor: async () => [] });
+  contributions.registerAppCourses({ app: "swim-school", list: async () => [course(RIVERSIDE), course(HILLTOP)], one: async (id) => course(id), hold: async () => { throw new Error("not in this test"); }, bookingsFor: async () => [] });
 
   async function sessionAt(siteId: string) {
     const user = switches.withAppSwitches({ id: "u1", name: "Synthetic Superadmin", roleId: "r1", roleName: "Synthetic", permissions: [] as string[], grants: [], isSuperadmin: true }, await switches.appSwitchesOf(ORG), siteId);
@@ -84,7 +84,9 @@ const appOfScreen = (requires: PermissionKey) => APPS.find((app) => appPermissio
 
 for (const off of APPS) {
   test(`with ${off} switched off, Home, the menus and every other app still work`, async () => {
-    rows = [{ appId: off, state: "off", siteIds: [] }];
+    // A new app follows its former apps' switches until it has its own (switches.test.ts); here
+    // each has its own, so only the one app goes.
+    rows = [{ appId: off, state: "off", siteIds: [] }, ...switchHeirs().filter((h) => h.appId !== off).map((h) => ({ appId: h.appId, state: "on", siteIds: [] }))];
     const { authz, contributions, home, announce } = platform();
     const { session, menus, home: h } = await home(RIVERSIDE);
 
@@ -111,7 +113,7 @@ for (const off of APPS) {
     assert.deepEqual(sorted((await contributions.memberHistoryFor("m1")).map((e) => e.module)), sorted(others(off)));
     assert.deepEqual(sorted((await contributions.memberNoticesFor("m1")).map((e) => e.module)), sorted(others(off)));
     assert.equal((await contributions.members()) === null, off === "swim-school", "the member directory is null only when the swim school is off");
-    assert.equal((await contributions.appCourses()) === null, off === "short-courses", "the parents app's courses are null only when Short courses is off");
+    assert.equal((await contributions.appCourses()) === null, off === "swim-school", "the parents app's courses are null only when the swim school (Classes) is off");
 
     // Events: every other app's listener hears it; the switched-off one does not run.
     assert.deepEqual(await announce(RIVERSIDE), others(off));
@@ -135,7 +137,7 @@ test("an app on at one site is there, and only there", async () => {
   assert.ok((await announce(RIVERSIDE)).includes("rota"));
   assert.ok(!(await announce(HILLTOP)).includes("rota"));
 
-  rows = [{ appId: "short-courses", state: "sites", siteIds: [HILLTOP] }];
+  rows = [{ appId: "swim-school", state: "sites", siteIds: [HILLTOP] }];
   const courses = (await contributions.appCourses())!;
   assert.deepEqual((await courses.list()).map((c) => c.site.id), [HILLTOP]);
   assert.equal(await courses.one(RIVERSIDE), null);

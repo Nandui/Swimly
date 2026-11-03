@@ -57,9 +57,22 @@ type ModuleAccess = {
   extras?: readonly ModuleExtra[];
   /** Only a superadmin gives this module (HR). */
   restricted?: boolean;
-  /** Modules merged into this one, whose level keys it kept. A role's stored level for one of
-   *  them still counts here, and the higher level wins, until the role is next saved. */
-  formerly?: readonly string[];
+  /** Apps merged into this one, or the part of one it took over (D24). A role's stored level for
+   *  one of them still counts here, through `levels`, and the higher level wins, until the role
+   *  is next saved. One former app can feed several apps. */
+  formerly?: readonly FormerApp[];
+};
+
+/** An app that was merged into this one, wholly or in part. */
+export type FormerApp = {
+  /** Its manifest id, still a key in stored roles (and in Admin › Apps' stored switches). */
+  id: string;
+  /** Its level key → this app's level key. A key missing here gives nothing in this app; with no
+   *  map at all, the keys are the same. Former levels were cumulative, so map each one. */
+  levels?: Readonly<Record<string, string>>;
+  /** This app is new and took the former app's place in Admin › Apps: until a superadmin sets
+   *  its own switch, it is on wherever any of its former apps was on (src/lib/apps/switches.ts). */
+  switch?: boolean;
 };
 
 /** The part of the centre a module serves. Presentation only: it orders and
@@ -130,6 +143,15 @@ function modulePermissions(mod: ModuleManifest): PermissionKey[] {
 export function visibleModules(ctx: ModuleContext): ModuleManifest[] {
   const off = new Set(ctx.appsOff ?? []);
   return allModules().filter((m) => !off.has(m.id) && modulePermissions(m).some((key) => ctx.permissions.has(key)));
+}
+
+/** Where each new app's switch comes from until it has one of its own: its id, and the former
+ *  apps marked `switch`. */
+export function switchHeirs(): { appId: string; from: string[] }[] {
+  return allModules().flatMap((m) => {
+    const from = (m.access.formerly ?? []).filter((f) => f.switch).map((f) => f.id);
+    return from.length ? [{ appId: m.id, from }] : [];
+  });
 }
 
 /** The apps a superadmin can switch on, off or on at some sites: every app in
