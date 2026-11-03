@@ -220,3 +220,38 @@ test("Manage removes payments with no swimmer behind them, at their sites only, 
   assert.deepEqual(audit.map((a) => a.action).sort(), ["delete", "update"]);
   assert.deepEqual((await data.paymentLists({})).nonSwimmers, { remove: 0, worked: 0, link: 0 });
 });
+
+test("Manage removes a wrong upload: its payments and their history go, and the same sheet can be uploaded again", async () => {
+  const db = fixture.prisma;
+  const history = serverModule<typeof import("../features/payment-upload/server/history")>("src/modules/activities/features/payment-upload/server/history.ts", {
+    "@/lib/prisma": { prisma: db }, "server-only": {}, react: { cache: <T,>(fn: T) => fn },
+    "@/lib/authz": { AuthorizationError: class extends Error {}, requireSession: async () => session(),
+      can: (s: { user: { permissions: string[] } }, p: PermissionKey) => expandPermissions(s.user.permissions).has(p), canSee: () => true },
+    "@/lib/clubs/current": { currentClubId: async () => churchfield, currentClubIdIfAny: async () => churchfield },
+  });
+  manager();
+  workbook(
+    ["LW Churchfield", "Synthetic Parent", 30, "W/LWC1001", "AM04", "Insufficient Funds", "LWC1001", null],
+    ["LW Churchfield", "Example Person", 31, "W/LWC2002", "MD01", "No Mandate", "LWC2002", null],
+  );
+  const sent = await upload.uploadFailureSheet(form({ file: file("Wrong sheet 07.xlsx"), month: "2026-07", operationId: uuid() }));
+  assert.deepEqual(sent, { ok: true, added: 2, month: "2026-07" });
+  const one = await failure("W/LWC1001");
+  reception();
+  assert.equal((await steps.logContact({ id: one.id, operationId: uuid(), version: one.version, method: "phone", result: "spoke", note: "" })).ok, true);
+
+  manager();
+  const wrong = (await history.uploadHistory()).find((u) => u.fileName === "Wrong sheet 07.xlsx")!;
+  assert.deepEqual([wrong.month, wrong.onList, wrong.worked], ["2026-07", 2, 1]);
+  reception();
+  assert.equal((await upload.removeUpload(wrong.id)).ok, false, "Use cannot remove an upload");
+  manager();
+  assert.deepEqual(await upload.removeUpload(wrong.id), { ok: true });
+  assert.equal(await db.paymentFailure.count({ where: { importId: wrong.id } }), 0);
+  assert.equal(await db.paymentFailureEvent.count({ where: { failureId: one.id } }), 0, "with their history");
+  assert.equal(await db.paymentImport.count({ where: { id: wrong.id } }), 0, "and the upload's own record");
+  assert.equal(await db.auditLog.count({ where: { action: "delete", summary: { contains: "Removed with its upload, Wrong sheet 07.xlsx" } } }), 2);
+  assert.equal((await upload.removeUpload(wrong.id)).ok, false, "a second press finds nothing");
+  assert.deepEqual(await upload.uploadFailureSheet(form({ file: file("Wrong sheet 07.xlsx"), month: "2026-07", operationId: uuid() })), { ok: true, added: 2, month: "2026-07" },
+    "the same sheet goes in again once its upload is removed");
+});

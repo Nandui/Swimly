@@ -4,6 +4,11 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.3.1 · 3 November 2026 · Failed payments: undo a wrong upload
+
+- **Upload the sheet** now lists your recent uploads underneath: the month, the file, who uploaded it and when, and how many of its payments are still on the list.
+- **Remove this upload** takes every payment that upload added off the list, after asking first. Use it if the wrong sheet went in, then upload the right one. The same file can be uploaded again afterwards.
+
 ## 3.3.0 · 3 November 2026 · Classes, Finance requests and Academy
 
 - **Swim school is now called Classes**, and **short courses** are part of it. Open Classes and choose **Short courses** on its Overview; the short course list is under **Set up**. The weekly timetable page is now called **Timetable**.
