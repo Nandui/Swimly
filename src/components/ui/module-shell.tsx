@@ -53,7 +53,9 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
 }) {
   const pathname = usePathname();
   const frame = useFrame();
-  useEffect(() => { window.scrollTo({ top: 0 }); }, [pathname, scrollKey]);
+  // The window scrolls on phones, the frame from tablet up (kit.css).
+  const frameRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { window.scrollTo({ top: 0 }); frameRef.current?.scrollTo({ top: 0 }); }, [pathname, scrollKey]);
   const pages = (groups ?? [{ label: '', links }]).flatMap((group) => group.links);
   const topRef = useRef<HTMLElement>(null);
   const inline = useLargeTitle(`${id}-main`, topRef, pathname);
@@ -73,7 +75,7 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
     <div className={`turnfin-module turnfin-${id} tf-shell`}>
       <a className="skip-link" href={`#${id}-main`}>Skip to content</a>
       <Sidebar current={railCurrent} name={who.name} app={app} scopeNote={scopeNote} pathname={pathname} onSearch={() => setSearching(true)} />
-      <div className="tf-frame">
+      <div ref={frameRef} className="tf-frame">
         <header ref={topRef} className="tf-top" data-titled={inline ? '' : undefined}>
           {inline?.back ? (
             <Glass shape="circle" className="tf-bar tf-inline-back">
