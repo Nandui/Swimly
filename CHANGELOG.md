@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.5.0 · 3 November 2026 · Every page is in the side menu
+
+- **Nothing is hidden on an app's Overview any more.** Every page now sits in the side menu, under the page it belongs to: open the arrow beside a page to see the pages under it.
+- **Where to find them:** Analytics is under Overview, Cancelled classes under Duty manager, Assessments under Schedule, Awaiting enrolment and Failed payments under Swimmers, and Short courses, Legend agreements and Together under Timetable.
+- **In Finance requests,** Refund drafts and Coinage drafts are now under Refunds and Coinage.
+- When you open one of these pages, its branch opens by itself so you can see where you are. On a phone, tap Classes at the bottom to see the same list.
+
 ## 3.4.1 · 3 November 2026 · Failed payments: the short Failed DDs sheet
 
 - **Upload the sheet** now also takes the short Failed DDs sheet (Contact Name, Amount, Return Description and Membership Number, a tab per site). Each tab's name says the site, such as CF for Churchfield, and each payment still shows what to ask the member for.
