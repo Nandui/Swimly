@@ -751,6 +751,11 @@ body.turnfin-app:has(> .tf-shell, > * > .tf-shell) { background: var(--ground); 
   .turnfin-app .tf-frame { box-shadow: 0 0 0 1px var(--label-2); }
 }
 .turnfin-app .tf-main { flex: 1 1 auto; min-width: 0; outline: none; }
+/* From tablet up the sheet fits the window and the page scrolls inside it, so the sheet's
+   rounded edges and the sidebar stay put. Phones keep the window scrolling (the sheet is the page). */
+@media screen and (min-width: 768px) {
+  .turnfin-app .tf-frame { height: calc(100dvh - 20px); min-height: 0; overflow: hidden auto; overscroll-behavior: contain; scroll-padding-top: 80px; scroll-padding-bottom: var(--space-6); }
+}
 
 /* The toolbar: sticky and transparent, glass controls floating in it, a soft blur beneath. */
 .turnfin-app .tf-top { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: var(--space-3); min-width: 0; min-height: 64px; margin-bottom: var(--space-2); padding-block: var(--space-2); }
