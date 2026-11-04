@@ -12,6 +12,7 @@ import { planPages } from "@/modules/plan/features/workspace/pages";
 import { purchasingPages } from "@/modules/purchasing/features/workspace/pages";
 import { rotaPages } from "@/modules/rota/shared/components/pages";
 import { monitoringPages } from "@/modules/site-monitoring/features/workspace/pages";
+import { staffingPages } from "@/modules/staffing/features/workspace/pages";
 import { stockPages } from "@/modules/stock/features/workspace/pages";
 import { tasksPages } from "@/modules/tasks/features/workspace/pages";
 import { trainingPages } from "@/modules/training/features/workspace/pages";
@@ -35,6 +36,7 @@ const APPS: [string, { href: string; label: string; place?: "setup"; under?: str
   ["Purchasing", purchasingPages(everything)],
   ["Rota", rotaPages(true)],
   ["Site Monitoring", monitoringPages()],
+  ["Staffing", staffingPages()],
   ["Stock", stockPages()],
   ["Tasks", tasksPages(everything)],
   ["Training", trainingPages(everything)],

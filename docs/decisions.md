@@ -6,6 +6,12 @@ The decisions Turnfin 2.0 stands on, newest first. Each says what was decided, w
 
 ---
 
+### D27 · 4 November 2026 · Staffing: swim teacher rostering on the contract
+
+**Staffing**, a new app in Team, rosters swim teachers from the swim teacher rostering specification ([staffing.md](staffing.md)): two-week **rota blocks** built from each site's weekly **slots**, contracted hours first, published every second Friday four weeks ahead and acknowledged; **swaps** as the only way to hand over a shift; **call-offs, late arrivals and no-shows** logged by the duty manager, with on-time worked out from the logged call; **strikes** on the handbook's ladder, per semester; and **exam seasons** with their absence deadlines. Levels View, Run (duty manager), Supervise (pool deck supervisor) and Manage (centre manager) at the person's sites. **Warnings, never blocks** (owner's choice, same day): qualifications, rest, the weekly cap, overlaps and the lifeguard contract are shown and the supervisor decides, as on Rota. The process rules do refuse: a published shift changes only with Manage and a reason, nothing is published under 24 hours' notice, swaps close 48 hours before the shift.
+**Why:** call-offs, availability treated as a wish list and no consistent swap or strike process; young managers need a guided process. It sits beside Rota rather than inside it because it rosters on contracts and blocks, not activities, and its strikes are disciplinary records.
+**Follows:** teachers act through managers in Work for now (Supervise records swaps, acknowledgements and exam absences for them); acknowledging, asking for swaps and seeing their own strikes move to Turnfin Me through `/api/staff/v1` next. Preferences and mismatch meetings (BR-9), the monthly report, the Google Chat post and notifications by email are not built yet, and the spec's open questions (early versus late shift, under-18 limits, ratios, Timepoint) stand; [staffing.md](staffing.md) lists them.
+
 ### D26 · 3 November 2026 · Training sets up learning; Qualifications keeps qualifications
 
 Training is for setting up learning and delivering it to staff, nothing more. A **course** is sections of steps: reading, checklists, quizzes and exams, hand-ins, a **live session** (date, place, register) or a **trainer sign-off**, so e-learning, live and practical training are one idea. Templates, AI draft, refresher cards, hand-ins and learning paths stay. Courses are assigned by hand to people, a job or a site, with an optional due date, or go automatically to anyone who starts a job; an assignment never repeats. An assignment is not started, in progress or done on a date, with its exam score; Training issues no certificates. **Progress** (per course and per person, downloadable) replaces the Matrix, Reports and In-service hours. Levels stay Trainer (sign off, run live sessions), Author (also build and publish) and Manage (also assign and see Progress).
@@ -182,5 +188,5 @@ The platform (sign-in, people, sites, access, audit, events, email, the API tool
 
 ### D1 · Apps in the catalogue
 
-The apps are those in [apps.md](apps.md): Classes (the swim school, with failed payments and short courses), Pool deck and Analytics (one module); Finance requests; Academy; Tasks; Incidents; Rota; Training; Qualifications (D26); Docs; HR; CCTV log; Site Monitoring; Purchasing; Stock; Admin (D24). Classes and the Academy book people from the swim school's member records rather than keeping their own.
+The apps are those in [apps.md](apps.md): Classes (the swim school, with failed payments and short courses), Pool deck and Analytics (one module); Finance requests; Academy; Tasks; Incidents; Rota; Staffing (D27); Training; Qualifications (D26); Docs; HR; CCTV log; Site Monitoring; Purchasing; Stock; Admin (D24). Classes and the Academy book people from the swim school's member records rather than keeping their own.
 **Follows:** a new app is a new entry here.

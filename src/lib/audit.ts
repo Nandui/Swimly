@@ -61,6 +61,8 @@ export const MODULE_OF_ENTITY: Readonly<Record<string, string>> = {
   Supplier: "Purchasing", PurchaseProduct: "Purchasing", PurchaseApprovalRule: "Purchasing", PurchaseOrder: "Purchasing", PurchasingSettings: "Purchasing",
   TaskTemplate: "Tasks", Task: "Tasks", TaskAction: "Tasks", TaskSite: "Tasks",
   IncidentReport: "Incidents", IncidentsSettings: "Incidents",
+  StaffingSettings: "Staffing", StaffingTeacher: "Staffing", StaffingSlot: "Staffing", StaffingBlock: "Staffing", StaffingShift: "Staffing", StaffingAck: "Staffing",
+  StaffingSwap: "Staffing", StaffingAttendance: "Staffing", StaffingStrike: "Staffing", StaffingExamSeason: "Staffing", StaffingExamAbsence: "Staffing",
   StockCategory: "Stock", StockProduct: "Stock", StockTake: "Stock", StockTakeLine: "Stock",
   CctvViewing: "CCTV log", CctvViewingNote: "CCTV log",
   MonitoringAction: "Site Monitoring",
@@ -107,7 +109,7 @@ export async function isSystemActor(actorId: string | null | undefined) {
 /** Rows that belong to no club, so their audit entries belong to none either
  *  and show up in every club's activity. */
 // Organisation-level records (People core) belong to no single site either.
-const SHARED_ENTITIES = new Set(["User", "StaffRole", "AppSwitch", "Student", "Programme", "Level", "Competency", "AssessmentType", "Organisation", "Department", "RoleAssignment", "QualificationType", "Qualification", "SharedDevice", "TrainingCourse", "TrainingAssignment", "TrainingRule", "TrainingEvidence", "TrainingPath", "TrainingPathEnrolment", "TrainingSession", "TrainingHours", "TrainingHourTarget", "RotaAbsence", "RotaImport", "RotaDepartment", "Supplier", "PurchaseProduct", "PurchaseApprovalRule", "PurchasingSettings", "IncidentsSettings", "StockCategory", "StockProduct", "ActivityType", "Position"]);
+const SHARED_ENTITIES = new Set(["User", "StaffRole", "AppSwitch", "Student", "Programme", "Level", "Competency", "AssessmentType", "Organisation", "Department", "RoleAssignment", "QualificationType", "Qualification", "SharedDevice", "TrainingCourse", "TrainingAssignment", "TrainingRule", "TrainingEvidence", "TrainingPath", "TrainingPathEnrolment", "TrainingSession", "TrainingHours", "TrainingHourTarget", "RotaAbsence", "RotaImport", "RotaDepartment", "Supplier", "PurchaseProduct", "PurchaseApprovalRule", "PurchasingSettings", "IncidentsSettings", "StockCategory", "StockProduct", "StaffingSettings", "StaffingTeacher", "StaffingExamSeason", "ActivityType", "Position"]);
 
 /** @param db Pass the transaction client when the audit row must live or die
  *  with the write it describes. The default writes on its own connection,

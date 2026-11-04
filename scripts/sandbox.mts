@@ -68,11 +68,11 @@ const levelRoles: { name: string; homeName: string; levels: Record<string, strin
   { name: "Instructor", homeName: "Pool deck", levels: { "pool-deck": "teach" }, system: true },
   { name: "Receptionist", homeName: "Front of House", levels: { "swim-school": "desk", "finance-requests": "use", docs: "read", rota: "view", plan: "view", tasks: "do", stock: "count", maintenance: "report" } },
   { name: "Lifeguard", homeName: "Poolside", levels: { docs: "read", rota: "view", plan: "view", tasks: "do", maintenance: "report" } },
-  { name: "Pool supervisor", homeName: "Pool planning", levels: { docs: "read", rota: "plan", plan: "plan", academy: "tutor", "pool-deck": "teach", tasks: "review", incidents: "report", maintenance: "report" } },
-  { name: "Duty manager", homeName: "Duty desk", levels: { "swim-school": "desk", "finance-requests": "manage", docs: "read", training: "trainer", rota: "manage", plan: "manage", academy: "tutor", "pool-deck": "teach", tasks: "review", incidents: "report", cctv: "record", maintenance: "manage", hr: "team" }, extras: ["swim-school.cancel-classes"] },
+  { name: "Pool supervisor", homeName: "Pool planning", levels: { docs: "read", rota: "plan", plan: "plan", academy: "tutor", "pool-deck": "teach", tasks: "review", incidents: "report", maintenance: "report", staffing: "supervise" } },
+  { name: "Duty manager", homeName: "Duty desk", levels: { "swim-school": "desk", "finance-requests": "manage", docs: "read", training: "trainer", rota: "manage", plan: "manage", academy: "tutor", "pool-deck": "teach", tasks: "review", incidents: "report", cctv: "record", maintenance: "manage", hr: "team", staffing: "run" }, extras: ["swim-school.cancel-classes"] },
   { name: "Swim school manager", homeName: "Swim school office", levels: { "swim-school": "manage", "pool-deck": "lead", docs: "manage", training: "manage", qualifications: "keep", rota: "manage", plan: "manage", hr: "sites", academy: "manage", tasks: "manage", incidents: "report" }, extras: ["swim-school.cancel-classes", "docs.approve"] },
-  { name: "Centre manager", homeName: "Centre office", levels: { docs: "read", rota: "manage", plan: "manage", tasks: "review", incidents: "investigate", stock: "manage", cctv: "review", "site-monitoring": "act", maintenance: "manage", hr: "sites" } },
-  { name: "Operations manager", homeName: "Operations", levels: { docs: "read", tasks: "review", incidents: "manage", stock: "manage", cctv: "review", "site-monitoring": "act", maintenance: "manage" } },
+  { name: "Centre manager", homeName: "Centre office", levels: { docs: "read", rota: "manage", plan: "manage", tasks: "review", incidents: "investigate", stock: "manage", cctv: "review", "site-monitoring": "act", maintenance: "manage", hr: "sites", staffing: "manage" } },
+  { name: "Operations manager", homeName: "Operations", levels: { docs: "read", tasks: "review", incidents: "manage", stock: "manage", cctv: "review", "site-monitoring": "act", maintenance: "manage", staffing: "manage" } },
 ];
 for (const [i, role] of levelRoles.entries()) {
   const data = { homeName: role.homeName, ...roleColumns({ levels: role.levels, extras: role.extras ?? [] }) };
@@ -136,6 +136,24 @@ for (const [i, [id, name, requires, holders]] of positions.entries()) {
   await prisma.position.create({ data: { id, orgId: ORG, name, sortOrder: i, requires: { create: requires.map((typeId) => ({ typeId })) } } });
   await prisma.user.updateMany({ where: { id: { in: holders } }, data: { positionId: id, jobTitle: name, contractType: "full-time", contractMinutes: 39 * 60 } });
 }
+
+// Staffing: four teachers at Hillview and its weekly slots, so Sam can start a block.
+await prisma.staffingTeacher.createMany({ data: [
+  { orgId: ORG, userId: "sbx_ava", college: "ucc", contract: "swim_teacher_lifeguard" },
+  { orgId: ORG, userId: "sbx_ciara", college: "mtu", contract: "swim_teacher", wantsMore: true },
+  { orgId: ORG, userId: "sbx_conor", college: "ucc", contract: "swim_teacher" },
+  { orgId: ORG, userId: "sbx_dylan", college: "none", contract: "swim_teacher_lifeguard" },
+] });
+await prisma.user.updateMany({ where: { id: { in: ["sbx_ciara", "sbx_conor"] } }, data: { contractMinutes: 12 * 60 } });
+await prisma.staffingSlot.createMany({ data: [
+  ...[2, 3, 4, 5].flatMap((weekday) => [
+    { orgId: ORG, siteId: "club_churchfield", weekday, role: "teaching", name: "School morning", startMin: 615, endMin: 795, needed: 2 },
+    { orgId: ORG, siteId: "club_churchfield", weekday, role: "teaching", name: "School afternoon", startMin: 840, endMin: 915, needed: 2 },
+  ]),
+  ...[1, 2, 3, 4, 5].map((weekday) => ({ orgId: ORG, siteId: "club_churchfield", weekday, role: "float", name: "Float", startMin: 960, endMin: 1110, needed: 1 })),
+  { orgId: ORG, siteId: "club_churchfield", weekday: 2, role: "lifeguard", name: "Rebel Rockets cover", startMin: 1080, endMin: 1140, needed: 1, hardToFill: true },
+] });
+await prisma.staffingSettings.create({ data: { orgId: ORG, values: { lifeguardTypeId: "qt_nplq" } } });
 
 // Tasks: templates and two weeks of history at both sites.
 await seedTasks(prisma, ORG, roles);
