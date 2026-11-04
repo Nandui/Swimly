@@ -234,8 +234,9 @@ test("a manager on duty files a report on someone they manage, without a fresh s
   assert.equal((await report.fileReport("ava", { ...input, kind: "general" })).ok, false, "a report has a kind other than General");
   assert.equal((await report.fileReport("ava", { ...input, date: "2099-01-01" })).ok, false, "not in the future");
   assert.equal((await report.fileReport("ava", input)).ok, true, "a PIN session may file: it reads nothing");
+  assert.equal((await report.fileReport("ava", { ...input, kind: "good_work", body: "Synthetic: calm rescue at the deep end" })).ok, true, "good work can be reported too");
   await assert.rejects(records.hrPerson("ava"), NotFound, "a reporter cannot open the file");
-  const [row] = await hr.db.query<{ visibility: string; kind: string; via: string; site_id: string; occurred_at: Date }>("SELECT visibility, kind, via, site_id, occurred_at FROM notes WHERE via='report'");
+  const [row] = await hr.db.query<{ visibility: string; kind: string; via: string; site_id: string; occurred_at: Date }>("SELECT visibility, kind, via, site_id, occurred_at FROM notes WHERE via='report' AND kind='conduct'");
   assert.deepEqual([row.visibility, row.kind, row.via, row.site_id], ["record", "conduct", "report", "club_churchfield"]);
   assert.equal(new Date(row.occurred_at).toISOString(), "2026-10-20T13:30:00.000Z", "Ireland summer time");
   as("ava");
@@ -253,10 +254,11 @@ test("the centre managers of the report's site see it under Needs you until one 
   assert.deepEqual(await home.reportHomeItems(viewer(["hr.notes.write"])), [], "another site's centre manager is not alerted");
   as("riley", { grants: [CENTRE] });
   const [item] = await home.reportHomeItems(viewer(["hr.notes.write"]));
-  assert.deepEqual([item.count, item.href, item.attention], [1, "/hr/people/ava", true]);
-  assert.equal((await records.hrPeople()).people.find((p) => p.id === "ava")?.unreadReports, 1);
+  assert.deepEqual([item.count, item.href, item.attention], [2, "/hr/people/ava", true], "the conduct and the good work reports");
+  assert.equal((await records.hrPeople()).people.find((p) => p.id === "ava")?.unreadReports, 2);
   const file = await records.hrPerson("ava");
-  const filed = file.notes.find((n) => n.via === "report")!;
+  const filed = file.notes.find((n) => n.via === "report" && n.kind === "conduct")!;
+  assert.ok(file.notes.some((n) => n.via === "report" && n.kind === "good_work"), "good work is on the file too");
   assert.equal(filed.kind, "conduct");
   assert.deepEqual(await home.reportHomeItems(viewer(["hr.notes.write"])), [], "read once the file is opened");
   assert.equal((await actions.withdrawNote(filed.id, "Synthetic: wrong person")).ok, true, "a reporter can't, so the file's keeper withdraws it");

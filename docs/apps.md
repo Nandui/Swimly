@@ -158,7 +158,7 @@ Staff documents to read, write and approve, and who has read them. Every role is
 ### HR
 *Module `hr` · `/hr/overview` · reach: the people they manage, their sites, or everyone · data: its own schema, `turnfin_hr`, in the main database*
 
-Restricted staff files: details, employment, notes (each of a kind: General, Conduct, Performance, Attendance or Safety) and performance reviews, and quick reports from managers on duty ([D22](decisions.md)).
+Restricted staff files: details, employment, notes (each of a kind: General, Conduct, Performance, Attendance, Safety or Good work) and performance reviews, and quick reports from managers on duty ([D22](decisions.md)).
 
 | Level | Gives |
 | --- | --- |
