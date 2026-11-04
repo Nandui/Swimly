@@ -4,12 +4,20 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 3.6.3 · 4 November 2026 · Test the failed payment emails
+## 3.7.1 · 4 November 2026 · Test the failed payment emails
 
 - **On a failed payment, admins can now choose Send test email to me.** It sends that payment's next warning email, marked [Test], to your own email address, so you can check the emails are going out. The family gets nothing, and the payment doesn't change.
 - **If it can't be sent,** you see an error straight away, which means the email service needs looking at.
 
-## 3.6.2 · 4 November 2026 · Apps sorted under headings in the side menu
+## 3.7.0 · 4 November 2026 · Staffing, for swim teacher rotas
+
+- **Staffing** is a new app in Team for rostering swim teachers on their contracts. Teachers' hours are rostered where the centre needs them, two weeks at a time.
+- **Blocks:** the pool deck supervisor starts a two-week block from the site's weekly slots, with the same people as last time, and fills it, contracted hours first. Choosing who goes on a place lists the best fit first, with any warnings: a qualification out of date, short rest, over the weekly hours, already on, or not on a lifeguard contract. Warnings never stop you; you decide. **Publish** by every second Friday at 17:00, four weeks ahead, then track who has acknowledged it.
+- **Today:** the duty manager logs call-offs (only a phone call to the centre landline counts), late arrivals and no-shows, and covers the gaps. Whether a call-off was on time is worked out from when it came in.
+- **Requests:** swaps (a named taker or Looking for cover, then the supervisor approves) close 48 hours before the shift. Exam absences are recorded with the college's notice; the outcome follows the exam season's deadline.
+- **Strikes** follow the handbook: a return-to-work chat, then a signed note, then a referral to HR. A no call, no show goes straight to the centre manager and HR. Strikes reset in September, January and May, and count from 25 January 2027.
+- **Set up:** slots and teachers for supervisors; exam seasons and the settings for centre managers. Teachers will acknowledge rotas and ask for swaps themselves in Turnfin Me later; for now a supervisor records it for them.
+ 4 November 2026 · Apps sorted under headings in the side menu
 
 - **On Home, the side menu now shows your apps under headings**: Front of house, Poolside, Team, Managers and Back office, the same groups as the Apps menu on a phone. A heading only shows if you have an app in it.
 

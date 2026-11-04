@@ -105,6 +105,20 @@ The rota started again, on test at one site beside Rota ([D17](decisions.md)): s
 
 Connects: reads people, departments, qualifications and the site's areas (Admin › Areas, shared with Classes and Rota); reads swim classes and plans their teachers through Classes' commitments. No Turnfin Me, home card or person file while it is on test.
 
+### Staffing
+*Module `staffing` · `/staffing/overview` · reach: sites · data: `staffing.prisma`*
+
+Swim teacher rota blocks on contracted hours, with swaps, call-offs, strikes and exam seasons ([staffing.md](staffing.md), [D27](decisions.md)).
+
+| Level | Gives |
+| --- | --- |
+| View | see blocks, today's shifts, swaps and exam absences |
+| Run | also log call-offs, late arrivals and no-shows, cover gaps, see strikes and hold return-to-work chats |
+| Supervise | also keep slots and teachers, build and publish blocks, decide swaps and exam absences, hold second strike conversations |
+| Manage | also change published shifts, handle referrals, keep exam seasons and settings |
+
+Connects: reads people, contracted hours, dates of birth and qualifications through the platform's functions. Its home card shows chats, blocks to publish, swaps to decide, teachers to phone and referrals. No Turnfin Me yet.
+
 ### Training
 *Module `training` · `/training/overview` · reach: sites · data: `training.prisma`*
 

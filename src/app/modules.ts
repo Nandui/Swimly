@@ -10,6 +10,7 @@ import { purchasingModule } from "@/modules/purchasing/manifest";
 import { planModule } from "@/modules/plan/manifest";
 import { rotaModule } from "@/modules/rota/manifest";
 import { siteMonitoringModule } from "@/modules/site-monitoring/manifest";
+import { staffingModule } from "@/modules/staffing/manifest";
 import { stockModule } from "@/modules/stock/manifest";
 import { tasksModule } from "@/modules/tasks/manifest";
 import { trainingModule } from "@/modules/training/manifest";
@@ -28,6 +29,7 @@ export const modules = [
   incidentsModule,
   rotaModule,
   planModule,
+  staffingModule,
   trainingModule,
   qualificationsModule,
   academyModule,
