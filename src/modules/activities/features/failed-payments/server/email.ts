@@ -8,7 +8,26 @@ import { nextEmail, paymentEmail, type EmailStep } from "@/modules/activities/sh
 import { familyEmailText, type FamilyEmail } from "@/modules/activities/shared/parents/family-email";
 import type { PaymentStatus } from "@/modules/activities/shared/payments/types";
 
-const address = z.string().email().max(254);
+export const emailAddress = z.string().email().max(254);
+export const validAddress = (to: string) => !!to && emailAddress.safeParse(to).success && !/[\r\n]/.test(to);
+
+async function memberOf(row: PaymentFailure, member?: Member | null) {
+  if (member !== undefined) return member;
+  const directory = await members();
+  return row.memberId && directory ? (await directory.byIds([row.memberId], { medical: false })).get(row.memberId) ?? null : null;
+}
+
+/** The words of one warning email for this payment, with the swimmer's and the site's details. */
+async function emailWords(row: PaymentFailure, step: EmailStep, member: Member | null) {
+  const [site, phones] = await Promise.all([siteName(row.siteId), sitePhones([row.siteId])]);
+  const { subject, email } = paymentEmail(step, {
+    greet: member?.contactName?.trim() || row.name, child: member?.firstName ?? "your child",
+    amountCents: row.amountCents, month: row.month, returnCode: row.returnCode,
+    site, phone: phones.get(row.siteId)?.trim() ?? "",
+    firstEmailOn: row.firstEmailAt ? today(row.firstEmailAt) : null, sentOn: today(),
+  });
+  return { subject, email: email as FamilyEmail };
+}
 
 /** The next warning email for a failed payment, as the page previews it and the send action sends
  *  it: its step, when it is due, who it goes to and its words. `blocked` says why it can't go yet
@@ -17,21 +36,20 @@ const address = z.string().email().max(254);
 export async function emailPlan(row: PaymentFailure, member?: Member | null) {
   const next = nextEmail({ status: row.status as PaymentStatus, emailsSent: row.emailsSent, firstEmailOn: row.firstEmailAt ? today(row.firstEmailAt) : null }, today());
   if (!next) return null;
-  if (member === undefined) {
-    const directory = await members();
-    member = row.memberId && directory ? (await directory.byIds([row.memberId], { medical: false })).get(row.memberId) ?? null : null;
-  }
+  member = await memberOf(row, member);
   const to = member?.contactEmail?.trim().toLowerCase() ?? "";
   const blocked = !member ? "This payment isn't linked to a swimmer, so there's no family email to send to."
-    : !to || !address.safeParse(to).success || /[\r\n]/.test(to) ? "There's no valid email address on the swimmer's record. Add one on their profile, or contact the family another way."
+    : !validAddress(to) ? "There's no valid email address on the swimmer's record. Add one on their profile, or contact the family another way."
     : null;
-  const [site, phones] = await Promise.all([siteName(row.siteId), sitePhones([row.siteId])]);
-  const { subject, email } = paymentEmail(next.step, {
-    greet: member?.contactName?.trim() || row.name, child: member?.firstName ?? "your child",
-    amountCents: row.amountCents, month: row.month, returnCode: row.returnCode,
-    site, phone: phones.get(row.siteId)?.trim() ?? "",
-    firstEmailOn: row.firstEmailAt ? today(row.firstEmailAt) : null, sentOn: today(),
-  });
-  return { step: next.step as EmailStep, dueOn: next.dueOn, due: next.due, to, blocked, subject, email: email as FamilyEmail, text: familyEmailText(email) };
+  const { subject, email } = await emailWords(row, next.step as EmailStep, member);
+  return { step: next.step as EmailStep, dueOn: next.dueOn, due: next.due, to, blocked, subject, email, text: familyEmailText(email) };
 }
 export type EmailPlan = NonNullable<Awaited<ReturnType<typeof emailPlan>>>;
+
+/** The email a test send uses: the next step's words, or the first email's once none is left, so
+ *  a test works on any payment, closed or not linked to a swimmer. */
+export async function testEmailWords(row: PaymentFailure) {
+  const next = nextEmail({ status: row.status as PaymentStatus, emailsSent: row.emailsSent, firstEmailOn: row.firstEmailAt ? today(row.firstEmailAt) : null }, today());
+  const step = (next?.step ?? 1) as EmailStep;
+  return { step, ...(await emailWords(row, step, await memberOf(row))) };
+}

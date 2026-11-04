@@ -6,6 +6,7 @@ import { Tag } from "@/components/ui-kit/tag";
 import { formatDate, formatDateTime, plural } from "@/lib/format";
 import { FollowUpActions } from "@/modules/activities/features/failed-payments/components/follow-up-actions";
 import { SendEmail } from "@/modules/activities/features/failed-payments/components/send-email";
+import { SendTestEmail } from "@/modules/activities/features/failed-payments/components/send-test-email";
 import { EMAIL_STEP_LABEL, EMAIL_STEPS, type EmailStep } from "@/modules/activities/shared/payments/emails";
 import type { getPaymentFailure } from "@/modules/activities/features/failed-payments/server/data";
 import { euro, METHOD_LABEL, monthLabel, PAYMENT_ACTIONS, PAYMENT_STATUS_META, RESULT_LABEL, RETURN_ADVICE, type ContactMethod, type ContactResult, type PaymentAction, type PaymentView } from "@/modules/activities/shared/payments/types";
@@ -49,6 +50,7 @@ export function FailureView({ data }: { data: Data }) {
       <div className="rec-layout">
         <RecordNext act={act} label={act ? "Your move" : "Where it stands"} body={nextStep(r, data.can.follow)}>
           {data.email ? <SendEmail failure={r} plan={data.email} /> : null}
+          {data.can.manage ? <SendTestEmail failureId={r.id} /> : null}
           {data.can.follow || data.can.manage ? <FollowUpActions failure={r} follow={data.can.follow} manage={data.can.manage} /> : null}
           <RecordSteps steps={steps(r)} label="Where the payment has got to" />
         </RecordNext>
