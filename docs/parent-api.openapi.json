@@ -1484,25 +1484,13 @@
               "WORKING_ON",
               "ACHIEVED"
             ]
-          },
-          "assessedOn": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date"
-              },
-              {
-                "type": "null"
-              }
-            ]
           }
         },
         "required": [
           "id",
           "name",
           "description",
-          "status",
-          "assessedOn"
+          "status"
         ],
         "additionalProperties": false
       },
