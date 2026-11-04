@@ -8,7 +8,7 @@ import type { TrainingActor } from "@/modules/training/shared/access";
 export function trainingPages(who: Pick<TrainingActor, "signoff">): (ModulePage & { match: (pathname: string) => boolean })[] {
   return [
     { href: "/training/overview", label: "Overview", icon: LayoutDashboard, description: "What waits for you, and every Training page", match: (p) => p === "/training/overview" },
-    { href: "/training", label: "People", icon: Users, description: "Training for the people you cover: what is due, waiting for sign-off and done", match: (p) => p === "/training" || p.startsWith("/training/people/") },
+    { href: "/training", label: "People", folderEntry: "Everyone", icon: Users, description: "Training for the people you cover: what is due, waiting for sign-off and done", match: (p) => p === "/training" || p.startsWith("/training/people/") },
     ...(who.signoff ? [{ href: "/training/sign-off", label: "Sign-off", icon: ClipboardCheck, description: "People who say they are ready, to watch and sign off", match: (p: string) => p.startsWith("/training/sign-off") }] : []),
     { href: "/training/matrix", label: "Matrix", under: "/training", icon: Grid3x3, description: "Everyone you cover against the courses they need, and how many are in date", match: (p) => p.startsWith("/training/matrix") },
     { href: "/training/reports", label: "Reports", icon: ChartColumn, description: "Overdue training by site and by manager, each course's numbers, and downloads for Excel", match: (p) => p.startsWith("/training/reports") },

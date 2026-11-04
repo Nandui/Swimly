@@ -14,11 +14,11 @@ export function financePages(who: Pick<FinanceActor, "id" | "refunds" | "coinage
   return [
     { view: "overview", href: "/finance-requests", label: "Overview", icon: LayoutDashboard, description: "What waits for you, and every Finance requests page" },
     ...(who.refunds ? [
-      { view: "refunds:requests" as const, href: "/refunds", label: "Refunds", icon: ReceiptText, description: "Every refund request you can see, by status, with the queues to follow up" },
+      { view: "refunds:requests" as const, href: "/refunds", label: "Refunds", folderEntry: "All refunds", icon: ReceiptText, description: "Every refund request you can see, by status, with the queues to follow up" },
       { view: "refunds:mine" as const, href: `/refunds?creator=${mine}&status=all`, label: "My refunds", icon: UserRound, description: "The refund requests you logged, whatever their status" },
     ] : []),
     ...(who.coinage ? [
-      { view: "coinage:requests" as const, href: "/coinage", label: "Coinage", icon: Coins, description: "Every coinage request you can see, by status, with the queues to follow up" },
+      { view: "coinage:requests" as const, href: "/coinage", label: "Coinage", folderEntry: "All coinage", icon: Coins, description: "Every coinage request you can see, by status, with the queues to follow up" },
       { view: "coinage:mine" as const, href: `/coinage?creator=${mine}&status=all`, label: "My coinage", icon: UserRound, description: "The coinage requests you made, whatever their status" },
     ] : []),
     ...(who.refunds?.request ? [{ view: "refunds:drafts" as const, href: "/refunds?status=DRAFT", label: "Refund drafts", under: "/refunds", icon: FilePenLine, description: "Refund requests you started and have not sent yet" }] : []),

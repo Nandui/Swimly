@@ -19,7 +19,7 @@ export function FinanceShell({ who, contentClass, children }: { who: FinanceActo
     : pathname.startsWith('/refunds') ? 'refunds:requests'
     : pathname === '/coinage' ? `coinage:${coinageListView(query, who.id)}`
     : 'coinage:requests';
-  const links = financePages(who).map(({ href, label, icon, place, under, view: page }) => ({ href, label, icon, place, under, active: page === view }));
+  const links = financePages(who).map(({ href, label, icon, place, under, folderEntry, view: page }) => ({ href, label, icon, place, under, folderEntry, active: page === view }));
   return (
     <ModuleShell module="Finance requests" id="finance-requests" who={who} scopeNote="Your team's space" links={links} contentClass={contentClass} scrollKey={query.toString()}>
       {children}

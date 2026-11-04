@@ -119,6 +119,8 @@ export type ModulePage = {
   /** A work page's sub-page: the href of the page it nests under in the sidebar, which opens like
    *  a folder. Sub-pages can nest in turn, and do not count towards the five work pages. */
   under?: string;
+  /** When pages nest under this one: its name inside its own folder, whose title is `label`. */
+  folderEntry?: string;
 };
 
 const groupRank = (mod: ModuleManifest) => MODULE_GROUPS.findIndex((g) => g.key === mod.group);

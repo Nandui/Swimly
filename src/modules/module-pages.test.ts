@@ -22,9 +22,9 @@ const everything = new Proxy({}, { get: (_target, key) => (key === "id" ? "someo
 
 /** Every app's pages as the most capable person sees them. The swim school's Overview is added
  *  by its frame, as it is not in its nav list. */
-const APPS: [string, { href: string; label: string; place?: "setup"; under?: string }[]][] = [
+const APPS: [string, { href: string; label: string; place?: "setup"; under?: string; folderEntry?: string }[]][] = [
   ["Admin", ADMIN_GROUPS.flatMap((group) => group.links)],
-  ["Classes", [{ href: "/swim-school", label: "Overview" }, ...NAV_ITEMS]],
+  ["Classes", [{ href: "/swim-school", label: "Overview", folderEntry: "Summary" }, ...NAV_ITEMS]],
   ["Academy", academyPages()],
   ["CCTV log", cctvPages()],
   ["Finance requests", financePages({ id: "someone", refunds: everything, coinage: everything })],
@@ -54,6 +54,14 @@ test("every page nested under another names a page of its own app, and is not al
     for (const page of pages.filter((p) => p.under)) {
       assert.ok(!page.place, `${app}: ${page.label} is both nested and under Set up`);
       assert.ok(hrefs.has(page.under!), `${app}: ${page.label} nests under ${page.under}, which is not one of its pages`);
+    }
+  }
+});
+
+test("a page with pages under it names itself inside its folder, as its title is not a link (DESIGN.md)", () => {
+  for (const [app, pages] of APPS) {
+    for (const page of pages.filter((p) => pages.some((s) => s.under === p.href))) {
+      assert.ok(page.folderEntry && page.folderEntry !== page.label, `${app}: ${page.label} holds pages, so give it a folderEntry: its own name inside the ${page.label} folder`);
     }
   }
 });

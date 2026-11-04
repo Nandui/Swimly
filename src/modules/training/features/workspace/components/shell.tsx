@@ -11,7 +11,7 @@ export function TrainingShell({ who, children }: {
   who: TrainingActor; children: ReactNode;
 }) {
   const pathname = usePathname();
-  const links = trainingPages(who).map(({ href, label, icon, place, under, match }) => ({ href, label, icon, place, under, active: match(pathname) }));
+  const links = trainingPages(who).map(({ href, label, icon, place, under, folderEntry, match }) => ({ href, label, icon, place, under, folderEntry, active: match(pathname) }));
   return (
     <ModuleShell module="Training" id="training" who={who} links={links} scopeNote="Only the people you cover">
       {children}
