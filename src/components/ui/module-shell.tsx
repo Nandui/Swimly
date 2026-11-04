@@ -19,7 +19,10 @@ import { SearchDialog } from '@/components/ui/search-dialog';
  *  page sits `under` another and nests beneath it in the sidebar, like a folder, so every page
  *  has a place there. The icon shows in menus; links handed over by a server page have none,
  *  because a component cannot cross to the client. */
-export type ModuleLink = { href: string; label: string; icon?: LucideIcon; active: boolean; place?: 'setup'; under?: string };
+/** `folderEntry`: when pages nest under this one, its sidebar row becomes the folder's title
+ *  (it opens and closes, never navigates) and the page itself is listed first inside, by this
+ *  name ("Weekly classes" in the Timetable folder). */
+export type ModuleLink = { href: string; label: string; icon?: LucideIcon; active: boolean; place?: 'setup'; under?: string; folderEntry?: string };
 export type ModuleLinkGroup = { label: string; links: ModuleLink[] };
 
 /** The one frame every app opens in (DESIGN.md, The frame and navigation; D19). One level of
@@ -178,17 +181,21 @@ function Sidebar({ current, name, app, scopeNote, pathname, onSearch }: { curren
   );
   const work = app?.pages.filter((p) => !p.place && atTop(p, app.pages)) ?? [];
   const setup = app?.pages.filter((p) => p.place === 'setup') ?? [];
+  /** A page with pages under it is a folder: its row is the title, which opens and closes, and
+   *  the page itself is the first entry inside, so no row is both a page and a folder. */
   const page = (p: ModuleLink): ReactNode => {
     const subPages = app?.pages.filter((s) => s.under === p.href) ?? [];
-    const link = item(p.href, p.href, p.label, p.icon, currentFor(p, pathname));
-    if (!subPages.length) return link;
+    if (!subPages.length) return item(p.href, p.href, p.label, p.icon, currentFor(p, pathname));
+    const open = within(p, app?.pages ?? []);
     return (
-      <Collapsible key={p.href} className="tf-side-folder" defaultOpen={within(p, app?.pages ?? [])}>
-        <div className="tf-side-folder-row">
-          {link}
-          <CollapsibleTrigger className="tf-side-folder-toggle" aria-label={`${p.label} pages`}><ChevronRight aria-hidden="true" className="tf-side-chevron" /></CollapsibleTrigger>
-        </div>
-        <CollapsibleContent className="tf-side-tree">{subPages.map(page)}</CollapsibleContent>
+      <Collapsible key={p.href} className="tf-side-folder" defaultOpen={open}>
+        <CollapsibleTrigger className="tf-side-item tf-side-folder-title" data-current={open || undefined}>
+          {p.icon ? <p.icon aria-hidden="true" /> : null}<span className="tf-side-label">{p.label}</span><ChevronRight aria-hidden="true" className="tf-side-chevron" />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="tf-side-tree">
+          {item(p.href, p.href, p.folderEntry ?? p.label, p.icon, currentFor(p, pathname))}
+          {subPages.map(page)}
+        </CollapsibleContent>
       </Collapsible>
     );
   };
@@ -250,13 +257,22 @@ function TabBar({ current, app, pathname, onSearch }: { current: string; app: Op
       <span className="tf-bottom-icon"><Icon aria-hidden="true" /></span><span>{label}</span>
     </Link>
   );
-  const pageItem = (page: ModuleLink) => (
-    <DropdownMenuItem key={page.href} asChild className="min-h-11" data-depth={depth(page, app?.pages ?? []) || undefined}>
-      <Link href={page.href} aria-current={currentFor(page, pathname)}>{page.icon ? <page.icon aria-hidden="true" /> : null}{page.label}</Link>
+  const all = app?.pages ?? [];
+  const pageItem = (page: ModuleLink, label = page.label, extra = 0) => (
+    <DropdownMenuItem key={page.href} asChild className="min-h-11" data-depth={depth(page, all) + extra || undefined}>
+      <Link href={page.href} aria-current={currentFor(page, pathname)}>{page.icon ? <page.icon aria-hidden="true" /> : null}{label}</Link>
     </DropdownMenuItem>
   );
-  const all = app?.pages ?? [];
-  const inOrder = (p: ModuleLink): ModuleLink[] => [p, ...all.filter((s) => s.under === p.href).flatMap(inOrder)];
+  /** As in the sidebar, a folder is a title over its own page and the pages under it. */
+  const inOrder = (p: ModuleLink): ReactNode[] => {
+    const subPages = all.filter((s) => s.under === p.href);
+    if (!subPages.length) return [pageItem(p)];
+    return [
+      <DropdownMenuLabel key={`${p.href}:folder`} className="text-xs font-semibold text-ui-muted-foreground" data-depth={depth(p, all) || undefined}>{p.label}</DropdownMenuLabel>,
+      pageItem(p, p.folderEntry ?? p.label, 1),
+      ...subPages.flatMap(inOrder),
+    ];
+  };
   const work = all.filter((p) => p.place !== 'setup' && atTop(p, all)).flatMap(inOrder);
   const setup = all.filter((p) => p.place === 'setup');
   return (
@@ -271,12 +287,12 @@ function TabBar({ current, app, pathname, onSearch }: { current: string; app: Op
             </DropdownMenuTrigger>
             <DropdownMenuContent side="top" align="center" className="w-64 max-w-(--overlay-max-width)">
               <DropdownMenuLabel className="text-xs font-semibold text-ui-muted-foreground">{open.name}</DropdownMenuLabel>
-              {work.map(pageItem)}
+              {work}
               {setup.length ? (
                 <DropdownMenuGroup>
                   <DropdownMenuSeparator />
                   <DropdownMenuLabel className="text-xs font-semibold text-ui-muted-foreground">Set up</DropdownMenuLabel>
-                  {setup.map(pageItem)}
+                  {setup.map((p) => pageItem(p))}
                 </DropdownMenuGroup>
               ) : null}
             </DropdownMenuContent>

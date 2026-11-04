@@ -4,6 +4,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.6.1 · 4 November 2026 · Folders in the side menu are titles
+
+- **A page with pages under it is now a folder title.** Choosing it opens or closes the folder; it no longer opens a page.
+- **Its own page is the first one inside.** Under Timetable, choose **Weekly classes** for the timetable. Likewise Overview → **Summary**, Duty manager → **Today**, Schedule → **Day by day**, Swimmers → **All swimmers**, Training's People → **Everyone**, Refunds → **All refunds** and Coinage → **All coinage**.
+- On a phone, the Classes list shows each folder's name as a heading over its pages.
+
 ## 3.6.0 · 3 November 2026 · Qualifications, its own app
 
 - **Qualifications** is a new app in Team for the people who keep staff qualifications in date. It has three pages: **Expiring**, **Certificates to check** and **In-service hours**. They used to be in Training, and old links still work.
