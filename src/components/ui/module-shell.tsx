@@ -166,13 +166,13 @@ function useLargeTitle(mainId: string, top: RefObject<HTMLElement | null>, pathn
   return inline;
 }
 
-/** The sidebar (DESIGN.md, Sidebar; D19), on the ground. On Home: the logo and name, Home, one
- *  "Apps" heading and the person's apps in the groups' order. In an app it drills in: "‹ Home"
+/** The sidebar (DESIGN.md, Sidebar; D19), on the ground. On Home: the logo and name, Home, then
+ *  each of the person's app groups as a heading ("Team", "Finance"…) with its apps under it. In an app it drills in: "‹ Home"
  *  (unless the app is the person's only one), the app's name, its work pages and its Set up
  *  pages under one item that opens in place. Help and the account sit at the foot. */
 function Sidebar({ current, name, app, scopeNote, pathname, onSearch }: { current: string; name: string; app: OpenApp; scopeNote: string; pathname: string; onSearch: () => void }) {
   const { modules, groups } = useFrame();
-  const apps = groupFrameModules(modules, groups).flatMap((group) => group.modules);
+  const appGroups = groupFrameModules(modules, groups);
   const only = modules.length === 1;
   const item = (key: string, href: string, label: string, Icon: LucideIcon | undefined, ariaCurrent: 'page' | 'true' | undefined) => (
     <Link key={key} href={href} className="tf-side-item" aria-current={ariaCurrent}>
@@ -230,8 +230,12 @@ function Sidebar({ current, name, app, scopeNote, pathname, onSearch }: { curren
         ) : (
           <>
             {item('home', '/', 'Home', House, current === 'home' ? 'page' : undefined)}
-            {apps.length > 0 && <p className="tf-side-heading">Apps</p>}
-            {apps.map((m) => item(m.id, m.href, m.name, m.icon, current === m.id ? 'true' : undefined))}
+            {appGroups.map((group) => (
+              <div key={group.key} role="group" aria-labelledby={`tf-side-group-${group.key}`} className="tf-side-group">
+                <p id={`tf-side-group-${group.key}`} className="tf-side-heading">{group.label}</p>
+                {group.modules.map((m) => item(m.id, m.href, m.name, m.icon, current === m.id ? 'true' : undefined))}
+              </div>
+            ))}
           </>
         )}
       </div>

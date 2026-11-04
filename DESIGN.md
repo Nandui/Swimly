@@ -26,7 +26,7 @@ The values below are the contract. Names are the CSS custom properties the theme
 | --- | --- | --- | --- |
 | `ground` | #0062b1 | #0062b1 | The logo's deep blue, behind the frame, at every width and in both themes. |
 | `on-ground` | #ffffff | #ffffff | Text, titles and symbols on the ground (6.2:1; 5.1:1 over the fin). |
-| `on-ground-2` | #ebf3fa | #ebf3fa | Secondary text on the ground: the date, "Apps", counts, the person's job (5.5:1; 4.5:1 over the fin). Never translucent white, which fails over the fin. |
+| `on-ground-2` | #ebf3fa | #ebf3fa | Secondary text on the ground: the date, app group headings, counts, the person's job (5.5:1; 4.5:1 over the fin). Never translucent white, which fails over the fin. |
 | `ground-fill` | rgba(255,255,255,.14) | rgba(255,255,255,.14) | The search field and hover on the ground. |
 | `sheet` | #ffffff | #0d151e | The page the work sits on. |
 | `surface` | #f4f7fa | #16202b | Figure tiles, the refund amount, empty register tiles. |
@@ -103,7 +103,7 @@ Turnfin is one frame holding apps ([PRODUCT.md](PRODUCT.md)). What it shows is w
 ### Desktop (1100px and wider)
 
 - **Sidebar,** on the ground, `sidebar-width` wide, with the fin behind it. It drills in:
-  - On Home: the logo in a white app-icon tile (34px, `radius-item`) with "Turnfin" beside it (to Home), the search field ("Search · Ctrl K"), Home, "Apps", and the person's apps in group order.
+  - On Home: the logo in a white app-icon tile (34px, `radius-item`) with "Turnfin" beside it (to Home), the search field ("Search · Ctrl K"), Home, then each of the person's app groups as a heading (Front of house, Poolside, Team, Managers, Back office) with its apps under it. A group the person has no apps in is left out.
   - In an app, the list slides across to "‹ Home", the app's name in `title-2`, and its pages. Set up sits last, after a hairline.
   - The open item is a white pill with `brand-ink` text and `shadow-selected`. Its count sits in a `brand` pill. Other counts are plain `on-ground-2` numbers. No red badges.
   - The person's initials in a white circle, their name and "job · site ▾" sit at the foot and open the account menu.
