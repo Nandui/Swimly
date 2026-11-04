@@ -4,6 +4,10 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.6.2 · 4 November 2026 · Apps sorted under headings in the side menu
+
+- **On Home, the side menu now shows your apps under headings**: Front of house, Poolside, Team, Managers and Back office, the same groups as the Apps menu on a phone. A heading only shows if you have an app in it.
+
 ## 3.6.1 · 4 November 2026 · Folders in the side menu are titles
 
 - **A page with pages under it is now a folder title.** Choosing it opens or closes the folder; it no longer opens a page.
