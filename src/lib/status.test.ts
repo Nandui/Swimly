@@ -18,6 +18,7 @@ import * as shortCourses from "@/modules/activities/shared/short-courses/rules";
 import * as academy from "@/modules/academy";
 import { STOCK_CATEGORY_TONE_META, STOCK_CHANGE_META, STOCK_TAKE_META } from "@/modules/stock";
 import { CCTV_REASON_META } from "@/modules/cctv";
+import * as staffing from "@/modules/staffing";
 import * as rota from "@/modules/rota/shared/constants";
 import * as rotaMeta from "@/modules/rota/shared/meta";
 import { REACH_META, STAFF_STATUS_META } from "@/lib/staff/constants";
@@ -37,6 +38,7 @@ const MAPS: Record<string, Record<string, StatusMeta>> = {
   ...academy,
   STOCK_CATEGORY_TONE_META, STOCK_CHANGE_META, STOCK_TAKE_META,
   CCTV_REASON_META,
+  ...staffing.STAFFING_STATUS_MAPS,
   MONITORING_STATUS_META,
   MAINTENANCE_STATUS_META, MAINTENANCE_URGENCY_META,
   OFF_REASON_META,

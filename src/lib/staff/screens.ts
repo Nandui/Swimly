@@ -141,6 +141,7 @@ export const SCREENS = [
   { key: "short-courses", label: "Short courses", path: "/short-courses", description: "Six and eight week courses at the pool, the gym or the studio: places, payment, waiting lists and registers.", requires: "short-courses.read" },
   { key: "academy", label: "Academy", path: "/academy", description: "A separate workspace for the Academy's lifeguard and swim teacher courses: candidates, checks, payment, registers and results.", requires: "academy.read" },
   { key: "stock", label: "Stock", path: "/stock", description: "A separate workspace for stock taking: count what is on the shelf at each site on a phone or tablet, keep the product list and compare two counts.", requires: "stock.read" },
+  { key: "staffing", label: "Staffing", path: "/staffing", description: "A separate workspace for swim teacher rostering: two-week rota blocks on contracted hours, acknowledgements, swaps, call-offs, strikes and exam seasons.", requires: "staffing.read" },
   { key: "cctv", label: "CCTV log", path: "/cctv", description: "A separate workspace for managers: a record of every time CCTV footage is checked, who checked it, why, what they looked for and what they saw.", requires: "cctv.record" },
   { key: "site-monitoring", label: "Site Monitoring", path: "/site-monitoring", description: "A separate workspace for managers: actions raised automatically at their sites, such as a task completed with a reading out of range, each closed by saying what was done.", requires: "site-monitoring.read" },
   { key: "payments", label: "Failed payments", path: "/payments", description: "The direct debits that failed each month: the bank's sheet is uploaded, and reception contacts each member until it is recovered.", requires: "payments.read" },
@@ -188,7 +189,7 @@ export const ACTIVITIES_SCREENS = [
   "analytics", "duty", "cancellations", "calendar", "instructor", "students", "courses",
   "together", "assessments", "awaiting-enrolment", "legend-agreements", "programmes", "payments", "short-courses",
 ] as const satisfies readonly ScreenKey[];
-export const OTHER_APP_SCREENS = ["docs", "refunds", "coinage", "training", "staff-qualifications", "hr", "rota", "purchasing", "stock", "academy", "tasks", "incidents", "cctv", "site-monitoring", "maintenance", "plan"] as const satisfies readonly ScreenKey[];
+export const OTHER_APP_SCREENS = ["docs", "refunds", "coinage", "training", "staff-qualifications", "hr", "rota", "purchasing", "stock", "academy", "tasks", "incidents", "cctv", "site-monitoring", "maintenance", "plan", "staffing"] as const satisfies readonly ScreenKey[];
 
 const CORE = new Set<string>(CORE_SCREENS);
 const SWIM_SCHOOL = new Set<string>(ACTIVITIES_SCREENS);
