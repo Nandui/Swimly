@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { CircleCheck, CircleX, Clock, RefreshCw, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Tag } from "@/components/ui-kit/tag";
 import { EmptyState } from "@/components/ui-kit/empty-state";
-import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/shadcn/tabs";
@@ -39,9 +38,11 @@ export function ScheduleCalendar({ courses, assessments, iso, todayIso, initialN
   const agendaTrigger = useRef<HTMLButtonElement>(null);
   const [width, setWidth] = useState(0);
 
-  useEffect(() => {
+  // Measured before paint, so a client navigation opens on the right view instead of flashing Agenda first.
+  useLayoutEffect(() => {
     const element = surface.current;
     if (!element) return;
+    setWidth(element.clientWidth);
     const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
     observer.observe(element);
     return () => observer.disconnect();
@@ -95,24 +96,30 @@ export function ScheduleCalendar({ courses, assessments, iso, todayIso, initialN
     <Tabs value={agenda ? 'agenda' : 'sheet'} onValueChange={next => setView(next as 'sheet' | 'agenda')} className="gap-(--space-5)">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <ScheduleDayNavigation iso={iso} todayIso={clock.date} pending={refreshing} onSelect={date => startRefresh(() => router.push(scheduleHref(date), { scroll: false }))} />
-      <TabsList aria-label="Calendar display" className={width < 600 ? "hidden" : undefined}>
+      {/* Below 600px the sheet cannot fit, so there is no choice to offer (the theme's tab list
+          display overrides a `hidden` class, so it is left out rather than hidden). */}
+      {width >= 600 ? <TabsList aria-label="Calendar display">
         <TabsTrigger value="sheet" disabled={courses.length === 0 && assessments.length > 0}>Booking sheet</TabsTrigger>
         <TabsTrigger ref={agendaTrigger} value="agenda">Agenda</TabsTrigger>
-      </TabsList>
+      </TabsList> : null}
     </div>
     <div inert={refreshing || undefined} className={cn("flex min-w-0 flex-col gap-4", refreshing && "opacity-60")}>
 
-    <div className="flex flex-wrap items-center gap-2" role="status" aria-live="polite">
-      <Tag meta={SCHEDULE_SUMMARY_META.classes} label={plural(courses.length, "class", "classes")} />
-      {assessments.length > 0 ? <Tag meta={SCHEDULE_SUMMARY_META.assessments} label={plural(assessments.length, "assessment")} /> : null}
-      {running > 0 ? <Tag meta={HOME_SESSION_META.now} label={`${running} running now`} /> : null}
-      {isToday && later > 0 ? <Tag meta={SCHEDULE_SUMMARY_META.upcoming} label={`${later} coming up`} /> : null}
+    {/* One summary line: the day's counts, and, on the booking sheet, the way to the assessments
+        it leaves out, in place rather than as a separate banner. */}
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+      <div className="flex flex-wrap items-center gap-2" role="status" aria-live="polite">
+        <Tag meta={SCHEDULE_SUMMARY_META.classes} label={plural(courses.length, "class", "classes")} />
+        {assessments.length > 0 ? <Tag meta={SCHEDULE_SUMMARY_META.assessments} label={plural(assessments.length, "assessment")} /> : null}
+        {running > 0 ? <Tag meta={HOME_SESSION_META.now} label={`${running} running now`} /> : null}
+        {isToday && later > 0 ? <Tag meta={SCHEDULE_SUMMARY_META.upcoming} label={`${later} coming up`} /> : null}
+      </div>
+      {!agenda && assessments.length > 0 ? <p className="flex flex-wrap items-center gap-x-1 text-(length:--pc-text-sm) text-(--label-2)">
+        {assessments.length === 1 ? "The assessment isn't" : "Assessments aren't"} on the booking sheet.
+        <Button variant="link" onClick={() => { setView('agenda'); agendaTrigger.current?.focus(); }}>View in agenda</Button>
+      </p> : null}
+      {courses.length === 0 && assessments.length > 0 && width >= 600 ? <p className="text-(length:--pc-text-sm) text-(--label-2)">Assessments appear in Agenda; the booking sheet shows weekly classes.</p> : null}
     </div>
-
-    {courses.length === 0 && assessments.length > 0 && width >= 600 ? <Notice title="Assessment sessions appear in Agenda." description="The booking sheet shows weekly classes." /> : null}
-
-    {!agenda && assessments.length > 0 ? <Notice title={`${plural(assessments.length, "assessment")} ${assessments.length === 1 ? "is" : "are"} also scheduled on this day.`}
-      actions={<Button variant="outline" onClick={() => { setView('agenda'); agendaTrigger.current?.focus(); }}>View in agenda</Button>} /> : null}
 
     <TabsContent value={agenda ? 'agenda' : 'sheet'} className={cn("m-0 min-w-0", courses.length + assessments.length > 0 && styles["sheet-card"])} tabIndex={-1}>
     {courses.length === 0 && assessments.length === 0 ? <CalendarEmpty />
@@ -127,7 +134,7 @@ export function ScheduleCalendar({ courses, assessments, iso, todayIso, initialN
           <Table aria-label="Schedule booking sheet" data-layout="grid" containerClassName="overflow-visible">
             <colgroup><col className={styles["level-col"]} />{slots.map(slot => <col key={slot.start} className={styles["time-col"]} />)}</colgroup>
             <TableHeader><TableRow>
-              <TableHead scope="col">Level and time</TableHead>
+              <TableHead scope="col">Level</TableHead>
               {slots.map(slot => <TableHead key={slot.start} scope="col" id={`column-${slot.start}`} data-phase={slot.phase}>
                 <TimeHeading slot={slot} count={plural(slot.classes.length, "class", "classes")} />
               </TableHead>)}

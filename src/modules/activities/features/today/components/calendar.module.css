@@ -1,13 +1,15 @@
 /* The Schedule booking sheet: one bg-2 card on the ground, each level a row of time slots. Time
-   columns are a fixed 144px beside a 136px level column, and the table is only as wide as its
-   columns. The time headers and level labels stay in view while the sheet scrolls across times;
+   columns are at least 144px beside a 136px level column, and widen to fill the card on a short
+   day. The time headers and level labels stay in view while the sheet scrolls across times;
    the frame owns vertical scrolling. The column running now is the soft blue the timeline uses
    for on now, and says so in words; a finished one is quiet. Classes are the kit's time blocks
    (kit.css), stacked here so their labels wrap rather than truncate. */
 .calendar { display:flex; flex-direction:column; gap:var(--space-6); min-width:0; }
 .calendar .sheet-card { padding:var(--space-2); border-radius:var(--radius-card); background:var(--bg-2); box-shadow:var(--shadow-card); }
 .calendar .sheet-scroll { position:relative; overflow-x:auto; scrollbar-width:thin; }
-.calendar table { width:max-content; border-collapse:separate; border-spacing:6px; table-layout:fixed; }
+/* At least the card's width, so a short day spreads its columns across the card rather than
+   hugging the left edge; a long one keeps 144px columns and scrolls. */
+.calendar table { width:max-content; min-width:100%; border-collapse:separate; border-spacing:6px; table-layout:fixed; }
 .calendar .level-col { width:136px; }
 .calendar .time-col { width:144px; }
 .calendar th, .calendar td { white-space:normal; }
