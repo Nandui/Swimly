@@ -10,7 +10,7 @@ import { allowedFor, audit, refresh } from "@/modules/hr/shared/writes";
 
 export type ReportInput = { kind: string; body: string; date: string; time: string };
 
-/** A manager on duty puts an issue on someone's HR file (D22). It is always on
+/** A manager on duty puts good work or an issue on someone's HR file (D22). It is always on
  *  the record, never shared with the person, and names the reporter's working
  *  site, whose centre managers see it under Needs you until one reads it.
  *  `hr.reports.write` reads nothing, so it needs no fresh sign-in. */

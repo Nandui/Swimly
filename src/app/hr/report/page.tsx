@@ -18,8 +18,8 @@ export default async function HrReportPage({ searchParams }: { searchParams: Pro
   const now = `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
   return (
     <PageShell spacing="roomy" header={<PageHeader title="Report" description={who.records
-      ? "Put an issue with a member of staff on their HR file."
-      : "Put an issue with someone you manage on their HR file. They are not told, and you can't open it again."} />}>
+      ? "Put good work or an issue with a member of staff on their HR file."
+      : "Put good work or an issue with someone you manage on their HR file. They are not told, and you can't open it again."} />}>
       <section className="flex min-w-0 flex-col gap-(--space-4)" aria-label="People">
         <form method="get" role="search" aria-label="Find a person">
           <SearchField label="Person" placeholder="Name" name="q" defaultValue={q} clearHref={q ? "/hr/report" : undefined} />

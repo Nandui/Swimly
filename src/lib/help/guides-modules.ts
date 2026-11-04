@@ -198,13 +198,13 @@ export const MODULE_GUIDES: HelpArticle[] = [
     related: ["hr-review"], action: "hr",
   },
   {
-    slug: "hr-report", title: "Report an issue with a staff member", category: "hr", scopes: ["desk"],
+    slug: "hr-report", title: "Report good work or an issue with a staff member", category: "hr", scopes: ["desk"],
     summary: "Put a quick report on someone's HR file without opening it.",
-    keywords: ["hr", "report", "issue", "conduct", "performance", "attendance", "safety", "duty manager", "staff"],
+    keywords: ["hr", "report", "issue", "conduct", "performance", "attendance", "safety", "good work", "praise", "positive", "duty manager", "staff"],
     before: ["You need the HR: Report level, or higher. You can report on the people you manage."],
     steps: [
       { title: "Open Report", text: "In HR, choose Report." },
-      { title: "Fill it in", text: "Choose the person and what it is about: Conduct, Performance, Attendance or Safety. Write what happened, keeping to facts, and when it happened." },
+      { title: "Fill it in", text: "Choose the person and what it is about: Good work, Conduct, Performance, Attendance or Safety. Write what happened, keeping to facts, and when it happened." },
       { title: "Send it", text: "Choose Send report. It goes on their HR file against your name. The person is not told." },
     ],
     result: "The centre managers for your site see it under Needs you until one of them reads it. You cannot open it again; if it is wrong, ask a centre manager to withdraw it.",

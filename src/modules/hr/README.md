@@ -7,7 +7,7 @@ HR keeps its records in its own schema, `turnfin_hr`, in the main database ([D23
 ## Features
 - `team` — the people this person may see in HR, with their latest review (`/hr`).
 - `person` — one person's HR file: notes of a kind (add, withdraw), reviews and details (`/hr/people/[id]`). Opening it reads the reports waiting for the reader's sites.
-- `report` — quick reports on the people you manage (`/hr/report`), and their home-page count for the centre managers of the site they came from ([D22](../../../docs/decisions.md)).
+- `report` — quick reports (good work or an issue) on the people you manage (`/hr/report`), and their home-page count for the centre managers of the site they came from ([D22](../../../docs/decisions.md)).
 - `reviews` — performance reviews: start, write, share and see one (`/hr/reviews/[id]`, started from a person's file).
 - `activity` — who opened which HR records, and when (`/hr/activity`).
 - `export` — a person's HR records as one download for subject access (`/hr/people/[id]/export`).

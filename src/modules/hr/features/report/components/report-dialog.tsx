@@ -22,7 +22,7 @@ export function ReportDialog({ subjectUserId, name, today, now }: { subjectUserI
       width="sm:max-w-lg"
       trigger={<Button variant="outline" className="min-h-11"><FilePen aria-hidden="true" />Report</Button>}
       title={`Report about ${name}`}
-      description="Keep to facts: what happened and what you did. It goes on their HR file against your name. They are not told, and you can't open it again."
+      description="Good work or an issue. Keep to facts: what happened and what you did. It goes on their HR file against your name. They are not told, and you can't open it again."
       submitLabel="Send report"
       successMessage="Report sent"
       onOpen={() => setKind("")}
