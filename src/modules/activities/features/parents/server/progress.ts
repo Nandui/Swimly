@@ -44,7 +44,8 @@ function progressDto(events: ReleasedEvent[], curriculum: SharedCurriculum, curr
       const competencies = level.competencies.filter(c => !c.archivedAt || marks.has(c.id)).map(competency => {
         const value = object(marks.get(competency.id)?.value ?? null);
         return { id: competency.id, name: competency.name, description: competency.description,
-          status: value.status === "ACHIEVED" || value.status === "WORKING_ON" ? value.status : unmarked, assessedOn: value.assessedOn ?? null };
+          // No date: parents see whether a skill is achieved, not when (owner decision, 4 November 2026).
+          status: value.status === "ACHIEVED" || value.status === "WORKING_ON" ? value.status : unmarked };
       });
       const completion = completions.get(level.id);
       const value = object(completion?.value ?? null);
