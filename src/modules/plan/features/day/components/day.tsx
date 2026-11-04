@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, UserPlus } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, UserPlus } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
+import { Input } from "@/components/shadcn/input";
 import { DayTimeline, type DayTimelineBlock } from "@/components/ui-kit/day-timeline";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Inspector } from "@/components/ui-kit/inspector";
@@ -31,6 +32,7 @@ export function DayView({ data }: { data: PlanDayData }) {
   const router = useRouter();
   const [picked, setPicked] = useState<Picked | null>(null);
   const [pending, start] = useTransition();
+  const dateInput = useRef<HTMLInputElement>(null);
   const { site, date, needs, shifts, duties, people, occurrences } = data;
   const nameOf = (userId: string) => people.find((p) => p.id === userId)?.name ?? "Someone";
   const duty = (id: string) => duties.find((d) => d.id === id);
@@ -228,9 +230,18 @@ export function DayView({ data }: { data: PlanDayData }) {
   return (
     <div className="flex flex-col gap-(--space-7)">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button asChild variant="outline" size="icon" className="min-h-11 min-w-11"><Link href={link(shiftIso(date, -1))} aria-label="The day before"><ChevronLeft aria-hidden="true" /></Link></Button>
-          <p className="font-semibold">{formatDay(date)}</p>
+          {/* Any day in one go (owner, 4 November 2026): the date opens the device's own date picker. */}
+          <div className="relative">
+            <Button variant="outline" className="min-h-11 font-semibold" aria-label={`${formatDay(date)}. Choose another day`}
+              onClick={() => { const input = dateInput.current; if (!input) return; try { input.showPicker(); } catch { input.focus(); } }}>
+              <CalendarDays aria-hidden="true" />{formatDay(date)}
+            </Button>
+            <Input ref={dateInput} type="date" value={date} aria-label="Go to day" tabIndex={-1}
+              className="pointer-events-none absolute inset-0 h-full w-full opacity-0"
+              onChange={(e) => { if (e.target.value && e.target.value !== date) router.push(link(e.target.value)); }} />
+          </div>
           <Button asChild variant="outline" size="icon" className="min-h-11 min-w-11"><Link href={link(shiftIso(date, 1))} aria-label="The day after"><ChevronRight aria-hidden="true" /></Link></Button>
           {isToday ? null : <Button asChild variant="ghost" className="min-h-11"><Link href={link(data.today)}>Today</Link></Button>}
         </div>
