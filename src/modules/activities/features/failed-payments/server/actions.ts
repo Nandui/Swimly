@@ -4,13 +4,14 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
+import { requireSession } from "@/lib/authz";
 import { formatDay } from "@/lib/format";
 import { mayFor } from "@/lib/policy/session";
 import { prisma } from "@/lib/prisma";
 import { requirePaymentsActor, type PaymentsActor } from "@/modules/activities/shared/payments/access";
 import { closeChange, closeSchema, contactChange, contactSchema, PaymentError, problemOf, reopenChange, reopenSchema, type CloseInput, type ContactInput, type ReopenInput } from "@/modules/activities/shared/payments/rules";
 import { alreadyDone, failureLabel, guardVersion, lockFailure, recordStep } from "@/modules/activities/shared/payments/service";
-import { emailPlan } from "@/modules/activities/features/failed-payments/server/email";
+import { emailPlan, testEmailWords, validAddress } from "@/modules/activities/features/failed-payments/server/email";
 import { nonSwimmerPlan } from "@/modules/activities/features/failed-payments/server/non-swimmers";
 import { sendFamilyEmail } from "@/modules/activities/shared/parents/family-email";
 import { EMAIL_STEP_LABEL } from "@/modules/activities/shared/payments/emails";
@@ -156,4 +157,32 @@ export async function sendPaymentEmail(input: SendEmailInput): Promise<PaymentRe
   }
   revalidatePath("/payments", "layout");
   return { ok: true, id };
+}
+
+/** An admin checks the warning emails actually go (owner, 4 November 2026): the payment's next
+ *  email, marked as a test, is sent to the signed-in person's own address. It needs Payments:
+ *  Manage at the payment's site (Admin: Manage and superadmins hold it). Nothing on the payment
+ *  changes; an audit row records the test. It sends from every environment, previews included,
+ *  because it only ever goes to the person who asked. */
+export async function sendTestPaymentEmail(input: { id: string }): Promise<{ ok: true; to: string } | { ok: false; error: string }> {
+  const parsed = z.object({ id: z.string().min(1) }).safeParse(input);
+  if (!parsed.success) return fail("Refresh the page and try again.");
+  const { id } = parsed.data;
+  const who = await requirePaymentsActor();
+  const row = await prisma.paymentFailure.findFirst({ where: { id, orgId: who.orgId ?? undefined } });
+  if (!row || !(await mayFor("payments.read", { siteId: row.siteId, orgId: who.orgId }))) return fail("This payment is not available.");
+  if (!(await mayFor("payments.manage", { siteId: row.siteId, orgId: who.orgId }))) return fail("Sending a test email needs Payments: Manage at this site.");
+  const to = (await requireSession()).user.email?.trim().toLowerCase() ?? "";
+  if (!validAddress(to)) return fail("Your account has no valid email address to send the test to.");
+  const { step, subject, email } = await testEmailWords(row);
+  try {
+    await sendFamilyEmail(to, `[Test] ${subject}`, email);
+  } catch {
+    // Provider responses can contain credentials: log the payment, not the error.
+    console.error("Failed payments: a test email was not sent", { failureId: id, step });
+    return fail("The test email couldn't be sent, so the email service isn't working. Check the parents mailbox settings.");
+  }
+  await logAudit({ actorId: who.id, actorName: who.name, action: "test_email", entity: "PaymentFailure", entityId: id, clubId: row.siteId,
+    summary: `${failureLabel(row)}. Test of the ${EMAIL_STEP_LABEL[step].toLowerCase()} sent to ${to}` });
+  return { ok: true, to };
 }
