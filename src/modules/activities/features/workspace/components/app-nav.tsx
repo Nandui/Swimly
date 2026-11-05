@@ -31,7 +31,7 @@ export function AppChrome({ who, screens, club, clubs, children }: {
     { label: "", links: [{ href: SWIM_SCHOOL_OVERVIEW, label: "Overview", folderEntry: "Summary", icon: LayoutDashboard, active: pathname === SWIM_SCHOOL_OVERVIEW }] },
     ...visibleNavGroups(screens).map(group => ({
       label: group.label,
-      links: group.items.map(item => ({ href: item.href, label: item.label, icon: item.icon, place: item.place, under: item.under, folderEntry: item.folderEntry, active: isNavItemActive(pathname, item.href) })),
+      links: group.items.map(item => ({ href: item.href, label: item.label, icon: item.icon, place: item.place, under: item.under, folderEntry: item.folderEntry, folder: item.folder, active: isNavItemActive(pathname, item.href) })),
     })),
   ];
   return (

@@ -23,7 +23,7 @@ const everything = new Proxy({}, { get: (_target, key) => (key === "id" ? "someo
 
 /** Every app's pages as the most capable person sees them. The swim school's Overview is added
  *  by its frame, as it is not in its nav list. */
-const APPS: [string, { href: string; label: string; place?: "setup"; under?: string; folderEntry?: string }[]][] = [
+const APPS: [string, { href: string; label: string; place?: "setup"; under?: string; folderEntry?: string; folder?: { label: string } }[]][] = [
   ["Admin", ADMIN_GROUPS.flatMap((group) => group.links)],
   ["Classes", [{ href: "/swim-school", label: "Overview", folderEntry: "Summary" }, ...NAV_ITEMS]],
   ["Academy", academyPages()],
@@ -43,9 +43,9 @@ const APPS: [string, { href: string; label: string; place?: "setup"; under?: str
   ["Qualifications", qualificationsPages()],
 ];
 
-test("every app lists at most five work pages in the sidebar, then Set up; nested pages do not count (DESIGN.md, D19)", () => {
+test("every app lists at most five work pages in the sidebar, then Set up; nested pages do not count, and a label-only folder counts once (DESIGN.md, D19)", () => {
   for (const [app, pages] of APPS) {
-    const work = pages.filter((page) => !page.place && !page.under).map((page) => page.label);
+    const work = [...new Set(pages.filter((page) => !page.place && !page.under).map((page) => page.folder?.label ?? page.label))];
     assert.ok(work.length <= 5, `${app} lists ${work.length} work pages in the sidebar: ${work.join(", ")}. Move the rest under Set up or under a work page.`);
   }
 });
@@ -55,6 +55,7 @@ test("every page nested under another names a page of its own app, and is not al
     const hrefs = new Set(pages.filter((page) => !page.place).map((page) => page.href));
     for (const page of pages.filter((p) => p.under)) {
       assert.ok(!page.place, `${app}: ${page.label} is both nested and under Set up`);
+      assert.ok(!page.folder, `${app}: ${page.label} is both nested under a page and in the ${page.folder?.label} folder`);
       assert.ok(hrefs.has(page.under!), `${app}: ${page.label} nests under ${page.under}, which is not one of its pages`);
     }
   }

@@ -21,8 +21,12 @@ import { SearchDialog } from '@/components/ui/search-dialog';
  *  because a component cannot cross to the client. */
 /** `folderEntry`: when pages nest under this one, its sidebar row becomes the folder's title
  *  (it opens and closes, never navigates) and the page itself is listed first inside, by this
- *  name ("Weekly classes" in the Timetable folder). */
-export type ModuleLink = { href: string; label: string; icon?: LucideIcon; active: boolean; place?: 'setup'; under?: string; folderEntry?: string };
+ *  name ("All swimmers" in the Swimmers folder). */
+/** `folder`: a label-only folder ("Schedule", "Compliance") the page sits in. Pages naming the
+ *  same folder label are gathered under one title that opens and closes but is not a page; a
+ *  folder holding only one page this person can open shows that page on its own. */
+export type ModuleFolder = { label: string; icon?: LucideIcon };
+export type ModuleLink = { href: string; label: string; icon?: LucideIcon; active: boolean; place?: 'setup'; under?: string; folderEntry?: string; folder?: ModuleFolder };
 export type ModuleLinkGroup = { label: string; links: ModuleLink[] };
 
 /** The one frame every app opens in (DESIGN.md, The frame and navigation; D19). One level of
@@ -122,6 +126,20 @@ function atTop(page: ModuleLink, pages: ModuleLink[]): boolean {
   return !page.under || !pages.some((p) => p.href === page.under);
 }
 
+/** The top of the sidebar in order: pages on their own, and pages sharing a label-only folder
+ *  gathered where the first of them stands. */
+type TopEntry = { page: ModuleLink } | { folder: ModuleFolder; pages: ModuleLink[] };
+function topEntries(top: ModuleLink[]): TopEntry[] {
+  const entries: TopEntry[] = [];
+  for (const page of top) {
+    const folder = page.folder;
+    const open = folder && entries.find((e): e is Extract<TopEntry, { folder: ModuleFolder }> => 'folder' in e && e.folder.label === folder.label);
+    if (open) open.pages.push(page);
+    else entries.push(folder ? { folder, pages: [page] } : { page });
+  }
+  return entries.map((e) => ('folder' in e && e.pages.length === 1 ? { page: e.pages[0] } : e));
+}
+
 /** Whether the page or one of the pages nested under it is open, so its folder starts open. */
 function within(page: ModuleLink, pages: ModuleLink[]): boolean {
   return page.active || pages.some((p) => p.under === page.href && within(p, pages));
@@ -199,6 +217,18 @@ function Sidebar({ current, name, app, scopeNote, pathname, onSearch }: { curren
       </Collapsible>
     );
   };
+  const entry = (e: TopEntry): ReactNode => {
+    if ('page' in e) return page(e.page);
+    const open = e.pages.some((p) => within(p, app?.pages ?? []));
+    return (
+      <Collapsible key={`folder:${e.folder.label}`} className="tf-side-folder" defaultOpen={open}>
+        <CollapsibleTrigger className="tf-side-item tf-side-folder-title" data-current={open || undefined}>
+          {e.folder.icon ? <e.folder.icon aria-hidden="true" /> : null}<span className="tf-side-label">{e.folder.label}</span><ChevronRight aria-hidden="true" className="tf-side-chevron" />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="tf-side-tree">{e.pages.map(page)}</CollapsibleContent>
+      </Collapsible>
+    );
+  };
   return (
     <Glass as="nav" shape="panel" className="tf-side" aria-label={app ? `${app.name} pages` : 'Apps'}>
       <Link href="/" className="tf-side-brand" aria-label="Turnfin home">
@@ -215,7 +245,7 @@ function Sidebar({ current, name, app, scopeNote, pathname, onSearch }: { curren
               <Link href="/" className="tf-side-item tf-side-back"><ChevronLeft aria-hidden="true" /><span className="tf-side-label">Home</span></Link>
             )}
             <p className="tf-side-app">{app.name}<span className="sr-only">. {scopeNote}</span></p>
-            {work.map(page)}
+            {topEntries(work).map(entry)}
             {setup.length ? (
               <Collapsible className="tf-side-setup" defaultOpen={setup.some((p) => p.active)}>
                 <CollapsibleTrigger className="tf-side-item" data-current={setup.some((p) => p.active) || undefined}>
@@ -268,16 +298,19 @@ function TabBar({ current, app, pathname, onSearch }: { current: string; app: Op
     </DropdownMenuItem>
   );
   /** As in the sidebar, a folder is a title over its own page and the pages under it. */
-  const inOrder = (p: ModuleLink): ReactNode[] => {
+  const inOrder = (p: ModuleLink, extra = 0): ReactNode[] => {
     const subPages = all.filter((s) => s.under === p.href);
-    if (!subPages.length) return [pageItem(p)];
+    if (!subPages.length) return [pageItem(p, p.label, extra)];
     return [
-      <DropdownMenuLabel key={`${p.href}:folder`} className="text-xs font-semibold text-ui-muted-foreground" data-depth={depth(p, all) || undefined}>{p.label}</DropdownMenuLabel>,
-      pageItem(p, p.folderEntry ?? p.label, 1),
-      ...subPages.flatMap(inOrder),
+      <DropdownMenuLabel key={`${p.href}:folder`} className="text-xs font-semibold text-ui-muted-foreground" data-depth={depth(p, all) + extra || undefined}>{p.label}</DropdownMenuLabel>,
+      pageItem(p, p.folderEntry ?? p.label, extra + 1),
+      ...subPages.flatMap((s) => inOrder(s, extra)),
     ];
   };
-  const work = all.filter((p) => p.place !== 'setup' && atTop(p, all)).flatMap(inOrder);
+  const work = topEntries(all.filter((p) => p.place !== 'setup' && atTop(p, all))).flatMap((e) => 'page' in e ? inOrder(e.page) : [
+    <DropdownMenuLabel key={`folder:${e.folder.label}`} className="text-xs font-semibold text-ui-muted-foreground">{e.folder.label}</DropdownMenuLabel>,
+    ...e.pages.flatMap((p) => inOrder(p, 1)),
+  ]);
   const setup = all.filter((p) => p.place === 'setup');
   return (
     <div className="tf-bottom-wrap">
