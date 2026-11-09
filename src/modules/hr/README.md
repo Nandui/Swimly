@@ -9,6 +9,7 @@ HR keeps its records in its own schema, `turnfin_hr`, in the main database ([D23
 - `person` — one person's HR file: notes of a kind (add, withdraw), reviews and details (`/hr/people/[id]`). Opening it reads the reports waiting for the reader's sites.
 - `report` — quick reports (good work or an issue) on the people you manage (`/hr/report`), and their home-page count for the centre managers of the site they came from ([D22](../../../docs/decisions.md)).
 - `reviews` — performance reviews: start, write, share and see one (`/hr/reviews/[id]`, started from a person's file).
+- `digest` — the daily email of yesterday's reports by person, in full, to the addresses a superadmin keeps in HR > Settings (`/hr/settings`); sent by `/api/cron/hr` at 07:00 UTC, once a day.
 - `activity` — who opened which HR records, and when (`/hr/activity`).
 - `export` — a person's HR records as one download for subject access (`/hr/people/[id]/export`).
 - `details-requests` — details changes sent from Turnfin Me, and their home-page count (`/hr/details-requests`).
@@ -24,7 +25,7 @@ HR keeps its records in its own schema, `turnfin_hr`, in the main database ([D23
 - `acknowledgeReviewFor(me, id, comment)` — a person acknowledges a shared review.
 
 ## Data owned
-In the `turnfin_hr` schema (plain SQL, not Prisma): `notes`, `reviews`, `access_events`, `audit_events`, `storage_imports` (the record of the one-time copy from the old HR database, 2 November 2026).
+In the `turnfin_hr` schema (plain SQL, not Prisma): `notes`, `reviews`, `access_events`, `audit_events`, `settings` (the daily email's addresses), `digest_runs` (each day's email, claimed once, with its outcome), `storage_imports` (the record of the one-time copy from the old HR database, 2 November 2026).
 
 HR's starter-page item counts Core's `StaffDetailChangeRequest`, and a person's file reads Core's people and other modules' records through the `personFile` and `subjectRecords` seams.
 

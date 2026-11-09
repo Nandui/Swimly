@@ -67,6 +67,7 @@ In `vercel.json`, times in UTC, each guarded by `CRON_SECRET`:
 | `/api/cron/training` | 05:30 | runs every training rule: assigns courses to people who never finished them or are due again |
 | `/api/cron/incidents` | 06:00 | reminds each owner of an incident action due tomorrow or overdue |
 | `/api/cron/reminders` | 07:00 | each person's daily digest from Turnfin Me |
+| `/api/cron/hr` | 07:00 | emails yesterday's HR reports, by person, to the addresses in HR > Settings (once a day; nothing on a day with no reports) |
 
 ## Settings
 

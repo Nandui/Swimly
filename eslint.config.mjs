@@ -30,7 +30,7 @@ const otherModules = {
   training: moduleArea("training", "src/app/api/cron/training/**"),
   // Its pages are at /staff-qualifications: Admin's list of qualification types keeps /qualifications.
   qualifications: moduleArea("qualifications", "src/app/staff-qualifications/**"),
-  hr: moduleArea("hr"),
+  hr: moduleArea("hr", "src/app/api/cron/hr/**"),
   rota: moduleArea("rota"),
   plan: moduleArea("plan"),
   purchasing: moduleArea("purchasing"),

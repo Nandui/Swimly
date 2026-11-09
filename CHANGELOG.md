@@ -4,6 +4,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.9.0 · 9 November 2026 · A daily email of HR reports
+
+- **Superadmins can now get every HR report by email the next morning.** In HR, open **Settings** and add the email addresses that should get it.
+- **The email lists each person who had a report the day before**, with every good work and issue report: what kind it was, when and where it happened, who reported it, what they wrote, and a link to the person's HR file.
+- **It arrives early every morning** (7am in winter, 8am in summer). Nothing is sent on a day with no reports, and withdrawn reports are left out.
+
 ## 3.8.0 · 9 November 2026 · Staffing, for lifeguards too
 
 - **Staffing now rosters lifeguards as well as swim teachers**: all the part-time staff in the pool, on the same blocks, swaps, call-offs and strikes.
