@@ -22,7 +22,6 @@ export async function getMergesForDay(iso: string) {
   for (const row of rows) into.set(row.intoCourseId, [...(into.get(row.intoCourseId) ?? []), row]);
   return { away: new Map(rows.map(row => [row.fromCourseId, row])), into };
 }
-export type DayMerge = Awaited<ReturnType<typeof getMergesForDay>>["away"] extends Map<string, infer T> ? T : never;
 
 /** The merge that took this class away on this date, if any. */
 export async function getMergeAway(courseId: string, iso: string) {

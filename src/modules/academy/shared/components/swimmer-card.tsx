@@ -3,8 +3,7 @@
 import { useState, type ReactNode } from "react";
 import { Link2 } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import { Field, FormDialog } from "@/components/form-dialog";
-import { Input } from "@/components/shadcn/input";
+import { FormDialog } from "@/components/form-dialog";
 import type { ActionResult } from "@/lib/action-result";
 import { formatDate } from "@/lib/format";
 import { readSwimmerChoice, splitName, SwimmerPicker, type SwimmerPrefill } from "@/modules/academy/shared/components/swimmer-picker";
@@ -68,14 +67,5 @@ export function SwimmerLinkDialog({ name, prefill, needsDateOfBirth, submit, pri
       submit={(fd) => submit(readSwimmerChoice(fd))}>
       <SwimmerPicker fid={`link-${name.replace(/\W+/g, "-")}`} initialQuery={name} prefill={{ ...splitName(name), ...prefill }} needsDateOfBirth={needsDateOfBirth} />
     </FormDialog>
-  );
-}
-
-/** Asked only when the course has a minimum age and the picked swimmer's record has no date of birth. */
-export function BirthDateField({ fid, defaultValue, minAge }: { fid: string; defaultValue?: string | null; minAge: number }) {
-  return (
-    <Field label="Date of birth" htmlFor={`${fid}-dob`} hint={`Their swimmer record has none, and the course is for ${minAge} and over.`}>
-      <Input id={`${fid}-dob`} name="dateOfBirth" type="date" required defaultValue={defaultValue ?? ""} className="min-h-11" />
-    </Field>
   );
 }

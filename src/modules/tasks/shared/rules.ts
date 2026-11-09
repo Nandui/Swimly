@@ -108,9 +108,6 @@ export type TaskRecord = Record<string, string>;
 // Status: stored, then what people see
 // ---------------------------------------------------------------------------
 
-/** What is stored. Late, early, overdue and missed are worked out from the times. */
-export const TASK_STATUSES = ["open", "done", "not_applicable", "cant_complete"] as const;
-
 /** What a task shows. Tones come from here, never a call site. */
 export const TASK_STATE_META = {
   upcoming: { label: "Later", color: "gray", icon: Circle },

@@ -3,7 +3,7 @@ import {
   MessageCircle, PhoneCall, PhoneOff, Repeat, Scale, ShieldAlert, Timer, UserRound, UserX, Users, XCircle,
 } from "lucide-react";
 import { z } from "zod";
-import { addDaysIso, ageOn, dublinInstant, parseDateOnly, toDateOnlyString } from "@/lib/format";
+import { addDaysIso, ageOn, dublinInstant, parseDateOnly } from "@/lib/format";
 import type { StatusMeta } from "@/lib/status";
 
 /** Staffing's rules, pure and client-safe (docs/staffing.md): the settings and their defaults, the
@@ -271,8 +271,6 @@ export function nextBlockStart(lastStartsOn: string | null, todayIso: string, s:
 /** The instant a shift starts. */
 export const shiftStart = (shift: { date: string; startMin: number }) =>
   dublinInstant(shift.date, Math.min(Math.max(shift.startMin, 0), 1439)) ?? parseDateOnly(shift.date);
-export const shiftEnd = (shift: { date: string; endMin: number }) =>
-  dublinInstant(shift.date, Math.min(Math.max(shift.endMin, 0), 1439)) ?? parseDateOnly(shift.date);
 export const hoursUntil = (start: Date, now: Date) => (start.getTime() - now.getTime()) / HOUR;
 
 /* ---------- Call-offs (BR-6.2, 6.3, 6.6, 6.7, 6.8) ---------- */
@@ -460,8 +458,6 @@ export function placesFor(startsOn: string, slots: readonly SlotForBlock[], prev
   return out;
 }
 
-export const isoDay = (d: Date) => toDateOnlyString(d);
-
 /* ---------- Who could take a shift (BR-5.3 steps 3 and 4, BR-8.6) ---------- */
 
 export type Candidate = { id: string; name: string; contract: ContractKind; dateOfBirth: string | null; quals: FitPerson["quals"]; contractMinutes: number | null; wantsMore: boolean; strikes: number };
@@ -482,4 +478,3 @@ export function rankFits(shift: FitShift, people: readonly Candidate[], shifts: 
     return { ...p, warnings, week, belowContract, tier, serious };
   }).sort((a, b) => Number(a.serious) - Number(b.serious) || a.tier - b.tier || a.warnings.length - b.warnings.length || a.strikes - b.strikes || a.name.localeCompare(b.name));
 }
-export type RankedFit = ReturnType<typeof rankFits>[number];

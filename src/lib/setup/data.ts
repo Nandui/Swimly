@@ -63,12 +63,6 @@ export async function areasPage() {
   }) };
 }
 
-/** A site's open areas, in order: what a module's place field offers. */
-export async function areaNames(siteId: string) {
-  const rows = await prisma.siteArea.findMany({ where: { siteId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { name: true } });
-  return rows.map((r) => r.name);
-}
-
 /** Why a "where" is not one of the site's areas, or null when it is (or is empty, or is the
  *  value it already had, so editing an older record never fails on it). */
 export async function areaProblem(siteId: string, place: string, keep?: string | null) {

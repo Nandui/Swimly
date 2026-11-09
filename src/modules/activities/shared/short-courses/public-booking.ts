@@ -11,11 +11,8 @@ const REFERENCE_LETTERS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 /** A booking reference, "AC-4K8PZ": no 0/O or 1/I to misread over the phone. */
 export const newReference = (prefix: string) => `${prefix}-${Array.from({ length: 5 }, () => REFERENCE_LETTERS[randomInt(0, REFERENCE_LETTERS.length)]).join("")}`;
 
-const DAY = new Intl.DateTimeFormat("en-IE", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" });
 const WHEN = new Intl.DateTimeFormat("en-IE", { timeZone: "Europe/Dublin", weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hour12: false });
 const parts = (f: Intl.DateTimeFormat, d: Date) => (t: string) => f.formatToParts(d).find((x) => x.type === t)?.value ?? "";
-/** "Sat 7 Nov" for a date-only value. */
-export function dayWords(d: Date) { const p = parts(DAY, d); return `${p("weekday")} ${p("day")} ${p("month")}`; }
 /** "Sat 7 Nov, 14:05" in Dublin time. */
 export function whenWords(d: Date) { const p = parts(WHEN, d); return `${p("weekday")} ${p("day")} ${p("month")}, ${p("hour")}:${p("minute")}`; }
 
