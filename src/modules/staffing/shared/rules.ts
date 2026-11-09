@@ -8,7 +8,7 @@ import type { StatusMeta } from "@/lib/status";
 
 /** Staffing's rules, pure and client-safe (docs/staffing.md): the settings and their defaults, the
  *  status maps, semesters, block dates, call-off deadlines, the strike ladder, exam absence
- *  outcomes, swaps, acknowledgements and the warnings a teacher can carry on a shift.
+ *  outcomes, swaps, acknowledgements and the warnings a person can carry on a shift.
  *
  *  Warnings, never blocks (owner's choice, 4 November 2026). Every rule here answers a question;
  *  the screens show the answer and the supervisor decides. Rule ids (BR-…) are the spec's. */
@@ -80,12 +80,21 @@ export const COLLEGE_META = {
   none: { label: "No college", color: "gray", icon: UserRound },
 } satisfies Record<College, StatusMeta>;
 
-export const CONTRACT_KINDS = ["swim_teacher", "swim_teacher_lifeguard"] as const;
+/** The part-time pool contracts (owner, 9 November 2026: lifeguards are rostered here too). */
+export const CONTRACT_KINDS = ["swim_teacher", "lifeguard", "swim_teacher_lifeguard"] as const;
 export type ContractKind = (typeof CONTRACT_KINDS)[number];
 export const CONTRACT_KIND_META = {
   swim_teacher: { label: "Swim teacher", color: "blue", icon: GraduationCap },
-  swim_teacher_lifeguard: { label: "Swim teacher and lifeguard", color: "purple", icon: LifeBuoy },
+  lifeguard: { label: "Lifeguard", color: "purple", icon: LifeBuoy },
+  swim_teacher_lifeguard: { label: "Swim teacher and lifeguard", color: "gray", icon: Users },
 } satisfies Record<ContractKind, StatusMeta>;
+
+/** Whether a contract covers a slot's role. A float is anyone's. */
+export function contractCovers(contract: ContractKind, role: string): boolean {
+  if (role === "lifeguard") return contract !== "swim_teacher";
+  if (role === "teaching") return contract !== "lifeguard";
+  return true;
+}
 
 export const SEASON_NAMES = ["winter", "spring", "summer"] as const;
 export type SeasonName = (typeof SEASON_NAMES)[number];
@@ -198,7 +207,7 @@ export const EXAM_OUTCOME_META = {
 export const FIT_KINDS = ["contract", "qualification", "vetting", "overlap", "rest", "weekly", "young"] as const;
 export type FitKind = (typeof FIT_KINDS)[number];
 export const FIT_META = {
-  contract: { label: "Not a lifeguard contract", color: "red", icon: LifeBuoy },
+  contract: { label: "Not on their contract", color: "red", icon: LifeBuoy },
   qualification: { label: "Qualification not current", color: "red", icon: BadgeCheck },
   vetting: { label: "Garda vetting not current", color: "red", icon: ShieldAlert },
   overlap: { label: "Already on then", color: "red", icon: Users },
@@ -306,7 +315,7 @@ export function strikeStage(number: number, cause: StrikeCause, counted: boolean
   return number <= 1 ? "informal_1" : number === 2 ? "informal_2" : "formal_referral";
 }
 
-/** When the owner's step is due (BR-8.4): strike 1 by the teacher's next shift, the rest within
+/** When the owner's step is due (BR-8.4): strike 1 by the person's next shift, the rest within
  *  the set days. A referral for a no-show is due today. */
 export function strikeDue(stage: StrikeStage, occurredOn: string, nextShift: string | null, s: Pick<StaffingSettings, "strikeDueDays">): string {
   if (stage === "serious_misconduct_referral") return occurredOn;
@@ -384,9 +393,10 @@ function ageOn(dateOfBirth: string, day: string) {
 /** Everything worth knowing before putting a person on a shift. Nothing here refuses. */
 export function fitWarnings(shift: FitShift, p: FitPerson, s: StaffingSettings): Fit[] {
   const out: Fit[] = [];
-  if (shift.role === "lifeguard" && p.contract !== "swim_teacher_lifeguard") out.push({ kind: "contract", text: "Only a swim teacher and lifeguard contract takes lifeguard shifts." });
-  const needs = shift.role === "lifeguard" ? s.lifeguardTypeId : s.teachingTypeId;
-  if (!holds(p, needs, shift.date)) out.push({ kind: "qualification", text: shift.role === "lifeguard" ? "No current lifeguard qualification on that day." : "No current swim teacher qualification on that day." });
+  if (!contractCovers(p.contract, shift.role)) out.push({ kind: "contract", text: shift.role === "lifeguard" ? "Their contract is swim teaching only; lifeguard shifts need a lifeguard contract." : "Their contract is lifeguarding only; teaching shifts need a swim teacher contract." });
+  // A float needs the qualification of the work their contract is for.
+  const guarding = shift.role === "lifeguard" || (shift.role === "float" && p.contract === "lifeguard");
+  if (!holds(p, guarding ? s.lifeguardTypeId : s.teachingTypeId, shift.date)) out.push({ kind: "qualification", text: guarding ? "No current lifeguard qualification on that day." : "No current swim teacher qualification on that day." });
   if (!holds(p, s.vettingTypeId, shift.date)) out.push({ kind: "vetting", text: "No current Garda vetting on that day." });
   const others = p.shifts.filter((o) => o.id !== shift.id);
   const start = absoluteMin(shift.date, shift.startMin), end = absoluteMin(shift.date, shift.endMin);
@@ -462,7 +472,7 @@ export const isoDay = (d: Date) => toDateOnlyString(d);
 export type Candidate = { id: string; name: string; contract: ContractKind; dateOfBirth: string | null; quals: FitPerson["quals"]; contractMinutes: number | null; wantsMore: boolean; strikes: number };
 const SERIOUS: readonly FitKind[] = ["contract", "qualification", "vetting", "overlap"];
 
-/** Everyone who could take a shift, best first: nothing serious in the way, then teachers below
+/** Everyone who could take a shift, best first: nothing serious in the way, then people below
  *  their contracted hours that week, then those wanting extra hours with no strikes this semester,
  *  then the rest; fewer warnings first. Warnings push a name down and never remove it. */
 export function rankFits(shift: FitShift, people: readonly Candidate[], shifts: readonly (FitShift & { userId: string })[], s: StaffingSettings) {

@@ -15,7 +15,7 @@ import {
 } from "@/modules/staffing/shared/rules";
 
 /** What Staffing's reads and writes share: the pages to refresh, access at a site, the settings,
- *  the sites a person covers, the teachers and recording a strike. */
+ *  the sites a person covers, the pool staff and recording a strike. */
 
 type Db = Prisma.TransactionClient | typeof prisma;
 
@@ -66,9 +66,9 @@ export async function pickSite(siteId: string | undefined) {
   return { who, sites, site: site ?? null };
 }
 
-/** Everyone kept as a teacher in Staffing who is still active, with what the warnings need:
+/** Everyone on the Staffing rota (swim teachers and lifeguards) who is still active, with what the warnings need:
  *  contract, college, contracted minutes, date of birth and qualifications. */
-export async function teachers(orgId: string | null, db: Db = prisma) {
+export async function poolStaff(orgId: string | null, db: Db = prisma) {
   const rows = await db.staffingTeacher.findMany({ where: { orgId: orgId ?? undefined } });
   const active = await activeStaffIds(rows.map((r) => r.userId));
   const kept = rows.filter((r) => active.has(r.userId));
@@ -86,7 +86,7 @@ export async function teachers(orgId: string | null, db: Db = prisma) {
     quals: quals.filter((q) => q.userId === r.userId && !q.revokedAt).map((q) => ({ typeId: q.typeId, expiresOn: q.expiresOn ? toDateOnlyString(q.expiresOn) : null })),
   })).sort((a, b) => a.name.localeCompare(b.name));
 }
-export type Teacher = Awaited<ReturnType<typeof teachers>>[number];
+export type PoolStaff = Awaited<ReturnType<typeof poolStaff>>[number];
 
 /** Every shift these people have between two days, at any site, for the warnings. */
 export async function shiftsOf(userIds: readonly string[], from: string, to: string, db: Db = prisma) {

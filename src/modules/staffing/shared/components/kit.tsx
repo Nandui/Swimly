@@ -70,7 +70,7 @@ export function PersonPicker({ shift, people, shifts, settings, trigger, title, 
           <Input id="stf-reason" name="reason" required minLength={3} maxLength={300} className="min-h-11" />
         </Field>
       ) : null}
-      {ranked.length === 0 && !allowNobody ? <p className="text-sm text-ui-muted-foreground">No teachers yet. Add them under Set up, Teachers.</p> : (
+      {ranked.length === 0 && !allowNobody ? <p className="text-sm text-ui-muted-foreground">Nobody on the rota yet. Add people under Set up, Staff.</p> : (
         <RadioGroup name="userId" required aria-label="Who" className="pc-list max-h-96 overflow-y-auto">
           {allowNobody ? <ChoiceRow type="radio" value="nobody" title="Nobody" hint="Leave the place empty" /> : null}
           {ranked.map((p) => (

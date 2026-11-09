@@ -6,6 +6,11 @@ The decisions Turnfin 2.0 stands on, newest first. Each says what was decided, w
 
 ---
 
+### D28 · 9 November 2026 · Staffing rosters lifeguards too
+
+Staffing was built for swim teachers (D27), but lifeguards are part-time pool staff on the same rota, the same contracts and the same attendance rules. **Teachers** becomes **Staff** (`/staffing/staff`), and a person's contract is **swim teacher**, **lifeguard**, or **swim teacher and lifeguard**. The contract warning now works both ways: a lifeguard place for a swim teacher, a teaching place for a lifeguard. Still a warning, never a block. No schema change: the contract is a string, and the `StaffingTeacher` table keeps its name.
+**Follows:** [staffing.md](staffing.md).
+
 ### D27 · 4 November 2026 · Staffing: swim teacher rostering on the contract
 
 **Staffing**, a new app in Team, rosters swim teachers from the swim teacher rostering specification ([staffing.md](staffing.md)): two-week **rota blocks** built from each site's weekly **slots**, contracted hours first, published every second Friday four weeks ahead and acknowledged; **swaps** as the only way to hand over a shift; **call-offs, late arrivals and no-shows** logged by the duty manager, with on-time worked out from the logged call; **strikes** on the handbook's ladder, per semester; and **exam seasons** with their absence deadlines. Levels View, Run (duty manager), Supervise (pool deck supervisor) and Manage (centre manager) at the person's sites. **Warnings, never blocks** (owner's choice, same day): qualifications, rest, the weekly cap, overlaps and the lifeguard contract are shown and the supervisor decides, as on Rota. The process rules do refuse: a published shift changes only with Manage and a reason, nothing is published under 24 hours' notice, swaps close 48 hours before the shift.

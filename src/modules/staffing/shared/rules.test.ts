@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { dublinInstant } from "@/lib/format";
 import {
-  ackState, attendanceStrike, blockState, examOutcome, fitWarnings, hoursAgainstContract, judgeCallOff, mondayOf, nextBlockStart, placesFor, rankFits,
+  ackState, attendanceStrike, blockState, contractCovers, examOutcome, fitWarnings, hoursAgainstContract, judgeCallOff, mondayOf, nextBlockStart, placesFor, rankFits,
   publishDeadline, readSettings, semesterOf, STAFFING_DEFAULTS as S, strikeCounted, strikeDue, strikeStage, swapAllowed, swapExpired, type FitPerson,
 } from "@/modules/staffing/shared/rules";
 
@@ -114,10 +114,22 @@ test("warnings: a swim-teacher-only contract on a lifeguard shift, overlap, rest
   assert.ok(kinds({ date: "2026-12-05", startMin: 600, endMin: 700, role: "teaching" }, { ...teacher, dateOfBirth: "2009-12-31" }).includes("young"));
 });
 
+test("warnings: a lifeguard-only contract guards and floats, and is warned off teaching", () => {
+  const s = { ...S, lifeguardTypeId: "nplq", teachingTypeId: "swim", vettingTypeId: null };
+  const guard: FitPerson = { contract: "lifeguard", dateOfBirth: "2000-01-01", quals: [{ typeId: "nplq", expiresOn: null }], shifts: [] };
+  const both: FitPerson = { ...guard, contract: "swim_teacher_lifeguard", quals: [{ typeId: "nplq", expiresOn: null }, { typeId: "swim", expiresOn: null }] };
+  const kinds = (role: string, p: FitPerson) => fitWarnings({ date: "2026-12-01", startMin: 600, endMin: 780, role }, p, s).map((w) => w.kind);
+  assert.deepEqual(kinds("lifeguard", guard), []);
+  assert.deepEqual(kinds("float", guard), [], "a lifeguard's float needs their lifeguard qualification");
+  assert.deepEqual(kinds("teaching", guard), ["contract", "qualification"]);
+  for (const role of ["lifeguard", "teaching", "float"]) assert.deepEqual(kinds(role, both), [], role);
+  assert.equal(contractCovers("swim_teacher", "float"), true);
+});
+
 test("a block copies the people from the same slot and day of the block before, leaving leavers out", () => {
   const slots = [{ id: "am", weekday: 2, role: "teaching", name: "School morning", startMin: 615, endMin: 795, needed: 2 }];
   const first = placesFor("2026-11-23", slots, null, () => true);
-  assert.equal(first.length, 4, "two Tuesdays, two teachers each");
+  assert.equal(first.length, 4, "two Tuesdays, two people each");
   assert.ok(first.every((p) => p.userId === null));
   const previous = { startsOn: "2026-11-23", shifts: [{ slotId: "am", date: "2026-11-24", userId: "ann" }, { slotId: "am", date: "2026-11-24", userId: "leaver" }] };
   const next = placesFor("2026-12-07", slots, previous, (id) => id !== "leaver");

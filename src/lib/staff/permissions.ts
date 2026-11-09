@@ -299,7 +299,7 @@ export const PERMISSIONS = [
   {
     key: "staffing.read",
     group: "Staffing",
-    label: "See swim teacher staffing",
+    label: "See pool staffing",
     description: "See the rota blocks, today's shifts, swaps and exam absences at the sites this role covers.",
   },
   {
@@ -312,7 +312,7 @@ export const PERMISSIONS = [
     key: "staffing.supervise",
     group: "Staffing",
     label: "Build and publish rota blocks",
-    description: "Keep the weekly slots and teachers, build and publish rota blocks, decide swaps and exam absences, and hold second strike conversations at the sites this role covers. Includes running the day.",
+    description: "Keep the weekly slots and the staff on the rota, build and publish rota blocks, decide swaps and exam absences, and hold second strike conversations at the sites this role covers. Includes running the day.",
   },
   {
     key: "staffing.manage",

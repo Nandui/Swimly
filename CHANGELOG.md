@@ -4,6 +4,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.8.0 · 9 November 2026 · Staffing, for lifeguards too
+
+- **Staffing now rosters lifeguards as well as swim teachers**: all the part-time staff in the pool, on the same blocks, swaps, call-offs and strikes.
+- **Set up › Teachers is now Set up › Staff.** Choose **Add to the rota** for anyone who works at the site, and pick their contract: **Swim teacher**, **Lifeguard**, or **Swim teacher and lifeguard**.
+- **The contract warning works both ways.** A lifeguard on a teaching place is warned, just as a swim teacher on a lifeguard place already was. A float suits anyone. As always, warnings never stop you; you decide.
+
 ## 3.7.1 · 4 November 2026 · Test the failed payment emails
 
 - **On a failed payment, admins can now choose Send test email to me.** It sends that payment's next warning email, marked [Test], to your own email address, so you can check the emails are going out. The family gets nothing, and the payment doesn't change.

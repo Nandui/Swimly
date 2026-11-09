@@ -2,7 +2,7 @@ import "server-only";
 import { addDaysIso, isDateOnly, today, toDateOnlyString } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { isAway, semesterOf, STRIKE_OWNER, type AttendanceKind, type StrikeStage } from "@/modules/staffing/shared/rules";
-import { dateOf, pickSite, settingsFor, shiftsOf, strikeCounts, teachers } from "@/modules/staffing/shared/server";
+import { dateOf, pickSite, settingsFor, shiftsOf, strikeCounts, poolStaff } from "@/modules/staffing/shared/server";
 
 /** Today for the duty manager (spec section 9): the day's shifts at a site, what was logged, the
  *  places that need cover with who could take them, and the strike conversations due. */
@@ -13,7 +13,7 @@ export async function todayPage(siteId: string | undefined, dayParam: string | u
   const settings = await settingsFor(who.orgId);
   const [rows, people] = await Promise.all([
     prisma.staffingShift.findMany({ where: { siteId: site.id, date: dateOf(day), block: { publishedAt: { not: null } } }, orderBy: [{ startMin: "asc" }, { name: "asc" }, { createdAt: "asc" }] }),
-    teachers(who.orgId),
+    poolStaff(who.orgId),
   ]);
   const logs = await prisma.staffingAttendance.findMany({ where: { shiftId: { in: rows.map((r) => r.id) } }, orderBy: { createdAt: "asc" } });
   const names = new Map(people.map((p) => [p.id, p.name]));

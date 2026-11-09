@@ -17,7 +17,7 @@ import { rankFits, type Candidate, type FitShift, type StaffingSettings } from "
 type Ahead = { id: string; date: string; startMin: number; endMin: number; role: string; name: string; userId: string; person: string; swapOpen: boolean; swappable: boolean };
 type Shifts = readonly (FitShift & { userId: string })[];
 
-/** Ask for a swap for a teacher (BR-5.2, 5.3): their shift, then a named taker or "Looking for cover". */
+/** Ask for a swap for someone (BR-5.2, 5.3): their shift, then a named taker or "Looking for cover". */
 export function AskSwap({ ahead, people, shifts, settings }: { ahead: Ahead[]; people: readonly Candidate[]; shifts: Shifts; settings: StaffingSettings }) {
   const refresh = useRefresh();
   const open = ahead.filter((s) => s.swappable && !s.swapOpen);
@@ -28,7 +28,7 @@ export function AskSwap({ ahead, people, shifts, settings }: { ahead: Ahead[]; p
   const chosen = ranked.find((p) => p.id === taker);
   return (
     <FormDialog portalClassName={THEME} width="sm:max-w-lg" trigger={<Button disabled={open.length === 0}><Plus aria-hidden="true" />Ask for a swap</Button>}
-      title="Ask for a swap" description={`For a teacher who asked. Swaps close ${settings.swapNoticeHours} hours before the shift; after that they phone the duty manager.`}
+      title="Ask for a swap" description={`For someone who asked. Swaps close ${settings.swapNoticeHours} hours before the shift; after that they phone the duty manager.`}
       submitLabel="Ask" successMessage="Swap asked for" onSuccess={refresh}
       submit={(fd) => requestSwap(text(fd, "shiftId"), { takerId: text(fd, "takerId") || null, takerAgreed: checked(fd, "agreed") })}>
       <Field label="Shift" htmlFor="stf-swap-shift">

@@ -9,7 +9,7 @@ import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { RadioGroup, RadioGroupItem } from "@/components/shadcn/radio-group";
 import { formatTime } from "@/lib/format";
-import { archiveSlot, deleteSeason, saveSeason, saveSettings, saveSlot, saveTeacher } from "@/modules/staffing/features/setup/server/actions";
+import { archiveSlot, deleteSeason, saveSeason, saveSettings, saveSlot, saveStaff } from "@/modules/staffing/features/setup/server/actions";
 import { NUMBERS, TIMES } from "@/modules/staffing/features/setup/fields";
 import { checked, text, THEME, useRefresh } from "@/modules/staffing/shared/components/kit";
 import {
@@ -72,22 +72,22 @@ export function ArchiveSlot({ id, name, archived }: { id: string; name: string; 
   );
 }
 
-export type TeacherEdit = { id: string; name: string; teacher: boolean; college: string; contract: ContractKind; wantsMore: boolean };
+export type StaffEdit = { id: string; name: string; onRota: boolean; college: string; contract: ContractKind; wantsMore: boolean };
 
-export function TeacherDialog({ siteId, person }: { siteId: string; person: TeacherEdit }) {
+export function StaffDialog({ siteId, person }: { siteId: string; person: StaffEdit }) {
   const refresh = useRefresh();
   const fid = `stf-t-${person.id}`;
   return (
-    <FormDialog portalClassName={THEME} trigger={<Button variant={person.teacher ? "outline" : "default"}>{person.teacher ? "Change" : "Make a teacher"}</Button>}
-      title={person.teacher ? `Change ${person.name}` : `Make ${person.name} a teacher`} description="Their contracted hours, date of birth and qualifications stay on their Staff page."
-      submitLabel="Save" successMessage="Teacher saved" onSuccess={refresh}
-      submit={(fd) => saveTeacher(siteId, person.id, true, { college: text(fd, "college") as College, contract: text(fd, "contract") as ContractKind, wantsMore: checked(fd, "wantsMore") })}>
+    <FormDialog portalClassName={THEME} trigger={<Button variant={person.onRota ? "outline" : "default"}>{person.onRota ? "Change" : "Add to the rota"}</Button>}
+      title={person.onRota ? `Change ${person.name}` : `Add ${person.name} to the rota`} description="Their contracted hours, date of birth and qualifications stay on their Staff page."
+      submitLabel="Save" successMessage="Saved" onSuccess={refresh}
+      submit={(fd) => saveStaff(siteId, person.id, true, { college: text(fd, "college") as College, contract: text(fd, "contract") as ContractKind, wantsMore: checked(fd, "wantsMore") })}>
       <Field label="College" htmlFor={`${fid}-college`} hint="Their exam seasons and deadlines follow it.">
         <NativeSelect id={`${fid}-college`} name="college" defaultValue={person.college} className="min-h-11 w-full">
           {COLLEGES.map((c) => <NativeSelectOption key={c} value={c}>{COLLEGE_META[c].label}</NativeSelectOption>)}
         </NativeSelect>
       </Field>
-      <Field label="Contract" htmlFor={`${fid}-contract`} hint="Only a swim teacher and lifeguard contract takes lifeguard shifts.">
+      <Field label="Contract" htmlFor={`${fid}-contract`} hint="What they can be put on: teaching, lifeguarding or both. Anything else shows a warning.">
         <NativeSelect id={`${fid}-contract`} name="contract" defaultValue={person.contract} className="min-h-11 w-full">
           {CONTRACT_KINDS.map((c) => <NativeSelectOption key={c} value={c}>{CONTRACT_KIND_META[c].label}</NativeSelectOption>)}
         </NativeSelect>
@@ -97,12 +97,12 @@ export function TeacherDialog({ siteId, person }: { siteId: string; person: Teac
   );
 }
 
-export function RemoveTeacher({ siteId, person }: { siteId: string; person: TeacherEdit }) {
+export function RemoveStaff({ siteId, person }: { siteId: string; person: StaffEdit }) {
   const refresh = useRefresh();
   return (
-    <FormDialog portalClassName={THEME} trigger={<Button variant="ghost">Remove</Button>} title={`${person.name} is no longer a teacher?`}
+    <FormDialog portalClassName={THEME} trigger={<Button variant="ghost">Remove</Button>} title={`Take ${person.name} off the rota?`}
       description="They are no longer offered for places. Shifts they already have stay theirs." submitLabel="Remove" successMessage="Removed" onSuccess={refresh}
-      submit={() => saveTeacher(siteId, person.id, false, { college: person.college as College, contract: person.contract })}>
+      submit={() => saveStaff(siteId, person.id, false, { college: person.college as College, contract: person.contract })}>
       <p className="text-sm text-ui-muted-foreground">Their strikes and history stay.</p>
     </FormDialog>
   );

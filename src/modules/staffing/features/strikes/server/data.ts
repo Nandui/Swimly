@@ -4,10 +4,10 @@ import { today, toDateOnlyString } from "@/lib/format";
 import { mayFor } from "@/lib/policy/session";
 import { prisma } from "@/lib/prisma";
 import { previousSemester, semesterOf, STRIKE_OWNER, type StrikeCause, type StrikeStage } from "@/modules/staffing/shared/rules";
-import { pickSite, teachers } from "@/modules/staffing/shared/server";
+import { pickSite, poolStaff } from "@/modules/staffing/shared/server";
 
 /** Strikes at a site (BR-8): the conversations and referrals still to do, soonest first, then this
- *  semester's strikes by teacher. Disciplinary records, so Run at the site is needed to see them. */
+ *  semester's strikes by person. Disciplinary records, so Run at the site is needed to see them. */
 export async function strikesPage(siteId: string | undefined, semesterKey: string | undefined) {
   const { who, sites, site } = await pickSite(siteId);
   if (!site) return null;
@@ -17,7 +17,7 @@ export async function strikesPage(siteId: string | undefined, semesterKey: strin
   const semester = semesterKey && /^\d{4}-(01|05|09)$/.test(semesterKey) ? semesterKey : current.key;
   const [rows, people] = await Promise.all([
     prisma.staffingStrike.findMany({ where: { siteId: site.id, OR: [{ semester }, { handledAt: null, withdrawnAt: null }] }, orderBy: [{ occurredOn: "desc" }, { createdAt: "desc" }] }),
-    teachers(who.orgId),
+    poolStaff(who.orgId),
   ]);
   const names = new Map(people.map((p) => [p.id, p.name]));
   const strikes = rows.map((s) => ({

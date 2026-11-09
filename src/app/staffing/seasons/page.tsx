@@ -15,7 +15,7 @@ export default async function StaffingSeasonsPage() {
   const { who, seasons } = await seasonsPage();
   if (!who.manage) notFound();
   return (
-    <PageShell spacing="roomy" header={<PageHeader title="Exam seasons" description="Each college's published exam periods. Teachers ask for exam absences by the deadline, with the college's notice." actions={<SeasonDialog />} />}>
+    <PageShell spacing="roomy" header={<PageHeader title="Exam seasons" description="Each college's published exam periods. Staff ask for exam absences by the deadline, with the college's notice." actions={<SeasonDialog />} />}>
       <RecordSection id="stf-seasons-h" title="Seasons" aside={<p>{seasons.length}</p>}>
         {seasons.length === 0 ? <div className="pc-list"><EmptyState compact icon="calendarDays" title="No seasons yet" /></div> : (
           <ul className="pc-list">

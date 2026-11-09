@@ -18,7 +18,7 @@ export function StartBlockDialog({ siteId, siteName, mondays }: { siteId: string
   const router = useRouter();
   return (
     <FormDialog portalClassName={THEME} trigger={<Button><Plus aria-hidden="true" />Start a block</Button>}
-      title="Start a rota block" description={`Two weeks at ${siteName}: every slot on each day, with the same people as the block before where they are still teachers.`}
+      title="Start a rota block" description={`Two weeks at ${siteName}: every slot on each day, with the same people as the block before where they are still on the rota.`}
       submitLabel="Start block" successMessage="Block started"
       submit={async (fd) => {
         const result = await createBlock(siteId, text(fd, "startsOn"));
@@ -34,7 +34,7 @@ export function StartBlockDialog({ siteId, siteName, mondays }: { siteId: string
   );
 }
 
-/** Publish (BR-2.2, 3.8): when teachers are below contracted hours, say why it is accepted. */
+/** Publish (BR-2.2, 3.8): when people are below contracted hours, say why it is accepted. */
 export function PublishDialog({ blockId, short }: { blockId: string; short: { name: string; short: number }[] }) {
   const refresh = useRefresh();
   return (
@@ -50,7 +50,7 @@ export function PublishDialog({ blockId, short }: { blockId: string; short: { na
             <Textarea id="stf-short" name="acceptShort" required minLength={3} maxLength={500} />
           </Field>
         </>
-      ) : <p className="text-sm text-ui-muted-foreground">Every teacher with contracted hours has them in both weeks.</p>}
+      ) : <p className="text-sm text-ui-muted-foreground">Everyone with contracted hours has them in both weeks.</p>}
     </FormDialog>
   );
 }
@@ -95,7 +95,7 @@ export function AckButtons({ blockId, userId, name, acknowledged }: { blockId: s
       </FormDialog>
       <FormDialog portalClassName={THEME} trigger={<Button variant="outline">Acknowledged</Button>} title={`${name} acknowledged?`} description="Record that they confirmed they have seen this block."
         submitLabel="Record" successMessage="Acknowledgement recorded" onSuccess={refresh} submit={() => recordAck(blockId, userId, "acknowledged")}>
-        <p className="text-sm text-ui-muted-foreground">Turnfin Me will let teachers acknowledge for themselves.</p>
+        <p className="text-sm text-ui-muted-foreground">Turnfin Me will let staff acknowledge for themselves.</p>
       </FormDialog>
     </span>
   );

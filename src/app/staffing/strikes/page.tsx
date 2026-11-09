@@ -14,7 +14,7 @@ const CAN: Record<StrikeStage, "run" | "supervise" | "manage"> = {
   not_counted: "run", informal_1: "run", informal_2: "supervise", formal_referral: "manage", serious_misconduct_referral: "manage",
 };
 
-/** Strikes at a site (BR-8): what is due, then each teacher's strikes this semester. Never a strike:
+/** Strikes at a site (BR-8): what is due, then each person's strikes this semester. Never a strike:
  *  an approved swap or absence, a properly reported sick day, an on-time exam absence. */
 export default async function StaffingStrikesPage({ searchParams }: { searchParams: Promise<{ site?: string; semester?: string }> }) {
   const params = await searchParams;
@@ -44,7 +44,7 @@ export default async function StaffingStrikesPage({ searchParams }: { searchPara
 
       <SegmentedLinks label="Semester" items={semesters.map((key) => ({ href: `/staffing/strikes?${new URLSearchParams({ site: site.id, semester: key })}`, label: semesterOf(`${key}-01`).label, current: key === semester }))} />
 
-      <RecordSection id="stf-people-h" title={semesterLabel} aside={people.length ? <p>{people.length} teachers</p> : null} note="Teachers with no strikes this semester get first offer of extra and holiday hours.">
+      <RecordSection id="stf-people-h" title={semesterLabel} aside={people.length ? <p>{people.length} people</p> : null} note="People with no strikes this semester get first offer of extra and holiday hours.">
         {people.length === 0 ? <div className="pc-list"><EmptyState compact icon="usersRound" title="No strikes this semester" /></div> : (
           <ul className="pc-list">
             {people.map((p) => (

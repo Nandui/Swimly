@@ -137,11 +137,11 @@ for (const [i, [id, name, requires, holders]] of positions.entries()) {
   await prisma.user.updateMany({ where: { id: { in: holders } }, data: { positionId: id, jobTitle: name, contractType: "full-time", contractMinutes: 39 * 60 } });
 }
 
-// Staffing: four teachers at Hillview and its weekly slots, so Sam can start a block.
+// Staffing: four pool staff at Hillview (teachers, a lifeguard and two who do both) and its weekly slots, so Sam can start a block.
 await prisma.staffingTeacher.createMany({ data: [
   { orgId: ORG, userId: "sbx_ava", college: "ucc", contract: "swim_teacher_lifeguard" },
   { orgId: ORG, userId: "sbx_ciara", college: "mtu", contract: "swim_teacher", wantsMore: true },
-  { orgId: ORG, userId: "sbx_conor", college: "ucc", contract: "swim_teacher" },
+  { orgId: ORG, userId: "sbx_conor", college: "ucc", contract: "lifeguard" },
   { orgId: ORG, userId: "sbx_dylan", college: "none", contract: "swim_teacher_lifeguard" },
 ] });
 await prisma.user.updateMany({ where: { id: { in: ["sbx_ciara", "sbx_conor"] } }, data: { contractMinutes: 12 * 60 } });

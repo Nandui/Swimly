@@ -8,7 +8,7 @@ import { staffingPages } from '@/modules/staffing/features/workspace/pages';
 import type { StaffingActor } from '@/modules/staffing/shared/access';
 
 /** The pages that show one site: they take it from `?site=` and show the picker. */
-const SITE_PAGES = new Set(['/staffing', '/staffing/today', '/staffing/requests', '/staffing/strikes', '/staffing/slots', '/staffing/teachers']);
+const SITE_PAGES = new Set(['/staffing', '/staffing/today', '/staffing/requests', '/staffing/strikes', '/staffing/slots', '/staffing/staff']);
 
 /** Staffing's pages in the shared workspace frame. Set up shows only to Supervise and Manage. */
 export function StaffingShell({ who, sites, children }: { who: StaffingActor; sites: { id: string; name: string }[]; children: ReactNode }) {
