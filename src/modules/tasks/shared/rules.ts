@@ -338,15 +338,3 @@ export function completionProblems(def: TaskDefinition, checks: readonly boolean
   if (needsFollowUp(def, records) && !hasAction) out.push("Raise a follow-up action for the reading out of range.");
   return out;
 }
-
-// ---------------------------------------------------------------------------
-// Export
-// ---------------------------------------------------------------------------
-
-/** A CSV cell that a spreadsheet will not run as a formula. */
-function csvCell(value: unknown): string {
-  let s = String(value ?? "");
-  if (/^[=+@\-\t\r]/.test(s)) s = `'${s}`;
-  return `"${s.replaceAll('"', '""')}"`;
-}
-export const csvRows = (rows: readonly (readonly unknown[])[]) => rows.map((r) => r.map(csvCell).join(",")).join("\r\n");

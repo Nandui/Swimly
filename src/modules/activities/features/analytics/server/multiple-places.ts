@@ -1,4 +1,5 @@
 import type { DayOfWeek } from "@/generated/prisma/client";
+import { csvFile } from "@/lib/csv";
 import { courseLabel, DAY_META } from "@/modules/activities/shared/courses/constants";
 
 export type PlaceRow = {
@@ -34,16 +35,10 @@ export function multiplePlaces(rows: PlaceRow[]) {
 
 export type MultiplePlacesSwimmer = ReturnType<typeof multiplePlaces>[number];
 
-function csvCell(value: string | number) {
-  const text = String(value);
-  // A leading =, +, - or @ would run as a formula in Excel.
-  return `"${(/^[=+\-@]/.test(text) ? `'${text}` : text).replace(/"/g, '""')}"`;
-}
-
 /** Excel-friendly: BOM for UTF-8 names, CRLF rows. */
 export function multiplePlacesCsv(swimmers: MultiplePlacesSwimmer[]) {
   const header = ["Member ID", "First name", "Last name", "Sites", "Enrolments", "Waitlisted", "Classes"];
   const rows = swimmers.map(s => [s.memberNumber ?? "", s.firstName, s.lastName, s.sites.join("; "), s.classes.length, s.waitlisted,
     s.classes.map(c => `${c.label} · ${c.site}${c.waitlisted ? " (waitlisted)" : ""}`).join("; ")]);
-  return `﻿${[header, ...rows].map(row => row.map(csvCell).join(",")).join("\r\n")}\r\n`;
+  return csvFile([header, ...rows]);
 }

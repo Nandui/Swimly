@@ -6,4 +6,3 @@ export { ReportView } from "@/modules/training/features/insight/components/repor
 export { CourseAuditPackView, PersonAuditPackView } from "@/modules/training/features/insight/components/audit-pack";
 export { PrintButton } from "@/modules/training/features/insight/components/print-button";
 export { filterQuery, InsightFilterForm, readFilters } from "@/modules/training/features/insight/components/parts";
-export { csvRows } from "@/modules/training/shared/rules";

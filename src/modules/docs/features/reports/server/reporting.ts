@@ -1,3 +1,4 @@
+import { csvRows } from '@/lib/csv';
 import type { Requirement, LibraryDocument } from '@/modules/docs/shared/types';
 /** Reports need only who a row belongs to: name, email for exports, and team membership. */
 type ReportMember = { id: string; name: string; email?: string; teamIds: string[] };
@@ -29,11 +30,6 @@ export function filterReading(
     );
   });
 }
-export function csvCell(value: unknown) {
-  let text = String(value ?? '');
-  if (/^[\s]*[=+@-]/.test(text) || /^[\t\r]/.test(text)) text = "'" + text;
-  return '"' + text.replaceAll('"', '""') + '"';
-}
 export function readingCsv(items: Requirement[], members: ReportMember[]) {
   const header = [
     'Document',
@@ -58,5 +54,5 @@ export function readingCsv(items: Requirement[], members: ReportMember[]) {
       r.acknowledgedAt,
     ];
   });
-  return '\uFEFF' + [header, ...data].map((row) => row.map(csvCell).join(',')).join('\r\n');
+  return '\uFEFF' + csvRows([header, ...data]);
 }

@@ -1,5 +1,6 @@
+import { csvFile } from "@/lib/csv";
 import { today } from "@/lib/format";
-import { courseInsight, csvRows, learnerCsv, readFilters } from "@/modules/training/features/insight";
+import { courseInsight, learnerCsv, readFilters } from "@/modules/training/features/insight";
 
 /** Everyone the reader covers who was given this course, and where they are, as a CSV for Excel. */
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -12,7 +13,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   }
   if (!data) return new Response("Not found", { status: 404, headers: { "Cache-Control": "no-store" } });
   const name = data.course.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "course";
-  return new Response(`﻿${csvRows(learnerCsv(data))}\r\n`, { headers: {
+  return new Response(csvFile(learnerCsv(data)), { headers: {
     "Content-Type": "text/csv; charset=utf-8", "Cache-Control": "no-store",
     "Content-Disposition": `attachment; filename="${name}-${today()}.csv"`,
   } });

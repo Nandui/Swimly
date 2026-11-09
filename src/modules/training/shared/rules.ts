@@ -109,14 +109,6 @@ export function cellTone(cell: MatrixCell): "done" | "soon" | "due" | "submitted
   return cell.kind;
 }
 
-/** A cell a spreadsheet opens safely: quoted, and never read as a formula. */
-function csvCell(value: unknown): string {
-  let s = String(value ?? "");
-  if (/^[=+@\-\t\r]/.test(s)) s = `'${s}`;
-  return `"${s.replaceAll('"', '""')}"`;
-}
-export const csvRows = (rows: readonly (readonly unknown[])[]) => rows.map((r) => r.map(csvCell).join(",")).join("\r\n");
-
 /** A matrix cell in words, for the download. */
 export function cellInWords(cell: MatrixCell | null) {
   if (!cell) return "Not needed";
