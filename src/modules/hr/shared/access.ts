@@ -24,6 +24,8 @@ export type HrActor = {
   reviews: boolean;
   /** Keeps staff details (position, employment, contact) for someone. */
   details: boolean;
+  /** Chooses who gets the daily reports email (HR > Settings). */
+  digest: boolean;
 };
 
 export function hrAccess(session: Session): HrActor | null {
@@ -36,6 +38,7 @@ export function hrAccess(session: Session): HrActor | null {
     notes: holdsAnywhere(actor, "hr.notes.write"),
     reviews: holdsAnywhere(actor, "hr.reviews.write"),
     details: holdsAnywhere(actor, "hr.details.write"),
+    digest: holdsAnywhere(actor, "hr.digest.manage"),
   };
 }
 

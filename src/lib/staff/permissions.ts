@@ -435,6 +435,13 @@ export const PERMISSIONS = [
     restricted: true,
   },
   {
+    key: "hr.digest.manage",
+    group: "HR",
+    label: "Keep the daily reports email",
+    description: "Choose who gets the email each morning with every HR report filed the day before, in full (HR > Set up > Settings). Restricted: only a superadmin can give it, and it asks for your password again.",
+    restricted: true,
+  },
+  {
     key: "work.anywhere",
     group: "Administration",
     label: "Work from any device",
