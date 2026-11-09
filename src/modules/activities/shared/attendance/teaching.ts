@@ -3,6 +3,7 @@ import type { Session } from "next-auth";
 import { can, canSee } from "@/lib/authz";
 import { parseDateOnly, weekdayOf, today } from "@/lib/format";
 import { cancellationError } from "@/modules/activities/shared/cancellations/guard";
+import { mergedAwayError } from "@/modules/activities/shared/merges/guard";
 
 export type TeachingContext = { courseId: string; date: string };
 
@@ -25,6 +26,8 @@ export async function teachingError(
   if (!course || course.archivedAt) return "This class is no longer active.";
   const cancelled = await cancellationError(tx, context.courseId, date);
   if (cancelled) return cancelled;
+  const merged = await mergedAwayError(tx, context.courseId, date);
+  if (merged) return merged;
   if (context.date > today() || weekdayOf(date) !== course.dayOfWeek)
     return "This class does not run on that date.";
   const claim = await tx.classCover.findUnique({

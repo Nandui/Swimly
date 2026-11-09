@@ -10,6 +10,7 @@ function fixture(owner: string | null | undefined, cancelled = false) {
     {
       "@/modules/activities/shared/courses/planned": plannedDouble(),
       "@/modules/activities/shared/cancellations/data": { getCancellation: async () => cancelled ? { id: "cancelled", reason: "Pool closed" } : null },
+      "@/modules/activities/shared/merges/data": { getMergeAway: async () => null },
       "@/modules/activities/shared/attendance/page-guard": {
         classPage: async () => ({ user: { id: "teacher" } }),
       },

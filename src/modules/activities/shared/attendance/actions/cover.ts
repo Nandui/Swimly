@@ -13,6 +13,7 @@ import { formatDate, isDateOnly, parseDateOnly, today, weekdayOf } from "@/lib/f
 import { withCourseSeat } from "@/modules/activities/shared/enrolment/seat";
 import { dayTeacherId, plannedTeachers } from "@/modules/activities/shared/courses/planned";
 import { cancellationError } from "@/modules/activities/shared/cancellations/guard";
+import { mergedAwayError } from "@/modules/activities/shared/merges/guard";
 
 /** Confirm who is teaching a class on a date. The existing ClassCover record
  * now includes scheduled instructors as well as substitutes. Claims and their
@@ -73,6 +74,8 @@ async function claim(input: TakeOverInput, session: Session, starting: boolean):
     const date = parseDateOnly(iso);
     const cancelled = await cancellationError(tx, courseId, date);
     if (cancelled) return fail(cancelled);
+    const merged = await mergedAwayError(tx, courseId, date);
+    if (merged) return fail(merged);
     if (weekdayOf(date) !== course.dayOfWeek) {
       return fail(
         `${courseLabel(course)} runs on ${DAY_META[course.dayOfWeek].label}s. ${formatDate(date)} is not one.`

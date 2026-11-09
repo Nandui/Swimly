@@ -14,6 +14,7 @@ test("teaching saves allow colleagues but reject unstarted dates and swimmers ou
     { "@/lib/authz": { can: () => true, canSee: () => true } },
   );
   const tx = {
+    classMerge: { findUnique: async () => null, findMany: async () => [], count: async () => 0 },
     classCancellation: { findUnique: async () => cancelled ? { id: "cancellation" } : null },
     course: {
       findUnique: async () => ({ dayOfWeek: "FRIDAY", archivedAt: null }),

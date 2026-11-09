@@ -23,6 +23,7 @@ function fixture() {
   const audits: { action: string; summary: string }[] = [];
   let queue = Promise.resolve();
   const tx = {
+    classMerge: { findUnique: async () => null, findMany: async () => [], count: async () => 0 },
     classCancellation: { findUnique: async () => { assert.ok(locked); return cancelled ? { id: "cancellation" } : null; } },
     course: {
       findUnique: async () => {

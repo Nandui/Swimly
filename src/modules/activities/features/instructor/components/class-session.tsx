@@ -18,6 +18,7 @@ import { courseName, formatSessionTime } from "@/modules/activities/shared/cours
 import { formatDate, parseDateOnly, today } from "@/lib/format";
 import { fullName } from "@/modules/activities/shared/students/constants";
 import { Notice } from "@/components/ui-kit/notice";
+import { mergedAwayMessage } from "@/modules/activities/shared/merges/constants";
 import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
 import { WrongClub } from "@/components/ui/wrong-club";
@@ -55,7 +56,10 @@ export async function InstructorClassSession({
   if (view.state !== "ready")
     return (
       <PageShell header={<PageHeader {...header} />}>
-        {view.state === "cancelled" ? <Notice tone="warning" title="This session is cancelled"><p>{view.cancellation.reason}</p><p>Attendance and competencies cannot be saved for this session.</p></Notice> : view.state === "wrong-site" ? (
+        {view.state === "cancelled" ? <Notice tone="warning" title="This session is cancelled"><p>{view.cancellation.reason}</p><p>Attendance and competencies cannot be saved for this session.</p></Notice> : view.state === "merged" ? (
+          <Notice tone="warning" title="This class was merged for today"><p>{mergedAwayMessage(view.merge)}</p><p>{view.merge.reason}</p>
+            <Button asChild variant="outline" className="mt-3"><Link href={instructorClassHref(view.merge.intoCourseId, { ...params, date: view.iso })}>Open {view.merge.intoClassName}<ChevronRight aria-hidden="true" /></Link></Button></Notice>
+        ) : view.state === "wrong-site" ? (
           <WrongClub header={false} what="This class" noun="this class" owner={course.club} current={view.club} />
         ) : view.state === "archived" ? (
           <Notice tone="warning" title="This class is archived" />

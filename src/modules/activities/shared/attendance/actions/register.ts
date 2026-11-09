@@ -17,6 +17,8 @@ import { withCourseSeat } from "@/modules/activities/shared/enrolment/seat";
 import { savedRegister, type SavedRegister } from "@/modules/activities/shared/attendance/revision";
 import { teachingError } from "@/modules/activities/shared/attendance/teaching";
 import { cancellationError } from "@/modules/activities/shared/cancellations/guard";
+import { mergedAwayError } from "@/modules/activities/shared/merges/guard";
+import { mergedSwimmers } from "@/modules/activities/shared/merges/data";
 
 /** The register is written by one action carrying the whole class.
  *
@@ -78,6 +80,8 @@ export async function markRegister(input: MarkRegisterInput): Promise<RegisterSa
     const date = parseDateOnly(iso);
     const cancelled = await cancellationError(tx, courseId, date);
     if (cancelled) return fail(cancelled);
+    const mergedAway = await mergedAwayError(tx, courseId, date);
+    if (mergedAway) return fail(mergedAway);
     // Deck-only accounts cannot opt out by omitting the teaching flag.
     if (parsed.data.teaching || (!canSee(session, "courses") && !canSee(session, "calendar"))) {
       const error = await teachingError(tx, session, { courseId, date: iso }, clubId);
@@ -109,6 +113,12 @@ export async function markRegister(input: MarkRegisterInput): Promise<RegisterSa
     }
     if (iso > today()) return fail("You cannot take attendance for a class that has not happened.");
 
+    // Swimmers merged in for the day are marked here and saved on their own class's rows,
+    // so the attendance counts towards it. Their class is locked by the merge, not here:
+    // a merged-away class can no longer be marked or started itself.
+    const merged = await mergedSwimmers(tx, courseId, date);
+    const homeOf = (studentId: string) => merged.get(studentId)?.courseId ?? courseId;
+    const mergedRows = [...merged].map(([studentId, from]) => ({ courseId: from.courseId, studentId }));
     const [enrolled, existingRows] = await Promise.all([
       tx.enrolment.findMany({
         where: {
@@ -122,7 +132,7 @@ export async function markRegister(input: MarkRegisterInput): Promise<RegisterSa
         select: { studentId: true },
       }),
       tx.attendanceRecord.findMany({
-        where: { courseId, date },
+        where: { date, OR: [{ courseId }, ...mergedRows] },
         select: { studentId: true, status: true, note: true },
       }),
     ]);
@@ -132,6 +142,7 @@ export async function markRegister(input: MarkRegisterInput): Promise<RegisterSa
     const allowed = new Set([
       ...enrolled.map((row) => row.studentId),
       ...existingRows.map((row) => row.studentId),
+      ...merged.keys(),
     ]);
     const stranger = marks.find((mark) => !allowed.has(mark.studentId));
     if (stranger) {
@@ -188,10 +199,10 @@ export async function markRegister(input: MarkRegisterInput): Promise<RegisterSa
         changed.map((mark) =>
           tx.attendanceRecord.upsert({
             where: {
-              courseId_date_studentId: { courseId, date, studentId: mark.studentId },
+              courseId_date_studentId: { courseId: homeOf(mark.studentId), date, studentId: mark.studentId },
             },
             create: {
-              courseId,
+              courseId: homeOf(mark.studentId),
               date,
               studentId: mark.studentId,
               status: mark.status,
@@ -254,8 +265,9 @@ export async function markRegister(input: MarkRegisterInput): Promise<RegisterSa
       const was = previous.get(mark.studentId);
       await logAudit({ actorId: session.user.id, actorName: markedByName, action: was ? "attendance-corrected" : "attendance",
         entity: "Student", entityId: mark.studentId, clubId, programmeId: course.level.programmeId,
-        summary: `${nameById.get(mark.studentId)} — ${was ? "updated" : "recorded"} attendance for ${courseLabel(course)} on ${formatDate(date)}`,
-        details: { version: 1, kind: "attendance", date: iso, courseId, className: courseLabel(course),
+        summary: `${nameById.get(mark.studentId)} — ${was ? "updated" : "recorded"} attendance for ${merged.get(mark.studentId)?.className ?? courseLabel(course)} on ${formatDate(date)}${merged.has(mark.studentId) ? `, taught in ${courseLabel(course)} (merged)` : ""}`,
+        details: { version: 1, kind: "attendance", date: iso, courseId: homeOf(mark.studentId), className: merged.get(mark.studentId)?.className ?? courseLabel(course),
+          ...(merged.has(mark.studentId) ? { mergedInto: courseId, mergedIntoName: courseLabel(course) } : {}),
           before: was?.status ?? null, after: mark.status, previousNote: was?.note ?? null, note: mark.note || null,
           taughtBy: cover?.coverByName ?? null },
       }, tx);

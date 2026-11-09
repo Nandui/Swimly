@@ -16,6 +16,8 @@ export { weekdayOfIso } from "@/modules/activities/shared/attendance/dates";
 export { instructorClassHref, instructorHomeHref } from "@/modules/activities/shared/attendance/navigation";
 export { CANCELLATION_META } from "@/modules/activities/shared/cancellations/constants";
 export { getCancellationsForDay } from "@/modules/activities/shared/cancellations/data";
+export { MERGE_META } from "@/modules/activities/shared/merges/constants";
+export { getMergesForDay } from "@/modules/activities/shared/merges/data";
 export { courseName, DAY_META, formatSessionTime, formatTime } from "@/modules/activities/shared/courses/constants";
 export { type CourseRow } from "@/modules/activities/shared/courses/data/courses";
 export { getCoursesOnDate } from "@/modules/activities/shared/courses/planned";

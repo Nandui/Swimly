@@ -38,6 +38,8 @@ import {
 import { coverLabel, getClassCover } from "@/modules/activities/shared/attendance/data/cover";
 import { getRegister } from "@/modules/activities/shared/attendance/data/register";
 import { getCancellation } from "@/modules/activities/shared/cancellations/data";
+import { getMergeAway } from "@/modules/activities/shared/merges/data";
+import { mergedAwayMessage } from "@/modules/activities/shared/merges/constants";
 import { can, canSee } from "@/lib/authz";
 import { getCurrentClub } from "@/lib/clubs/current";
 import { DAY_META, courseName, formatSlot } from "@/modules/activities/shared/courses/constants";
@@ -115,7 +117,7 @@ export async function ClassSession({
       ? requested
       : mostRecentOccurrence(course.dayOfWeek);
 
-  const cancellation = await getCancellation(id, iso);
+  const [cancellation, merge] = await Promise.all([getCancellation(id, iso), getMergeAway(id, iso)]);
   const backLabel = returnTo.source ? returnTo.label : "Class details";
 
   const stepHref = (next: Step, date = iso) =>
@@ -150,6 +152,7 @@ export async function ClassSession({
   );
 
   if (cancellation) return <PageShell spacing="roomy" header={<PageHeader back={{ href: returnTo.href, label: backLabel }} title={courseName(course)} description={`${formatSlot(course)} · ${formatDate(parseDateOnly(iso))}`} actions={weekActions} />}><Notice title="This session is cancelled"><p>{cancellation.reason}</p><p>Existing teaching records are kept. Further marks cannot be saved for this session.</p></Notice></PageShell>;
+  if (merge) return <PageShell spacing="roomy" header={<PageHeader back={{ href: returnTo.href, label: backLabel }} title={courseName(course)} description={`${formatSlot(course)} · ${formatDate(parseDateOnly(iso))}`} actions={weekActions} />}><Notice title="This class was merged for this day"><p>{mergedAwayMessage(merge)}</p><p>{merge.reason}</p></Notice></PageShell>;
 
   const [{ lines, taken, note, revision }, cover, progress, planned] = await Promise.all(
     [getRegister(id, iso, workspace === "instructor" ? "deck" : "desk"), getClassCover(id, iso), getClassProgress(id), plannedTeachers([id], iso)],

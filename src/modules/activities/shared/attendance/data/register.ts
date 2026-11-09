@@ -6,6 +6,9 @@ import { parseDateOnly } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { savedRegister } from "@/modules/activities/shared/attendance/revision";
 import { getSharedCurriculum } from "@/modules/activities/shared/curriculum/data/shared";
+import { mergedSwimmers } from "@/modules/activities/shared/merges/data";
+
+const SWIMMER = { id: true, firstName: true, lastName: true, dateOfBirth: true, medicalNotes: true } as const;
 
 export type RegisterLine = {
   studentId: string;
@@ -22,6 +25,9 @@ export type RegisterLine = {
   /** On the register only because they were marked on it before — they have
    *  since left the class. Shown, so an old register stays saveable. */
   offRoster: boolean;
+  /** The class they belong to, when they joined this one for the day by a merge. Their
+   *  attendance is saved against that class. */
+  mergedFrom: string | null;
 };
 
 /** Who should be on this register, and what is already recorded.
@@ -33,8 +39,11 @@ export async function getRegister(courseId: string, iso: string, audience: Swimm
   const session = await requireActivitiesAccess();
   const medical = medicalAllowed(session, audience);
   const date = parseDateOnly(iso);
+  // Swimmers merged in for the day: their marks live on their own class's register rows.
+  const merged = await mergedSwimmers(prisma, courseId, date);
+  const mergedRows = [...merged].map(([studentId, from]) => ({ courseId: from.courseId, studentId }));
 
-  const [enrolments, existing, note, curriculum] = await Promise.all([
+  const [enrolments, existing, note, curriculum, guests] = await Promise.all([
     prisma.enrolment.findMany({
       where: {
         courseId,
@@ -58,7 +67,7 @@ export async function getRegister(courseId: string, iso: string, audience: Swimm
       },
     }),
     prisma.attendanceRecord.findMany({
-      where: { courseId, date },
+      where: { date, OR: [{ courseId }, ...mergedRows] },
       select: {
         status: true,
         note: true,
@@ -78,6 +87,10 @@ export async function getRegister(courseId: string, iso: string, audience: Swimm
       select: { note: true, byName: true },
     }),
     getSharedCurriculum(),
+    merged.size ? prisma.enrolment.findMany({
+      where: { OR: mergedRows, status: "ACTIVE" },
+      select: { courseId: true, level: { select: { id: true, name: true } }, student: { select: SWIMMER } },
+    }) : [],
   ]);
 
   const lines = new Map<string, RegisterLine>();
@@ -90,6 +103,21 @@ export async function getRegister(courseId: string, iso: string, audience: Swimm
       status: null,
       note: null,
       offRoster: false,
+      mergedFrom: null,
+    });
+  }
+
+  for (const guest of guests) {
+    // Someone in both classes stays on this register as one of its own.
+    if (lines.has(guest.student.id) || merged.get(guest.student.id)?.courseId !== guest.courseId) continue;
+    lines.set(guest.student.id, {
+      studentId: guest.student.id,
+      ...classifyMedical(guest.student, medical),
+      levelName: curriculum.level(guest.level.id)?.name ?? guest.level.name,
+      status: null,
+      note: null,
+      offRoster: false,
+      mergedFrom: merged.get(guest.student.id)!.className,
     });
   }
 
@@ -106,6 +134,7 @@ export async function getRegister(courseId: string, iso: string, audience: Swimm
         status: record.status,
         note: record.note,
         offRoster: true,
+        mergedFrom: null,
       });
     }
   }
