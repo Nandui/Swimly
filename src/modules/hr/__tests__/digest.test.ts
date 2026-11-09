@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import { createHrTestDatabase } from "@/test/hr-database";
 import { serverModule } from "@/test/server-module";
-import { digestEmail, kindTally, recipientList, recipientsProblem } from "@/modules/hr/features/digest/rules";
+import { digestEmail, kindTally, recipientList, recipientsProblem, reportsByAddress } from "@/modules/hr/features/digest/rules";
 
 /** The daily email of yesterday's reports: only yesterday's (Dublin) reports,
  *  never withdrawn ones or file notes, by person, once a day, nothing on an
@@ -25,6 +25,9 @@ before(async () => {
     "@/lib/directory": {
       staffByIds: async (ids: string[]) => new Map(ids.map((id) => [id, { id, name: id === "u_ava" ? "Ava Test" : "Ben Test" }])),
       sitesByIds: async (ids: string[]) => new Map(ids.map((id) => [id, { id, name: "Test Pool" }])),
+      // Ava's main site is North, Ben's South; Cara has none.
+      mainSitesByIds: async (ids: string[]) => new Map(ids.map((id) => [id, ({ u_ava: "site_n", u_ben: "site_s" } as Record<string, string>)[id] ?? null])),
+      liveSitesOf: async () => [{ id: "site_n", name: "North", code: null }, { id: "site_s", name: "South", code: null }],
     },
     "@/lib/email/sender": { emailSender: () => ({ sender: "x@example.invalid" }) },
     "@/lib/email/google": { sendGoogleTextEmail: async (to: string, subject: string, text: string) => { outbox.push({ to, subject, text }); } },
@@ -51,6 +54,17 @@ test("only holders of the daily reports email tick change the list", async () =>
   await assert.rejects(settings.saveDigestRecipients({ id: "u_boss", name: "Boss", orgId: ORG, digest: true }, "bad"), /not an email/);
   await settings.saveDigestRecipients({ id: "u_boss", name: "Boss", orgId: ORG, digest: true }, "me@example.ie\nhr@example.ie");
   assert.deepEqual((await settings.digestSetting(ORG)).to, ["me@example.ie", "hr@example.ie"]);
+  await assert.rejects(settings.saveDigestRecipients({ id: "u_boss", name: "Boss", orgId: ORG, digest: true }, "me@example.ie", { site_n: "bad" }), /North: .*not an email/);
+});
+
+test("a site's list gets the reports on people whose main site it is", () => {
+  const r = (id: string, mainSiteId: string | null) => ({ id, mainSiteId });
+  const routes = reportsByAddress([r("a", "site_n"), r("b", "site_s"), r("c", null)], ["boss@x.ie"],
+    { site_n: "north@x.ie, both@x.ie", site_s: "both@x.ie, boss@x.ie" });
+  assert.deepEqual(routes.get("boss@x.ie")?.map((x) => x.id), ["a", "b", "c"]);
+  assert.deepEqual(routes.get("north@x.ie")?.map((x) => x.id), ["a"]);
+  assert.deepEqual(routes.get("both@x.ie")?.map((x) => x.id), ["a", "b"]);
+  assert.equal(reportsByAddress([r("b", "site_s")], [], { site_n: "north@x.ie" }).size, 0);
 });
 
 test("sends yesterday's reports by person, once", async () => {
@@ -90,4 +104,16 @@ test("the email reads per person", () => {
   assert.match(text, /Cara Test: 1 good work/);
   assert.match(text, /Good work · .* · Test Pool · reported by Manager Test/);
   assert.match(text, /    Line two/);
+});
+
+test("site lists get only their own staff, and nothing on a day with none of theirs", async () => {
+  await settings.saveDigestRecipients({ id: "u_boss", name: "Boss", orgId: ORG, digest: true }, "", { site_n: "north@example.ie", site_s: "south@example.ie" });
+  outbox.length = 0;
+  await note("m1", "u_ava", "conduct", "2026-11-14T10:00:00Z");
+  const result = await send.runDailyDigest("https://turnfin.test", new Date("2026-11-15T07:00:00Z"));
+  assert.deepEqual(result, { day: "2026-11-14", sent: 1, failed: 0 });
+  assert.deepEqual(outbox.map((m) => m.to), ["north@example.ie"]);
+  assert.ok(outbox[0].text.includes("Ava Test"));
+  const setting = await settings.digestSetting(ORG);
+  assert.deepEqual(setting.sites.map((x) => x.to), [["north@example.ie"], ["south@example.ie"]]);
 });
