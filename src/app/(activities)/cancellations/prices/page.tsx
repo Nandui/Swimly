@@ -3,13 +3,12 @@ import { PageHeader } from "@/components/ui-kit/page-header";
 import { PageShell } from "@/components/ui-kit/page-shell";
 import { RecordSection } from "@/components/ui-kit/record";
 import { LegendPriceDialog } from "@/modules/activities/features/duty";
+import { euro } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
 import { can } from "@/lib/authz";
 import { getLegendPrices } from "@/modules/activities/features/cancellations";
 
 export const metadata: Metadata = { title: "Billing prices" };
-
-const euro = (cents: number) => new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(cents / 100);
 
 /** The swim school's billing prices (owner decision, 9 October 2026): the monthly price of each
  *  Legend agreement price, the same at every site, put in NewCycleFee by the restore export.

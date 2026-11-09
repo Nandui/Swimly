@@ -1,5 +1,8 @@
 import { Ban, BriefcaseMedical, UserRoundX, CalendarClock, CircleCheck, CircleDashed, Clock, Coins, Dumbbell, FileWarning, Globe, HandCoins, Hourglass, PersonStanding, PlayCircle, Shapes, Ticket, TriangleAlert, Wallet, Waves } from "lucide-react";
+import { ageOn, centsOf, euro } from "@/lib/format";
 import type { StatusMeta } from "@/lib/status";
+
+export { ageOn, centsOf, euro };
 
 /** The rules for short courses (owner decision, 13 October 2026). Pure,
  *  so they are tested on their own and every screen reads them the same way. */
@@ -106,27 +109,11 @@ export function waitingOrder<T extends { status: string; createdAt: Date }>(peop
   return people.filter((p) => p.status === "waiting").sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 }
 
-/** Whole years old on a day. */
-export function ageOn(dateOfBirth: string, on: string) {
-  const [y, m, d] = dateOfBirth.split("-").map(Number);
-  const [ty, tm, td] = on.split("-").map(Number);
-  return ty - y - (tm < m || (tm === m && td < d) ? 1 : 0);
-}
-
 /** "09:00" from minutes after midnight, and back (null when it is not a time). */
 export const clock = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 export function clockOf(value: string) {
   const m = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(value.trim());
   return m ? Number(m[1]) * 60 + Number(m[2]) : null;
-}
-
-const EURO = new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" });
-export const euro = (cents: number) => EURO.format(cents / 100);
-/** "90", "90.00" or "€90" → cents, or null. */
-export function centsOf(value: string): number | null {
-  const clean = value.trim().replace(/[€,\s]/g, "");
-  if (!/^\d+(\.\d{1,2})?$/.test(clean)) return null;
-  return Math.round(Number(clean) * 100);
 }
 
 /** What someone still owes on a course: the price less what they paid, never below nothing. */

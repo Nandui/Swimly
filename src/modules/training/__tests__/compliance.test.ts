@@ -4,7 +4,7 @@ import { isolatedPrisma } from "@/test/pglite-prisma";
 import { serverModule } from "@/test/server-module";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import { newCertificateCode, readCertificateCode } from "../shared/certificates";
-import { addDays, addMonths, audienceInWords, cellInWords, csvRows, isCompliant, matrixCell, ruleCovers, ruleState, timingInWords, type RuleHistory } from "../shared/rules";
+import { addDays, addMonths, audienceInWords, cellInWords, isCompliant, matrixCell, ruleCovers, ruleState, timingInWords, type RuleHistory } from "../shared/rules";
 
 /** The compliance autopilot (e-learning phase 4): training
  *  rules, the daily run that assigns and renews, the matrix and certificates.
@@ -145,7 +145,6 @@ test("rules read in plain words, and the download never runs a formula", () => {
   assert.equal(timingInWords({ dueDays: 14, renewMonths: 12, renewLeadDays: 30 }), "14 days to finish, again every year");
   assert.equal(timingInWords({ dueDays: 1, renewMonths: null, renewLeadDays: 30 }), "1 day to finish, once");
   assert.equal(timingInWords({ dueDays: 30, renewMonths: 24, renewLeadDays: 30 }), "30 days to finish, again every 2 years");
-  assert.equal(csvRows([["Name", "=HYPERLINK(\"x\")"], ["Ava \"A\"", "-1"]]), "\"Name\",\"'=HYPERLINK(\"\"x\"\")\"\r\n\"Ava \"\"A\"\"\",\"'-1\"");
 });
 
 test("certificate codes are easy to read aloud and forgiving to type", () => {

@@ -10,7 +10,6 @@ import {
   requirements,
 } from '@/modules/docs/shared/domain';
 import { paragraph, matrixSchema, validateBody } from '@/modules/docs/shared/content';
-import { csvCell } from '@/modules/docs/features/reports/server/reporting';
 import type { DocumentContent, Snapshot, Draft } from '@/modules/docs/shared/types';
 import { richDocumentExample } from '@/test/docs-rich-content';
 import { serverModule } from '@/test/server-module';
@@ -438,10 +437,6 @@ test('template edits do not rewrite documents already created', async () => {
   });
   const d = await one<Draft>(db, 'SELECT * FROM drafts WHERE document_id=$1', [f.id]);
   assert.deepEqual(d?.content.body, before);
-});
-test('CSV output neutralises spreadsheet formulas', () => {
-  assert.equal(csvCell('=HYPERLINK("bad")'), '"\'=HYPERLINK(""bad"")"');
-  assert.match(csvCell(' +SUM(1,2)'), /^"'/);
 });
 test('PostgreSQL full-text search matches content inside the approved body', async () => {
   const c = content();

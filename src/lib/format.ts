@@ -254,6 +254,29 @@ export function ageInYears(dateOfBirth: Date, now: Date = new Date()): number {
   return age;
 }
 
+/** Whole years old on a day, both written "YYYY-MM-DD": the age rule for a
+ *  course, a shift or a report on a given date. */
+export function ageOn(dateOfBirth: string, on: string): number {
+  const [y, m, d] = dateOfBirth.split("-").map(Number);
+  const [ty, tm, td] = on.split("-").map(Number);
+  return ty - y - (tm < m || (tm === m && td < d) ? 1 : 0);
+}
+
+const EURO = new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" });
+
+/** Cents as staff read money: "€1,234.50". The only money formatter. */
+export function euro(cents: number): string {
+  return EURO.format(cents / 100);
+}
+
+/** An amount a person typed ("350", "350.00", "€1,250.50") as cents; null
+ *  when it is not an amount. */
+export function centsOf(value: string): number | null {
+  const clean = value.trim().replace(/[€,\s]/g, "");
+  if (!/^\d+(\.\d{1,2})?$/.test(clean)) return null;
+  return Math.round(Number(clean) * 100);
+}
+
 /** Up to two initials from a person's name, for an avatar fallback. The only initials helper:
  *  server-safe, and re-exported by the (client) Avatar module as `initials`. */
 export function nameInitials(name: string): string {

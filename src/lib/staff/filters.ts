@@ -8,8 +8,6 @@ export type StaffShow = keyof typeof STAFF_SHOW;
 
 export type StaffFilters = { q: string; show: StaffShow; role: string | null; site: string | null; department: string | null };
 
-export const STAFF_FILTER_KEYS = ["q", "show", "role", "site", "department"] as const;
-
 /** What a filter needs from a person; the list's own rows carry more. */
 export type FilterablePerson = {
   name: string;

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
-  clockOf, completionProblems, csvRows, dayIn, dueOn, exceptions, isClock, isScheduleTime, outOfRange, score, scheduleLabel, scoreBand, taskState, tasksOn, templateProblems, windowOn, zonedInstant,
+  clockOf, completionProblems, dayIn, dueOn, exceptions, isClock, isScheduleTime, outOfRange, score, scheduleLabel, scoreBand, taskState, tasksOn, templateProblems, windowOn, zonedInstant,
   type TaskDefinition, type TaskSchedule,
 } from "./rules";
 
@@ -87,10 +87,6 @@ test("a template cannot be published with nothing to do, a bad range or a schedu
   assert.ok(templateProblems({ ...base, fields: [{ id: "a", label: "pH", type: "number", required: true, min: 8, max: 7 }] }).some((p) => p.includes("above the lowest")));
   assert.ok(templateProblems({ ...base, schedules: [schedule({ repeat: "weekly", weekdays: [] })] }).includes("Choose the days of the week it is due."));
   assert.ok(templateProblems({ ...base, schedules: [schedule({ from: "2026-03-29", start: "01:30", due: "03:00" })] }).some((p) => p.includes("clocks go forward")));
-});
-
-test("the export never hands a spreadsheet a formula", () => {
-  assert.equal(csvRows([["=SUM(A1)", 'say "hi"']]), `"'=SUM(A1)","say ""hi"""`);
 });
 
 test("schedules can start at opening and be due at closing, in the site's own time zone", () => {

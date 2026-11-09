@@ -5,5 +5,5 @@ export { trainingRules, trainingMatrix } from "@/modules/training/features/compl
 export { checkCertificate } from "@/modules/training/features/compliance/server/certificate";
 export { PauseRule, RemoveRule, RuleDialog, RunRulesNow } from "@/modules/training/features/compliance/components/rules";
 export { MATRIX_CELL_META, RULE_STATE_META } from "@/modules/training/shared/constants";
-export { cellInWords, cellTone, csvRows, type MatrixCell } from "@/modules/training/shared/rules";
+export { cellInWords, cellTone, type MatrixCell } from "@/modules/training/shared/rules";
 export { applyTrainingRules } from "@/modules/training/features/compliance/server/engine";

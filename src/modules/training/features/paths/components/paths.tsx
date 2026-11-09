@@ -13,7 +13,7 @@ import { toast } from "@/components/ui/toast";
 import { today } from "@/lib/format";
 import { enrolInPath, leavePath, savePath, setPathArchived } from "@/modules/training/features/paths/server/actions";
 import { THEME } from "@/modules/training/shared/components/dialog-kit";
-import { PeopleChooser, type ChoosablePerson } from "@/modules/training/shared/components/people-chooser";
+import { PeopleChooser, type ChoosablePerson } from "@/components/ui/people-chooser";
 
 /** Learning paths (e-learning phase 5): building a path of courses in order,
  *  putting people on it, and taking them off. */

@@ -66,7 +66,6 @@ export async function diaryWeek(input: { site?: string; dept?: string; day?: str
     subActivities: await subActivitiesFor(types.map((t) => t.id)),
   } as const;
 }
-export type DiaryWeek = Extract<Awaited<ReturnType<typeof diaryWeek>>, { diary: unknown }>;
 
 /** The model's input for each day, read in one go for the days asked. */
 export async function diaryInputs(siteId: string, orgId: string | null, days: readonly string[], departmentId: string | null) {

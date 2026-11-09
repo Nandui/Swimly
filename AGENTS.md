@@ -217,7 +217,7 @@ Step 5 replaces the Glass kit, tokens and page frame with those in DESIGN.md; th
 
 Tests, email templates and the browser theme colour in `src/app/layout.tsx` are exempt where they need literal values. `eslint-suppressions.json` stays empty. Never disable a rule inline or add a suppression without the owner's yes and a decision entry.
 
-Nothing yet runs these checks on pull requests and `main` is unprotected (roadmap step 1): run them yourself before every push.
+Every pull request to `main` runs typecheck, lint, the tests and a build (`.github/workflows/check.yml`). `main` itself is still unprotected (roadmap step 1), so nothing yet stops a merge that fails: run the checks yourself before every push, and never merge on a red check.
 
 ## Databases in brief
 

@@ -1,5 +1,8 @@
 import { Ban, BriefcaseMedical, CalendarClock, CircleCheck, CircleDashed, CircleX, Clock, Coins, HandCoins, LifeBuoy, PhoneCall, PhoneMissed, PlayCircle, RotateCcw, School, Shapes, TriangleAlert, UserRoundX, Wallet } from "lucide-react";
+import { ageOn, centsOf, euro } from "@/lib/format";
 import type { StatusMeta } from "@/lib/status";
+
+export { ageOn, centsOf, euro };
 
 /** The Academy's rules (owner decision, 8 October 2026). Pure, so they are
  *  tested on their own and every screen reads them the same way. */
@@ -65,13 +68,6 @@ export function courseState(c: { status: string; cancelledAt: Date | null }, fir
   return firstDay && firstDay <= today ? "running" : "planned";
 }
 
-/** Whole years old on a day. */
-export function ageOn(dateOfBirth: string, on: string) {
-  const [y, m, d] = dateOfBirth.split("-").map(Number);
-  const [ty, tm, td] = on.split("-").map(Number);
-  return ty - y - (tm < m || (tm === m && td < d) ? 1 : 0);
-}
-
 /** Where a candidate stands before assessment: each check the course asks for (done, or what is
  *  missing), and their hours against the minimum. `ready` when all are met. */
 export function readiness(
@@ -113,14 +109,6 @@ export function hoursLabel(minutes: number) {
   return h ? `${h}h${m ? ` ${m}m` : ""}` : `${m}m`;
 }
 
-const EURO = new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" });
-export const euro = (cents: number) => EURO.format(cents / 100);
-/** "350", "350.00" or "€350" → cents, or null. */
-export function centsOf(value: string): number | null {
-  const clean = value.trim().replace(/[€,\s]/g, "");
-  if (!/^\d+(\.\d{1,2})?$/.test(clean)) return null;
-  return Math.round(Number(clean) * 100);
-}
 
 /* ---------- Online booking (owner decision, 8 October 2026) ----------
    People hold a place on the booking site; we cannot take payment online, so reception phones

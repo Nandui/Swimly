@@ -1,4 +1,5 @@
 import { Ban, CheckCheck, CircleHelp, Clock3, FilePenLine, Inbox, ScanSearch, XCircle } from "lucide-react";
+import { euro } from "@/lib/format";
 import type { StatusMeta } from "@/lib/status";
 
 /** Each status has its own icon shape, so colour is never the only signal. */
@@ -32,7 +33,7 @@ type RefundHistory = { id: string; actorName: string; action: string; note: stri
 export type RefundDetail = { request: RefundView; attachments: Receipt[]; events: RefundHistory[]; delivery: { id: string; status: string; error: string | null }[] };
 export type RefundResult = { ok: true; id: string; version: number; warning?: string } | { ok: false; error: string };
 export const refundNumber = (number: number) => `RF-${String(number).padStart(6, "0")}`;
-export const euros = (cents: number | null) => cents === null ? "Not entered" : new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(cents / 100);
+export const euros = (cents: number | null) => cents === null ? "Not entered" : euro(cents);
 export const editableRefund = (row: { status: string; creatorId: string }, who: RefundActor) => who.request && (row.status === "NEEDS_INFORMATION" || (row.status === "DRAFT" && row.creatorId === who.id));
 /** Which request view a list address shows: everyone's, the person's own, or their drafts.
  *  The page bar and the list heading both follow it. */

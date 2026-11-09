@@ -1,4 +1,5 @@
 import { Ban, CheckCheck, CircleHelp, Clock3, FilePenLine, Inbox, ScanSearch, XCircle } from "lucide-react";
+import { euro } from "@/lib/format";
 import type { StatusMeta } from "@/lib/status";
 
 /** Each status has its own icon shape, so colour is never the only signal. */
@@ -38,7 +39,7 @@ export type CoinageDetail = { request: CoinageView; events: CoinageHistory[]; de
 export type CoinageResult = { ok: true; id: string; version: number; warning?: string } | { ok: false; error: string };
 
 export const coinageNumber = (number: number) => `CO-${String(number).padStart(6, "0")}`;
-export const euros = (cents: number | null) => cents === null ? "Not entered" : new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(cents / 100);
+export const euros = (cents: number | null) => cents === null ? "Not entered" : euro(cents);
 /** The denominations a request asks for, largest first, with how many coins that is. */
 export const coinageLines = (lines: CoinageLines) => denominations.filter(d => (lines[String(d.cents)] ?? 0) > 0)
   .map(d => ({ ...d, amountCents: lines[String(d.cents)]!, pieces: lines[String(d.cents)]! / d.cents }));

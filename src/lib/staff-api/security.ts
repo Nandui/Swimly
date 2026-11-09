@@ -22,8 +22,3 @@ export async function rateLimit(bucket: string, maximum: number, seconds: number
     RETURNING count`;
   if (rows[0].count > maximum) throw new StaffApiError(429, "RATE_LIMITED", "Too many attempts. Wait a few minutes and try again.");
 }
-
-/** Only Vercel's overwritten IP header is trusted; elsewhere one shared bucket. */
-export function requestIp(request: Request) {
-  return process.env.VERCEL === "1" ? (request.headers.get("x-real-ip") ?? "unknown").slice(0, 100) : "anonymous";
-}

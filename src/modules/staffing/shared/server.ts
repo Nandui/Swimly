@@ -56,7 +56,6 @@ export async function staffingSites() {
   const sites = await liveSitesWithin(who.orgId, read);
   return { who, sites: sites.map((s) => ({ ...s, run: holds(run, s.id), supervise: holds(supervise, s.id), manage: holds(manage, s.id) })) };
 }
-export type StaffingSite = Awaited<ReturnType<typeof staffingSites>>["sites"][number];
 
 /** The page's site: `?site=` when the person covers it, else their first. */
 export async function pickSite(siteId: string | undefined) {
@@ -86,7 +85,6 @@ export async function poolStaff(orgId: string | null, db: Db = prisma) {
     quals: quals.filter((q) => q.userId === r.userId && !q.revokedAt).map((q) => ({ typeId: q.typeId, expiresOn: q.expiresOn ? toDateOnlyString(q.expiresOn) : null })),
   })).sort((a, b) => a.name.localeCompare(b.name));
 }
-export type PoolStaff = Awaited<ReturnType<typeof poolStaff>>[number];
 
 /** Every shift these people have between two days, at any site, for the warnings. */
 export async function shiftsOf(userIds: readonly string[], from: string, to: string, db: Db = prisma) {

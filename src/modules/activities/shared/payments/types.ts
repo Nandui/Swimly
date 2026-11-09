@@ -1,5 +1,5 @@
 import { Ban, CircleCheck, Landmark, PhoneCall, PhoneOutgoing } from "lucide-react";
-import { formatMonth } from "@/lib/format";
+import { euro, formatMonth } from "@/lib/format";
 import type { StatusMeta } from "@/lib/status";
 
 /** Payments' words, pure: server and client both read them. Each status has its own icon, so
@@ -59,8 +59,7 @@ export const RETURN_ADVICE: Record<string, string> = {
 /** "2026-09" as "September 2026". */
 export const monthLabel = (month: string) => (/^\d{4}-\d{2}$/.test(month) ? formatMonth(`${month}-01`) : month);
 
-const EURO = new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" });
-export const euro = (cents: number) => EURO.format(cents / 100);
+export { euro };
 
 /** One failure as screens see it: no Core rows. */
 export type PaymentView = {

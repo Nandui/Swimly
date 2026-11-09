@@ -10,6 +10,7 @@ Every doc, once. Each fact lives in one place and the others link to it. Add a n
 | [apps.md](apps.md) | every app: purpose, levels, reach, data, connections; the rules that protect people | working on an app or on access |
 | [roadmap.md](roadmap.md) | the 2.0 steps in order, each with "done when"; the owner's open decisions | choosing or planning work |
 | [operations.md](operations.md) | environments, running it, migrations, scheduled jobs, every setting, record management, production scripts | databases, deploys, settings |
+| [staffing.md](staffing.md) | Staffing's rules: contracts, blocks, swaps, call-offs, strikes and exam seasons | working on Staffing |
 | [decisions.md](decisions.md) | the decisions 2.0 stands on, and how to add one | before changing something fundamental |
 | [../DESIGN.md](../DESIGN.md) | the 2.0 design, Turnfin Sheet: principles, tokens, frame, components, motion, states, forms, accessibility, how it is built, the screen checklist | before any visual change |
 | [parent-api.openapi.json](parent-api.openapi.json) | the parent app's API contract | changing `/api/parent/v1` |

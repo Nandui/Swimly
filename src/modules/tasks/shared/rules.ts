@@ -108,9 +108,6 @@ export type TaskRecord = Record<string, string>;
 // Status: stored, then what people see
 // ---------------------------------------------------------------------------
 
-/** What is stored. Late, early, overdue and missed are worked out from the times. */
-export const TASK_STATUSES = ["open", "done", "not_applicable", "cant_complete"] as const;
-
 /** What a task shows. Tones come from here, never a call site. */
 export const TASK_STATE_META = {
   upcoming: { label: "Later", color: "gray", icon: Circle },
@@ -338,15 +335,3 @@ export function completionProblems(def: TaskDefinition, checks: readonly boolean
   if (needsFollowUp(def, records) && !hasAction) out.push("Raise a follow-up action for the reading out of range.");
   return out;
 }
-
-// ---------------------------------------------------------------------------
-// Export
-// ---------------------------------------------------------------------------
-
-/** A CSV cell that a spreadsheet will not run as a formula. */
-function csvCell(value: unknown): string {
-  let s = String(value ?? "");
-  if (/^[=+@\-\t\r]/.test(s)) s = `'${s}`;
-  return `"${s.replaceAll('"', '""')}"`;
-}
-export const csvRows = (rows: readonly (readonly unknown[])[]) => rows.map((r) => r.map(csvCell).join(",")).join("\r\n");

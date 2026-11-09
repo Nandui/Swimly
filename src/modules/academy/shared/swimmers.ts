@@ -83,4 +83,3 @@ export function swimmerView(swimmer: Member | undefined) {
     hasMedicalNotes: swimmer.hasMedicalNotes, medicalNotes: swimmer.medicalNotes,
   };
 }
-export type SwimmerView = NonNullable<ReturnType<typeof swimmerView>>;
