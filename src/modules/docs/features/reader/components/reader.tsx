@@ -43,6 +43,7 @@ import {
   canWrite,
   canManage,
   canApprove,
+  canApproveOwn,
   formatDate,
   overdue,
   DOC_STATUS_META,
@@ -113,7 +114,7 @@ export function Reader({
     draft.status === 'in_review' &&
     s.approverId === w.member.id &&
     canApprove(w.member) &&
-    !s.contributors.includes(w.member.id) &&
+    (!s.contributors.includes(w.member.id) || canApproveOwn(w.member)) &&
     !d.archivedAt;
   function action(
     fn: () => Promise<{ ok: boolean; error?: string }>,

@@ -237,7 +237,10 @@ export function DocumentEditor({
     }
   }
   const approvers = w.members.filter(
-    (m) => m.active && m.access.approve && !contributors.includes(m.id) && m.id !== w.member.id,
+    (m) =>
+      m.active &&
+      m.access.approve &&
+      (m.access.approveOwn || (!contributors.includes(m.id) && m.id !== w.member.id)),
   );
   const failed = saveStatus === 'Couldn’t save';
   const selfLocked = lockError === SELF_LOCK_MESSAGE;
@@ -546,10 +549,10 @@ export function DocumentEditor({
           <div className="flex flex-col gap-2">
             <Label className="block" htmlFor={approverId}>Approver</Label>
             <NativeSelect id={approverId} value={approver} onChange={(e) => setApprover(e.target.value)} required>
-              <NativeSelectOption value="">Select an independent approver</NativeSelectOption>
+              <NativeSelectOption value="">Select an approver</NativeSelectOption>
               {approvers.map((m) => (
                 <NativeSelectOption key={m.id} value={m.id}>
-                  {m.name}
+                  {m.id === w.member.id ? `${m.name} (you)` : m.name}
                 </NativeSelectOption>
               ))}
             </NativeSelect>

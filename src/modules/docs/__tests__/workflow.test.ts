@@ -1,8 +1,8 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { one, rows, findMember, type Database } from '@/modules/docs/shared/database';
-import { createDocsTestDatabase, demoMatrix } from '@/test/docs-database';
+import { one, rows, findMember } from '@/modules/docs/shared/database';
+import { createDocsTestDatabase, demoMatrix, type DocsTestDatabase } from '@/test/docs-database';
 import {
   DocumentService,
   documentView,
@@ -14,7 +14,7 @@ import { csvCell } from '@/modules/docs/features/reports/server/reporting';
 import type { DocumentContent, Snapshot, Draft } from '@/modules/docs/shared/types';
 import { richDocumentExample } from '@/test/docs-rich-content';
 import { serverModule } from '@/test/server-module';
-let db: Database;
+let db: DocsTestDatabase;
 let service: DocumentService;
 before(async () => {
   db = await createDocsTestDatabase();
@@ -128,27 +128,36 @@ test('draft edits do not change published reading content or expose draft search
     !(await library(db, 'riley', { query: 'UNPUBLISHEDMAGICWORD' })).some((d) => d.id === f.id),
   );
 });
-test('all contributors, including administrators, are excluded from self-approval', async () => {
+test('contributors are excluded from self-approval; administrators may approve their own', async () => {
   const f = await create();
   await service.lock('jamie', f.id, f.session, true);
-  const a = (await service.lock('alex', f.id, 'admin-edit'))!;
-  const saved = await service.save('alex', f.id, 'admin-edit', a.revision, {
-    ...a.content,
-    summary: 'Administrator contribution',
-  });
+  const j = (await service.lock('sam', f.id, 'sam-edit'))!;
+  const edited = await service.save('sam', f.id, 'sam-edit', j.revision, { ...j.content, summary: 'Approver contribution' });
   await assert.rejects(
-    service.submit('alex', f.id, 'admin-edit', saved.revision, 'alex', 'Attempt self-approval'),
+    service.submit('sam', f.id, 'sam-edit', edited.revision, 'sam', 'Attempt self-approval'),
     /independent approver/,
   );
-  const s = await service.submit(
-    'alex',
-    f.id,
-    'admin-edit',
-    saved.revision,
-    'sam',
-    'Independent review',
-  );
-  await assert.rejects(service.review('alex', f.id, s, 'approved', ''), /independent approver/);
+  const sent = await service.submit('sam', f.id, 'sam-edit', edited.revision, 'alex', 'Sent to an administrator');
+  await assert.rejects(service.review('sam', f.id, sent, 'approved', ''), /independent approver/);
+  // Administrators hold every new permission, including approving their own (owner decision, 9 November 2026).
+  await service.review('alex', f.id, sent, 'changes_requested', 'Again');
+  const a = (await service.lock('alex', f.id, 'admin-edit'))!;
+  const saved = await service.save('alex', f.id, 'admin-edit', a.revision, { ...a.content, summary: 'Administrator contribution' });
+  const s = await service.submit('alex', f.id, 'admin-edit', saved.revision, 'alex', 'Administrator self-approval');
+  assert.ok(await service.review('alex', f.id, s, 'approved', ''));
+});
+test('someone who can approve their own documents may approve their own revision', async () => {
+  await db.identity.query('UPDATE public."StaffRole" SET permissions=$2 WHERE id=$1', ['sam', ['docs.approve.own']]);
+  try {
+    const f = await create();
+    await service.lock('jamie', f.id, f.session, true);
+    const a = (await service.lock('sam', f.id, 'own-edit'))!;
+    const saved = await service.save('sam', f.id, 'own-edit', a.revision, { ...a.content, summary: 'Own edit' });
+    const s = await service.submit('sam', f.id, 'own-edit', saved.revision, 'sam', 'Self-approved change');
+    assert.ok(await service.review('sam', f.id, s, 'approved', ''));
+  } finally {
+    await db.identity.query('UPDATE public."StaffRole" SET permissions=$2 WHERE id=$1', ['sam', ['docs.approve']]);
+  }
 });
 test('reader cannot create, edit, submit, approve, report, or see unpublished documents', async () => {
   const f = await create();

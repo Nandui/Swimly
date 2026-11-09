@@ -168,6 +168,7 @@ Staff documents to read, write and approve, and who has read them. Every role is
 | Write | draft documents and send them for approval |
 | Manage | aim documents at roles and see who has read them |
 | *Extra:* Can approve documents | approve and publish colleagues' documents, never their own |
+| *Extra:* Can approve their own documents | also approve and publish documents they wrote or edited (operations managers; owner decision, 9 November 2026) |
 
 ### HR
 *Module `hr` · `/hr/overview` · reach: the people they manage, their sites, or everyone · data: its own schema, `turnfin_hr`, in the main database*

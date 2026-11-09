@@ -4,6 +4,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.11.0 · 9 November 2026 · Approve your own documents in Docs
+
+- **Some roles can now approve their own documents in Docs.** When editing a role, tick **Can approve their own documents** under Docs (the role needs at least **Write**). It is meant for operations managers.
+- **When you send a document for review, you can choose yourself as the approver**, shown as "(you)" in the list, even if you edited it. You then approve it from the document as usual.
+- **Administrators can approve their own documents too.** Everyone else still needs a colleague who did not edit the document to approve it.
+
 ## 3.10.0 · 9 November 2026 · HR reports email, by site
 
 - **Each site can have its own list for the daily HR reports email.** In HR, open **Set up › Settings**: as well as **Every site**, there is a list for each site's staff.
