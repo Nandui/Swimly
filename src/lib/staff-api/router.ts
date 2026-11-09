@@ -1,6 +1,7 @@
 import { StaffApiError, notFound } from "@/lib/staff-api/errors";
 import { idSchema, json, parseInput, staffResponse } from "@/lib/staff-api/http";
-import { rateLimit, requestIp } from "@/lib/staff-api/security";
+import { requestIp } from "@/lib/public-api/http";
+import { rateLimit } from "@/lib/staff-api/security";
 import { authenticate, logout, requestCode, requestConfirm, verifyCode, verifyConfirm } from "@/lib/staff-api/auth";
 import * as records from "@/lib/staff-api/records";
 

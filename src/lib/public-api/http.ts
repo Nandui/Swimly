@@ -36,6 +36,12 @@ export function bearerToken(request: Request, shape: RegExp = /^[A-Za-z0-9_-]{20
 
 export function json(data: unknown, status = 200) { return Response.json(data, { status }); }
 
+/** Who is calling, for rate limits. Only Vercel's overwritten IP header is trusted;
+ *  anywhere else every caller shares one bucket. */
+export function requestIp(request: Request): string {
+  return process.env.VERCEL === "1" ? (request.headers.get("x-real-ip") ?? "unknown").slice(0, 100) : "anonymous";
+}
+
 export type PublicApiOptions = {
   /** Names the API in the server log, e.g. "Staff API". */
   name: string;

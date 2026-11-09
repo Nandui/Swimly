@@ -4,8 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { StaffApiError, confirmRequired, unauthenticated } from "@/lib/staff-api/errors";
 import { sendStaffCode } from "@/lib/staff-api/email";
 import { emailSchema, idSchema, readBody } from "@/lib/staff-api/http";
-import { digest, opaqueToken, rateLimit, requestIp, sixDigitCode } from "@/lib/staff-api/security";
-import { bearerToken } from "@/lib/public-api/http";
+import { digest, opaqueToken, rateLimit, sixDigitCode } from "@/lib/staff-api/security";
+import { bearerToken, requestIp } from "@/lib/public-api/http";
 
 /** Turnfin Me sign-in: an email code every time, sent to the address on the
  *  person's Turnfin account; no password. A session lasts up to 12 hours (the

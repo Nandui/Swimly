@@ -1,7 +1,7 @@
 import { createHmac, randomBytes, randomInt, randomUUID } from "node:crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { bearerToken } from "@/lib/public-api/http";
+import { bearerToken, requestIp } from "@/lib/public-api/http";
 import { holdSchema } from "@/modules/academy/shared/public-booking";
 import { academyPublicCourses } from "@/modules/academy/features/booking/server/academy";
 import { emailBookingsFor } from "@/modules/contributions";
@@ -28,10 +28,6 @@ const TOKEN_MS = 7 * 24 * 60 * 60 * 1000;
 const MAX_ATTEMPTS = 5;
 const digest = (value: string) => createHmac("sha256", academyApiConfig().secret).update(value).digest("hex");
 
-/** Only Vercel's overwritten IP header is trusted; elsewhere one shared bucket. */
-function requestIp(request: Request) {
-  return process.env.VERCEL === "1" ? (request.headers.get("x-real-ip") ?? "unknown").slice(0, 100) : "anonymous";
-}
 const tooMany = () => new AcademyApiError(429, "RATE_LIMITED", "Too many attempts. Wait a while and try again.");
 
 /* ---------- Courses on sale ---------- */
