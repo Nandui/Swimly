@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import {
   ackState, blockEnd, blockState, hoursAgainstContract, nextBlockStart, publishDeadline, semesterOf,
 } from "@/modules/staffing/shared/rules";
-import { pickSite, settingsFor, shiftsOf, staffingSites, strikeCounts, teachers } from "@/modules/staffing/shared/server";
+import { pickSite, settingsFor, shiftsOf, staffingSites, strikeCounts, poolStaff } from "@/modules/staffing/shared/server";
 
 /** The Blocks page: one site's blocks, newest first, with where each stands. */
 export async function blocksPage(siteId: string | undefined) {
@@ -36,7 +36,7 @@ export async function blocksPage(siteId: string | undefined) {
   return { who, sites, site, blocks, next: { startsOn: next, deadline: nextDeadline, state: blockState(null, nextDeadline, now) }, upcoming, settings };
 }
 
-/** One block: its days and places, the teachers and their other shifts (for the warnings, worked
+/** One block: its days and places, the staff and their other shifts (for the warnings, worked
  *  out in the browser from the same rules), hours against contract and acknowledgements. */
 export async function blockPage(id: string) {
   const block = await prisma.staffingBlock.findUnique({
@@ -51,7 +51,7 @@ export async function blockPage(id: string) {
   const startsOn = toDateOnlyString(block.startsOn);
   const endsOn = blockEnd(startsOn);
   const settings = await settingsFor(block.orgId);
-  const people = await teachers(block.orgId);
+  const people = await poolStaff(block.orgId);
   const ids = people.map((p) => p.id);
   const [others, strikes, swaps] = await Promise.all([
     shiftsOf(ids, addDaysIso(startsOn, -7), addDaysIso(endsOn, 7)),
@@ -61,7 +61,7 @@ export async function blockPage(id: string) {
   const names = new Map(people.map((p) => [p.id, p.name]));
   const shifts = block.shifts.map((s) => ({
     id: s.id, slotId: s.slotId, date: toDateOnlyString(s.date), startMin: s.startMin, endMin: s.endMin, role: s.role, name: s.name,
-    userId: s.userId, person: s.userId ? names.get(s.userId) ?? "Someone no longer a teacher" : null, status: s.status,
+    userId: s.userId, person: s.userId ? names.get(s.userId) ?? "Someone no longer on the rota" : null, status: s.status,
   }));
   const contracts = new Map(people.filter((p) => p.contractMinutes !== null).map((p) => [p.id, p.contractMinutes!]));
   const hours = hoursAgainstContract(startsOn, shifts, contracts)

@@ -22,7 +22,7 @@ export default async function StaffingSlotsPage({ searchParams }: { searchParams
   if (!site.supervise) notFound();
   return (
     <PageShell spacing="roomy" header={<PageHeader title="Slots" description={`Each week's places to fill at ${site.name}. New blocks take their places from here.`} actions={<SlotDialog siteId={site.id} />} />}>
-      {slots.length === 0 ? <EmptyState icon="calendarRange" title="No slots yet" hint="Add the school mornings and afternoons, the programme lanes, the float and anything else that needs teachers." /> : null}
+      {slots.length === 0 ? <EmptyState icon="calendarRange" title="No slots yet" hint="Add the school mornings and afternoons, the programme lanes, the lifeguard positions, the float and anything else that needs people." /> : null}
       {DAYS.map((label, i) => {
         const day = slots.filter((s) => s.weekday === i + 1);
         if (!day.length) return null;

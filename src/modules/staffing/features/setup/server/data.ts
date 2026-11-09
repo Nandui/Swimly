@@ -6,7 +6,7 @@ import { qualificationTypesOf } from "@/lib/qualifications";
 import { examDeadline, type ContractKind } from "@/modules/staffing/shared/rules";
 import { pickSite, settingsFor, staffingSites } from "@/modules/staffing/shared/server";
 
-/** Set up: a site's weekly slots, who is a teacher, the exam seasons and the settings. */
+/** Set up: a site's weekly slots, who is on the rota, the exam seasons and the settings. */
 
 export async function slotsPage(siteId: string | undefined) {
   const { who, sites, site } = await pickSite(siteId);
@@ -15,7 +15,7 @@ export async function slotsPage(siteId: string | undefined) {
   return { who, sites, site, slots: slots.map((s) => ({ id: s.id, weekday: s.weekday, role: s.role, name: s.name, startMin: s.startMin, endMin: s.endMin, needed: s.needed, hardToFill: s.hardToFill, archived: !!s.archivedAt })) };
 }
 
-export async function teachersPage(siteId: string | undefined) {
+export async function staffPage(siteId: string | undefined) {
   const { who, sites, site } = await pickSite(siteId);
   if (!site) return null;
   const staff = await activeStaffAgesAtSite(who.orgId, site.id);
@@ -26,7 +26,7 @@ export async function teachersPage(siteId: string | undefined) {
     who, sites, site,
     staff: staff.map((s) => {
       const row = kept.get(s.id);
-      return { id: s.id, name: s.name, teacher: !!row, college: row?.college ?? "none", contract: (row?.contract ?? "swim_teacher") as ContractKind, wantsMore: row?.wantsMore ?? false, contractMinutes: contracts.get(s.id) ?? null };
+      return { id: s.id, name: s.name, onRota: !!row, college: row?.college ?? "none", contract: (row?.contract ?? "swim_teacher") as ContractKind, wantsMore: row?.wantsMore ?? false, contractMinutes: contracts.get(s.id) ?? null };
     }),
   };
 }

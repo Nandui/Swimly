@@ -9,11 +9,11 @@ import { formatTime } from "@/lib/format";
 import { mayFor } from "@/lib/policy/session";
 import { prisma } from "@/lib/prisma";
 import {
-  COLLEGES, CONTRACT_KINDS, SEASON_LABEL, SEASON_NAMES, settingsSchema, SLOT_ROLES, toMinutes, WEEKDAY_SHORT, COLLEGE_META,
+  COLLEGES, CONTRACT_KIND_META, CONTRACT_KINDS, SEASON_LABEL, SEASON_NAMES, settingsSchema, SLOT_ROLES, toMinutes, WEEKDAY_SHORT, COLLEGE_META,
 } from "@/modules/staffing/shared/rules";
 import { atSite, dateOf, refresh, settingsFor } from "@/modules/staffing/shared/server";
 
-/** Set up writes: slots (Supervise at the site), teachers (Supervise at a site they work at), exam
+/** Set up writes: slots (Supervise at the site), staff (Supervise at a site they work at), exam
  *  seasons and settings (Manage; the organisation's). Slots are archived, never deleted. */
 
 const time = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use a time like 10:15.");
@@ -70,13 +70,13 @@ export async function archiveSlot(id: string, archived: boolean): Promise<Action
   return ok();
 }
 
-const teacherSchema = z.object({ college: z.enum(COLLEGES), contract: z.enum(CONTRACT_KINDS), wantsMore: z.boolean().default(false) });
+const staffSchema = z.object({ college: z.enum(COLLEGES), contract: z.enum(CONTRACT_KINDS), wantsMore: z.boolean().default(false) });
 
-/** Make someone a teacher in Staffing, change their college or contract, or stop (keep = false). */
-export async function saveTeacher(siteId: string, userId: string, keep: boolean, input: z.input<typeof teacherSchema>): Promise<ActionResult> {
+/** Put someone on the Staffing rota, change their college or contract, or stop (keep = false). */
+export async function saveStaff(siteId: string, userId: string, keep: boolean, input: z.input<typeof staffSchema>): Promise<ActionResult> {
   const where = await atSite(siteId, "staffing.supervise");
   if (!where.ok) return fail(where.error);
-  const parsed = teacherSchema.safeParse(input);
+  const parsed = staffSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const person = await staffStatus(userId);
   if (!person || person.orgId !== where.actor.orgId) return fail("That person is not in your organisation.");
@@ -87,14 +87,14 @@ export async function saveTeacher(siteId: string, userId: string, keep: boolean,
     if (!keep) {
       if (!before) return;
       await tx.staffingTeacher.delete({ where: { userId } });
-      await logAudit({ actorId: where.actor.id, actorName: where.actor.name, action: "delete", entity: "StaffingTeacher", entityId: before.id, clubId: null, summary: `${person.name} is no longer a teacher in Staffing` }, tx);
+      await logAudit({ actorId: where.actor.id, actorName: where.actor.name, action: "delete", entity: "StaffingTeacher", entityId: before.id, clubId: null, summary: `${person.name} is no longer on the Staffing rota` }, tx);
       return;
     }
     const row = await tx.staffingTeacher.upsert({ where: { userId }, create: { ...parsed.data, userId, orgId: where.actor.orgId }, update: parsed.data });
     await logAudit({ actorId: where.actor.id, actorName: where.actor.name, action: before ? "update" : "create", entity: "StaffingTeacher", entityId: row.id, clubId: null,
-      summary: `${before ? "Changed" : "Added"} ${person.name} as a teacher in Staffing: ${COLLEGE_META[parsed.data.college].label}, ${parsed.data.contract === "swim_teacher_lifeguard" ? "swim teacher and lifeguard" : "swim teacher"}${parsed.data.wantsMore ? ", wants extra hours" : ""}` }, tx);
+      summary: `${before ? `Changed ${person.name} on` : `Added ${person.name} to`} the Staffing rota: ${COLLEGE_META[parsed.data.college].label}, ${CONTRACT_KIND_META[parsed.data.contract].label.toLowerCase()} contract${parsed.data.wantsMore ? ", wants extra hours" : ""}` }, tx);
   });
-  refresh("/staffing/teachers");
+  refresh("/staffing/staff");
   return ok();
 }
 

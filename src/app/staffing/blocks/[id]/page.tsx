@@ -12,7 +12,7 @@ import { ACK_STATE_META, AckButtons, AssignPlace, BLOCK_STATE_META, blockDays, b
 export const metadata: Metadata = { title: "Rota block" };
 
 /** One rota block (spec section 9, Rota builder): a day at a time, each place with who is on it and
- *  their warnings; per-teacher hours against contract; then acknowledgements once published. */
+ *  their warnings; per-person hours against contract; then acknowledgements once published. */
 export default async function StaffingBlockPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ day?: string }> }) {
   const data = await blockPage((await params).id);
   const { block, site, shifts, people, others, hours, acks, settings } = data;
@@ -32,7 +32,7 @@ export default async function StaffingBlockPage({ params, searchParams }: { para
       eyebrow={<Tag meta={BLOCK_STATE_META[block.state]} />}
       description={published ? `Published at ${site.name} by ${block.publishedByName ?? "someone"}, ${formatDateTime(block.publishedAt!)}.` : `${site.name}. Publish by ${formatDateTime(block.deadline)}. ${filled} of ${shifts.length} places filled.`}
       actions={!published && site.supervise ? <><DeleteBlockDialog blockId={block.id} /><PublishDialog blockId={block.id} short={short.map((h) => ({ name: h.name, short: h.short }))} /></> : undefined} />}>
-      {block.shortAccepted ? <Notice tone="info" title="Published with teachers below contracted hours" description={block.shortAccepted} /> : null}
+      {block.shortAccepted ? <Notice tone="info" title="Published with people below contracted hours" description={block.shortAccepted} /> : null}
       {published && !site.manage ? <Notice tone="info" title="This block is published" description="Its shifts change by a swap or an absence (Requests), or by a centre manager with a reason." /> : null}
 
       <SegmentedLinks label="Day of the block" items={days.map((d) => ({ href: `/staffing/blocks/${block.id}?day=${d}`, label: formatShortDay(d), count: empty(d) || undefined, current: d === open }))} />
@@ -67,7 +67,7 @@ export default async function StaffingBlockPage({ params, searchParams }: { para
 
       <RecordSection id="stf-hours-h" title="Hours against contract" aside={short.length ? <p>{short.length} below</p> : null}
         note="Each week of the block. Contracted hours are kept on the person's Staff page.">
-        {hours.length === 0 ? <div className="pc-list"><EmptyState compact icon="users" title="No teachers yet" hint="Add teachers under Set up." /></div> : (
+        {hours.length === 0 ? <div className="pc-list"><EmptyState compact icon="users" title="Nobody on the rota yet" hint="Add swim teachers and lifeguards under Set up, Staff." /></div> : (
           <ul className="pc-list">
             {hours.map((h) => (
               <li key={h.userId} className="pc-row">

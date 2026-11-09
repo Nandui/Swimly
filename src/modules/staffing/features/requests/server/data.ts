@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import {
   examDeadline, fitWarnings, isShortNoticeClash, semesterOf, shiftStart, swapAllowed, swapExpired, swapOverdue, type ExamOutcome, type SwapStatus,
 } from "@/modules/staffing/shared/rules";
-import { dateOf, pickSite, settingsFor, shiftsOf, strikeCounts, teachers } from "@/modules/staffing/shared/server";
+import { dateOf, pickSite, settingsFor, shiftsOf, strikeCounts, poolStaff } from "@/modules/staffing/shared/server";
 
 /** Requests at a site: swaps (open, to approve, decided) and exam absences, with the exam seasons
  *  and their deadlines, and the published shifts ahead a request can be made for. */
@@ -22,7 +22,7 @@ export async function requestsPage(siteId: string | undefined) {
       where: { siteId: site.id, date: { gte: dateOf(day), lte: dateOf(addDaysIso(day, 56)) }, userId: { not: null }, status: "scheduled", block: { publishedAt: { not: null } } },
       orderBy: [{ date: "asc" }, { startMin: "asc" }],
     }),
-    teachers(who.orgId),
+    poolStaff(who.orgId),
   ]);
   const names = new Map(people.map((p) => [p.id, p.name]));
   const name = (id: string | null) => (id ? names.get(id) ?? "Someone" : null);

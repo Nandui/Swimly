@@ -6,7 +6,7 @@ import { addDaysIso, today } from "@/lib/format";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import { mondayOf } from "@/modules/staffing/shared/rules";
 
-/** Staffing end to end on an isolated database: the migration's exam seasons, slots and teachers,
+/** Staffing end to end on an isolated database: the migration's exam seasons, slots and staff,
  *  building and publishing a block, acknowledgements, a swap and its no-show, call-offs, exam
  *  absences and the strike ladder, each at the person's own sites, and the audit trail. Invented
  *  people only. */
@@ -73,7 +73,7 @@ test("the migration gives each organisation the 2026-27 exam seasons", async () 
   assert.deepEqual(seasons.map((s) => `${s.college} ${s.name}`), ["ucc winter", "mtu winter", "ucc summer", "mtu summer"]);
 });
 
-test("slots and teachers are kept by Supervise at the site; strikes count from a date the manager sets", async () => {
+test("slots and staff are kept by Supervise at the site; strikes count from a date the manager sets", async () => {
   as("sup", [], [at(churchfield, ["staffing.supervise"])]);
   assert.equal((await setup.saveSlot(bishopstown, null, { name: "School morning", weekdays: [2], role: "teaching", start: "10:15", end: "13:15", needed: 2 })).ok, false, "not their site");
   as("sup", ["staffing.manage"], [at(bishopstown, ["staffing.manage"])]);
@@ -81,7 +81,7 @@ test("slots and teachers are kept by Supervise at the site; strikes count from a
   assert.equal((await setup.saveSlot(bishopstown, null, { name: "Lifeguard", weekdays: [2], role: "lifeguard", start: "14:00", end: "16:00", needed: 1 })).ok, true);
   assert.equal((await setup.saveSlot(bishopstown, null, { name: "Backwards", weekdays: [2], role: "teaching", start: "14:00", end: "13:00", needed: 1 })).ok, false);
   for (const [id, college] of [["ann", "ucc"], ["bea", "mtu"], ["cal", "ucc"]] as const) {
-    assert.equal((await setup.saveTeacher(bishopstown, id, true, { college, contract: "swim_teacher", wantsMore: id === "cal" })).ok, true);
+    assert.equal((await setup.saveStaff(bishopstown, id, true, { college, contract: "swim_teacher", wantsMore: id === "cal" })).ok, true);
   }
   assert.equal((await setup.saveSettings({ strikeCountingFrom: "2026-01-01", restHours: 10 })).ok, false, "rest can't go below the law");
   assert.equal((await setup.saveSettings({ strikeCountingFrom: "2026-01-01" })).ok, true);
@@ -102,7 +102,7 @@ test("a block takes its places from the slots; a swim-teacher contract on a life
   assert.ok(page.hours.find((h) => h.userId === "ann")!.short > 0);
 });
 
-test("publishing needs below-contract teachers accepted with a note, then tracks acknowledgements", async () => {
+test("publishing needs below-contract staff accepted with a note, then tracks acknowledgements", async () => {
   as("sup", [], [at(bishopstown, ["staffing.supervise"])]);
   const teaching = await fixture.prisma.staffingShift.findMany({ where: { blockId, role: "teaching" }, orderBy: [{ date: "asc" }, { createdAt: "asc" }] });
   for (const [i, s] of teaching.entries()) await blocks.assignShift(s.id, { userId: i % 2 ? "bea" : "ann" });

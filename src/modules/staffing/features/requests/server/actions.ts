@@ -8,10 +8,10 @@ import { prisma } from "@/lib/prisma";
 import {
   EXAM_OUTCOME_META, examApproved, examOutcome, examStrike, fitWarnings, seasonFor, shiftStart, swapAllowed, toMinutes,
 } from "@/modules/staffing/shared/rules";
-import { atSite, recordStrike, refresh, settingsFor, shiftsOf, teachers } from "@/modules/staffing/shared/server";
+import { atSite, recordStrike, refresh, settingsFor, shiftsOf, poolStaff } from "@/modules/staffing/shared/server";
 
 /** Swaps and exam absences (BR-5, BR-7), recorded in Work by the pool deck supervisor for the
- *  teacher who asked (Turnfin Me will let teachers ask themselves). A swap leaves the shift with
+ *  person who asked (Turnfin Me will let staff ask themselves). A swap leaves the shift with
  *  the requester until approved; on approval the taker owns it, strikes included. */
 
 const at = (date: string) => new Date(`${date}T00:00:00Z`);
@@ -27,10 +27,10 @@ export async function requestSwap(shiftId: string, input: { takerId: string | nu
   const start = shiftStart({ date: toDateOnlyString(shift.date), startMin: shift.startMin });
   if (!swapAllowed(start, new Date(), settings)) return fail(`That shift starts in under ${settings.swapNoticeHours} hours. Swaps close then: they phone the duty manager on the centre landline.`);
   if (await prisma.staffingSwap.findFirst({ where: { shiftId, status: { in: ["open", "accepted"] } }, select: { id: true } })) return fail("There is already a swap asked for on this shift.");
-  const people = await teachers(where.actor.orgId);
+  const people = await poolStaff(where.actor.orgId);
   const requester = people.find((p) => p.id === shift.userId)?.name ?? "Someone";
   const taker = input.takerId ? people.find((p) => p.id === input.takerId) : null;
-  if (input.takerId && !taker) return fail("That person is not a teacher in Staffing.");
+  if (input.takerId && !taker) return fail("That person is not on the Staffing rota.");
   if (taker?.id === shift.userId) return fail("They can't swap with themselves.");
   const status = taker && input.takerAgreed ? "accepted" : "open";
   await prisma.$transaction(async (tx) => {
@@ -44,7 +44,7 @@ export async function requestSwap(shiftId: string, input: { takerId: string | nu
   return ok();
 }
 
-/** A teacher takes an open swap. */
+/** Someone takes an open swap. */
 export async function acceptSwap(swapId: string, takerId: string): Promise<ActionResult> {
   const swap = await prisma.staffingSwap.findUnique({ where: { id: swapId }, include: { shift: true } });
   if (!swap) return fail("That swap no longer exists.");
@@ -53,8 +53,8 @@ export async function acceptSwap(swapId: string, takerId: string): Promise<Actio
   if (swap.status !== "open") return fail("That swap is no longer looking for cover.");
   const settings = await settingsFor(where.actor.orgId);
   if (!swapAllowed(shiftStart({ date: toDateOnlyString(swap.shift.date), startMin: swap.shift.startMin }), new Date(), settings)) return fail("That swap has expired: the shift stays with the person rostered.");
-  const taker = (await teachers(where.actor.orgId)).find((p) => p.id === takerId);
-  if (!taker) return fail("That person is not a teacher in Staffing.");
+  const taker = (await poolStaff(where.actor.orgId)).find((p) => p.id === takerId);
+  if (!taker) return fail("That person is not on the Staffing rota.");
   if (takerId === swap.requesterId) return fail("They can't swap with themselves.");
   await prisma.$transaction(async (tx) => {
     await tx.staffingSwap.update({ where: { id: swapId }, data: { takerId, status: "accepted", acceptedAt: new Date() } });
@@ -80,9 +80,9 @@ export async function decideSwap(swapId: string, input: z.input<typeof decideSch
   if (swap.status !== "accepted" && !(swap.status === "open" && !approve)) return fail(swap.status === "open" ? "Nobody has taken this swap yet." : "This swap is already decided.");
   if (!approve && reason.length < 3) return fail("Say why the swap is refused.");
   if (approve && swap.shift.userId !== swap.requesterId) return fail("The shift has changed hands since this swap was asked for.");
-  const people = await teachers(where.actor.orgId);
+  const people = await poolStaff(where.actor.orgId);
   const taker = swap.takerId ? people.find((p) => p.id === swap.takerId) : null;
-  if (approve && !taker) return fail("The person taking it is no longer a teacher in Staffing.");
+  if (approve && !taker) return fail("The person taking it is no longer on the Staffing rota.");
   const date = toDateOnlyString(swap.shift.date);
   const settings = await settingsFor(where.actor.orgId);
   const warnings = taker ? fitWarnings({ id: swap.shiftId, date, startMin: swap.shift.startMin, endMin: swap.shift.endMin, role: swap.shift.role },
@@ -126,9 +126,9 @@ export async function recordExamAbsence(shiftId: string, input: z.input<typeof e
   const requestedAt = dublinInstant(d.requestedOn, toMinutes(d.requestedTime));
   if (!requestedAt) return fail("That time does not exist on that day.");
   if (requestedAt.getTime() > Date.now() + 60_000) return fail("The request can't be in the future.");
-  const person = (await teachers(where.actor.orgId)).find((p) => p.id === shift.userId);
-  if (!person) return fail("They are not a teacher in Staffing.");
-  if (person.college === "none") return fail(`${person.name} has no college on record. Set it under Set up, Teachers.`);
+  const person = (await poolStaff(where.actor.orgId)).find((p) => p.id === shift.userId);
+  if (!person) return fail("They are not on the Staffing rota.");
+  if (person.college === "none") return fail(`${person.name} has no college on record. Set it under Set up, Staff.`);
   const date = toDateOnlyString(shift.date);
   const seasons = (await prisma.staffingExamSeason.findMany({ where: { orgId: where.actor.orgId, college: person.college } }))
     .map((x) => ({ ...x, startsOn: toDateOnlyString(x.startsOn), endsOn: toDateOnlyString(x.endsOn) }));

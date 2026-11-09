@@ -6,7 +6,7 @@ import { logAudit } from "@/lib/audit";
 import { dublinInstant, formatShortDay, formatTime, toDateOnlyString } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { attendanceStrike, CALL_METHODS, isAway, judgeCallOff, STRIKE_CAUSE_META, toMinutes } from "@/modules/staffing/shared/rules";
-import { atSite, recordStrike, refresh, settingsFor, teachers } from "@/modules/staffing/shared/server";
+import { atSite, recordStrike, refresh, settingsFor, poolStaff } from "@/modules/staffing/shared/server";
 
 /** The duty manager's writes (BR-6, BR-10): log a call-off, a late arrival or a no-show against a
  *  published shift, and put someone on in an away person's place. Whether a call-off was on time
@@ -44,7 +44,7 @@ export async function logAttendance(shiftId: string, input: AttendanceInput): Pr
   if (isAway(shift.status)) return fail("Something is already logged for this shift.");
   const settings = await settingsFor(at.actor.orgId);
   const day = toDateOnlyString(shift.date);
-  const person = (await teachers(at.actor.orgId)).find((p) => p.id === shift.userId)?.name ?? "Someone";
+  const person = (await poolStaff(at.actor.orgId)).find((p) => p.id === shift.userId)?.name ?? "Someone";
   let onTime: boolean | null = null;
   let calledAt: Date | null = null;
   if (d.kind === "call_off") {
@@ -80,8 +80,8 @@ export async function coverShift(shiftId: string, userId: string): Promise<Actio
   if (!shift) return fail("That shift no longer exists.");
   const at = await atSite(shift.siteId, "staffing.run");
   if (!at.ok) return fail(at.error);
-  const person = (await teachers(at.actor.orgId)).find((p) => p.id === userId);
-  if (!person) return fail("That person is not a teacher in Staffing.");
+  const person = (await poolStaff(at.actor.orgId)).find((p) => p.id === userId);
+  if (!person) return fail("That person is not on the Staffing rota.");
   if (shift.userId === userId) return fail(`${person.name} is already on this shift.`);
   if (!shift.userId) {
     await prisma.$transaction(async (tx) => {

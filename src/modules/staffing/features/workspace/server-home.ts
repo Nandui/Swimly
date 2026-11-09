@@ -32,7 +32,7 @@ export async function staffingHomeItems(viewer: HomeViewer): Promise<HomeItem[]>
     if (swaps) items.push({ label: "Swaps to decide", hint: "Within 24 hours", href: "/staffing/requests", count: swaps, attention: true });
     const acks = await prisma.staffingAck.findMany({ where: { acknowledgedAt: null, phonedAt: null, block: { ...inSites(sup), publishedAt: { not: null } } }, select: { block: { select: { publishedAt: true } } } });
     const phone = acks.filter((a) => ackState(a.block.publishedAt!, null, now, settings) === "phone").length;
-    if (phone) items.push({ label: "Teachers to phone about the rota", hint: "Not acknowledged in 48 hours", href: "/staffing", count: phone, attention: true });
+    if (phone) items.push({ label: "Staff to phone about the rota", hint: "Not acknowledged in 48 hours", href: "/staffing", count: phone, attention: true });
     const second = await prisma.staffingStrike.count({ where: { ...inSites(sup), handledAt: null, withdrawnAt: null, stage: "informal_2" } });
     if (second) items.push({ label: "Second strike conversations", hint: "Signed note", href: "/staffing/strikes", count: second, attention: true });
   }
