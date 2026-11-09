@@ -31,8 +31,6 @@ Its levels are in [docs/apps.md](../../../docs/apps.md).
 - `RotaDayNote`, `RotaWeekShare`, `RotaLog` — the day's note, shared weeks and the change log.
 - The retired rota's tables (`RotaShift`, `RotaShiftSegment`, `RotaShiftChange`, `RotaActivity`, `RotaBooking`, `RotaBookingNeed`, `RotaPerson`, `RotaDepartment`, `RotaImport`, `RotaChange`) are no longer read; they stay until one migration removes them.
 
-Rota still reads the platform's people, sites, departments, activity types and qualifications with Prisma; it should read them through `src/lib/directory.ts` and the other platform functions (a known gap, [docs/architecture.md](../../../docs/architecture.md#known-gaps)).
-
 ## Events
 - Emits: none.
 - Listens to: none.

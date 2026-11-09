@@ -24,10 +24,10 @@ Step 1 comes first, because nothing else is safe without it. Step 5 can start as
 
 ## 1. Safety net
 
-Today a merge to `main` deploys and migrates production, and nothing checks it automatically.
+A merge to `main` deploys and migrates production.
 
-- A GitHub check on every pull request: typecheck, lint (boundary and UI rules), tests and a build against the development database.
-- `main` protected: it accepts only pull requests that pass the check.
+- **Built:** a GitHub check on every pull request (`.github/workflows/check.yml`): typecheck, lint (boundary and UI rules), tests and a build that reaches no database.
+- `main` protected: it accepts only pull requests that pass the check. Still open, and the owner's to switch on.
 - A test floor for every app: its rules, every front-door function and every event it emits or handles. Every app meets it.
 - `npm run lint` runs on Windows as well as Linux.
 

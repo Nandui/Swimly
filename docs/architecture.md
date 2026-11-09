@@ -261,12 +261,11 @@ Prisma 7: the client is generated into `src/generated/prisma`, uses the `@prisma
 ## Known gaps
 
 What the code does not yet match in this document, each owned by a roadmap step:
-- No check runs on pull requests and `main` is unprotected (step 1).
+- `main` is unprotected: the pull request check runs (`.github/workflows/check.yml`) but nothing yet refuses a merge that fails it (step 1).
 - Several apps have thin tests (step 1).
 - One role per person; combined roles exist (step 3).
 - Three email queues and six file checks (step 4).
 - One event in the whole app (step 6).
 - Legacy columns and tables still in the schema, unread or soon unread: `StaffRole.screens`, `StaffRole.home`, `User.role`, `RoleAssignment`. Dropping them is an owner decision ([roadmap.md](roadmap.md)).
 - `AuditLog.programmeId` is swim-school-shaped; `module` is what the activity log filters by.
-- Rota still reads the platform's people, sites, departments, activity types and qualifications with Prisma instead of `src/lib/directory.ts` and the other platform functions.
 - The 2.0 tokens (`src/app/theme/glass.css`, copied into `apps/me` and `apps/academy`), the glass material and the frame (`src/app/theme/kit.css`, `src/components/ui-kit/glass.tsx`, with Turnfin Me's own copies) are built, and every screen inside the frame is on them (26 October 2026); the pre-2.0 `poolside.css` is retired, apart from the Academy site's own copy (on hold). Docs keeps its Docs-era file names (`docs-shell.css`, `docs-integration.css`), on the 2.0 tokens.
