@@ -18,6 +18,31 @@ export function recipientsProblem(list: string[]): string | null {
   return wrong ? `"${wrong}" is not an email address. Use addresses like name@example.com.` : null;
 }
 
+/** Each site's own list, as stored: site id to "a@x, b@y". */
+export const bySite = (value: unknown): Record<string, string> =>
+  value && typeof value === "object" && !Array.isArray(value)
+    ? Object.fromEntries(Object.entries(value).filter((e): e is [string, string] => typeof e[1] === "string"))
+    : {};
+
+/** Who gets which reports: an address on the every-site list gets them all; an
+ *  address on a site's list gets the reports on people whose main site it is.
+ *  Each address once, with every report it should see. */
+export function reportsByAddress<R extends { mainSiteId: string | null }>(reports: R[], every: string[], perSite: Record<string, string>): Map<string, R[]> {
+  const out = new Map<string, R[]>();
+  const everyone = new Set(every);
+  for (const address of everyone) out.set(address, [...reports]);
+  for (const [siteId, typed] of Object.entries(perSite)) {
+    const theirs = reports.filter((r) => r.mainSiteId === siteId);
+    if (!theirs.length) continue;
+    for (const address of recipientList(typed)) {
+      if (everyone.has(address)) continue;
+      out.set(address, [...(out.get(address) ?? []), ...theirs]);
+    }
+  }
+  for (const [address, list] of out) if (!list.length) out.delete(address);
+  return out;
+}
+
 export type DigestReport = {
   id: string; subjectUserId: string; subject: string; kind: string; body: string;
   occurredAt: Date; site: string; authorName: string;

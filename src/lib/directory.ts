@@ -37,6 +37,14 @@ export async function staffByIds(ids: readonly (string | null | undefined)[], db
   return new Map(rows.map((row) => [row.id, row]));
 }
 
+/** Each person's main site (`primaryClubId`), or null when they have none. */
+export async function mainSitesByIds(ids: readonly (string | null | undefined)[], db?: Db): Promise<Map<string, string | null>> {
+  const wanted = unique(ids);
+  if (wanted.length === 0) return new Map();
+  const rows = await (await client(db)).user.findMany({ where: { id: { in: wanted } }, select: { id: true, primaryClubId: true } });
+  return new Map(rows.map((row) => [row.id, row.primaryClubId]));
+}
+
 export async function sitesByIds(ids: readonly (string | null | undefined)[], db?: Db): Promise<Map<string, SiteStatusRef>> {
   const wanted = unique(ids);
   if (wanted.length === 0) return new Map();

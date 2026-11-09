@@ -4,6 +4,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.10.0 · 9 November 2026 · HR reports email, by site
+
+- **Each site can have its own list for the daily HR reports email.** In HR, open **Set up › Settings**: as well as **Every site**, there is a list for each site's staff.
+- **A site's list gets the reports on people whose main site it is**, so a centre manager hears about their own staff only. The **Every site** list still gets everything.
+- **Each address gets one email**, with only the reports meant for it, and nothing on a day with none. Someone with no main site set is only in the **Every site** email.
+
 ## 3.9.1 · 9 November 2026 · Choose who keeps the HR reports email
 
 - **The daily HR reports email can now be looked after by chosen roles, not only superadmins.** A superadmin ticks **Keeps the daily reports email** under HR when editing a role. People in that role then see **Set up › Settings** in HR, where they choose who gets the email.
