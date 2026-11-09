@@ -13,7 +13,7 @@ import { toast } from "@/components/ui/toast";
 import { today } from "@/lib/format";
 import { addToSession, cancelSession, closeRegister, markPlace, removeFromSession, saveSession } from "@/modules/training/features/sessions/server/actions";
 import { THEME } from "@/modules/training/shared/components/dialog-kit";
-import { PeopleChooser, type ChoosablePerson } from "@/modules/training/shared/components/people-chooser";
+import { PeopleChooser, type ChoosablePerson } from "@/components/ui/people-chooser";
 
 /** Classroom and poolside sessions (e-learning phase 5): planning one,
  *  booking people on, taking the register and closing it. */

@@ -13,7 +13,7 @@ import { toast } from "@/components/ui/toast";
 import { today } from "@/lib/format";
 import { logHours, removeHours, removeHourTarget, saveHourTarget } from "@/modules/qualifications/features/hours/server/actions";
 import { THEME } from "@/modules/qualifications/shared/constants";
-import { PeopleChooser, type ChoosablePerson } from "@/modules/qualifications/shared/components/people-chooser";
+import { PeopleChooser, type ChoosablePerson } from "@/components/ui/people-chooser";
 
 /** In-service hours: logging hours for people, taking a wrong entry off, and what each
  *  qualification needs. */
