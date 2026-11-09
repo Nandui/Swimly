@@ -1,5 +1,8 @@
 import { Ban, CircleCheck, CircleDashed, CircleX, Clock3, FlaskConical, MailCheck, MailX, Power, PowerOff } from "lucide-react";
+import { centsOf, euro } from "@/lib/format";
 import type { StatusMeta } from "@/lib/status";
+
+export { centsOf, euro };
 
 /** Purchasing's rules, pure so they are tested on their own. */
 
@@ -39,16 +42,6 @@ const MONTH_IN_IRELAND = new Intl.DateTimeFormat("en-IE", { timeZone: "Europe/Du
 export function poNumber(siteCode: string, approvedAt: Date, n: number) {
   const month = MONTHS[Number(MONTH_IN_IRELAND.format(approvedAt)) - 1];
   return `${siteCode.toUpperCase()}-${month}-${String(n).padStart(4, "0")}`;
-}
-
-/** Euro amounts as staff read them: "€1,234.50". */
-const EURO = new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" });
-export const euro = (cents: number) => EURO.format(cents / 100);
-/** "12.50" or "12" typed by a person, as cents; null when it is not an amount. */
-export function centsOf(value: string): number | null {
-  const clean = value.trim().replace(/[€,\s]/g, "");
-  if (!/^\d+(\.\d{1,2})?$/.test(clean)) return null;
-  return Math.round(Number(clean) * 100);
 }
 
 export function orderTotal(lines: readonly { unitPriceCents: number; quantity: number }[]) {

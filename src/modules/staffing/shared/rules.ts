@@ -3,7 +3,7 @@ import {
   MessageCircle, PhoneCall, PhoneOff, Repeat, Scale, ShieldAlert, Timer, UserRound, UserX, Users, XCircle,
 } from "lucide-react";
 import { z } from "zod";
-import { addDaysIso, dublinInstant, parseDateOnly, toDateOnlyString } from "@/lib/format";
+import { addDaysIso, ageOn, dublinInstant, parseDateOnly, toDateOnlyString } from "@/lib/format";
 import type { StatusMeta } from "@/lib/status";
 
 /** Staffing's rules, pure and client-safe (docs/staffing.md): the settings and their defaults, the
@@ -384,11 +384,6 @@ export type Fit = { kind: FitKind; text: string };
 const minutesOf = (x: FitShift) => x.endMin - x.startMin;
 const holds = (p: FitPerson, typeId: string | null, day: string) => !typeId || p.quals.some((q) => q.typeId === typeId && (!q.expiresOn || q.expiresOn >= day));
 const absoluteMin = (date: string, min: number) => parseDateOnly(date).getTime() / 60_000 + min;
-
-function ageOn(dateOfBirth: string, day: string) {
-  const [by, bm, bd] = dateOfBirth.split("-").map(Number), [y, m, d] = day.split("-").map(Number);
-  return y - by - (m < bm || (m === bm && d < bd) ? 1 : 0);
-}
 
 /** Everything worth knowing before putting a person on a shift. Nothing here refuses. */
 export function fitWarnings(shift: FitShift, p: FitPerson, s: StaffingSettings): Fit[] {

@@ -1,4 +1,4 @@
-import { addDaysIso } from "@/lib/format";
+import { addDaysIso, ageOn } from "@/lib/format";
 import type { MarkRow, PlaceRow } from "@/modules/activities/features/analytics/server/insight-queries";
 import { weeksBetween } from "@/modules/activities/features/analytics/server/period";
 
@@ -99,12 +99,6 @@ const AGE_BANDS = [
   { label: "Under 4", max: 4 }, { label: "4 to 5", max: 6 }, { label: "6 to 7", max: 8 }, { label: "8 to 9", max: 10 },
   { label: "10 to 12", max: 13 }, { label: "13 to 17", max: 18 }, { label: "18 and over", max: Infinity },
 ] as const;
-
-export function ageOn(dateOfBirth: string, date: string) {
-  const [y, m, d] = dateOfBirth.split("-").map(Number);
-  const [ty, tm, td] = date.split("-").map(Number);
-  return ty - y - (tm < m || (tm === m && td < d) ? 1 : 0);
-}
 
 /** Current swimmers by age band, each once. */
 export function ageProfile(places: PlaceRow[], date: string) {

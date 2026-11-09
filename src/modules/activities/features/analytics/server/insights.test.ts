@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { LessonRow, MarkRow, PlaceRow } from "@/modules/activities/features/analytics/server/insight-queries";
 import { customPeriod, periodFrom, reportPeriod, reportQuery, rangeKey } from "@/modules/activities/features/analytics/server/period";
-import { activeAt, ageOn, attendanceRisk, movements, retention, swimmerSpans } from "@/modules/activities/features/analytics/server/swimmers";
+import { activeAt, attendanceRisk, movements, retention, swimmerSpans } from "@/modules/activities/features/analytics/server/swimmers";
 import { readLessons, teacherStats } from "@/modules/activities/features/analytics/server/teaching";
 
 let n = 0;
@@ -78,8 +78,6 @@ test("swimmers are counted once however many places they hold", () => {
   const now = activeAt(places, "2026-03-01");
   assert.equal(now.swimmers.size, 1);
   assert.equal(now.places, 2);
-  assert.equal(ageOn("2018-10-17", "2026-10-16"), 7);
-  assert.equal(ageOn("2018-10-16", "2026-10-16"), 8);
 });
 
 const mark = (status: MarkRow["status"], date: string): MarkRow => ({ studentId: "s", courseId: "c", date, status, teacherId: "t", teacherName: "T" });
