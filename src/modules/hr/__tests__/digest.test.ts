@@ -6,7 +6,7 @@ import { digestEmail, kindTally, recipientList, recipientsProblem } from "@/modu
 
 /** The daily email of yesterday's reports: only yesterday's (Dublin) reports,
  *  never withdrawn ones or file notes, by person, once a day, nothing on an
- *  empty day, and only a superadmin sets who gets it. Synthetic people only. */
+ *  empty day, and only holders of the HR tick set who gets it. Synthetic people only. */
 const ORG = "org_test";
 let hr: Awaited<ReturnType<typeof createHrTestDatabase>>;
 let send: typeof import("../features/digest/server/send");
@@ -46,10 +46,10 @@ test("addresses are cleaned and checked", () => {
   assert.equal(kindTally([{ kind: "conduct" }, { kind: "good_work" }, { kind: "conduct" }]), "1 good work, 2 conduct");
 });
 
-test("only a superadmin changes the list", async () => {
-  await assert.rejects(settings.saveDigestRecipients({ id: "u_mgr", name: "M", orgId: ORG, superadmin: false }, "me@example.ie"), /superadmin/);
-  await assert.rejects(settings.saveDigestRecipients({ id: "u_boss", name: "Boss", orgId: ORG, superadmin: true }, "bad"), /not an email/);
-  await settings.saveDigestRecipients({ id: "u_boss", name: "Boss", orgId: ORG, superadmin: true }, "me@example.ie\nhr@example.ie");
+test("only holders of the daily reports email tick change the list", async () => {
+  await assert.rejects(settings.saveDigestRecipients({ id: "u_mgr", name: "M", orgId: ORG, digest: false }, "me@example.ie"), /Keeps the daily reports email/);
+  await assert.rejects(settings.saveDigestRecipients({ id: "u_boss", name: "Boss", orgId: ORG, digest: true }, "bad"), /not an email/);
+  await settings.saveDigestRecipients({ id: "u_boss", name: "Boss", orgId: ORG, digest: true }, "me@example.ie\nhr@example.ie");
   assert.deepEqual((await settings.digestSetting(ORG)).to, ["me@example.ie", "hr@example.ie"]);
 });
 

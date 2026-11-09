@@ -25,5 +25,8 @@ export const hrModule: ModuleManifest = {
       },
       { key: "all", label: "Everyone", help: "Staff files, notes, reports and reviews for everyone.", permissions: [] },
     ],
+    extras: [
+      { key: "digest", label: "Keeps the daily reports email", help: "Choose who gets every HR report from the day before, in full, by email each morning (HR > Set up > Settings).", from: "sites", permissions: ["hr.digest.manage"] },
+    ],
   },
 };

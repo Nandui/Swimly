@@ -6,7 +6,8 @@ import { recipientList, recipientsProblem } from "@/modules/hr/features/digest/r
 
 /** Who gets the daily email of yesterday's reports: a list of addresses the
  *  owner keeps in HR > Settings (owner decision, 9 November 2026), not a role.
- *  Only a superadmin sees or changes it, since the email carries every report in full. */
+ *  Only holders of `hr.digest.manage` (a tick on chosen roles, and superadmins)
+ *  see or change it, since the email carries every report in full. */
 
 export class DigestSettingError extends Error {}
 
@@ -18,8 +19,8 @@ export async function digestSetting(orgId: string) {
   return { to: recipientList(row?.to ?? ""), changedByName: row?.changedByName ?? null, changedAt: row?.updatedAt ?? null, last: last ?? null };
 }
 
-export async function saveDigestRecipients(who: Pick<HrActor, "id" | "name" | "orgId" | "superadmin">, typed: string) {
-  if (!who.superadmin || !who.orgId) throw new DigestSettingError("Only a superadmin changes who gets the daily HR email.");
+export async function saveDigestRecipients(who: Pick<HrActor, "id" | "name" | "orgId" | "digest">, typed: string) {
+  if (!who.digest || !who.orgId) throw new DigestSettingError("Changing who gets the daily HR email needs the HR tick \"Keeps the daily reports email\".");
   const list = recipientList(typed);
   const problem = recipientsProblem(list);
   if (problem) throw new DigestSettingError(problem);

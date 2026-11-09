@@ -179,6 +179,7 @@ Restricted staff files: details, employment, notes (each of a kind: General, Con
 | Report | file reports on the people they manage; no files, not even their own reports |
 | Their sites | files, notes, reports and reviews for everyone who works at their sites |
 | Everyone | the same for everyone |
+| *Extra:* Keeps the daily reports email | choose who gets every report from the day before, in full, each morning (HR > Set up > Settings) |
 
 Only a superadmin gives HR. Administrators never inherit it. Every read and write needs a fresh sign-in, except filing a report, which reads nothing. Reads are logged (`access_events`), and the subject export is superadmin-only. A report is never shared with the person; the Their sites holders at the site it was filed from see it under Needs you until one of them opens that person's file.
 
