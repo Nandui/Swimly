@@ -29,7 +29,8 @@ test("a colleague reaches the browser with their name and access, and their cont
   const shown = toWorkspaceMember(colleague, member(['docs.read']));
   assert.equal('email' in shown, false);
   assert.equal('role' in shown, false);
-  assert.deepEqual(shown.access, { read: true, write: true, approve: false });
+  assert.deepEqual(shown.access, { read: true, write: true, approve: false, approveOwn: false });
+  assert.equal(toWorkspaceMember(member(['docs.approve.own']), member(['docs.read'])).access.approveOwn, true);
   assert.equal(toWorkspaceMember(colleague, member(['docs.read', 'docs.manage'])).email, 'jamie@example.invalid');
   assert.equal('permissions' in shown, false, 'never the raw permissions');
 });

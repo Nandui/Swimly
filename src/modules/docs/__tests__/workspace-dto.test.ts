@@ -25,10 +25,11 @@ test('colleagues reach the browser without permissions, screens or contact detai
 
 test('pickers still get resolved access for each colleague', async () => {
   const byId = Object.fromEntries((await colleagues('riley')).map((m) => [m.id, m.access]));
-  assert.deepEqual(byId.jamie, { read: true, write: true, approve: false });
-  assert.deepEqual(byId.sam, { read: true, write: true, approve: true });
-  assert.deepEqual(byId.riley, { read: true, write: false, approve: false });
-  assert.deepEqual(byId.outsider, { read: false, write: false, approve: false });
+  assert.deepEqual(byId.jamie, { read: true, write: true, approve: false, approveOwn: false });
+  assert.deepEqual(byId.sam, { read: true, write: true, approve: true, approveOwn: false });
+  assert.deepEqual(byId.riley, { read: true, write: false, approve: false, approveOwn: false });
+  assert.deepEqual(byId.outsider, { read: false, write: false, approve: false, approveOwn: false });
+  assert.equal(byId.alex.approveOwn, true, 'administrators may approve their own');
 });
 
 test('Docs administrators also get email and role to manage staff groups, never raw grants', async () => {

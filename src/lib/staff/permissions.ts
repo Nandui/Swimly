@@ -20,6 +20,7 @@ export const PERMISSIONS = [
   { key: "docs.read", group: "Docs", label: "Read published documents", description: "Open Docs, read published versions and acknowledge assigned reading." },
   { key: "docs.write", group: "Docs", label: "Author documents", description: "Create and edit drafts and submit them for independent approval. Includes reading." },
   { key: "docs.approve", group: "Docs", label: "Approve documents", description: "Review and publish documents written by other staff. Includes authoring; never permits self-approval." },
+  { key: "docs.approve.own", group: "Docs", label: "Approve own documents", description: "Also approve and publish documents they wrote or edited themselves (owner decision, 9 November 2026: operations managers). Includes approving." },
   { key: "docs.manage", group: "Docs", label: "Administer Docs", description: "Manage document teams, templates, risk matrix, reading assignments and reading reports. Includes authoring, but approval requires its separate permission." },
   {
     key: "swimschool.desk",
@@ -525,6 +526,7 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "coinage.process": ["coinage.read"],
   "docs.write": ["docs.read"],
   "docs.approve": ["docs.read", "docs.write"],
+  "docs.approve.own": ["docs.approve", "docs.read", "docs.write"],
   "docs.manage": ["docs.read", "docs.write"],
   "attendance.markAny": ["attendance.mark", "attendance.cover"],
   "progression.complete": ["progression.assess"],

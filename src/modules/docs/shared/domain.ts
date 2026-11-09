@@ -9,6 +9,7 @@ import {
   canRead,
   canManage,
   canApprove,
+  canApproveOwn,
   SELF_LOCK_MESSAGE,
   type Member,
   type DocumentContent,
@@ -331,7 +332,7 @@ export class DocumentService {
       if (d.revision !== expected || d.status === 'in_review')
         fail('The draft changed. Refresh before submitting.', 409);
       const reviewer = await actor(tx, approverId);
-      if (!canApprove(reviewer) || d.contributors.includes(approverId))
+      if (!canApprove(reviewer) || (d.contributors.includes(approverId) && !canApproveOwn(reviewer)))
         fail('Choose an independent approver who has not edited this revision.');
       if (!summary.trim() || summary.length > 2000)
         fail('Add a change summary (up to 2,000 characters).');
@@ -394,7 +395,7 @@ export class DocumentService {
         [submissionId, id],
       );
       if (!s) fail('Submission not found.', 404);
-      if (s.approverId !== who || s.contributors.includes(who))
+      if (s.approverId !== who || (s.contributors.includes(who) && !canApproveOwn(m)))
         fail('Only the assigned independent approver can decide this revision.', 403);
       const prior = await one<{ decision: string }>(
         tx,

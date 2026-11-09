@@ -152,7 +152,7 @@ export type WorkspaceMember = {
   active: boolean;
   facilityIds: string[];
   teamIds: string[];
-  access: { read: boolean; write: boolean; approve: boolean };
+  access: { read: boolean; write: boolean; approve: boolean; approveOwn: boolean };
   email?: string;
   role?: Role;
 };
@@ -173,6 +173,8 @@ export type Workspace = {
 export const canRead = (m: Member) => m.active && expandPermissions(m.permissions).has('docs.read');
 export const canWrite = (m: Member) => canRead(m) && expandPermissions(m.permissions).has('docs.write');
 export const canApprove = (m: Member) => canRead(m) && expandPermissions(m.permissions).has('docs.approve');
+/** May approve a revision they contributed to (the "Can approve their own documents" tick). */
+export const canApproveOwn = (m: Member) => canApprove(m) && expandPermissions(m.permissions).has('docs.approve.own');
 export const canManage = (m: Member) => canRead(m) && expandPermissions(m.permissions).has('docs.manage');
 /** The only way a colleague reaches the browser. `viewer` decides whether contact details are included. */
 export function toWorkspaceMember(m: Member, viewer: Member): WorkspaceMember {
@@ -182,7 +184,7 @@ export function toWorkspaceMember(m: Member, viewer: Member): WorkspaceMember {
     active: m.active,
     facilityIds: m.facilityIds,
     teamIds: m.teamIds,
-    access: { read: canRead(m), write: canWrite(m), approve: canApprove(m) },
+    access: { read: canRead(m), write: canWrite(m), approve: canApprove(m), approveOwn: canApproveOwn(m) },
     ...(canManage(viewer) ? { email: m.email, role: m.role } : {}),
   };
 }

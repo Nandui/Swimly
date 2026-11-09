@@ -21,6 +21,7 @@ export const docsModule: ModuleManifest = {
     ],
     extras: [
       { key: "approve", label: "Can approve documents", help: "Approve and publish colleagues' documents, never their own.", from: "read", permissions: ["docs.approve"] },
+      { key: "approve-own", label: "Can approve their own documents", help: "Also approve and publish documents they wrote or edited themselves, such as an operations manager.", from: "write", permissions: ["docs.approve.own"] },
     ],
   },
 };
