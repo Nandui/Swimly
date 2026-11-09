@@ -17,6 +17,7 @@ function fixture() {
         startMinutes: 900, durationMinutes: 30, location: "Learner pool", instructorId: "scheduled",
         level: { id: "level", name: "Turtles", programme: { id: "programme", name: "Swim skills" } } };
     } },
+    classMerge: { findUnique: async () => null, findMany: async () => [], count: async () => 0 },
     classCancellation: {
       findUnique: async () => { assert.ok(locked); return stored; },
       findFirst: async ({ where }: { where: { id: string; courseId: string; clubId: string } }) => stored && stored.id === where.id && stored.courseId === where.courseId && stored.clubId === where.clubId ? stored : null,

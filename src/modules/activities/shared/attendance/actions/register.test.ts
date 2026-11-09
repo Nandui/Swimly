@@ -16,6 +16,8 @@ function fixture() {
   const updated: string[] = [];
   let archived = false;
   let cancelled = false;
+  let merge: "in" | "away" | null = null;
+  const writes: string[] = [];
   let beforeTransaction: (() => void) | undefined;
   let queue = Promise.resolve();
   let locked = false;
@@ -23,6 +25,11 @@ function fixture() {
   let desk = true;
   const readGuard = () => assert.equal(locked, true, "register reads follow the course lock");
   const tx = {
+    classMerge: {
+      findUnique: async () => { readGuard(); return merge === "away" ? { intoClassName: "Host class", intoStartMinutes: 960 } : null; },
+      findMany: async () => { readGuard(); return merge === "in" ? [{ fromCourseId: "home", fromClassName: "Home class", swimmers: [{ studentId: "guest" }] }] : []; },
+      count: async () => 0,
+    },
     classCancellation: { findUnique: async () => { readGuard(); return cancelled ? { id: "cancellation" } : null; } },
     $queryRaw: async () => { locked = true; return []; },
     course: {
@@ -37,10 +44,11 @@ function fixture() {
     // No teacher planned on the rota for that date: the class's instructor teaches it.
     classPlannedTeacher: { findMany: async () => [] },
     enrolment: { findMany: async () => { readGuard(); return [{ studentId: "one" }, { studentId: "two" }]; } },
-    student: { findMany: async () => ["one", "two"].map(id => ({ id, firstName: "Test", lastName: id })) },
+    student: { findMany: async ({ where }: { where: { id: { in: string[] } } }) => where.id.in.map(id => ({ id, firstName: "Test", lastName: id })) },
     attendanceRecord: {
-      findMany: async () => { readGuard(); return structuredClone(rows); }, upsert: async ({ where, update, create }: { where: { courseId_date_studentId: { studentId: string } }; update: object; create: (typeof rows)[number] }) => {
+      findMany: async () => { readGuard(); return structuredClone(rows); }, upsert: async ({ where, update, create }: { where: { courseId_date_studentId: { courseId: string; studentId: string } }; update: object; create: (typeof rows)[number] }) => {
         const id = where.courseId_date_studentId.studentId;
+        writes.push(`${where.courseId_date_studentId.courseId}:${id}`);
         updated.push(id);
         const existing = rows.find(row => row.studentId === id);
         if (existing) Object.assign(existing, update);
@@ -81,7 +89,7 @@ function fixture() {
     "next/cache": { revalidatePath: () => { } },
   });
   const input = () => ({ courseId: "class", date: "2026-08-31", marks: rows.map(row => ({ studentId: row.studentId, status: row.status, note: row.note ?? undefined })), classNote: note, revision: savedRegister("class", "2026-08-31", rows, note).revision });
-  return { markRegister, input, rows, audits, updated, cancel: () => { cancelled = true; }, setClaim: (id: string | null | undefined) => { owner = id; }, deckOnly: () => { desk = false; }, beforeTransaction: (fn: () => void) => { beforeTransaction = fn; }, archive: () => { archived = true; }, note: () => note, failAudit: () => { failAudit = true; }, failStudentAudit: () => { failStudentAudit = true; } };
+  return { markRegister, input, rows, audits, updated, cancel: () => { cancelled = true; }, merge: (kind: "in" | "away") => { merge = kind; }, writes, setClaim: (id: string | null | undefined) => { owner = id; }, deckOnly: () => { desk = false; }, beforeTransaction: (fn: () => void) => { beforeTransaction = fn; }, archive: () => { archived = true; }, note: () => note, failAudit: () => { failAudit = true; }, failStudentAudit: () => { failStudentAudit = true; } };
 }
 
 test("cancellation blocks a stale desk register and preserves all prior marks", async () => {
@@ -206,4 +214,28 @@ test("each changed swimmer gets structured evidence; failure rolls back records 
   const failed = fixture(), change = failed.input(); change.marks[0].note = "Note only"; failed.failStudentAudit();
   await assert.rejects(failed.markRegister(change), /Audit unavailable/);
   assert.equal(failed.rows[0].note,null); assert.equal(failed.audits.length,0);
+});
+
+test("a class merged away cannot be marked itself; its swimmers are marked on the class they joined", async () => {
+  const f = fixture(), before = structuredClone(f.rows), input = f.input();
+  input.marks[0].status = "ABSENT";
+  f.merge("away");
+  const result = await f.markRegister(input);
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.match(result.error, /merged into Host class at 16:00/);
+  assert.deepEqual(f.rows, before); assert.equal(f.audits.length, 0);
+});
+
+test("merged-in swimmers are marked on the host register and saved against their own class", async () => {
+  const f = fixture();
+  f.merge("in");
+  const input = f.input();
+  input.marks.push({ studentId: "guest", status: "PRESENT", note: undefined });
+  const result = await f.markRegister(input);
+  assert.equal(result.ok, true);
+  assert.deepEqual(f.writes, ["home:guest"]);
+  const evidence = f.audits.find(a => a.entity === "Student" && a.entityId === "guest");
+  assert.equal(evidence?.details?.courseId, "home");
+  assert.equal(evidence?.details?.mergedInto, "class");
+  assert.match(evidence?.summary ?? "", /attendance for Home class .*, taught in Test class.*\(merged\)/);
 });

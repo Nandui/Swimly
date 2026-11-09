@@ -349,6 +349,7 @@ function RegisterFormState({
             line.dateOfBirth ? `Age ${ageLabel(line.dateOfBirth)}` : null,
             line.levelName || null,
             line.offRoster ? "No longer in this class" : null,
+            line.mergedFrom ? `Joined from ${line.mergedFrom}` : null,
           ].filter(Boolean).join(" · ");
           const body = (
             <>

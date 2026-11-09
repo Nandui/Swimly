@@ -10,6 +10,7 @@ import { claimState } from "@/modules/activities/shared/attendance/claim-state";
 import { isIsoDate, mostRecentOccurrence } from "@/modules/activities/shared/attendance/dates";
 import { parseDateOnly, today, weekdayOf } from "@/lib/format";
 import { getCancellation } from "@/modules/activities/shared/cancellations/data";
+import { getMergeAway } from "@/modules/activities/shared/merges/data";
 
 /** A deck class page's tab title: the class name its H1 shows, behind the same
  *  guard. getCourse is cached per request, so the page reuses this read. */
@@ -44,6 +45,8 @@ export async function getInstructorClass(id: string, requestedDate: unknown) {
   if (course.archivedAt) return { ...base, state: "archived" as const };
   const cancellation = await getCancellation(id, iso);
   if (cancellation) return { ...base, state: "cancelled" as const, cancellation };
+  const merge = await getMergeAway(id, iso);
+  if (merge) return { ...base, state: "merged" as const, merge };
   const claim = await getClassCover(id, iso);
   const state = claimState(claim, session.user.id);
   if (state === "available") return { ...base, state, claim };

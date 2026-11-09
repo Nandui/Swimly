@@ -8,7 +8,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/shadcn/collapsible";
 import {
-  ATTENDANCE_RECORD_META, CANCELLATION_META, claimState, courseName, type CourseRow, formatSessionTime, formatTime, getCancellationsForDay, getCoursesOnDate, getCoversForDay, getRegisterStateForDay, getTodayAssessments, InstructorAssessments, instructorClassHref, instructorHomeHref, RefreshClasses, StartClass, weekdayOfIso,
+  ATTENDANCE_RECORD_META, CANCELLATION_META, claimState, courseName, type CourseRow, formatSessionTime, formatTime, getCancellationsForDay, getCoursesOnDate, getMergesForDay, MERGE_META, getCoversForDay, getRegisterStateForDay, getTodayAssessments, InstructorAssessments, instructorClassHref, instructorHomeHref, RefreshClasses, StartClass, weekdayOfIso,
 } from "@/modules/activities/features/instructor";
 import { formatDate, formatDay, minutesNow, parseDateOnly, plural, today } from "@/lib/format";
 import { HOME_SESSION_META } from "@/lib/home-meta";
@@ -33,19 +33,22 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
     day = weekdayOfIso(iso),
     now = minutesNow(),
     me = session.user.id;
-  const [courses, marked, covers, cancellations, assessments] = await Promise.all([
+  const [courses, marked, covers, cancellations, assessments, merges] = await Promise.all([
     getCoursesOnDate(iso),
     getRegisterStateForDay(day, iso),
     getCoversForDay(iso),
     getCancellationsForDay(iso),
     getTodayAssessments(iso),
+    getMergesForDay(iso),
   ]);
+  // A class merged into another today is taught there, so it leaves the lists like a cancelled one.
+  const off = (id: string) => cancellations.has(id) || merges.away.has(id);
   const mine = courses.filter(
       (c) => c.instructorId === me || covers.get(c.id)?.coverById === me,
     ),
     shown = tab === "all" ? courses : mine;
   const sections = groupClasses(
-    shown.filter(course => !cancellations.has(course.id)),
+    shown.filter(course => !off(course.id)),
     group,
     now,
   );
@@ -62,15 +65,17 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
       name = courseName(course),
       own = course.instructorId === me;
     const openHref = instructorClassHref(course.id, { tab, group, date: iso });
-    const cancelled = cancellations.get(course.id);
+    const cancelled = cancellations.get(course.id), mergedAway = merges.away.get(course.id), joined = merges.into.get(course.id) ?? [];
     // The class's own phase (a level section can hold several): on now and done say so beside the
     // name, a cancelled class says it in the trail; what comes next needs no tag.
-    const block = cancelled ? "off" : ({ earlier: "done", now: "now", later: "next" } as const)[phaseOf(course, now)];
+    const block = cancelled || mergedAway ? "off" : ({ earlier: "done", now: "now", later: "next" } as const)[phaseOf(course, now)];
     const blockMeta = HOME_SESSION_META[block];
     const caption = [
       course.location || "Pool",
       plural(course._count.enrolments, "swimmer"),
       cancelled?.reason,
+      mergedAway ? `Joined ${mergedAway.intoClassName} at ${formatTime(mergedAway.intoStartMinutes)}` : null,
+      joined.length ? `+${plural(joined.reduce((n, j) => n + j._count.swimmers, 0), "swimmer")} from ${joined.map(j => `${j.fromClassName} ${formatTime(j.fromStartMinutes)}`).join(", ")}` : null,
       tab === "all" && state === "available" && !own ? course.instructor?.name ?? "No instructor assigned" : null,
       state === "shared" ? `Started by ${claim?.coverByName}` : null,
     ].filter(Boolean).join(" · ");
@@ -85,7 +90,7 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
           <p className="pc-row-hint break-words">{caption}</p>
         </div>
         <div className="pc-row-trail">
-          {cancelled ? <Tag meta={CANCELLATION_META.cancelled} /> : state !== "available" ? (
+          {cancelled ? <Tag meta={CANCELLATION_META.cancelled} /> : mergedAway ? <Tag meta={MERGE_META.away} /> : state !== "available" ? (
             <>
               <Tag meta={marked.has(course.id) ? ATTENDANCE_RECORD_META.taken : ATTENDANCE_RECORD_META.notTaken} />
               <Button asChild variant="outline">
@@ -126,7 +131,7 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
       </section>
     );
   }
-  const cancelledToday = shown.filter((course) => cancellations.has(course.id));
+  const cancelledToday = shown.filter((course) => off(course.id));
   const earlierCount = earlier.reduce((n, s) => n + s.courses.length, 0);
   return (
     <PageShell spacing="roomy" header={<PageHeader title="Pool deck" description={formatDay(iso)} actions={<RefreshClasses />} />}>
@@ -160,7 +165,7 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
             {listed.map(section)}
             {cancelledToday.length ? (
               <section aria-labelledby="classes-cancelled" className="flex flex-col">
-                <div className="pc-section-head"><h2 id="classes-cancelled">Cancelled today</h2><p>{cancelledToday.length}</p></div>
+                <div className="pc-section-head"><h2 id="classes-cancelled">{cancelledToday.some(c => cancellations.has(c.id)) ? cancelledToday.some(c => merges.away.has(c.id)) ? "Cancelled or merged today" : "Cancelled today" : "Merged today"}</h2><p>{cancelledToday.length}</p></div>
                 <ul className="pc-list">{cancelledToday.map(row)}</ul>
               </section>
             ) : null}

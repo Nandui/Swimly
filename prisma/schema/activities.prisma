@@ -196,6 +196,7 @@ model Student {
   completions          LevelCompletion[]
   assessmentBookings   AssessmentBooking[]
   cancelledSessions    CancelledClassSwimmer[]
+  mergedSessions       ClassMergeSwimmer[]
   parentAccess         ParentChildAccess[]
   parentAccessRequests ParentAccessRequest[]
   parentChangeRequests ParentChangeRequest[]
@@ -244,6 +245,8 @@ model Course {
   covers          ClassCover[]
   assessedResults CompetencyResult[]
   cancellations   ClassCancellation[]
+  mergesAway      ClassMerge[]          @relation("ClassMergeFrom")
+  mergesIn        ClassMerge[]          @relation("ClassMergeInto")
   plannedTeachers ClassPlannedTeacher[]
 
   @@index([clubId, dayOfWeek, startMinutes])
@@ -462,6 +465,56 @@ model CancelledClassSwimmer {
   student      Student           @relation(fields: [studentId], references: [id], onDelete: Restrict)
 
   @@unique([cancellationId, studentId])
+  @@index([studentId])
+}
+
+/// One day's class joined into another class at the same level, because there were not
+/// enough instructors or something happened on the day (owner request, 9 November 2026).
+/// The weekly timetable and enrolments stay as they are. On that date the swimmers listed
+/// here are on the host class's register, and their attendance is still recorded against
+/// their own class (`fromCourseId`), so it counts towards it. Undoing a merge deletes the
+/// row, with an audit entry, and is allowed only before any of them has been marked.
+/// Names and times are frozen, like a cancellation's, so the list reads true later.
+model ClassMerge {
+  id               String   @id @default(cuid())
+  clubId           String
+  date             DateTime @db.Date
+  fromCourseId     String
+  intoCourseId     String
+  levelName        String
+  programmeName    String
+  fromClassName    String
+  fromStartMinutes Int
+  intoClassName    String
+  intoStartMinutes Int
+  intoLocation     String?
+  /// Who was to teach the host class when they were merged.
+  instructorName   String?
+  reason           String
+  mergedById       String
+  mergedByName     String
+  mergedAt         DateTime @default(now())
+
+  fromCourse Course              @relation("ClassMergeFrom", fields: [fromCourseId], references: [id], onDelete: Restrict)
+  intoCourse Course              @relation("ClassMergeInto", fields: [intoCourseId], references: [id], onDelete: Restrict)
+  swimmers   ClassMergeSwimmer[]
+
+  @@unique([fromCourseId, date])
+  @@index([intoCourseId, date])
+  @@index([clubId, date])
+}
+
+model ClassMergeSwimmer {
+  id           String  @id @default(cuid())
+  mergeId      String
+  studentId    String
+  swimmerName  String
+  memberNumber String?
+
+  merge   ClassMerge @relation(fields: [mergeId], references: [id], onDelete: Cascade)
+  student Student    @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@unique([mergeId, studentId])
   @@index([studentId])
 }
 

@@ -16,6 +16,7 @@ function fixture() {
   const curriculum = sharedCurriculumRows();
   const student = { id: "swimmer", firstName: "Synthetic", lastName: "Swimmer", clubId: "other" };
   const tx = {
+    classMerge: { findUnique: async () => null, findMany: async () => [], count: async () => 0 },
     classCancellation: { findUnique: async () => cancelled ? { id: "cancellation" } : null },
     $queryRaw: async (strings: TemplateStringsArray) => { if(strings.join('').includes('"Course"'))courseLocked=true; locked = true; return []; },
     course: { findUnique: async () => { assert.ok(courseLocked); return { levelId: courseLevel, archivedAt: null, dayOfWeek: 'MONDAY' }; } },

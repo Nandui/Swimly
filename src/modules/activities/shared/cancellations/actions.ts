@@ -49,6 +49,12 @@ export async function cancelClassSession(input: z.infer<typeof cancelSchema>): P
     if (weekdayOf(date) !== raw.dayOfWeek) return fail("This class does not run today. Refresh the list.");
     const existing = await tx.classCancellation.findUnique({ where: { courseId_date: { courseId, date } } });
     if (existing) return ok(); // Lost-response retries cannot duplicate billing work.
+    const [mergedAway, mergedIn] = await Promise.all([
+      tx.classMerge.findUnique({ where: { fromCourseId_date: { fromCourseId: courseId, date } }, select: { id: true } }),
+      tx.classMerge.count({ where: { intoCourseId: courseId, date } }),
+    ]);
+    if (mergedAway) return fail("This class was merged into another today. Undo the merge before cancelling it.");
+    if (mergedIn) return fail("Other classes have joined this one today. Undo those merges before cancelling it.");
     const course = sharedCourse(raw, await readSharedCurriculum(tx));
     const [enrolments, cover, attendanceRecorded] = await Promise.all([
       tx.enrolment.findMany({ where: { courseId, status: "ACTIVE", startedOn: { lte: date },
