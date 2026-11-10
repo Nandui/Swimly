@@ -4,6 +4,10 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.11.1 · 10 November 2026 · Pick the days it doesn't run from a calendar
+
+- **In Plan (test), "Days it doesn't run" is now a calendar.** When you add or change what's on, the calendar shows every day it runs between its first and last day. Press a day to take it off, and press it again to put it back. The days you took off are listed underneath.
+
 ## 3.11.0 · 9 November 2026 · Approve your own documents in Docs
 
 - **Some roles can now approve their own documents in Docs.** When editing a role, tick **Can approve their own documents** under Docs (the role needs at least **Write**). It is meant for operations managers.
