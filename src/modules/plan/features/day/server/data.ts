@@ -7,8 +7,9 @@ import { candidatesFor, fillsOf, gapsOf, laneClashes, needsOf, occurrencesOn, ta
 import { mayManage, planSites, plannableDepartments, viewableSite } from "@/modules/plan/shared/scope";
 
 /** The Day: what's on with its gaps, then each person's shift with their duties, breaks, tasks and
- *  warnings, for the whole site (every department), the Manage level's "run today" view too. */
-export async function planDay(params: { site?: string; date?: string }) {
+ *  warnings, for the whole site (every department), the Manage level's "run today" view too. One
+ *  department can be picked to narrow the people shown; what's on stays the whole site's. */
+export async function planDay(params: { site?: string; date?: string; dept?: string }) {
   const who = await requirePlanActor();
   const sites = await planSites(who);
   const siteId = sites.find((s) => s.id === params.site)?.id ?? sites[0]?.id;
@@ -50,6 +51,8 @@ export async function planDay(params: { site?: string; date?: string }) {
     .map((c) => ({ id: `class:${c.ref}`, shiftId: s.id, dutyId: classDuty?.id ?? "", sessionId: null, start: c.start, end: c.end }))] }));
   return {
     who, sites, site, date, today: today(), now: minutesNow(), manage, departments, duties, areas, people, offs,
+    /** The department picked to narrow the people shown, or null for every department. */
+    department: departments.all.find((d) => d.id === params.dept) ?? null,
     occurrences, needs, classDutyId: classDuty?.id ?? null,
     clashes: laneClashes(occurrences, new Map(areas.map((a) => [a.id, a.lanes]))),
     shifts: shifts.map((s) => ({

@@ -6,8 +6,8 @@ import { DayView, planDay } from "@/modules/plan/features/day";
 
 export const metadata: Metadata = { title: "Day" };
 
-/** The Day at one site, every department together: plan it ahead, or run it today. */
-export default async function PlanDayPage({ searchParams }: { searchParams: Promise<{ site?: string; date?: string }> }) {
+/** The Day at one site, every department together or one picked: plan it ahead, or run it today. */
+export default async function PlanDayPage({ searchParams }: { searchParams: Promise<{ site?: string; date?: string; dept?: string }> }) {
   const data = await planDay(await searchParams);
   return (
     <PageShell spacing="roomy" header={<PageHeader title="Day"

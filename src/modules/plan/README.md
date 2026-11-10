@@ -6,7 +6,7 @@ Its levels are in [docs/apps.md](../../../docs/apps.md#plan-test); why it exists
 
 ## Features
 - `week` — the Week (`/plan`): one department's people across Monday to Sunday, adding and changing shifts, copying last week (`copyLastWeek`).
-- `day` — the Day (`/plan/day`): what's on area by area (one row per area, one block per session or class) with what still needs someone and who could fill it, each person's shift with duties, breaks, classes and free time, the warnings and the day's timed tasks; putting people on and taking them off (`saveBlock`, `removeBlock`), choosing class teachers (`planClassTeacher`), and changing one day of a session (`setSessionDay`).
+- `day` — the Day (`/plan/day`): what's on area by area (one row per area, one block per session or class) with what still needs someone and who could fill it, each person's shift with duties, breaks, classes and free time, the warnings and the day's timed tasks, for every department or the one picked (`?dept=`, which narrows the people only); putting people on and taking them off (`saveBlock`, `removeBlock`), choosing class teachers (`planClassTeacher`), and changing one day of a session (`setSessionDay`).
 - `off` — Off (`/plan/off`): marking people off and taking it back (`markOff`, `withdrawOff`).
 - `setup` — Setup (`/plan/setup`): duties with their tasks, and what's on with the duties it needs (`saveDuty`, `saveSession` and their retire actions). It shows the site's areas from Admin › Areas, where they are kept.
 - `workspace` — the frame, its one page list (`pages.ts`, for the page bar and the starter page `/plan/overview`), the site picker and the access check (`src/app/plan/layout.tsx`).
