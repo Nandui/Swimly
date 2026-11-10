@@ -18,6 +18,7 @@ import "@/modules/staffing/module";
 import "@/modules/cctv/module";
 import "@/modules/site-monitoring/module";
 import "@/modules/maintenance/module";
+import "@/modules/risk/module";
 import "@/lib/people/home";
 import "@/modules/hr/module";
 

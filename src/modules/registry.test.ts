@@ -16,9 +16,9 @@ test("the front of house holds Classes (the swim school, with short courses) and
   assert.equal(front.label, "Front of house");
 });
 
-test("the managers group holds the CCTV log, site monitoring, maintenance and analytics", () => {
+test("the managers group holds the CCTV log, site monitoring, maintenance, risk assessments and analytics", () => {
   const managers = groupModules(allModules()).find((g) => g.key === "managers")!;
-  assert.deepEqual(managers.modules.map((m) => m.id), ["cctv", "site-monitoring", "maintenance", "analytics"]);
+  assert.deepEqual(managers.modules.map((m) => m.id), ["cctv", "site-monitoring", "maintenance", "risk", "analytics"]);
   assert.equal(managers.label, "Managers");
 });
 

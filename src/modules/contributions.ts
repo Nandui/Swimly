@@ -716,3 +716,37 @@ export async function qualificationRenewals(): Promise<QualificationRenewals | n
   const source = qualificationRenewalSource;
   return source && (await appOn(source.app)) ? source : null;
 }
+
+// ---------------------------------------------------------------------------
+// The hazards a site has assessed
+// ---------------------------------------------------------------------------
+
+/** One hazard from a site's risk assessments, as another app may show it: its reference and
+ *  words, the assessment it is on, its risk with the controls in place, and where it opens. */
+export type AssessedHazard = { id: string; reference: string; hazard: string; assessment: string; score: number; href: string };
+/** An app that keeps assessed hazards (Risk assessments) lets others point at them: an incident
+ *  names the hazards it involved. The asker has already checked its own permission at the site;
+ *  the answer is never personal, and the owning app checks again when the link is opened. */
+export type HazardRegister = {
+  /** The app it belongs to (its manifest id). */
+  app: string;
+  /** Up to 20 hazards on assessments in use at the site that match `q` (all of them, for ""),
+   *  those assessed for `area` first. */
+  search(siteId: string, q: string, area?: string): Promise<AssessedHazard[]>;
+  /** These hazards, where they are still on an assessment in use at the site. */
+  byIds(siteId: string, ids: readonly string[]): Promise<AssessedHazard[]>;
+};
+
+let hazardRegisterSource: HazardRegister | null = null;
+
+export function registerHazardRegister(source: HazardRegister) {
+  hazardRegisterSource = source;
+}
+
+/** The assessed hazards at a site, or null when no app keeps them or it is switched off there:
+ *  the caller then offers none. */
+export async function hazardRegister(siteId: string): Promise<HazardRegister | null> {
+  await modulesLoaded();
+  const source = hazardRegisterSource;
+  return source && (await appOn(source.app, { siteId })) ? source : null;
+}

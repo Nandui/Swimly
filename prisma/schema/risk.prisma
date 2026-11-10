@@ -1,0 +1,165 @@
+// Risk assessments (owner, 10 November 2026, D29): the hazards of each area, job and activity at
+// a site, what controls them, who signed that off and when it is next reviewed. Brought over from
+// the standalone Risk Management app (Nandui/project-risk). Sites, areas, positions, activities,
+// departments and people are the platform's and read only through its functions, so the tables
+// keep plain ids and names. Assessments are archived, never deleted; a removed hazard is hidden.
+
+/// One assessment: what it is about, at one site, and where it has got to.
+model RiskAssessment {
+  id                  String              @id
+  orgId               String
+  siteId              String
+  /// "RA-BT-0001": the site's code and the next number at that site. An imported one keeps its own.
+  reference           String
+  /// area | job | activity (`RISK_SUBJECT_META`)
+  subjectType         String              @default("area")
+  /// What it is about, by name: a site's area (follows renames, registerAreaRename), a position
+  /// or an activity.
+  subject             String
+  /// What the assessment covers, in the assessor's words.
+  scope               String              @default("")
+  departmentId        String?
+  /// Who answers for it and signs it off.
+  ownerId             String?
+  ownerName           String              @default("")
+  /// Who carried it out, as typed: often not a Turnfin user.
+  assessorName        String              @default("")
+  /// draft | review | approved | archived (`RISK_STATUS_META`)
+  status              String              @default("draft")
+  /// The status it held when archived, so restoring puts it back.
+  archivedFrom        String              @default("")
+  /// YYYY-MM-DD, as every day below.
+  assessedOn          String
+  reviewMonths        Int                 @default(12)
+  /// The risk every hazard is aimed at, with its controls in place: a plain score, 1 to 25.
+  targetScore         Int                 @default(8)
+  lastReviewedOn      String?
+  nextReviewOn        String
+  ownerApprovedById   String?
+  ownerApprovedByName String?
+  ownerApprovedAt     DateTime?
+  /// The executive sign-off: a second person, never the owner. It never changes the status.
+  execApprovedById    String?
+  execApprovedByName  String?
+  execApprovedAt      DateTime?
+  /// The highest hazard number given out; a number is never used twice.
+  hazardSeq           Int                 @default(0)
+  version             Int                 @default(1)
+  createdById         String
+  createdByName       String
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  hazards             RiskHazard[]
+  reviews             RiskReview[]
+  reviewRequests      RiskReviewRequest[]
+  events              RiskEvent[]
+
+  @@unique([orgId, reference])
+  @@index([orgId, siteId, status])
+  @@index([siteId, subjectType, subject])
+  @@index([status, nextReviewOn])
+  @@index([ownerId, status])
+  @@map("risk_assessments")
+}
+
+/// One hazard on an assessment: the risk before controls, the controls, and the risk that is left.
+model RiskHazard {
+  id                 String         @id
+  orgId              String
+  assessmentId       String
+  /// Its number on the assessment, for "RA-BT-0001-HZ-003". Never reused.
+  seq                Int
+  sortOrder          Int            @default(0)
+  hazard             String
+  riskFactor         String         @default("")
+  /// Who could be harmed: names from `PERSONS_AT_RISK`, comma separated.
+  personsAtRisk      String         @default("")
+  consequence        String         @default("")
+  /// Before any controls, 1 to 5 each.
+  inherentLikelihood Int            @default(1)
+  inherentSeverity   Int            @default(1)
+  controls           String         @default("")
+  /// With the controls in place, 1 to 5 each, and their product, kept for the high-risk list.
+  likelihood         Int            @default(1)
+  severity           Int            @default(1)
+  score              Int            @default(1)
+  /// What still has to be done to reach the assessment's target.
+  furtherAction      String         @default("")
+  /// physical | chemical | biological | ergonomic | psychosocial | environmental
+  category           String         @default("physical")
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  removedAt          DateTime?
+  assessment         RiskAssessment @relation(fields: [assessmentId], references: [id], onDelete: Restrict)
+
+  @@unique([assessmentId, seq])
+  @@index([orgId, score])
+  @@map("risk_hazards")
+}
+
+/// A review that was carried out: what it found and when the next one is due.
+model RiskReview {
+  id             String         @id @default(cuid())
+  orgId          String
+  assessmentId   String
+  reviewedOn     String
+  /// Null for a review brought over from the old app, which kept only the name.
+  reviewerId     String?
+  reviewerName   String
+  /// no_changes | updated | escalated (`RISK_REVIEW_OUTCOMES`)
+  outcome        String         @default("no_changes")
+  notes          String         @default("")
+  nextReviewOn   String
+  createdAt      DateTime       @default(now())
+  assessment     RiskAssessment @relation(fields: [assessmentId], references: [id], onDelete: Restrict)
+
+  @@index([assessmentId, reviewedOn])
+  @@map("risk_reviews")
+}
+
+/// Someone asking for an assessment to be looked at again, and how that was answered.
+model RiskReviewRequest {
+  id                String         @id @default(cuid())
+  orgId             String
+  siteId            String
+  assessmentId      String
+  /// The hazard it is about, when it is about one.
+  hazardId          String?
+  requestedById     String?
+  requestedByName   String
+  notes             String
+  /// open | actioned | dismissed (`RISK_REQUEST_META`)
+  status            String         @default("open")
+  resolvedAt        DateTime?
+  resolvedById      String?
+  resolvedByName    String?
+  resolutionNote    String         @default("")
+  /// The incident that raised it (Incidents' id and number), when one did. Ids only: never joined.
+  sourceIncidentId  String?
+  sourceIncidentRef String         @default("")
+  createdAt         DateTime       @default(now())
+  assessment        RiskAssessment @relation(fields: [assessmentId], references: [id], onDelete: Restrict)
+
+  @@index([orgId, siteId, status])
+  @@index([assessmentId, status])
+  @@index([sourceIncidentId])
+  @@map("risk_review_requests")
+}
+
+/// An assessment's history: one row per step. `operationId` makes a repeated press land once.
+model RiskEvent {
+  id           String         @id @default(cuid())
+  orgId        String
+  assessmentId String
+  operationId  String
+  actorId      String?
+  actorName    String
+  action       String
+  note         String         @default("")
+  createdAt    DateTime       @default(now())
+  assessment   RiskAssessment @relation(fields: [assessmentId], references: [id], onDelete: Restrict)
+
+  @@unique([assessmentId, operationId])
+  @@index([assessmentId, createdAt])
+  @@map("risk_events")
+}
