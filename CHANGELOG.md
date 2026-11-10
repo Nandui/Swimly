@@ -16,6 +16,10 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - **In Incidents, link the hazards a report involved.** If you triage reports, **Link hazards** on a report lets you pick hazards from that site’s risk assessments and, if the controls did not hold, ask for the assessment to be reviewed.
 - When editing a role, set its level under **Risk assessments**: View, Write or Manage. Tick **Can give the executive sign-off** for people who add a second sign-off to assessments they do not own.
 
+## 3.11.1 · 10 November 2026 · Pick the days it doesn't run from a calendar
+
+- **In Plan (test), "Days it doesn't run" is now a calendar.** When you add or change what's on, the calendar shows every day it runs between its first and last day. Press a day to take it off, and press it again to put it back. The days you took off are listed underneath.
+
 ## 3.11.0 · 9 November 2026 · Approve your own documents in Docs
 
 - **Some roles can now approve their own documents in Docs.** When editing a role, tick **Can approve their own documents** under Docs (the role needs at least **Write**). It is meant for operations managers.

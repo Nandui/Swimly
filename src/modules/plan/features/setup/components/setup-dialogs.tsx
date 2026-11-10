@@ -11,6 +11,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-sel
 import { Textarea } from "@/components/shadcn/textarea";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { archiveDuty, cancelSession, saveDuty, saveSession } from "@/modules/plan/features/setup/server/actions";
+import { SkipDaysCalendar } from "@/modules/plan/features/setup/components/skip-days-calendar";
 import { ChoiceField, TimeField } from "@/modules/plan/shared/components/fields";
 import { DUTY_COLOR_LABEL, DUTY_COLORS, TASK_WHEN, TASK_WHEN_LABEL, WEEKDAYS, dutyColor, type DutyColor } from "@/modules/plan/shared/rules";
 
@@ -86,19 +87,18 @@ export type SessionDraft = { id?: string; title: string; areaId: string; lanes: 
 
 /** Add or change what's on: where, when it repeats, the days it doesn't run, and the duties it needs.
  *  Sessions on the same area add up, so a booking lists only the staff it adds. */
-export function SessionDialog({ trigger, siteId, draft, areas, duties }: {
-  trigger: React.ReactNode; siteId: string; draft: SessionDraft; areas: (Ref & { lanes: number })[]; duties: Ref[];
+export function SessionDialog({ trigger, siteId, today, draft, areas, duties }: {
+  trigger: React.ReactNode; siteId: string; today: string; draft: SessionDraft; areas: (Ref & { lanes: number })[]; duties: Ref[];
 }) {
   const router = useRouter();
   const [f, setF] = useState(draft);
-  const [skip, setSkip] = useState("");
   const set = <K extends keyof SessionDraft>(key: K, value: SessionDraft[K]) => setF((x) => ({ ...x, [key]: value }));
   const area = areas.find((a) => a.id === f.areaId);
   const toggle = <T,>(list: T[], item: T) => list.includes(item) ? list.filter((x) => x !== item) : [...list, item];
   return (
     <FormDialog portalClassName={P} trigger={trigger} width="sm:max-w-2xl" title={draft.id ? `Change ${draft.title}` : "Add what's on"}
       description="Something that needs staff: the pool open, a school's lessons, a party. It repeats on the days you choose."
-      submitLabel={draft.id ? "Save" : "Add"} successMessage="Saved" onOpen={() => { setF(draft); setSkip(""); }} onSuccess={() => router.refresh()}
+      submitLabel={draft.id ? "Save" : "Add"} successMessage="Saved" onOpen={() => { setF(draft); }} onSuccess={() => router.refresh()}
       submit={() => saveSession({ siteId, title: f.title, areaId: f.areaId || null, lanes: f.lanes, start: f.start, end: f.end, weekdays: f.weekdays,
         firstDay: f.firstDay, lastDay: f.lastDay, skipDays: f.skipDays, note: f.note, needs: f.needs }, draft.id)}>
       <Field label="What's on" htmlFor="plan-s-title" hint="Pool open, Public swim, Lessons: Example School, Party."><Input id="plan-s-title" required maxLength={80} className="min-h-11" value={f.title} onChange={(e) => set("title", e.target.value)} /></Field>
@@ -126,13 +126,7 @@ export function SessionDialog({ trigger, siteId, draft, areas, duties }: {
       </div>
       <fieldset className="flex flex-col gap-2">
         <legend className="font-semibold">Days it doesn&apos;t run</legend>
-        {f.skipDays.length ? <ul className="flex flex-wrap gap-2">{f.skipDays.map((d) => (
-          <li key={d}><Button type="button" variant="outline" className="min-h-11 tabular-nums" aria-label={`Run on ${d} after all`} onClick={() => set("skipDays", f.skipDays.filter((x) => x !== d))}>{d}<Trash2 aria-hidden="true" /></Button></li>
-        ))}</ul> : null}
-        <div className="flex items-end gap-2">
-          <Field label="Add a day" htmlFor="plan-s-skip" optional><Input id="plan-s-skip" type="date" min={f.firstDay} max={f.lastDay} className="min-h-11" value={skip} onChange={(e) => setSkip(e.target.value)} /></Field>
-          <Button type="button" variant="outline" className="min-h-11" disabled={!skip} onClick={() => { set("skipDays", [...new Set([...f.skipDays, skip])].sort()); setSkip(""); }}>Add</Button>
-        </div>
+        <SkipDaysCalendar firstDay={f.firstDay} lastDay={f.lastDay} weekdays={f.weekdays} skipDays={f.skipDays} today={today} onChange={(v) => set("skipDays", v)} />
       </fieldset>
       <fieldset className="flex flex-col gap-2">
         <legend className="font-semibold">Staff it needs the whole time</legend>
