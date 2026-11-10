@@ -74,7 +74,7 @@ export function SetupView({ data }: { data: PlanSetupData }) {
 
       <section aria-labelledby="plan-whats-on" className="flex min-w-0 flex-col">
         <div className="pc-section-head"><h2 id="plan-whats-on">What&apos;s on at {site.name}</h2>
-          {manage ? <SessionDialog siteId={site.id} draft={newSession} areas={areas} duties={duties.filter((d) => !d.isBreak)}
+          {manage ? <SessionDialog siteId={site.id} today={data.today} draft={newSession} areas={areas} duties={duties.filter((d) => !d.isBreak)}
             trigger={<Button variant="outline" className="min-h-11"><Plus aria-hidden="true" />Add what&apos;s on</Button>} /> : null}
         </div>
         {sessions.length === 0 ? <EmptyState compact icon="calendarDays" title="Nothing on yet" hint="Add what needs staff, such as Pool open with 2 lifeguards. Swim classes come from Swim school by themselves." /> : (
@@ -88,7 +88,7 @@ export function SetupView({ data }: { data: PlanSetupData }) {
                   <span className="pc-row-hint">{s.needs.length ? `Needs ${s.needs.map((n) => `${n.count} ${dutyName(n.dutyId)}`).join(", ")}` : "Needs nobody extra"}</span>
                 </span>
                 {manage ? <span className="pc-row-trail">
-                  <SessionDialog siteId={site.id} draft={{ ...s, areaId: s.areaId ?? "" }} areas={areas} duties={duties.filter((d) => !d.isBreak)}
+                  <SessionDialog siteId={site.id} today={data.today} draft={{ ...s, areaId: s.areaId ?? "" }} areas={areas} duties={duties.filter((d) => !d.isBreak)}
                     trigger={<Button variant="outline" className="min-h-11">Change</Button>} />
                   <RetireDialog kind="session" id={s.id} name={s.title} />
                 </span> : null}
