@@ -4,6 +4,18 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.12.0 · 10 November 2026 · Risk assessments
+
+- **Risk assessments is a new app**, under Managers. It keeps one assessment for each area, job or activity at a site: its hazards, what controls them, who signed it off and when it is next reviewed. It replaces the separate Risk Management website; the assessments from there will be brought over.
+- **Start an assessment** from Risk assessments if your role can write them. It begins as a draft that only writers see. Add its hazards one at a time, rating each twice: before any controls, and with the controls in place.
+- **Its owner signs it off.** Send a draft for sign-off and its owner gets it on their Home page. Once signed, it is **In force**. If anyone changes it afterwards, the sign-off is cleared and the owner signs the changed assessment again.
+- **Reviews stay visible.** An assessment in force shows when its next review is due. Overdue reviews show in red on the assessment, on the **Reviews** page and on Home, until someone logs the review.
+- **Anyone who can read an assessment can ask for a review** of it, or of one hazard, with a note. Writers answer the request on the assessment.
+- **High risk** lists every hazard that is still rated High or Very high with its controls in place.
+- **Print** gives the whole assessment to print or save as a PDF.
+- **In Incidents, link the hazards a report involved.** If you triage reports, **Link hazards** on a report lets you pick hazards from that site’s risk assessments and, if the controls did not hold, ask for the assessment to be reviewed.
+- When editing a role, set its level under **Risk assessments**: View, Write or Manage. Tick **Can give the executive sign-off** for people who add a second sign-off to assessments they do not own.
+
 ## 3.11.0 · 9 November 2026 · Approve your own documents in Docs
 
 - **Some roles can now approve their own documents in Docs.** When editing a role, tick **Can approve their own documents** under Docs (the role needs at least **Write**). It is meant for operations managers.

@@ -6,6 +6,13 @@ The decisions Turnfin 2.0 stands on, newest first. Each says what was decided, w
 
 ---
 
+### D29 · 10 November 2026 · Risk assessments, brought over from Risk Management
+
+**Risk assessments**, a new app in Managers, keeps each site's risk assessments: one for each area, job or activity, its hazards rated before controls and with them in place, sign-off by its owner, reviews on a schedule and requests for another look. It replaces the standalone Risk Management app ([Nandui/project-risk](https://github.com/Nandui/project-risk)) for assessments. Levels **View**, **Write** and **Manage** at the person's sites, and one extra, **Can give the executive sign-off**, never on an assessment they own. Turnfin's Incidents stays the record for incidents: whoever triages a report can link the hazards it involved and ask for their assessment to be reviewed.
+**Why:** the assessments and the incidents they explain were in a separate app with its own sign-in, sites and people; in Turnfin they use the sites, areas, positions and roles that are already kept.
+**What changed from the old app:** areas, jobs and departments come from Admin's lists, so the old app's own library goes; its five access levels become three levels and an extra; "Under review" for an overdue review becomes a tag on an assessment that stays in force; a new assessment is a draft whose hazards are added one at a time; nothing is deleted (assessments are archived, a removed hazard is hidden).
+**Follows:** one new plug in the platform, `registerHazardRegister`, and one new event, `incidents.hazards.flagged` ([architecture.md](architecture.md#how-apps-talk)). The old assessments come over with `scripts/import-risk-assessments.ts`, dry-run until `--confirm`, run on Production only with the owner's yes ([operations.md](operations.md#operator-scripts-against-production)). Not brought over: the old app's incidents, its spreadsheet import and its AI drafting (owner, 10 November 2026). Copying hazards between assessments and insights charts are not built yet. It goes live at one site first (Admin › Apps). [apps.md](apps.md).
+
 ### D28 · 9 November 2026 · Staffing rosters lifeguards too
 
 Staffing was built for swim teachers (D27), but lifeguards are part-time pool staff on the same rota, the same contracts and the same attendance rules. **Teachers** becomes **Staff** (`/staffing/staff`), and a person's contract is **swim teacher**, **lifeguard**, or **swim teacher and lifeguard**. The contract warning now works both ways: a lifeguard place for a swim teacher, a teaching place for a lifeguard. Still a warning, never a block. No schema change: the contract is a string, and the `StaffingTeacher` table keeps its name.
@@ -193,5 +200,5 @@ The platform (sign-in, people, sites, access, audit, events, email, the API tool
 
 ### D1 · Apps in the catalogue
 
-The apps are those in [apps.md](apps.md): Classes (the swim school, with failed payments and short courses), Pool deck and Analytics (one module); Finance requests; Academy; Tasks; Incidents; Rota; Staffing (D27); Training; Qualifications (D26); Docs; HR; CCTV log; Site Monitoring; Purchasing; Stock; Admin (D24). Classes and the Academy book people from the swim school's member records rather than keeping their own.
+The apps are those in [apps.md](apps.md): Classes (the swim school, with failed payments and short courses), Pool deck and Analytics (one module); Finance requests; Academy; Tasks; Incidents; Rota; Staffing (D27); Training; Qualifications (D26); Docs; HR; CCTV log; Site Monitoring; Maintenance (D14); Risk assessments (D29); Purchasing; Stock; Admin (D24). Classes and the Academy book people from the swim school's member records rather than keeping their own.
 **Follows:** a new app is a new entry here.

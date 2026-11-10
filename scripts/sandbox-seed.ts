@@ -23,6 +23,7 @@ export async function seed(ctx: Ctx) {
   await seedStock(ctx.prisma);
   await seedCctv(ctx.prisma);
   await seedMaintenance(ctx.prisma);
+  await seedRisk(ctx.prisma);
   await seedSwimHistory(ctx.prisma, ctx.roles.Instructor);
   await seedDeskHistory(ctx.prisma, ctx.roles.Receptionist);
 }
@@ -395,6 +396,71 @@ async function seedStock(db: PrismaClient) {
   // The hand towels were missed last week: they are not counted, not none.
   await db.stockTakeLine.createMany({ data: products.slice(0, -1).map((p, i) => ({ stockTakeId: week.id, productId: p.id, quantity: list[i][4], countedByName: "Maya Example" })) });
   await db.stockTakeLine.createMany({ data: products.slice(0, 4).map((p, i) => ({ stockTakeId: open.id, productId: p.id, quantity: Math.max(0, list[i][4] - 2), countedByName: "Maya Example" })) });
+}
+
+/** Risk assessments at both sites, in every state: Hillview's main pool in force with its review
+ *  overdue, a High hazard and a review request waiting; the lifeguards' job in force with the
+ *  executive sign-off and a review due soon; the learner pool waiting for Maya to sign it off; and
+ *  a draft for Riverside's gym. Orla and Owen manage; Maya writes; lifeguards read. */
+async function seedRisk(db: PrismaClient) {
+  const ORG = "org_leisureworld", RIVERSIDE = "club_bishopstown", HILLVIEW = "club_churchfield";
+  const day = (offset: number) => new Date(Date.now() + offset * 86_400_000).toISOString().slice(0, 10);
+  const at = (offset: number) => new Date(Date.now() + offset * 86_400_000);
+  type Person = [string, string];
+  const ORLA: Person = ["sbx_orla", "Orla Example"], OWEN: Person = ["sbx_owen", "Owen Example"], MAYA: Person = ["sbx_maya", "Maya Example"], CIARA: Person = ["sbx_ciara", "Ciara Example"];
+  type Hazard = { hazard: string; factor: string; persons: string; consequence: string; before: [number, number]; controls: string; after: [number, number]; further?: string; category?: string };
+  type Seed = { ref: string; site: string; type: string; subject: string; scope: string; owner: Person; status: string; assessed: number; months: number; next: number; lastReviewed?: number; exec?: boolean; hazards: Hazard[] };
+  const list: Seed[] = [
+    { ref: "RA-HV-0001", site: HILLVIEW, type: "area", subject: "Main pool", scope: "Synthetic: public swimming, lessons and club sessions in the 25 metre pool.", owner: ORLA, status: "approved", assessed: -400, months: 12, next: -35, hazards: [
+      { hazard: "Wet floor at the pool edge", factor: "Water carried out of the pool by swimmers", persons: "Customers, Children", consequence: "A fall on tiles: bruising or a fracture", before: [4, 3], controls: "Non-slip tiles. No-running signs. Lifeguards remind swimmers.", after: [2, 3] },
+      { hazard: "A swimmer in difficulty in deep water", factor: "Weak swimmers reaching the deep end", persons: "Customers, Children", consequence: "Drowning", before: [3, 5], controls: "Two lifeguards on poolside. Deep end marked. Swim test for unaccompanied children.", after: [2, 5], further: "Add depth markers to the floor of the pool at the next drain down." },
+      { hazard: "Diving into the shallow end", factor: "No depth awareness", persons: "Customers, Children", consequence: "Head or spinal injury", before: [3, 4], controls: "No-diving signs at the shallow end. Lifeguards enforce.", after: [1, 4] },
+      { hazard: "Glare on the water surface", factor: "Low winter sun through the east windows", persons: "Customers", consequence: "A swimmer in difficulty is not seen", before: [3, 4], controls: "Blinds lowered on sunny mornings. Lifeguard positions rotated.", after: [2, 3], category: "environmental" },
+    ] },
+    { ref: "RA-HV-0002", site: HILLVIEW, type: "job", subject: "Lifeguard", scope: "Synthetic: the work of a lifeguard on shift.", owner: ORLA, status: "approved", assessed: -200, months: 12, next: 12, lastReviewed: -353, exec: true, hazards: [
+      { hazard: "Lifting a casualty from the water", factor: "Awkward posture at the pool edge", persons: "Staff", consequence: "Back strain", before: [3, 3], controls: "Rescue training every month. Two-person lifts. Spinal board at each pool.", after: [2, 2], category: "ergonomic" },
+      { hazard: "Long spells of scanning", factor: "Heat, noise and repetition", persons: "Staff, Customers", consequence: "Lapses in attention", before: [4, 4], controls: "Rotation every 30 minutes. Water on poolside.", after: [2, 4], category: "psychosocial" },
+    ] },
+    { ref: "RA-HV-0003", site: HILLVIEW, type: "area", subject: "Learner pool", scope: "Synthetic: lessons for children and parent and toddler sessions.", owner: MAYA, status: "review", assessed: -6, months: 12, next: 359, hazards: [
+      { hazard: "A child leaving the lesson unseen", factor: "Busy changeovers between classes", persons: "Children", consequence: "A child in the main pool alone", before: [3, 5], controls: "Teachers count in and out. Gate to the main pool kept closed.", after: [1, 5] },
+    ] },
+    { ref: "RA-RS-0001", site: RIVERSIDE, type: "area", subject: "Gym", scope: "", owner: OWEN, status: "draft", assessed: -1, months: 12, next: 364, hazards: [] },
+  ];
+  for (const r of list) {
+    const id = randomUUID();
+    const signed = r.status === "approved";
+    await db.riskAssessment.create({ data: {
+      id, orgId: ORG, siteId: r.site, reference: r.ref, subjectType: r.type, subject: r.subject, scope: r.scope, ownerId: r.owner[0], ownerName: r.owner[1], status: r.status,
+      assessedOn: day(r.assessed), reviewMonths: r.months, targetScore: 8, lastReviewedOn: r.lastReviewed ? day(r.lastReviewed) : null, nextReviewOn: day(r.next), hazardSeq: r.hazards.length,
+      ...(signed ? { ownerApprovedById: r.owner[0], ownerApprovedByName: r.owner[1], ownerApprovedAt: at(r.assessed + 3) } : {}),
+      ...(r.exec ? { execApprovedById: OWEN[0], execApprovedByName: OWEN[1], execApprovedAt: at(r.assessed + 5) } : {}),
+      createdById: r.owner[0], createdByName: r.owner[1], createdAt: at(r.assessed),
+    } });
+    const hazardIds: string[] = [];
+    for (const [i, h] of r.hazards.entries()) {
+      const hazardId = randomUUID();
+      hazardIds.push(hazardId);
+      await db.riskHazard.create({ data: {
+        id: hazardId, orgId: ORG, assessmentId: id, seq: i + 1, sortOrder: i + 1, hazard: h.hazard, riskFactor: h.factor, personsAtRisk: h.persons, consequence: h.consequence,
+        inherentLikelihood: h.before[0], inherentSeverity: h.before[1], controls: h.controls, likelihood: h.after[0], severity: h.after[1], score: h.after[0] * h.after[1],
+        furtherAction: h.further ?? "", category: h.category ?? "physical", createdAt: at(r.assessed),
+      } });
+    }
+    const step = (action: string, actor: Person, offset: number, note = "") => db.riskEvent.create({ data: { orgId: ORG, assessmentId: id, operationId: randomUUID(), actorId: actor[0], actorName: actor[1], action, note, createdAt: at(offset) } });
+    await step("create", r.owner, r.assessed);
+    if (r.status !== "draft") await step("submit", r.owner, r.assessed + 2);
+    if (signed) await step("owner_approve", r.owner, r.assessed + 3);
+    if (r.exec) await step("exec_approve", OWEN, r.assessed + 5);
+    if (r.lastReviewed) {
+      await db.riskReview.create({ data: { orgId: ORG, assessmentId: id, reviewedOn: day(r.lastReviewed), reviewerId: r.owner[0], reviewerName: r.owner[1], outcome: "no_changes", notes: "Synthetic: controls checked on poolside.", nextReviewOn: day(r.next), createdAt: at(r.lastReviewed) } });
+      await step("review", r.owner, r.lastReviewed, "No changes needed.");
+    }
+    if (r.ref === "RA-HV-0001") {
+      const notes = "Synthetic: the non-slip strip by the steps has lifted.";
+      await db.riskReviewRequest.create({ data: { orgId: ORG, siteId: r.site, assessmentId: id, hazardId: hazardIds[0], requestedById: CIARA[0], requestedByName: CIARA[1], notes, createdAt: at(-2) } });
+      await step("request", CIARA, -2, notes);
+    }
+  }
 }
 
 /** Maintenance requests at both sites, in every status: some waiting to go in Trackplan (one
