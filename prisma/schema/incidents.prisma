@@ -82,6 +82,7 @@ model IncidentReport {
   footageRequests IncidentFootageRequest[]
   footage       IncidentFootage[]
   wellbeingChecks IncidentWellbeingCheck[]
+  hazardLinks   IncidentHazardLink[]
 
   @@index([siteId, status])
   @@index([reporterId])
@@ -411,4 +412,34 @@ model IncidentWellbeingUpdate {
 
   @@index([checkId])
   @@map("incidents_wellbeing_updates")
+}
+
+/// A hazard from the site's risk assessments that whoever triages linked to the report (owner,
+/// 10 November 2026, D29). The hazard belongs to another app: this keeps its id, and its words
+/// and where it opens as they were when it was linked. Hidden when removed.
+model IncidentHazardLink {
+  id          String    @id @default(cuid())
+  orgId       String?
+  reportId    String
+  hazardId    String
+  /// "RA-BT-0001-HZ-003"
+  hazardRef   String
+  hazard      String
+  /// The assessment it is on: "RA-BT-0001 Main pool".
+  assessment  String
+  href        String
+  note        String    @default("")
+  /// The assessment's writers were asked to look at it again.
+  reviewAsked Boolean   @default(false)
+  addedById   String
+  addedByName String
+  createdAt   DateTime  @default(now())
+  removedAt   DateTime?
+  removedById String?
+
+  report IncidentReport @relation(fields: [reportId], references: [id], onDelete: Restrict)
+
+  @@index([reportId])
+  @@index([hazardId])
+  @@map("incidents_hazard_links")
 }

@@ -90,6 +90,8 @@ export const incidentActions = {
   wellbeing_cancel: "Request to HR cancelled",
   wellbeing_update: "HR recorded an update",
   wellbeing_done: "HR finished the request",
+  hazard_link: "Hazard linked",
+  hazard_unlink: "Hazard link removed",
   reopen: "Reopened",
   export: "Opened for the insurer",
 } as const;

@@ -8,6 +8,7 @@ import { Tag } from "@/components/ui-kit/tag";
 import { formatDateTime } from "@/lib/format";
 import { FilesPanel } from "@/modules/incidents/features/files";
 import { FootagePanel, footageOnReport } from "@/modules/incidents/features/footage";
+import { HazardsPanel, hazardsOnReport } from "@/modules/incidents/features/hazards";
 import { WellbeingPanel, wellbeingOnReport } from "@/modules/incidents/features/wellbeing";
 import { Investigation, ReopenReport } from "@/modules/incidents/features/investigation";
 import { AddAddendum } from "@/modules/incidents/features/report";
@@ -18,12 +19,12 @@ export const metadata: Metadata = { title: "Incident report" };
 
 /** One report, headed as the approved Turnfin Glass canvas heads it: its status and number above
  *  what it was about, who reported it and where below. Then what this person may do next, the
- *  report as written, its triage, photos, CCTV footage, wellbeing checks and investigation, and
- *  its history. */
+ *  report as written, its triage, photos, CCTV footage, wellbeing checks, the hazards it involved
+ *  and investigation, and its history. */
 export default async function IncidentPage({ params }: { params: Promise<{ id: string }> }) {
   const data = await incidentReport((await params).id);
   const { report: r, can } = data;
-  const [footage, wellbeing] = await Promise.all([footageOnReport(r.id), wellbeingOnReport(r.id)]);
+  const [footage, wellbeing, hazards] = await Promise.all([footageOnReport(r.id), wellbeingOnReport(r.id), hazardsOnReport(r.id)]);
   return (
     <PageShell spacing="roomy" header={<PageHeader title={incidentCategories[r.category as keyof typeof incidentCategories]?.label ?? "Incident report"} back={{ href: "/incidents", label: "Incidents" }}
         eyebrow={<p className="rec-head"><Tag meta={incidentStatuses[r.status]} />{r.serious ? <Tag meta={seriousMeta} /> : null}
@@ -37,6 +38,7 @@ export default async function IncidentPage({ params }: { params: Promise<{ id: s
         <FilesPanel reportId={r.id} files={r.files} userId={data.who.id} canAdd={can.addFiles} canRemoveAny={can.removeFiles} />
         {footage ? <FootagePanel reportId={r.id} data={footage} /> : null}
         {wellbeing ? <WellbeingPanel reportId={r.id} data={wellbeing} /> : null}
+        {hazards ? <HazardsPanel reportId={r.id} data={hazards} /> : null}
         {can.triage ? <TriageForm id={r.id} version={r.version} category={r.category} {...data.triage} /> : null}
         {can.seeInvestigation && r.status !== "reported" && (r.status === "investigating" || r.statements.length || r.actions.length || r.rootCause) ? (
           <Investigation id={r.id} version={r.version} today={data.today} occurredOn={r.occurredOn} statements={r.statements} whys={r.whys} rootCause={r.rootCause}
