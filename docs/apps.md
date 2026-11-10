@@ -75,7 +75,9 @@ Accidents, incidents and near misses: reported in two minutes, triaged the same 
 | Investigate | also every report at their sites, the serious-report alert, triage, close low-risk ones. Never their own |
 | Manage | also close serious and moderate reports. Never their own |
 
-Connects: person file and subject records.
+Whoever triages can link the hazards a report involved, from the site's risk assessments, and ask for an assessment to be reviewed (D29); with Risk assessments switched off at the site, nothing is offered.
+
+Connects: person file and subject records; reads the site's assessed hazards through a plug; emits `incidents.hazards.flagged`.
 
 ## Team
 
@@ -222,6 +224,22 @@ A request is **Reported**, **In Trackplan**, **Fixed** or **Closed, not fixed**.
 
 Connects: subject records; area renames.
 
+### Risk assessments
+*Module `risk` · `/risk-assessments/overview` · reach: sites · data: `risk.prisma`*
+
+The hazards of each area, job and activity at a site, what controls them, who signed that off and when each is next reviewed ([D29](decisions.md)).
+
+| Level | Gives |
+| --- | --- |
+| View | read the assessments at their sites, drafts apart, print them, and ask for one to be reviewed |
+| Write | also start assessments, change them and their hazards, send them for sign-off, sign off the ones they own, log reviews and answer review requests |
+| Manage | also archive assessments and bring them back |
+| *Extra:* Can give the executive sign-off | add a second sign-off to an assessment its owner has signed off. Never on one they own |
+
+An assessment is a **Draft**, **Waiting for sign-off**, **In force** or **Archived**. It is about one area (from the site's areas), one job (from Admin's positions) or one activity, and one thing has one live assessment at a site. Each hazard is rated twice, likelihood times severity (1 to 25): before any controls and with them in place. Changing an assessment that was signed off clears the sign-off. Only an assessment in force is on a review schedule; an overdue review shows on it, on Reviews and on Home.
+
+Connects: the site's assessed hazards for Incidents to link (the hazard register plug); listens to `incidents.hazards.flagged`; subject records; area renames.
+
 ### Analytics
 *Module `activities` · `/analytics` · reach: sites · data: reads the swim school's and desk measures*
 
@@ -285,7 +303,7 @@ A withheld note becomes a `hasMedicalNotes` flag, so the deck still knows to ask
 
 **The pool deck** is tablet-sized, with no desk navigation, no links to desk pages and no cross-site swimmer search. Its only lookup (`/instructor/swimmers`) finds swimmers with a current place at the working site. Every class needs a confirmed start for that date; once started, anyone with the teaching permissions can help, and a start never gives exclusive ownership. The atomic start record, its audit row and the save-conflict checks stay.
 
-**Nobody decides their own** refund, coinage request, document approval or incident.
+**Nobody decides their own** refund, coinage request, document approval or incident. A risk assessment is signed off by its owner; the executive sign-off never comes from the owner.
 
 **HR stays restricted** (above), and its database holds ids only: access is decided in the main database by the policy engine.
 

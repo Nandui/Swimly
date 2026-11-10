@@ -12,6 +12,7 @@ import { refundStatuses } from "@/modules/finance-requests";
 import { coinageStatuses } from "@/modules/finance-requests";
 import { MONITORING_STATUS_META } from "@/modules/site-monitoring";
 import { MAINTENANCE_STATUS_META, MAINTENANCE_URGENCY_META } from "@/modules/maintenance";
+import { RISK_BAND_META, RISK_REQUEST_META, RISK_REVIEW_META, RISK_STATUS_META } from "@/modules/risk";
 import { OFF_REASON_META } from "@/modules/plan";
 import { PAYMENT_STATUS_META } from "@/modules/activities/shared/payments/types";
 import * as shortCourses from "@/modules/activities/shared/short-courses/rules";
@@ -41,6 +42,7 @@ const MAPS: Record<string, Record<string, StatusMeta>> = {
   ...staffing.STAFFING_STATUS_MAPS,
   MONITORING_STATUS_META,
   MAINTENANCE_STATUS_META, MAINTENANCE_URGENCY_META,
+  RISK_ASSESSMENT_STATUS_META: RISK_STATUS_META, RISK_ASSESSMENT_BAND_META: RISK_BAND_META, RISK_REVIEW_META, RISK_REQUEST_META,
   OFF_REASON_META,
   PAYMENT_STATUS_META,
   ABSENCE_REASON_META: rota.ABSENCE_REASON_META, ROTA_CHANGE_REASON_META: rota.ROTA_CHANGE_REASON_META, BOOKING_KIND_META: rota.BOOKING_KIND_META,

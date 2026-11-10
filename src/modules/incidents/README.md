@@ -11,6 +11,7 @@ Its levels are in [docs/apps.md](../../../docs/apps.md); the rules live in `shar
 - `files` — photos and documents on a report (`/api/incidents/files`).
 - `footage` — CCTV footage requests: emailing whoever holds it a link that uploads to the report without signing in (`/footage/[token]`, `/api/incidents/footage/*`), the videos in a private Vercel Blob store, and watching them (on `/incidents/[id]`).
 - `wellbeing` — Ask HR: asking HR, by email to the addresses in Incidents › Settings (`/incidents/settings`), to check on someone after an incident, or letting HR know a staff member was in it (what HR may follow up, and optionally what happened and their injury); HR records what they did, when and what happens next through a no-sign-in link (`/wellbeing/[token]`). What HR writes is read only by Manage at the site and whoever asked.
+- `hazards` — linking the hazards a report involved, from the site's risk assessments, and asking for an assessment to be reviewed (on `/incidents/[id]`, for those who triage at the site). The hazards are another app's, read through the hazard register plug; a link keeps the hazard's words as they were.
 - `insights` — trends for those who triage and the reports past their keeping period (`/incidents/insights`).
 - `export` — one report's full record to print or save as a PDF for the insurer (`/incidents/[id]/export`, Manage).
 - `staff` — a staff member's incidents and injuries for their HR personal file and subject access export (registered in `module.ts`).
@@ -41,8 +42,10 @@ Declared in `prisma/schema/incidents.prisma`, migrations `20261031120000_inciden
 - `incidents_wellbeing_checks` (`IncidentWellbeingCheck`) — the kind (wellbeing check, or a staff member in the incident, with follow-ups and whether HR sees what happened; migration `20261206120000_incident_hr_request_kind`), who it is about and why, the addresses it went to, the link's hashed secret and expiry, its state and the email's outcome.
 - `incidents_wellbeing_updates` (`IncidentWellbeingUpdate`) — what HR recorded through the link: who, the day, what they did and what happens next. Never changed or deleted.
 
+- `incidents_hazard_links` (`IncidentHazardLink`) — the hazards linked to a report: the hazard's id in the app that keeps it, its reference and words when linked, the note, and whether a review was asked for; hidden when removed (migration `20261216100000_incident_hazard_links`).
+
 ## Events
-- Emits: none. Actions stay in Incidents rather than being copied into Tasks.
+- Emits: `incidents.hazards.flagged`, after hazards are linked to a report with "Ask for the assessment to be reviewed" ticked. Actions stay in Incidents rather than being copied into Tasks.
 - Listens to: none.
 
 ## Registration (module.ts)
@@ -58,4 +61,5 @@ Declared in `prisma/schema/incidents.prisma`, migrations `20261031120000_inciden
 - Vercel Blob (`@vercel/blob`, a private store, `BLOB_READ_WRITE_TOKEN`) for CCTV videos only.
 - Core reads (never Core tables): sites, areas and people through `src/lib/directory.ts` (`liveSitesOf`, `liveSiteById`, `areaNamesAt`, `withSite`, `withSites`, `siteName`, `activeStaffHolding`, `staffSiteIds`, `staffAccess`).
 - The UI kit's workspace frame `ModuleShell`.
-- Other modules: none. The report form links to Docs' emergency plans by URL for people with `docs.read`.
+- The hazard register plug (`hazardRegister` in `src/modules/contributions`): the site's assessed hazards, or nothing where no app keeps them or it is switched off there.
+- Other modules: none. The report form links to Docs' emergency plans by URL for people with `docs.read`; a linked hazard opens its assessment by the URL the plug gave.

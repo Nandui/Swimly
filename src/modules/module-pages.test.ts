@@ -10,6 +10,7 @@ import { incidentPages } from "@/modules/incidents/features/workspace/pages";
 import { maintenancePages } from "@/modules/maintenance/features/workspace/pages";
 import { planPages } from "@/modules/plan/features/workspace/pages";
 import { purchasingPages } from "@/modules/purchasing/features/workspace/pages";
+import { riskPages } from "@/modules/risk/features/workspace/pages";
 import { rotaPages } from "@/modules/rota/shared/components/pages";
 import { monitoringPages } from "@/modules/site-monitoring/features/workspace/pages";
 import { staffingPages } from "@/modules/staffing/features/workspace/pages";
@@ -34,6 +35,7 @@ const APPS: [string, { href: string; label: string; place?: "setup"; under?: str
   ["Maintenance", maintenancePages()],
   ["Plan (test)", planPages()],
   ["Purchasing", purchasingPages(everything)],
+  ["Risk assessments", riskPages({ write: true })],
   ["Rota", rotaPages(true)],
   ["Site Monitoring", monitoringPages()],
   ["Staffing", staffingPages()],

@@ -23,7 +23,7 @@ flowchart TB
       a1["Classes · Pool deck · Analytics"]
       a2["Finance requests · Academy"]
       a3["Tasks · Incidents · Rota · Training · Qualifications"]
-      a4["Docs · HR · CCTV log · Site Monitoring · Maintenance"]
+      a4["Docs · HR · CCTV log · Site Monitoring · Maintenance · Risk assessments"]
       a5["Purchasing · Stock · next app"]
     end
     platform["Platform: sign-in, people, jobs, sites, access, audit,<br/>events, app switches, shared services"]
@@ -111,6 +111,7 @@ An app must keep working when any other app is switched off: a missing front doo
 | `registerEmailBookings` | the places another app holds under a customer's email, for "My bookings" on the Academy booking site (the swim school's short courses, D24) |
 | `registerSearch` | what an app can be searched for, for the one search ([The frame](#the-frame)) |
 | `registerQualificationRenewals` | the course that renews a qualification and assigning it (Training), for Qualifications' expiring list ([D26](decisions.md)) |
+| `registerHazardRegister` | the hazards on a site's risk assessments in use, searched (Risk assessments), for an incident report to link ([D29](decisions.md)) |
 
 Every registration names its `app` (the manifest id), so a switched-off app's plugs answer "not available". A plug that fails is named on the page, never fatal. Other seams: **session hooks** (`src/modules/session-hooks.ts`, per-request work such as applying due scheduled unenrolments) and **links** by URL.
 
@@ -125,6 +126,7 @@ The bus is `src/platform/events`: typed and in-process. An event is emitted afte
 | Event | Emitted by | Payload | Listeners |
 | --- | --- | --- | --- |
 | `tasks.reading.out_of_range` | Tasks, when a task is completed with readings outside their range | `orgId`, `siteId`, `taskId`, `task` (title), `recordedById`, `recordedByName`, `recordedAt` (ISO), `readings[]` (`key` "record:field", `reading`, `value`, `unit`, `allowed`, `guidance`) | Site Monitoring raises one action per reading for the site's managers; the same reading again raises nothing |
+| `incidents.hazards.flagged` | Incidents, when whoever triages a report links hazards to it and asks for a review | `orgId`, `siteId`, `incidentId`, `incident` (its number, "INC-00042"), `operationId`, `hazardIds[]`, `note`, `flaggedById`, `flaggedByName`. No names from the report | Risk assessments raises one review request on each assessment in use holding one of the hazards; while one from that incident is still to answer, nothing new |
 
 **Planned (roadmap step 6):** `rota.shift.changed`, replacing Rota's direct call to `notifyShiftChange` (`src/lib/staff-api/notify.ts`), listened to by Turnfin Me's email. Each other cross-app side effect becomes an event when its code is next touched.
 
@@ -265,7 +267,7 @@ What the code does not yet match in this document, each owned by a roadmap step:
 - Several apps have thin tests (step 1).
 - One role per person; combined roles exist (step 3).
 - Three email queues and six file checks (step 4).
-- One event in the whole app (step 6).
+- Two events in the whole app (step 6).
 - Legacy columns and tables still in the schema, unread or soon unread: `StaffRole.screens`, `StaffRole.home`, `User.role`, `RoleAssignment`. Dropping them is an owner decision ([roadmap.md](roadmap.md)).
 - `AuditLog.programmeId` is swim-school-shaped; `module` is what the activity log filters by.
 - The 2.0 tokens (`src/app/theme/glass.css`, copied into `apps/me` and `apps/academy`), the glass material and the frame (`src/app/theme/kit.css`, `src/components/ui-kit/glass.tsx`, with Turnfin Me's own copies) are built, and every screen inside the frame is on them (26 October 2026); the pre-2.0 `poolside.css` is retired, apart from the Academy site's own copy (on hold). Docs keeps its Docs-era file names (`docs-shell.css`, `docs-integration.css`), on the 2.0 tokens.
