@@ -10,6 +10,7 @@ import { DayTimeline, type DayTimelineBlock } from "@/components/ui-kit/day-time
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Inspector } from "@/components/ui-kit/inspector";
 import { Notice } from "@/components/ui-kit/notice";
+import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { toast } from "@/components/ui/toast";
 import { formatDay, formatTime, formatTimeRange } from "@/lib/format";
 import { BlockDialog } from "@/modules/plan/features/day/components/block-dialog";
@@ -33,13 +34,16 @@ export function DayView({ data }: { data: PlanDayData }) {
   const [picked, setPicked] = useState<Picked | null>(null);
   const [pending, start] = useTransition();
   const dateInput = useRef<HTMLInputElement>(null);
-  const { site, date, needs, shifts, duties, people, occurrences } = data;
+  const { site, date, needs, shifts, duties, people, occurrences, department } = data;
+  // The people shown: every department's, or the one picked. What's on, and who could fill it, stay
+  // the whole site's, because what's on belongs to an area and its duties, not to a department.
+  const shown = department ? shifts.filter((s) => s.departmentId === department.id) : shifts;
   const nameOf = (userId: string) => people.find((p) => p.id === userId)?.name ?? "Someone";
   const duty = (id: string) => duties.find((d) => d.id === id);
   const shiftOf = (id: string) => shifts.find((s) => s.id === id);
   const blockOwner = new Map(shifts.flatMap((s) => s.blocks.map((b) => [b.id, s] as const)));
   const sessionTitle = (id: string | null) => occurrences.find((o) => o.sessionId === id)?.title ?? null;
-  const link = (d: string) => `/plan/day?${new URLSearchParams({ site: site.id, date: d })}`;
+  const link = (d: string, dept: string | null = department?.id ?? null) => `/plan/day?${new URLSearchParams({ site: site.id, date: d, ...(dept ? { dept } : {}) })}`;
   const isToday = date === data.today;
   const canAddShift = data.departments.mine.length > 0;
   const sessionOptions = occurrences.map((o) => ({ id: o.sessionId, title: o.title, start: o.start, end: o.end, dutyIds: o.needs.map((n) => n.dutyId) }));
@@ -81,8 +85,8 @@ export function DayView({ data }: { data: PlanDayData }) {
   const needsSomeone = items.filter((i) => i.short > 0);
 
   // People: one lane per shift, its duties, breaks, classes and free time.
-  const personLanes = shifts.map((s) => ({ key: s.id, label: `${nameOf(s.userId)} · ${formatTimeRange(s.start, s.end)}` }));
-  const personBlocks: DayTimelineBlock[] = shifts.flatMap((s) => {
+  const personLanes = shown.map((s) => ({ key: s.id, label: `${nameOf(s.userId)} · ${formatTimeRange(s.start, s.end)}` }));
+  const personBlocks: DayTimelineBlock[] = shown.flatMap((s) => {
     const busy = [...s.blocks.map((b) => ({ start: b.start, end: b.end })), ...s.classes.map((c) => ({ start: c.start, end: c.end }))].sort((a, b) => a.start - b.start);
     const free: { start: number; end: number }[] = [];
     let at = s.start;
@@ -224,8 +228,8 @@ export function DayView({ data }: { data: PlanDayData }) {
       </> : shiftActions };
   })();
 
-  const toCheck = shifts.filter((s) => s.warnings.length);
-  const tasks = shifts.flatMap((s) => s.tasks.map((t) => ({ ...t, who: nameOf(s.userId) }))).sort((a, b) => a.at - b.at);
+  const toCheck = shown.filter((s) => s.warnings.length);
+  const tasks = shown.flatMap((s) => s.tasks.map((t) => ({ ...t, who: nameOf(s.userId) }))).sort((a, b) => a.at - b.at);
 
   return (
     <div className="flex flex-col gap-(--space-7)">
@@ -245,9 +249,14 @@ export function DayView({ data }: { data: PlanDayData }) {
           <Button asChild variant="outline" size="icon" className="min-h-11 min-w-11"><Link href={link(shiftIso(date, 1))} aria-label="The day after"><ChevronRight aria-hidden="true" /></Link></Button>
           {isToday ? null : <Button asChild variant="ghost" className="min-h-11"><Link href={link(data.today)}>Today</Link></Button>}
         </div>
-        {canAddShift ? <ShiftDialog siteId={site.id} draft={{ userId: "", departmentId: data.departments.mine[0]?.id ?? "", date, start: 7 * 60, end: 15 * 60, note: "" }}
+        {canAddShift ? <ShiftDialog siteId={site.id} draft={{ userId: "", departmentId: (data.departments.mine.find((d) => d.id === department?.id) ?? data.departments.mine[0])?.id ?? "", date, start: 7 * 60, end: 15 * 60, note: "" }}
           people={people} departments={data.departments.mine} trigger={<Button variant="outline" className="min-h-11"><UserPlus aria-hidden="true" />Add a shift</Button>} /> : null}
       </div>
+
+      {data.departments.all.length > 1 ? (
+        <SegmentedLinks label="Department" items={[{ href: link(date, null), label: "All departments", current: !department },
+          ...data.departments.all.map((d) => ({ href: link(date, d.id), label: d.name, current: d.id === department?.id }))]} />
+      ) : null}
 
       {data.classDutyId ? null : <Notice tone="info" title="Classes aren't shown yet" description="Mark one duty as the one classes need, in Setup, to see swim classes and plan their teachers here." />}
       {data.clashes.map((c) => <Notice key={`${c.a}${c.b}`} tone="warning" title={c.text} />)}
@@ -281,8 +290,8 @@ export function DayView({ data }: { data: PlanDayData }) {
       ) : null}
 
       <section aria-labelledby="plan-people" className="flex min-w-0 flex-col">
-        <div className="pc-section-head"><h2 id="plan-people">People</h2>{shifts.length ? <p>{shifts.length} on</p> : null}</div>
-        {shifts.length === 0 ? <EmptyState compact icon="users" title="Nobody is planned this day" hint={canAddShift ? "Add a shift, or plan the week first." : undefined} /> : (
+        <div className="pc-section-head"><h2 id="plan-people">People</h2>{shown.length ? <p>{shown.length} on</p> : null}</div>
+        {shown.length === 0 ? <EmptyState compact icon="users" title={department ? `Nobody is planned in ${department.name} this day` : "Nobody is planned this day"} hint={canAddShift ? "Add a shift, or plan the week first." : undefined} /> : (
           <div className="pc-panel">
             <DayTimeline from={from} to={to} now={isToday ? data.now : -1} nowLabel={formatTime(data.now)} hours={hours} lanes={personLanes} blocks={personBlocks}
               label={`People at ${site.name}`} onSelect={pick} selected={null} />
