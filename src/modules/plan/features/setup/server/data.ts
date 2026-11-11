@@ -7,14 +7,14 @@ import { qualificationTypesOf } from "@/lib/qualifications";
 import { prisma } from "@/lib/prisma";
 import { requirePlanActor } from "@/modules/plan/shared/access";
 import { areasOf, dutiesOf } from "@/modules/plan/shared/data";
-import { mayManage, planSites, viewableSite } from "@/modules/plan/shared/scope";
+import { mayManage, pickSiteId, planSites, viewableSite } from "@/modules/plan/shared/scope";
 
 /** Setup: the organisation's duties, and a site's areas and sessions (current and to come). Anyone
  *  with the plan reads it; only Manage at the site changes it. */
 export async function planSetup(params: { site?: string }) {
   const who = await requirePlanActor();
   const sites = await planSites(who);
-  const siteId = sites.find((s) => s.id === params.site)?.id ?? sites[0]?.id;
+  const siteId = await pickSiteId(sites, params.site);
   if (!siteId) return { who, sites, site: null } as const;
   const site = await viewableSite(siteId);
   if (!site) notFound();

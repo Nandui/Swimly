@@ -5,7 +5,7 @@ import { today } from "@/lib/format";
 import { requirePlanActor } from "@/modules/plan/shared/access";
 import { offsBetween, peopleFor } from "@/modules/plan/shared/data";
 import { shiftIso } from "@/modules/plan/shared/model";
-import { planSites, plannableDepartments, viewableSite } from "@/modules/plan/shared/scope";
+import { pickSiteId, planSites, plannableDepartments, viewableSite } from "@/modules/plan/shared/scope";
 
 /** Who is off at a site, from a week ago to three months ahead, and the people the person may mark
  *  off (those in the departments they plan; everyone for Manage). Plan's own record: no reasons
@@ -13,7 +13,7 @@ import { planSites, plannableDepartments, viewableSite } from "@/modules/plan/sh
 export async function planOffs(params: { site?: string }) {
   const who = await requirePlanActor();
   const sites = await planSites(who);
-  const siteId = sites.find((s) => s.id === params.site)?.id ?? sites[0]?.id;
+  const siteId = await pickSiteId(sites, params.site);
   if (!siteId) return { who, sites, site: null } as const;
   const site = await viewableSite(siteId);
   if (!site) notFound();

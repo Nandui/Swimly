@@ -1,6 +1,7 @@
 import "server-only";
 import { departmentIdsOf, departmentsForSite, liveSiteById, liveSitesWithin } from "@/lib/directory";
 import { mayFor, sitesFor } from "@/lib/policy/session";
+import { rememberedSite } from "@/lib/remembered-site";
 import type { PlanActor } from "@/modules/plan/shared/access";
 
 /** Where a person may read and write Plan (test). Manage at a site plans every department there;
@@ -9,6 +10,12 @@ import type { PlanActor } from "@/modules/plan/shared/access";
 /** The sites the person sees the plan at, in order; the first is the default. */
 export async function planSites(who: PlanActor) {
   return liveSitesWithin(who.orgId, await sitesFor("plan.view"));
+}
+
+/** A page's site among those: `?site=`, else the one last picked in the site picker, else the first. */
+export async function pickSiteId(sites: { id: string }[], asked: string | undefined) {
+  const has = (id: string | undefined) => sites.find((s) => s.id === id)?.id;
+  return has(asked) ?? has(await rememberedSite("plan")) ?? sites[0]?.id;
 }
 
 /** One site the person may view, with its organisation, or null. */
