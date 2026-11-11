@@ -1,4 +1,5 @@
 import "server-only";
+import { rememberedSite } from "@/lib/remembered-site";
 import { revalidatePath } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Prisma } from "@/generated/prisma/client";
@@ -57,10 +58,12 @@ export async function staffingSites() {
   return { who, sites: sites.map((s) => ({ ...s, run: holds(run, s.id), supervise: holds(supervise, s.id), manage: holds(manage, s.id) })) };
 }
 
-/** The page's site: `?site=` when the person covers it, else their first. */
+/** The page's site: `?site=` when the person covers it, else the one last picked in the site
+ *  picker, else their first. */
 export async function pickSite(siteId: string | undefined) {
   const { who, sites } = await staffingSites();
-  const site = siteId ? sites.find((s) => s.id === siteId) : sites[0];
+  const remembered = siteId ? undefined : await rememberedSite("staffing");
+  const site = siteId ? sites.find((s) => s.id === siteId) : sites.find((s) => s.id === remembered) ?? sites[0];
   if (siteId && !site) notFound();
   return { who, sites, site: site ?? null };
 }

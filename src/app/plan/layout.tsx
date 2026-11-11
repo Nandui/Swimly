@@ -12,5 +12,6 @@ export const metadata: Metadata = { title: { default: "Plan (test)", template: T
 export default async function PlanLayout({ children }: { children: ReactNode }) {
   const who = planAccess(await pageSession());
   if (!who) notFound();
-  return <PlanShell who={who} sites={await planWorkspaceSites()}>{children}</PlanShell>;
+  const { sites, home } = await planWorkspaceSites();
+  return <PlanShell who={who} sites={sites} home={home}>{children}</PlanShell>;
 }

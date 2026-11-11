@@ -4,7 +4,7 @@ import { isDateOnly, minutesNow, today } from "@/lib/format";
 import { requirePlanActor } from "@/modules/plan/shared/access";
 import { areasOf, classesAt, dutiesOf, heldOn, offsBetween, peopleFor, qualificationNames, sessionsOf, shiftsAt, shiftsElsewhere } from "@/modules/plan/shared/data";
 import { candidatesFor, fillsOf, gapsOf, laneClashes, needsOf, occurrencesOn, tasksOf, warningsOf } from "@/modules/plan/shared/model";
-import { mayManage, planSites, plannableDepartments, viewableSite } from "@/modules/plan/shared/scope";
+import { mayManage, pickSiteId, planSites, plannableDepartments, viewableSite } from "@/modules/plan/shared/scope";
 
 /** The Day: what's on with its gaps, then each person's shift with their duties, breaks, the tasks
  *  chosen for each duty and warnings, for the whole site (every department), the Manage level's "run today" view too. One
@@ -12,7 +12,7 @@ import { mayManage, planSites, plannableDepartments, viewableSite } from "@/modu
 export async function planDay(params: { site?: string; date?: string; dept?: string }) {
   const who = await requirePlanActor();
   const sites = await planSites(who);
-  const siteId = sites.find((s) => s.id === params.site)?.id ?? sites[0]?.id;
+  const siteId = await pickSiteId(sites, params.site);
   if (!siteId) return { who, sites, site: null } as const;
   const site = await viewableSite(siteId);
   if (!site) notFound();

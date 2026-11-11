@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { rotaAccess, RotaShell, rotaSites } from "@/modules/rota/features/workspace";
 import { pageSession } from "@/lib/page-guards";
+import { rememberedSite } from "@/lib/remembered-site";
 import { TITLE_TEMPLATE } from "@/lib/app";
 import '../workspace/module-workspace.css';
 
@@ -14,6 +15,6 @@ export default async function RotaLayout({ children }: { children: ReactNode }) 
   const who = rotaAccess(await pageSession());
   if (!who) notFound();
   // The site picker's list, in rotaWeek's order (its first site is the default).
-  const { sites } = await rotaSites();
-  return <RotaShell who={who} sites={sites.map(({ id, name }) => ({ id, name }))}>{children}</RotaShell>;
+  const [{ sites }, home] = await Promise.all([rotaSites(), rememberedSite("rota")]);
+  return <RotaShell who={who} sites={sites.map(({ id, name }) => ({ id, name }))} home={home ?? null}>{children}</RotaShell>;
 }

@@ -1,5 +1,6 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
+import { rememberedSite } from "@/lib/remembered-site";
 import { currentClubIdIfAny } from "@/lib/clubs/current";
 import { liveSitesWithin } from "@/lib/directory";
 import { parseDateOnly, toDateOnlyString as iso } from "@/lib/format";
@@ -93,11 +94,13 @@ export async function tasksSites() {
   const who = await requireTasksActor();
   const [complete, review] = await Promise.all([sitesFor("tasks.complete"), who.review ? sitesFor("tasks.review") : null]);
   const sites = await liveSitesWithin(who.orgId ?? null, complete);
-  const working = await currentClubIdIfAny();
+  const [working, remembered] = await Promise.all([currentClubIdIfAny(), rememberedSite("tasks")]);
+  const has = (id: string | null | undefined) => sites.find((s) => s.id === id)?.id;
   return {
     who, sites: sites.map((s) => ({ ...s, review: !!review && covers(review, s.id) })),
-    /** The default site: the one they are working at, if Tasks covers it. */
-    home: sites.some((s) => s.id === working) ? working : sites[0]?.id ?? null,
+    /** The default site: the one last picked in the site picker, else the one they are working
+     *  at, if Tasks covers it. */
+    home: has(remembered) ?? has(working) ?? sites[0]?.id ?? null,
   };
 }
 

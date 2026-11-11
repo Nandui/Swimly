@@ -4,14 +4,14 @@ import { today } from "@/lib/format";
 import { requirePlanActor } from "@/modules/plan/shared/access";
 import { dutiesOf, offsBetween, peopleFor, shiftsAt } from "@/modules/plan/shared/data";
 import { mondayOf, shiftIso } from "@/modules/plan/shared/model";
-import { planSites, plannableDepartments, viewableSite } from "@/modules/plan/shared/scope";
+import { pickSiteId, planSites, plannableDepartments, viewableSite } from "@/modules/plan/shared/scope";
 
 /** The Week: one department's people, Monday to Sunday, with each shift and who is off. The
  *  department's own people come first, then anyone borrowed onto its plan. */
 export async function planWeek(params: { site?: string; week?: string; dept?: string }) {
   const who = await requirePlanActor();
   const sites = await planSites(who);
-  const siteId = sites.find((s) => s.id === params.site)?.id ?? sites[0]?.id;
+  const siteId = await pickSiteId(sites, params.site);
   if (!siteId) return { who, sites, site: null } as const;
   const site = await viewableSite(siteId);
   if (!site) notFound();

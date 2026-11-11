@@ -1,4 +1,5 @@
 import "server-only";
+import { rememberedSite } from "@/lib/remembered-site";
 import { activeStaffAgesAtSite, areasAt, liveSitesWithin, sitesByIds, staffAgesByIds, withSites } from "@/lib/directory";
 import { qualificationsHeldBy } from "@/lib/qualifications";
 import { activityTypesByIds, activityTypesOf } from "@/lib/setup/activity-types";
@@ -30,7 +31,8 @@ export type RotaSite = Awaited<ReturnType<typeof rotaSites>>["sites"][number];
 
 export async function pickSite(siteId: string | undefined) {
   const { who, sites } = await rotaSites();
-  const site = siteId ? sites.find((s) => s.id === siteId) : sites[0];
+  const remembered = siteId ? undefined : await rememberedSite("rota");
+  const site = siteId ? sites.find((s) => s.id === siteId) : sites.find((s) => s.id === remembered) ?? sites[0];
   if (siteId && !site) notFound();
   return { who, sites, site: site ?? null };
 }

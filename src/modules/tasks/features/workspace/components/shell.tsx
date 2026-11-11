@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { ModuleShell } from '@/components/ui/module-shell';
 import { SiteSwitcher } from '@/components/ui/site-switcher';
+import { rememberSite } from '@/lib/remember-site';
 import { tasksPages } from '@/modules/tasks/features/workspace/pages';
 import type { TasksActor } from '@/modules/tasks/shared/access';
 
@@ -21,7 +22,7 @@ export function TasksShell({ who, sites, home, openActions, children }: { who: T
   }));
   return (
     <ModuleShell module="Tasks" id="tasks" who={who} links={links} scopeNote="Only the sites you cover"
-      tools={SITE_PAGES.has(pathname) && sites.length ? <SiteSwitcher sites={sites} label="Tasks site" clear={['date']} fallback={home} /> : undefined}>
+      tools={SITE_PAGES.has(pathname) && sites.length ? <SiteSwitcher sites={sites} label="Tasks site" clear={['date']} fallback={home} remember={(id) => rememberSite('tasks', id)} /> : undefined}>
       {children}
     </ModuleShell>
   );

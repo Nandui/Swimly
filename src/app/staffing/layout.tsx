@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { staffingAccess, StaffingShell, staffingSites } from "@/modules/staffing/features/workspace";
 import { pageSession } from "@/lib/page-guards";
+import { rememberedSite } from "@/lib/remembered-site";
 import { TITLE_TEMPLATE } from "@/lib/app";
 import '../workspace/module-workspace.css';
 
@@ -13,6 +14,6 @@ export const metadata: Metadata = { title: { default: "Staffing", template: TITL
 export default async function StaffingLayout({ children }: { children: ReactNode }) {
   const who = staffingAccess(await pageSession());
   if (!who) notFound();
-  const { sites } = await staffingSites();
-  return <StaffingShell who={who} sites={sites.map(({ id, name }) => ({ id, name }))}>{children}</StaffingShell>;
+  const [{ sites }, home] = await Promise.all([staffingSites(), rememberedSite("staffing")]);
+  return <StaffingShell who={who} sites={sites.map(({ id, name }) => ({ id, name }))} home={home ?? null}>{children}</StaffingShell>;
 }
