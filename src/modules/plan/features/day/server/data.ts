@@ -6,8 +6,8 @@ import { areasOf, classesAt, dutiesOf, heldOn, offsBetween, peopleFor, qualifica
 import { candidatesFor, fillsOf, gapsOf, laneClashes, needsOf, occurrencesOn, tasksOf, warningsOf } from "@/modules/plan/shared/model";
 import { mayManage, planSites, plannableDepartments, viewableSite } from "@/modules/plan/shared/scope";
 
-/** The Day: what's on with its gaps, then each person's shift with their duties, breaks, tasks and
- *  warnings, for the whole site (every department), the Manage level's "run today" view too. One
+/** The Day: what's on with its gaps, then each person's shift with their duties, breaks, the tasks
+ *  chosen for each duty and warnings, for the whole site (every department), the Manage level's "run today" view too. One
  *  department can be picked to narrow the people shown; what's on stays the whole site's. */
 export async function planDay(params: { site?: string; date?: string; dept?: string }) {
   const who = await requirePlanActor();
@@ -48,7 +48,7 @@ export async function planDay(params: { site?: string; date?: string; dept?: str
   const mine = new Set(departments.mine.map((d) => d.id));
   // For "free then", a class someone teaches counts as busy like a duty.
   const busyShifts = shifts.map((s) => ({ ...s, blocks: [...s.blocks, ...classes.all.filter((c) => c.userId === s.userId)
-    .map((c) => ({ id: `class:${c.ref}`, shiftId: s.id, dutyId: classDuty?.id ?? "", sessionId: null, start: c.start, end: c.end }))] }));
+    .map((c) => ({ id: `class:${c.ref}`, shiftId: s.id, dutyId: classDuty?.id ?? "", sessionId: null, start: c.start, end: c.end, taskIds: [] }))] }));
   return {
     who, sites, site, date, today: today(), now: minutesNow(), manage, departments, duties, areas, people, offs,
     /** The department picked to narrow the people shown, or null for every department. */

@@ -3,13 +3,13 @@ import { activePlacedStaff, activeStaffAtSite, areasAt, staffByIds } from "@/lib
 import { qualificationsHeldBy, qualificationTypesOf } from "@/lib/qualifications";
 import { prisma } from "@/lib/prisma";
 import { commitmentsFor } from "@/modules/contributions";
-import type { ClassItem, DutyRef, SessionDef, Shift } from "@/modules/plan/shared/model";
+import type { ClassItem, DutyRef, DutyTask, SessionDef, Shift } from "@/modules/plan/shared/model";
 
 /** What Plan (test) reads for one site over some days, for the Week and Day screens: the setup,
  *  what's on, the shifts, who is off, the classes from other apps and who holds which
  *  qualification. Everything else is worked out by the pure model. */
 
-export type PlanDutyRow = DutyRef & { color: string; defaultMinutes: number | null; forClasses: boolean; tasks: { name: string; when: string; atMinutes: number | null }[] };
+export type PlanDutyRow = DutyRef & { color: string; defaultMinutes: number | null; forClasses: boolean; tasks: DutyTask[] };
 export type PlanAreaRow = { id: string; name: string; parentId: string | null; lanes: number; departmentId: string | null };
 export type PlanPerson = { id: string; name: string; departmentIds: string[] };
 
@@ -20,7 +20,7 @@ export async function dutiesOf(orgId: string): Promise<PlanDutyRow[]> {
     include: { tasks: { orderBy: [{ sortOrder: "asc" }] } },
   });
   return rows.map((d) => ({ id: d.id, name: d.name, qualificationTypeId: d.qualificationTypeId, isBreak: d.isBreak, departmentId: d.departmentId,
-    color: d.color, defaultMinutes: d.defaultMinutes, forClasses: d.forClasses, tasks: d.tasks.map((t) => ({ name: t.name, when: t.when, atMinutes: t.atMinutes })) }));
+    color: d.color, defaultMinutes: d.defaultMinutes, forClasses: d.forClasses, tasks: d.tasks.map((t) => ({ id: t.id, name: t.name, when: t.when, atMinutes: t.atMinutes })) }));
 }
 
 /** A site's live areas from Admin › Areas, the one list Swim school and Rota use too (owner, 2
@@ -47,9 +47,9 @@ export async function sessionsOf(orgId: string, siteId: string, from: string, to
 }
 
 const shiftRow = (s: { id: string; userId: string; departmentId: string; siteId: string; date: string; startMinutes: number; endMinutes: number; note: string;
-  blocks: { id: string; shiftId: string; dutyId: string; sessionId: string | null; startMinutes: number; endMinutes: number }[] }) => ({
+  blocks: { id: string; shiftId: string; dutyId: string; sessionId: string | null; startMinutes: number; endMinutes: number; taskIds: string[] }[] }) => ({
   id: s.id, userId: s.userId, departmentId: s.departmentId, siteId: s.siteId, date: s.date, start: s.startMinutes, end: s.endMinutes, note: s.note,
-  blocks: s.blocks.map((b) => ({ id: b.id, shiftId: b.shiftId, dutyId: b.dutyId, sessionId: b.sessionId, start: b.startMinutes, end: b.endMinutes })),
+  blocks: s.blocks.map((b) => ({ id: b.id, shiftId: b.shiftId, dutyId: b.dutyId, sessionId: b.sessionId, start: b.startMinutes, end: b.endMinutes, taskIds: b.taskIds })),
 }) satisfies Shift & { note: string };
 
 /** The shifts at a site from `from` to `to`, with their blocks. */

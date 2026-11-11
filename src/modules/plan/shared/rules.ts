@@ -51,6 +51,8 @@ export const dutySchema = z.object({
   isBreak: z.boolean().default(false),
   forClasses: z.boolean().default(false),
   tasks: z.array(z.object({
+    /** A task already on the duty keeps its id, so the days it was chosen on keep it. */
+    id: z.string().min(1).optional(),
     name: z.string().trim().min(2, "Name each task.").max(80),
     when: z.enum(TASK_WHEN),
     atMinutes: minutes.nullable().default(null),
@@ -89,6 +91,8 @@ export type ShiftInput = z.input<typeof shiftSchema>;
 
 export const blockSchema = z.object({
   shiftId: id, dutyId: z.string().min(1, "Choose the duty."), sessionId: optionalId, start: minutes, end: minutes,
+  /** The duty's tasks this person does in the block; none unless chosen. */
+  taskIds: z.array(z.string().min(1)).max(20).default([]),
 }).refine(span, spanMessage);
 export type BlockInput = z.input<typeof blockSchema>;
 
