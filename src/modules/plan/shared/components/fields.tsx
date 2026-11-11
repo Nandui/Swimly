@@ -1,11 +1,23 @@
 "use client";
 
+import { Checkbox } from "@/components/shadcn/checkbox";
 import { Input } from "@/components/shadcn/input";
+import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { Field } from "@/components/form-dialog";
 import { clock, parseClock } from "@/modules/plan/shared/rules";
 
-/** Plan (test)'s small form fields: a time in 5-minute steps, and a choice from a list. */
+/** Plan (test)'s small form fields: a time in 5-minute steps, a choice from a list, and a tick. */
+
+/** A yes/no with its label, 44px tall. */
+export function Tick({ id, label, checked, onChange, disabled }: { id: string; label: string; checked: boolean; onChange: (checked: boolean) => void; disabled?: boolean }) {
+  return (
+    <div className="flex min-h-11 items-center gap-3">
+      <Checkbox id={id} checked={checked} disabled={disabled} onCheckedChange={(v) => onChange(v === true)} />
+      <Label htmlFor={id}>{label}</Label>
+    </div>
+  );
+}
 
 export function TimeField({ id, label, value, onChange, hint }: { id: string; label: string; value: number | null; onChange: (minutes: number | null) => void; hint?: string }) {
   return (

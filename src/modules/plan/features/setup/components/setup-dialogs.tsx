@@ -4,34 +4,23 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import { Checkbox } from "@/components/shadcn/checkbox";
 import { Input } from "@/components/shadcn/input";
-import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { Textarea } from "@/components/shadcn/textarea";
 import { Field, FormDialog } from "@/components/form-dialog";
 import { archiveDuty, cancelSession, saveDuty, saveSession } from "@/modules/plan/features/setup/server/actions";
 import { SkipDaysCalendar } from "@/modules/plan/features/setup/components/skip-days-calendar";
-import { ChoiceField, TimeField } from "@/modules/plan/shared/components/fields";
+import { ChoiceField, Tick, TimeField } from "@/modules/plan/shared/components/fields";
 import { DUTY_COLOR_LABEL, DUTY_COLORS, TASK_WHEN, TASK_WHEN_LABEL, WEEKDAYS, dutyColor, type DutyColor } from "@/modules/plan/shared/rules";
 
 type Ref = { id: string; name: string };
 const P = "turnfin-module";
 
-/** A yes/no with its label, 44px tall. */
-function Tick({ id, label, checked, onChange }: { id: string; label: string; checked: boolean; onChange: (checked: boolean) => void }) {
-  return (
-    <div className="flex min-h-11 items-center gap-3">
-      <Checkbox id={id} checked={checked} onCheckedChange={(v) => onChange(v === true)} />
-      <Label htmlFor={id}>{label}</Label>
-    </div>
-  );
-}
-
 export type DutyDraft = { id?: string; name: string; departmentId: string; qualificationTypeId: string; color: string; defaultMinutes: number | null;
-  isBreak: boolean; forClasses: boolean; tasks: { name: string; when: string; atMinutes: number | null }[] };
+  isBreak: boolean; forClasses: boolean; tasks: { id?: string; name: string; when: string; atMinutes: number | null }[] };
 
-/** Add or change a duty: what it is, whose work, who may do it, and the tasks that come with it. */
+/** Add or change a duty: what it is, whose work, who may do it, and the tasks it can come with.
+ *  The list is kept here; who does which is chosen on the Day (owner, 11 November 2026). */
 export function DutyDialog({ trigger, draft, departments, qualifications }: { trigger: React.ReactNode; draft: DutyDraft; departments: Ref[]; qualifications: Ref[] }) {
   const router = useRouter();
   const [f, setF] = useState(draft);
@@ -43,7 +32,7 @@ export function DutyDialog({ trigger, draft, departments, qualifications }: { tr
       submitLabel={draft.id ? "Save duty" : "Add duty"} successMessage="Duty saved" onOpen={() => setF(draft)} onSuccess={() => router.refresh()}
       submit={() => saveDuty({ name: f.name, departmentId: f.departmentId || null, qualificationTypeId: f.qualificationTypeId || null, color: dutyColor(f.color),
         defaultMinutes: f.defaultMinutes, isBreak: f.isBreak, forClasses: f.forClasses,
-        tasks: f.tasks.map((t) => ({ name: t.name, when: t.when as (typeof TASK_WHEN)[number], atMinutes: t.when === "at" ? t.atMinutes : null })) }, draft.id)}>
+        tasks: f.tasks.map((t) => ({ id: t.id, name: t.name, when: t.when as (typeof TASK_WHEN)[number], atMinutes: t.when === "at" ? t.atMinutes : null })) }, draft.id)}>
       <Field label="Name" htmlFor="plan-duty-name"><Input id="plan-duty-name" required maxLength={60} className="min-h-11" value={f.name} onChange={(e) => set("name", e.target.value)} /></Field>
       <div className="grid gap-4 sm:grid-cols-2">
         <ChoiceField id="plan-duty-dept" label="Department" value={f.departmentId} onChange={(v) => set("departmentId", v)} options={departments} empty="Any department" optional />
@@ -62,7 +51,8 @@ export function DutyDialog({ trigger, draft, departments, qualifications }: { tr
       <Tick id="plan-duty-break" label="This is a break" checked={f.isBreak} onChange={(v) => setF((x) => ({ ...x, isBreak: v, forClasses: v ? false : x.forClasses }))} />
       {f.isBreak ? null : <Tick id="plan-duty-classes" label="Swim classes need this duty (one place each)" checked={f.forClasses} onChange={(v) => set("forClasses", v)} />}
       <fieldset className="flex flex-col gap-3">
-        <legend className="font-semibold">Tasks that come with it</legend>
+        <legend className="font-semibold">Tasks it can come with</legend>
+        <p className="text-sm text-ui-muted-foreground">List them here. On the Day, you choose which ones each person on this duty does.</p>
         {f.tasks.map((t, i) => (
           <div key={i} className="flex flex-wrap items-end gap-2 *:min-w-28 [&>*:first-child]:flex-1">
             <Field label="Task" htmlFor={`plan-task-${i}`}><Input id={`plan-task-${i}`} className="min-h-11" maxLength={80} value={t.name} onChange={(e) => setTask(i, { name: e.target.value })} /></Field>

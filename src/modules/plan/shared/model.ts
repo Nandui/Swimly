@@ -46,7 +46,8 @@ export type Need = {
   count: number;
 };
 
-export type Block = { id: string; shiftId: string; dutyId: string; sessionId: string | null; start: number; end: number };
+/** `taskIds`: the duty's tasks chosen for this block on the Day. */
+export type Block = { id: string; shiftId: string; dutyId: string; sessionId: string | null; start: number; end: number; taskIds: string[] };
 export type Shift = { id: string; userId: string; departmentId: string; siteId: string; date: string; start: number; end: number; blocks: Block[] };
 
 export type DutyRef = { id: string; name: string; qualificationTypeId: string | null; isBreak: boolean; departmentId: string | null };
@@ -200,13 +201,23 @@ export function laneClashes(occurrences: readonly Occurrence[], laneCount: Reado
   return out;
 }
 
-/** The tasks a block brings, at their times. A task at a set time belongs to the block running
- *  then, so one ending at 12:00 leaves a 12:00 task to the block starting at 12:00. */
-export function tasksOf(block: Span, tasks: readonly { name: string; when: string; atMinutes: number | null }[]): { name: string; at: number }[] {
-  return tasks.flatMap((t) => {
-    if (t.when === "start") return [{ name: t.name, at: block.start }];
-    if (t.when === "end") return [{ name: t.name, at: block.end }];
-    return t.atMinutes !== null && t.atMinutes >= block.start && t.atMinutes < block.end ? [{ name: t.name, at: t.atMinutes }] : [];
+export type DutyTask = { id: string; name: string; when: string; atMinutes: number | null };
+
+/** When a duty's task falls in a block, or null for a set time the block isn't running at. A task
+ *  at a set time belongs to the block running then, so one ending at 12:00 leaves a 12:00 task to
+ *  the block starting at 12:00. */
+export function taskTime(block: Span, task: { when: string; atMinutes: number | null }): number | null {
+  if (task.when === "start") return block.start;
+  if (task.when === "end") return block.end;
+  return task.atMinutes !== null && task.atMinutes >= block.start && task.atMinutes < block.end ? task.atMinutes : null;
+}
+
+/** The tasks a block brings, at their times: the ones chosen for it on the Day from its duty's
+ *  list (owner, 11 November 2026), never the whole list by itself. */
+export function tasksOf(block: Span & { taskIds: readonly string[] }, tasks: readonly DutyTask[]): { name: string; at: number }[] {
+  return tasks.filter((t) => block.taskIds.includes(t.id)).flatMap((t) => {
+    const at = taskTime(block, t);
+    return at === null ? [] : [{ name: t.name, at }];
   }).sort((a, b) => a.at - b.at);
 }
 

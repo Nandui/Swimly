@@ -3,15 +3,17 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FormDialog } from "@/components/form-dialog";
+import { TaskTicks } from "@/modules/plan/features/day/components/task-ticks";
 import { saveBlock } from "@/modules/plan/features/day/server/actions";
 import { ChoiceField, TimeField } from "@/modules/plan/shared/components/fields";
+import type { DutyTask } from "@/modules/plan/shared/model";
 
-type Duty = { id: string; name: string; isBreak: boolean; defaultMinutes: number | null };
+type Duty = { id: string; name: string; isBreak: boolean; defaultMinutes: number | null; tasks: DutyTask[] };
 type SessionOption = { id: string; title: string; start: number; end: number; dutyIds: string[] };
-export type BlockDraft = { id?: string; shiftId: string; dutyId: string; sessionId: string | null; start: number; end: number };
+export type BlockDraft = { id?: string; shiftId: string; dutyId: string; sessionId: string | null; start: number; end: number; taskIds: string[] };
 
-/** Put someone on a duty for part of their shift, for a session that needs it or on its own; or
- *  change one they are on. A break is a duty too. */
+/** Put someone on a duty for part of their shift, for a session that needs it or on its own, with
+ *  the duty's tasks they do; or change one they are on. A break is a duty too. */
 export function BlockDialog({ trigger, draft, duties, sessions, who, onDone }: {
   trigger: React.ReactNode; draft: BlockDraft; duties: Duty[]; sessions: SessionOption[]; who: string; onDone?: () => void;
 }) {
@@ -19,9 +21,12 @@ export function BlockDialog({ trigger, draft, duties, sessions, who, onDone }: {
   const [f, setF] = useState(draft);
   const set = <K extends keyof BlockDraft>(key: K, value: BlockDraft[K]) => setF((x) => ({ ...x, [key]: value }));
   const fitting = sessions.filter((s) => s.dutyIds.includes(f.dutyId));
+  const tasks = duties.find((d) => d.id === f.dutyId)?.tasks ?? [];
   function chooseDuty(dutyId: string) {
     const duty = duties.find((d) => d.id === dutyId);
-    setF((x) => ({ ...x, dutyId, sessionId: sessions.some((s) => s.id === x.sessionId && s.dutyIds.includes(dutyId)) ? x.sessionId : null,
+    // Tasks belong to their duty, so another duty starts with none chosen.
+    setF((x) => ({ ...x, dutyId, taskIds: dutyId === x.dutyId ? x.taskIds : [],
+      sessionId: sessions.some((s) => s.id === x.sessionId && s.dutyIds.includes(dutyId)) ? x.sessionId : null,
       end: !x.id && duty?.defaultMinutes ? Math.min(1440, x.start + duty.defaultMinutes) : x.end }));
   }
   return (
@@ -30,7 +35,8 @@ export function BlockDialog({ trigger, draft, duties, sessions, who, onDone }: {
       description="It has to fit inside their shift, and inside the session when it fills one."
       submitLabel={draft.id ? "Save duty" : "Put on"} successMessage={draft.id ? "Duty saved" : "Duty added"}
       onOpen={() => setF(draft)} onSuccess={() => { router.refresh(); onDone?.(); }}
-      submit={() => saveBlock({ shiftId: f.shiftId, dutyId: f.dutyId, sessionId: f.sessionId, start: f.start, end: f.end }, draft.id)}>
+      submit={() => saveBlock({ shiftId: f.shiftId, dutyId: f.dutyId, sessionId: f.sessionId, start: f.start, end: f.end,
+        taskIds: f.taskIds.filter((id) => tasks.some((t) => t.id === id)) }, draft.id)}>
       <ChoiceField id="plan-block-duty" label="Duty" value={f.dutyId} onChange={chooseDuty} options={duties} empty="Choose a duty" />
       {fitting.length ? (
         <ChoiceField id="plan-block-session" label="For" value={f.sessionId ?? ""} onChange={(v) => set("sessionId", v || null)} optional empty="Nothing in particular"
@@ -40,6 +46,7 @@ export function BlockDialog({ trigger, draft, duties, sessions, who, onDone }: {
         <TimeField id="plan-block-start" label="From" value={f.start} onChange={(v) => set("start", v ?? 0)} />
         <TimeField id="plan-block-end" label="To" value={f.end} onChange={(v) => set("end", v ?? 0)} />
       </div>
+      {tasks.length ? <TaskTicks idPrefix="plan-block-task" tasks={tasks} block={f} value={f.taskIds} onChange={(v) => set("taskIds", v)} /> : null}
     </FormDialog>
   );
 }

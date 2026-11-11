@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.13.0 · 11 November 2026 · Choose a duty's tasks on the Day
+
+- **In Plan (test), a duty's tasks are now chosen on the Day.** Setup still keeps the list of tasks each duty can come with. Nobody gets them by themselves any more: you choose who does which.
+- **Put someone on a duty, then tick their tasks.** Press their duty under People and tick the tasks they do in that stretch. You can also tick them while putting someone on a duty, or when you change it.
+- **Each task shows the time it falls at.** A task set for a time when that duty isn't running can't be ticked.
+- **Tasks lists only the tasks you have given**, with who does each. Duties planned before today start with none, so tick the ones you want.
+- **Copying last week** brings each duty's tasks with it.
+
 ## 3.12.1 · 10 November 2026 · Pick a department on the Day
 
 - **In Plan (test), the Day has a department picker.** It opens on **All departments**, as before. Pick one to see only that department's people, with their warnings and timed tasks. What's on, and who could fill a gap, still cover the whole site. The department stays picked as you move from day to day.

@@ -63,8 +63,9 @@ model PlanDuty {
   @@map("plan_duties")
 }
 
-/// A small job that comes with a duty at a time, shown on the person's day (never ticked off:
-/// that is the Tasks app): "Open the till" at the start of Reception.
+/// A small job a duty can come with, at a time: "Open the till" at the start of Reception. Setup
+/// lists them; the Day chooses which ones each person on the duty does (`PlanBlock.taskIds`; owner,
+/// 11 November 2026). Shown on the person's day, never ticked off: that is the Tasks app.
 model PlanDutyTask {
   id        String @id @default(cuid())
   dutyId    String
@@ -178,6 +179,8 @@ model PlanBlock {
   sessionId    String?
   startMinutes Int
   endMinutes   Int
+  /// The duty's tasks this person does in this block (`PlanDutyTask` ids), chosen on the Day.
+  taskIds      String[] @default([])
   createdAt    DateTime @default(now())
 
   shift PlanShift @relation(fields: [shiftId], references: [id], onDelete: Cascade)

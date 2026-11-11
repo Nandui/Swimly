@@ -43,10 +43,19 @@ export async function saveDuty(input: DutyInput, id?: string): Promise<ActionRes
     // One duty is the one classes need: marking this one moves the mark here.
     if (v.forClasses) await tx.planDuty.updateMany({ where: { orgId: who.orgId, forClasses: true, ...(id ? { id: { not: id } } : {}) }, data: { forClasses: false } });
     const data = { name: v.name, departmentId: v.departmentId, qualificationTypeId: v.qualificationTypeId, color: v.color, defaultMinutes: v.defaultMinutes, isBreak: v.isBreak, forClasses: v.forClasses };
-    const tasks = { create: v.tasks.map((t, i) => ({ name: t.name, when: t.when, atMinutes: t.when === "at" ? t.atMinutes : null, sortOrder: i })) };
+    // A task already on the duty keeps its row, so the days it was chosen on (`PlanBlock.taskIds`)
+    // keep it; one left out is taken off, and those days stop showing it.
+    const tasks = v.tasks.map((t, i) => ({ id: t.id, name: t.name, when: t.when, atMinutes: t.when === "at" ? t.atMinutes : null, sortOrder: i }));
+    const had = new Set(existing ? (await tx.planDutyTask.findMany({ where: { dutyId: existing.id }, select: { id: true } })).map((t) => t.id) : []);
+    const kept = tasks.filter((t) => t.id && had.has(t.id));
+    const added = tasks.filter((t) => !t.id || !had.has(t.id)).map((t) => ({ name: t.name, when: t.when, atMinutes: t.atMinutes, sortOrder: t.sortOrder }));
     const row = existing
-      ? await tx.planDuty.update({ where: { id: existing.id }, data: { ...data, tasks: { deleteMany: {}, ...tasks } } })
-      : await tx.planDuty.create({ data: { ...data, orgId: who.orgId, tasks } });
+      ? await tx.planDuty.update({ where: { id: existing.id }, data: { ...data, tasks: {
+        deleteMany: { id: { notIn: kept.map((t) => t.id!) } },
+        update: kept.map((t) => ({ where: { id: t.id! }, data: { name: t.name, when: t.when, atMinutes: t.atMinutes, sortOrder: t.sortOrder } })),
+        create: added,
+      } } })
+      : await tx.planDuty.create({ data: { ...data, orgId: who.orgId, tasks: { create: added } } });
     await logAudit({ actorId: who.id, actorName: who.name, action: existing ? "update" : "create", entity: "PlanDuty", entityId: row.id, clubId: null,
       summary: `${existing ? "Changed" : "Added"} the duty ${row.name}` }, tx);
     return ok();
