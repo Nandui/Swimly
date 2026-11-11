@@ -11,8 +11,8 @@ import { copyWeek, mondayOf, occurrencesOn, shiftIso } from "@/modules/plan/shar
 import { mayPlanDepartment, viewableSite } from "@/modules/plan/shared/scope";
 
 /** Copy a department's last week into this one (owner, 29 October 2026): its shifts with their
- *  duties and the tasks chosen for them and, where the same session still runs, who filled it. Skips people marked off and never touches shifts already
- *  on this week. */
+ *  duties and the tasks chosen for them, at the same times, and, where the same session still
+ *  runs, who filled it. Skips people marked off and never touches shifts already on this week. */
 export async function copyLastWeek(siteId: string, departmentId: string, week: string): Promise<ActionResult & { copied?: number }> {
   const who = await requirePlanActor();
   if (!isDateOnly(week)) return fail("Choose a week.");
@@ -40,7 +40,7 @@ export async function copyLastWeek(siteId: string, departmentId: string, week: s
       await tx.planShift.create({ data: {
         orgId: site.orgId, siteId: site.id, departmentId, userId: s.userId, date: s.date, startMinutes: s.start, endMinutes: s.end, note: s.note,
         createdById: who.id, createdByName: who.name,
-        blocks: { create: s.blocks.map((b) => ({ dutyId: b.dutyId, sessionId: b.sessionId, startMinutes: b.start, endMinutes: b.end, taskIds: b.taskIds })) },
+        blocks: { create: s.blocks.map((b) => ({ dutyId: b.dutyId, sessionId: b.sessionId, startMinutes: b.start, endMinutes: b.end, taskIds: b.tasks.map((t) => t.id), taskMinutes: b.tasks.map((t) => t.at) })) },
       } });
     }
     await logAudit({ actorId: who.id, actorName: who.name, action: "create", entity: "PlanShift", clubId: site.id,

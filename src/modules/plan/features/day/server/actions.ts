@@ -18,7 +18,7 @@ import { mayManage, mayPlanDepartment, viewableSite } from "@/modules/plan/share
 
 const nameOf = async (userId: string) => (await staffByIds([userId])).get(userId)?.name ?? "Someone";
 
-/** Add or change a duty block inside a shift, with the duty's tasks chosen for it. A block fills a
+/** Add or change a duty block inside a shift, with the duty's tasks chosen for it and their times. A block fills a
  *  session only for a duty that session needs, on a day it runs. */
 export async function saveBlock(input: BlockInput, id?: string): Promise<ActionResult> {
   const who = await requirePlanActor();
@@ -32,10 +32,13 @@ export async function saveBlock(input: BlockInput, id?: string): Promise<ActionR
   if (v.start < shift.startMinutes || v.end > shift.endMinutes) return fail(`Keep it inside the shift, ${clock(shift.startMinutes)} to ${clock(shift.endMinutes)}, or change the shift first.`);
   const duty = await prisma.planDuty.findFirst({ where: { id: v.dutyId, orgId: site.orgId, archivedAt: null }, include: { tasks: { orderBy: { sortOrder: "asc" } } } });
   if (!duty) return fail("That duty is no longer on the list.");
-  // The tasks chosen for it come from the duty's own list in Setup, kept in that order.
-  const chosen = new Set(v.taskIds);
-  const tasks = duty.tasks.filter((t) => chosen.has(t.id));
-  if (tasks.length !== chosen.size) return fail(`${duty.name} no longer comes with one of those tasks. Open it again and choose from its list.`);
+  // The tasks chosen for it come from the duty's own list in Setup; each is done at a time inside
+  // the block, set here on the Day.
+  const tasks = v.tasks.flatMap((t) => { const task = duty.tasks.find((x) => x.id === t.id); return task ? [{ id: task.id, name: task.name, at: t.at }] : []; })
+    .sort((a, b) => a.at - b.at);
+  if (tasks.length !== v.tasks.length) return fail(`${duty.name} no longer comes with one of those tasks. Open it again and choose from its list.`);
+  const outside = tasks.find((t) => t.at < v.start || t.at > v.end);
+  if (outside) return fail(`Keep the time for ${outside.name} inside the duty, ${clock(v.start)} to ${clock(v.end)}.`);
   let sessionTitle: string | null = null;
   if (v.sessionId) {
     const [session] = (await sessionsOf(site.orgId, site.id, shift.date, shift.date)).filter((s) => s.id === v.sessionId);
@@ -49,9 +52,9 @@ export async function saveBlock(input: BlockInput, id?: string): Promise<ActionR
   const result = await prisma.$transaction(async (tx) => {
     const existing = id ? await tx.planBlock.findFirst({ where: { id, shiftId: shift.id } }) : null;
     if (id && !existing) return fail("That duty is no longer on the shift.");
-    const data = { dutyId: duty.id, sessionId: v.sessionId, startMinutes: v.start, endMinutes: v.end, taskIds: tasks.map((t) => t.id) };
+    const data = { dutyId: duty.id, sessionId: v.sessionId, startMinutes: v.start, endMinutes: v.end, taskIds: tasks.map((t) => t.id), taskMinutes: tasks.map((t) => t.at) };
     const row = existing ? await tx.planBlock.update({ where: { id: existing.id }, data }) : await tx.planBlock.create({ data: { ...data, shiftId: shift.id } });
-    const withTasks = tasks.length ? `, with ${tasks.map((t) => t.name).join(", ")}` : existing?.taskIds.length ? ", with no tasks" : "";
+    const withTasks = tasks.length ? `, with ${tasks.map((t) => `${t.name} at ${clock(t.at)}`).join(", ")}` : existing?.taskIds.length ? ", with no tasks" : "";
     await logAudit({ actorId: who.id, actorName: who.name, action: existing ? "update" : "create", entity: "PlanBlock", entityId: row.id, clubId: site.id,
       summary: `${existing ? "Moved" : "Put"} ${name} on ${duty.name}${sessionTitle ? ` for ${sessionTitle}` : ""}, ${shift.date} ${clock(v.start)} to ${clock(v.end)}${withTasks}` }, tx);
     return ok();

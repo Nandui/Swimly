@@ -17,8 +17,8 @@ import { BlockDialog } from "@/modules/plan/features/day/components/block-dialog
 import { SessionDayDialog } from "@/modules/plan/features/day/components/session-day";
 import { planClassTeacher, removeBlock, saveBlock } from "@/modules/plan/features/day/server/actions";
 import type { PlanDayData } from "@/modules/plan/features/day/server/data";
-import { TaskTicks } from "@/modules/plan/features/day/components/task-ticks";
-import { shiftIso, tasksOf } from "@/modules/plan/shared/model";
+import { BlockTasks } from "@/modules/plan/features/day/components/task-ticks";
+import { shiftIso, tasksOf, type BlockTask } from "@/modules/plan/shared/model";
 import { RemoveShiftDialog, ShiftDialog } from "@/modules/plan/shared/components/shift-dialog";
 
 type Picked = { kind: "item"; key: string } | { kind: "gap"; needKey: string; index: number }
@@ -120,9 +120,9 @@ export function DayView({ data }: { data: PlanDayData }) {
     if (!result.ok) { toast.error(result.error ?? "That didn't save."); return; }
     toast.success(done); close(); router.refresh();
   });
-  /** Give one duty block its tasks, from the duty's list; the block stays open to tick another. */
-  const giveTasks = (block: { id: string; shiftId: string; dutyId: string; sessionId: string | null; start: number; end: number }, taskIds: string[]) => start(async () => {
-    const result = await saveBlock({ shiftId: block.shiftId, dutyId: block.dutyId, sessionId: block.sessionId, start: block.start, end: block.end, taskIds }, block.id);
+  /** Give one duty block its tasks and their times, from the duty's list; the block stays open. */
+  const giveTasks = (block: { id: string; shiftId: string; dutyId: string; sessionId: string | null; start: number; end: number }, tasks: BlockTask[]) => start(async () => {
+    const result = await saveBlock({ shiftId: block.shiftId, dutyId: block.dutyId, sessionId: block.sessionId, start: block.start, end: block.end, tasks }, block.id);
     if (!result.ok) { toast.error(result.error ?? "That didn't save."); return; }
     toast.success("Tasks saved"); router.refresh();
   });
@@ -217,7 +217,7 @@ export function DayView({ data }: { data: PlanDayData }) {
     if (picked.kind === "free") {
       return { title: `${name} is free`, description: formatTimeRange(picked.start, picked.end),
         actions: <>
-          {shift.canPlan ? <BlockDialog draft={{ shiftId: shift.id, dutyId: "", sessionId: null, start: picked.start, end: picked.end, taskIds: [] }} duties={dutyOptions}
+          {shift.canPlan ? <BlockDialog draft={{ shiftId: shift.id, dutyId: "", sessionId: null, start: picked.start, end: picked.end, tasks: [] }} duties={dutyOptions}
             sessions={sessionOptions} who={name} onDone={close} trigger={<Button className="min-h-11">Put on a duty</Button>} /> : null}
           {shiftActions}
         </> };
@@ -225,12 +225,13 @@ export function DayView({ data }: { data: PlanDayData }) {
     const block = shift.blocks.find((b) => b.id === picked.blockId);
     if (!block) return null;
     const d = duty(block.dutyId);
-    // The duty's tasks (kept in Setup) are given here, block by block: whoever plans the shift ticks
-    // the ones this person does; everyone else reads the ones given.
+    // The duty's tasks (named in Setup) are given here, block by block: whoever plans the shift ticks
+    // the ones this person does and sets their times; everyone else reads the ones given.
     const given = tasksOf(block, d?.tasks ?? []);
+    const mine = block.tasks.filter((x) => d?.tasks.some((t) => t.id === x.id));
     return { title: `${name}: ${d?.name ?? "Duty"}`, description: [formatTimeRange(block.start, block.end), sessionTitle(block.sessionId)].filter(Boolean).join(" · "),
       body: shift.canPlan && d?.tasks.length
-        ? <TaskTicks idPrefix={`plan-give-${block.id}`} tasks={d.tasks} block={block} value={block.taskIds.filter((id) => d.tasks.some((t) => t.id === id))} disabled={pending} onChange={(v) => giveTasks(block, v)} />
+        ? <BlockTasks key={`${block.id}|${mine.map((t) => `${t.id}@${t.at}`).join("|")}`} idPrefix={`plan-give-${block.id}`} tasks={d.tasks} block={block} given={mine} pending={pending} onSave={(v) => giveTasks(block, v)} />
         : given.length ? <ul className="pc-list">{given.map((t) => <li key={`${t.name}${t.at}`} className="pc-row"><span className="w-12 shrink-0 tabular-nums">{formatTime(t.at)}</span><span className="pc-row-body">{t.name}</span></li>)}</ul>
         : shift.canPlan && d && !d.isBreak ? <p className="text-sm text-ui-muted-foreground">{d.name} has no tasks to give. {data.manage ? "Add them to the duty in Setup." : "A manager adds them to the duty in Setup."}</p> : null,
       actions: shift.canPlan ? <>
@@ -325,7 +326,7 @@ export function DayView({ data }: { data: PlanDayData }) {
         </section>
         <section aria-labelledby="plan-tasks" className="flex min-w-0 flex-col">
           <div className="pc-section-head"><h2 id="plan-tasks">Tasks</h2>{tasks.length ? <p>{tasks.length}</p> : null}</div>
-          {tasks.length === 0 ? <p className="pc-section-note">No tasks given yet. Pick someone&apos;s duty under People to choose its tasks.</p> : (
+          {tasks.length === 0 ? <p className="pc-section-note">No tasks given yet. Pick someone&apos;s duty under People to choose its tasks and their times.</p> : (
             <ul className="pc-list">
               {tasks.map((t, i) => <li key={`${t.who}${t.name}${t.at}${i}`} className="pc-row"><span className="w-12 shrink-0 tabular-nums">{formatTime(t.at)}</span>
                 <span className="pc-row-body"><span className="pc-row-title">{t.name}</span><span className="pc-row-hint">{t.who}</span></span></li>)}
