@@ -22,8 +22,8 @@ export function BlockDialog({ trigger, draft, duties, sessions, who, onDone }: {
   const set = <K extends keyof BlockDraft>(key: K, value: BlockDraft[K]) => setF((x) => ({ ...x, [key]: value }));
   const fitting = sessions.filter((s) => s.dutyIds.includes(f.dutyId));
   const tasks = duties.find((d) => d.id === f.dutyId)?.tasks ?? [];
-  /** Moving the stretch keeps each task's time inside it. */
-  const setSpan = (span: { start: number; end: number }) => setF((x) => ({ ...x, ...span, tasks: span.end > span.start ? x.tasks.map((t) => ({ ...t, at: within(t.at, span) })) : x.tasks }));
+  /** Moving the stretch keeps each task's times inside it. */
+  const setSpan = (span: { start: number; end: number }) => setF((x) => ({ ...x, ...span, tasks: span.end > span.start ? x.tasks.map((t) => ({ ...t, at: within(t.at, span), end: within(t.end, span) })) : x.tasks }));
   function chooseDuty(dutyId: string) {
     const duty = duties.find((d) => d.id === dutyId);
     // Tasks belong to their duty, so another duty starts with none chosen.

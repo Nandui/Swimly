@@ -40,7 +40,7 @@ export async function copyLastWeek(siteId: string, departmentId: string, week: s
       await tx.planShift.create({ data: {
         orgId: site.orgId, siteId: site.id, departmentId, userId: s.userId, date: s.date, startMinutes: s.start, endMinutes: s.end, note: s.note,
         createdById: who.id, createdByName: who.name,
-        blocks: { create: s.blocks.map((b) => ({ dutyId: b.dutyId, sessionId: b.sessionId, startMinutes: b.start, endMinutes: b.end, taskIds: b.tasks.map((t) => t.id), taskMinutes: b.tasks.map((t) => t.at) })) },
+        blocks: { create: s.blocks.map((b) => ({ dutyId: b.dutyId, sessionId: b.sessionId, startMinutes: b.start, endMinutes: b.end, taskIds: b.tasks.map((t) => t.id), taskMinutes: b.tasks.map((t) => t.at), taskEndMinutes: b.tasks.map((t) => t.end) })) },
       } });
     }
     await logAudit({ actorId: who.id, actorName: who.name, action: "create", entity: "PlanShift", clubId: site.id,
