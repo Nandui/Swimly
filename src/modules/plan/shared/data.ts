@@ -47,11 +47,12 @@ export async function sessionsOf(orgId: string, siteId: string, from: string, to
 }
 
 const shiftRow = (s: { id: string; userId: string; departmentId: string; siteId: string; date: string; startMinutes: number; endMinutes: number; note: string;
-  blocks: { id: string; shiftId: string; dutyId: string; sessionId: string | null; startMinutes: number; endMinutes: number; taskIds: string[]; taskMinutes: number[] }[] }) => ({
+  blocks: { id: string; shiftId: string; dutyId: string; sessionId: string | null; startMinutes: number; endMinutes: number; taskIds: string[]; taskMinutes: number[]; taskEndMinutes: number[] }[] }) => ({
   id: s.id, userId: s.userId, departmentId: s.departmentId, siteId: s.siteId, date: s.date, start: s.startMinutes, end: s.endMinutes, note: s.note,
   blocks: s.blocks.map((b) => ({ id: b.id, shiftId: b.shiftId, dutyId: b.dutyId, sessionId: b.sessionId, start: b.startMinutes, end: b.endMinutes,
-    // A task ticked before times were set on the Day (3.13.0) has none: it reads as the block's start.
-    tasks: b.taskIds.map((id, i) => ({ id, at: b.taskMinutes[i] ?? b.startMinutes })) })),
+    // A task ticked before its times were set on the Day (3.13.0, 3.14.0) lacks them: it reads from
+    // the block's start, to the block's end.
+    tasks: b.taskIds.map((id, i) => ({ id, at: b.taskMinutes[i] ?? b.startMinutes, end: b.taskEndMinutes[i] ?? b.endMinutes })) })),
 }) satisfies Shift & { note: string };
 
 /** The shifts at a site from `from` to `to`, with their blocks. */

@@ -107,12 +107,13 @@ test("lanes taken twice at once clash; the whole area open alongside lanes does 
   assert.deepEqual(laneClashes(occurrencesOn([lessons, lane2], THU), lanes).map((c) => c.text), ["Lessons: Example School and Lane hire both take lane 2."]);
 });
 
-test("a block's tasks are the ones chosen for it on the day, at the times set there", () => {
+test("a block's tasks are the ones chosen for it on the day, from the start to the end set there", () => {
   const tasks = [{ id: "open", name: "Open the till" }, { id: "close", name: "Close the till" }, { id: "post", name: "Check the post" }];
   assert.deepEqual(tasksOf({ tasks: [] }, tasks), [], "none by themselves");
-  assert.deepEqual(tasksOf({ tasks: [{ id: "close", at: h(12, 45) }, { id: "open", at: h(9) }] }, tasks),
-    [{ name: "Open the till", at: h(9) }, { name: "Close the till", at: h(12, 45) }], "in time order");
-  assert.deepEqual(tasksOf({ tasks: [{ id: "post", at: h(10) }, { id: "gone", at: h(11) }] }, tasks), [{ name: "Check the post", at: h(10) }], "a task since taken off the duty is ignored");
+  assert.deepEqual(tasksOf({ tasks: [{ id: "close", at: h(12, 45), end: h(13) }, { id: "open", at: h(9), end: h(9, 15) }] }, tasks),
+    [{ name: "Open the till", at: h(9), end: h(9, 15) }, { name: "Close the till", at: h(12, 45), end: h(13) }], "in time order, each from its start to its end");
+  assert.deepEqual(tasksOf({ tasks: [{ id: "post", at: h(10), end: h(10, 30) }, { id: "gone", at: h(11), end: h(12) }] }, tasks),
+    [{ name: "Check the post", at: h(10), end: h(10, 30) }], "a task since taken off the duty is ignored");
 });
 
 test("a long gap is offered to everyone on for part of it, for the part they are there", () => {

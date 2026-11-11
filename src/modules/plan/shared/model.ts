@@ -46,8 +46,8 @@ export type Need = {
   count: number;
 };
 
-/** One of a duty's tasks given to a block on the Day, and the time it is done at. */
-export type BlockTask = { id: string; at: number };
+/** One of a duty's tasks given to a block on the Day, from `at` to `end`. */
+export type BlockTask = { id: string; at: number; end: number };
 /** `tasks`: the duty's tasks chosen for this block on the Day, each with its time. */
 export type Block = { id: string; shiftId: string; dutyId: string; sessionId: string | null; start: number; end: number; tasks: BlockTask[] };
 export type Shift = { id: string; userId: string; departmentId: string; siteId: string; date: string; start: number; end: number; blocks: Block[] };
@@ -207,13 +207,13 @@ export function laneClashes(occurrences: readonly Occurrence[], laneCount: Reado
 export type DutyTask = { id: string; name: string };
 
 /** The tasks a block brings, in time order: the ones chosen for it on the Day from its duty's
- *  list, each at the time set there (owner, 11 November 2026). Never the whole list by itself, and
- *  a task since taken off the duty is left out. */
-export function tasksOf(block: { tasks: readonly BlockTask[] }, tasks: readonly DutyTask[]): { name: string; at: number }[] {
+ *  list, each from the start to the end set there (owner, 11 November 2026). Never the whole list
+ *  by itself, and a task since taken off the duty is left out. */
+export function tasksOf(block: { tasks: readonly BlockTask[] }, tasks: readonly DutyTask[]): { name: string; at: number; end: number }[] {
   return block.tasks.flatMap((given) => {
     const task = tasks.find((t) => t.id === given.id);
-    return task ? [{ name: task.name, at: given.at }] : [];
-  }).sort((a, b) => a.at - b.at);
+    return task ? [{ name: task.name, at: given.at, end: given.end }] : [];
+  }).sort((a, b) => a.at - b.at || a.end - b.end);
 }
 
 export type Candidate = Span & { shiftId: string; userId: string; qualified: boolean; ownDepartment: boolean; free: boolean; whole: boolean };

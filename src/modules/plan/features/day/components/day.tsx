@@ -226,13 +226,13 @@ export function DayView({ data }: { data: PlanDayData }) {
     if (!block) return null;
     const d = duty(block.dutyId);
     // The duty's tasks (named in Setup) are given here, block by block: whoever plans the shift ticks
-    // the ones this person does and sets their times; everyone else reads the ones given.
+    // the ones this person does and sets when each starts and ends; everyone else reads the ones given.
     const given = tasksOf(block, d?.tasks ?? []);
     const mine = block.tasks.filter((x) => d?.tasks.some((t) => t.id === x.id));
     return { title: `${name}: ${d?.name ?? "Duty"}`, description: [formatTimeRange(block.start, block.end), sessionTitle(block.sessionId)].filter(Boolean).join(" · "),
       body: shift.canPlan && d?.tasks.length
-        ? <BlockTasks key={`${block.id}|${mine.map((t) => `${t.id}@${t.at}`).join("|")}`} idPrefix={`plan-give-${block.id}`} tasks={d.tasks} block={block} given={mine} pending={pending} onSave={(v) => giveTasks(block, v)} />
-        : given.length ? <ul className="pc-list">{given.map((t) => <li key={`${t.name}${t.at}`} className="pc-row"><span className="w-12 shrink-0 tabular-nums">{formatTime(t.at)}</span><span className="pc-row-body">{t.name}</span></li>)}</ul>
+        ? <BlockTasks key={`${block.id}|${mine.map((t) => `${t.id}@${t.at}-${t.end}`).join("|")}`} idPrefix={`plan-give-${block.id}`} tasks={d.tasks} block={block} given={mine} pending={pending} onSave={(v) => giveTasks(block, v)} />
+        : given.length ? <ul className="pc-list">{given.map((t) => <li key={`${t.name}${t.at}`} className="pc-row"><span className="w-28 shrink-0 tabular-nums">{formatTimeRange(t.at, t.end)}</span><span className="pc-row-body">{t.name}</span></li>)}</ul>
         : shift.canPlan && d && !d.isBreak ? <p className="text-sm text-ui-muted-foreground">{d.name} has no tasks to give. {data.manage ? "Add them to the duty in Setup." : "A manager adds them to the duty in Setup."}</p> : null,
       actions: shift.canPlan ? <>
         <BlockDialog draft={{ ...block, id: block.id }} duties={dutyOptions} sessions={sessionOptions} who={name} onDone={close} trigger={<Button className="min-h-11">Change</Button>} />
@@ -242,7 +242,7 @@ export function DayView({ data }: { data: PlanDayData }) {
   })();
 
   const toCheck = shown.filter((s) => s.warnings.length);
-  const tasks = shown.flatMap((s) => s.tasks.map((t) => ({ ...t, who: nameOf(s.userId) }))).sort((a, b) => a.at - b.at);
+  const tasks = shown.flatMap((s) => s.tasks.map((t) => ({ ...t, who: nameOf(s.userId) }))).sort((a, b) => a.at - b.at || a.end - b.end);
 
   return (
     <div className="flex flex-col gap-(--space-7)">
@@ -328,7 +328,7 @@ export function DayView({ data }: { data: PlanDayData }) {
           <div className="pc-section-head"><h2 id="plan-tasks">Tasks</h2>{tasks.length ? <p>{tasks.length}</p> : null}</div>
           {tasks.length === 0 ? <p className="pc-section-note">No tasks given yet. Pick someone&apos;s duty under People to choose its tasks and their times.</p> : (
             <ul className="pc-list">
-              {tasks.map((t, i) => <li key={`${t.who}${t.name}${t.at}${i}`} className="pc-row"><span className="w-12 shrink-0 tabular-nums">{formatTime(t.at)}</span>
+              {tasks.map((t, i) => <li key={`${t.who}${t.name}${t.at}${i}`} className="pc-row"><span className="w-28 shrink-0 tabular-nums">{formatTimeRange(t.at, t.end)}</span>
                 <span className="pc-row-body"><span className="pc-row-title">{t.name}</span><span className="pc-row-hint">{t.who}</span></span></li>)}
             </ul>
           )}

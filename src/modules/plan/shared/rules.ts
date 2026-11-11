@@ -87,9 +87,10 @@ export type ShiftInput = z.input<typeof shiftSchema>;
 
 export const blockSchema = z.object({
   shiftId: id, dutyId: z.string().min(1, "Choose the duty."), sessionId: optionalId, start: minutes, end: minutes,
-  /** The duty's tasks this person does in the block, each with its time; none unless chosen. */
-  tasks: z.array(z.object({ id: z.string().min(1), at: minutes })).max(20).default([]),
+  /** The duty's tasks this person does in the block, each from `at` to `end`; none unless chosen. */
+  tasks: z.array(z.object({ id: z.string().min(1), at: minutes, end: minutes })).max(20).default([]),
 }).refine(span, spanMessage)
+  .refine((b) => b.tasks.every((t) => t.end > t.at), { message: "Each task's end must be after its start.", path: ["tasks"] })
   .refine((b) => new Set(b.tasks.map((t) => t.id)).size === b.tasks.length, { message: "Give each task once.", path: ["tasks"] });
 export type BlockInput = z.input<typeof blockSchema>;
 

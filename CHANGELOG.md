@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.15.0 · 11 November 2026 · Tasks have a start and an end
+
+- **In Plan (test), each task you give on the Day now has a start and an end.** Tick a task on someone's duty and set **From** and **To** for it, then press **Save tasks**. It is the same while putting someone on a duty or changing it.
+- **A ticked task starts as the whole duty.** Narrow it to when it is really done. It has to stay inside the duty, and end after it starts.
+- **Tasks lists each task with its times**, such as 09:30 to 10:00, and who does it.
+- Tasks you already gave keep their start and run to the end of the duty until you set an end.
+
 ## 3.14.0 · 11 November 2026 · Set a task's time on the Day
 
 - **In Plan (test), Setup now asks only for a task's name.** The "When" choice has gone from the duty form: just list the tasks the duty can come with.
