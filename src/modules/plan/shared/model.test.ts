@@ -25,7 +25,7 @@ const duties = new Map<string, DutyRef>([
   ["teacher", { id: "teacher", name: "Swim teacher", qualificationTypeId: null, isBreak: false, departmentId: "pool" }],
   ["break", { id: "break", name: "Break", qualificationTypeId: null, isBreak: true, departmentId: null }],
 ]);
-const block = (change: Partial<Block>): Block => ({ id: "b", shiftId: "x", dutyId: "lifeguard", sessionId: "open", start: h(7), end: h(15), taskIds: [], ...change });
+const block = (change: Partial<Block>): Block => ({ id: "b", shiftId: "x", dutyId: "lifeguard", sessionId: "open", start: h(7), end: h(15), tasks: [], ...change });
 const shift = (change: Partial<Shift>): Shift => ({ id: "x", userId: "u", departmentId: "pool", siteId: "site", date: THU, start: h(7), end: h(15), blocks: [], ...change });
 
 test("days of the week count from Monday", () => {
@@ -107,18 +107,12 @@ test("lanes taken twice at once clash; the whole area open alongside lanes does 
   assert.deepEqual(laneClashes(occurrencesOn([lessons, lane2], THU), lanes).map((c) => c.text), ["Lessons: Example School and Lane hire both take lane 2."]);
 });
 
-test("the tasks chosen for a block land at its start, end or set time, inside the block", () => {
-  const tasks = [{ id: "close", name: "Close the till", when: "end", atMinutes: null }, { id: "open", name: "Open the till", when: "start", atMinutes: null },
-    { id: "test", name: "Pool test", when: "at", atMinutes: h(12) }, { id: "late", name: "Late check", when: "at", atMinutes: h(20) }];
-  const all = tasks.map((t) => t.id);
-  assert.deepEqual(tasksOf({ start: h(9), end: h(13), taskIds: all }, tasks), [{ name: "Open the till", at: h(9) }, { name: "Pool test", at: h(12) }, { name: "Close the till", at: h(13) }]);
-  assert.deepEqual(tasksOf({ start: h(7), end: h(12), taskIds: all }, tasks).map((t) => t.name), ["Open the till", "Close the till"], "12:00 belongs to the block from 12:00");
-});
-
-test("a duty's tasks are only the ones chosen for the block on the day", () => {
-  const tasks = [{ id: "open", name: "Open the till", when: "start", atMinutes: null }, { id: "close", name: "Close the till", when: "end", atMinutes: null }];
-  assert.deepEqual(tasksOf({ start: h(9), end: h(13), taskIds: [] }, tasks), [], "none by themselves");
-  assert.deepEqual(tasksOf({ start: h(9), end: h(13), taskIds: ["close", "gone"] }, tasks), [{ name: "Close the till", at: h(13) }], "a task since taken off the duty is ignored");
+test("a block's tasks are the ones chosen for it on the day, at the times set there", () => {
+  const tasks = [{ id: "open", name: "Open the till" }, { id: "close", name: "Close the till" }, { id: "post", name: "Check the post" }];
+  assert.deepEqual(tasksOf({ tasks: [] }, tasks), [], "none by themselves");
+  assert.deepEqual(tasksOf({ tasks: [{ id: "close", at: h(12, 45) }, { id: "open", at: h(9) }] }, tasks),
+    [{ name: "Open the till", at: h(9) }, { name: "Close the till", at: h(12, 45) }], "in time order");
+  assert.deepEqual(tasksOf({ tasks: [{ id: "post", at: h(10) }, { id: "gone", at: h(11) }] }, tasks), [{ name: "Check the post", at: h(10) }], "a task since taken off the duty is ignored");
 });
 
 test("a long gap is offered to everyone on for part of it, for the part they are there", () => {

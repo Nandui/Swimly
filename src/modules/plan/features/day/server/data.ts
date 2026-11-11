@@ -48,7 +48,7 @@ export async function planDay(params: { site?: string; date?: string; dept?: str
   const mine = new Set(departments.mine.map((d) => d.id));
   // For "free then", a class someone teaches counts as busy like a duty.
   const busyShifts = shifts.map((s) => ({ ...s, blocks: [...s.blocks, ...classes.all.filter((c) => c.userId === s.userId)
-    .map((c) => ({ id: `class:${c.ref}`, shiftId: s.id, dutyId: classDuty?.id ?? "", sessionId: null, start: c.start, end: c.end, taskIds: [] }))] }));
+    .map((c) => ({ id: `class:${c.ref}`, shiftId: s.id, dutyId: classDuty?.id ?? "", sessionId: null, start: c.start, end: c.end, tasks: [] }))] }));
   return {
     who, sites, site, date, today: today(), now: minutesNow(), manage, departments, duties, areas, people, offs,
     /** The department picked to narrow the people shown, or null for every department. */

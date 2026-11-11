@@ -11,16 +11,17 @@ import { Field, FormDialog } from "@/components/form-dialog";
 import { archiveDuty, cancelSession, saveDuty, saveSession } from "@/modules/plan/features/setup/server/actions";
 import { SkipDaysCalendar } from "@/modules/plan/features/setup/components/skip-days-calendar";
 import { ChoiceField, Tick, TimeField } from "@/modules/plan/shared/components/fields";
-import { DUTY_COLOR_LABEL, DUTY_COLORS, TASK_WHEN, TASK_WHEN_LABEL, WEEKDAYS, dutyColor, type DutyColor } from "@/modules/plan/shared/rules";
+import { DUTY_COLOR_LABEL, DUTY_COLORS, WEEKDAYS, dutyColor, type DutyColor } from "@/modules/plan/shared/rules";
 
 type Ref = { id: string; name: string };
 const P = "turnfin-module";
 
 export type DutyDraft = { id?: string; name: string; departmentId: string; qualificationTypeId: string; color: string; defaultMinutes: number | null;
-  isBreak: boolean; forClasses: boolean; tasks: { id?: string; name: string; when: string; atMinutes: number | null }[] };
+  isBreak: boolean; forClasses: boolean; tasks: { id?: string; name: string }[] };
 
 /** Add or change a duty: what it is, whose work, who may do it, and the tasks it can come with.
- *  The list is kept here; who does which is chosen on the Day (owner, 11 November 2026). */
+ *  Only their names are kept here; who does which, and at what time, is chosen on the Day (owner,
+ *  11 November 2026). */
 export function DutyDialog({ trigger, draft, departments, qualifications }: { trigger: React.ReactNode; draft: DutyDraft; departments: Ref[]; qualifications: Ref[] }) {
   const router = useRouter();
   const [f, setF] = useState(draft);
@@ -32,7 +33,7 @@ export function DutyDialog({ trigger, draft, departments, qualifications }: { tr
       submitLabel={draft.id ? "Save duty" : "Add duty"} successMessage="Duty saved" onOpen={() => setF(draft)} onSuccess={() => router.refresh()}
       submit={() => saveDuty({ name: f.name, departmentId: f.departmentId || null, qualificationTypeId: f.qualificationTypeId || null, color: dutyColor(f.color),
         defaultMinutes: f.defaultMinutes, isBreak: f.isBreak, forClasses: f.forClasses,
-        tasks: f.tasks.map((t) => ({ id: t.id, name: t.name, when: t.when as (typeof TASK_WHEN)[number], atMinutes: t.when === "at" ? t.atMinutes : null })) }, draft.id)}>
+        tasks: f.tasks.map((t) => ({ id: t.id, name: t.name })) }, draft.id)}>
       <Field label="Name" htmlFor="plan-duty-name"><Input id="plan-duty-name" required maxLength={60} className="min-h-11" value={f.name} onChange={(e) => set("name", e.target.value)} /></Field>
       <div className="grid gap-4 sm:grid-cols-2">
         <ChoiceField id="plan-duty-dept" label="Department" value={f.departmentId} onChange={(v) => set("departmentId", v)} options={departments} empty="Any department" optional />
@@ -52,21 +53,15 @@ export function DutyDialog({ trigger, draft, departments, qualifications }: { tr
       {f.isBreak ? null : <Tick id="plan-duty-classes" label="Swim classes need this duty (one place each)" checked={f.forClasses} onChange={(v) => set("forClasses", v)} />}
       <fieldset className="flex flex-col gap-3">
         <legend className="font-semibold">Tasks it can come with</legend>
-        <p className="text-sm text-ui-muted-foreground">List them here. On the Day, you choose which ones each person on this duty does.</p>
+        <p className="text-sm text-ui-muted-foreground">Just name them here. On the Day, you choose which ones each person on this duty does, and at what time.</p>
         {f.tasks.map((t, i) => (
-          <div key={i} className="flex flex-wrap items-end gap-2 *:min-w-28 [&>*:first-child]:flex-1">
+          <div key={i} className="flex items-end gap-2 [&>*:first-child]:flex-1">
             <Field label="Task" htmlFor={`plan-task-${i}`}><Input id={`plan-task-${i}`} className="min-h-11" maxLength={80} value={t.name} onChange={(e) => setTask(i, { name: e.target.value })} /></Field>
-            <Field label="When" htmlFor={`plan-task-when-${i}`}>
-              <NativeSelect id={`plan-task-when-${i}`} className="min-h-11" value={t.when} onChange={(e) => setTask(i, { when: e.target.value })}>
-                {TASK_WHEN.map((w) => <NativeSelectOption key={w} value={w}>{TASK_WHEN_LABEL[w]}</NativeSelectOption>)}
-              </NativeSelect>
-            </Field>
-            {t.when === "at" ? <TimeField id={`plan-task-at-${i}`} label="Time" value={t.atMinutes} onChange={(v) => setTask(i, { atMinutes: v })} /> : <span />}
             <Button type="button" variant="ghost" size="icon" className="min-h-11 min-w-11" aria-label={`Remove ${t.name || "this task"}`}
               onClick={() => set("tasks", f.tasks.filter((_, j) => j !== i))}><Trash2 aria-hidden="true" /></Button>
           </div>
         ))}
-        <div><Button type="button" variant="outline" className="min-h-11" onClick={() => set("tasks", [...f.tasks, { name: "", when: "start", atMinutes: null }])}><Plus aria-hidden="true" />Add a task</Button></div>
+        <div><Button type="button" variant="outline" className="min-h-11" onClick={() => set("tasks", [...f.tasks, { name: "" }])}><Plus aria-hidden="true" />Add a task</Button></div>
       </fieldset>
     </FormDialog>
   );

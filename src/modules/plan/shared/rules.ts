@@ -19,8 +19,6 @@ export const OFF_REASON_META = {
 } satisfies Record<(typeof OFF_REASONS)[number], StatusMeta>;
 export const offReasonMeta = (reason: string): StatusMeta => OFF_REASON_META[(OFF_REASONS as readonly string[]).includes(reason) ? (reason as (typeof OFF_REASONS)[number]) : "other"];
 
-export const TASK_WHEN = ["start", "end", "at"] as const;
-export const TASK_WHEN_LABEL: Record<(typeof TASK_WHEN)[number], string> = { start: "At the start", end: "At the end", at: "At a set time" };
 
 export const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
 
@@ -54,9 +52,7 @@ export const dutySchema = z.object({
     /** A task already on the duty keeps its id, so the days it was chosen on keep it. */
     id: z.string().min(1).optional(),
     name: z.string().trim().min(2, "Name each task.").max(80),
-    when: z.enum(TASK_WHEN),
-    atMinutes: minutes.nullable().default(null),
-  }).refine((t) => t.when !== "at" || t.atMinutes !== null, { message: "Give the task's time.", path: ["atMinutes"] })).max(20).default([]),
+  })).max(20).default([]),
 }).refine((d) => !(d.isBreak && d.forClasses), { message: "A break can't be the duty classes need.", path: ["forClasses"] });
 export type DutyInput = z.input<typeof dutySchema>;
 
@@ -91,9 +87,10 @@ export type ShiftInput = z.input<typeof shiftSchema>;
 
 export const blockSchema = z.object({
   shiftId: id, dutyId: z.string().min(1, "Choose the duty."), sessionId: optionalId, start: minutes, end: minutes,
-  /** The duty's tasks this person does in the block; none unless chosen. */
-  taskIds: z.array(z.string().min(1)).max(20).default([]),
-}).refine(span, spanMessage);
+  /** The duty's tasks this person does in the block, each with its time; none unless chosen. */
+  tasks: z.array(z.object({ id: z.string().min(1), at: minutes })).max(20).default([]),
+}).refine(span, spanMessage)
+  .refine((b) => new Set(b.tasks.map((t) => t.id)).size === b.tasks.length, { message: "Give each task once.", path: ["tasks"] });
 export type BlockInput = z.input<typeof blockSchema>;
 
 export const offSchema = z.object({

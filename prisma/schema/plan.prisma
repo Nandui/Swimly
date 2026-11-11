@@ -63,15 +63,18 @@ model PlanDuty {
   @@map("plan_duties")
 }
 
-/// A small job a duty can come with, at a time: "Open the till" at the start of Reception. Setup
-/// lists them; the Day chooses which ones each person on the duty does (`PlanBlock.taskIds`; owner,
-/// 11 November 2026). Shown on the person's day, never ticked off: that is the Tasks app.
+/// A small job a duty can come with: "Open the till" on Reception. Setup lists them by name only;
+/// the Day chooses which ones each person on the duty does, and at what time (`PlanBlock.taskIds`
+/// and `taskMinutes`; owner, 11 November 2026). Shown on the person's day, never ticked off: that
+/// is the Tasks app.
 model PlanDutyTask {
   id        String @id @default(cuid())
   dutyId    String
   name      String
-  /// "start", "end" or "at" (at `atMinutes`).
+  /// Retired (owner, 11 November 2026): the time is set on the Day, in `PlanBlock.taskMinutes`.
+  /// No longer read; new rows write "start". Waits for the owner's yes to be removed.
   when      String
+  /// Retired with `when`.
   atMinutes Int?
   sortOrder Int    @default(0)
 
@@ -181,6 +184,8 @@ model PlanBlock {
   endMinutes   Int
   /// The duty's tasks this person does in this block (`PlanDutyTask` ids), chosen on the Day.
   taskIds      String[] @default([])
+  /// The time each of those tasks is done at, in the same order, set on the Day.
+  taskMinutes  Int[]    @default([])
   createdAt    DateTime @default(now())
 
   shift PlanShift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
