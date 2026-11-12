@@ -218,3 +218,82 @@ model PlanOff {
   @@index([userId, firstDay])
   @@map("plan_offs")
 }
+
+/// Where a department's cover requests are posted at a site: one Google Chat space (owner, 12
+/// November 2026, D30). Without one, nobody can be asked for that department there.
+model PlanChatSpace {
+  id            String   @id @default(cuid())
+  orgId         String
+  siteId        String
+  departmentId  String
+  /// Google Chat's own name for the space: "spaces/AAAA…".
+  space         String
+  /// The space's name as people see it in Chat.
+  name          String   @default("")
+  linkedById    String
+  linkedByName  String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([siteId, departmentId])
+  @@index([orgId])
+  @@map("plan_chat_spaces")
+}
+
+/// A gap on the Day that staff are asked to cover (D30): what's on, the duty and the stretch, as
+/// they read when asked. Staff offer; whoever plans the department chooses one, and Plan puts
+/// them on. It stops when someone is chosen or the asking is stopped.
+model PlanCoverRequest {
+  id            String    @id @default(cuid())
+  orgId         String
+  siteId        String
+  date          String
+  /// The need it asks for, as the Day keys it: "s:<session>:<duty>" or "c:<source>:<ref>".
+  needKey       String
+  dutyId        String
+  sessionId     String?
+  classSource   String?
+  classRef      String?
+  /// The department asked; a chosen person's new shift goes on its plan.
+  departmentId  String
+  title         String
+  /// Where it is, in words: the area's name.
+  place         String    @default("")
+  startMinutes  Int
+  endMinutes    Int
+  note          String    @default("")
+  askedById     String
+  askedByName   String
+  closedAt      DateTime?
+  /// "filled" (someone was chosen) or "stopped".
+  outcome       String?
+  chosenUserId  String?
+  closedById    String?
+  closedByName  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  offers PlanCoverOffer[]
+
+  @@index([orgId, siteId, date])
+  @@map("plan_cover_requests")
+}
+
+/// One person's latest answer to a cover request.
+model PlanCoverOffer {
+  id        String   @id @default(cuid())
+  orgId     String
+  requestId String
+  userId    String
+  /// "yes" (I can cover) or "no".
+  answer    String
+  /// Where they answered: "chat".
+  via       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  request PlanCoverRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@unique([requestId, userId])
+  @@map("plan_cover_offers")
+}
