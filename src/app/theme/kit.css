@@ -498,7 +498,9 @@ body.turnfin-app { background: var(--bg); }
 /* DayTimeline (ui-kit/day-timeline.tsx): lanes of Calendar-style blocks with a 3px leading bar,
    the hours along the top in caption-2, and the red now line and pill, as in Calendar. Each lane
    sits beside its label and holds as many rows as its overlapping blocks need; a hairline parts
-   one lane from the next. */
+   one lane from the next. A group of lanes (an area with its lanes or parts) is one grid of rows:
+   its own lane first in the label ink, its parts indented beneath, and each block placed by its
+   rows, so one that takes several lanes fills them. */
 .turnfin-app .day-tl { display: grid; grid-template-columns: 90px minmax(0, 1fr); column-gap: var(--space-3); min-width: 0; }
 .turnfin-app .day-tl-axis { position: relative; height: 20px; color: var(--label-2); font-size: 11px; line-height: 13px; font-weight: 550; font-variant-numeric: tabular-nums; }
 .turnfin-app .day-tl-hour { position: absolute; top: 2px; translate: -50% 0; white-space: nowrap; }
@@ -506,13 +508,16 @@ body.turnfin-app { background: var(--bg); }
 .turnfin-app .day-tl-hour[data-edge='end'] { translate: -100% 0; }
 .turnfin-app .day-tl-pill { position: absolute; top: 0; z-index: 3; padding: 1px 6px; border-radius: var(--radius-xs); background: var(--red-badge); color: #ffffff; font-size: 11px; line-height: 15px; font-weight: 650; white-space: nowrap; translate: -50% 0; }
 .turnfin-app .day-tl-label { display: flex; align-items: center; align-self: start; min-width: 0; height: 40px; overflow: hidden; color: var(--label-2); font-size: 13px; line-height: 18px; font-weight: 550; white-space: nowrap; text-overflow: ellipsis; }
-.turnfin-app .day-tl-lane { position: relative; display: flex; flex-direction: column; min-width: 0; }
-.turnfin-app .day-tl-label:not(:nth-child(3)), .turnfin-app .day-tl-lane:not(:nth-child(4)) { border-top: 0.5px solid var(--sep); }
-.turnfin-app .day-tl-row { position: relative; height: 40px; }
+.turnfin-app .day-tl-label[data-role='head'] { color: var(--label); font-weight: 650; }
+.turnfin-app .day-tl-label[data-role='part'] { padding-left: var(--space-3); border-top: 0.5px solid var(--sep); }
+.turnfin-app :is(.day-tl-labels, .day-tl-lane) { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); grid-auto-rows: 40px; min-width: 0; }
+.turnfin-app .day-tl-labels:not(:nth-child(3)), .turnfin-app .day-tl-lane:not(:nth-child(4)) { border-top: 0.5px solid var(--sep); }
+.turnfin-app .day-tl-row[data-edge='lane'] { border-top: 0.5px solid var(--sep); }
 .turnfin-app .day-tl-line { position: absolute; top: 0; bottom: 0; width: 0.5px; background: var(--sep); }
 .turnfin-app .day-tl-block { position: absolute; top: 3px; bottom: 3px; z-index: 2; display: flex; flex-direction: column; justify-content: center; min-width: 0; margin-right: 3px; padding: 0 8px 0 11px; overflow: hidden; border-radius: var(--radius-sm); font-size: 12px; line-height: 15px; font-weight: 600; white-space: nowrap; text-decoration: none; transition: background-color 450ms var(--ease), color 450ms var(--ease); }
 .turnfin-app :is(.day-tl-name, .day-tl-sub) { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .turnfin-app .day-tl-sub { font-weight: 450; opacity: 0.85; }
+.turnfin-app .day-tl-block[data-tall] { justify-content: flex-start; padding-top: 6px; }
 /* A block's parts (a duty's tasks): segments inside it in a deeper shade of its own tone, beside
    its leading bar; ones at the same time share its height. Its name sits in the stretch left free. */
 .turnfin-app .day-tl-parts { position: absolute; inset: 3px 2px 3px 4px; pointer-events: none; }
@@ -534,8 +539,8 @@ body.turnfin-app { background: var(--bg); }
    below the card. */
 @media (max-width: 767px) {
   .turnfin-app .day-tl { grid-template-columns: minmax(0, 1fr); }
-  .turnfin-app :is(.day-tl-corner, .day-tl-label) { display: none; }
-  .turnfin-app .day-tl-row { height: 30px; }
+  .turnfin-app :is(.day-tl-corner, .day-tl-labels) { display: none; }
+  .turnfin-app .day-tl-lane { grid-auto-rows: 30px; }
   .turnfin-app .day-tl-block { padding: 0; font-size: 0; }
   .turnfin-app :is(.day-tl-name, .day-tl-sub, .day-tl-part-name, .day-tl-room) { display: none; }
   .turnfin-app .day-tl-part { padding: 0; }
@@ -547,6 +552,7 @@ body.turnfin-app { background: var(--bg); }
 /* A block that opens an Inspector is the kit's Button (DayTimeline `onSelect`): the button's own
    size, capsule and fill give way to the block's, and the open one is ringed in fin blue. */
 .turnfin-app [data-slot='button'].day-tl-block { align-items: flex-start; justify-content: center; gap: 0; min-height: 0; height: auto; padding: 0 8px 0 11px; border-radius: var(--radius-sm); font-size: 12px; line-height: 15px; text-align: left; cursor: pointer; }
+.turnfin-app [data-slot='button'].day-tl-block[data-tall] { justify-content: flex-start; padding-top: 6px; }
 .turnfin-app [data-slot='button'].day-tl-block:hover:not(:disabled) { background: var(--day-tl-bg); color: var(--day-tl-ink); filter: brightness(0.97); }
 .turnfin-app [data-slot='button'].day-tl-block:active { scale: 0.96; }
 .turnfin-app [data-slot='button'].day-tl-block[aria-expanded='true'] { box-shadow: 0 0 0 2px var(--bg-2), 0 0 0 4px var(--accent); }
