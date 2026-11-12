@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.16.0 · 12 November 2026 · Booked assessments on the Plan
+
+- **In Plan (test), assessments with someone booked now show under What's on.** Each sits in its area's row on the Day at its time, named for its kind with how many are booked, such as Assessment: New swimmers (3 booked).
+- **It shows who assesses it, or 1 short when nobody is chosen.** Press it, then **Fill**, to choose the assessor from the people on shift. Swim school shows the same person on the assessment.
+- **An assessment nobody is booked on, or one that was cancelled, is left out.**
+- Rota shows booked assessments in their area too, and counts the time for the assessor.
+
 ## 3.15.0 · 11 November 2026 · Tasks have a start and an end
 
 - **In Plan (test), each task you give on the Day now has a start and an end.** Tick a task on someone's duty and set **From** and **To** for it, then press **Save tasks**. It is the same while putting someone on a duty or changing it.

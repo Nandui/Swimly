@@ -10,6 +10,7 @@ import type { Commitment, CommitmentQuery, CommitmentSource } from "@/modules/co
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let list: (q: CommitmentQuery) => Promise<Commitment[]>;
 let plan: NonNullable<CommitmentSource["plan"]>;
+let assessments: CommitmentSource;
 const date = (iso: string) => new Date(`${iso}T00:00:00Z`);
 // 5 October 2026 is a Monday.
 const MON = "2026-10-05", NEXT = "2026-10-12";
@@ -39,6 +40,7 @@ before(async () => {
     "next/navigation": { notFound() { throw new Error("not found"); }, redirect() { throw new Error("redirect"); } },
   });
   const classes = sources.find((s) => s.id === "activities.classes")!;
+  assessments = sources.find((s) => s.id === "activities.assessments")!;
   list = classes.list;
   plan = classes.plan!;
 });
@@ -91,4 +93,34 @@ test("a class that has started, is cancelled or does not run that day cannot be 
   assert.equal((await plan({ ref: "seam-tue", siteId: "club_churchfield", date: "2026-10-06", userId: "cole", by })).ok, false, "cancelled");
   assert.equal((await plan({ ref: "seam-mon", siteId: "club_churchfield", date: "2026-10-20", userId: "cole", by })).ok, false, "a Tuesday");
   assert.equal((await plan({ ref: "seam-mon", siteId: "club_bishopstown", date: MON, userId: "cole", by })).ok, false, "another site");
+});
+
+test("assessments: only sessions someone is booked on, with the kind, how many and the assessor", async () => {
+  const db = fixture.prisma;
+  const DAY = "2026-11-14";
+  await db.assessmentType.create({ data: { id: "seam-kind", programmeId: "seam-programme", name: "New swimmers" } });
+  const session = (id: string, startMinutes: number, extra: object = {}) => db.assessmentSession.create({ data: { id, clubId: "club_churchfield", date: date(DAY), startMinutes, durationMinutes: 30, programmeId: "seam-programme", typeId: "seam-kind", location: "Learner pool", ...extra } });
+  await session("seam-as-booked", 600, { instructorId: "tess" });
+  await session("seam-as-empty", 660);
+  await session("seam-as-called-off", 720, { cancelledAt: new Date() });
+  await session("seam-as-gave-back", 780);
+  for (const id of ["seam-kid-1", "seam-kid-2"]) await db.student.create({ data: { id, clubId: "club_churchfield", firstName: "Synthetic", lastName: id, dateOfBirth: date("2018-01-01") } });
+  const book = (sessionId: string, studentId: string, status: "BOOKED" | "CANCELLED" = "BOOKED") => db.assessmentBooking.create({ data: { sessionId, studentId, status, bookedByName: "tess" } });
+  await book("seam-as-booked", "seam-kid-1"); await book("seam-as-booked", "seam-kid-2", "CANCELLED");
+  await book("seam-as-called-off", "seam-kid-1"); await book("seam-as-gave-back", "seam-kid-1", "CANCELLED");
+
+  const day = await assessments.list({ siteIds: ["club_churchfield"], from: DAY, to: DAY });
+  assert.deepEqual(day.map((c) => [c.ref, c.userId, c.startMinutes, c.endMinutes, c.label, c.place]),
+    [["seam-as-booked", "tess", 600, 630, "Assessment: New swimmers (1 booked), Learner pool", "Learner pool"]], "empty, cancelled and given-back ones are left out");
+  assert.deepEqual((await assessments.list({ userIds: ["cole"], from: DAY, to: DAY })), []);
+  assert.deepEqual(await assessments.list({ siteIds: ["club_bishopstown"], from: DAY, to: DAY }), []);
+
+  const by = { id: "tess", name: "tess" };
+  assert.deepEqual(await assessments.plan!({ ref: "seam-as-booked", siteId: "club_churchfield", date: DAY, userId: "cole", by }), { ok: true });
+  assert.deepEqual((await assessments.list({ userIds: ["cole"], from: DAY, to: DAY })).map((c) => c.ref), ["seam-as-booked"], "the session's assessor is the one planned");
+  assert.deepEqual(await assessments.plan!({ ref: "seam-as-booked", siteId: "club_churchfield", date: DAY, userId: null, by }), { ok: true });
+  assert.deepEqual((await assessments.list({ siteIds: ["club_churchfield"], from: DAY, to: DAY })).map((c) => c.userId), [null], "nobody is a gap");
+  assert.equal((await assessments.plan!({ ref: "seam-as-called-off", siteId: "club_churchfield", date: DAY, userId: "cole", by })).ok, false, "cancelled");
+  assert.equal((await assessments.plan!({ ref: "seam-as-booked", siteId: "club_churchfield", date: "2026-11-15", userId: "cole", by })).ok, false, "another day");
+  assert.equal((await assessments.plan!({ ref: "seam-as-booked", siteId: "club_bishopstown", date: DAY, userId: "cole", by })).ok, false, "another site");
 });

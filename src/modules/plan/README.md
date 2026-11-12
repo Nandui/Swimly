@@ -40,6 +40,6 @@ No relations to Core tables: sites, departments, people and qualifications are r
 ## Depends on
 - Platform: the policy engine, audit, the database client and the format helpers.
 - Core reads (never Core tables): sites, areas (`areasAt`, `areaById`), departments and people through `src/lib/directory.ts`; qualifications through `src/lib/qualifications.ts`.
-- Core's contributions registry (`src/modules/contributions.ts`: `commitmentsFor`, `planCommitment`) for Swim school's classes and Academy's sessions, and to plan a class's teacher.
+- Core's contributions registry (`src/modules/contributions.ts`: `commitmentsFor`, `planCommitment`) for Swim school's classes and booked assessments and Academy's sessions, and to plan a class's teacher or an assessment's assessor.
 - The UI kit's workspace frame `ModuleShell`, `SiteSwitcher`, `DayTimeline` and `Inspector`.
 - Other modules: none directly.
