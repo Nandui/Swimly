@@ -61,6 +61,7 @@ It never queries Core tables. It reads people and sites through `src/lib/directo
 
 ## Registration (module.ts)
 - Commitments (`activities.classes`): each class, its time and who teaches it, for the rota. Also `plan`, which records a class's planned teacher. The rota's Plan is the only place a class's teacher is chosen (owner decision, 16 October 2026); `Course.instructorId` is kept but only counts until the grace day `USUAL_INSTRUCTOR_UNTIL` (`shared/courses/planned.ts`).
+- Commitments (`activities.assessments`, `features/assessments/server/contributions.ts`): each assessment session that is not cancelled and has someone booked, its time, kind, how many are booked and its assessor, for Plan's What's on and the Rota (owner request, 12 November 2026). Also `plan`, which sets the session's assessor.
 - Site summary: programmes, swimmers and classes on Sites.
 - Starter page items (`registerHomeCard`; Home counts the ones that need the person): Swim school (today's classes and assessments, swimmers awaiting enrolment, parent updates, failed payments to contact and waiting on the member, and Manage's "Upload the failure sheet") and Pool deck (the viewer's classes today).
 - Area rename: classes and assessment sessions follow an area renamed in Admin.
