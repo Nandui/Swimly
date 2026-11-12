@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
-  breakMinutesOwed, candidatesFor, copyWeek, fillsOf, gapsOf, laneClashes, mondayOf, needsOf, occurrencesOn, tasksOf, warningsOf, weekdayOfIso,
+  breakMinutesOwed, candidatesFor, copyWeek, fillsOf, gapsOf, laneClashes, mondayOf, needsOf, occurrencesOn, tasksOf, warningsOf, weekdayOfIso, whatsOnRows,
   type Block, type ClassItem, type DutyRef, type SessionDef, type Shift,
 } from "./model";
 
@@ -143,4 +143,37 @@ test("copying a week moves shifts on seven days, keeps fills of sessions still r
   ];
   const copied = copyWeek(last, { existing: [{ userId: "c", date: "2026-11-06" }], offOn: (u) => u === "b", runsOn: (id) => id !== "school" });
   assert.deepEqual(copied.map((s) => [s.userId, s.date, s.blocks.map((b) => b.id)]), [["a", THU, ["own"]]]);
+});
+
+/** What's on's rows: a pool of three lanes with a part, a gym with neither, and a place no area matches. */
+const ROW_AREAS = [
+  { id: "main", name: "Main Pool", parentId: null, lanes: 3 }, { id: "deep", name: "Deep end", parentId: "main", lanes: 0 },
+  { id: "gym", name: "Gym", parentId: null, lanes: 0 }, { id: "spa", name: "Spa", parentId: null, lanes: 0 },
+];
+const on = (key: string, areaId: string | null, lanes: number[], start: number, end: number, where = "No area") => ({ key, areaId, lanes, start, end, where });
+
+test("what's on: an area's lanes and parts sit beneath it, and only areas with something on show", () => {
+  const { rows } = whatsOnRows(ROW_AREAS, [on("squad", "main", [1, 2], h(6), h(7)), on("circuits", "gym", [], h(6), h(7))]);
+  assert.deepEqual(rows.map((r) => `${r.under ? "- " : ""}${r.label}`), ["Main Pool", "- Lane 1", "- Lane 2", "- Lane 3", "- Deep end", "Gym"]);
+});
+
+test("what's on: a thing sits on the lanes it names, or its part", () => {
+  const { placed } = whatsOnRows(ROW_AREAS, [on("squad", "main", [1, 2], h(6), h(7)), on("dive", "deep", [], h(6), h(7)), on("nine", "main", [9], h(8), h(9))]);
+  assert.deepEqual(placed.get("squad"), { lane: "main#1", lanes: ["main#2"] });
+  assert.deepEqual(placed.get("dive"), { lane: "deep", lanes: [] });
+  // A lane the pool doesn't have names none: the whole pool, alone then, so it fills it.
+  assert.deepEqual(placed.get("nine"), { lane: "main#1", lanes: ["main#2", "main#3", "deep"] });
+});
+
+test("what's on: the whole area fills it when alone, and sits on its own row when something else is on", () => {
+  const alone = whatsOnRows(ROW_AREAS, [on("gala", "main", [], h(6), h(7)), on("squad", "main", [1], h(7), h(8))]);
+  assert.deepEqual(alone.placed.get("gala"), { lane: "main#1", lanes: ["main#2", "main#3", "deep"] });
+  const open = whatsOnRows(ROW_AREAS, [on("pool open", "main", [], h(6), h(22)), on("squad", "main", [1], h(7), h(8))]);
+  assert.deepEqual(open.placed.get("pool open"), { lane: "main", lanes: [] });
+});
+
+test("what's on: an area with no lanes or parts is one row, and unmatched places come last with No area at the end", () => {
+  const { rows, placed } = whatsOnRows(ROW_AREAS, [on("circuits", "gym", [], h(6), h(7)), on("walk", null, [], h(6), h(7)), on("talk", null, [], h(6), h(7), "Car park")]);
+  assert.deepEqual(rows.map((r) => r.label), ["Gym", "Car park", "No area"]);
+  assert.deepEqual([placed.get("circuits")?.lane, placed.get("talk")?.lane, placed.get("walk")?.lane], ["gym", "where:Car park", "where:No area"]);
 });
