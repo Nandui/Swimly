@@ -50,7 +50,7 @@ export type HomeViewer = {
 };
 
 /** A quick action's icon, by name, so modules stay free of UI imports. */
-export type HomeIcon = "userPlus" | "calendarPlus" | "receipt" | "userX" | "filePlus" | "clipboardCheck";
+export type HomeIcon = "userPlus" | "calendarPlus" | "receipt" | "userX" | "filePlus" | "clipboardCheck" | "ticket";
 
 type HomeItemBase = {
   label: string;

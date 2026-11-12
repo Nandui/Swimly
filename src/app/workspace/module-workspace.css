@@ -143,6 +143,23 @@
   .turnfin-purchasing :is(.tf-frame, .pc-panel) { box-shadow: none !important; background: #fff !important; color: #000 !important; }
 }
 
+/* Vouchers: the sheet of vouchers to hand out, one card each, dashed to cut along. It prints
+   two to a row without the workspace around it. */
+.turnfin-vouchers .voucher-sheet { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; }
+.turnfin-vouchers .voucher-card { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 20px; border: 1px dashed var(--pc-line-strong); border-radius: var(--pc-radius-card); background: var(--pc-surface); break-inside: avoid; }
+.turnfin-vouchers .voucher-card > p { margin: 0; }
+.turnfin-vouchers :is(.voucher-card-org, .voucher-card-number) { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); font-weight: 600; color: var(--pc-ink-muted); }
+.turnfin-vouchers .voucher-card-service { font-size: var(--pc-text-page); line-height: var(--pc-leading-page); font-weight: 700; }
+.turnfin-vouchers .voucher-card-code { margin-block: 8px !important; padding: 8px 12px; align-self: flex-start; border: 1px solid var(--pc-line-strong); border-radius: var(--pc-radius-control); font-size: var(--pc-text-title); line-height: var(--pc-leading-title); font-weight: 700; letter-spacing: 0.14em; font-variant-numeric: tabular-nums; }
+.turnfin-vouchers .voucher-card-terms { font-size: var(--pc-text-caption); line-height: var(--pc-leading-caption); color: var(--pc-ink-muted); }
+@media print {
+  body:has(.turnfin-vouchers) :is(.tf-rail, .tf-top, .tf-bottom, .app-footer, [data-print="hide"]) { display: none !important; }
+  .turnfin-vouchers :is(.tf-frame, .pc-panel, .voucher-card) { box-shadow: none !important; background: #fff !important; color: #000 !important; }
+  .turnfin-vouchers .voucher-sheet { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; }
+  .turnfin-vouchers .voucher-card { border-color: #000; border-radius: 0; }
+  .turnfin-vouchers .voucher-card :is(.voucher-card-org, .voucher-card-number, .voucher-card-terms) { color: #000; }
+}
+
 /* Academy: the list to call for payment lines its columns up from 1024px (who, course, calls,
    then the deadline and the call button); below that each row stacks as usual. */
 @media (min-width: 1024px) {

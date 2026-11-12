@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarPlus, ChevronRight, ClipboardCheck, FilePlus, ReceiptText, UserPlus, UserX, Waves, type LucideIcon } from "lucide-react";
+import { CalendarPlus, ChevronRight, ClipboardCheck, FilePlus, ReceiptText, Ticket, UserPlus, UserX, Waves, type LucideIcon } from "lucide-react";
 import { Tag } from "@/components/ui-kit/tag";
 import { TimelineGrid, type TimelineBlock, type TimelineLane } from "@/components/workspace/timeline-grid";
 import { formatTimeRange, plural } from "@/lib/format";
@@ -13,7 +13,7 @@ export type Placed = HomeItem & { moduleIcon: LucideIcon; key: string };
 
 /** Quick action and figure icons, by the name a module gives (modules import no UI). */
 export const ACTION_ICONS: Record<HomeIcon, LucideIcon> = {
-  userPlus: UserPlus, calendarPlus: CalendarPlus, receipt: ReceiptText, userX: UserX, filePlus: FilePlus, clipboardCheck: ClipboardCheck,
+  userPlus: UserPlus, calendarPlus: CalendarPlus, receipt: ReceiptText, userX: UserX, filePlus: FilePlus, clipboardCheck: ClipboardCheck, ticket: Ticket,
 };
 
 /** Split a module's items into the places they show. */

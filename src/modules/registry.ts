@@ -1,4 +1,4 @@
-import { Award, CalendarClock, ClipboardCheck, Files, GraduationCap, HeartHandshake, ReceiptText, Settings, ShoppingCart, Waves, WavesLadder, type LucideIcon } from "lucide-react";
+import { Award, CalendarClock, ClipboardCheck, Files, GraduationCap, HeartHandshake, ReceiptText, Settings, ShoppingCart, Ticket, Waves, WavesLadder, type LucideIcon } from "lucide-react";
 import type { PermissionKey } from "@/lib/staff/permissions";
 
 /** Every module Turnfin offers, each described once (docs/how-turnfin-works.md).
@@ -182,6 +182,26 @@ registerModule({
     levels: [
       { key: "use", label: "Use", help: "Log a customer's refund request and follow it.", permissions: ["refunds.read", "refunds.request"] },
       { key: "manage", label: "Manage", help: "Decide refund requests and record payments. Nobody decides their own.", permissions: ["refunds.review", "refunds.process"] },
+    ],
+  },
+});
+
+// Vouchers (owner request, 12 November 2026; docs/vouchers.md): at times like
+// Christmas the centre gives vouchers for a service, usually a family swim,
+// to communities and organisations. Reception marks each one as used.
+registerModule({
+  id: "vouchers",
+  group: "front-of-house",
+  name: "Vouchers",
+  description: "The vouchers we give to communities and organisations: who got how many, and which have been used",
+  icon: Ticket,
+  href: "/vouchers",
+  logName: "Vouchers",
+  access: {
+    reach: "sites",
+    levels: [
+      { key: "redeem", label: "Redeem", help: "Check a voucher's code and mark it as used at their sites.", permissions: ["vouchers.redeem"] },
+      { key: "manage", label: "Manage", help: "Also make batches of vouchers for an organisation, print them, cancel them and see which were used.", permissions: ["vouchers.manage"] },
     ],
   },
 });

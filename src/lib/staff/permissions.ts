@@ -203,6 +203,18 @@ export const PERMISSIONS = [
     description: "Approve suppliers and their products and prices, and set who approves orders up to what amount. Includes seeing orders.",
   },
   {
+    key: "vouchers.redeem",
+    group: "Vouchers",
+    label: "Redeem vouchers",
+    description: "Check a voucher's code and mark it as used at the sites this role covers.",
+  },
+  {
+    key: "vouchers.manage",
+    group: "Vouchers",
+    label: "Give out vouchers",
+    description: "Make batches of vouchers for communities and organisations at the sites this role covers, print them, cancel them and see which were used. Includes redeeming.",
+  },
+  {
     key: "tasks.complete",
     group: "Tasks",
     label: "Do tasks",
@@ -381,6 +393,7 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "setup.areas": ["setup.view"],
   "purchasing.request": ["purchasing.read"],
   "purchasing.manage": ["purchasing.read"],
+  "vouchers.manage": ["vouchers.redeem"],
   "tasks.review": ["tasks.complete"],
   "tasks.manage": ["tasks.review", "tasks.complete"],
   "academy.run": ["academy.read"],

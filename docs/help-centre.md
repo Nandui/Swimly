@@ -24,7 +24,7 @@ Me and the swim school guides show to every desk reader.
 
 Every guide includes screenshots of the current app beside the steps they
 illustrate, with descriptive alternative text, captions and a full-size link.
-The 63 screenshots are taken from the sandbox's fictional people and records,
+The 68 screenshots are taken from the sandbox's fictional people and records,
 show light appearance and the v2 frame, and remain visible when printing a guide.
 
 ## Access and navigation

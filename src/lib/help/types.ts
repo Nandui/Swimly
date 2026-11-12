@@ -12,6 +12,7 @@ export const HELP_CATEGORIES = [
   { id: "assessments", title: "Assessments", description: "Create sessions, book swimmers and record placements." },
   { id: "operations", title: "Daily operations", description: "Cancel a session, follow up with billing and read analytics." },
   { id: "refunds", title: "Refunds", description: "Log a customer’s refund request and decide it in finance." },
+  { id: "vouchers", title: "Vouchers", description: "Check and use a voucher at the desk, and give vouchers to communities and organisations." },
   { id: "docs", title: "Docs", description: "Find and read staff documents, write them and send them for approval." },
   { id: "training", title: "Training", description: "Assign training and sign off what people show you in person." },
   { id: "rota", title: "Rota", description: "Plan the week’s shifts and report an absence." },
@@ -23,7 +24,7 @@ export const HELP_CATEGORIES = [
 /** The module a topic belongs to, as the screen that opens it: Help shows these topics only to
  *  people who can open that screen (Task links respect screen access, DESIGN.md). */
 export const HELP_CATEGORY_SCREENS: Partial<Record<(typeof HELP_CATEGORIES)[number]["id"], ScreenKey>> = {
-  refunds: "refunds", docs: "docs", training: "training", rota: "rota", hr: "hr", tasks: "tasks",
+  refunds: "refunds", vouchers: "vouchers", docs: "docs", training: "training", rota: "rota", hr: "hr", tasks: "tasks",
 };
 export type HelpCategory = (typeof HELP_CATEGORIES)[number]["id"];
 export type HelpArticle = {

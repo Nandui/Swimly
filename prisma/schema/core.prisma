@@ -444,6 +444,7 @@ model Club {
   taskActions        TaskAction[]
   taskSite           TaskSite?
   taskScores         TaskScoreSnapshot[]
+  vouchersRedeemed   Voucher[]
 
   @@index([sortOrder])
 }
