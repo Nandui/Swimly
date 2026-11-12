@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import Link from "next/link";
 import { Button } from "@/components/shadcn/button";
-import { leftOf, stretchOf } from "@/components/ui-kit/scale";
+import { heightOf, leftOf, stretchOf, topOf } from "@/components/ui-kit/scale";
 
 /** A block's look (DESIGN.md, DayTimeline): done in the quiet fill, on now in the fin blue, next in
  *  grey, a gap to fill in orange, covered in green, a booking hatched, cancelled struck through.
@@ -22,7 +22,14 @@ export type DayTimelineBlock = {
   href?: string;
   /** The whole sentence a screen reader reads: "Starfish, 16:00 to 16:30, finished". */
   ariaLabel: string;
+  /** Named stretches inside the block, such as a duty's tasks, drawn as segments within it. The
+   *  block's own name moves to the widest stretch they leave free, and goes when they leave none
+   *  (owner, 12 November 2026); `ariaLabel` still says it all. */
+  parts?: DayTimelinePart[];
 };
+
+/** A stretch inside a block: minutes after midnight, and what it says ("Till 2"). */
+export type DayTimelinePart = { start: number; end: number; label: string };
 
 /** The day as Calendar-style lanes of blocks with the red now line (DESIGN.md, DayTimeline). The
  *  caller places it in a card with its title and decides every word; the kit only draws. Times are
@@ -49,7 +56,19 @@ export function DayTimeline({ from, to, now, nowLabel, hours, lanes, blocks, lab
   const showNow = now >= from && now <= to;
   const block = (b: DayTimelineBlock) => {
     const place = stretchOf(at(Math.max(b.start, from)), at(Math.min(b.end, to)));
-    const body = <><span className="day-tl-name">{b.label}</span>{b.sub ? <span className="day-tl-sub">{b.sub}</span> : null}</>;
+    const name = <><span className="day-tl-name">{b.label}</span>{b.sub ? <span className="day-tl-sub">{b.sub}</span> : null}</>;
+    const laid = partsIn(b);
+    // Parts sit by their share of the block; the name needs a free stretch wide enough to read.
+    const within = (minutes: number) => (minutes - b.start) / Math.max(1, b.end - b.start);
+    const room = laid.free && (laid.free.end - laid.free.start) / span >= 0.06 ? laid.free : null;
+    const body = laid.parts.length === 0 ? name : <>
+      <span className="day-tl-parts" data-rows={laid.rows > 2 ? "many" : undefined}>
+        {laid.parts.map((p, index) => (
+          <span key={index} className={`day-tl-part ${stretchOf(within(p.start), within(p.end))} ${topOf(p.row / laid.rows)} ${heightOf(1 / laid.rows)}`}><span className="day-tl-part-name">{p.label}</span></span>
+        ))}
+      </span>
+      {room ? <span className={`day-tl-room ${stretchOf(within(room.start), within(room.end))}`}>{name}</span> : null}
+    </>;
     return (
       <span key={b.key} role="listitem" className="contents">
         {onSelect
@@ -94,4 +113,29 @@ export function rowsOf(blocks: DayTimelineBlock[]): DayTimelineBlock[][] {
     else rows.push([b]);
   }
   return rows.length ? rows : [[]];
+}
+
+/** A block's parts laid out: each kept inside the block and put on the first row free by its start
+ *  (parts at the same time share the block's height), and the widest stretch no part covers, where
+ *  the block's own name can go. */
+export function partsIn(block: Pick<DayTimelineBlock, "start" | "end" | "parts">): {
+  rows: number;
+  parts: (DayTimelinePart & { row: number })[];
+  free: { start: number; end: number } | null;
+} {
+  const inside = (block.parts ?? []).map((p) => ({ ...p, start: Math.max(p.start, block.start), end: Math.min(p.end, block.end) }))
+    .filter((p) => p.end > p.start).sort((x, y) => x.start - y.start || x.end - y.end);
+  const ends: number[] = [];
+  const parts = inside.map((p) => {
+    let row = ends.findIndex((end) => end <= p.start);
+    if (row < 0) row = ends.push(p.end) - 1;
+    else ends[row] = p.end;
+    return { ...p, row };
+  });
+  const gaps: { start: number; end: number }[] = [];
+  let at = block.start;
+  for (const p of inside) { gaps.push({ start: at, end: p.start }); at = Math.max(at, p.end); }
+  gaps.push({ start: at, end: block.end });
+  const free = gaps.filter((g) => g.end > g.start).reduce<{ start: number; end: number } | null>((best, g) => (best && best.end - best.start >= g.end - g.start ? best : g), null);
+  return { rows: Math.max(1, ends.length), parts, free };
 }
