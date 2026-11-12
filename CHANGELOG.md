@@ -4,13 +4,20 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 3.17.0 · 12 November 2026 · What's on, area by area with its lanes
+## 3.18.0 · 12 November 2026 · What's on, area by area with its lanes
 
 - **In Plan (test), What's on on the Day is now grouped by area.** Each area that has lanes or parts shows its name, then a row for each lane and each part beneath it. An area with neither is one row, as before.
 - **A block fills the lanes it takes.** A session on lanes 1 and 2 is one block across both rows. Lanes that aren't next to each other, such as 1 and 3, show the block on each.
 - **Something that takes the whole area fills all of its rows** when nothing else is on there at that time. When something else is on, such as lessons during Pool open, it sits on the area's own row, above the lanes.
 - **A swim class sits on its lane.** A class at "Main pool, lane 3" is on the Main pool's Lane 3 row, not on a row of its own.
 - On a phone the blocks show without the row names, as before.
+
+## 3.17.0 · 12 November 2026 · Booked assessments on the Plan
+
+- **In Plan (test), assessments with someone booked now show under What's on.** Each sits in its area's row on the Day at its time, named for its kind with how many are booked, such as Assessment: New swimmers (3 booked).
+- **It shows who assesses it, or 1 short when nobody is chosen.** Press it, then **Fill**, to choose the assessor from the people on shift. Swim school shows the same person on the assessment.
+- **An assessment nobody is booked on, or one that was cancelled, is left out.**
+- Rota shows booked assessments in their area too, and counts the time for the assessor.
 
 ## 3.16.0 · 12 November 2026 · Tasks show on the Day's timeline
 

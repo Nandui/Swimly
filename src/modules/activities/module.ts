@@ -20,6 +20,7 @@ import { memberPaymentNotices } from "@/modules/activities/features/failed-payme
 import { paymentsHomeItems } from "@/modules/activities/features/failed-payments/server/home";
 import { parentsAppCourses } from "@/modules/activities/features/short-courses/server/parents-app";
 import { shortCourseEmailBookings } from "@/modules/activities/features/short-courses/server/email-bookings";
+import { ASSESSMENT_SESSIONS, assessmentCommitments, planAssessor } from "@/modules/activities/features/assessments/server/contributions";
 import { renameShortCoursePlaces, SHORT_COURSE_SESSIONS, shortCourseCommitments, shortCourseHomeItems, shortCourseMemberHistory, shortCourseRegisterItems } from "@/modules/activities/features/short-courses/server/contributions";
 
 
@@ -240,6 +241,10 @@ registerSearch({
     }));
   },
 });
+
+/** Assessment sessions someone is booked on, as commitments: Plan shows them under What's on and
+ *  the Rota in their area, and Plan can choose the assessor. */
+registerCommitments({ id: ASSESSMENT_SESSIONS, app: "swim-school", list: assessmentCommitments, plan: planAssessor });
 
 /** Short courses, part of the swim school since D24 (3 November 2026), keep their own tables:
  *  their sessions as commitments (the Rota shows them), area renames, the courses each swimmer
