@@ -97,8 +97,12 @@ export function DayView({ data }: { data: PlanDayData }) {
       ...s.blocks.map((b) => {
         const d = duty(b.dutyId);
         const label = d?.name ?? "Duty";
+        // The tasks given in this duty are drawn inside its block, each where it starts and ends
+        // (owner, 12 November 2026: "can the subtasks be shown in the timeline bar too?").
+        const given = tasksOf(b, d?.tasks ?? []);
         return { key: `block|${s.id}|${b.id}`, lane: s.id, start: b.start, end: b.end, kind: d?.isBreak ? "off" as const : "ok" as const, label,
-          sub: sessionTitle(b.sessionId) ?? undefined, ariaLabel: `${nameOf(s.userId)}: ${label}, ${formatTimeRange(b.start, b.end)}` };
+          sub: sessionTitle(b.sessionId) ?? undefined, parts: given.map((t) => ({ start: t.at, end: t.end, label: t.name })),
+          ariaLabel: [`${nameOf(s.userId)}: ${label}, ${formatTimeRange(b.start, b.end)}`, ...given.map((t) => `${t.name} ${formatTimeRange(t.at, t.end)}`)].join("; ") };
       }),
       ...s.classes.map((c) => ({ key: `class|${s.id}|${c.ref}`, lane: s.id, start: c.start, end: c.end, kind: "book" as const, label: c.title,
         sub: "Teaching", ariaLabel: `${nameOf(s.userId)}: teaching ${c.title}, ${formatTimeRange(c.start, c.end)}` })),

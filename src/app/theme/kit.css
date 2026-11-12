@@ -513,6 +513,13 @@ body.turnfin-app { background: var(--bg); }
 .turnfin-app .day-tl-block { position: absolute; top: 3px; bottom: 3px; z-index: 2; display: flex; flex-direction: column; justify-content: center; min-width: 0; margin-right: 3px; padding: 0 8px 0 11px; overflow: hidden; border-radius: var(--radius-sm); font-size: 12px; line-height: 15px; font-weight: 600; white-space: nowrap; text-decoration: none; transition: background-color 450ms var(--ease), color 450ms var(--ease); }
 .turnfin-app :is(.day-tl-name, .day-tl-sub) { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .turnfin-app .day-tl-sub { font-weight: 450; opacity: 0.85; }
+/* A block's parts (a duty's tasks): segments inside it in a deeper shade of its own tone, beside
+   its leading bar; ones at the same time share its height. Its name sits in the stretch left free. */
+.turnfin-app .day-tl-parts { position: absolute; inset: 3px 2px 3px 4px; pointer-events: none; }
+.turnfin-app .day-tl-part { position: absolute; display: flex; align-items: center; min-width: 0; padding: 0 6px; overflow: hidden; border: 1px solid transparent; border-radius: var(--radius-xs); background: color-mix(in srgb, var(--day-tl-ink) 14%, transparent) padding-box; color: var(--day-tl-ink); font-size: 11px; line-height: 13px; font-weight: 650; }
+.turnfin-app .day-tl-part-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.turnfin-app .day-tl-parts[data-rows='many'] .day-tl-part-name { display: none; }
+.turnfin-app .day-tl-room { position: absolute; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; min-width: 0; padding: 0 8px; overflow: hidden; pointer-events: none; }
 .turnfin-app .day-tl-block::before { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 3px; background: var(--day-tl-bar, transparent); }
 .turnfin-app a.day-tl-block:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .turnfin-app .day-tl-block[data-kind='done'] { --day-tl-bg: var(--fill-2); --day-tl-ink: var(--label-2); background: var(--day-tl-bg); color: var(--day-tl-ink); }
@@ -530,7 +537,8 @@ body.turnfin-app { background: var(--bg); }
   .turnfin-app :is(.day-tl-corner, .day-tl-label) { display: none; }
   .turnfin-app .day-tl-row { height: 30px; }
   .turnfin-app .day-tl-block { padding: 0; font-size: 0; }
-  .turnfin-app :is(.day-tl-name, .day-tl-sub) { display: none; }
+  .turnfin-app :is(.day-tl-name, .day-tl-sub, .day-tl-part-name, .day-tl-room) { display: none; }
+  .turnfin-app .day-tl-part { padding: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .turnfin-app .live-dot::after { animation: none; }
