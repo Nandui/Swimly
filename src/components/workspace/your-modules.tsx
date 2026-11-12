@@ -1,28 +1,30 @@
 'use client';
 
-import { createContext, useContext, type ReactNode } from 'react';
-import { allModules, type ModuleManifest } from '@/modules/registry';
-
-type YourWork = { ids: readonly string[]; role: string; site: string };
+import { type ReactNode } from 'react';
+import { RolePreviewToggle } from '@/components/staff/role-preview';
+import { FrameProvider } from '@/components/ui/frame';
+import { APP_VERSION } from '@/lib/app';
+import { toast } from '@/components/ui/toast';
+import { switchClub } from '@/lib/clubs/actions/clubs';
+import { searchEverything } from '@/lib/search/actions';
+import { allModules, MODULE_GROUPS } from '@/modules/registry';
 
 /** The signed-in person's modules, role and working site, set once by the
- *  root layout from their session (docs/how-turnfin-works.md), so every frame
+ *  root layout from their session (docs/architecture.md), so every frame
  *  offers the same modules and the account menu names the same role and site
- *  without a shell passing them. Empty when signed out or outside the layout. */
-const YourModules = createContext<YourWork>({ ids: [], role: '', site: '' });
-
-export function YourModulesProvider({ ids, role, site, children }: YourWork & { children: ReactNode }) {
-  return <YourModules.Provider value={{ ids, role, site }}>{children}</YourModules.Provider>;
-}
-
-/** The person's modules in group order (MODULE_GROUPS); `groupModules` adds the headings. */
-export function useYourModules(): ModuleManifest[] {
-  const { ids } = useContext(YourModules);
-  return allModules().filter((m) => ids.includes(m.id));
-}
-
-/** The role (the worn one in View as) and working site, for the account menu. */
-export function useYourAccount(): { role: string; site: string } {
-  const { role, site } = useContext(YourModules);
-  return { role, site };
+ *  without a shell passing them. It fills the UI kit's frame context
+ *  (src/components/ui/frame.tsx) with them, with signing out, changing the
+ *  working site and the role preview, so the frame itself never reads the registry or the session. */
+export function YourModulesProvider({ ids, role, site, picture = null, children }: { ids: readonly string[]; role: string; site: string; picture?: string | null; children: ReactNode }) {
+  const modules = allModules().filter((m) => ids.includes(m.id)).map(({ id, name, href, icon, group }) => ({ id, name, href, icon, group }));
+  async function leave() {
+    // Loaded when someone signs out rather than on every page.
+    try { const { signOut } = await import('next-auth/react'); await signOut({ redirectTo: '/sign-in' }); }
+    catch (error) { toast.error('Could not sign out. Try again.'); throw error; }
+  }
+  return (
+    <FrameProvider value={{ modules, groups: MODULE_GROUPS, role, site, picture, version: APP_VERSION, signOut: leave, switchSite: (id) => switchClub(id, { stay: true }), tools: <RolePreviewToggle />, search: searchEverything }}>
+      {children}
+    </FrameProvider>
+  );
 }

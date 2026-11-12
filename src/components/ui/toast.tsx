@@ -1,0 +1,21 @@
+"use client";
+
+import { toast as sonner } from "sonner";
+import { Toaster } from "@/components/shadcn/sonner";
+import { usePathname } from "next/navigation";
+
+/** Preserve the app's imperative API and keep errors until dismissed. */
+export const toast = {
+  success(message: string) { sonner.success(message); },
+  error(message: string) { sonner.error(message, { duration: Infinity }); },
+};
+
+export function ToastBridge() {
+  const pathname = usePathname();
+  const onDeck = pathname === "/instructor" || pathname.startsWith("/instructor/");
+  // The deck's save/continue controls occupy the bottom edge. Never cover
+  // them with the notification confirming the save they just made. Only the
+  // top is offset on phones: a number would inset all four sides and squeeze
+  // the toast. Desk toasts clear the bottom bar through kit.css.
+  return <Toaster position={onDeck ? "top-center" : "bottom-right"} offset={onDeck ? "calc(var(--spacing) * 20)" : undefined} mobileOffset={onDeck ? { top: "calc(var(--spacing) * 36)" } : undefined} closeButton />;
+}

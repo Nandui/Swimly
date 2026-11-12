@@ -2,11 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
-import { RaiseAction, ReopenAction, ResolveAction } from "@/components/tasks/task-dialogs";
+import { ACTION_STATUS_META, RaiseAction, ReopenAction, ResolveAction, taskActions } from "@/modules/tasks/features/follow-ups";
 import { formatDate, formatDayMonth, today } from "@/lib/format";
-import { taskActions } from "@/lib/tasks/data";
-import { ACTION_STATUS_META } from "@/lib/tasks/rules";
 
 export const metadata: Metadata = { title: "Actions" };
 
@@ -16,23 +15,22 @@ export default async function TaskActionsPage({ searchParams }: { searchParams: 
   const data = await taskActions((await searchParams).site);
   if (!data.site) {
     return (
-      <>
-        <PageHeader title="Actions" />
+      <PageShell header={<PageHeader title="Actions" />}>
         <EmptyState as="h2" icon="building" title="No sites to show" hint="Your role does not do tasks at a site yet." />
-      </>
+      </PageShell>
     );
   }
   const { site, open, resolved, actionTemplates } = data;
   const day = today();
   return (
-    <>
-      <PageHeader
+    <PageShell header={<PageHeader
         title={`Actions: ${site.name}`}
         description="Close the loop: follow-ups raised from tasks, or on their own, what needs putting right and how it was."
         actions={<RaiseAction siteId={site.id} variant="default" templates={actionTemplates} />}
-      />
-      <section className="pc-panel" aria-labelledby="actions-open">
-        <div className="pc-panel-head"><h2 id="actions-open">Open <span className="text-ui-muted-foreground tabular-nums">· {open.length}</span></h2></div>
+      />}>
+      <section className="flex min-w-0 flex-col" aria-labelledby="actions-open">
+        <div className="pc-section-head"><h2 id="actions-open">Open</h2><p>{open.length}</p></div>
+        <div className="pc-panel">
         {open.length === 0 ? <EmptyState compact icon="clipboardCheck" title="Nothing to put right" /> : (
           <ul className="pc-rows">
             {open.map((a) => {
@@ -56,9 +54,12 @@ export default async function TaskActionsPage({ searchParams }: { searchParams: 
             })}
           </ul>
         )}
+        </div>
       </section>
-      <section className="pc-panel" aria-labelledby="actions-resolved">
-        <div className="pc-panel-head"><div className="flex flex-col gap-1"><h2 id="actions-resolved">Resolved</h2><p className="pc-row-hint">The latest 30.</p></div></div>
+      <section className="flex min-w-0 flex-col" aria-labelledby="actions-resolved">
+        <div className="pc-section-head"><h2 id="actions-resolved">Resolved</h2></div>
+        <p className="pc-section-note">The latest 30.</p>
+        <div className="pc-panel">
         {resolved.length === 0 ? <EmptyState compact icon="clipboardList" title="None resolved yet" /> : (
           <ul className="pc-rows">
             {resolved.map((a) => (
@@ -75,7 +76,8 @@ export default async function TaskActionsPage({ searchParams }: { searchParams: 
             ))}
           </ul>
         )}
+        </div>
       </section>
-    </>
+    </PageShell>
   );
 }

@@ -5,7 +5,7 @@ import { serverModule } from "@/test/server-module";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import { joinLocation, splitLocation } from "./meta";
 
-/** Admin's shared setup (docs/admin-setup.md): the activity list and each site's areas need
+/** Admin's shared setup: the activity list and each site's areas need
  *  their own permission, and renaming an area reaches the records that use it. Invented data. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let actions: typeof import("./actions");
@@ -38,19 +38,21 @@ before(async () => {
   };
   // The rename runs through the modules' registered handlers, as in the app.
   const contributions = serverModule<typeof import("@/modules/contributions")>("src/modules/contributions.ts", doubles);
-  serverModule("src/lib/rota/areas.ts", { ...doubles, "@/modules/contributions": contributions });
+  const rota = serverModule<typeof import("@/modules/rota/shared/areas")>("src/modules/rota/shared/areas.ts", doubles);
+  contributions.registerAreaRename({ id: "rota.places", rename: rota.renameRotaPlaces });
   actions = serverModule("src/lib/setup/actions.ts", { ...doubles, "@/modules/server": { renameAreaEverywhere: contributions.renameAreaEverywhere } });
 });
 after(async () => { await fixture?.close(); });
 
-test("the activity list is kept with its own permission; names are unique; one activity takes the classes", async () => {
+test("the activity list is kept with its own permission; names are unique; no activity takes the classes any more", async () => {
   as("ana", ["setup.view"]);
   await assert.rejects(actions.saveActivityType(null, { name: "Lifeguarding", departmentId: "d-pool", icon: "lifeguard" }), Denied, "seeing the setup is not keeping it");
   as("ana", ["setup.activities"]);
   assert.equal((await actions.saveActivityType(null, { name: "Lifeguarding", departmentId: "d-pool", icon: "lifeguard" })).ok, true);
   assert.equal((await actions.saveActivityType(null, { name: "lifeguarding", departmentId: "d-pool", icon: "lifeguard" })).ok, false, "names are unique");
-  assert.equal((await actions.saveActivityType(null, { name: "Teaching", departmentId: "d-pool", icon: "teaching", fromClasses: true })).ok, true);
-  assert.equal((await actions.saveActivityType(null, { name: "Squad coaching", departmentId: "d-pool", icon: "teaching", fromClasses: true })).ok, false, "one activity takes the classes");
+  const old = await fixture.prisma.activityType.create({ data: { orgId: ORG, name: "Teaching", departmentId: "d-pool", icon: "teaching", fromClasses: true } });
+  assert.equal((await actions.saveActivityType(old.id, { name: "Teaching", departmentId: "d-pool", icon: "teaching" })).ok, true);
+  assert.equal((await fixture.prisma.activityType.findUniqueOrThrow({ where: { id: old.id } })).fromClasses, false, "saving one that took the classes makes it ordinary");
   const lg = await fixture.prisma.activityType.findFirstOrThrow({ where: { name: "Lifeguarding" } });
   assert.equal((await actions.archiveActivityType(lg.id, true)).ok, true);
   const log = await fixture.prisma.auditLog.findFirstOrThrow({ where: { entity: "ActivityType", action: "create" } });

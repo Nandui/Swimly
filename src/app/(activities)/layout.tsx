@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { AppChrome } from "@/modules/activities/components/app-nav";
+import { AppChrome } from "@/modules/activities/features/workspace";
 import { permissionsOf } from "@/lib/authz";
 import { getCurrentClub } from "@/lib/clubs/current";
 import { visibleScreens } from "@/lib/staff/screens";

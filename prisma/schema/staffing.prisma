@@ -1,0 +1,268 @@
+// Staffing (docs/staffing.md, 4 November 2026): swim teacher rostering on the contract.
+// Two-week rota blocks built from weekly slots, published and acknowledged; swaps; call-offs,
+// late arrivals and no-shows logged by the duty manager; strikes on the handbook's ladder; and
+// exam seasons with their absence deadlines. Sites and staff are Core's and read only through
+// its functions, so these tables keep plain ids and carry the module prefix.
+//
+// Warnings, never blocks (owner's choice, 4 November 2026): a constraint (qualification, rest,
+// weekly cap, overlap, contract) is shown and the supervisor decides.
+
+/// The organisation's Staffing settings: every number the rules use, over `STAFFING_DEFAULTS`.
+/// Only the values someone changed are stored.
+model StaffingSettings {
+  id        String   @id @default(cuid())
+  orgId     String   @unique
+  values    Json     @default("{}")
+  updatedAt DateTime @updatedAt
+
+  @@map("staffing_settings")
+}
+
+/// What Staffing needs to know about a teacher beyond Core: their college (for exam seasons) and
+/// contract type (only a dual-role contract may take lifeguard shifts). Contracted hours, date of
+/// birth and qualifications stay Core's.
+model StaffingTeacher {
+  id        String   @id @default(cuid())
+  orgId     String
+  userId    String   @unique
+  /// ucc | mtu | none (`COLLEGE_META`).
+  college   String   @default("none")
+  /// swim_teacher | swim_teacher_lifeguard (`CONTRACT_KIND_META`).
+  contract  String   @default("swim_teacher")
+  /// Wants extra hours beyond their contract.
+  wantsMore Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orgId])
+  @@map("staffing_teachers")
+}
+
+/// A recurring weekly place to fill at a site: "Tue school morning, 10:15 to 13:15, 3 teachers".
+/// Archived, never deleted, so old blocks stay readable.
+model StaffingSlot {
+  id         String    @id @default(cuid())
+  orgId      String
+  siteId     String
+  /// 1 Monday to 7 Sunday.
+  weekday    Int
+  /// teaching | lifeguard | float (`SLOT_ROLE_META`).
+  role       String    @default("teaching")
+  name       String
+  startMin   Int
+  endMin     Int
+  needed     Int       @default(1)
+  hardToFill Boolean   @default(false)
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([siteId, weekday])
+  @@map("staffing_slots")
+}
+
+/// Two weeks at a site, Monday to Sunday, built and published together.
+model StaffingBlock {
+  id              String    @id @default(cuid())
+  orgId           String
+  siteId          String
+  /// A Monday.
+  startsOn        DateTime  @db.Date
+  publishedAt     DateTime?
+  publishedById   String?
+  publishedByName String?
+  /// Teachers still below their contracted hours when it was published, accepted by the
+  /// publisher with this note (BR-3.8).
+  shortAccepted   String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  shifts StaffingShift[]
+  acks   StaffingAck[]
+
+  @@unique([siteId, startsOn])
+  @@map("staffing_blocks")
+}
+
+/// One dated place from a slot, for one person (or nobody yet).
+model StaffingShift {
+  id        String   @id @default(cuid())
+  orgId     String
+  siteId    String
+  blockId   String
+  slotId    String?
+  date      DateTime @db.Date
+  startMin  Int
+  endMin    Int
+  role      String
+  name      String
+  userId    String?
+  /// The away shift this one covers, when the duty manager put someone on in their place.
+  coversId  String?
+  /// scheduled | absent_approved | called_off | late | no_show | sent_home (`SHIFT_STATUS_META`).
+  status    String   @default("scheduled")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  block StaffingBlock  @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  swaps StaffingSwap[]
+
+  @@index([blockId])
+  @@index([siteId, date])
+  @@index([userId, date])
+  @@map("staffing_shifts")
+}
+
+/// A teacher's acknowledgement of a published block, with the reminder and the phone call.
+model StaffingAck {
+  id             String    @id @default(cuid())
+  blockId        String
+  userId         String
+  acknowledgedAt DateTime?
+  phonedAt       DateTime?
+  phonedByName   String?
+  createdAt      DateTime  @default(now())
+
+  block StaffingBlock @relation(fields: [blockId], references: [id], onDelete: Cascade)
+
+  @@unique([blockId, userId])
+  @@map("staffing_acks")
+}
+
+/// Handing over a shift: requester, then a taker who accepts, then the supervisor's decision.
+/// Until approved the shift stays with the requester.
+model StaffingSwap {
+  id             String    @id @default(cuid())
+  orgId          String
+  siteId         String
+  shiftId        String
+  requesterId    String
+  /// Null while "Looking for cover".
+  takerId        String?
+  /// open | accepted | approved | refused | expired (`SWAP_STATUS_META`).
+  status         String    @default("open")
+  requestedAt    DateTime  @default(now())
+  acceptedAt     DateTime?
+  decidedAt      DateTime?
+  decidedById    String?
+  decidedByName  String?
+  refusalReason  String?
+  /// The warnings the taker had when it was decided.
+  warnings       String[]  @default([])
+  createdAt      DateTime  @default(now())
+
+  shift StaffingShift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+
+  @@index([siteId, status])
+  @@index([requesterId])
+  @@map("staffing_swaps")
+}
+
+/// What the duty manager logs about a shift: a call-off, a late arrival or a no-show.
+model StaffingAttendance {
+  id          String    @id @default(cuid())
+  orgId       String
+  siteId      String
+  shiftId     String
+  userId      String
+  /// call_off | late | no_show (`ATTENDANCE_META`).
+  kind        String
+  /// When they phoned (a call-off).
+  calledAt    DateTime?
+  /// phone | text | other: only a phone call to the landline counts as on time.
+  method      String?
+  /// sick | other
+  reason      String?
+  note        String    @default("")
+  /// Worked out from the call time and the shift (BR-6.3); null when not a call-off.
+  onTime      Boolean?
+  minutesLate Int?
+  sentHome    Boolean   @default(false)
+  loggedById  String
+  loggedBy    String
+  createdAt   DateTime  @default(now())
+
+  @@index([siteId, createdAt])
+  @@index([userId])
+  @@map("staffing_attendance")
+}
+
+/// A breach of the attendance rules. Counted per teacher per semester, escalating (BR-8.3).
+model StaffingStrike {
+  id            String    @id @default(cuid())
+  orgId         String
+  siteId        String
+  userId        String
+  /// "2026-09", "2027-01" or "2027-05": the semester it counts in.
+  semester      String
+  /// Its place among this semester's counted strikes; 0 when not counted.
+  number        Int
+  /// `STRIKE_CAUSE_META`.
+  cause         String
+  /// The attendance log or exam absence it came from.
+  sourceId      String?
+  occurredOn    DateTime  @db.Date
+  /// informal_1 | informal_2 | formal_referral | serious_misconduct_referral (`STRIKE_STAGE_META`).
+  stage         String
+  /// False before the strike counting date (the settling-in period, BR-8.5).
+  counted       Boolean   @default(true)
+  /// The conversation or referral is due by then.
+  dueOn         DateTime  @db.Date
+  handledAt     DateTime?
+  handledById   String?
+  handledByName String?
+  note          String    @default("")
+  /// Strike 2: the written note was signed by both.
+  signedByBoth  Boolean   @default(false)
+  withdrawnAt   DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([userId, semester])
+  @@index([siteId, handledAt])
+  @@map("staffing_strikes")
+}
+
+/// A college's published exam period. The absence deadline is worked out from the start.
+model StaffingExamSeason {
+  id                String    @id @default(cuid())
+  orgId             String
+  /// ucc | mtu
+  college           String
+  /// winter | spring | summer
+  name              String
+  startsOn          DateTime  @db.Date
+  endsOn            DateTime  @db.Date
+  firstYearStartsOn DateTime? @db.Date
+  confirmed         Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([orgId, startsOn])
+  @@map("staffing_exam_seasons")
+}
+
+/// A teacher off a shift for an exam, with the college's notice. Its outcome follows BR-7.4.
+model StaffingExamAbsence {
+  id            String    @id @default(cuid())
+  orgId         String
+  siteId        String
+  userId        String
+  shiftId       String
+  /// When they asked.
+  requestedAt   DateTime
+  /// The date the college sent its exam notice; null when there is none.
+  noticeSentOn  DateTime? @db.Date
+  /// on_time | late_notice | short_notice | college_short_notice | no_notice (`EXAM_OUTCOME_META`).
+  outcome       String
+  /// approved | refused
+  status        String
+  strikeId      String?
+  note          String    @default("")
+  decidedById   String
+  decidedByName String
+  createdAt     DateTime  @default(now())
+
+  @@index([userId])
+  @@index([siteId, createdAt])
+  @@map("staffing_exam_absences")
+}

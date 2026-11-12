@@ -34,7 +34,7 @@ async function home(role: Role) {
 test("a receptionist's home is Front of House, with exactly their modules", async () => {
   const h = await home({ name: "Receptionist", homeName: "Front of House", levels: { "swim-school": "desk", refunds: "use", docs: "read", rota: "view" } });
   assert.equal(h.homeName, "Front of House");
-  assert.deepEqual(h.moduleIds, ["swim-school", "refunds", "rota", "docs"], "group by group: front of house, then team");
+  assert.deepEqual(h.moduleIds, ["swim-school", "finance-requests", "rota", "docs"], "group by group: front of house, then team");
   assert.deepEqual(h.asked, [h.moduleIds], "cards are asked for the role's modules only");
 });
 
@@ -59,18 +59,26 @@ function viewer(role: Role): HomeViewer {
 const course = (id: string, instructorId: string, startMinutes: number) => ({ id, instructorId, startMinutes, durationMinutes: 30, location: "Main pool", name: null, level: { name: `Level ${id}` } });
 function swimSchool() {
   const contributions = serverModule<typeof import("@/modules/contributions")>("src/modules/contributions.ts", { "server-only": {} });
-  serverModule("src/modules/activities/contributions.ts", {
+  serverModule("src/modules/activities/module.ts", {
     "server-only": {},
     "@/lib/prisma": { prisma: { parentChangeRequest: { count: async () => 2 } } },
     "@/modules/contributions": contributions,
     "@/lib/audit": { logAudit: async () => {} },
     "@/lib/directory": { staffByIds: async () => new Map() },
     "@/lib/format": { ...format, today: () => "2026-09-29", minutesNow: () => 0 },
-    "@/modules/activities/lib/courses/planned": { getCoursesOnDate: async () => [course("a", "u1", 960), course("b", "u1", 1020), course("c", "someone", 1080)] },
-    "@/modules/activities/lib/attendance/data/cover": { getCoversForDay: async () => new Map() },
-    "@/modules/activities/lib/cancellations/data": { getCancellationsForDay: async () => new Map([["b", { id: "x", courseId: "b", reason: "Pool closed" }]]) },
-    "@/modules/activities/lib/today/assessments": { getTodayAssessments: async () => [{ booked: 4 }] },
-    "@/modules/activities/lib/enrolment/data/awaiting-enrolment": { getAwaitingEnrolment: async () => ({ total: 0 }) },
+    "@/modules/activities/shared/courses/planned": { getCoursesOnDate: async () => [course("a", "u1", 960), course("b", "u1", 1020), course("c", "someone", 1080)] },
+    "@/modules/activities/shared/attendance/data/cover": { getCoversForDay: async () => new Map() },
+    "@/modules/activities/shared/cancellations/data": { getCancellationsForDay: async () => new Map([["b", { id: "x", courseId: "b", reason: "Pool closed" }]]) },
+    "@/modules/activities/shared/today/assessments": { getTodayAssessments: async () => [{ booked: 4 }] },
+    "@/modules/activities/features/enrolment/server/data/awaiting-enrolment": { getAwaitingEnrolment: async () => ({ total: 0 }) },
+    "@/modules/activities/features/failed-payments/server/data": { memberPaymentNotices: async () => [] },
+    "@/modules/activities/features/failed-payments/server/home": { paymentsHomeItems: async () => [] },
+    "@/modules/activities/features/short-courses/server/parents-app": { parentsAppCourses: { app: "swim-school" } },
+    "@/modules/activities/features/short-courses/server/email-bookings": { shortCourseEmailBookings: async () => [] },
+    "@/modules/activities/features/short-courses/server/contributions": {
+      SHORT_COURSE_SESSIONS: "short-courses.sessions", shortCourseCommitments: async () => [], renameShortCoursePlaces: async () => 0,
+      shortCourseMemberHistory: async () => [], shortCourseHomeItems: async () => [], shortCourseRegisterItems: async () => [],
+    },
   });
   return async (levels: Record<string, string>, extras: string[] = [], id = "swim-school") =>
     (await contributions.homeCardItems([id], viewer({ name: "R", homeName: null, levels, extras }))).get(id) ?? [];

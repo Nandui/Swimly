@@ -1,0 +1,69 @@
+/* ── Incidents in Turnfin Glass (DESIGN.md; approved canvas, 25 October 2026) ─────────────────
+   The list is the kit's grouped list (kit.css, .pc-list). A report is a record page
+   (ui-kit/record.tsx and kit.css, .rec-*): its status and number above what it was about, what
+   happens next with the four steps beside the report, cards of label and value rows, the history.
+   This file holds only what is Incidents' own: the list's tags, the account as written, the
+   people, the checklist and the HSA deadline. The forms the page passes in are the kit's panels. Colour carries
+   meaning only: blue is this person's move, orange someone hurt or a deadline, red serious or
+   late, green done. One column on phones, the next step first. */
+
+/* The list: status, severity and serious tags under each report's line. */
+.turnfin-app .inc-reports .pc-row { align-items: flex-start; flex-wrap: nowrap; padding-block: var(--space-3); }
+.turnfin-app .inc-reports .pc-row > .pc-tile-icon { margin-top: 2px; }
+.turnfin-app .inc-reports .pc-row > .pc-row-chevron { align-self: center; }
+.turnfin-app .inc-row-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+
+/* The report: its sections and the forms the page passes in, one column. */
+.turnfin-app .inc-file { display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; }
+.turnfin-app .inc-file svg { stroke-width: 1.9; }
+.turnfin-app .inc-forms { display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; }
+.turnfin-app .inc-forms:empty { display: none; }
+/* "Kept as written" beside a section title. */
+.turnfin-app .inc-kept { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; line-height: 18px; font-weight: 550 !important; }
+.turnfin-app .inc-kept > svg { width: 14px; height: 14px; }
+
+/* The account as written, under the facts. */
+.turnfin-app .inc-quote { margin: 0; padding-top: var(--space-4); border-top: 0.5px solid var(--sep); font-size: 17px; line-height: 25px; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* The people, each a name with a tile, then their rows. */
+.turnfin-app .inc-people { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.turnfin-app .inc-person { display: flex; flex-direction: column; gap: var(--space-3); padding-block: var(--space-2); }
+.turnfin-app .inc-person + .inc-person { margin-top: var(--space-2); padding-top: var(--space-4); border-top: 0.5px solid var(--sep); }
+.turnfin-app .inc-person-head { display: flex; align-items: center; gap: var(--space-4); min-width: 0; }
+.turnfin-app :is(.inc-person-head, .inc-witnesses) h3 { margin: 0; font-size: 15px; line-height: 20px; font-weight: 650; overflow-wrap: anywhere; }
+.turnfin-app .inc-person .rec-facts { margin: 0; }
+.turnfin-app .inc-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--space-2); white-space: normal; }
+.turnfin-app .inc-chip { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 9px; border-radius: var(--radius-capsule); font-size: 12px; font-weight: 600; }
+.turnfin-app .inc-chip > svg { width: 13px; height: 13px; }
+.turnfin-app .inc-chip[data-tone='red'] { background: var(--red-soft); color: var(--red-ink); }
+.turnfin-app .inc-chip[data-tone='orange'] { background: var(--orange-soft); color: var(--orange-ink); }
+.turnfin-app .inc-witnesses { display: flex; flex-direction: column; gap: var(--space-2); padding-top: var(--space-4); border-top: 0.5px solid var(--sep); }
+.turnfin-app :is(.inc-witnesses > ul, .inc-reads) { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.turnfin-app :is(.inc-witnesses, .inc-reads) li { display: flex; align-items: flex-start; gap: var(--space-3); overflow-wrap: anywhere; }
+.turnfin-app :is(.inc-witnesses, .inc-reads) li > svg { flex: none; width: 16px; height: 16px; margin-top: 2px; color: var(--label-2); }
+.turnfin-app .inc-witnesses strong { font-weight: 600; }
+
+/* In what happens next: the investigation's checklist and the HSA deadline. */
+.turnfin-app .inc-checklist { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.turnfin-app .inc-checklist > li { display: flex; align-items: center; gap: var(--space-3); }
+.turnfin-app .inc-check { display: grid; place-items: center; flex: none; width: 22px; height: 22px; border-radius: var(--radius-capsule); box-shadow: inset 0 0 0 1.5px var(--label-3); }
+.turnfin-app .inc-checklist > li[data-done] > .inc-check { background: var(--green); color: var(--on-green); box-shadow: none; }
+.turnfin-app .inc-check > svg { width: 13px; height: 13px; stroke-width: 3; }
+.turnfin-app .inc-hsa { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-4); border-radius: var(--radius-lg); background: var(--orange-soft); }
+.turnfin-app .inc-hsa > p { margin: 0; }
+.turnfin-app .inc-hsa-head { display: flex; align-items: flex-start; gap: var(--space-2); font-weight: 650; }
+.turnfin-app .inc-hsa-head > svg { flex: none; width: 18px; height: 18px; margin-top: 1px; color: var(--orange-ink); }
+.turnfin-app .inc-hsa-count { color: var(--orange-ink); font-family: var(--font-display); font-size: 20px; line-height: 25px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.turnfin-app .inc-hsa-count[data-late] { color: var(--red-ink); }
+.turnfin-app .inc-hsa-body { color: var(--label-2); font-size: 13px; line-height: 18px; }
+.turnfin-app .inc-next-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+/* Statements under the investigation read as wells. */
+.turnfin-app .inc-statement { border: 0; border-radius: var(--radius-lg); background: var(--fill-2); }
+
+@media (max-width: 767px) {
+  .turnfin-app .inc-quote { font-size: 15px; line-height: 22px; }
+}
+@media print {
+  .turnfin-app .inc-file .rec-card { box-shadow: inset 0 0 0 0.5px var(--sep); }
+}

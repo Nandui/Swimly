@@ -1,0 +1,98 @@
+/* Column headings over the grouped list of classes (the kit draws the list as one card). */
+.directory {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.columns,
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.9fr) minmax(0, 1fr) calc(
+      var(--spacing) * 4
+    );
+  align-items: center;
+  gap: calc(var(--spacing) * 4);
+  padding: 12px 16px;
+}
+/* The list's 10px inset plus each row's 10px, so the headings sit over their cells. */
+.columns {
+  padding: 4px 20px 0;
+  color: var(--label-2);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+}
+.row {
+  min-height: 64px;
+  color: var(--label);
+  text-decoration: none;
+}
+.identity,
+.site,
+.schedule,
+.availability {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.name {
+  width: auto;
+  font-size: inherit;
+  line-height: inherit;
+  font-weight: 600;
+}
+.secondary {
+  color: var(--label-2);
+  font-size: 12px;
+  line-height: 16px;
+}
+.site {
+  display: none;
+}
+.arrow {
+  width: calc(var(--spacing) * 4);
+  height: calc(var(--spacing) * 4);
+  color: var(--label-2);
+}
+@media (min-width: 64rem) {
+  .columns,
+  .row {
+    grid-template-columns:
+      minmax(0, 1.3fr) minmax(0, 0.85fr) minmax(0, 1fr)
+      minmax(0, 1fr) calc(var(--spacing) * 4);
+  }
+  .site {
+    display: block;
+  }
+  .mobileSite {
+    display: none;
+  }
+}
+@media (max-width: 47.99rem) {
+  .columns {
+    display: none;
+  }
+  .row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: calc(var(--spacing) * 4) calc(var(--spacing) * 3);
+  }
+  .identity {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    padding-right: calc(var(--spacing) * 6);
+  }
+  .schedule {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .availability {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .arrow {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    align-self: start;
+  }
+}

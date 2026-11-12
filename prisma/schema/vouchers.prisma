@@ -1,8 +1,8 @@
-// Vouchers (owner request, 12 November 2026; docs/vouchers.md): at certain
-// times of year, Christmas for one, the centre gives vouchers for a service
-// (usually a family swim) to communities and organisations. A batch is one
-// gift to one of them; each voucher in it has its own code, printed on it and
-// used once at reception.
+// Vouchers (owner request, 12 November 2026, D30): at certain times of year, Christmas for one,
+// the centre gives vouchers for a service (usually a family swim) to communities and
+// organisations. A batch is one gift to one of them; each voucher in it has its own code, printed
+// on it and used once at reception. Sites and staff are the platform's and read only through its
+// functions, so these tables keep plain ids and carry the module prefix (AGENTS.md, Data and writes).
 
 /// One gift of vouchers to one community or organisation.
 model VoucherBatch {
@@ -39,17 +39,20 @@ model VoucherBatch {
   vouchers Voucher[]
 
   @@index([orgId, createdAt])
+  @@map("voucher_batches")
 }
 
 /// One voucher: a code that works once, while its batch is valid.
 model Voucher {
   id             String    @id @default(cuid())
+  orgId          String
   batchId        String
   /// Its place in the batch, from 1, printed as "3 of 30".
   number         Int
   /// "7K3M-9QXD": printed on the voucher and typed at reception.
   code           String    @unique
   redeemedAt     DateTime?
+  /// The site it was used at (`Club.id`).
   redeemedSiteId String?
   redeemedById   String?
   redeemedByName String?
@@ -57,9 +60,9 @@ model Voucher {
   voidedAt       DateTime?
   voidedByName   String?
 
-  batch        VoucherBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
-  redeemedSite Club?        @relation(fields: [redeemedSiteId], references: [id], onDelete: Restrict)
+  batch VoucherBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
 
   @@unique([batchId, number])
-  @@index([redeemedSiteId, redeemedAt])
+  @@index([orgId, redeemedSiteId, redeemedAt])
+  @@map("vouchers")
 }

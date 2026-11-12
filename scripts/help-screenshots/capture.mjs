@@ -1,4 +1,4 @@
-/* Help's screenshots (docs/help-centre.md, "Updating screenshots"): the real app in the local
+/* Help's screenshots ("Updating screenshots"): the real app in the local
  * sandbox (`npm run sandbox`), whose people and records are all invented, signed in as the
  * sandbox accounts, in light appearance. It opens dialogs and menus but never submits one.
  *
@@ -40,7 +40,7 @@ const plans = [
   { id: 'instructor-home', ...deck, steps: [{ go: '/instructor' }] },
   { id: 'instructor-menu', ...deck, steps: [{ go: '/instructor' }, { click: /^Account menu:/ }], shot: 'menu' },
   { id: 'instructor-site', ...deck, steps: [{ go: '/instructor' }, { click: /change site$/ }], shot: 'menu' },
-  // Home and the Work modules
+  // Home and every app beyond the swim school
   { id: 'home', as: 'maya', steps: [{ go: '/' }] },
   { id: 'refund-new', as: 'noah', steps: [{ go: '/refunds/new' }] },
   { id: 'refund-decision', as: 'maya', steps: [{ go: '/refunds' }, { link: /Sam Example/ }] },
@@ -56,6 +56,7 @@ const plans = [
   { id: 'tasks-reports', as: 'maya', steps: [{ go: '/tasks/reports' }] },
   { id: 'tasks-template', steps: [{ go: '/tasks/templates/tpl_water' }] },
   { id: 'hr-note', steps: [{ go: '/hr' }, { confirmPassword: true }, { link: /^Ava Example/ }, { click: 'Add note' }], shot: 'dialog' },
+  { id: 'hr-report', as: 'maya', steps: [{ go: '/hr/report' }, { click: 'Report' }], shot: 'dialog' },
   { id: 'hr-review', steps: [{ go: '/hr' }, { confirmPassword: true }, { link: /^Ava Example/ }, { link: /review/ }] },
   // Swimmers, enrolment and parents
   { id: 'directory', steps: [{ go: '/students' }] },
@@ -100,8 +101,8 @@ const plans = [
   { id: 'cancel-session', as: 'maya', steps: [{ go: '/duty' }, { click: /^Cancel session/ }, { fill: { 'Reason for cancellation': 'Learner pool closed for cleaning.' } }], shot: 'dialog' },
   { id: 'billing', as: 'maya', steps: [{ go: '/cancellations' }, { click: /^Review cancellation/ }], shot: 'dialog' },
   { id: 'analytics', steps: [{ go: '/analytics' }] },
-  { id: 'analytics-reception', steps: [{ go: '/analytics' }, { link: 'Reception activity' }] },
-  { id: 'analytics-instructors', steps: [{ go: '/analytics' }, { link: 'Instructor attendance' }] },
+  { id: 'analytics-reception', steps: [{ go: '/analytics' }, { link: 'Reception' }] },
+  { id: 'analytics-instructors', steps: [{ go: '/analytics' }, { link: 'Registers' }] },
   // Administration
   { id: 'programme', steps: [{ go: '/programmes' }, { click: /^Add (a )?programme/ }, { fill: { Name: 'Water safety' } }], shot: 'dialog' },
   { id: 'curriculum', steps: [{ go: '/programmes' }, { link: /Learn to swim/ }, { click: /^Add (a )?competency/ }], shot: 'dialog' },

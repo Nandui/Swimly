@@ -1,0 +1,215 @@
+/* shadcn primitives on the Turnfin Glass tokens. light-dark() follows the device/theme. */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(html:not([data-theme="light"]), html:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+}
+
+:root {
+  /* shadcn's names for the 2.0 tokens (src/app/theme/glass.css), which hold every value. */
+  --ui-background: var(--bg-2);
+  --ui-workspace: var(--bg);
+  --ui-foreground: var(--label);
+  --ui-card: var(--bg-2);
+  --ui-card-foreground: var(--label);
+  --ui-popover: var(--bg-2);
+  --ui-popover-foreground: var(--label);
+  /* The fin blue as text; a fill with white text on it uses --accent-btn (Button, below). */
+  --ui-primary: var(--accent);
+  --ui-primary-hover: var(--accent-hi);
+  --ui-primary-foreground: #ffffff;
+  --ui-brand-soft: var(--accent-soft);
+  --ui-brand-soft-hover: var(--accent-soft);
+  --ui-brand-ink: var(--accent-ink);
+  --ui-brand-border: var(--accent);
+  --ui-muted: var(--fill-2);
+  --ui-muted-foreground: var(--label-2);
+  --ui-secondary: var(--fill-2);
+  --ui-secondary-foreground: var(--label);
+  --ui-accent: var(--accent-soft);
+  --ui-accent-foreground: var(--accent-ink);
+  --ui-border: var(--sep);
+  --ui-input: var(--label-2);
+  --ui-ring: var(--accent);
+  --ui-destructive: var(--red-ink);
+  --ui-sidebar: var(--bg);
+  --ui-sidebar-hover: var(--bg-3);
+  /* Status tones: the 2.0 colours only. Yellow is needs action; purple becomes the fin blue. */
+  --ui-status-green: var(--green-ink);
+  --ui-status-green-bg: var(--green-soft);
+  --ui-status-blue: var(--accent-ink);
+  --ui-status-blue-bg: var(--accent-soft);
+  --ui-status-red: var(--red-ink);
+  --ui-status-red-bg: var(--red-soft);
+  --ui-status-orange: var(--orange-ink);
+  --ui-status-orange-bg: var(--orange-soft);
+  --ui-status-yellow: var(--orange-ink);
+  --ui-status-yellow-bg: var(--orange-soft);
+  --ui-status-purple: var(--accent-ink);
+  --ui-status-purple-bg: var(--accent-soft);
+  --ui-radius: 0.625rem;
+}
+
+@theme inline {
+  --color-ui-background: var(--ui-background);
+  --color-ui-workspace: var(--ui-workspace);
+  --color-ui-foreground: var(--ui-foreground);
+  --color-ui-card: var(--ui-card);
+  --color-ui-card-foreground: var(--ui-foreground);
+  --color-ui-popover: var(--ui-popover);
+  --color-ui-popover-foreground: var(--ui-foreground);
+  --color-ui-primary: var(--ui-primary);
+  --color-ui-primary-hover: var(--ui-primary-hover);
+  --color-ui-primary-foreground: var(--ui-primary-foreground);
+  --color-ui-brand-soft: var(--ui-brand-soft);
+  --color-ui-brand-ink: var(--ui-brand-ink);
+  --color-ui-brand-border: var(--ui-brand-border);
+  --color-ui-secondary: var(--ui-muted);
+  --color-ui-secondary-foreground: var(--ui-foreground);
+  --color-ui-muted: var(--ui-muted);
+  --color-ui-muted-foreground: var(--ui-muted-foreground);
+  --color-ui-accent: var(--ui-muted);
+  --color-ui-accent-foreground: var(--ui-foreground);
+  --color-ui-destructive: var(--ui-destructive);
+  --color-ui-border: var(--ui-border);
+  --color-ui-input: var(--ui-input);
+  --color-ui-ring: var(--ui-ring);
+  --radius-ui-xs: calc(var(--ui-radius) * 0.5);
+  --radius-ui-sm: calc(var(--ui-radius) * 0.6);
+  --radius-ui-md: calc(var(--ui-radius) * 0.8);
+  --radius-ui-lg: var(--ui-radius);
+  --radius-ui-xl: calc(var(--ui-radius) * 1.4);
+  --radius-ui-2xl: calc(var(--ui-radius) * 1.8);
+  /* Corners on the 2.0 radii (kit.css points them at glass.css): rounded-control (capsules),
+     rounded-card (radius-lg, 14px, inside a card) and rounded-panel (radius-card, 26px). */
+  --radius-control: var(--radius-capsule);
+  --radius-card: var(--radius-lg);
+  --radius-panel: var(--radius-card);
+}
+
+/* Sizes and positions that come from data (src/components/ui-kit/scale.ts): bar lengths in
+   hundredths, places along a timeline or picture in five-hundredths, and grid lines for
+   timelines. Pages never set them inline (owner rule, 20 October 2026). */
+@source inline("{w,h}-{0..100}/100");
+@source inline("{left,right,top}-{0..500}/500");
+/* Timeline grid places (TimelineGrid): 5-minute columns over a day and its lanes. */
+@source inline("{col-start,col-end,row-start,row-end}-{1..300}");
+@source inline("row-span-{1..20}");
+/* A share of a ring (ProgressRing, scale.ts progressOf), in hundredths. */
+@source inline("progress-at-{0..100}");
+@utility progress-at-* { --progress-at: calc(--value(integer) * 1%); }
+
+/* Layout utilities from the Poolside layout sizes (owner decision, 10 October 2026), so pages
+   never need an arbitrary value (owner rule, 20 October 2026). Auto-fit grids of tiles, cards
+   and wide columns; a side rail beside the main column; search fields and the page title. */
+@utility grid-cols-tiles { grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--tile-min)), 1fr)); }
+@utility grid-cols-cards { grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--card-min)), 1fr)); }
+@utility grid-cols-columns { grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--column-min)), 1fr)); }
+@utility grid-cols-main-rail { grid-template-columns: minmax(0, 1fr) min(100%, var(--rail-width)); }
+@utility grid-cols-rail-main { grid-template-columns: min(100%, var(--rail-width)) minmax(0, 1fr); }
+/* One growing column and one sized to its content (a row's text and its actions), and back. */
+@utility grid-cols-fill-auto { grid-template-columns: minmax(0, 1fr) auto; }
+@utility grid-cols-auto-fill { grid-template-columns: auto minmax(0, 1fr); }
+@utility grid-rows-auto-fill { grid-template-rows: auto minmax(0, 1fr); }
+@utility grid-rows-auto-auto-fill { grid-template-rows: auto auto minmax(0, 1fr); }
+@utility grid-rows-auto-auto { grid-template-rows: auto auto; }
+/* A row of two or three fields with its actions at the end (witnesses, area lines). */
+@utility grid-cols-two-fields-action { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; }
+@utility grid-cols-three-fields-action { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto; }
+/* Alerts: an icon column (none without an icon) beside the text. */
+@utility grid-cols-alert { grid-template-columns: 0 minmax(0, 1fr); }
+@utility grid-cols-alert-icon { grid-template-columns: calc(var(--spacing) * 4) minmax(0, 1fr); }
+@utility basis-field { flex-basis: min(100%, var(--field-min)); }
+@utility min-w-field { min-width: min(100%, var(--field-min)); }
+@utility basis-column { flex-basis: min(100%, var(--column-min)); }
+@utility max-w-deck { max-width: var(--deck-width); }
+/* A heading that takes its container's type size, such as an empty state's title. */
+@utility text-inherit { font-size: inherit; line-height: inherit; }
+
+@layer base {
+  [data-slot] {
+    border-color: var(--ui-border);
+  }
+}
+[data-slot="select-trigger"] {
+  border-color: var(--ui-input);
+}
+[data-slot][aria-invalid="true"] {
+  border-color: var(--ui-destructive);
+}
+/* Fields own their focus treatment; don't add a second outline over it. */
+[data-slot]:not([data-slot="input"], [data-slot="textarea"], [data-slot="command-input"]):focus-visible,
+.shadcn-workspace a:focus-visible {
+  outline: 2px solid var(--ui-ring);
+  outline-offset: 2px;
+}
+/* Command searches share one row with an icon, inside a clipped popover/dialog. */
+[data-slot="command-input-wrapper"]:has(> [data-slot="command-input"]:focus-visible) {
+  border-bottom-color: var(--ui-ring);
+  box-shadow: inset 0 -1px 0 var(--ui-ring);
+}
+@media (forced-colors: active) {
+  [data-slot="command-input-wrapper"]:has(> [data-slot="command-input"]:focus-visible),
+  [data-slot="input"]:focus-visible,
+  [data-slot="textarea"]:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}
+[data-slot="badge"][data-tone="green"] {
+  color: var(--ui-status-green);
+  background: var(--ui-status-green-bg);
+}
+[data-slot="badge"][data-tone="blue"] {
+  color: var(--ui-status-blue);
+  background: var(--ui-status-blue-bg);
+}
+[data-slot="badge"][data-tone="red"] {
+  color: var(--ui-status-red);
+  background: var(--ui-status-red-bg);
+}
+[data-slot="badge"][data-tone="orange"] {
+  color: var(--ui-status-orange);
+  background: var(--ui-status-orange-bg);
+}
+[data-slot="badge"][data-tone="purple"] {
+  color: var(--ui-status-purple);
+  background: var(--ui-status-purple-bg);
+}
+
+@media (max-width: 48rem), (pointer: coarse) {
+  [data-variant][data-size]:is(button, [role="combobox"]) {
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+  }
+  [data-slot="button"],
+  [data-slot="select-trigger"],
+  [data-slot="command-input-wrapper"],
+  [data-slot="tabs-trigger"] {
+    min-height: 2.75rem;
+  }
+  [data-slot="button"],
+  [data-slot="tabs-trigger"] {
+    min-width: 2.75rem;
+  }
+  [data-slot="command-input"],
+  [data-slot="input"],
+  [data-slot="textarea"] {
+    min-height: 2.75rem;
+    /* Deliberate off-scale 16px: below it iOS zooms on focus. The only 16px rule for
+       command-input (swimmer and instructor search); kit.css restores 14px on desktops. */
+    font-size: 1rem;
+  }
+  [data-slot="command-input-wrapper"] {
+    /* Keep the 44px input inside the row, including its bottom divider. */
+    min-height: calc(2.75rem + 1px);
+  }
+  [data-slot="tabs-list"] {
+    height: auto;
+  }
+}

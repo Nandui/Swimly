@@ -1,0 +1,50 @@
+import "server-only";
+import type { Prisma } from "@/generated/prisma/client";
+import { activeStaffWithRoles } from "@/lib/directory";
+import { prisma } from "@/lib/prisma";
+import { subjectsFor } from "@/lib/policy/session";
+import type { SubjectFilter } from "@/lib/policy/types";
+import { withQualificationTypes } from "@/lib/qualifications";
+import type { PermissionKey } from "@/lib/staff/permissions";
+import { requireTrainingActor } from "@/modules/training/shared/access";
+
+/** Training reads. Every list of people's records is limited to the people
+ *  the capability covers, resolved by the policy engine; the course catalogue
+ *  is organisation data any Training user may read. */
+
+export const people = (filter: SubjectFilter): Prisma.StringFilter | undefined =>
+  filter.kind === "all" ? undefined : { in: [...filter.userIds] };
+
+export async function scopedUserIds(cap: PermissionKey) {
+  return people(await subjectsFor(cap));
+}
+
+// ---------------------------------------------------------------------------
+// Catalogue
+// ---------------------------------------------------------------------------
+
+export async function listCourses(options: { archived?: boolean } = {}) {
+  const who = await requireTrainingActor();
+  const rows = await prisma.trainingCourse.findMany({
+    where: { orgId: who.orgId ?? undefined, archivedAt: options.archived ? { not: null } : null },
+    orderBy: { title: "asc" },
+    select: { id: true, title: true, summary: true, content: true, requiresSignoff: true, archivedAt: true, grantsTypeId: true, publishedVersionId: true, coverId: true, category: true, tags: true, selfEnrol: true, isTemplate: true },
+  });
+  const versions = new Map((await prisma.trainingCourseVersion.findMany({
+    where: { id: { in: rows.map((r) => r.publishedVersionId).filter((id): id is string => !!id) } }, select: { id: true, number: true, lessonCount: true },
+  })).map((v) => [v.id, v]));
+  const courses = (await withQualificationTypes(rows, "grantsTypeId", "grantsType"))
+    .map(({ id, title, summary, content, requiresSignoff, archivedAt, grantsType, publishedVersionId, coverId, category, tags, selfEnrol, isTemplate }) => ({
+      id, title, summary, content, requiresSignoff, archivedAt, coverId, category, tags, selfEnrol, isTemplate, grantsType: grantsType && { id: grantsType.id, name: grantsType.name, validityMonths: grantsType.validityMonths },
+      published: publishedVersionId ? versions.get(publishedVersionId) ?? null : null,
+    }));
+  return { who, courses };
+}
+
+/** Active people the signed-in person may assign training to. */
+export async function assignablePeople() {
+  const who = await requireTrainingActor();
+  if (!who.assign) return [];
+  // Their role, so a course can be given to everyone on a role at once.
+  return activeStaffWithRoles(who.orgId ?? null, await subjectsFor("training.assign"));
+}

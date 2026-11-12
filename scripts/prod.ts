@@ -23,7 +23,7 @@ function fail(message: string): never {
   process.exit(1);
 }
 
-if (!existsSync(FILE)) fail(`No ${FILE}. Paste production's DATABASE_URL there first (see docs/database-operations.md).`);
+if (!existsSync(FILE)) fail(`No ${FILE}. Paste production's DATABASE_URL there first (see docs/operations.md).`);
 const values = parse(readFileSync(FILE));
 const url = values.DIRECT_URL || values.DATABASE_URL_UNPOOLED || values.DATABASE_URL;
 if (!url) fail(`${FILE} has no DATABASE_URL. Paste production's connection string there.`);

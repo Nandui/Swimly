@@ -1,7 +1,7 @@
 import type { Role } from "@/generated/prisma/client";
 
 /** Every permission the app has to give, and nothing else: the one access
- *  language (docs/how-turnfin-works.md). A role's levels give permissions;
+ *  language (docs/architecture.md). A role's levels give permissions;
  *  pages, menus and actions ask for a permission, never a level or a role.
  *
  *  This catalogue is **code, not data**. A permission exists because a page
@@ -13,9 +13,14 @@ export const PERMISSIONS = [
   { key: "refunds.request", group: "Refunds", label: "Submit refund requests", description: "Create private drafts, submit requests and answer finance queries. Includes reading." },
   { key: "refunds.review", group: "Refunds", label: "Review refund requests", description: "Take responsibility, request information, approve or decline other staff's requests. Includes reading, not payment recording." },
   { key: "refunds.process", group: "Refunds", label: "Record refund payments", description: "Record external payment of approved refunds and cancel unpaid approvals. Includes reading, not approval." },
+  { key: "coinage.read", group: "Coinage", label: "Read coinage requests", description: "Open Coinage and follow sent requests across sites. Drafts stay private to whoever started them." },
+  { key: "coinage.request", group: "Coinage", label: "Request coinage", description: "Start drafts, send coinage requests to accounts and answer their questions. Includes reading." },
+  { key: "coinage.review", group: "Coinage", label: "Decide coinage requests", description: "Take on, ask about, approve or decline other staff's coinage requests. Includes reading, not recording orders." },
+  { key: "coinage.process", group: "Coinage", label: "Record coinage orders", description: "Record the order for approved coinage and cancel approvals not yet ordered. Includes reading, not approval." },
   { key: "docs.read", group: "Docs", label: "Read published documents", description: "Open Docs, read published versions and acknowledge assigned reading." },
   { key: "docs.write", group: "Docs", label: "Author documents", description: "Create and edit drafts and submit them for independent approval. Includes reading." },
   { key: "docs.approve", group: "Docs", label: "Approve documents", description: "Review and publish documents written by other staff. Includes authoring; never permits self-approval." },
+  { key: "docs.approve.own", group: "Docs", label: "Approve own documents", description: "Also approve and publish documents they wrote or edited themselves (owner decision, 9 November 2026: operations managers). Includes approving." },
   { key: "docs.manage", group: "Docs", label: "Administer Docs", description: "Manage document teams, templates, risk matrix, reading assignments and reading reports. Includes authoring, but approval requires its separate permission." },
   {
     key: "swimschool.desk",
@@ -145,8 +150,8 @@ export const PERMISSIONS = [
   {
     key: "training.manage",
     group: "Training",
-    label: "Build the training catalogue",
-    description: "Create, edit and retire training courses, and choose which qualification a course gives. Assigning and signing off are separate.",
+    label: "Build training courses",
+    description: "Create courses from lessons (text, videos and files), preview and publish them, retire them, and choose which qualification a course gives. Assigning and signing off are separate.",
   },
   {
     key: "training.assign",
@@ -203,16 +208,22 @@ export const PERMISSIONS = [
     description: "Approve suppliers and their products and prices, and set who approves orders up to what amount. Includes seeing orders.",
   },
   {
-    key: "vouchers.redeem",
-    group: "Vouchers",
-    label: "Redeem vouchers",
-    description: "Check a voucher's code and mark it as used at the sites this role covers.",
+    key: "incidents.reports.create",
+    group: "Incidents",
+    label: "Report incidents",
+    description: "Report accidents, incidents and near misses at the sites this role covers, and follow their own reports.",
   },
   {
-    key: "vouchers.manage",
-    group: "Vouchers",
-    label: "Give out vouchers",
-    description: "Make batches of vouchers for communities and organisations at the sites this role covers, print them, cancel them and see which were used. Includes redeeming.",
+    key: "incidents.reports.review",
+    group: "Incidents",
+    label: "Triage incident reports",
+    description: "See every report at the sites this role covers, injury details included, triage them and close low-risk ones. Never their own. Includes reporting.",
+  },
+  {
+    key: "incidents.reports.signoff",
+    group: "Incidents",
+    label: "Sign off serious incidents",
+    description: "Get the alert when a serious incident is reported at the sites this role covers, and close serious reports. Never their own. Includes triage.",
   },
   {
     key: "tasks.complete",
@@ -234,21 +245,203 @@ export const PERMISSIONS = [
   },
   {
     key: "academy.read",
-    group: "Academy",
+    group: "Short courses",
     label: "See Academy courses",
     description: "See the lifeguard and swim teacher courses at the sites this role covers, their sessions and candidates.",
   },
   {
     key: "academy.run",
-    group: "Academy",
+    group: "Short courses",
     label: "Run Academy courses",
     description: "Add candidates and their payment, record pre-course checks, take registers and record results on courses at the sites this role covers. Includes seeing them.",
   },
   {
     key: "academy.manage",
-    group: "Academy",
+    group: "Short courses",
     label: "Manage the Academy",
     description: "Keep the list of courses we deliver and put courses on, with their sessions, tutor and price, at the sites this role covers. Includes running them.",
+  },
+  {
+    key: "short-courses.read",
+    group: "Short courses",
+    label: "See and book short courses",
+    description: "See the short courses at the sites this role covers, book people on, record their payment and keep the waiting list.",
+  },
+  {
+    key: "short-courses.run",
+    group: "Short courses",
+    label: "Take short course registers",
+    description: "See the short courses at the sites this role covers and take their registers. Booking people on is the desk's.",
+  },
+  {
+    key: "short-courses.manage",
+    group: "Short courses",
+    label: "Manage short courses",
+    description: "Keep the list of short courses we offer and put courses on, with their weeks, times, instructor, places and price, at the sites this role covers. Includes taking registers.",
+  },
+  {
+    key: "stock.read",
+    group: "Stock",
+    label: "See stock counts",
+    description: "See the stock counts at the sites this role covers, the product list, and how two counts compare.",
+  },
+  {
+    key: "stock.count",
+    group: "Stock",
+    label: "Count stock",
+    description: "Start a stock count at the sites this role covers, count the products and submit it. Includes seeing the counts.",
+  },
+  {
+    key: "stock.manage",
+    group: "Stock",
+    label: "Manage stock",
+    description: "Keep the product list and its categories, and delete a count at the sites this role covers. Includes counting.",
+  },
+  {
+    key: "vouchers.redeem",
+    group: "Vouchers",
+    label: "Redeem vouchers",
+    description: "Check a voucher's code and mark it as used at the sites this role covers.",
+  },
+  {
+    key: "vouchers.manage",
+    group: "Vouchers",
+    label: "Give out vouchers",
+    description: "Make batches of vouchers for communities and organisations at the sites this role covers, print them, cancel them and see which were used. Includes redeeming.",
+  },
+  {
+    key: "staffing.read",
+    group: "Staffing",
+    label: "See pool staffing",
+    description: "See the rota blocks, today's shifts, swaps and exam absences at the sites this role covers.",
+  },
+  {
+    key: "staffing.run",
+    group: "Staffing",
+    label: "Run the day's staffing",
+    description: "Log call-offs, late arrivals and no-shows at the sites this role covers, see strikes there and record return-to-work chats. Includes seeing staffing.",
+  },
+  {
+    key: "staffing.supervise",
+    group: "Staffing",
+    label: "Build and publish rota blocks",
+    description: "Keep the weekly slots and the staff on the rota, build and publish rota blocks, decide swaps and exam absences, and hold second strike conversations at the sites this role covers. Includes running the day.",
+  },
+  {
+    key: "staffing.manage",
+    group: "Staffing",
+    label: "Manage staffing",
+    description: "Change published shifts, handle formal and no-show referrals with HR, and keep the exam seasons and Staffing's settings. Includes building blocks.",
+  },
+  {
+    key: "cctv.record",
+    group: "CCTV log",
+    label: "Record CCTV viewings",
+    description: "Record each time they check CCTV footage at the sites this role covers, and read their own entries.",
+  },
+  {
+    key: "cctv.review",
+    group: "CCTV log",
+    label: "Read every CCTV viewing",
+    description: "Read every CCTV viewing recorded at the sites this role covers and add notes to them. Includes recording.",
+  },
+  {
+    key: "analytics.view",
+    group: "Analytics",
+    label: "See swim school analytics",
+    description: "See the Business, Reception and Pool deck dashboards for the sites this role covers, and every report behind them.",
+  },
+  {
+    key: "site-monitoring.read",
+    group: "Site Monitoring",
+    label: "See Site Monitoring",
+    description: "See the actions raised for managers at the sites this role covers, such as a task completed with a reading out of range.",
+  },
+  {
+    key: "site-monitoring.act",
+    group: "Site Monitoring",
+    label: "Close Site Monitoring actions",
+    description: "Close an action by saying what was done, or open it again, at the sites this role covers. Includes seeing them.",
+  },
+  {
+    key: "maintenance.report",
+    group: "Maintenance",
+    label: "Report maintenance problems",
+    description: "Report something broken or needing repair at the sites this role covers, and see every request there.",
+  },
+  {
+    key: "maintenance.manage",
+    group: "Maintenance",
+    label: "Manage maintenance requests",
+    description: "Put requests in Trackplan, correct them, mark them fixed, close them not fixed and open them again, at the sites this role covers. Includes reporting.",
+  },
+  {
+    key: "risk.read",
+    group: "Risk assessments",
+    label: "Read risk assessments",
+    description: "Read the risk assessments at the sites this role covers, drafts apart, and ask for one to be reviewed.",
+  },
+  {
+    key: "risk.write",
+    group: "Risk assessments",
+    label: "Write risk assessments",
+    description: "Write and change risk assessments and their hazards, send them for sign-off, sign off the ones they own, log reviews and answer review requests, at the sites this role covers. Includes reading.",
+  },
+  {
+    key: "risk.manage",
+    group: "Risk assessments",
+    label: "Manage risk assessments",
+    description: "Archive risk assessments and bring them back, at the sites this role covers. Includes writing.",
+  },
+  {
+    key: "risk.signoff",
+    group: "Risk assessments",
+    label: "Give the executive sign-off",
+    description: "Add the executive sign-off to a risk assessment its owner has signed off, at the sites this role covers. Never on one they own.",
+  },
+  {
+    key: "payments.read",
+    group: "Payments",
+    label: "See failed payments",
+    description: "See the direct debits that failed at the sites this role covers, with who was contacted and how each ended.",
+  },
+  {
+    key: "payments.follow",
+    group: "Payments",
+    label: "Follow up failed payments",
+    description: "Log each contact with the member and record that they paid at the desk, set up a new mandate or cancelled, at the sites this role covers. Includes seeing them.",
+  },
+  {
+    key: "payments.manage",
+    group: "Payments",
+    label: "Manage failed payments",
+    description: "Upload the monthly failure sheet, open closed payments again and remove payments that aren't swimmers, at the sites this role covers. Includes following them up.",
+  },
+  {
+    key: "plan.view",
+    group: "Plan (test)",
+    label: "See the plan",
+    description: "See who works when, on which duties, and the gaps, at the sites this role covers.",
+  },
+  {
+    key: "plan.plan",
+    group: "Plan (test)",
+    label: "Plan their departments",
+    description: "Plan shifts and duties, and mark people off, for the departments they belong to at the sites this role covers. Includes seeing the plan.",
+  },
+  {
+    key: "plan.manage",
+    group: "Plan (test)",
+    label: "Manage the plan",
+    description: "Plan every department, run today, and keep the duties, areas and what's on, at the sites this role covers. Includes planning.",
+  },
+  {
+    key: "hr.reports.write",
+    group: "HR",
+    label: "Report on staff",
+    description: "File a quick report (conduct, performance, attendance or safety) on the people this role covers. It goes on their HR record; the reporter cannot read it back. Restricted, but needs no password again, because it reads nothing.",
+    restricted: true,
+    stepUp: false,
   },
   {
     key: "hr.records.read",
@@ -279,6 +472,13 @@ export const PERMISSIONS = [
     restricted: true,
   },
   {
+    key: "hr.digest.manage",
+    group: "HR",
+    label: "Keep the daily reports email",
+    description: "Choose who gets the email each morning with every HR report filed the day before, in full (HR > Set up > Settings). Restricted: only a superadmin can give it, and it asks for your password again.",
+    restricted: true,
+  },
+  {
     key: "work.anywhere",
     group: "Administration",
     label: "Work from any device",
@@ -288,7 +488,7 @@ export const PERMISSIONS = [
     key: "setup.view",
     group: "Administration",
     label: "See the shared setup",
-    description: "Open the setup lists every module uses: departments, qualifications, activities and each site's areas. Changing one needs its own permission below.",
+    description: "Open the setup lists every app uses: departments, qualifications, activities and each site's areas. Changing one needs its own permission below.",
   },
   {
     key: "setup.departments",
@@ -330,24 +530,6 @@ export const PERMISSIONS = [
 
 export type PermissionKey = (typeof PERMISSIONS)[number]["key"];
 
-export type PermissionGroup = (typeof PERMISSIONS)[number]["group"];
-
-/** The order groups are offered in: the everyday work first, the powerful
- *  things last, so nobody ticks Administration on their way past. */
-export const PERMISSION_GROUP_ORDER: PermissionGroup[] = [
-  "Daily operations",
-  "Swimmers",
-  "On the deck",
-  "The rules",
-  "Docs",
-  "Refunds",
-  "People",
-  "Training",
-  "Rota",
-  "HR",
-  "Administration",
-];
-
 const ALL_KEYS = new Set<string>(PERMISSIONS.map((p) => p.key));
 
 /** Together these keys grant administrator access. Neither key alone does.
@@ -375,8 +557,12 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "refunds.request": ["refunds.read"],
   "refunds.review": ["refunds.read"],
   "refunds.process": ["refunds.read"],
+  "coinage.request": ["coinage.read"],
+  "coinage.review": ["coinage.read"],
+  "coinage.process": ["coinage.read"],
   "docs.write": ["docs.read"],
   "docs.approve": ["docs.read", "docs.write"],
+  "docs.approve.own": ["docs.approve", "docs.read", "docs.write"],
   "docs.manage": ["docs.read", "docs.write"],
   "attendance.markAny": ["attendance.mark", "attendance.cover"],
   "progression.complete": ["progression.assess"],
@@ -393,15 +579,40 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "setup.areas": ["setup.view"],
   "purchasing.request": ["purchasing.read"],
   "purchasing.manage": ["purchasing.read"],
-  "vouchers.manage": ["vouchers.redeem"],
+  "incidents.reports.review": ["incidents.reports.create"],
+  "incidents.reports.signoff": ["incidents.reports.review", "incidents.reports.create"],
   "tasks.review": ["tasks.complete"],
   "tasks.manage": ["tasks.review", "tasks.complete"],
   "academy.run": ["academy.read"],
   "academy.manage": ["academy.run", "academy.read"],
+  // Taking registers (Pool deck Teach, D24) is not booking: the desk books with Classes Desk.
+  "short-courses.manage": ["short-courses.run", "short-courses.read"],
+  "stock.count": ["stock.read"],
+  "stock.manage": ["stock.count", "stock.read"],
+  "vouchers.manage": ["vouchers.redeem"],
+  "staffing.run": ["staffing.read"],
+  "staffing.supervise": ["staffing.run", "staffing.read"],
+  "staffing.manage": ["staffing.supervise", "staffing.run", "staffing.read"],
+  "cctv.review": ["cctv.record"],
+  "site-monitoring.act": ["site-monitoring.read"],
+  "maintenance.manage": ["maintenance.report"],
+  "risk.write": ["risk.read"],
+  "risk.manage": ["risk.write", "risk.read"],
+  "risk.signoff": ["risk.read"],
+  "payments.manage": ["payments.follow", "payments.read"],
+  "payments.follow": ["payments.read"],
+  "plan.manage": ["plan.plan"],
+  "plan.plan": ["plan.view"],
   "hr.notes.write": ["hr.records.read"],
   "hr.reviews.write": ["hr.records.read"],
   "hr.details.write": ["hr.records.read"],
 };
+
+/** Restricted capabilities that read nothing, so need no fresh sign-in (D22). */
+export function skipsStepUp(key: string): boolean {
+  const meta = PERMISSIONS.find((p) => p.key === key);
+  return !!meta && "stepUp" in meta && meta.stepUp === false;
+}
 
 /** Restricted capabilities (HR, performance): never inherited by
  *  administrators. They reach a person only through a role a superadmin

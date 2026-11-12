@@ -1,0 +1,217 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import { fail, ok, onUniqueViolation, type ActionResult } from "@/lib/action-result";
+import { logAudit } from "@/lib/audit";
+import { squarePicture } from "@/lib/images/square-picture";
+import { roleById, withRoles } from "@/lib/directory";
+import { prisma } from "@/lib/prisma";
+import { requirePurchasingActor } from "@/modules/purchasing/shared/access";
+import { revalidatePurchasing as revalidate, text } from "@/modules/purchasing/shared/forms";
+import { centsOf, copyList, euro, MAX_COPY_TO, optionsOf } from "@/modules/purchasing/shared/rules";
+
+/** Purchasing's supplier writes. Suppliers, products and
+ *  approval rules need `purchasing.manage`. Every write is audited. */
+
+async function manager() {
+  const who = await requirePurchasingActor();
+  if (!who.manage || !who.orgId) return null;
+  return who;
+}
+const NOT_MANAGER = "Managing suppliers needs Purchasing: Manage.";
+/* Suppliers. */
+
+const supplierSchema = z.object({
+  name: z.string().trim().min(2, "Give the supplier's name.").max(100),
+  accountNumber: text(60), contactName: text(100), email: z.string().trim().max(200).refine((v) => v === "" || /^\S+@\S+\.\S+$/.test(v), "Use an email address like orders@example.com.").default(""),
+  phone: text(40), note: text(500),
+});
+export type SupplierInput = z.input<typeof supplierSchema>;
+
+export async function saveSupplier(id: string | null, input: SupplierInput): Promise<ActionResult> {
+  const who = await manager();
+  if (!who) return fail(NOT_MANAGER);
+  const parsed = supplierSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const data = parsed.data;
+  const result = await onUniqueViolation(() => prisma.$transaction(async (tx) => {
+    if (id) {
+      const moved = await tx.supplier.updateMany({ where: { id, orgId: who.orgId! }, data });
+      if (moved.count !== 1) return fail("That supplier no longer exists.");
+    }
+    const saved = id ? { id } : await tx.supplier.create({ data: { ...data, orgId: who.orgId! }, select: { id: true } });
+    await logAudit({ actorId: who.id, actorName: who.name, action: id ? "update" : "create", entity: "Supplier", entityId: saved.id, clubId: null, summary: `${id ? "Changed" : "Approved"} supplier ${data.name}` }, tx);
+    return ok();
+  }), `There is already a supplier called ${data.name}.`);
+  if (result.ok) revalidate();
+  return result;
+}
+
+/** Archived suppliers cannot be ordered from; their orders stay. */
+export async function setSupplierArchived(id: string, archived: boolean): Promise<ActionResult> {
+  const who = await manager();
+  if (!who) return fail(NOT_MANAGER);
+  const supplier = await prisma.supplier.findFirst({ where: { id, orgId: who.orgId! }, select: { name: true } });
+  if (!supplier) return fail("That supplier no longer exists.");
+  await prisma.$transaction(async (tx) => {
+    await tx.supplier.update({ where: { id }, data: { archivedAt: archived ? new Date() : null } });
+    await logAudit({ actorId: who.id, actorName: who.name, action: archived ? "archive" : "restore", entity: "Supplier", entityId: id, clubId: null, summary: `${archived ? "Removed" : "Restored"} ${supplier.name} ${archived ? "from" : "to"} the approved suppliers` }, tx);
+  });
+  revalidate();
+  return ok();
+}
+
+/** A supplier's picture (its logo or a photo): a new one replaces the old, an empty
+ *  form takes it off and its initials show again. */
+export async function setSupplierPicture(id: string, form: FormData): Promise<ActionResult> {
+  const who = await manager();
+  if (!who) return fail(NOT_MANAGER);
+  const supplier = await prisma.supplier.findFirst({ where: { id, orgId: who.orgId! }, select: { name: true } });
+  if (!supplier) return fail("That supplier no longer exists.");
+  const file = form instanceof FormData ? form.get("picture") : null;
+  let data: { pictureData: Uint8Array<ArrayBuffer> | null; pictureVersion: string | null } = { pictureData: null, pictureVersion: null };
+  if (file !== null) {
+    if (!(file instanceof File) || (file.size === 0 && !file.name)) return fail("Choose a picture first.");
+    const picture = await squarePicture(file, { solid: true });
+    if (!picture.ok) return picture;
+    data = { pictureData: picture.bytes, pictureVersion: picture.version };
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.supplier.update({ where: { id }, data });
+    await logAudit({ actorId: who.id, actorName: who.name, action: "update", entity: "Supplier", entityId: id, clubId: null,
+      summary: data.pictureData ? `Changed the picture of ${supplier.name}` : `Took the picture off ${supplier.name}` }, tx);
+  });
+  revalidate();
+  revalidatePath(`/purchasing/suppliers/${id}`);
+  revalidatePath("/purchasing/new");
+  return ok();
+}
+
+/* Approved products. */
+
+const productSchema = z.object({
+  name: z.string().trim().min(2, "Give the product's name.").max(120),
+  code: text(60), unit: text(60), brand: text(60),
+  sizes: text(600).transform(optionsOf).refine((v) => v.length <= 40 && v.every((o) => o.length <= 30), "Up to 40 sizes, each under 30 characters."),
+  colours: text(600).transform(optionsOf).refine((v) => v.length <= 40 && v.every((o) => o.length <= 30), "Up to 40 colours, each under 30 characters."),
+  price: z.string(),
+});
+export type ProductInput = z.input<typeof productSchema>;
+
+export async function saveProduct(supplierId: string, id: string | null, input: ProductInput): Promise<ActionResult> {
+  const who = await manager();
+  if (!who) return fail(NOT_MANAGER);
+  const parsed = productSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const priceCents = centsOf(parsed.data.price);
+  if (priceCents === null) return fail("Give the agreed price before VAT, like 12.50.");
+  const supplier = await prisma.supplier.findFirst({ where: { id: supplierId, orgId: who.orgId! }, select: { name: true } });
+  if (!supplier) return fail("That supplier no longer exists.");
+  const { name, code, unit, brand, sizes, colours } = parsed.data;
+  const data = { name, code, unit, brand, sizes, colours, priceCents };
+  await prisma.$transaction(async (tx) => {
+    const saved = id
+      ? (await tx.purchaseProduct.updateMany({ where: { id, supplierId }, data }), { id })
+      : await tx.purchaseProduct.create({ data: { ...data, supplierId }, select: { id: true } });
+    await logAudit({ actorId: who.id, actorName: who.name, action: id ? "update" : "create", entity: "PurchaseProduct", entityId: saved.id, clubId: null,
+      summary: `${id ? "Changed" : "Approved"} ${data.name}${brand ? ` (${brand})` : ""} from ${supplier.name} at ${euro(priceCents)}${data.unit ? ` per ${data.unit}` : ""}${sizes.length ? `; sizes ${sizes.join(", ")}` : ""}${colours.length ? `; colours ${colours.join(", ")}` : ""}` }, tx);
+  });
+  revalidatePath(`/purchasing/suppliers/${supplierId}`);
+  return ok();
+}
+
+export async function setProductArchived(id: string, archived: boolean): Promise<ActionResult> {
+  const who = await manager();
+  if (!who) return fail(NOT_MANAGER);
+  const product = await prisma.purchaseProduct.findFirst({ where: { id, supplier: { orgId: who.orgId! } }, select: { name: true, supplierId: true, supplier: { select: { name: true } } } });
+  if (!product) return fail("That product no longer exists.");
+  await prisma.$transaction(async (tx) => {
+    await tx.purchaseProduct.update({ where: { id }, data: { archivedAt: archived ? new Date() : null } });
+    await logAudit({ actorId: who.id, actorName: who.name, action: archived ? "archive" : "restore", entity: "PurchaseProduct", entityId: id, clubId: null, summary: `${archived ? "Removed" : "Restored"} ${product.name} ${archived ? "from" : "to"} ${product.supplier.name}'s approved products` }, tx);
+  });
+  revalidatePath(`/purchasing/suppliers/${product.supplierId}`);
+  return ok();
+}
+
+/* Approval rules: a role, up to an amount, for one supplier or every supplier. */
+
+export async function addApprovalRule(input: { supplierId: string | null; roleId: string; limit: string }): Promise<ActionResult> {
+  const who = await manager();
+  if (!who) return fail(NOT_MANAGER);
+  const limitCents = input.limit.trim() === "" ? null : centsOf(input.limit);
+  if (input.limit.trim() !== "" && limitCents === null) return fail("Give the limit as an amount like 500, or leave it empty for no limit.");
+  const role = await roleById(input.roleId);
+  if (!role) return fail("Choose a role.");
+  const supplier = input.supplierId ? await prisma.supplier.findFirst({ where: { id: input.supplierId, orgId: who.orgId! }, select: { name: true } }) : null;
+  if (input.supplierId && !supplier) return fail("That supplier no longer exists.");
+  const clash = await prisma.purchaseApprovalRule.findFirst({ where: { orgId: who.orgId!, supplierId: input.supplierId, roleId: role.id }, select: { id: true } });
+  if (clash) return fail(`${role.name} already approves for ${supplier?.name ?? "every supplier"}. Remove that rule first to change its limit.`);
+  await prisma.$transaction(async (tx) => {
+    const rule = await tx.purchaseApprovalRule.create({ data: { orgId: who.orgId!, supplierId: input.supplierId, roleId: role.id, limitCents }, select: { id: true } });
+    await logAudit({ actorId: who.id, actorName: who.name, action: "create", entity: "PurchaseApprovalRule", entityId: rule.id, clubId: null,
+      summary: `${role.name} may approve orders ${limitCents === null ? "of any amount" : `up to ${euro(limitCents)}`} from ${supplier?.name ?? "every supplier without its own approvers"}` }, tx);
+  });
+  revalidate();
+  if (input.supplierId) revalidatePath(`/purchasing/suppliers/${input.supplierId}`);
+  return ok();
+}
+
+export async function removeApprovalRule(id: string): Promise<ActionResult> {
+  const who = await manager();
+  if (!who) return fail(NOT_MANAGER);
+  const rule = await prisma.purchaseApprovalRule.findFirst({ where: { id, orgId: who.orgId! }, select: { supplierId: true, roleId: true, supplier: { select: { name: true } } } }).then((row) => row && withRoles([row], "roleId", "role").then(([r]) => r));
+  if (!rule) return ok();
+  await prisma.$transaction(async (tx) => {
+    await tx.purchaseApprovalRule.delete({ where: { id } });
+    await logAudit({ actorId: who.id, actorName: who.name, action: "cancel", entity: "PurchaseApprovalRule", entityId: id, clubId: null, summary: `${rule.role.name} no longer approves orders from ${rule.supplier?.name ?? "every supplier"}` }, tx);
+  });
+  revalidate();
+  if (rule.supplierId) revalidatePath(`/purchasing/suppliers/${rule.supplierId}`);
+  return ok();
+}
+
+/* Emails to suppliers. */
+
+/** Who gets a copy (CC) of every email to a supplier: one address, or none. */
+export async function setSupplierEmailCopy(addresses: string): Promise<ActionResult> {
+  const who = await manager();
+  if (!who) return fail("Changing who is copied needs Purchasing: Manage.");
+  const list = copyList(addresses);
+  if (list.length > MAX_COPY_TO) return fail(`Copy up to ${MAX_COPY_TO} addresses.`);
+  const wrong = list.find((a) => a.length > 254 || !z.string().email().safeParse(a).success);
+  if (wrong) return fail(`"${wrong}" is not an email address. Use addresses like name@example.com, separated by commas, or leave it empty.`);
+  const copyTo = list.join(", ");
+  await prisma.$transaction(async (tx) => {
+    await tx.purchasingSettings.upsert({
+      where: { orgId: who.orgId! },
+      create: { orgId: who.orgId!, copyTo, changedById: who.id, changedByName: who.name },
+      update: { copyTo, changedById: who.id, changedByName: who.name },
+    });
+    await logAudit({ actorId: who.id, actorName: who.name, action: "update", entity: "PurchasingSettings", entityId: who.orgId!,
+      summary: copyTo ? `Copied ${copyTo} on every email to a supplier` : "Stopped copying anyone on emails to suppliers" }, tx);
+  });
+  revalidate();
+  return ok();
+}
+
+/** Turn emailing approved orders to suppliers on or off for the organisation. It can only
+ *  be turned on once someone has sent themselves a test (owner request, 15 October 2026). */
+export async function setSupplierEmails(on: boolean): Promise<ActionResult> {
+  const who = await manager();
+  if (!who) return fail("Turning emails to suppliers on or off needs Purchasing: Manage.");
+  if (on && (await prisma.purchaseOrderEmail.count({ where: { kind: "test", status: "sent", order: { orgId: who.orgId! } } })) === 0) {
+    return fail("Send yourself a test from an approved order first, and check it, before turning emails to suppliers on.");
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.purchasingSettings.upsert({
+      where: { orgId: who.orgId! },
+      create: { orgId: who.orgId!, supplierEmailsOn: on, changedById: who.id, changedByName: who.name },
+      update: { supplierEmailsOn: on, changedById: who.id, changedByName: who.name },
+    });
+    await logAudit({ actorId: who.id, actorName: who.name, action: "update", entity: "PurchasingSettings", entityId: who.orgId!,
+      summary: on ? "Turned emails to suppliers on" : "Turned emails to suppliers off" }, tx);
+  });
+  revalidate();
+  return ok();
+}

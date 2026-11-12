@@ -1,24 +1,22 @@
 import type { Metadata } from "next";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { PrintSheet } from "@/components/vouchers/batch-actions";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { formatDate, plural } from "@/lib/format";
-import { printPage } from "@/lib/vouchers/data";
+import { printPage, PrintSheet } from "@/modules/vouchers/features/batches";
 
 export const metadata: Metadata = { title: "Print vouchers" };
 
-/** The sheet to print and cut: one card for each voucher still to hand out,
- *  with what it gives, its code, when and where it can be used and the small
- *  print. Printing hides the workspace around it (module-workspace.css). */
-export default async function PrintVouchersPage({ params }: { params: Promise<{ id: string }> }) {
-  const { batch: b, organisation, vouchers } = await printPage((await params).id);
+/** The sheet to print and cut: one card for each voucher still to hand out, with what it gives,
+ *  its code, when and where it can be used and the small print. Printing leaves out the frame and
+ *  this page's header (module-workspace.css). */
+export default async function PrintVouchersPage({ params }: PageProps<"/vouchers/batches/[id]/print">) {
+  const { id } = await params;
+  const { batch: b, organisation, vouchers } = await printPage(id);
   return (
-    <div className="flex flex-col gap-6">
-      <div data-print="hide">
-        <PageHeader title="Print vouchers" back={{ href: `/vouchers/batches/${b.id}`, label: "The batch" }}
-          description={`${plural(vouchers.length, "voucher")} for ${b.recipient} still to hand out. Used and cancelled vouchers are left off.`}
-          actions={vouchers.length ? <PrintSheet /> : undefined} />
-      </div>
+    <PageShell spacing="roomy" className="voucher-print" header={<PageHeader title="Print vouchers" back={{ href: `/vouchers/batches/${id}`, label: "The batch" }}
+        description={`${plural(vouchers.length, "voucher")} for ${b.recipient} still to hand out. Used and cancelled vouchers are left off.`}
+        actions={vouchers.length ? <PrintSheet /> : undefined} />}>
       {vouchers.length === 0 ? (
         <EmptyState as="h2" icon="receipt" title="Nothing to print" hint="Every voucher in this batch has been used or cancelled." />
       ) : (
@@ -37,6 +35,6 @@ export default async function PrintVouchersPage({ params }: { params: Promise<{ 
           ))}
         </ul>
       )}
-    </div>
+    </PageShell>
   );
 }

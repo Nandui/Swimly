@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { MultiplePlacesReport } from "@/modules/activities/components/analytics/multiple-places-report";
-import { getMultiplePlacesAnalytics } from "@/modules/activities/lib/analytics/report-data";
+import { getMultiplePlacesAnalytics, MultiplePlacesReport } from "@/modules/activities/features/analytics";
 import { screenPage } from "@/lib/page-guards";
 
 export const metadata: Metadata = { title: "Multiple enrolments" };

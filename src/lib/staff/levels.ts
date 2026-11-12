@@ -3,11 +3,11 @@ import { expandPermissions, hasAdministratorAccess, type PermissionKey } from "@
 import { SCREENS, isScreenKey } from "@/lib/staff/screens";
 
 /** A role as the owner thinks of it: one level for each module, plus a few
- *  ticks (docs/how-turnfin-works.md).
+ *  ticks (docs/architecture.md).
  *
  *  Levels are translated here into the named permissions the app checks, so
  *  no page or action ever asks for a level. The role row keeps the
- *  translation in `permissions` (everything except HR "Their team", which only
+ *  translation in `permissions` (everything except HR Report, which only
  *  the policy engine reads), so every reader of that column works as is. */
 
 /** Module id → level key. A missing module means None. */
@@ -26,7 +26,7 @@ const ADMIN_MODULE = "admin";
 /** The roles every new database starts with. The seed creates any that are
  *  missing; an admin may rename them and change their levels. */
 export const SYSTEM_ROLES: { name: string; description: string; homeName: string; levels: Levels }[] = [
-  { name: "Admin", description: "Every module except HR, including people, roles and sites.", homeName: "Management", levels: { admin: "manage" } },
+  { name: "Admin", description: "Every app except HR, including people, roles and sites.", homeName: "Management", levels: { admin: "manage" } },
   { name: "Instructor", description: "The class instructor view and nothing else.", homeName: "Pool deck", levels: { "pool-deck": "teach" } },
 ];
 
@@ -39,14 +39,32 @@ function rankOf(mod: ModuleManifest, level: string | undefined) {
   return mod.access.levels.findIndex((l) => l.key === level);
 }
 
+/** Where a stored level counts now: in its own module, if that module still has the level, and
+ *  in every module that took it over (`formerly`), through that module's level map. */
+function currentLevels(id: string, level: string): { mod: ModuleManifest; level: string }[] {
+  const own = moduleById(id);
+  const out = own && rankOf(own, level) >= 0 ? [{ mod: own, level }] : [];
+  for (const mod of allModules()) {
+    for (const former of mod.access.formerly ?? []) {
+      if (former.id !== id) continue;
+      const mapped = former.levels ? former.levels[level] : level;
+      if (mapped && rankOf(mod, mapped) >= 0) out.push({ mod, level: mapped });
+    }
+  }
+  return out;
+}
+
 /** Drops unknown modules, levels and extras, so a stored role never grants
- *  something the catalogue no longer describes. */
+ *  something the catalogue no longer describes. A level stored for a merged
+ *  module counts for the modules that took it over, through their level maps; the higher wins. */
 export function cleanLevels(input: unknown, extras: unknown = []): RoleLevels {
   const levels: Record<string, string> = {};
   if (input && typeof input === "object" && !Array.isArray(input)) {
-    for (const [id, level] of Object.entries(input as Record<string, unknown>)) {
-      const mod = moduleById(id);
-      if (mod && typeof level === "string" && rankOf(mod, level) >= 0) levels[id] = level;
+    for (const [id, stored] of Object.entries(input as Record<string, unknown>)) {
+      if (typeof stored !== "string") continue;
+      for (const { mod, level } of currentLevels(id, stored)) {
+        if (rankOf(mod, level) > rankOf(mod, levels[mod.id])) levels[mod.id] = level;
+      }
     }
   }
   const kept = (Array.isArray(extras) ? extras : []).filter((key): key is string => {
@@ -94,8 +112,14 @@ export function accessByReach(role: RoleLevels): AccessByReach {
   return { everywhere: tidy(out.everywhere), sites: tidy(out.sites), team: tidy(out.team) };
 }
 
-/** What the role row stores in `permissions`: everything except HR "Their
- *  team", which reaches only the holder's reports. */
+/** The apps whose levels apply only at the sites a person works at (any level
+ *  with "sites" reach), by name, for the "Works at" wording on a person's page. */
+export function siteBoundAppNames(): string[] {
+  return allModules().filter((mod) => mod.access.levels.some((level) => (level.reach ?? mod.access.reach) === "sites")).map((mod) => mod.name);
+}
+
+/** What the role row stores in `permissions`: everything except HR Report,
+ *  which reaches only the holder's reports. */
 export function storedPermissions(role: RoleLevels): PermissionKey[] {
   const { everywhere, sites } = accessByReach(role);
   return tidy([...everywhere, ...sites]);
@@ -146,10 +170,11 @@ export function levelsFromAccess(permissions: readonly string[], screens: readon
         chosen = Math.max(chosen, rankOf(mod, extra.from));
       }
     }
-    // The role's own keys applied everywhere, so a level that reaches only
-    // the holder's team (HR "Their team") would narrow it: take the next
-    // level that applies everywhere instead.
-    while (chosen >= 0 && mod.access.levels[chosen].reach === "team" && chosen < mod.access.levels.length - 1) chosen += 1;
+    // The role's own keys applied everywhere, so a level that reaches less
+    // than its module (HR Report and Their sites) would narrow it: take the
+    // next level that applies as widely as the module instead.
+    const narrower = (index: number) => (mod.access.levels[index].reach ?? mod.access.reach) !== mod.access.reach;
+    while (chosen >= 0 && narrower(chosen) && chosen < mod.access.levels.length - 1) chosen += 1;
     if (chosen >= 0) levels[mod.id] = mod.access.levels[chosen].key;
   }
   if (before.has("work.anywhere") && !administrator) extras.push(WORK_ANYWHERE);
@@ -195,5 +220,5 @@ export function describeLevels(role: RoleLevels): string {
     return `${line.module}: ${line.level}${ticks.length ? ` (${ticks.join(", ")})` : ""}`;
   });
   if (role.extras.includes(WORK_ANYWHERE)) parts.push("can work away from the centre's PCs");
-  return parts.length ? parts.join(" · ") : "No modules";
+  return parts.length ? parts.join(" · ") : "No apps";
 }

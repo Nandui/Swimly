@@ -5,11 +5,14 @@ import { z } from "zod";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { requirePermission } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
+import { departmentById } from "@/lib/directory";
 import { prisma } from "@/lib/prisma";
-import { ACTIVITY_ICON_KEYS } from "@/lib/setup/meta";
+import { ACTIVITY_ICON_KEYS, SUB_WHEN, SUB_WHENS } from "@/lib/setup/meta";
+import { WEEKDAYS, hoursWords, minimumWords, type WeekHour } from "@/lib/setup/area-staffing";
+import { Prisma } from "@/generated/prisma/client";
 import { renameAreaEverywhere } from "@/modules/server";
 
-/** Writes to the shared setup (docs/admin-setup.md): the activity list and
+/** Writes to the shared setup: the activity list and
  *  each site's areas. Each list needs its own permission (Admin: Manage, or
  *  Admin: Setup with that list's tick). Every change is audited under Admin. */
 
@@ -25,11 +28,12 @@ const typeSchema = z.object({
   departmentId: z.string().min(1, "Choose the department that plans it."),
   icon: z.enum(ACTIVITY_ICON_KEYS as [string, ...string[]]),
   requiredTypeId: z.string().trim().max(64).default("").transform((v) => v || null),
-  fromClasses: z.boolean().default(false),
 });
 export type ActivityTypeInput = z.input<typeof typeSchema>;
 
-/** Add an activity to the organisation's list, or change one. One activity takes the swim classes. */
+/** Add an activity to the organisation's list, or change one. No activity takes the swim classes
+ *  any more (owner decision, 16 October 2026: they fill the rota Plan by themselves), so saving
+ *  one that used to makes it an ordinary activity. */
 export async function saveActivityType(id: string | null, input: ActivityTypeInput): Promise<ActionResult> {
   const session = await requirePermission("setup.activities");
   const orgId = session.user.orgId;
@@ -41,17 +45,60 @@ export async function saveActivityType(id: string | null, input: ActivityTypeInp
   if (data.requiredTypeId && !(await prisma.qualificationType.findFirst({ where: { id: data.requiredTypeId, orgId }, select: { id: true } }))) return fail("That qualification is no longer offered.");
   const clash = await prisma.activityType.findFirst({ where: { orgId, name: { equals: data.name, mode: "insensitive" }, ...(id ? { id: { not: id } } : {}) }, select: { id: true } });
   if (clash) return fail("There is already an activity with that name.");
-  if (data.fromClasses && (await prisma.activityType.findFirst({ where: { orgId, fromClasses: true, archivedAt: null, ...(id ? { id: { not: id } } : {}) }, select: { name: true } }))) {
-    return fail("Another activity already takes the swim classes.");
-  }
   if (id && !(await prisma.activityType.findFirst({ where: { id, orgId }, select: { id: true } }))) return fail("That activity is no longer on the list.");
   await prisma.$transaction(async (tx) => {
-    const row = id ? await tx.activityType.update({ where: { id }, data }) : await tx.activityType.create({ data: { ...data, orgId } });
+    const row = id ? await tx.activityType.update({ where: { id }, data: { ...data, fromClasses: false } }) : await tx.activityType.create({ data: { ...data, orgId } });
     await logAudit({ actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: id ? "update" : "create", entity: "ActivityType", entityId: row.id, clubId: null, summary: `${id ? "Changed" : "Added"} the activity ${data.name}` }, tx);
   });
   refresh("/activity-list");
   return ok();
 }
+
+const subsSchema = z.array(z.object({
+  id: z.string().trim().max(64).default(""),
+  name: z.string().trim().min(2, "Name each sub-activity, for example Open the cash till.").max(60, "Keep each name under 60 characters."),
+  when: z.enum(SUB_WHENS),
+  /** Its set times, like 12:00 and 16:00, when `when` is "at". */
+  times: z.array(z.string().trim()).max(12, "Up to 12 times for each sub-activity.").default([]),
+  usual: z.boolean(),
+})).max(20, "Up to 20 sub-activities.");
+export type SubActivitiesInput = z.input<typeof subsSchema>;
+
+/** An activity's sub-activities (owner, 20 October 2026: "when we assign that activity, we might
+ *  also assign other sub activities that are available during that"): what is done while on it
+ *  and when. Usual ones are given to whoever is put on it; days already planned keep theirs.
+ *  Taking one off the list archives it. */
+export async function saveSubActivities(activityTypeId: string, input: SubActivitiesInput): Promise<ActionResult> {
+  const session = await requirePermission("setup.activities");
+  const parsed = subsSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const type = await prisma.activityType.findFirst({ where: { id: activityTypeId, orgId: session.user.orgId ?? undefined }, select: { name: true, subs: { where: { archivedAt: null }, select: { id: true } } } });
+  if (!type) return fail("That activity is no longer on the list.");
+  const rows: (Omit<z.output<typeof subsSchema>[number], "times"> & { atMinutes: number | null; times: number[] })[] = [];
+  for (const s of parsed.data) {
+    const times = s.when === "at" ? s.times.map(clockMinutes) : [];
+    if (s.when === "at" && (!times.length || times.some((t) => t === null))) return fail(`Give ${s.name} its times, like 12:00 and 16:00.`);
+    const sorted = [...new Set(times as number[])].sort((a, b) => a - b);
+    rows.push({ ...s, atMinutes: sorted[0] ?? null, times: sorted });
+  }
+  if (new Set(rows.map((r) => r.name.toLowerCase())).size !== rows.length) return fail("Each sub-activity once.");
+  const kept = new Set(rows.map((r) => r.id).filter(Boolean));
+  await prisma.$transaction(async (tx) => {
+    for (const [i, r] of rows.entries()) {
+      const data = { name: r.name, when: r.when, atMinutes: r.atMinutes, times: r.times, usual: r.usual, sortOrder: i };
+      if (r.id && type.subs.some((x) => x.id === r.id)) await tx.subActivity.update({ where: { id: r.id }, data });
+      else await tx.subActivity.create({ data: { ...data, activityTypeId } });
+    }
+    const gone = type.subs.filter((x) => !kept.has(x.id)).map((x) => x.id);
+    if (gone.length) await tx.subActivity.updateMany({ where: { id: { in: gone } }, data: { archivedAt: new Date() } });
+    await logAudit({ actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: "update", entity: "ActivityType", entityId: activityTypeId, clubId: null,
+      summary: `Set ${type.name}'s sub-activities: ${rows.map((r) => `${r.name} (${r.when === "at" ? `at ${r.times.map(s2).join(" and ")}` : SUB_WHEN[r.when].toLowerCase()}${r.usual ? "" : ", when chosen"})`).join(", ") || "none"}` }, tx);
+  });
+  refresh("/activity-list");
+  return ok();
+}
+const clockMinutes = (v: string) => (/^\d{2}:\d{2}$/.test(v) && Number(v.slice(0, 2)) < 24 && Number(v.slice(3)) < 60 ? Number(v.slice(0, 2)) * 60 + Number(v.slice(3)) : null);
+const s2 = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 
 /** Archive or restore an activity. Days already planned with it keep it. */
 export async function archiveActivityType(id: string, archived: boolean): Promise<ActionResult> {
@@ -70,31 +117,143 @@ export async function archiveActivityType(id: string, archived: boolean): Promis
 
 const areaName = z.string().trim().min(1, "Name the area, for example 25m pool.").max(60, "Keep the name under 60 characters.");
 
-/** Add an area to a site, or rename one. A rename reaches every module's records that use it. */
-export async function saveArea(siteId: string, id: string | null, input: { name: string }): Promise<ActionResult> {
+const areaLanes = z.coerce.number().int("Give a whole number of lanes.").min(0, "Give 0 lanes for an area without lanes.").max(20, "Up to 20 lanes.");
+
+/** Add an area to a site, or rename one, and say how many lanes it has (0 for none), whose
+ *  department it is and what area it is part of (owner, 20 October 2026: Pool has the 25 m and
+ *  the 18 m; one level). A sub-area takes its parent's department. A rename reaches every module's
+ *  records that use it. */
+export async function saveArea(siteId: string, id: string | null, input: { name: string; lanes?: number | string; departmentId?: string | null; parentId?: string | null }): Promise<ActionResult> {
   const session = await requirePermission("setup.areas");
   const parsed = areaName.safeParse(input.name);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const lanesParsed = areaLanes.safeParse(input.lanes === "" || input.lanes === undefined ? 0 : input.lanes);
+  if (!lanesParsed.success) return fail(lanesParsed.error.issues[0].message);
+  const lanes = lanesParsed.data;
   const name = parsed.data.replace(/\s+/g, " ");
   if (name.includes(",")) return fail("Leave commas out of an area's name: a swim class adds its detail after one, as in Learner pool, lane 3.");
   const site = await prisma.club.findFirst({ where: { id: siteId, orgId: session.user.orgId ?? undefined, archivedAt: null }, select: { id: true, name: true, orgId: true } });
   if (!site?.orgId) return fail("That site is not open.");
   const clash = await prisma.siteArea.findFirst({ where: { siteId, name: { equals: name, mode: "insensitive" }, ...(id ? { id: { not: id } } : {}) }, select: { id: true } });
   if (clash) return fail(`${site.name} already has an area called ${name}.`);
-  const existing = id ? await prisma.siteArea.findFirst({ where: { id, siteId }, select: { name: true } }) : null;
+  const existing = id ? await prisma.siteArea.findFirst({ where: { id, siteId }, select: { name: true, lanes: true, departmentId: true, parentId: true, _count: { select: { subAreas: { where: { archivedAt: null } } } } } }) : null;
   if (id && !existing) return fail("That area no longer exists.");
-  if (existing?.name === name) return ok();
+  const parentId = input.parentId === undefined ? existing?.parentId ?? null : input.parentId || null;
+  const parent = parentId ? await prisma.siteArea.findFirst({ where: { id: parentId, siteId, archivedAt: null }, select: { id: true, name: true, parentId: true } }) : null;
+  if (parentId && (!parent || parent.id === id)) return fail("Choose another open area at this site for it to be part of.");
+  if (parent?.parentId) return fail(`${parent.name} is itself part of another area. An area can be part of one that is not.`);
+  if (parent && existing?._count.subAreas) return fail(`${existing.name} has areas of its own, so it can't be part of another.`);
+  const wanted = input.departmentId === undefined ? existing?.departmentId ?? null : input.departmentId || null;
+  const department = !parent && wanted ? await departmentById(wanted, site.orgId) : null;
+  if (!parent && wanted && !department) return fail("That department no longer exists.");
+  const departmentId = department?.id ?? null;
+  const sameHome = existing?.parentId === (parent?.id ?? null) && existing?.departmentId === departmentId;
+  if (existing?.name === name && existing.lanes === lanes && sameHome) return ok();
+  const renamed = !!existing && existing.name !== name;
   const last = id ? null : await prisma.siteArea.findFirst({ where: { siteId }, orderBy: { sortOrder: "desc" }, select: { sortOrder: true } });
   let moved = 0;
   await prisma.$transaction(async (tx) => {
     if (id) {
-      await tx.siteArea.update({ where: { id }, data: { name } });
-      moved = await renameAreaEverywhere({ siteId, from: existing!.name, to: name }, tx);
+      await tx.siteArea.update({ where: { id }, data: { name, lanes, departmentId, parentId: parent?.id ?? null } });
+      if (renamed) moved = await renameAreaEverywhere({ siteId, from: existing!.name, to: name }, tx);
     } else {
-      await tx.siteArea.create({ data: { orgId: site.orgId!, siteId, name, sortOrder: (last?.sortOrder ?? -1) + 1 } });
+      await tx.siteArea.create({ data: { orgId: site.orgId!, siteId, name, lanes, departmentId, parentId: parent?.id ?? null, sortOrder: (last?.sortOrder ?? -1) + 1 } });
     }
+    const laneWords = lanes ? `${lanes} ${lanes === 1 ? "lane" : "lanes"}` : "no lanes";
     await logAudit({ actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: id ? "update" : "create", entity: "SiteArea", entityId: id, clubId: siteId,
-      summary: id ? `Renamed ${site.name}'s area ${existing!.name} to ${name}${moved ? `, and ${moved} ${moved === 1 ? "record" : "records"} that use it` : ""}` : `Added the area ${name} at ${site.name}` }, tx);
+      summary: !id ? `Added the area ${name} at ${site.name}, ${laneWords}${parent ? `, part of ${parent.name}` : department ? `, ${department.name}'s` : ""}`
+        : [renamed ? `Renamed ${site.name}'s area ${existing!.name} to ${name}${moved ? `, and ${moved} ${moved === 1 ? "record" : "records"} that use it` : ""}` : null,
+          existing!.lanes !== lanes ? `${renamed ? "gave it" : `Gave ${site.name}'s area ${name}`} ${laneWords}` : null,
+          !sameHome ? `${site.name}'s area ${name} is now ${parent ? `part of ${parent.name}` : department ? `${department.name}'s` : "shared by every department"}` : null].filter(Boolean).join("; ") }, tx);
+  });
+  refresh("/areas");
+  return ok();
+}
+
+const clockTime = z.string().trim().max(5).refine((v) => !v || /^([01]\d|2[0-3]):[0-5]\d$/.test(v), "Use times like 07:00.");
+const staffingSchema = z.object({
+  lines: z.array(z.object({
+    count: z.coerce.number().int("Give a whole number of staff.").min(1, "Give at least 1 staff, or remove the line.").max(30, "Up to 30 staff."),
+    /** The role it asks for (Admin, Positions); empty for none. */
+    roleId: z.string().trim().max(64).default("").transform((v) => v || null),
+    typeId: z.string().trim().max(64).default("").transform((v) => v || null),
+    /** People on this activity there (owner, 21 October 2026), between `from` and `until` or whenever it is open. */
+    activityTypeId: z.string().trim().max(64).default("").transform((v) => v || null),
+    from: clockTime.default(""),
+    until: clockTime.default(""),
+  })).max(12, "Up to 12 lines."),
+  openFrom: clockTime.default(""),
+  openUntil: clockTime.default(""),
+  /** A weekday's own hours, Monday 0; both empty is closed that day. Weekdays left out keep every day's. */
+  days: z.array(z.object({ day: z.number().int().min(0).max(6), from: clockTime.default(""), until: clockTime.default("") })).max(7).default([]),
+  /** Staff in another area covering this one while both are open. */
+  together: z.array(z.object({
+    withAreaId: z.string().trim().min(1, "Choose the area that covers it.").max(64),
+    count: z.coerce.number().int("Give a whole number of staff.").min(1, "Give at least 1 staff in all.").max(30, "Up to 30 staff."),
+    typeId: z.string().trim().max(64).default("").transform((v) => v || null),
+  })).max(4, "Up to 4 areas.").default([]),
+});
+export type AreaStaffingInput = z.input<typeof staffingSchema>;
+const minutesOf = (v: string) => (v ? Number(v.slice(0, 2)) * 60 + Number(v.slice(3, 5)) : null);
+
+/** Set the staff an area needs and the hours it is open (owner requests, 16 October 2026: "the 25
+ *  meter pool has a time to be open, and during that time it will need a specific amount of staff
+ *  with specific qualifications"): every day's hours, and a weekday's own hours or closed. Each line
+ *  is then a need on the rota Plan while it is open. No lines takes the need away. */
+export async function saveAreaStaffing(id: string, input: AreaStaffingInput): Promise<ActionResult> {
+  const session = await requirePermission("setup.areas");
+  const orgId = session.user.orgId;
+  const parsed = staffingSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const lines = parsed.data.lines.map((l) => ({ ...l, typeId: l.activityTypeId ? null : l.typeId, roleId: l.activityTypeId ? null : l.roleId, from: l.activityTypeId ? minutesOf(l.from) : null, until: l.activityTypeId ? minutesOf(l.until) : null }));
+  const duty = lines.filter((l) => !l.activityTypeId);
+  const onActivities = lines.filter((l) => l.activityTypeId);
+  if (onActivities.some((l) => (l.from === null) !== (l.until === null))) return fail("Give an activity line both times, or leave both empty for whenever it is open.");
+  if (onActivities.some((l) => l.from !== null && l.until !== null && l.until <= l.from)) return fail("An activity line has to end after it starts, on the same day.");
+  if (new Set(onActivities.map((l) => `${l.activityTypeId}|${l.from}|${l.until}`)).size !== onActivities.length) return fail("Each activity and time once: change its number instead.");
+  const openFrom = minutesOf(parsed.data.openFrom), openUntil = minutesOf(parsed.data.openUntil);
+  if ((openFrom === null) !== (openUntil === null)) return fail("Give both opening times, or leave both empty.");
+  if (openFrom !== null && openUntil !== null && openUntil <= openFrom) return fail("It has to close after it opens, on the same day.");
+  const days: WeekHour[] = [];
+  for (const d of parsed.data.days) {
+    const from = minutesOf(d.from), until = minutesOf(d.until);
+    if ((from === null) !== (until === null)) return fail(`Give both of ${WEEKDAYS[d.day]}'s times, or choose closed.`);
+    if (from !== null && until !== null && until <= from) return fail(`On ${WEEKDAYS[d.day]} it has to close after it opens.`);
+    if (!days.some((x) => x.day === d.day)) days.push({ day: d.day, from, until });
+  }
+  days.sort((a, b) => a.day - b.day);
+  if (lines.some((l) => l.from === null) && openFrom === null && !days.some((d) => d.from !== null)) return fail("Give the hours it is open, when it needs these staff.");
+  const area = await prisma.siteArea.findFirst({ where: { id, orgId: orgId ?? undefined }, select: { name: true, siteId: true, site: { select: { name: true } } } });
+  if (!area) return fail("That area no longer exists.");
+  const { together } = parsed.data;
+  const others = together.length ? await prisma.siteArea.findMany({ where: { siteId: area.siteId, archivedAt: null, id: { in: together.map((t) => t.withAreaId), not: id } }, select: { id: true, name: true } }) : [];
+  if (together.some((t) => !others.some((o) => o.id === t.withAreaId))) return fail("Choose another open area at this site to cover it.");
+  if (together.some((t) => !duty.some((l) => l.typeId === t.typeId))) return fail("It can only be covered for a type of staff it needs. Add that type of staff above first.");
+  if (new Set(together.map((t) => `${t.withAreaId}|${t.typeId ?? ""}`)).size !== together.length) return fail("Each area and type of staff once.");
+  const typeIds = [...new Set(lines.flatMap((l) => (l.typeId ? [l.typeId] : [])))];
+  const types = typeIds.length ? await prisma.qualificationType.findMany({ where: { id: { in: typeIds }, orgId: orgId ?? undefined }, select: { id: true, name: true } }) : [];
+  if (types.length !== typeIds.length) return fail("That qualification is no longer offered.");
+  const roleIds = [...new Set(duty.flatMap((l) => (l.roleId ? [l.roleId] : [])))];
+  const roles = roleIds.length ? await prisma.position.findMany({ where: { id: { in: roleIds }, orgId: orgId ?? undefined }, select: { id: true, name: true } }) : [];
+  if (roles.length !== roleIds.length) return fail("That role is no longer offered.");
+  if (new Set(duty.map((l) => `${l.roleId ?? ""}|${l.typeId ?? ""}`)).size !== duty.length) return fail("Each role once: add to its number instead.");
+  const activityIds = [...new Set(onActivities.map((l) => l.activityTypeId!))];
+  const activities = activityIds.length ? await prisma.activityType.findMany({ where: { id: { in: activityIds }, orgId: orgId ?? undefined, archivedAt: null, fromClasses: false }, select: { id: true, name: true } }) : [];
+  if (activities.length !== activityIds.length) return fail("That activity is no longer on the list.");
+  const name = new Map(types.map((t) => [t.id, t.name]));
+  const role = new Map(roles.map((r) => [r.id, r.name]));
+  const activityName = new Map(activities.map((a) => [a.id, a.name]));
+  const words = lines.length ? lines.map((l) => minimumWords({ count: l.count, typeId: l.typeId, typeName: l.typeId ? `holding ${name.get(l.typeId)}` : null, roleName: l.roleId ? role.get(l.roleId) ?? null : null,
+    activityTypeId: l.activityTypeId, activityName: l.activityTypeId ? activityName.get(l.activityTypeId) ?? null : null, from: l.from, until: l.until })).join(", ") : "no minimum";
+  const hours = lines.length ? `, ${hoursWords({ openFrom, openUntil, weekHours: days })}` : "";
+  const covered = together.map((t) => `, covered from ${others.find((o) => o.id === t.withAreaId)!.name} while both are open (${t.count} ${t.typeId ? `holding ${name.get(t.typeId)}` : "anyone"} in all)`).join("");
+  await prisma.$transaction(async (tx) => {
+    await tx.siteAreaStaffing.deleteMany({ where: { areaId: id } });
+    if (lines.length) await tx.siteAreaStaffing.createMany({ data: lines.map((l, i) => ({ areaId: id, count: l.count, positionId: l.roleId, qualificationTypeId: l.typeId, activityTypeId: l.activityTypeId,
+      fromMinutes: l.from, untilMinutes: l.until, sortOrder: i })) });
+    await tx.siteArea.update({ where: { id }, data: { openFrom, openUntil, weekHours: days.length ? days : Prisma.DbNull, together: together.length ? together : Prisma.DbNull } });
+    await logAudit({ actorId: session.user.id, actorName: session.user.name ?? "Unknown", action: "update", entity: "SiteArea", entityId: id, clubId: area.siteId,
+      summary: `Set ${area.site.name}'s area ${area.name} to ${words}${hours}${covered}` }, tx);
   });
   refresh("/areas");
   return ok();

@@ -2,33 +2,47 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { CircleAlert, Info, TriangleAlert } from "lucide-react";
+import { Badge } from "@/components/shadcn/badge";
+import { Button } from "@/components/shadcn/button";
+import { Progress } from "@/components/shadcn/progress";
+import { Skeleton } from "@/components/shadcn/skeleton";
+import { Notice as KitNotice } from "@/components/ui-kit/notice";
 import { ApiError, api, session } from "@/lib/api";
 import type { Meta } from "@/lib/meta";
 
+/** A status: the meta supplies the words, tone and icon (Turnfin's Tag). */
 export function Tag({ meta }: { meta: Meta }) {
   const Icon = meta.icon;
-  return <span className={`tag tone-${meta.tone}`}><Icon aria-hidden="true" />{meta.label}</span>;
+  return <Badge data-tone={meta.tone}><Icon aria-hidden="true" />{meta.label}</Badge>;
 }
 
-const NOTICE_ICON = { info: Info, warning: TriangleAlert, error: CircleAlert };
-
-/** A callout with an icon per tone, so colour is never the only signal. `live` announces it
- *  (alert for an error, status otherwise): only for the result of something the person just did,
- *  never for what a page says on load. */
-export function Notice({ title, children, tone, live }: { title: string; children?: ReactNode; tone?: "error" | "warning"; live?: boolean }) {
-  const Icon = NOTICE_ICON[tone ?? "info"];
-  return (
-    <div className={`notice${tone ? ` ${tone}` : ""}`} role={live ? (tone === "error" ? "alert" : "status") : undefined}>
-      <Icon aria-hidden="true" />
-      <div className="notice-body"><strong>{title}</strong>{children ? <p>{children}</p> : null}</div>
-    </div>
-  );
+/** A callout with an icon per tone (Turnfin's Notice), so colour is never the only signal. `live`
+ *  announces it (alert for an error, status otherwise): only for the result of something the
+ *  person just did, never for what a page says on load. */
+export function Notice({ title, children, tone, live, className }: { title: string; children?: ReactNode; tone?: "error" | "warning" | "success"; live?: boolean; className?: string }) {
+  return <KitNotice title={title} tone={tone} live={live ? (tone === "error" ? "alert" : "status") : undefined} className={className}>{children}</KitNotice>;
 }
 
-/** An empty list: one muted row in the panel, where the rows would be. */
+/** How far through something is (lessons, questions, saving): the shadcn Progress bar. */
+export function Bar({ value, max, label }: { value: number; max: number; label: string }) {
+  return <Progress value={max > 0 ? Math.round((Math.min(value, max) / max) * 100) : 0} aria-label={label} />;
+}
+
+/** An empty list: one muted row in the grouped list, where the rows would be. */
 export function EmptyRows({ children }: { children: ReactNode }) {
-  return <ul className="pc-rows"><li className="pc-row" data-muted>{children}</li></ul>;
+  return <ul className="pc-list"><li className="pc-row" data-muted>{children}</li></ul>;
+}
+
+/** A section as Turnfin Glass draws it (DESIGN.md, The page shell): its heading above the grouped
+ *  content, with a count or a quiet link at the end of the heading, never inside the card. Without
+ *  a title it is a plain section named by `label`. */
+export function Section({ id, title, aside, label, className, children }: { id?: string; title?: ReactNode; aside?: ReactNode; label?: string; className?: string; children: ReactNode }) {
+  return (
+    <section aria-labelledby={title ? id : undefined} aria-label={title ? undefined : label} className={`flex min-w-0 flex-col${className ? ` ${className}` : ""}`}>
+      {title ? <div className="pc-section-head"><h2 id={id}>{title}</h2>{aside}</div> : null}
+      {children}
+    </section>
+  );
 }
 
 /** Loads one API resource for the page. Signed out → the sign-in page, and
@@ -62,21 +76,21 @@ export function useLoad<T>(path: string | null) {
   return { data, setData, error, reload };
 }
 
-/** Placeholder rows the shape of the list that is coming (Work's PageLoading). */
+/** Placeholder rows the shape of the list that is coming (Turnfin's PageLoading). */
 export function Loading({ rows = 3 }: { rows?: number }) {
   return (
     <div className="pc-panel" role="status">
       <span className="sr-only">Loading…</span>
-      {Array.from({ length: rows }, (_, i) => <div key={i} className="placeholder-row" />)}
+      {Array.from({ length: rows }, (_, i) => <Skeleton key={i} className="h-16 rounded-card" />)}
     </div>
   );
 }
 
 export function LoadError({ error, retry }: { error: ApiError; retry: () => void }) {
   return (
-    <div className="stack-sm">
+    <div className="flex flex-col gap-2">
       <Notice title="Couldn't load this" tone="error" live>{error.message}</Notice>
-      <div><button type="button" className="button outline" onClick={retry}>Try again</button></div>
+      <div><Button type="button" variant="outline" onClick={retry}>Try again</Button></div>
     </div>
   );
 }

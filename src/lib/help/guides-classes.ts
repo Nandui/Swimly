@@ -59,14 +59,14 @@ export const CLASS_GUIDES: HelpArticle[] = [
   },
   {
     slug: "take-attendance", title: "Take attendance and add a class note", category: "teaching", scopes: ["desk", "instructor"],
-    summary: "Record each swimmer’s attendance for the correct class and date, then save it.", keywords: ["register", "attendance", "present", "absent", "late", "note", "paper", "save attendance"],
-    before: ["You need attendance permission for the class. Check the date before marking. An unrecorded swimmer starts as absent."],
+    summary: "Record each swimmer’s attendance for the correct class and date, then save it.", keywords: ["register", "attendance", "present", "absent", "late", "note", "paper", "save register", "all here", "still to mark", "medical notes"],
+    before: ["You need attendance permission for the class. Check the date before marking. Every swimmer starts unmarked, and the register saves once everyone is marked."],
     steps: [
       { title: "Open your started class", text: "In Instructor, confirm Start class if you have not done so, then choose Open class and the Attendance step. Only the instructor who started the class can save its teaching work here.", scopes: ["instructor"] },
       { title: "Open the correct dated register", text: "Open the teaching record from Schedule or the class’s attendance controls. Select the correct date before copying a paper register. Marking another teacher’s register requires the appropriate permission or offered cover confirmation.", scopes: ["desk"] },
-      { title: "Check each swimmer’s attendance", text: "Work through the roster and choose the attendance status that matches what happened. Review Medical information where needed for teaching. Do not leave present swimmers at the default absent status." },
+      { title: "Check each swimmer’s attendance", text: "Tap a swimmer once for present, twice for absent and three times for late; the word beside each swimmer says which, and the ring counts who is here. All here marks everyone present. Medical notes, above the list, opens the notes for the swimmers in this class where you may read them." },
       { title: "Add a class note if needed", text: "Use Class note for information the team should know about this lesson. Check the entire roster before saving." },
-      { title: "Save the register", text: "Choose Save and continue to move to competencies, or Save attendance when that button is shown. Wait for the saved result before leaving." },
+      { title: "Save the register", text: "Until everyone is marked, the button says how many are still to mark. Then choose Save and continue to move to competencies, or Save register when that button is shown. Wait for the saved result before leaving." },
     ], result: "Attendance and the class note are saved together for the selected class and date.",
     troubleshooting: [{ question: "Someone else saved attendance while I was working.", answer: "Use the comparison the app shows. Review the saved marks before choosing the saved version or deliberately replacing it. A restored draft still needs to be saved." }],
     related: ["start-class", "daily-schedule", "record-competencies", "saving-and-connection"],
@@ -105,12 +105,12 @@ export const CLASS_GUIDES: HelpArticle[] = [
   },
   {
     slug: "profile-competencies", title: "Review or edit competencies on a swimmer profile", category: "teaching", scopes: ["desk"],
-    summary: "Inspect marks across programmes, make permitted corrections and view a competency’s history.", keywords: ["profile", "competency", "competencies", "progress", "correct mark", "not marked"],
+    summary: "Inspect marks across programmes, make permitted corrections and view a competency’s history.", keywords: ["profile", "competency", "competencies", "progress", "correct mark", "not marked", "not achieved"],
     before: ["Open the swimmer’s profile. Editing requires permission to mark competencies. Archived and completed levels can be read-only."],
     steps: [
       { title: "Open Competencies", text: "Expand the relevant programme and level. The profile shows achieved counts and confirmed completions." },
       { title: "Inspect the current evidence", text: "Read each competency’s mark, assessor and date when available. Use History to inspect its recorded changes when your access allows it." },
-      { title: "Make the intended changes", text: "Choose Not marked, Not achieved or Achieved as appropriate. Review all unsaved edits before leaving the level." },
+      { title: "Make the intended changes", text: "Choose Not achieved or Achieved. A competency nobody has marked yet starts as Not achieved. Review all unsaved edits before leaving the level." },
       { title: "Save the marks", text: "Use the marks save action and wait for confirmation. Changing profile tabs preserves the editing state, but unsaved work still needs a successful save." },
     ], result: "The saved marks update the swimmer’s shared progress, with the changes recorded in their history.",
     troubleshooting: [{ question: "How do I correct a completed level?", answer: "Use the separate completion-correction action if you have permission. Read its consequences before changing a confirmed milestone." }],
@@ -174,7 +174,7 @@ export const CLASS_GUIDES: HelpArticle[] = [
     summary: "Find assessed swimmers and class waitlists, then arrange a class place.", keywords: ["awaiting enrolment", "assessed", "follow up", "placement", "waiting", "waitlist", "class place"],
     before: ["Your role needs the Awaiting enrolment screen. Check the site in the tools bar at the top right. Enrolling also requires enrolment permission."],
     steps: [
-      { title: "Open Awaiting enrolment", text: "Choose Awaiting enrolment in the Swim school page bar (under More if it does not fit). Enrolments and waitlists includes assessed swimmers awaiting a place and class waitlists, even without an assessment. Awaiting moves lists current swimmers explicitly confirmed ready by an instructor. Search either list by name or member number." },
+      { title: "Open Awaiting enrolment", text: "Choose Awaiting enrolment in the Classes page bar (under More if it does not fit). Enrolments and waitlists includes assessed swimmers awaiting a place and class waitlists, even without an assessment. Awaiting moves lists current swimmers explicitly confirmed ready by an instructor. Search either list by name or member number." },
       { title: "Follow up an instructor's move request", text: "Open Awaiting moves to see the current class, the confirming instructor, date and any note. Use Move swimmer to choose a class at any of your sites and confirm the move. The swimmer stays in their current class until you do this, then leaves this list. Needs review means progress or the class level changed; ask the instructor to review readiness before proceeding." },
       { title: "Review the placement and family contact", text: "Check the swimmer, member number, any assessed level and each waitlisted class. Open an assessment date or swimmer profile when your access permits it. A waitlist can remain while the swimmer attends another class." },
       { title: "Arrange a class place", text: "For an assessment placement, choose Enrol to find classes at that level across sites. For a waitlisted class with space, choose Enrol from waitlist and confirm. Full or archived classes cannot receive a place here. Capacity is checked again when you confirm." },

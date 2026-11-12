@@ -1,6 +1,4 @@
-import { requireMember } from '@/lib/docs/auth';
-import { workspace } from '@/lib/docs/queries';
-import { HomeView } from '@/components/docs/home';
+import { HomeView, requireMember, workspace } from "@/modules/docs/features/home";
 import type { Metadata } from 'next';
 export const metadata: Metadata = { title: 'Docs' };
 export default async function HomePage() {

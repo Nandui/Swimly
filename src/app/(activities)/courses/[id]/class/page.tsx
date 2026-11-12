@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { ClassSession } from "@/modules/activities/components/attendance/class-session";
+import { ClassSession, courseName, getCourse, legacyClassHref } from "@/modules/activities/features/attendance";
 import { can, canSee } from "@/lib/authz";
-import { courseName } from "@/modules/activities/lib/courses/constants";
-import { getCourse } from "@/modules/activities/lib/courses/data/courses";
-import { legacyClassHref } from "@/modules/activities/lib/attendance/navigation";
 import { pageSession } from "@/lib/page-guards";
 
 /** The class name, as the H1 shows it (never its status tag). Asks the same

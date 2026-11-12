@@ -4,6 +4,8 @@ import { Button } from "@/components/shadcn/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Separator } from "@/components/shadcn/separator";
 import { AuthFrame } from "@/components/auth-frame";
+import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -16,14 +18,20 @@ import { Input } from "@/components/ui/input";
 /** The front door, in the shared AuthFrame: the blue brand panel beside one white panel
  *  (AUSignIn).
  *
+ *  Every account may sign in with its email and password. With Google set up
+ *  (`google`) the sign-in page also offers Sign in with Google, and a first
+ *  Google sign-in makes the account (owner decision, 23 October 2026). The
+ *  unlinked /sign-in/developer page (`developer`) shows the password form only.
+ *
  *  `devAdminName` arrives already decided by the server: the page only passes
  *  a name when the deployment is allowed a passwordless sign-in, so the client
  *  never carries the rule and cannot be talked into showing the button. */
-export function SignInForm({ devAdminName, sharedDeviceName = null }: { devAdminName: string | null; sharedDeviceName?: string | null }) {
+export function SignInForm({ devAdminName, sharedDeviceName = null, google = false, developer = false, initialError = null }: { devAdminName: string | null; sharedDeviceName?: string | null; google?: boolean; developer?: boolean; initialError?: string | null }) {
+  const withGoogle = google && !developer;
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialError);
   const [pending, startTransition] = useTransition();
 
   function land() {
@@ -46,7 +54,7 @@ export function SignInForm({ devAdminName, sharedDeviceName = null }: { devAdmin
           redirect: false,
         });
         if (result?.code === "work_device") {
-          setError("This account can only sign in to Turnfin Work on a work computer. For your own records, use Turnfin Me on your phone.");
+          setError("This account can only sign in to Turnfin on a work computer. For your own records, use Turnfin Me on your phone.");
           return;
         }
         if (!result || result.error) {
@@ -58,6 +66,19 @@ export function SignInForm({ devAdminName, sharedDeviceName = null }: { devAdmin
         return;
       }
       land();
+    });
+  }
+
+  /** Off to Google and back to the home page. The server finds or makes the
+   *  account, and lets them in once it has a role. */
+  function handleGoogleSignIn() {
+    setError(null);
+    startTransition(async () => {
+      try {
+        await signIn("google", { redirectTo: "/" });
+      } catch {
+        setError("Could not sign you in with Google. Try again.");
+      }
     });
   }
 
@@ -79,20 +100,15 @@ export function SignInForm({ devAdminName, sharedDeviceName = null }: { devAdmin
 
   return (
     <AuthFrame welcome>
-      <div className="flex min-w-0 flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Sign in</h1>
-        <p className="text-sm text-ui-muted-foreground">Use your work email and password.</p>
-      </div>
+      <PageShell header={<PageHeader
+        title={developer ? "Developer sign-in" : "Sign in"}
+        description={developer ? "Email and password for the developer login." : withGoogle ? "Use your work email and password, or your work Google account." : "Use your work email and password."}
+      />}>
 
       {sharedDeviceName ? (
-        <div className="pc-note flex-wrap">
-          <Tablet aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-ui-primary" />
-          <div className="min-w-0 flex-1 basis-40">
-            <p className="text-sm font-semibold">{`${sharedDeviceName} is a work device`}</p>
-            <p className="text-xs text-ui-muted-foreground">If you have set a PIN and signed in here before, switch in with it instead.</p>
-          </div>
-          <Button asChild variant="outline" className="ml-auto"><Link href="/switch">Switch user</Link></Button>
-        </div>
+        <Notice icon={Tablet} title={`${sharedDeviceName} is a work device`}
+          description="If you have set a PIN and signed in here before, switch in with it instead."
+          actions={<Button asChild variant="outline"><Link href="/switch">Switch user</Link></Button>} />
       ) : null}
 
       <form method="post" onSubmit={handleSubmit}>
@@ -132,7 +148,24 @@ export function SignInForm({ devAdminName, sharedDeviceName = null }: { devAdmin
         </div>
       </form>
 
-      <p className="text-xs text-ui-muted-foreground">No account yet? Ask a manager to add you in Admin.</p>
+      {withGoogle ? (
+        <>
+          <div className="flex min-w-0 items-center gap-3">
+            <Separator className="flex-1" />
+            <span className="text-xs text-ui-muted-foreground">or</span>
+            <Separator className="flex-1" />
+          </div>
+          <Button type="button" variant="outline" onClick={handleGoogleSignIn} disabled={pending} className="w-full">
+            Sign in with Google
+          </Button>
+        </>
+      ) : null}
+
+      {developer ? null : withGoogle ? (
+        <p className="text-xs text-ui-muted-foreground">New here? Sign in with your work Google account and your Turnfin account is made for you. Then ask your manager to give you access.</p>
+      ) : (
+        <p className="text-xs text-ui-muted-foreground">No account yet? Ask a manager to add you in Admin.</p>
+      )}
 
       {devAdminName ? (
         <>
@@ -153,6 +186,7 @@ export function SignInForm({ devAdminName, sharedDeviceName = null }: { devAdmin
           </div>
         </>
       ) : null}
+      </PageShell>
     </AuthFrame>
   );
 }

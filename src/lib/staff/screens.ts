@@ -2,7 +2,7 @@ import { isRestrictedPermission, type PermissionKey } from "@/lib/staff/permissi
 
 /** Every page area the app has, as menu entries.
  *
- *  Access has one language: permissions (docs/how-turnfin-works.md). A screen
+ *  Access has one language: permissions (docs/architecture.md). A screen
  *  is simply a place in the menus that appears when the person holds its
  *  `requires` permission, which their role's levels give. Nothing stores
  *  screens; they are worked out from permissions every time.
@@ -11,13 +11,14 @@ import { isRestrictedPermission, type PermissionKey } from "@/lib/staff/permissi
  *  password there. */
 
 export const SCREENS = [
-  { key: "refunds", label: "Refunds", path: "/refunds", description: "A separate workspace for customer refund requests, finance decisions and external payment records.", requires: "refunds.read" },
+  { key: "refunds", label: "Refunds", path: "/refunds", description: "Refund requests in Finance requests: customer refunds, finance decisions and external payment records.", requires: "refunds.read" },
+  { key: "coinage", label: "Coinage", path: "/coinage", description: "Coinage requests in Finance requests: coins and notes for the tills, accounts decisions and order records.", requires: "coinage.read" },
   {
     key: "analytics",
     label: "Analytics",
     path: "/analytics",
-    description: "Enrolled swimmers by level, recent enrolment activity and monthly class cancellations for the selected site.",
-    requires: "courses.manage",
+    description: "For managers: the swim school's Business, Reception and Pool deck dashboards for their sites.",
+    requires: "analytics.view",
   },
   {
     key: "duty",
@@ -130,12 +131,23 @@ export const SCREENS = [
     description: "The log of every change. Needs the permission to read it.",
     requires: "activity.view",
   },
-  { key: "training", label: "Training", path: "/training", description: "A separate workspace for the training catalogue, assigning courses, trainer sign-off and expiring qualifications. Everyone completes their own training in Turnfin Me without it.", requires: "training.records.read" },
+  { key: "training", label: "Training", path: "/training", description: "A separate workspace for the training catalogue, assigning courses and trainer sign-off. Everyone completes their own training in Turnfin Me without it.", requires: "training.records.read" },
+  { key: "staff-qualifications", label: "Qualifications", path: "/staff-qualifications", description: "A separate workspace for staff qualifications: certificates uploaded in Turnfin Me to check, what is expiring and in-service hours.", requires: "qualifications.manage" },
   { key: "rota", label: "Rota", path: "/rota", description: "Plan who is on which activity at a site, day by day, with every gap in cover counted; run today and record absences. Staff see their own days in Turnfin Me.", requires: "rota.view" },
+  { key: "plan", label: "Plan (test)", path: "/plan", description: "The rota started again, on test beside Rota: shifts first, the duties in them, what's on and the gaps.", requires: "plan.view" },
   { key: "purchasing", label: "Purchasing", path: "/purchasing", description: "A separate workspace for purchase orders: approved suppliers and products, approval by role and amount, and numbered orders per site.", requires: "purchasing.read" },
-  { key: "vouchers", label: "Vouchers", path: "/vouchers", description: "A separate workspace for the vouchers given to communities and organisations: batches with a code on every voucher, printed, then marked as used at reception.", requires: "vouchers.redeem" },
+  { key: "incidents", label: "Incidents", path: "/incidents", description: "A separate workspace for accidents, incidents and near misses: reported in two minutes, triaged by a duty manager, serious ones signed off.", requires: "incidents.reports.create" },
   { key: "tasks", label: "Tasks", path: "/tasks", description: "A separate workspace for each site's daily checks and logs: tasks from templates on a schedule, readings with acceptable ranges, approval, follow-up actions and scores.", requires: "tasks.complete" },
-  { key: "academy", label: "Academy", path: "/academy", description: "A separate workspace for the lifeguard and swim teacher courses we deliver: candidates, payment, pre-course checks, registers and results.", requires: "academy.read" },
+  { key: "short-courses", label: "Short courses", path: "/short-courses", description: "Six and eight week courses at the pool, the gym or the studio: places, payment, waiting lists and registers.", requires: "short-courses.read" },
+  { key: "academy", label: "Academy", path: "/academy", description: "A separate workspace for the Academy's lifeguard and swim teacher courses: candidates, checks, payment, registers and results.", requires: "academy.read" },
+  { key: "vouchers", label: "Vouchers", path: "/vouchers", description: "A separate workspace for the vouchers given to communities and organisations: batches with a code on every voucher, printed, then marked as used at reception.", requires: "vouchers.redeem" },
+  { key: "stock", label: "Stock", path: "/stock", description: "A separate workspace for stock taking: count what is on the shelf at each site on a phone or tablet, keep the product list and compare two counts.", requires: "stock.read" },
+  { key: "staffing", label: "Staffing", path: "/staffing", description: "A separate workspace for rostering part-time pool staff (swim teachers and lifeguards): two-week rota blocks on contracted hours, acknowledgements, swaps, call-offs, strikes and exam seasons.", requires: "staffing.read" },
+  { key: "cctv", label: "CCTV log", path: "/cctv", description: "A separate workspace for managers: a record of every time CCTV footage is checked, who checked it, why, what they looked for and what they saw.", requires: "cctv.record" },
+  { key: "site-monitoring", label: "Site Monitoring", path: "/site-monitoring", description: "A separate workspace for managers: actions raised automatically at their sites, such as a task completed with a reading out of range, each closed by saying what was done.", requires: "site-monitoring.read" },
+  { key: "payments", label: "Failed payments", path: "/payments", description: "The direct debits that failed each month: the bank's sheet is uploaded, and reception contacts each member until it is recovered.", requires: "payments.read" },
+  { key: "maintenance", label: "Maintenance", path: "/maintenance", description: "A separate workspace for what is broken at each site: staff report it, and managers make sure it is in Trackplan and follow it until it is fixed.", requires: "maintenance.report" },
+  { key: "risk-assessments", label: "Risk assessments", path: "/risk-assessments", description: "A separate workspace for risk assessments: the hazards of each area, job and activity at a site, what controls them, who signed that off and when each is next reviewed.", requires: "risk.read" },
   { key: "hr", label: "HR", path: "/hr", description: "A separate, restricted workspace for HR notes and performance reviews of the people a role covers. Staff read what is shared with them in Turnfin Me.", requires: "hr.records.read" },
   { key: "docs", label: "Docs", path: "/docs", description: "A separate workspace for documents, independent approvals and required reading.", requires: "docs.read" },
 ] as const satisfies readonly {
@@ -170,26 +182,26 @@ export function visibleScreens(permissions: ReadonlySet<PermissionKey>): Set<Scr
  *  - Core: the organisation itself (people, roles, sites, the activity log),
  *    shared by every module and opened in the Core workspace.
  *  - Activities: the swim school (desk and office) and the pool deck.
- *  - Work modules: Docs, Refunds, Training, HR, Rota, Purchasing, Academy, Tasks and Vouchers, each its own workspace.
+ *  - Every other app: Docs, Refunds, Coinage, Training, HR, Rota, Purchasing, Stock, Vouchers, Academy, Short courses, Tasks, Incidents, the CCTV log, Site Monitoring, Maintenance, Risk assessments, Plan (test) and Payments.
  *
  *  A new screen must be added to exactly one of these; a test checks it.
  *  Separate modules never imply access to the swim-school workspace. */
 export const CORE_SCREENS = ["staff", "roles", "clubs", "departments", "positions", "qualifications", "activity-list", "areas", "activity"] as const satisfies readonly ScreenKey[];
 export const ACTIVITIES_SCREENS = [
   "analytics", "duty", "cancellations", "calendar", "instructor", "students", "courses",
-  "together", "assessments", "awaiting-enrolment", "legend-agreements", "programmes",
+  "together", "assessments", "awaiting-enrolment", "legend-agreements", "programmes", "payments", "short-courses",
 ] as const satisfies readonly ScreenKey[];
-export const WORK_MODULE_SCREENS = ["docs", "refunds", "training", "hr", "rota", "purchasing", "academy", "tasks", "vouchers"] as const satisfies readonly ScreenKey[];
+export const OTHER_APP_SCREENS = ["docs", "refunds", "coinage", "training", "staff-qualifications", "hr", "rota", "purchasing", "stock", "vouchers", "academy", "tasks", "incidents", "cctv", "site-monitoring", "maintenance", "risk-assessments", "plan", "staffing"] as const satisfies readonly ScreenKey[];
 
 const CORE = new Set<string>(CORE_SCREENS);
-const AQUATICS = new Set<string>(ACTIVITIES_SCREENS);
+const SWIM_SCHOOL = new Set<string>(ACTIVITIES_SCREENS);
 
 export function isCoreScreen(key: ScreenKey) {
   return CORE.has(key);
 }
 
 export function isActivitiesScreen(key: ScreenKey) {
-  return AQUATICS.has(key);
+  return SWIM_SCHOOL.has(key);
 }
 
 /** The screens an administrator sees: every screen except those that need a

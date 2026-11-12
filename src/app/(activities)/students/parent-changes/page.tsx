@@ -3,13 +3,12 @@ import UiLink from "next/link";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { Tag } from "@/components/ui-kit/tag";
-import { ApplyParentChange, DeclineParentChange } from "@/modules/activities/components/students/parent-change-actions";
+import { ApplyParentChange, DeclineParentChange, listParentChangeRequests, PARENT_CHANGE_STATUS_META } from "@/modules/activities/features/students";
 import { formatDateTime } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
-import { listParentChangeRequests } from "@/modules/activities/lib/students/data/parent-changes";
-import { PARENT_CHANGE_STATUS_META } from "@/modules/activities/lib/students/constants";
 
 export const metadata: Metadata = { title: "Parent updates" };
 
@@ -20,8 +19,7 @@ export default async function ParentChangesPage({ searchParams }: { searchParams
   const done = (await searchParams).view === "done";
   const rows = await listParentChangeRequests(done ? "DONE" : "PENDING");
   return (
-    <div className="tf-content min-w-0">
-      <PageHeader back={{ href: "/students", label: "Swimmers" }} title="Parent updates" description="Check each correction parents send from the parent app, then apply it or decline it with a reply" />
+    <PageShell className="tf-content" header={<PageHeader back={{ href: "/students", label: "Swimmers" }} title="Parent updates" description="Check each correction parents send from the parent app, then apply it or decline it with a reply" />}>
       <SegmentedLinks label="Request status" items={[
         { href: "/students/parent-changes", label: "Waiting", current: !done },
         { href: "/students/parent-changes?view=done", label: "Decided", current: done },
@@ -31,10 +29,10 @@ export default async function ParentChangesPage({ searchParams }: { searchParams
       ) : rows.map((row) => {
         const status = PARENT_CHANGE_STATUS_META[row.status as keyof typeof PARENT_CHANGE_STATUS_META];
         return (
-          <section key={row.id} className="pc-panel" aria-labelledby={`change-${row.id}`}>
+          <section key={row.id} className="rec-card" aria-labelledby={`change-${row.id}`}>
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
-                <h2 id={`change-${row.id}`}><UiLink className="inline-flex min-h-11 items-center underline-offset-4 hover:underline" href={`/students/${row.student.id}`}>{row.student.name}</UiLink></h2>
+                <h2 id={`change-${row.id}`} className="text-headline"><UiLink className="inline-flex min-h-11 items-center underline-offset-4 hover:underline" href={`/students/${row.student.id}`}>{row.student.name}</UiLink></h2>
                 <p className="pc-row-hint break-words">From {row.parent.name ?? "a verified parent"} ({row.parent.email}) · {formatDateTime(row.createdAt)}</p>
               </div>
               {status ? <Tag meta={status} /> : null}
@@ -52,7 +50,7 @@ export default async function ParentChangesPage({ searchParams }: { searchParams
                 ))}
               </TableBody>
             </Table>
-            <ul className="pc-rows pc-only-narrow" aria-label="Proposed changes">
+            <div className="pc-only-narrow flex-col"><ul className="pc-rows" aria-label="Proposed changes">
               {row.changes.map((change) => (
                 <li key={change.field} className="pc-row">
                   <div className="pc-row-body">
@@ -62,7 +60,7 @@ export default async function ParentChangesPage({ searchParams }: { searchParams
                   </div>
                 </li>
               ))}
-            </ul>
+            </ul></div>
             {row.status === "PENDING" ? (
               <div className="flex flex-wrap justify-end gap-2">
                 <DeclineParentChange id={row.id} name={row.student.name} />
@@ -74,6 +72,6 @@ export default async function ParentChangesPage({ searchParams }: { searchParams
           </section>
         );
       })}
-    </div>
+    </PageShell>
   );
 }

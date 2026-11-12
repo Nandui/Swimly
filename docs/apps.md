@@ -1,0 +1,324 @@
+# Turnfin 2.0: the apps
+
+Every app inside Turnfin: what it is for, its levels, where they reach, what it owns and how it connects. The levels come from each app's `manifest.ts` (listed in `src/app/modules.ts`); when they change there, change them here in the same commit. How apps are built is in [architecture.md](architecture.md); each module folder's `README.md` lists its features, front door, tables, events and permissions for coders.
+
+**Reach** says where a level applies: **sites** means at the sites the person works at (their jobs' sites, once jobs are built); **everywhere** means across the organisation.
+
+## Front of house
+
+Reception works in three apps: **Classes**, **Finance requests** ([D24](decisions.md), [roadmap step 8](roadmap.md#8-fewer-front-of-house-apps)) and **Vouchers** ([D30](decisions.md)). The Academy is in Team.
+
+### Classes
+*Module `activities` (app id `swim-school`) · starter page `/swim-school` · reach: sites · data: `activities.prisma`, `activities.short-courses.prisma`*
+
+Swimmers, classes, short courses and assessments at the desk, and their set-up. Named Swim school until D24; gym activities may follow.
+
+| Level | Gives |
+| --- | --- |
+| Desk | every swimmer, booking, move, waiting list and assessment booking; see the short courses at their sites, book people on, record payment and keep the waiting list; see the failed payments at their sites, log each contact and record how it ended: paid at the desk, new mandate set up, or place cancelled |
+| Manage | also programmes, levels and classes; keep the short course list and put short courses on; upload the bank's monthly failure sheet, open closed payments again, and remove payments that aren't swimmers |
+| *Extra:* Can cancel classes | cancel today's sessions on the duty manager page and pass them to billing |
+
+Connects: class and short course commitments for Rota; the member directory and history for the Academy; site summaries; home items; the parent app's API; short course places in "My bookings" on the Academy booking site.
+
+**Short courses** (`/short-courses`, on the Overview; the course list under Set up; D24): six- and eight-week courses at the pool, the gym or the studio. The desk books people from the swimmer records; the instructor takes the registers (Pool deck Teach, below). They keep their own tables for now; moving them onto programmes as an activity type, with their registers on the pool deck, is a later step.
+
+**Failed payments** (`/payments`, under Swimmers; D21, moved here by D24): the direct debits that failed each month, followed up by reception until each is recovered. Legend stays the billing system: money is taken there, never in Turnfin. A failure is **To contact**, **Contacted**, **Paid at the desk**, **New mandate set up** or **Place cancelled**. Only rows whose member number belongs to a swimmer on Turnfin are tracked; gym memberships and unknown numbers are left out. While one is open, the swimmer's profile shows "Payment failed". Reception can send the family up to three warning emails from the payment's page: a first email, a reminder from day 3 and a final notice from day 7 ([D25](decisions.md)).
+
+Who can book an assessment: programmes run in the order set on the Programmes page (Water Safety and Fun, Swimming Skills, Rookie Lifesaving). A swimmer with a place in a class can be booked only for an assessment of that programme or a later one, never an earlier one; with places in two programmes, the later counts. The session's age range must fit too. The desk and the parent app's API refuse the booking, and the API's `assessment-sessions/{id}/children` tells the app which children can book and why not (`shared/assessments/programme-rule.ts`).
+
+After every assessment booking, the family gets an "Assessment booked" email: the parent who booked in the parent app or, for a desk booking, the swimmer's contact email (else the linked parent accounts). It gives the child's first name, the assessment, day, time, site and the site's reception phone. It is sent after the booking commits, from Production only (previews run on real records), and never for bookings by a system account.
+
+### Finance requests
+*Module `finance-requests` · `/finance-requests` · reach: everywhere · data: `finance-requests.refunds.prisma`, `finance-requests.coinage.prisma`*
+
+Refunds and coinage for the tills, asked for at the desk and decided by finance (Refunds and Coinage until D24). Each kind keeps its own pages (`/refunds`, `/coinage`) and tables for now; one request table with a detail table per kind is a later step.
+
+| Level | Gives |
+| --- | --- |
+| Use | log a customer's refund request or ask for coinage for a till, and follow them |
+| Manage | decide refund and coinage requests, record payments and orders. Nobody decides their own |
+
+### Vouchers
+*Module `vouchers` · `/vouchers/overview` · reach: sites · data: `vouchers.prisma`*
+
+The vouchers given to communities and organisations at times like Christmas, usually a family swim: who got how many, and which have been used.
+
+| Level | Gives |
+| --- | --- |
+| Redeem | check any voucher's code, and mark it as used at their sites |
+| Manage | also make a batch of vouchers for an organisation, print, change and cancel it, put right a voucher marked as used by mistake and cancel one voucher |
+
+A code can be checked from any site, so reception can say where it is accepted; using it needs Redeem at that site. A batch shows to whoever manages vouchers at one of its sites, and changing or cancelling it needs every one of them.
+
+## Poolside
+
+### Pool deck
+*Module `activities` · `/instructor` · reach: sites · data: the swim school's*
+
+Today's classes at the pool: attendance, competencies and assessments, on a tablet.
+
+| Level | Gives |
+| --- | --- |
+| Teach | their own classes: attendance, competencies, assessments, covering a colleague's class; the short courses they instruct and their registers |
+| Lead | also attendance for any class |
+
+### Tasks
+*Module `tasks` · `/tasks/overview` · reach: sites · data: `tasks.prisma`*
+
+Each site's daily checks and logs: checklists, readings with acceptable ranges, approval and follow-up actions.
+
+| Level | Gives |
+| --- | --- |
+| Do | the day's tasks at their sites aimed at their role, and raising follow-up actions |
+| Review | also approve, reopen, mark not applicable, resolve actions, see reports |
+| Manage | also write the task templates |
+
+Emits `tasks.reading.out_of_range`. A nightly job (01:30) creates each day's tasks.
+
+### Incidents
+*Module `incidents` · `/incidents/overview` · reach: sites · data: `incidents.prisma`, footage in Vercel Blob*
+
+Accidents, incidents and near misses: reported in two minutes, triaged the same day, serious ones signed off.
+
+| Level | Gives |
+| --- | --- |
+| Report | report at their sites and follow their own reports |
+| Investigate | also every report at their sites, the serious-report alert, triage, close low-risk ones. Never their own |
+| Manage | also close serious and moderate reports. Never their own |
+
+Whoever triages can link the hazards a report involved, from the site's risk assessments, and ask for an assessment to be reviewed (D29); with Risk assessments switched off at the site, nothing is offered.
+
+Connects: person file and subject records; reads the site's assessed hazards through a plug; emits `incidents.hazards.flagged`.
+
+## Team
+
+### Rota
+*Module `rota` · `/rota/overview` · reach: sites · data: `rota.prisma`*
+
+Who is on which activity at the sites you cover, with every gap in cover counted.
+
+| Level | Gives |
+| --- | --- |
+| View | see the rota at their sites |
+| Plan | plan the days ahead for their departments |
+| Run | run today, change any day for every department, report absences, keep the activity list |
+
+Connects: reads commitments and qualifications; person file; shift-change emails through Turnfin Me.
+
+### Plan (test)
+*Module `plan` · `/plan/overview` · reach: sites · data: `plan.prisma`*
+
+The rota started again, on test at one site beside Rota ([D17](decisions.md)): shifts first, the duties in them, what's on and the gaps.
+
+| Level | Gives |
+| --- | --- |
+| View | see the plan at their sites |
+| Plan | plan shifts and duties for the departments they belong to, and mark people off |
+| Manage | plan every department, run today, and keep the duties, areas and what's on |
+
+Connects: reads people, departments, qualifications and the site's areas (Admin › Areas, shared with Classes and Rota); reads swim classes and booked assessments, and plans their teachers and assessors, through Classes' commitments. No Turnfin Me, home card or person file while it is on test.
+
+### Staffing
+*Module `staffing` · `/staffing/overview` · reach: sites · data: `staffing.prisma`*
+
+Rota blocks for part-time pool staff (swim teachers and lifeguards) on contracted hours, with swaps, call-offs, strikes and exam seasons ([staffing.md](staffing.md), [D27](decisions.md)).
+
+| Level | Gives |
+| --- | --- |
+| View | see blocks, today's shifts, swaps and exam absences |
+| Run | also log call-offs, late arrivals and no-shows, cover gaps, see strikes and hold return-to-work chats |
+| Supervise | also keep slots and the staff on the rota, build and publish blocks, decide swaps and exam absences, hold second strike conversations |
+| Manage | also change published shifts, handle referrals, keep exam seasons and settings |
+
+Connects: reads people, contracted hours, dates of birth and qualifications through the platform's functions. Its home card shows chats, blocks to publish, swaps to decide, staff to phone and referrals. No Turnfin Me yet.
+
+### Training
+*Module `training` · `/training/overview` · reach: sites · data: `training.prisma`*
+
+Training for the people you cover: what is due, waiting for sign-off and done. People take their own training in Turnfin Me.
+
+| Level | Gives |
+| --- | --- |
+| Trainer | sign off practical training at their sites |
+| Author | also build and publish courses |
+| Manage | also assign courses |
+
+Connects: adds the qualification a finished course gives; the course that renews a qualification, for Qualifications' expiring list; person file, subject records, Turnfin Me. Being cut down to setting up learning only ([D26](decisions.md), roadmap step 9).
+
+### Qualifications
+*Module `qualifications` · `/staff-qualifications/overview` · reach: sites · data: `qualifications.prisma` (in-service hours); the qualifications themselves are the platform's*
+
+Staff qualifications for the people you cover: certificates uploaded in Turnfin Me to check, what is expiring, and in-service hours ([D26](decisions.md)).
+
+| Level | Gives |
+| --- | --- |
+| Keep | check and record certificates, see what is expiring and assign the course that renews it (with Training's Manage for that person), log in-service hours and set what each qualification needs, for people at their sites |
+
+Training's Manage counts as Keep. Nobody checks or logs their own.
+
+Connects: reads and records the platform's qualifications; asks Training, through a plug, which course renews a qualification and to assign it; Turnfin Me's hours; subject records.
+
+### Academy
+*Module `academy` · `/academy/overview` · reach: sites · data: `academy.prisma`*
+
+The lifeguard and swim teacher courses the centres deliver to the public: candidates, checks, payment, registers and results. Part of Short courses from 15 October to 3 November 2026 (D24).
+
+| Level | Gives |
+| --- | --- |
+| Tutor | see the Academy courses at their sites; add candidates, record checks and payment, phone people who held a place online, take registers and record results |
+| Manage | also keep the Academy course list and put courses on |
+
+Connects: books from the swim school's member directory; course sessions as Rota commitments; call backs as desk measures; the Academy booking site's API (`/api/academy/v1`), which also shows a customer the short course places booked under their email. A pass puts the qualification on the person's staff record.
+
+### Docs
+*Module `docs` · `/docs` · reach: everywhere · data: its own database*
+
+Staff documents to read, write and approve, and who has read them. Every role is a Docs team, so a document can be aimed at a role.
+
+| Level | Gives |
+| --- | --- |
+| Read | the documents aimed at their role |
+| Write | draft documents and send them for approval |
+| Manage | aim documents at roles and see who has read them |
+| *Extra:* Can approve documents | approve and publish colleagues' documents, never their own |
+| *Extra:* Can approve their own documents | also approve and publish documents they wrote or edited (operations managers; owner decision, 9 November 2026) |
+
+### HR
+*Module `hr` · `/hr/overview` · reach: the people they manage, their sites, or everyone · data: its own schema, `turnfin_hr`, in the main database*
+
+Restricted staff files: details, employment, notes (each of a kind: General, Conduct, Performance, Attendance, Safety or Good work) and performance reviews, and quick reports from managers on duty ([D22](decisions.md)).
+
+| Level | Gives |
+| --- | --- |
+| Report | file reports on the people they manage; no files, not even their own reports |
+| Their sites | files, notes, reports and reviews for everyone who works at their sites |
+| Everyone | the same for everyone |
+| *Extra:* Keeps the daily reports email | choose who gets every report from the day before, in full, each morning (HR > Set up > Settings) |
+
+Only a superadmin gives HR. Administrators never inherit it. Every read and write needs a fresh sign-in, except filing a report, which reads nothing. Reads are logged (`access_events`), and the subject export is superadmin-only. A report is never shared with the person; the Their sites holders at the site it was filed from see it under Needs you until one of them opens that person's file.
+
+## Managers
+
+### CCTV log
+*Module `cctv` · `/cctv/overview` · reach: sites · data: `cctv.prisma`*
+
+A record of every time CCTV footage is checked: who, why, what they looked for and what they saw.
+
+| Level | Gives |
+| --- | --- |
+| Record | record each check at their sites and read their own entries |
+| Review | also read every entry at their sites and add notes |
+
+### Site Monitoring
+*Module `site-monitoring` · `/site-monitoring/overview` · reach: sites · data: `site-monitoring.prisma`*
+
+What managers need to act on at their sites, raised automatically.
+
+| Level | Gives |
+| --- | --- |
+| View | see the actions raised at their sites and what was done |
+| Act | also close an action by saying what was done, or open it again |
+
+Listens to `tasks.reading.out_of_range`.
+
+### Maintenance
+*Module `maintenance` · `/maintenance/overview` · reach: sites · data: `maintenance.prisma`*
+
+What is broken at each site, from the first report until it is fixed. The maintenance team works in Trackplan, their own tool. Turnfin asks whether a problem is already in Trackplan, and keeps a Trackplan reference if one is given. It never connects to Trackplan ([D14](decisions.md)).
+
+| Level | Gives |
+| --- | --- |
+| Report | report a problem at their sites, and see every request there, so nothing is reported twice |
+| Manage | also put requests in Trackplan, correct them, mark them fixed, close them not fixed, and open them again |
+
+A request is **Reported**, **In Trackplan**, **Fixed** or **Closed, not fixed**. It starts In Trackplan when the reporter answers that it is already there. "Could hurt someone" always makes it Urgent.
+
+Connects: subject records; area renames.
+
+### Risk assessments
+*Module `risk` · `/risk-assessments/overview` · reach: sites · data: `risk.prisma`*
+
+The hazards of each area, job and activity at a site, what controls them, who signed that off and when each is next reviewed ([D29](decisions.md)).
+
+| Level | Gives |
+| --- | --- |
+| View | read the assessments at their sites, drafts apart, print them, and ask for one to be reviewed |
+| Write | also start assessments, change them and their hazards, send them for sign-off, sign off the ones they own, log reviews and answer review requests |
+| Manage | also archive assessments and bring them back |
+| *Extra:* Can give the executive sign-off | add a second sign-off to an assessment its owner has signed off. Never on one they own |
+
+An assessment is a **Draft**, **Waiting for sign-off**, **In force** or **Archived**. It is about one area (from the site's areas), one job (from Admin's positions) or one activity, and one thing has one live assessment at a site. Each hazard is rated twice, likelihood times severity (1 to 25): before any controls and with them in place. Changing an assessment that was signed off clears the sign-off. Only an assessment in force is on a review schedule; an overdue review shows on it, on Reviews and on Home.
+
+Connects: the site's assessed hazards for Incidents to link (the hazard register plug); listens to `incidents.hazards.flagged`; subject records; area renames.
+
+### Analytics
+*Module `activities` · `/analytics` · reach: sites · data: reads the swim school's and desk measures*
+
+The swim school's Business, Reception and Pool deck dashboards.
+
+| Level | Gives |
+| --- | --- |
+| View | the dashboards for their sites and every report behind them |
+
+## Back office
+
+### Purchasing
+*Module `purchasing` · `/purchasing/overview` · reach: sites · data: `purchasing.prisma`*
+
+Purchase orders with approved suppliers, approved by role and amount, numbered per site.
+
+| Level | Gives |
+| --- | --- |
+| View | see their sites' orders, and approve those their role may approve |
+| Request | raise purchase orders at their sites |
+| Manage | suppliers, approved products and prices, and who approves up to what |
+
+Approval by role and amount is data, not a role check in code. With jobs it means "holds that role at the order's site".
+
+### Stock
+*Module `stock` · `/stock/overview` · reach: sites · data: `stock.prisma`*
+
+Count what is on the shelf at each site, keep the product list and compare two counts.
+
+| Level | Gives |
+| --- | --- |
+| View | see counts, the product list and comparisons |
+| Count | also start, count and submit a count |
+| Manage | also keep the product list and categories, delete a count |
+
+### Admin
+*The platform (`src/modules/registry.ts`) · `/core` · reach: everywhere · data: `core.prisma`, `base.prisma`*
+
+People, roles, sites, the shared setup lists and the activity log. Superadmins also switch apps on, off or on at some sites, at Admin › Apps ([architecture.md](architecture.md#app-switches)); that is the superadmin flag, not a level.
+
+| Level | Gives |
+| --- | --- |
+| Setup | see the shared setup lists; the extras choose which they keep |
+| Manage | people, roles, sites, every setup list and the activity log. Also Manage in every other app except HR |
+| *Extras:* Keeps departments, positions, the qualifications list, the activity list, sites' areas | add, rename and archive that list |
+
+## Rules that protect people
+
+These hold in every version of every screen.
+
+**Who sees which swimmer fields.** `src/modules/activities/shared/classification.ts` tags swimmer fields (`medical`, `contact`, `emergency`, `staff-note`) and decides who receives each:
+
+| Screens | Who | Medical notes |
+| --- | --- | --- |
+| Classes office and desk | swim school managers, reception | yes |
+| Pool deck | instructors | only for swimmers in a class they teach or cover that day, or on a short course they instruct |
+| Parent app | linked guardians | never; they propose corrections, which staff apply or decline |
+| Anyone else | roles with no Classes level | never: no swimmer data at all |
+
+A withheld note becomes a `hasMedicalNotes` flag, so the deck still knows to ask.
+
+**The pool deck** is tablet-sized, with no desk navigation, no links to desk pages and no cross-site swimmer search. Its only lookup (`/instructor/swimmers`) finds swimmers with a current place at the working site. Every class needs a confirmed start for that date; once started, anyone with the teaching permissions can help, and a start never gives exclusive ownership. The atomic start record, its audit row and the save-conflict checks stay.
+
+**Nobody decides their own** refund, coinage request, document approval or incident. A risk assessment is signed off by its owner; the executive sign-off never comes from the owner.
+
+**HR stays restricted** (above), and its database holds ids only: access is decided in the main database by the policy engine.
+
+## Adding an app
+
+A new app is one area of the business whose purpose fits one sentence without "and". It is one new module folder with the six-part contract and one line in `src/app/modules.ts`, changes no platform file, works with every other app switched off, and goes live at one site first (Admin › Apps). The owner approves every new app; record it in [decisions.md](decisions.md) and add it to this page. The checklist is in [../AGENTS.md](../AGENTS.md).

@@ -1,16 +1,15 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
-import { AcademyShell } from "@/components/academy/shell";
+import { academyAccess, AcademyShell } from "@/modules/academy/features/workspace";
 import { pageSession } from "@/lib/page-guards";
 import { TITLE_TEMPLATE } from "@/lib/app";
-import { academyAccess } from "@/lib/academy/access";
 import '../workspace/module-workspace.css';
 
 export const metadata: Metadata = { title: { default: "Academy", template: TITLE_TEMPLATE } };
 
-/** The Academy workspace: opens for the Academy screen with `academy.read` at any scope; pages
- *  limit courses to the sites it covers. */
+/** The Academy workspace: opens with `academy.read` at any scope; pages limit courses to the
+ *  sites it covers. */
 export default async function AcademyLayout({ children }: { children: ReactNode }) {
   const who = academyAccess(await pageSession());
   if (!who) notFound();

@@ -4,7 +4,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { FormFeedbackProvider, useFormFeedback } from "@/components/ui/form-feedback";
 
 import * as React from "react";
-import { toast } from "@/lib/toast";
+import { toast } from "@/components/ui/toast";
 import { Field } from "@/components/form-dialog";
 
 import { Input } from "@/components/ui/input";

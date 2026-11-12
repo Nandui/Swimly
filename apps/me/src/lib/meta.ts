@@ -1,7 +1,7 @@
 import { ArrowRightLeft, Ban, CalendarClock, CircleCheck, CircleDot, Clock3, Coffee, CopyX, FileQuestion, TriangleAlert, XCircle, type LucideIcon } from "lucide-react";
 
 /** Status words, tones and icons: from here only, never chosen at a call site.
- *  Every tone has its own icon, so colour is never the only signal. The icons match Work's
+ *  Every tone has its own icon, so colour is never the only signal. The icons match Turnfin's
  *  maps (TRAINING_STATUS_META, QUALIFICATION_STATE_META, REVIEW_STATUS_META, ROTA_FIT_META). */
 export type Tone = "green" | "orange" | "red" | "blue" | "gray";
 export type Meta = { label: string; tone: Tone; icon: LucideIcon };
@@ -54,4 +54,9 @@ export const REVIEW_OVERALL: Record<string, string> = {
   exceeds: "Exceeds expectations",
   meets: "Meets expectations",
   developing: "Still developing",
+};
+
+export const EXAM_RESULT_META: Record<"passed" | "failed", Meta> = {
+  passed: { label: "Passed", tone: "green", icon: CircleCheck },
+  failed: { label: "Not passed", tone: "orange", icon: CircleDot },
 };

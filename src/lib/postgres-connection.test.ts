@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { parse } from "pg-connection-string";
-import { postgresConnectionString } from "./postgres-connection";
+import { poolMax, postgresConnectionString } from "./postgres-connection";
 
 const base = "postgresql://test:synthetic%40password@db.example.test:5432/swimly";
 
@@ -34,4 +34,22 @@ test("explicit libpq compatibility retains its chosen SSL semantics", () => {
 
 test("non-URL connection strings are left for driver validation", () => {
   assert.equal(postgresConnectionString("/var/run/postgresql"), "/var/run/postgresql");
+});
+
+test("the pool size is the caller's own unless DATABASE_POOL_MAX sets a whole number", () => {
+  const saved = process.env.DATABASE_POOL_MAX;
+  try {
+    delete process.env.DATABASE_POOL_MAX;
+    assert.equal(poolMax(5), 5);
+    assert.equal(poolMax(), undefined);
+    process.env.DATABASE_POOL_MAX = "1";
+    assert.equal(poolMax(5), 1);
+    for (const bad of ["0", "-2", "1.5", "many"]) {
+      process.env.DATABASE_POOL_MAX = bad;
+      assert.equal(poolMax(5), 5);
+    }
+  } finally {
+    if (saved === undefined) delete process.env.DATABASE_POOL_MAX;
+    else process.env.DATABASE_POOL_MAX = saved;
+  }
 });

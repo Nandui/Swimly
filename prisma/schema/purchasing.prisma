@@ -1,4 +1,4 @@
-// Purchasing (owner request, 2 October 2026; docs/purchasing.md): approved
+// Purchasing (owner request, 2 October 2026): approved
 // suppliers, each with its approved products; purchase orders raised by
 // managers, approved by someone whose role may approve that much from that
 // supplier, then numbered per site in sequence: PO-BT-00001.
@@ -14,6 +14,10 @@ model Supplier {
   email         String    @default("")
   phone         String    @default("")
   note          String    @default("")
+  /// Its logo or a photo, a 512px WebP square (owner request, 21 October 2026); the
+  /// version (a hash of the bytes) names it in the picture's address. Null: its initials.
+  pictureData    Bytes?
+  pictureVersion String?
   archivedAt    DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -34,6 +38,14 @@ model PurchaseProduct {
   code       String    @default("")
   /// How it comes, e.g. "Box of 12" or "25 kg drum".
   unit       String    @default("")
+  /// For retail products (owner request, 15 October 2026): the brand, e.g. "Speedo".
+  brand      String    @default("")
+  /// The sizes it comes in, e.g. ["S", "M", "L"]; none for products without sizes. Each
+  /// order line picks one.
+  sizes      String[]  @default([])
+  /// The colours it comes in, e.g. ["Navy", "Black"]; none for products without colours.
+  /// Each order line picks one.
+  colours    String[]  @default([])
   /// Agreed price per unit, in cents, before VAT.
   priceCents Int
   archivedAt DateTime?
@@ -73,7 +85,8 @@ model PurchaseOrder {
   orgId           String
   siteId          String
   supplierId      String
-  /// "PO-BT-00001", given on approval; unique, in sequence per site.
+  /// "BT-OCT-0042", given on approval: site code, month approved, the organisation's
+  /// running number (one count per organisation). Older orders keep "PO-BT-00001".
   number          String?   @unique
   /// draft | pending | approved | rejected | cancelled (`PO_STATUS_META`)
   status          String    @default("draft")
@@ -94,16 +107,18 @@ model PurchaseOrder {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  site     Club                @relation(fields: [siteId], references: [id], onDelete: Restrict)
-  supplier Supplier            @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  site     Club                 @relation(fields: [siteId], references: [id], onDelete: Restrict)
+  supplier Supplier             @relation(fields: [supplierId], references: [id], onDelete: Restrict)
   lines    PurchaseOrderLine[]
+  emails   PurchaseOrderEmail[]
 
   @@index([orgId, status])
   @@index([siteId, createdAt])
 }
 
-/// One line of an order, keeping the product's name, code, unit and price as
-/// they were when it was ordered.
+/// One line of an order, keeping the product's name, code, unit, brand and price
+/// as they were when it was ordered. The same product can be on several lines,
+/// one for each size and colour.
 model PurchaseOrderLine {
   id             String  @id @default(cuid())
   orderId        String
@@ -111,6 +126,11 @@ model PurchaseOrderLine {
   name           String
   code           String  @default("")
   unit           String  @default("")
+  brand          String  @default("")
+  /// The size ordered, one of the product's sizes; empty when it has none.
+  size           String  @default("")
+  /// The colour ordered, one of the product's colours; empty when it has none.
+  colour         String  @default("")
   unitPriceCents Int
   quantity       Int
 
@@ -122,9 +142,47 @@ model PurchaseOrderLine {
 
 /// The last purchase order number given at a site. Raised inside the
 /// approval's transaction, so numbers never repeat or skip.
+/// Retired 15 October 2026: numbered the old "PO-BT-00001" orders per site; no longer written.
 model PurchaseOrderCounter {
   siteId String @id
   last   Int    @default(0)
 
   site Club @relation(fields: [siteId], references: [id], onDelete: Cascade)
+}
+
+/// Every time an approved order was emailed: to its supplier, or as a test to
+/// the person sending it, who sees exactly what the supplier will get.
+model PurchaseOrderEmail {
+  id         String   @id @default(cuid())
+  orderId    String
+  /// supplier | test
+  kind       String
+  /// Where it went: the supplier's address, or the sender's own for a test.
+  toAddress  String
+  /// Who got a copy (CC) of an email to the supplier; empty for none.
+  ccAddress  String   @default("")
+  sentById   String
+  sentByName String
+  /// sent | failed
+  status     String
+  /// Why it failed, in plain words.
+  error      String   @default("")
+  createdAt  DateTime @default(now())
+
+  order PurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
+}
+
+/// Purchasing's settings for an organisation. Emails to suppliers stay off
+/// until someone with Purchasing: Manage turns them on, after a test email
+/// (owner request, 15 October 2026); until then only tests can be sent.
+model PurchasingSettings {
+  orgId            String   @id
+  supplierEmailsOn Boolean  @default(false)
+  /// Copied (CC) on every email to a supplier, e.g. the operations manager; empty for none.
+  copyTo           String   @default("")
+  changedById      String?
+  changedByName    String?
+  updatedAt        DateTime @updatedAt
 }

@@ -4,7 +4,7 @@ import type { NextConfig } from "next";
  *  Academy API (NEXT_PUBLIC_ACADEMY_API_URL). */
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  // Its own project root, not the Swimly repository around it: separate builds, and Work's dev
+  // Its own project root, not the Swimly repository around it: separate builds, and Turnfin's dev
   // server never triggers reloads here.
   turbopack: { root: process.cwd() },
   outputFileTracingRoot: process.cwd(),

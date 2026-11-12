@@ -1,18 +1,16 @@
 import "server-only";
-import { permissionsOf } from "@/lib/authz";
 import { pageSession } from "@/lib/page-guards";
 import { staffApiConfig } from "@/lib/staff-api/config";
-import { visibleScreens } from "@/lib/staff/screens";
 import { prisma } from "@/lib/prisma";
-import { formatDay, today } from "@/lib/format";
+import { formatDay, minutesNow, today } from "@/lib/format";
 import { getCurrentClub } from "@/lib/clubs/current";
 import { modulesFor } from "@/modules/context";
 import { homeCardItems } from "@/modules/server";
 import type { Session } from "next-auth";
 import type { HomeViewer } from "@/modules/contributions";
 
-/** Everything a role's home page shows (docs/how-turnfin-works.md): its name,
- *  the modules the role has, and each module's card lines for this person. */
+/** Everything Home shows (docs/architecture.md): the role's name, the modules it has,
+ *  and each module's items for this person, which Home counts. */
 export async function loadHome() {
   const session = await pageSession();
   const user = session.user;
@@ -32,12 +30,12 @@ export async function loadHome() {
     siteName: sites?.club.name ?? null,
     sites,
     moduleIds,
-    /** The screens the person can open, for the top row's pages and search. */
-    screens: visibleScreens(permissionsOf(session)),
     items,
     /** Modules whose figures failed to load, so the page says so rather than leaving them out silently. */
     failed: items.failed ?? [],
     today: formatDay(today()),
+    /** Minutes after midnight at the centre, for the greeting, the day timeline and "Up next". */
+    now: minutesNow(),
     meUrl: turnfinMeUrl(),
   };
 }
@@ -47,7 +45,7 @@ function turnfinMeUrl(): string | null {
   try { return staffApiConfig().meUrl || null; } catch { return null; }
 }
 
-function viewerOf(user: Session["user"]): HomeViewer {
+export function viewerOf(user: Session["user"]): HomeViewer {
   return {
     id: user.id,
     name: user.name ?? "Staff member",
@@ -58,7 +56,8 @@ function viewerOf(user: Session["user"]): HomeViewer {
 }
 
 /** One module's overview page: the same items it gives the home page, for the
- *  person looking, and the working site's name for "Today". */
+ *  person looking, the working site's name, today's date for the line under the title and the
+ *  time now at the centre for the day's timeline. */
 export async function loadModuleOverview(moduleId: string) {
   const session = await pageSession();
   const [all, siteName] = await Promise.all([
@@ -67,5 +66,5 @@ export async function loadModuleOverview(moduleId: string) {
   ]);
   /** True when the module's figures failed to load, so the overview says so. */
   const failed = (all.failed ?? []).includes(moduleId);
-  return { items: all.get(moduleId) ?? [], siteName, failed };
+  return { items: all.get(moduleId) ?? [], siteName, failed, today: formatDay(today()), now: minutesNow() };
 }

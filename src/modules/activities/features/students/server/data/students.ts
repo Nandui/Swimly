@@ -1,0 +1,180 @@
+import { withSite, withSites, type SiteRef } from "@/lib/directory";
+import type { Prisma, StudentStatus } from "@/generated/prisma/client";
+import { classifyMedical, medicalAllowed, requireActivitiesAccess } from "@/modules/activities/shared/classification";
+import { getSharedCurriculum } from "@/modules/activities/shared/curriculum/data/shared";
+import { prisma } from "@/lib/prisma";
+
+const LIST_SELECT = {
+  id: true,
+  clubId: true,
+  memberNumber: true,
+  firstName: true,
+  lastName: true,
+  dateOfBirth: true,
+  status: true,
+  contactName: true,
+  contactPhone: true,
+} as const satisfies Prisma.StudentSelect;
+
+export type StudentRow = Prisma.StudentGetPayload<{ select: typeof LIST_SELECT }> & {
+  /** The swimmer's home site, named through Core's directory. */
+  club: SiteRef;
+  /** The levels this student is currently placed at, one per programme they
+   *  are in. Derived, because "current level" belongs to a
+   *  (student, programme) pair rather than to a student. */
+  placements: { programmeId: string; programmeName: string; levelId: string; levelName: string }[];
+};
+
+export type StudentFilters = {
+  q?: string;
+  status?: StudentStatus | "ALL";
+  levelId?: string;
+  /** 1-based. */
+  page?: number;
+};
+
+/** How many swimmers a page of the list holds. The club has over a thousand,
+ *  and the list used to `take: 500` — which was both a third of a megabyte of
+ *  payload per navigation and, quietly, a lie: swimmers 501 onwards could not
+ *  be reached by any amount of scrolling. */
+export const STUDENTS_PER_PAGE = 100;
+
+/** The directory search: every word must match a name, contact, email, phone
+ *  or member number. Shared by the list and its segment counts, so the counts
+ *  always describe the same search as the rows. */
+function searchWhere(query?: string): Prisma.StudentWhereInput {
+  const q = query?.trim();
+  if (!q) return {};
+  return {
+    AND: q.split(/\s+/).map((word) => ({
+      OR: [
+        { firstName: { contains: word, mode: "insensitive" as const } },
+        { lastName: { contains: word, mode: "insensitive" as const } },
+        { contactName: { contains: word, mode: "insensitive" as const } },
+        { contactEmail: { contains: word, mode: "insensitive" as const } },
+        { contactPhone: { contains: word } },
+        { memberNumber: { contains: word, mode: "insensitive" as const } },
+      ],
+    })),
+  };
+}
+
+/** The list. Set-based queries joined in memory rather than one query per row —
+ *  the placement lookup is the part that would otherwise go N+1. */
+export async function getStudents(filters: StudentFilters = {}) {
+  await requireActivitiesAccess();
+
+  const curriculum = await getSharedCurriculum();
+  const where: Prisma.StudentWhereInput = {
+    ...(filters.status && filters.status !== "ALL" ? { status: filters.status } : {}),
+    ...searchWhere(filters.q),
+    ...(filters.levelId
+      ? { enrolments: { some: { levelId: { in: curriculum.levelIds.variants(filters.levelId) }, status: "ACTIVE" } } }
+      : {}),
+  };
+
+  // Bound the page before computing an offset, including stale URLs after
+  // a filter change or a swimmer being removed from the result set.
+  const total = await prisma.student.count({ where });
+  const requested = filters.page ?? 1;
+  const page = Number.isSafeInteger(requested) && requested > 0
+    ? Math.min(requested, Math.max(1, Math.ceil(total / STUDENTS_PER_PAGE))) : 1;
+  const students = total ? await prisma.student.findMany({
+      where,
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }, { id: "asc" }],
+      select: LIST_SELECT,
+      skip: (page - 1) * STUDENTS_PER_PAGE,
+      take: STUDENTS_PER_PAGE,
+    }) : [];
+
+  if (students.length === 0) return { students: [] as StudentRow[], total, page };
+
+  // No nested selects here on purpose. Joining programme and level per
+  // enrolment asks the database to repeat a handful of names once per row; the
+  // whole curriculum is ten levels, so it is fetched once alongside and joined
+  // in memory. Cold, that was the difference between 130ms and 490ms.
+  const placements = await prisma.enrolment.findMany({
+    where: { studentId: { in: students.map(s => s.id) }, status: "ACTIVE" },
+    select: { studentId: true, programmeId: true, levelId: true },
+  });
+
+  const byStudent = new Map<string, StudentRow["placements"]>();
+  for (const placement of placements) {
+    const level = curriculum.level(placement.levelId);
+    if (!level) continue;
+    const list = byStudent.get(placement.studentId) ?? [];
+    if (list.some(p => p.levelId === level.id)) continue;
+    list.push({
+      programmeId: level.programme.id,
+      programmeName: level.programme.name,
+      levelId: level.id,
+      levelName: level.name,
+    });
+    byStudent.set(placement.studentId, list);
+  }
+
+  const withClub = await withSites(students, "clubId", "club");
+  return {
+    students: withClub.map((student) => ({
+      ...student,
+      placements: byStudent.get(student.id) ?? [],
+    })),
+    total,
+    page,
+  };
+}
+
+/** Segment counts for the directory, following the same search as the rows.
+ *  The search reaches contact, email and phone, so it needs Activities access. */
+export async function getStudentCounts(q?: string) {
+  await requireActivitiesAccess();
+
+  const [all, active] = await Promise.all([
+    prisma.student.count({ where: { ...searchWhere(q) } }),
+    prisma.student.count({ where: { ...searchWhere(q), status: "ACTIVE" } }),
+  ]);
+
+  return { all, active, inactive: all - active };
+}
+
+/** The profile. Medical notes come back here and nowhere in a list, and only
+ *  to desk and office roles (see Aquatics classification); others learn only
+ *  that notes are on file. */
+export async function getStudent(id: string) {
+  const session = await requireActivitiesAccess();
+
+  const found = await prisma.student.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      clubId: true,
+      memberNumber: true,
+      firstName: true,
+      lastName: true,
+      dateOfBirth: true,
+      status: true,
+      joinedOn: true,
+      contactName: true,
+      contactEmail: true,
+      contactPhone: true,
+      emergencyName: true,
+      emergencyPhone: true,
+      emergencyRelationship: true,
+      medicalNotes: true,
+      photoConsent: true,
+      photoConsentOn: true,
+      notes: true,
+    },
+  });
+  if (!found) return null;
+  // The home site name comes from Core's directory.
+  const row = await withSite(found, "clubId", "club");
+  return classifyMedical(row, medicalAllowed(session, "desk"));
+}
+
+export type StudentDetail = NonNullable<Awaited<ReturnType<typeof getStudent>>>;
+
+// There is deliberately no "every active student" read for pickers any more.
+// The swimmer picker searches the server as you type — see
+// `src/modules/activities/shared/students/actions/search.ts` — because handing a client component the
+// whole roll was 1,156 rows on every page that had one.

@@ -4,6 +4,7 @@ import { ActivityTable } from "@/components/activity-table";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { LinkPagination } from "@/components/ui-kit/link-pagination";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { ACTIVITY_PER_PAGE, getActivity } from "@/lib/activity/data/audit-log";
 import { formatCount } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
@@ -28,17 +29,16 @@ export default async function ActivityPage(props: PageProps<"/activity">) {
   const last = first + entries.length - 1;
 
   return (
-    <div className="min-w-0 flex flex-col gap-4">
-      <PageHeader title="Activity" description="Who changed what, and when." />
+    <PageShell spacing="roomy" header={<PageHeader title="Activity" description="Who changed what, and when." />}>
 
-      <section className="pc-panel" aria-label="Activity">
-        <SegmentedLinks label="Filter by module" items={[undefined, ...modules].map((name) => ({ href: name ? `/activity?module=${encodeURIComponent(name)}` : "/activity", label: name ?? "Every module", current: name === moduleName }))} />
+      <section className="flex min-w-0 flex-col gap-(--space-4)" aria-label="Activity">
+        <SegmentedLinks label="Filter by app" items={[undefined, ...modules].map((name) => ({ href: name ? `/activity?module=${encodeURIComponent(name)}` : "/activity", label: name ?? "Every app", current: name === moduleName }))} />
 
         {total === 0 ? (
           <EmptyState
             icon="scrollText"
             title="The trail is empty"
-            hint={moduleName ? `Nothing in ${moduleName} yet. Entries from before 28 September 2026 have no module.` : "Nothing has been created, updated or deleted yet."}
+            hint={moduleName ? `Nothing in ${moduleName} yet. Entries from before 28 September 2026 have no app.` : "Nothing has been created, updated or deleted yet."}
           />
         ) : (
           <>
@@ -61,6 +61,6 @@ export default async function ActivityPage(props: PageProps<"/activity">) {
           </>
         )}
       </section>
-    </div>
+    </PageShell>
   );
 }

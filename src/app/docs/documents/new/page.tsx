@@ -1,8 +1,5 @@
 import { redirect } from 'next/navigation';
-import { requireMember } from '@/lib/docs/auth';
-import { workspace } from '@/lib/docs/queries';
-import { canWrite } from '@/lib/docs/types';
-import { NewDocument } from '@/components/docs/new-document';
+import { canWrite, NewDocument, requireMember, workspace } from "@/modules/docs/features/editor";
 import type { Metadata } from 'next';
 export const metadata: Metadata = { title: 'Create a document' };
 export default async function NewDocumentPage() {

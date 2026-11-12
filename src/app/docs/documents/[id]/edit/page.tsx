@@ -1,9 +1,5 @@
 import { redirect, notFound } from 'next/navigation';
-import { requireMember } from '@/lib/docs/auth';
-import { database, one } from '@/lib/docs/database';
-import { workspace } from '@/lib/docs/queries';
-import { canWrite, type Draft, type DocumentRecord } from '@/lib/docs/types';
-import { DocumentEditor } from '@/components/docs/document-editor';
+import { canWrite, database, DocumentEditor, type DocumentRecord, type Draft, one, requireMember, workspace } from "@/modules/docs/features/editor";
 import type { Metadata } from 'next';
 import { cache } from 'react';
 

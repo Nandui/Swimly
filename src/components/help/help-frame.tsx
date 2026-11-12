@@ -5,7 +5,7 @@ import Image from "next/image";
 import { helpHref } from "@/lib/help/search";
 import type { HelpScope } from "@/lib/help/types";
 
-/** Help in the v2 frame (DESIGN.md, Poolside Clear v2): the fin, "Help centre" and the way back
+/** Help in the v2 frame: the fin, "Help centre" and the way back
  *  (no rail: Help opens in its own tab), then the guides on the canvas in white panels.
  *  Appearance follows the setting from the account menu. */
 export function HelpFrame({ scope, home, children }: { scope: HelpScope; home: string; children: ReactNode }) {
@@ -16,7 +16,7 @@ export function HelpFrame({ scope, home, children }: { scope: HelpScope; home: s
       <header className="tf-top">
         <Link href={helpHref(scope)} className="tf-brand" aria-label="Help centre home"><Image src="/brand/turnfin.png" alt="" width={72} height={72} priority /></Link>
         <span className="text-lg font-semibold">Help centre</span>
-        <div className="tf-bar tf-tools" role="group" aria-label="The way back">
+        <div className="tf-bar tf-tools glass" role="group" aria-label="The way back">
           <Link href={home} className="tf-bar-item"><ChevronLeft aria-hidden="true" /><span className="max-md:sr-only">{back}</span></Link>
         </div>
       </header>

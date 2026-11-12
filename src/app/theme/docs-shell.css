@@ -1,0 +1,1349 @@
+/* The .turnfin-docs shell layouts, shared by Docs and Refunds (Core, so neither module imports
+   the other). Originally imported from Turnfin Docs. */
+/* The original Docs layouts sit in a sub-layer of components, so the redesign below (the
+   components layer itself) wins wherever both set a property, Tailwind utilities written in the
+   markup win over them, and the unlayered Poolside Clear theme stays on top. */
+@layer components {
+@layer legacy {
+:where(.turnfin-docs) * {
+  box-sizing: border-box;
+}
+:where(.turnfin-docs) :scope {
+  scroll-behavior: smooth;
+  scroll-padding-top: 100px;
+}
+:where(.turnfin-docs) :scope {
+  margin: 0;
+  background: var(--bg);
+  color: var(--label);
+  font-family: var(--font-sans);
+  font-size: var(--type-body);
+  line-height: var(--type-body-leading);
+  -webkit-font-smoothing: antialiased;
+}
+:where(.turnfin-docs) h1,
+:where(.turnfin-docs) h2,
+:where(.turnfin-docs) h3,
+:where(.turnfin-docs) h4,
+:where(.turnfin-docs) p {
+  margin: 0;
+}
+:where(.turnfin-docs) h1,
+:where(.turnfin-docs) h2,
+:where(.turnfin-docs) h3,
+:where(.turnfin-docs) h4 {
+  color: var(--label);
+  font-family: var(--font-sans);
+}
+:where(.turnfin-docs) h1 {
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 41px;
+}
+:where(.turnfin-docs) h2 {
+  font-size: 20px;
+  font-weight: 600;
+}
+:where(.turnfin-docs) h3 {
+  font-size: var(--type-body);
+  font-weight: 600;
+}
+:where(.turnfin-docs) a {
+  color: inherit;
+  text-decoration: none;
+}
+:where(.turnfin-docs) button,
+:where(.turnfin-docs) input,
+:where(.turnfin-docs) textarea,
+:where(.turnfin-docs) select {
+  font: inherit;
+}
+:where(.turnfin-docs) button,
+:where(.turnfin-docs) a,
+:where(.turnfin-docs) input,
+:where(.turnfin-docs) textarea,
+:where(.turnfin-docs) select {
+  -webkit-tap-highlight-color: transparent;
+}
+:where(.turnfin-docs) button {
+  cursor: pointer;
+}
+:where(.turnfin-docs) button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+:where(.turnfin-docs) button {
+  color: inherit;
+}
+:where(.turnfin-docs) input,
+:where(.turnfin-docs) select,
+:where(.turnfin-docs) textarea {
+  background: var(--bg-2);
+  border: 1px solid var(--sep);
+  border-radius: var(--radius-lg);
+  color: var(--label);
+  padding: 10px 12px;
+  min-width: 0;
+  max-width: 100%;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+:where(.turnfin-docs) input:focus,
+:where(.turnfin-docs) select:focus,
+:where(.turnfin-docs) textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-color: var(--accent);
+}
+:where(.turnfin-docs) input::placeholder,
+:where(.turnfin-docs) textarea::placeholder {
+  color: var(--label-2);
+}
+:where(.turnfin-docs) textarea {
+  resize: vertical;
+  min-height: 82px;
+}
+:where(.turnfin-docs) input[type='checkbox'],
+:where(.turnfin-docs) input[type='radio'] {
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  padding: 0;
+}
+:where(.turnfin-docs) input[readonly] {
+  background: var(--fill-2);
+}
+:where(.turnfin-docs) select {
+  cursor: pointer;
+}
+:where(.turnfin-docs) select[multiple] {
+  min-height: 100px;
+}
+:where(.turnfin-docs) label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--label);
+}
+:where(.turnfin-docs) label small {
+  font-weight: 400;
+  color: var(--label-2);
+}
+:where(.turnfin-docs) fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+:where(.turnfin-docs) legend {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--label);
+}
+:where(.turnfin-docs) button:focus-visible,
+:where(.turnfin-docs) a:focus-visible,
+:where(.turnfin-docs) summary:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+:where(.turnfin-docs) svg {
+  flex-shrink: 0;
+}
+:where(.turnfin-docs) ::selection {
+  background: var(--ui-brand-soft);
+}
+:where(.turnfin-docs) .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+:where(.turnfin-docs) .muted {
+  color: var(--label-2);
+}
+:where(.turnfin-docs) .icon-button {
+  border: 0;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 33px;
+  min-height: 33px;
+  border-radius: var(--radius-capsule);
+  color: var(--label-2);
+  padding: 7px;
+}
+:where(.turnfin-docs) .icon-button:hover:not(:disabled) {
+  background: var(--fill-2);
+  color: var(--label);
+}
+:where(.turnfin-docs) .page-content {
+  padding: 37px 40px 30px;
+  width: 100%;
+  max-width: 1590px;
+  margin: 0 auto;
+  flex: 1;
+}
+:where(.turnfin-docs) .reading-title {
+  flex: 1;
+  min-width: 0;
+}
+:where(.turnfin-docs) .reading-title strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--label);
+  line-height: 16px;
+}
+:where(.turnfin-docs) .reading-title span {
+  font-size: 12px;
+  color: var(--label-2);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+:where(.turnfin-docs) .reading-title i {
+  width: 2px;
+  height: 2px;
+  border-radius: var(--radius-capsule);
+  display: inline-block;
+  background: var(--ui-border);
+}
+/* Holds the shared BackLink (a ghost pill) 4px above the page heading; hidden in print. */
+:where(.turnfin-docs) .document-prose {
+  font-size: var(--reading-size);
+  line-height: 1.8;
+  color: var(--label);
+  max-width: 70ch;
+  overflow-wrap: anywhere;
+}
+:where(.turnfin-docs) .document-prose p {
+  margin: 0.65em 0;
+}
+:where(.turnfin-docs) .document-prose ul,
+:where(.turnfin-docs) .document-prose ol {
+  padding-left: 1.65em;
+  margin: 0.9em 0;
+}
+:where(.turnfin-docs) .document-prose li {
+  padding-left: 0.35em;
+  margin: 0.5em 0;
+}
+:where(.turnfin-docs) .document-prose li::marker {
+  color: var(--label-2);
+  font-weight: 600;
+}
+:where(.turnfin-docs) .document-prose li > p {
+  margin: 0.2em 0;
+}
+:where(.turnfin-docs) .document-prose a {
+  text-decoration: underline;
+  color: var(--accent);
+  text-underline-offset: 3px;
+}
+:where(.turnfin-docs) .document-prose strong {
+  color: var(--label);
+  font-weight: 600;
+}
+:where(.turnfin-docs) .document-prose blockquote {
+  border-left: 3px solid var(--ui-border);
+  margin: 1.2em 0;
+  padding: 0.25em 1em;
+  color: var(--label-2);
+  background: var(--fill-2);
+}
+:where(.turnfin-docs) .document-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  border: 1px solid var(--sep);
+  border-radius: var(--radius-lg);
+  background: var(--fill-2);
+  color: var(--label-2);
+  padding: 13px 16px;
+  margin: 1.2em 0;
+  font-size: 0.85em;
+  line-height: 1.8;
+}
+:where(.turnfin-docs) .document-callout > svg {
+  margin-top: 4px;
+}
+:where(.turnfin-docs) .document-callout p {
+  margin: 0;
+}
+:where(.turnfin-docs) .document-callout.warning {
+  background: var(--ui-status-yellow-bg);
+  border-color: var(--ui-status-yellow-bg);
+  color: var(--label-2);
+}
+:where(.turnfin-docs) .document-prose img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-lg);
+}
+:where(.turnfin-docs) .document-prose figure {
+  margin: 1.2em 0;
+}
+:where(.turnfin-docs) .document-prose figcaption {
+  font-size: 0.8em;
+  color: var(--label-2);
+  text-align: center;
+  margin-top: 0.5em;
+}
+:where(.turnfin-docs) .document-prose hr {
+  border: 0;
+  border-top: 1px solid var(--sep);
+  margin: 1.5em 0;
+}
+:where(.turnfin-docs) .document-prose table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.85em;
+  margin: 1em 0;
+  table-layout: fixed;
+}
+:where(.turnfin-docs) .document-prose th,
+:where(.turnfin-docs) .document-prose td {
+  border: 1px solid var(--sep);
+  padding: 8px 12px;
+  vertical-align: top;
+  position: relative;
+}
+:where(.turnfin-docs) .document-prose th {
+  background: var(--fill-2);
+  text-align: left;
+  font-weight: 600;
+}
+:where(.turnfin-docs) .document-prose td p,
+:where(.turnfin-docs) .document-prose th p {
+  margin: 0;
+}
+:where(.turnfin-docs) .table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  scrollbar-width: thin;
+}
+:where(.turnfin-docs) .print-footer {
+  display: none;
+}
+:where(.turnfin-docs) .form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 17px;
+}
+:where(.turnfin-docs) .editor-prose .tableWrapper {
+  overflow: auto;
+}
+:where(.turnfin-docs) .editor-prose .selectedCell:after {
+  z-index: 2;
+  position: absolute;
+  content: '';
+  inset: 0;
+  background: var(--accent-soft);
+  pointer-events: none;
+}
+:where(.turnfin-docs) .risk-rating-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 20px 0;
+}
+:where(.turnfin-docs) .risk-rating {
+  background: var(--fill-2);
+  border: 1px solid var(--sep);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+}
+:where(.turnfin-docs) .risk-rating h3 {
+  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+:where(.turnfin-docs) .risk-rating label + label {
+  margin-top: 12px;
+}
+:where(.turnfin-docs) .risk-rating select {
+  font-size: 12px;
+  width: 100%;
+}
+:where(.turnfin-docs) .risk-edit-row .form-grid {
+  margin-top: 15px;
+}
+:where(.turnfin-docs) .risk-read {
+  border-top: 1px solid var(--sep);
+  margin-top: 28px;
+  padding-top: 25px;
+  scroll-margin-top: 25px;
+}
+:where(.turnfin-docs) .risk-read > h2 {
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+:where(.turnfin-docs) .risk-read > .muted {
+  font-size: 12px;
+  line-height: 16px;
+}
+:where(.turnfin-docs) .risk-read-card {
+  border: 1px solid var(--sep);
+  border-radius: var(--radius-lg);
+  margin-top: 20px;
+  padding: 20px;
+}
+:where(.turnfin-docs) .risk-read-header {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  border-bottom: 1px solid var(--sep);
+  padding-bottom: 16px;
+}
+:where(.turnfin-docs) .risk-number {
+  font-size: 12px;
+  border: 1px solid var(--sep);
+  background: var(--fill-2);
+  color: var(--label-2);
+  padding: 5px 7px;
+  border-radius: var(--radius-capsule);
+}
+:where(.turnfin-docs) .risk-read-header h3 {
+  font-size: var(--type-body);
+}
+:where(.turnfin-docs) .risk-read-card dl {
+  margin: 16px 0 0;
+}
+:where(.turnfin-docs) .risk-read-card dl > div {
+  margin: 14px 0;
+}
+:where(.turnfin-docs) .risk-read-card dt {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--label-2);
+  margin-bottom: 5px;
+}
+:where(.turnfin-docs) .risk-read-card dd {
+  margin: 0;
+  font-size: var(--type-body);
+  line-height: var(--type-body-leading);
+  color: var(--label-2);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+:where(.turnfin-docs) .risk-read-card dd small {
+  display: block;
+  font-size: 12px;
+  color: var(--label-2);
+  margin-top: 5px;
+}
+:where(.turnfin-docs) .risk-scores {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  background: var(--fill-2);
+  padding: 15px;
+  border-radius: var(--radius-lg);
+}
+:where(.turnfin-docs) .matrix-details {
+  margin-top: 23px;
+  font-size: 12px;
+}
+:where(.turnfin-docs) .matrix-details summary {
+  cursor: pointer;
+  color: var(--label-2);
+  font-weight: 600;
+  padding: 10px 0;
+}
+:where(.turnfin-docs) .matrix-definitions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  padding: 20px;
+  background: var(--fill-2);
+  border-radius: var(--radius-lg);
+}
+:where(.turnfin-docs) .matrix-definitions h3 {
+  margin-bottom: 12px;
+}
+:where(.turnfin-docs) .matrix-definitions p {
+  font-size: 12px;
+  margin-bottom: 13px;
+  color: var(--label-2);
+}
+:where(.turnfin-docs) .risk-band-key {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+:where(.turnfin-docs) .new-document {
+  max-width: 1030px;
+  margin: auto;
+}
+:where(.turnfin-docs) .comparison {
+  padding: 24px;
+  margin-bottom: 24px;
+}
+:where(.turnfin-docs) .comparison h3 {
+  margin: 20px 0 9px;
+}
+:where(.turnfin-docs) .diff-key {
+  display: flex;
+  gap: 15px;
+  font-size: 12px;
+  color: var(--label-2);
+  margin-bottom: 13px;
+}
+:where(.turnfin-docs) .text-diff {
+  padding: 20px;
+  font-size: 12px;
+  line-height: 16px;
+  background: var(--fill-2);
+  border: 1px solid var(--sep);
+  border-radius: var(--radius-lg);
+  max-height: 240px;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+:where(.turnfin-docs) .text-diff ins {
+  background: var(--ui-status-green-bg);
+  color: var(--ui-status-green);
+  text-decoration: underline;
+}
+:where(.turnfin-docs) .text-diff del {
+  background: var(--ui-status-red-bg);
+  color: var(--ui-status-red);
+}
+:where(.turnfin-docs) .side-by-side {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+  margin-top: 20px;
+}
+:where(.turnfin-docs) .side-by-side > article {
+  padding: 20px;
+  border: 1px solid var(--sep);
+  border-radius: var(--radius-lg);
+  --reading-size: 13px;
+  min-width: 0;
+}
+:where(.turnfin-docs) .side-by-side > article > h2 {
+  font-size: 20px;
+  margin: 15px 0;
+}
+:where(.turnfin-docs) .side-by-side .risk-read-card {
+  padding: 12px;
+}
+:where(.turnfin-docs) .side-by-side .risk-scores {
+  grid-template-columns: 1fr;
+}
+:where(.turnfin-docs) .compare-metadata {
+  font-size: 12px;
+  color: var(--label-2);
+  margin-bottom: 24px;
+}
+:where(.turnfin-docs) .matrix-admin {
+  padding: 24px;
+}
+:where(.turnfin-docs) .matrix-edit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 35px;
+  margin: 22px 0 32px;
+}
+:where(.turnfin-docs) .matrix-edit-grid h3 {
+  font-size: var(--type-body);
+  margin-bottom: 18px;
+}
+:where(.turnfin-docs) .matrix-level {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+:where(.turnfin-docs) .matrix-level > div {
+  flex: 1;
+  min-width: 0;
+}
+:where(.turnfin-docs) .matrix-level input {
+  font-size: 12px;
+  margin-bottom: 7px;
+}
+:where(.turnfin-docs) .matrix-level textarea {
+  font-size: 12px;
+  min-height: 62px;
+  line-height: 16px;
+}
+:where(.turnfin-docs) .matrix-admin > h3 {
+  margin-bottom: 8px;
+}
+:where(.turnfin-docs) .matrix-admin > .muted {
+  font-size: 12px;
+}
+/* Keep small interface labels muted, but maintain readable contrast. */
+:where(.turnfin-docs) .muted,
+:where(.turnfin-docs) .reading-title span,
+:where(.turnfin-docs) .document-prose {
+  color: var(--label-2);
+}
+@media (min-width: 1500px) {
+  :where(.turnfin-docs) .page-content {
+    padding: 45px 50px;
+  }
+  :where(.turnfin-docs) .reading-title strong {
+    font-size: 12px;
+  }
+}
+@media (max-width: 1200px) {
+  :where(.turnfin-docs) .page-content {
+    padding: 30px 27px;
+  }
+  :where(.turnfin-docs) .risk-rating-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 960px) {
+  :where(.turnfin-docs) .page-content {
+    padding: 28px 22px;
+  }
+  :where(.turnfin-docs) .matrix-edit-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  :where(.turnfin-docs) .side-by-side {
+    gap: 12px;
+  }
+  :where(.turnfin-docs) .side-by-side > article {
+    padding: 14px;
+  }
+}
+@media (max-width: 720px) {
+  :where(.turnfin-docs) .page-content {
+    padding: 27px 19px;
+  }
+  :where(.turnfin-docs) .reading-title strong {
+    font-size: 12px;
+  }
+  :where(.turnfin-docs) .reading-title span {
+    font-size: 12px;
+    gap: 4px;
+  }
+  :where(.turnfin-docs) .document-prose {
+    font-size: max(16px, calc(var(--reading-size) - 1px));
+    line-height: 1.8;
+  }
+  :where(.turnfin-docs) .document-prose h2 {
+    font-size: 1.13em;
+  }
+  :where(.turnfin-docs) .document-callout {
+    font-size: 0.85em;
+    padding: 12px;
+  }
+  :where(.turnfin-docs) .editor-toolbar {
+    padding: 8px;
+  }
+  :where(.turnfin-docs) .toolbar-button {
+    width: 32px;
+    height: 34px;
+  }
+  :where(.turnfin-docs) .editor-toolbar select {
+    width: 110px;
+  }
+  :where(.turnfin-docs) .editor-prose {
+    padding: 22px;
+    min-height: 400px;
+    font-size: 16px;
+  }
+  :where(.turnfin-docs) .editor-insert-panel {
+    padding: 16px;
+  }
+  :where(.turnfin-docs) .risk-edit-row {
+    margin: 17px;
+    padding: 16px;
+  }
+  :where(.turnfin-docs) .risk-rating-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  :where(.turnfin-docs) .risk-rating {
+    padding: 11px;
+  }
+  :where(.turnfin-docs) .risk-rating h3 {
+    font-size: 12px;
+  }
+  :where(.turnfin-docs) .risk-rating select {
+    font-size: 12px;
+    padding: 8px;
+  }
+  :where(.turnfin-docs) .risk-read-card {
+    padding: 17px;
+  }
+  :where(.turnfin-docs) .risk-read-header h3 {
+    font-size: var(--type-body);
+  }
+  :where(.turnfin-docs) .risk-read-card dd {
+    font-size: 12px;
+  }
+  :where(.turnfin-docs) .matrix-definitions {
+    grid-template-columns: 1fr;
+    padding: 17px;
+  }
+  :where(.turnfin-docs) .comparison {
+    padding: 19px;
+  }
+  :where(.turnfin-docs) .diff-key {
+    font-size: 12px;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  :where(.turnfin-docs) .side-by-side {
+    grid-template-columns: 1fr;
+  }
+  :where(.turnfin-docs) .text-diff {
+    padding: 15px;
+    font-size: 12px;
+  }
+  :where(.turnfin-docs) .side-by-side > article {
+    padding: 17px;
+  }
+  :where(.turnfin-docs) .matrix-admin {
+    padding: 20px;
+  }
+  :where(.turnfin-docs) .matrix-edit-grid {
+    margin-top: 20px;
+  }
+}
+:where(.turnfin-docs) .document-callout.warning {
+  color: var(--ui-status-yellow);
+}
+:where(.turnfin-docs) .document-prose {
+  color: var(--label);
+}
+@media (prefers-reduced-motion: reduce) {
+  :where(.turnfin-docs) * {
+    scroll-behavior: auto !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}
+@media print {
+  :where(.turnfin-docs) :scope {
+    background: var(--bg-2);
+    color: var(--label);
+    font-size: 11pt;
+  }
+  :where(.turnfin-docs) [data-slot='alert'],
+  :where(.turnfin-docs) .skip-link {
+    display: none !important;
+  }
+  :where(.turnfin-docs) .page-content {
+    padding: 0;
+    max-width: none;
+  }
+  :where(.turnfin-docs) .document-prose {
+    max-width: none;
+    font-size: 11pt;
+    color: var(--label);
+  }
+  :where(.turnfin-docs) .document-prose h2 {
+    font-size: 14pt;
+    break-after: avoid;
+  }
+  :where(.turnfin-docs) .document-prose h3,
+  :where(.turnfin-docs) .document-prose h4 {
+    break-after: avoid;
+  }
+  :where(.turnfin-docs) .document-callout {
+    background: var(--fill-2) !important;
+    border: 1px solid var(--label-2);
+    color: var(--label);
+    break-inside: avoid;
+  }
+  :where(.turnfin-docs) .document-prose img {
+    max-height: 200mm;
+    width: auto;
+  }
+  :where(.turnfin-docs) .document-prose li {
+    break-inside: avoid;
+  }
+  :where(.turnfin-docs) .table-scroll {
+    overflow: visible;
+  }
+  :where(.turnfin-docs) .document-prose table {
+    table-layout: auto;
+  }
+  :where(.turnfin-docs) .document-prose tr {
+    break-inside: avoid;
+  }
+  :where(.turnfin-docs) .document-prose th {
+    background: var(--fill-2) !important;
+    color: var(--label);
+  }
+  :where(.turnfin-docs) .document-prose td,
+  :where(.turnfin-docs) .document-prose th {
+    border-color: var(--label-2);
+  }
+  :where(.turnfin-docs) .risk-read-card {
+    break-inside: avoid;
+    border-color: var(--label-2);
+  }
+  :where(.turnfin-docs) .risk-read-card dt,
+  :where(.turnfin-docs) .risk-read-card dd {
+    color: var(--label);
+  }
+  :where(.turnfin-docs) [data-slot='badge'] {
+    border: 1px solid var(--label-2) !important;
+    background: var(--bg-2) !important;
+    color: var(--label) !important;
+  }
+  :where(.turnfin-docs) .risk-scores {
+    background: var(--bg-2);
+  }
+  :where(.turnfin-docs) .matrix-details {
+    display: none;
+  }
+  :where(.turnfin-docs) .print-footer {
+    display: block;
+    border-top: 1px solid var(--label-2);
+    padding-top: 10px;
+    margin-top: 25px;
+    color: var(--label-2);
+    font-size: 9pt;
+  }
+  :where(.turnfin-docs) a {
+    color: var(--label);
+  }
+  :where(.turnfin-docs) .document-prose a {
+    text-decoration: underline;
+  }
+}
+:where(.turnfin-docs) .risk-scores > dl {
+  margin: 0;
+}
+}
+}
+/* workspace layouts from Turnfin Docs; scoped to the module. */
+/* The Turnfin interface: a quiet, editorial home for operational knowledge. */
+@layer components {
+  :where(.turnfin-docs) :scope {
+    scroll-behavior: auto;
+  }
+  :where(.turnfin-docs) :scope {
+    font-size: var(--type-body);
+    line-height: var(--type-body-leading);
+  }
+  :where(.turnfin-docs) h1,
+  :where(.turnfin-docs) h2,
+  :where(.turnfin-docs) h3,
+  :where(.turnfin-docs) h4 {
+    font-family: var(--font-sans);
+    font-weight: 600;
+  }
+  :where(.turnfin-docs) h1 {
+    font-size: 34px;
+    line-height: 41px;
+    text-wrap: balance;
+  }
+  :where(.turnfin-docs) h2 {
+    font-size: 20px;
+    line-height: 25px;
+    text-wrap: balance;
+  }
+  :where(.turnfin-docs) h3 {
+    font-size: var(--type-body);
+  }
+  :where(.turnfin-docs) input,
+  :where(.turnfin-docs) select,
+  :where(.turnfin-docs) textarea {
+    border-color: var(--ui-input);
+    background: var(--ui-background);
+    color: var(--label);
+    border-radius: var(--radius-lg);
+  }
+  :where(.turnfin-docs) input:focus,
+  :where(.turnfin-docs) textarea:focus,
+  :where(.turnfin-docs) select:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+  :where(.turnfin-docs) label,
+  :where(.turnfin-docs) legend {
+    font-size: var(--type-body);
+    font-weight: 600;
+  }
+  :where(.turnfin-docs) .muted,
+  :where(.turnfin-docs) label small {
+    color: var(--label-2);
+  }
+  :where(.turnfin-docs) .icon-button {
+    border-radius: var(--radius-capsule);
+    min-width: 36px;
+    min-height: 36px;
+  }
+  :where(.turnfin-docs) .workspace-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px;
+    min-height: 40px;
+    border: 1px solid var(--ui-input);
+    border-radius: var(--radius-capsule);
+    background: transparent;
+    color: var(--label-2);
+  }
+  :where(.turnfin-docs) .workspace-search input {
+    width: 100%;
+    min-width: 0;
+    padding: 8px 0;
+    font-size: 12px;
+    background: transparent;
+    border: 0;
+    outline: none;
+    box-shadow: none;
+  }
+  :where(.turnfin-docs) .workspace-search:focus-within {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+  :where(.turnfin-docs) .workspace-search input:focus {
+    outline: none;
+    box-shadow: none;
+  }
+  /* Keep spacing off the scrollport so sticky controls meet the header. */
+  :where(.turnfin-docs) .workspace-page-content {
+    width: 100%;
+    max-width: none;
+    padding: 38px clamp(24px, 3.1vw, 56px);
+    margin: 0 auto;
+  }
+  :where(.turnfin-docs) .workspace-page-content > * {
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  :where(.turnfin-docs) .reading-title > strong {
+    font-size: var(--type-body);
+  }
+  :where(.turnfin-docs) .reading-title > span {
+    font-size: 12px;
+  }
+
+  :where(.turnfin-docs) .document-prose {
+    font-size: var(--reading-size);
+    color: var(--label);
+  }
+  :where(.turnfin-docs) .document-prose li::marker,
+  :where(.turnfin-docs) .document-prose strong {
+    color: var(--label);
+  }
+  :where(.turnfin-docs) .document-prose ol {
+    list-style: decimal;
+  }
+  :where(.turnfin-docs) .document-prose ul {
+    list-style: disc;
+  }
+  :where(.turnfin-docs) .document-prose ul ul {
+    list-style: circle;
+  }
+  :where(.turnfin-docs) .document-callout {
+    background: var(--ui-status-blue-bg);
+    color: var(--ui-status-blue);
+    border-color: var(--sep);
+  }
+  :where(.turnfin-docs) .document-callout.warning {
+    background: var(--ui-status-yellow-bg);
+    color: var(--ui-status-yellow);
+  }
+  @media (max-width: 1200px) {
+    :where(.turnfin-docs) .workspace-page-content {
+      padding: 30px 24px;
+    }
+  }
+  @media (max-width: 767px) {
+    :where(.turnfin-docs) .workspace-page-content {
+      padding: 28px 20px;
+    }
+    :where(.turnfin-docs) .risk-rating-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  @media (pointer: coarse), (max-width: 767px) {
+    :where(.turnfin-docs) .icon-button,
+    :where(.turnfin-docs) .toolbar-button {
+      min-height: 44px;
+    }
+    :where(.turnfin-docs) .icon-button,
+    :where(.turnfin-docs) .toolbar-button {
+      min-width: 44px;
+    }
+    :where(.turnfin-docs) select,
+    :where(.turnfin-docs) input:not([type='checkbox'], [type='radio'], [type='hidden']),
+    :where(.turnfin-docs) textarea {
+      min-height: 44px;
+      font-size: var(--type-body);
+    }
+  }
+  @media print {
+    :where(.turnfin-docs) .workspace-page-content {
+      display: block;
+      width: auto;
+      height: auto;
+      min-height: auto;
+      overflow: visible;
+      padding: 0;
+      margin: 0;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      background: var(--bg-2);
+    }
+    :where(.turnfin-docs) .document-prose {
+      color: var(--label);
+      font-size: 11pt;
+    }
+    :where(.turnfin-docs) .document-callout {
+      background: var(--fill-2) !important;
+      color: var(--label);
+    }
+  }
+}
+@media (forced-colors: active) {
+  :where(.turnfin-docs) input:focus-visible,
+  :where(.turnfin-docs) textarea:focus-visible,
+  :where(.turnfin-docs) select:focus-visible,
+  :where(.turnfin-docs) .workspace-search:focus-within {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :where(.turnfin-docs) *,
+  :where(.turnfin-docs) *::before,
+  :where(.turnfin-docs) *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  :where(.turnfin-docs) .ui-motion-press,
+  :where(.turnfin-docs) [data-motion] {
+    translate: none !important;
+    scale: none !important;
+    rotate: none !important;
+  }
+}
+/* flows layouts from Turnfin Docs; scoped to the module. */
+/* Task-oriented layouts. Colours follow the retained Turnfin logo. */
+@layer components {
+  :where(.turnfin-docs) .report-filter-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 44px;
+    margin-bottom: 16px;
+  }
+  :where(.turnfin-docs) .report-filter-heading h2 {
+    font-size: var(--type-body);
+  }
+  :where(.turnfin-docs) .report-records-heading {
+    padding: 22px;
+    border-bottom: 1px solid var(--sep);
+  }
+  :where(.turnfin-docs) .report-records-heading h2 {
+    font-size: 20px;
+  }
+  :where(.turnfin-docs) .report-records-heading p {
+    font-size: 12px;
+    color: var(--label-2);
+    margin-top: 7px;
+  }
+  @media (max-width: 800px) {
+    :where(.turnfin-docs) .staff-directory > .table-scroll {
+      display: none;
+    }
+    :where(.turnfin-docs) .report-filter-heading {
+      float: none;
+      margin: 0;
+      gap: 12px;
+    }
+    :where(.turnfin-docs) #report-filter-fields {
+      clear: both;
+      padding-top: 20px;
+    }
+  }
+}
+/* Button display utilities must not override breakpoint visibility. */
+/* controls layouts from Turnfin Docs; scoped to the module. */
+/* shadcn compositions with Turnfin's established layout and touch targets. */
+:where(.turnfin-docs) [data-slot='native-select-wrapper'] {
+  min-width: 0;
+}
+:where(.turnfin-docs) [data-slot='native-select'] {
+  min-height: 2.5rem;
+  padding-right: 2.25rem;
+  color: var(--ui-foreground);
+  background-color: var(--ui-background);
+}
+:where(.turnfin-docs) .workspace-search [data-slot='input'] {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+@media (max-width: 48rem), (pointer: coarse) {
+  :where(.turnfin-docs) [data-slot='native-select'] {
+    min-height: 2.75rem;
+    font-size: 1rem;
+  }
+}
+:where(.turnfin-docs) .matrix-disclosure[data-state='closed'] {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  :where(.turnfin-docs) [data-slot] {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+@media print {
+  :where(.turnfin-docs) .matrix-disclosure[data-state='closed'] {
+    display: block;
+  }
+  :where(.turnfin-docs) [data-slot='dialog-overlay'],
+  :where(.turnfin-docs) [data-slot='dialog-content'],
+  :where(.turnfin-docs) [data-slot='alert-dialog-overlay'],
+  :where(.turnfin-docs) [data-slot='alert-dialog-content'],
+  :where(.turnfin-docs) [data-slot='popover-content'] {
+    display: none !important;
+  }
+}
+
+/* The reader (V2Document): the contents rail's 44px row links inside their card, no box of their own. */
+@layer components {
+  :where(.turnfin-docs) .reader-contents-link {
+    display: flex;
+    align-items: center;
+    min-height: var(--control-height);
+    padding: 10px 12px;
+    border: 0;
+    border-radius: var(--radius-lg);
+    color: var(--label);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  :where(.turnfin-docs) .reader-contents-link[data-nested] {
+    margin-left: 16px;
+    font-weight: 400;
+  }
+  :where(.turnfin-docs) .reader-contents-link:hover {
+    background: var(--fill-2);
+  }
+  :where(.turnfin-docs) .document-prose {
+    line-height: 1.625;
+  }
+  /* The editor (DCEdit): writing beside the document details from 1100px, stacked below. */
+  :where(.turnfin-docs) .editor-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+  }
+  :where(.turnfin-docs) .editor-choices {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  :where(.turnfin-docs) .editor-choices > legend {
+    margin-bottom: 4px;
+    padding: 0;
+  }
+  /* The attachments drop zone: the label is the target; the file input inside stays sr-only. */
+  :where(.turnfin-docs) .editor-drop-zone {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 24px 16px;
+    border: 1px dashed var(--label-2);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    cursor: pointer;
+  }
+  :where(.turnfin-docs) .editor-drop-zone:hover {
+    background: var(--fill-2);
+  }
+  :where(.turnfin-docs) .editor-drop-zone:focus-within {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  :where(.turnfin-docs) .editor-drop-zone:has(input:disabled) {
+    border-color: var(--sep);
+    background: var(--fill-2);
+    color: var(--label-2);
+    cursor: not-allowed;
+  }
+  :where(.turnfin-docs) .risk-edit-row {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+    margin: 0;
+    padding: 16px;
+    border: 1px solid var(--sep);
+    border-radius: var(--radius-lg);
+  }
+  /* New document steps (DCNew): a static sunken pill row, the current step white with an edge.
+     Not links, so no hover. On phones only the current step shows, as "Step 2 of 3 · …". */
+  :where(.turnfin-docs) .create-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-self: flex-start;
+    max-width: 100%;
+    margin: 0;
+    padding: 4px;
+    border-radius: var(--radius-card);
+    background: var(--fill-2);
+    list-style: none;
+  }
+  :where(.turnfin-docs) .create-steps > li {
+    display: flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 16px;
+    border-radius: var(--radius-capsule);
+    color: var(--label-2);
+    font-weight: 600;
+  }
+  :where(.turnfin-docs) .create-steps > li[aria-current] {
+    background: var(--bg-2);
+    box-shadow: inset 0 0 0 1px var(--label-2);
+    color: var(--label);
+  }
+  :where(.turnfin-docs) .create-step-of {
+    display: none;
+  }
+  :where(.turnfin-docs) .template-choice {
+    align-items: center;
+  }
+  @media (max-width: 600px) {
+    :where(.turnfin-docs) .create-steps > li:not([aria-current]) {
+      display: none;
+    }
+    :where(.turnfin-docs) .create-step-of {
+      display: inline;
+      white-space: pre;
+    }
+    :where(.turnfin-docs) .create-steps .create-step-number {
+      display: none;
+    }
+  }
+  /* Risk matrix bands (DCAdmin): one header row from 768px, each input labelled for screen
+     readers; on phones every row shows its own labels and nothing scrolls sideways. */
+  :where(.turnfin-docs) .risk-band-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+    align-items: end;
+    padding: 12px 16px;
+    border: 1px solid var(--sep);
+    border-radius: var(--radius-lg);
+  }
+  :where(.turnfin-docs) .risk-band-row > :first-child {
+    grid-column: 1 / -1;
+  }
+  :where(.turnfin-docs) .risk-band-row label {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+  :where(.turnfin-docs) .risk-band-header {
+    display: none;
+  }
+  @media (min-width: 768px) {
+    :where(.turnfin-docs) .risk-band-row {
+      grid-template-columns: minmax(0, 2fr) 5.5rem 5.5rem minmax(0, 1.5fr) 9.5rem;
+      align-items: center;
+    }
+    :where(.turnfin-docs) .risk-band-row > :first-child {
+      grid-column: auto;
+    }
+    :where(.turnfin-docs) .risk-band-header {
+      display: grid;
+      padding-block: 0;
+      border: 0;
+      color: var(--label-2);
+      font-size: 12px;
+      line-height: 16px;
+      font-weight: 600;
+    }
+    :where(.turnfin-docs) .risk-band-row .risk-band-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+  }
+  /* A main panel with a side panel from 1100px (DCHistory's versions and activity log, the
+     admin groups and their form). */
+  :where(.turnfin-docs) .docs-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+  }
+  @media (min-width: 1100px) {
+    :where(.turnfin-docs) .docs-split {
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+    }
+    :where(.turnfin-docs) .docs-split > :only-child {
+      grid-column: 1 / -1;
+    }
+  }
+  @media (min-width: 1100px) {
+    :where(.turnfin-docs) .editor-columns {
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+    }
+  }
+}
+/* Printing a document: only the document itself, without the frame, the page actions, the rail
+   or the notices. */
+@media print {
+  :where(.turnfin-docs) :is(.tf-top, .tf-side, .tf-bottom, .reader-rail, .reader-workspace [data-slot='alert']) {
+    display: none !important;
+  }
+  :where(.turnfin-docs) .reader-workspace > :first-child :is(.pc-phead-actions, a) {
+    display: none !important;
+  }
+  :where(.turnfin-docs) :is(.tf-shell, .tf-frame) {
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+  :where(.turnfin-docs) .document-article {
+    padding: 0;
+    --reading-size: 11pt;
+  }
+  :where(.turnfin-docs) .document-article .print-footer {
+    display: block;
+  }
+}

@@ -2,10 +2,10 @@ import "server-only";
 import { cache } from "react";
 import type { Session } from "next-auth";
 import { requireSession, AuthorizationError } from "@/lib/authz";
-import { logAudit } from "@/lib/audit";
+import { appPermissions } from "@/modules/registry";
 import { prisma } from "@/lib/prisma";
 import type { PermissionKey } from "@/lib/staff/permissions";
-import { actorFrom, can, needsStepUp, recentlyConfirmed, siteFilter, subjectFilter } from "./engine";
+import { actorFrom, can, needsStepUp, siteFilter, subjectFilter } from "./engine";
 import { scopeFrom, type Actor, type Directory, type Resource } from "./types";
 
 /** The running app's connection to the policy engine. Modules call these;
@@ -25,11 +25,12 @@ export function actorForSession(session: Session): Actor {
     }),
     authMethod: user.authMethod ?? "password",
     authAt: user.authAt ?? null,
+    withheld: appPermissions(user.appsOff ?? []),
   });
 }
 
 /** The organisation chart from the main database, memoised per request. */
-export const prismaDirectory = cache((): Directory => {
+const prismaDirectory = cache((): Directory => {
   const memo = new Map<string, Promise<unknown>>();
   const once = <T,>(key: string, load: () => Promise<T>) => {
     if (!memo.has(key)) memo.set(key, load());
@@ -87,23 +88,8 @@ export async function sitesFor(cap: PermissionKey) {
   return siteFilter(await currentActor(), cap);
 }
 
-export class StepUpRequired extends AuthorizationError {
+class StepUpRequired extends AuthorizationError {
   constructor() { super("Confirm your password to open this."); }
-}
-
-/** Read-audit for restricted data: who looked at whose records, and why.
- *  Modules with their own database write the same shape to their own table. */
-export async function logAccess(input: { actor: Actor; cap: PermissionKey; entity: string; entityId?: string; subjectUserIds: readonly string[]; purpose: string }) {
-  if (input.subjectUserIds.length === 0) return;
-  await logAudit({
-    actorId: input.actor.id,
-    actorName: input.actor.name,
-    action: "view",
-    entity: input.entity,
-    entityId: input.entityId,
-    summary: `${input.actor.name} viewed ${input.purpose} (${input.cap})`,
-    details: { cap: input.cap, subjectUserIds: [...input.subjectUserIds].slice(0, 200) },
-  });
 }
 
 /** For pages that open restricted records: sends the person to confirm their
@@ -112,17 +98,6 @@ export async function logAccess(input: { actor: Actor; cap: PermissionKey; entit
 export async function requireFreshSession(cap: PermissionKey, returnTo: string) {
   const actor = await currentActor();
   if (needsStepUp(actor, cap)) {
-    const { redirect } = await import("next/navigation");
-    redirect(`/confirm-password?next=${encodeURIComponent(returnTo)}`);
-  }
-  return actor;
-}
-
-/** For a person's own restricted records (their shared HR notes and reviews):
- *  the same recent-password rule as restricted capabilities, without one. */
-export async function requireRecentPassword(returnTo: string) {
-  const actor = await currentActor();
-  if (!recentlyConfirmed(actor)) {
     const { redirect } = await import("next/navigation");
     redirect(`/confirm-password?next=${encodeURIComponent(returnTo)}`);
   }

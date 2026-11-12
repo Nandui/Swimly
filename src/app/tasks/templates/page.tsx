@@ -6,11 +6,12 @@ import { Label } from "@/components/shadcn/label";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { SearchField } from "@/components/ui-kit/search-field";
 import { Tag } from "@/components/ui-kit/tag";
-import { ArchiveTemplate, CopyTemplate } from "@/components/tasks/template-actions";
-import { taskTemplates } from "@/lib/tasks/data";
-import { TEMPLATE_KIND_SHORT, TEMPLATE_STATUS_META, scheduleLabel, type TemplateStatus } from "@/lib/tasks/rules";
+import {
+  ArchiveTemplate, CopyTemplate, scheduleLabel, taskTemplates, TEMPLATE_KIND_SHORT, TEMPLATE_STATUS_META, type TemplateStatus,
+} from "@/modules/tasks/features/templates";
 
 export const metadata: Metadata = { title: "Manage tasks" };
 
@@ -25,16 +26,15 @@ export default async function TaskTemplatesPage({ searchParams }: { searchParams
   const roleName = new Map(roles.map((r) => [r.id, r.name]));
   const filtered = !!(filters.q || filters.tag || filters.state !== "all");
   return (
-    <>
-      <PageHeader title="Manage tasks" description="Build, schedule and assign the work that keeps your sites running. Changing a template never rewrites a task already made."
+    <PageShell header={<PageHeader title="Manage tasks" description="Build, schedule and assign the work that keeps your sites running. Changing a template never rewrites a task already made."
         actions={<>
           <Button asChild variant="outline"><a href="/tasks/export.json"><Download aria-hidden="true" />Export everything</a></Button>
           <Button asChild><Link href="/tasks/templates/new"><Plus aria-hidden="true" />Create task</Link></Button>
-        </>} />
-      <section className="pc-panel" aria-labelledby="tpl-library">
-        <div className="pc-panel-head">
-          <div className="flex flex-col gap-1"><h2 id="tpl-library">Task library <span className="text-ui-muted-foreground tabular-nums">· {templates.length}{filtered ? ` of ${total}` : ""}</span></h2><p className="pc-row-hint">Reusable routines, built for your team.</p></div>
-        </div>
+        </>} />}>
+      <section className="flex min-w-0 flex-col" aria-labelledby="tpl-library">
+        <div className="pc-section-head"><h2 id="tpl-library">Task library</h2><p>{templates.length}{filtered ? ` of ${total}` : ""}</p></div>
+        <p className="pc-section-note">Reusable routines, built for your team.</p>
+        <div className="pc-panel">
         <form method="get" role="search" aria-label="Filter the library" className="flex flex-wrap items-end gap-4">
           <SearchField label="Find a task" placeholder="Title or tag" name="q" defaultValue={filters.q} className="grow basis-56" />
           <div className="min-w-0 grow basis-40 space-y-2 sm:grow-0 sm:min-w-40"><Label htmlFor="tpl-state" className="block">State</Label>
@@ -77,7 +77,8 @@ export default async function TaskTemplatesPage({ searchParams }: { searchParams
             ))}
           </ul>
         )}
+        </div>
       </section>
-    </>
+    </PageShell>
   );
 }

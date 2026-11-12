@@ -1,7 +1,7 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
-// Turnfin: colour comes from data-tone (poolside.css), and there is no default role, so a
+// Turnfin: colour comes from data-tone (kit.css), and there is no default role, so a
 // static notice does not interrupt a screen reader. Use Notice from ui-kit, not this directly.
 type AlertTone = "info" | "warning" | "error" | "success"
 
@@ -15,7 +15,7 @@ function Alert({
       data-slot="alert"
       data-tone={tone}
       className={cn(
-        "relative grid w-full grid-cols-[0_1fr] items-start gap-y-0.5 rounded-ui-lg px-4 py-3 text-sm has-[>svg]:grid-cols-[calc(var(--spacing)*4)_1fr] has-[>svg]:gap-x-3 [&>svg]:size-4 [&>svg]:translate-y-0.5",
+        "relative grid w-full grid-cols-alert items-start gap-y-0.5 rounded-ui-lg px-4 py-3 text-sm has-[>svg]:grid-cols-alert-icon has-[>svg]:gap-x-3 [&>svg]:size-4 [&>svg]:translate-y-0.5",
         className
       )}
       {...props}

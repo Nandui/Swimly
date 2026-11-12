@@ -1,10 +1,5 @@
 import { notFound } from 'next/navigation';
-import { requireMember } from '@/lib/docs/auth';
-import { database, rows } from '@/lib/docs/database';
-import { documentView, DomainError } from '@/lib/docs/domain';
-import { workspace } from '@/lib/docs/queries';
-import { canWrite, type AuditEvent } from '@/lib/docs/types';
-import { HistoryView } from '@/components/docs/history';
+import { type AuditEvent, canWrite, database, documentView, DomainError, HistoryView, requireMember, rows, workspace } from "@/modules/docs/features/history";
 import type { Metadata } from 'next';
 import { cache } from 'react';
 

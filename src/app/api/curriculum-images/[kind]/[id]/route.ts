@@ -1,9 +1,10 @@
+import { appRoute } from "@/lib/apps/switches";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
-export async function GET(request: Request, { params }: { params: Promise<{ kind: string; id: string }> }) {
+async function serveGet(request: Request, { params }: { params: Promise<{ kind: string; id: string }> }) {
   const session = await auth();
   if (!session?.user) return new Response(null, { status: 401, headers: { "Cache-Control": "no-store" } });
   const { kind, id } = await params;
@@ -25,3 +26,5 @@ export async function GET(request: Request, { params }: { params: Promise<{ kind
   if (request.headers.get("if-none-match") === headers.ETag) return new Response(null, { status: 304, headers });
   return new Response(new Uint8Array(row.imageData), { headers });
 }
+
+export const GET = appRoute("swim-school", serveGet);

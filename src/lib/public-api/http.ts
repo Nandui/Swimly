@@ -4,8 +4,8 @@ import { z } from "zod";
  *  (/api/parent/v1), Turnfin Me (/api/staff/v1) and the Academy booking site
  *  (/api/academy/v1). One contract: JSON only, small bodies, allowlisted
  *  origins, no cookies, never cached, and one error envelope. Each API keeps its
- *  own config, secret, routes and wording (docs/architecture.md, "Core owns
- *  shared plumbing"). */
+ *  own config, secret, routes and wording (docs/architecture.md, "Platform
+ *  services"). */
 
 /** An error the API means to show. Messages are written for the API's own
  *  users and never contain record values, credentials or provider details. */
@@ -35,6 +35,12 @@ export function bearerToken(request: Request, shape: RegExp = /^[A-Za-z0-9_-]{20
 }
 
 export function json(data: unknown, status = 200) { return Response.json(data, { status }); }
+
+/** Who is calling, for rate limits. Only Vercel's overwritten IP header is trusted;
+ *  anywhere else every caller shares one bucket. */
+export function requestIp(request: Request): string {
+  return process.env.VERCEL === "1" ? (request.headers.get("x-real-ip") ?? "unknown").slice(0, 100) : "anonymous";
+}
 
 export type PublicApiOptions = {
   /** Names the API in the server log, e.g. "Staff API". */

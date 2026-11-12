@@ -1,7 +1,6 @@
-import { requireActionMember } from '@/lib/docs/auth';
-import { readAttachment } from '@/lib/docs/files';
-import { DomainError } from '@/lib/docs/domain';
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+import { appRoute } from "@/lib/apps/switches";
+import { DomainError, readAttachment, requireActionMember } from "@/modules/docs/features/files";
+async function serveGet(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const m = await requireActionMember();
     const { file, bytes } = await readAttachment(m.id, (await params).id);
@@ -19,3 +18,5 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     });
   }
 }
+
+export const GET = appRoute("docs", serveGet);

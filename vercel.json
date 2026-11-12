@@ -11,6 +11,18 @@
     {
       "path": "/api/cron/tasks",
       "schedule": "30 1 * * *"
+    },
+    {
+      "path": "/api/cron/training",
+      "schedule": "30 5 * * *"
+    },
+    {
+      "path": "/api/cron/incidents",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/hr",
+      "schedule": "0 7 * * *"
     }
   ]
 }

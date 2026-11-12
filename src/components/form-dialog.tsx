@@ -21,7 +21,7 @@ import type {
   ActionConfirmation,
   ConfirmationReply,
 } from "@/lib/action-result";
-import { toast } from "@/lib/toast";
+import { toast } from "@/components/ui/toast";
 import { withTimeout } from "@/lib/save-feedback";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -29,6 +29,8 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { SearchablePicker } from "@/components/searchable-picker";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/shadcn/tooltip";
+import { ChangeReview } from "@/components/ui-kit/change-review";
+import { CountdownButton, useCountdown } from "@/components/ui/countdown-button";
 
 /** Every form dialog in the app, so the failure behaviour is written once.
  *
@@ -58,6 +60,9 @@ export function FormDialog({
   defaultOpen = false,
   destructive = false,
   cancelLabel = "Cancel",
+  pendingLabel,
+  timeoutMs,
+  countdown,
 }: {
   trigger: React.ReactNode;
   title: string;
@@ -84,6 +89,15 @@ export function FormDialog({
   onClose?: () => void;
   /** Open on arrival (initial state only), e.g. a home page quick action's `?add=1`. */
   defaultOpen?: boolean;
+  /** The submit's label while it runs, when "Saving…" would mislead (the AI writing a course). */
+  pendingLabel?: string;
+  /** How long to wait for a slow save before saying it couldn't be confirmed. */
+  timeoutMs?: number;
+  /** The dialog itself is the confirmation of a move or enrolment (Together's "Move them here"):
+   *  hold the submit for a few seconds, starting again whenever `key` changes; `blocked` keeps it
+   *  off (still checking, or a child cannot move). A server confirmation carrying a `change` is
+   *  held the same way without this. */
+  countdown?: { key: string; blocked?: boolean };
 }) {
   const [open, setOpen] = React.useState(defaultOpen);
   const rememberTrigger = useDialogTriggerFocus(open);
@@ -97,6 +111,11 @@ export function FormDialog({
     data: FormData;
   } | null>(null);
   const confirmationHeading = React.useRef<HTMLDivElement>(null);
+  const change = confirmation?.prompt.change;
+  const heldKey = !open ? null
+    : change ? JSON.stringify([confirmation.prompt.title, confirmation.prompt.ids])
+      : countdown && !countdown.blocked ? countdown.key : null;
+  const left = useCountdown(heldKey);
   React.useEffect(() => {
     if (confirmation) confirmationHeading.current?.focus();
   }, [confirmation]);
@@ -124,6 +143,7 @@ export function FormDialog({
     if (submitting.current) return;
     const formData = new FormData(event.currentTarget);
     if (confirmation) return;
+    if (countdown && (countdown.blocked || left > 0)) return;
     save(formData);
   }
 
@@ -134,7 +154,7 @@ export function FormDialog({
 
     startTransition(async () => {
       try {
-        const result = await withTimeout(submit(formData, reply));
+        const result = await withTimeout(submit(formData, reply), timeoutMs);
         if (result.ok) {
           toast.success(successMessage);
           startTransition(() => {
@@ -178,8 +198,9 @@ export function FormDialog({
           <DialogContent
             portalClassName={portalClassName}
             className={cn(
-              "flex max-h-[calc(100dvh-2rem)] flex-col gap-0 p-0",
+              "flex max-h-(--overlay-max-height) flex-col gap-0 p-0",
               width,
+              change && "sm:max-w-2xl",
             )}
             showCloseButton={false}
           >
@@ -218,6 +239,8 @@ export function FormDialog({
                   <div className="flex flex-col gap-4">{children}</div>
                 </fieldset>
 
+                {change ? <ChangeReview change={change} /> : null}
+
                 {error ? (
                   <div ref={summaryRef} tabIndex={-1}>
                     <Notice tone="error" live="alert" title={error} />
@@ -234,7 +257,32 @@ export function FormDialog({
                 >
                   {cancelLabel}
                 </Button>
-                {confirmation ? (
+                {change ? (
+                  <Button type="button" variant="outline" onClick={() => setConfirmation(null)} disabled={pending}>
+                    Back
+                  </Button>
+                ) : null}
+                {confirmation && change ? (
+                  confirmation.prompt.choices.map((choice, index, all) => (
+                    <CountdownButton
+                      key={choice.value}
+                      type="button"
+                      variant={index === all.length - 1 ? "default" : "outline"}
+                      left={left}
+                      pending={pending}
+                      pendingLabel={pendingLabel}
+                      announce={index === all.length - 1}
+                      onClick={() =>
+                        save(confirmation.data, {
+                          choice: choice.value,
+                          ids: confirmation.prompt.ids,
+                        })
+                      }
+                    >
+                      {choice.label}
+                    </CountdownButton>
+                  ))
+                ) : confirmation ? (
                   confirmation.prompt.choices.map((choice) => (
                     <Button
                       key={choice.value}
@@ -251,8 +299,10 @@ export function FormDialog({
                       {choice.label}
                     </Button>
                   ))
+                ) : countdown ? (
+                  <CountdownButton type="submit" left={left} disabled={countdown.blocked} pending={pending} pendingLabel={pendingLabel}>{submitLabel}</CountdownButton>
                 ) : (
-                  <LoadingButton type="submit" variant={destructive ? "destructive" : "default"} pending={pending}>{submitLabel}</LoadingButton>
+                  <LoadingButton type="submit" variant={destructive ? "destructive" : "default"} pending={pending} pendingLabel={pendingLabel}>{submitLabel}</LoadingButton>
                 )}
                 {confirmation && pending ? <span role="status" className="text-sm text-ui-muted-foreground">Saving change…</span> : null}
               </DialogFooter>
@@ -294,9 +344,14 @@ export function Trigger({
   children: React.ReactNode;
   onOpen: (element?: HTMLElement) => void;
 }) {
-  if (React.isValidElement<{ onClick?: React.MouseEventHandler; "aria-label"?: string; size?: string }>(children)) {
-    const inner = children.props.onClick;
-    const trigger = React.cloneElement(children, {
+  // A trigger handed down from a server page can arrive as a lazy element, which
+  // isValidElement refuses; Children.toArray resolves it, so the server and the
+  // browser draw the same single button.
+  const parts = React.Children.toArray(children);
+  const child = parts.length === 1 ? parts[0] : children;
+  if (React.isValidElement<{ onClick?: React.MouseEventHandler; "aria-label"?: string; size?: string }>(child)) {
+    const inner = child.props.onClick;
+    const trigger = React.cloneElement(child, {
       ...{ "aria-haspopup": "dialog" as const },
       onClick: (event: React.MouseEvent) => {
         inner?.(event);
@@ -306,8 +361,8 @@ export function Trigger({
         }
       },
     });
-    return children.props.size?.startsWith("icon") && children.props["aria-label"]
-      ? <Tooltip><TooltipTrigger asChild>{trigger}</TooltipTrigger><TooltipContent>{children.props["aria-label"]}</TooltipContent></Tooltip>
+    return child.props.size?.startsWith("icon") && child.props["aria-label"]
+      ? <Tooltip><TooltipTrigger asChild>{trigger}</TooltipTrigger><TooltipContent>{child.props["aria-label"]}</TooltipContent></Tooltip>
       : trigger;
   }
   return (

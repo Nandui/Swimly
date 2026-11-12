@@ -21,9 +21,9 @@ import { roleColumns } from "../src/lib/staff/levels";
 import { seedTasks } from "./sandbox-tasks";
 
 export const SANDBOX_PASSWORD = "sandbox-turnfin-2026";
-// SANDBOX_DB_PORT moves the three databases (main, then Docs and HR on the next two ports), for a second sandbox.
+// SANDBOX_DB_PORT moves the two databases (main, then Docs on the next port), for a second sandbox.
 const DB_PORT = Number(process.env.SANDBOX_DB_PORT ?? 54391);
-const PORTS = { main: DB_PORT, docs: DB_PORT + 1, hr: DB_PORT + 2, app: Number(process.env.SANDBOX_PORT ?? 3100) };
+const PORTS = { main: DB_PORT, docs: DB_PORT + 1, app: Number(process.env.SANDBOX_PORT ?? 3100) };
 
 async function serve(name: string, port: number, migrate: (db: PGlite) => Promise<void>) {
   const db = new PGlite();
@@ -38,15 +38,14 @@ const mainUrl = await serve("main", PORTS.main, async (db) => {
   for (const folder of readdirSync("prisma/migrations").filter((name) => /^\d/.test(name)).sort()) {
     await db.exec(readFileSync(`prisma/migrations/${folder}/migration.sql`, "utf8"));
   }
+  // HR is the turnfin_hr schema in the main database (D23).
+  for (const file of readdirSync("hr-database/migrations").sort()) await db.exec(readFileSync(`hr-database/migrations/${file}`, "utf8"));
+  // HR's migrations set search_path on this one session; the rest of Turnfin lives in public.
+  await db.exec("SET search_path = public");
 });
 const docsUrl = await serve("docs", PORTS.docs, async (db) => {
   for (const file of readdirSync("docs-database/migrations").sort()) await db.exec(readFileSync(`docs-database/migrations/${file}`, "utf8"));
 });
-const hrUrl = existsSync("hr-database/migrations")
-  ? await serve("hr", PORTS.hr, async (db) => {
-      for (const file of readdirSync("hr-database/migrations").sort()) await db.exec(readFileSync(`hr-database/migrations/${file}`, "utf8"));
-    })
-  : null;
 
 // ---------------------------------------------------------------------------
 // A fictional leisure group
@@ -54,7 +53,7 @@ const hrUrl = existsSync("hr-database/migrations")
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: mainUrl }) });
 const ORG = "org_leisureworld";
 // The migrations create the first customer's organisation and two sites. Rename them to
-// invented names, so nothing captured here (Help's screenshots, docs/help-centre.md) shows them.
+// invented names, so nothing captured here (Help's screenshots) shows them.
 await prisma.organisation.update({ where: { id: ORG }, data: { name: "Example Leisure" } });
 await prisma.club.update({ where: { id: "club_bishopstown" }, data: { name: "Riverside" } });
 await prisma.club.update({ where: { id: "club_churchfield" }, data: { name: "Hillview" } });
@@ -63,15 +62,17 @@ const hash = await bcrypt.hash(SANDBOX_PASSWORD, 10);
 export const SANDBOX_PIN = "2580";
 const pinHash = await bcrypt.hash(SANDBOX_PIN, 10);
 const roles: Record<string, string> = {};
-// The roles from "How Turnfin works" (docs/how-turnfin-works.md), as levels.
+// The roles from "How Turnfin works" (docs/apps.md), as levels.
 const levelRoles: { name: string; homeName: string; levels: Record<string, string>; extras?: string[]; system?: boolean }[] = [
   { name: "Admin", homeName: "Management", levels: { admin: "manage" }, system: true },
   { name: "Instructor", homeName: "Pool deck", levels: { "pool-deck": "teach" }, system: true },
-  { name: "Receptionist", homeName: "Front of House", levels: { "swim-school": "desk", refunds: "use", vouchers: "redeem", docs: "read", rota: "view", tasks: "do" } },
-  { name: "Lifeguard", homeName: "Poolside", levels: { docs: "read", rota: "view", tasks: "do" } },
-  { name: "Pool supervisor", homeName: "Pool planning", levels: { docs: "read", rota: "plan", academy: "run", tasks: "review" } },
-  { name: "Duty manager", homeName: "Duty desk", levels: { "swim-school": "desk", refunds: "manage", vouchers: "manage", docs: "read", training: "trainer", rota: "manage", academy: "run", tasks: "review" }, extras: ["swim-school.cancel-classes"] },
-  { name: "Swim school manager", homeName: "Swim school office", levels: { "swim-school": "manage", "pool-deck": "lead", docs: "manage", training: "manage", rota: "manage", hr: "team", academy: "manage", tasks: "manage" }, extras: ["swim-school.cancel-classes", "docs.approve"] },
+  { name: "Receptionist", homeName: "Front of House", levels: { risk: "view", "swim-school": "desk", "finance-requests": "use", vouchers: "redeem", docs: "read", rota: "view", plan: "view", tasks: "do", stock: "count", maintenance: "report" } },
+  { name: "Lifeguard", homeName: "Poolside", levels: { risk: "view", docs: "read", rota: "view", plan: "view", tasks: "do", maintenance: "report" } },
+  { name: "Pool supervisor", homeName: "Pool planning", levels: { risk: "view", docs: "read", rota: "plan", plan: "plan", academy: "tutor", "pool-deck": "teach", tasks: "review", incidents: "report", maintenance: "report", staffing: "supervise" } },
+  { name: "Duty manager", homeName: "Duty desk", levels: { risk: "write", "swim-school": "desk", "finance-requests": "manage", vouchers: "manage", docs: "read", training: "trainer", rota: "manage", plan: "manage", academy: "tutor", "pool-deck": "teach", tasks: "review", incidents: "report", cctv: "record", maintenance: "manage", hr: "team", staffing: "run" }, extras: ["swim-school.cancel-classes"] },
+  { name: "Swim school manager", homeName: "Swim school office", levels: { "swim-school": "manage", "pool-deck": "lead", docs: "manage", training: "manage", qualifications: "keep", rota: "manage", plan: "manage", hr: "sites", academy: "manage", tasks: "manage", incidents: "report" }, extras: ["swim-school.cancel-classes", "docs.approve"] },
+  { name: "Centre manager", homeName: "Centre office", levels: { risk: "manage", docs: "read", rota: "manage", plan: "manage", tasks: "review", incidents: "investigate", stock: "manage", cctv: "review", "site-monitoring": "act", maintenance: "manage", hr: "sites", staffing: "manage" } },
+  { name: "Operations manager", homeName: "Operations", levels: { risk: "manage", docs: "read", tasks: "review", incidents: "manage", stock: "manage", cctv: "review", "site-monitoring": "act", maintenance: "manage", staffing: "manage" }, extras: ["risk.signoff"] },
 ];
 for (const [i, role] of levelRoles.entries()) {
   const data = { homeName: role.homeName, ...roleColumns({ levels: role.levels, extras: role.extras ?? [] }) };
@@ -97,6 +98,8 @@ const people: Seed[] = [
   { id: "sbx_sam", name: "Sam Example", role: "Pool supervisor", title: "Pool supervisor, Hillview", site: "club_churchfield", departments: ["dept_aquatics"], manager: "sbx_liam", sites: ["club_churchfield"] },
   { id: "sbx_ciara", name: "Ciara Example", role: "Lifeguard", title: "Lifeguard", site: "club_churchfield", departments: ["dept_aquatics"], manager: "sbx_sam", sites: ["club_churchfield"] },
   { id: "sbx_conor", name: "Conor Example", role: "Lifeguard", title: "Lifeguard", site: "club_churchfield", departments: ["dept_aquatics"], manager: "sbx_sam", sites: ["club_churchfield"] },
+  { id: "sbx_orla", name: "Orla Example", role: "Centre manager", title: "Centre manager, Hillview", site: "club_churchfield", departments: [], manager: "sbx_owen", sites: ["club_churchfield"] },
+  { id: "sbx_owen", name: "Owen Example", role: "Operations manager", title: "Operations manager", site: "club_bishopstown", departments: [], manager: "sbx_alex" },
   { id: "sbx_dylan", name: "Dylan Example", role: "Lifeguard", title: "Lifeguard", site: "club_churchfield", departments: ["dept_aquatics"], manager: "sbx_sam", sites: ["club_churchfield"] },
 ];
 for (const p of people) {
@@ -110,7 +113,7 @@ for (const p of people) {
   if (p.manager) await prisma.user.update({ where: { id: p.id }, data: { managerId: p.manager } });
   for (const [i, departmentId] of p.departments.entries()) await prisma.userDepartment.create({ data: { userId: p.id, departmentId, isPrimary: i === 0 } });
 }
-// One role each (docs/how-turnfin-works.md): no extra roles.
+// One role each (docs/apps.md): no extra roles.
 const soon = new Date(); soon.setUTCDate(soon.getUTCDate() + 30);
 const past = new Date(); past.setUTCDate(past.getUTCDate() - 10);
 await prisma.qualification.createMany({ data: [
@@ -134,21 +137,40 @@ for (const [i, [id, name, requires, holders]] of positions.entries()) {
   await prisma.user.updateMany({ where: { id: { in: holders } }, data: { positionId: id, jobTitle: name, contractType: "full-time", contractMinutes: 39 * 60 } });
 }
 
-// Tasks (docs/tasks.md): templates and two weeks of history at both sites.
+// Staffing: four pool staff at Hillview (teachers, a lifeguard and two who do both) and its weekly slots, so Sam can start a block.
+await prisma.staffingTeacher.createMany({ data: [
+  { orgId: ORG, userId: "sbx_ava", college: "ucc", contract: "swim_teacher_lifeguard" },
+  { orgId: ORG, userId: "sbx_ciara", college: "mtu", contract: "swim_teacher", wantsMore: true },
+  { orgId: ORG, userId: "sbx_conor", college: "ucc", contract: "lifeguard" },
+  { orgId: ORG, userId: "sbx_dylan", college: "none", contract: "swim_teacher_lifeguard" },
+] });
+await prisma.user.updateMany({ where: { id: { in: ["sbx_ciara", "sbx_conor"] } }, data: { contractMinutes: 12 * 60 } });
+await prisma.staffingSlot.createMany({ data: [
+  ...[2, 3, 4, 5].flatMap((weekday) => [
+    { orgId: ORG, siteId: "club_churchfield", weekday, role: "teaching", name: "School morning", startMin: 615, endMin: 795, needed: 2 },
+    { orgId: ORG, siteId: "club_churchfield", weekday, role: "teaching", name: "School afternoon", startMin: 840, endMin: 915, needed: 2 },
+  ]),
+  ...[1, 2, 3, 4, 5].map((weekday) => ({ orgId: ORG, siteId: "club_churchfield", weekday, role: "float", name: "Float", startMin: 960, endMin: 1110, needed: 1 })),
+  { orgId: ORG, siteId: "club_churchfield", weekday: 2, role: "lifeguard", name: "Rebel Rockets cover", startMin: 1080, endMin: 1140, needed: 1, hardToFill: true },
+] });
+await prisma.staffingSettings.create({ data: { orgId: ORG, values: { lifeguardTypeId: "qt_nplq" } } });
+
+// Tasks: templates and two weeks of history at both sites.
 await seedTasks(prisma, ORG, roles);
 
 const seedModule = "./sandbox-seed.ts";
 if (existsSync(new URL(seedModule, import.meta.url))) {
   const extra = await import(seedModule) as { seed: (ctx: { prisma: PrismaClient; docsUrl: string; hrUrl: string | null; roles: Record<string, string> }) => Promise<void> };
-  await extra.seed({ prisma, docsUrl, hrUrl, roles });
+  await extra.seed({ prisma, docsUrl, hrUrl: mainUrl, roles });
 }
 await prisma.$disconnect();
 
-console.log(`[sandbox] Seeded a fictional leisure group (Riverside and Hillview). Sign in as alex@sandbox.invalid (superadmin), maya@ (duty manager), sam@ (pool supervisor), liam@, ava@, noah@ or riley@sandbox.invalid with the sandbox password in scripts/sandbox.mts.`);
+console.log(`[sandbox] Seeded a fictional leisure group (Riverside and Hillview). Sign in as alex@sandbox.invalid (superadmin), maya@ (duty manager), sam@ (pool supervisor), orla@ (centre manager), owen@ (operations manager), liam@, ava@, noah@ or riley@sandbox.invalid with the sandbox password in scripts/sandbox.mts.`);
 const env = {
   ...process.env,
   DATABASE_URL: mainUrl, DIRECT_URL: mainUrl, DOCS_DATABASE_URL: docsUrl, DOCS_DIRECT_URL: docsUrl,
-  ...(hrUrl ? { HR_DATABASE_URL: hrUrl, HR_DIRECT_URL: hrUrl } : {}),
+  // Each PGlite is one Postgres session: parallel connections would cross their queries.
+  DATABASE_POOL_MAX: "1",
   AUTH_SECRET: "sandbox-only-secret-not-for-deployment-0000", AUTH_TRUST_HOST: "true",
   DEV_AUTH_BYPASS: "", NEXT_TELEMETRY_DISABLED: "1",
   // Turnfin Me (apps/me, port 3101) against this sandbox. Codes print here.
@@ -157,6 +179,8 @@ const env = {
   // The Academy booking site (apps/academy, port 3102) against this sandbox. Codes print here.
   ACADEMY_API_ENABLED: "true", ACADEMY_AUTH_SECRET: "sandbox-only-academy-secret-not-for-deployment",
   ACADEMY_API_ALLOWED_ORIGINS: "http://localhost:3102", ACADEMY_EMAIL_DEV_LOG: "true",
+  // Incidents' CCTV footage requests print their link here instead of emailing it.
+  INCIDENTS_EMAIL_DEV_LOG: "true",
 };
 const app = spawn("npx", ["next", "dev", "-p", String(PORTS.app)], { stdio: "inherit", env, shell: true });
 app.on("exit", (code) => process.exit(code ?? 0));

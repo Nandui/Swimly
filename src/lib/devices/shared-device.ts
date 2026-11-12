@@ -12,8 +12,6 @@ import { prisma } from "@/lib/prisma";
  *  it cannot be forged or moved to name another device. */
 
 export const DEVICE_COOKIE = "turnfin.device";
-/** Idle minutes before a shared-device session returns to the switch screen. */
-export { SHARED_IDLE_MINUTES } from "./constants";
 /** A shared-device session never lasts longer than this, idle or not. */
 export const SHARED_SESSION_MAX_MS = 12 * 60 * 60 * 1000;
 export const PIN_MAX_FAILURES = 5;

@@ -1,0 +1,313 @@
+/* Turnfin Me's own layout, in Turnfin Glass's phone frame (DESIGN.md; owner rules, 20 October 2026:
+   shadcn components only, no arbitrary values, no inline styles or new colours, every page in
+   PageShell and PageHeader). The tokens, the shadcn controls, the glass, the tab bar, the live
+   banner, lists, rows and tile icons come from the theme files, copies of Turnfin's
+   (scripts/lint/ui-rules.mjs checks they match). Colours here are only those tokens; status colour
+   comes from the metadata maps in src/lib/meta.ts, always with an icon. */
+.turnfin-app {
+  /* Me only: a 16px reading size for documents and lessons (.doc). */
+  --type-reading: 16px;
+  --type-reading-leading: 26px;
+}
+body.turnfin-app { min-height: 100dvh; background: var(--bg); }
+
+.muted { color: var(--label-2); }
+.caption { font-size: var(--type-caption); line-height: var(--type-caption-leading); color: var(--label-2); }
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.stack-sm { display: flex; flex-direction: column; gap: 8px; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* Frame (DESIGN.md, Phone): the page with its large title, clear of the status bar; the glass bar
+   with the inline title, which fades in once the large title scrolls under it; and the floating
+   tab bar, all in one 720px column. */
+.frame { min-height: 100dvh; display: flex; flex-direction: column; }
+.turnfin-app .me-nav { position: fixed; top: calc(8px + env(safe-area-inset-top)); left: 50%; z-index: 40; display: flex; align-items: center; justify-content: center; max-width: calc(100% - 40px); min-height: 44px; padding: 0 var(--space-5); border-radius: var(--radius-capsule); opacity: 0; translate: -50% -8px; pointer-events: none; transition: opacity var(--duration-fade) var(--ease), translate var(--duration-spring) var(--spring); }
+.turnfin-app .me-nav[data-shown] { opacity: 1; translate: -50% 0; }
+/* A live banner takes the top centre while it is up; the bar steps aside. */
+.turnfin-app:has(.live-banner) .me-nav[data-shown] { opacity: 0; }
+.turnfin-app .me-nav-title { overflow: hidden; font-size: 17px; line-height: 22px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.brand-name { font-size: var(--type-title); line-height: var(--type-title-leading); font-weight: 600; color: var(--label); }
+.page { flex: 1; width: 100%; max-width: 720px; margin: 0 auto; padding: max(24px, calc(12px + env(safe-area-inset-top))) 16px calc(104px + env(safe-area-inset-bottom)); }
+/* Sign-in: one narrow column with no bottom bar. */
+.page.narrow { max-width: 440px; padding-top: max(48px, env(safe-area-inset-top)); padding-bottom: calc(48px + env(safe-area-inset-bottom)); }
+
+/* ---------------------------------------------------------------------------------------------
+   Me only: the single place Me differs from Turnfin. Me has no module rail, so the bottom bar shows
+   at every width, capped to the page's 720px column, and clears the home indicator; the page
+   scrolls focus targets clear of it. */
+.turnfin-app .tf-bottom { display: flex; left: max(20px, calc(50% - 352px)); right: max(20px, calc(50% - 352px)); bottom: calc(24px + env(safe-area-inset-bottom)); }
+html:has(.tf-bottom) { scroll-padding-bottom: calc(112px + env(safe-area-inset-bottom)); }
+
+
+/* A line between a section's heading and its list (a day's times, a path's progress), and one
+   under the list (what the day still needs). Footnote size, the secondary label colour. */
+.turnfin-app .me-section-note { margin: calc(-1 * var(--space-1)) var(--space-1) var(--space-3); color: var(--label-2); font-size: 13px; line-height: 18px; }
+.turnfin-app .me-section-note > [data-slot='badge'] { margin-left: var(--space-2); }
+.turnfin-app .me-section-foot { margin: var(--space-2) var(--space-1) 0; color: var(--label-2); font-size: 13px; line-height: 18px; }
+
+/* A shift's day and times, in a fixed column before what it is (Home, Next shifts). */
+.turnfin-app .me-when { display: flex; flex: none; flex-direction: column; width: 108px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Documents: 16px reading text. */
+.doc { font-size: var(--type-reading); line-height: var(--type-reading-leading); overflow-wrap: anywhere; }
+.doc > * + * { margin-top: 12px; }
+.doc > :is(h2, h3, h4):not(:first-child) { margin-top: 24px; }
+.doc ul, .doc ol { padding-left: 22px; margin: 0; }
+.doc :is(code, pre) { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.doc pre { margin-inline: 0; margin-bottom: 0; padding: 12px 16px; border-radius: var(--radius-lg); background: var(--fill-2); font-size: var(--type-body); line-height: var(--type-body-leading); white-space: pre-wrap; overflow-wrap: anywhere; }
+.doc hr { border: 0; border-top: 1px solid var(--sep); margin-inline: 0; margin-bottom: 0; }
+.doc table { border-collapse: collapse; width: 100%; display: block; overflow-x: auto; }
+.doc :is(th, td) { border: 1px solid var(--sep); padding: 8px; text-align: left; vertical-align: top; }
+.doc blockquote { margin: 0; padding-left: 12px; border-left: 3px solid var(--label-2); }
+.doc .callout { padding: 12px 16px; border-radius: var(--radius-lg); background: var(--accent-soft); }
+/* Top-level numbered lists are the mockup's steps: sunken rows with a blue counter. A paragraph
+   and a nested list inside one step stack in its second column; nested lists keep plain markers. */
+.doc > ol { list-style: none; padding: 0; counter-reset: s; display: flex; flex-direction: column; gap: 8px; }
+.doc > ol > li { display: grid; grid-template-columns: 24px 1fr; column-gap: 12px; padding: 12px 16px; border-radius: var(--radius-lg); background: var(--fill-2); counter-increment: s; }
+.doc > ol > li::before { content: counter(s); grid-row: 1 / span 99; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; margin-top: 1px; border-radius: 999px; background: var(--accent); color: var(--on-accent); font-size: var(--type-caption); line-height: var(--type-caption-leading); font-weight: 600; }
+.doc > ol > li > * { grid-column: 2; }
+.doc > ol > li > * + * { margin-top: 8px; }
+
+/* Courses built from lessons (Training e-learning). One lesson per screen, the course's
+   progress as a bar, Back and Next at the end within thumb reach. */
+.course-hero { gap: 20px; }
+.lesson-row[data-done] .pc-tile-icon { background: var(--green-soft); color: var(--green-ink); }
+.lesson-video { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: var(--radius-lg); overflow: hidden; background: var(--fill-2); }
+.lesson-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.lesson-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.lesson-nav > [data-slot="button"]:last-child { flex: 1 1 auto; max-width: 320px; margin-left: auto; }
+.lesson-file-image, .doc.lesson img { display: block; max-width: 100%; height: auto; border-radius: var(--radius-lg); }
+.lesson-image-placeholder { display: block; width: 100%; aspect-ratio: 4 / 3; border-radius: var(--radius-lg); background: var(--fill-2); }
+.doc.lesson h2 { font-size: var(--type-title); line-height: var(--type-title-leading); }
+.doc.lesson blockquote { padding: 12px 16px; border: 0; border-radius: var(--radius-lg); background: var(--accent-soft); color: var(--accent-ink); font-weight: 500; }
+.doc.lesson a { color: var(--accent); text-underline-offset: 3px; }
+
+/* Questions (quizzes and the final exam): big tappable answer rows, one question per screen. */
+.question { display: flex; flex-direction: column; gap: 16px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.question-prompt { display: flex; flex-direction: column; gap: 4px; padding: 0; font-size: var(--type-title); line-height: var(--type-title-leading); font-weight: 600; }
+.question-image { display: block; max-width: 100%; max-height: 320px; width: auto; height: auto; border-radius: var(--radius-lg); }
+.choices { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.choice { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 16px; border: 1px solid var(--label-2); border-radius: var(--radius-lg); background: var(--bg-2); }
+.choice.selectable { cursor: pointer; }
+.choice.selectable:hover { background: var(--bg-3); }
+.choice.selectable:has([data-state="checked"]), .turnfin-app .ui-motion-press.choice[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink); box-shadow: inset 0 0 0 1px var(--accent); }
+.choice.selectable:has(:focus-visible) { box-shadow: 0 0 0 1px var(--accent), var(--focus-halo); }
+.choice.selectable:has(:disabled) { cursor: default; }
+.choice-text { display: flex; flex: 1; flex-direction: column; gap: 8px; min-width: 0; overflow-wrap: anywhere; }
+.choice-image { display: block; max-width: 100%; max-height: 160px; width: auto; border-radius: var(--radius-lg); }
+.order-number { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 999px; background: var(--accent); color: var(--on-accent); font-size: var(--type-caption); font-weight: 600; }
+.order-moves { display: flex; flex: none; gap: 4px; }
+.match-pair { flex-wrap: wrap; }
+.match-pair .choice-text { flex: 1 1 140px; font-weight: 600; }
+.match-pair [data-slot="native-select"], .match-pair [data-slot="input"] { flex: 1 1 180px; width: auto; }
+.quiz-done { gap: 12px; }
+
+/* The final exam. */
+.exam-rules { display: flex; flex-direction: column; gap: 8px; margin: 0; padding-left: 20px; }
+.exam-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.exam-count { flex: 1 1 auto; font-weight: 600; }
+.exam-timer { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border-radius: 999px; background: var(--bg-2); font-weight: 600; }
+.exam-timer svg { width: 16px; height: 16px; }
+.exam-timer.is-low { background: var(--red-soft); color: var(--red-ink); }
+.exam-dots { display: flex; flex-wrap: wrap; gap: 6px; }
+.exam-dot { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--label-2); border-radius: 999px; background: var(--bg-2); color: var(--label); font: inherit; font-weight: 600; cursor: pointer; }
+.exam-dot[data-answered] { border-color: var(--accent-soft); background: var(--accent-soft); color: var(--accent-ink); }
+.exam-dot[aria-current] { border-color: var(--accent); background: var(--accent); color: var(--on-accent); }
+.exam-dot:focus-visible, .exam-jump:focus-visible { outline: none; box-shadow: 0 0 0 1px var(--accent), var(--focus-halo); }
+.turnfin-app .exam-jump { width: 100%; font: inherit; text-align: left; cursor: pointer; }
+.exam-figure { margin: 0; font-size: 56px; line-height: 1; font-weight: 700; letter-spacing: -0.02em; }
+
+/* Richer lessons (Training e-learning phase 3): callouts, tap to reveal, flip cards, step by
+   step, knowledge checks, branching scenarios, flashcards, checklists and recordings. */
+.eyebrow { color: var(--accent-ink); font-weight: 600; }
+.inline-icon { display: inline-block; width: 16px; height: 16px; margin-right: 6px; vertical-align: -3px; }
+.course-cover { display: block; width: 100%; aspect-ratio: 16 / 7; object-fit: cover; border-radius: var(--radius-lg); background: var(--fill-2); }
+.course-thumb { flex: none; width: 56px; height: 40px; object-fit: cover; border-radius: 10px; background: var(--fill-2); }
+.callout-box { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; border-left: 4px solid var(--accent); border-radius: var(--radius-lg); background: var(--accent-soft); color: var(--label); }
+.callout-box > * + * { margin-top: 0; }
+.doc .choices { padding-left: 0; }
+.callout-box[data-tone="tip"] { border-left-color: var(--green-ink); background: var(--green-soft); }
+.callout-box[data-tone="warning"] { border-left-color: var(--orange-ink); background: var(--orange-soft); }
+.callout-box[data-tone="danger"] { border-left-color: var(--red-ink); background: var(--red-soft); }
+.callout-label { margin: 0; font-size: var(--type-caption); line-height: var(--type-caption-leading); font-weight: 700; }
+.reveal { border: 1px solid var(--label-2); border-radius: var(--radius-lg); background: var(--bg-2); overflow: hidden; }
+.reveal-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 56px; padding: 8px 16px; border: 0; background: none; color: var(--label); font: inherit; font-weight: 600; text-align: left; cursor: pointer; }
+.reveal-toggle:hover { background: var(--bg-3); }
+.reveal-toggle:focus-visible, .flip-card:focus-visible, .flashcard:focus-visible, .spot-frame:focus-visible { outline: none; box-shadow: 0 0 0 1px var(--accent), var(--focus-halo); }
+.reveal-toggle > svg { flex: none; width: 20px; height: 20px; transition: transform 200ms var(--ease); }
+.reveal[data-open] .reveal-toggle > svg { transform: rotate(180deg); }
+.reveal-body { padding: 0 16px 16px; }
+.reveal-body > * + * { margin-top: 12px; }
+.flip-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.flip-card, .flashcard { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; min-height: 140px; padding: 20px 16px; border: 1px solid var(--label-2); border-radius: var(--radius-lg); background: var(--bg-2); color: var(--label); font: inherit; text-align: center; cursor: pointer; transition: background-color 160ms var(--ease), border-color 160ms var(--ease); }
+.flip-card[aria-pressed="true"], .flashcard[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
+.flip-face, .flip-text { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.flip-icon { position: absolute; right: 12px; bottom: 12px; width: 16px; height: 16px; opacity: 0.6; }
+.flashcard { min-height: 240px; }
+.flashcard-text { font-size: var(--type-title); line-height: var(--type-title-leading); font-weight: 600; overflow-wrap: anywhere; }
+.stepper { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: var(--radius-lg); background: var(--fill-2); }
+.stepper-body { min-height: 72px; }
+.stepper-body .step-item > * + * { margin-top: 12px; }
+.knowledge-check { display: flex; flex-direction: column; gap: 16px; padding: 16px; border: 1px solid var(--accent-soft); border-radius: var(--radius-lg); background: var(--bg-2); }
+.knowledge-check-label { display: inline-flex; align-items: center; gap: 6px; margin: 0; color: var(--accent-ink); font-weight: 700; }
+.knowledge-check-label > svg { width: 16px; height: 16px; }
+.scene-text { font-size: var(--type-reading); line-height: var(--type-reading-leading); white-space: pre-line; }
+.scene-choice { width: 100%; color: var(--label); font: inherit; text-align: left; }
+.scene-choice > svg { flex: none; width: 20px; height: 20px; color: var(--accent); }
+.audio-player { display: block; width: 100%; }
+.spot-frame { position: relative; display: inline-block; max-width: 100%; border-radius: var(--radius-lg); cursor: crosshair; touch-action: manipulation; }
+.spot-frame[data-locked] { cursor: default; }
+.spot-image { display: block; max-width: 100%; height: auto; border-radius: var(--radius-lg); user-select: none; -webkit-user-drag: none; }
+.spot-marker { position: absolute; width: 28px; height: 28px; margin: -14px 0 0 -14px; border: 3px solid var(--bg-2); border-radius: 999px; background: var(--accent); box-shadow: none; pointer-events: none; }
+.spot-marker.is-right { background: var(--green-ink); }
+.blank-sentence { font-size: var(--type-reading); line-height: 2.4; }
+.turnfin-app .blank-input[data-slot="input"] { display: inline-block; width: 9em; min-height: 40px; margin: 0 4px; padding: 4px 10px; vertical-align: baseline; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-toggle > svg, .flip-card, .flashcard { transition: none; } }
+
+/* A certificate for finished training (e-learning phase 4): on screen as a card, on paper alone. */
+.certificate { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px 24px 28px; border: 1px solid var(--label-2); border-radius: var(--radius-lg); background: var(--bg-2); text-align: center; overflow: hidden; }
+.certificate::before { content: ''; position: absolute; inset: 0 0 auto; height: 8px; background: var(--accent); }
+.certificate-seal { display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; margin-bottom: 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
+.certificate-seal svg { width: 32px; height: 32px; }
+.certificate-name { font-size: 32px; line-height: 1.15; letter-spacing: -0.01em; text-wrap: balance; }
+.certificate-course { font-size: var(--type-title); line-height: var(--type-title-leading); font-weight: 700; text-wrap: balance; }
+.certificate-code { margin-top: 16px; padding: 8px 16px; border-radius: 999px; background: var(--fill-2); letter-spacing: 0.04em; }
+@media print {
+  .no-print, .me-nav, .tf-bottom { display: none !important; }
+  body.turnfin-app { background: var(--bg-2); }
+  .page { padding: 0; }
+  .certificate { border: 2px solid var(--label); min-height: 90vh; justify-content: center; }
+}
+
+/* The learner's own space (Training e-learning phase 6). */
+/* Larger text, chosen under More › Text size: every size token steps up together. */
+html[data-text="large"] body.turnfin-app {
+  --type-caption: 14px; --type-caption-leading: 20px; --type-body: 17px; --type-body-leading: 26px;
+  --type-title: 21px; --type-title-leading: 28px; --type-reading: 19px; --type-reading-leading: 30px;
+}
+html[data-text="largest"] body.turnfin-app {
+  --type-caption: 16px; --type-caption-leading: 22px; --type-body: 20px; --type-body-leading: 30px;
+  --type-title: 24px; --type-title-leading: 32px; --type-reading: 22px; --type-reading-leading: 34px;
+}
+html[data-text] .turnfin-app [data-slot="input"] { font-size: max(16px, var(--type-body)); }
+.turnfin-app .ui-motion-press[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
+.lesson-tools { display: flex; flex-wrap: wrap; gap: 8px; }
+/* Training's own shortcuts: search, today's refresher, saved, the catalogue and my record. */
+.search-row { display: flex; gap: 8px; }
+.search-row [data-slot="input"] { flex: 1 1 auto; min-width: 0; }
+.learn-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.learn-tile { display: flex; flex-direction: column; gap: 8px; height: 100%; min-height: 96px; padding: 16px; border-radius: var(--radius-lg); background: var(--bg-2); color: var(--label); text-decoration: none; }
+.learn-tile:hover { background: var(--fill-2); }
+.learn-tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.learn-tile strong { font-weight: 600; }
+/* The daily refresher: the streak as a figure, the day's five as dots. */
+.refresher-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; }
+.streak { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+.streak-figure { font-size: var(--type-figure); line-height: var(--type-figure-leading); font-weight: 700; font-variant-numeric: tabular-nums; }
+.streak svg { width: 24px; height: 24px; color: var(--orange-ink); }
+.streak[data-cold] svg { color: var(--label-2); }
+.day-dots { display: flex; gap: 6px; }
+.day-dot { width: 12px; height: 12px; border-radius: 999px; background: var(--fill-2); box-shadow: inset 0 0 0 1px var(--label-2); }
+.day-dot[data-done] { background: var(--accent); box-shadow: none; }
+/* Badges: earned ones in colour, the rest as what to aim for. */
+.badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.badge { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; height: 100%; padding: 16px; border: 1px dashed var(--label-2); border-radius: var(--radius-lg); color: var(--label-2); }
+.badge[data-earned] { border: 1px solid transparent; background: var(--accent-soft); color: var(--accent-ink); }
+.badge-icon { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 999px; background: var(--fill-2); }
+.badge[data-earned] .badge-icon { background: var(--accent); color: var(--on-accent); }
+.badge-icon svg { width: 20px; height: 20px; }
+.badge strong { color: var(--label); font-weight: 600; }
+/* Star rating: big tappable stars, filled up to the one chosen. */
+.stars { display: flex; gap: 4px; }
+.star { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 999px; color: var(--label-2); cursor: pointer; }
+.star:hover { background: var(--bg-3); }
+.star:has(:focus-visible) { box-shadow: 0 0 0 1px var(--accent), var(--focus-halo); }
+.star svg { width: 32px; height: 32px; }
+.star[data-on] { color: var(--orange-ink); }
+.star[data-on] svg, .stars-read svg[data-on] { fill: currentColor; }
+.stars-read { display: inline-flex; gap: 2px; margin-right: 6px; vertical-align: -3px; color: var(--orange-ink); }
+.stars-read svg { width: 16px; height: 16px; }
+.stars-read svg:not([data-on]) { color: var(--label-2); }
+/* A saved note under its lesson. */
+.note-text { padding: 12px 16px; border-radius: var(--radius-lg); background: var(--fill-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+/* My record on paper: the frame and buttons drop away. */
+.record-table { width: 100%; border-collapse: collapse; font-size: var(--type-caption); }
+.record-table :is(th, td) { padding: 8px; border-bottom: 1px solid var(--sep); text-align: left; vertical-align: top; }
+.record-wrap { overflow-x: auto; }
+
+/* Training e-learning phase 8: typed answers, tabs, sort into groups, explore a picture, slides and hand in work. */
+.typed-answer { display: flex; align-items: center; gap: 8px; }
+.typed-answer [data-slot="input"] { flex: 1; }
+.typed-unit { font-weight: 600; color: var(--label-2); }
+.tabs { display: flex; flex-direction: column; gap: 12px; margin-block: 16px; }
+.tab-list { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: var(--radius-lg); background: var(--fill-2); }
+.tab-panel > :first-child { margin-top: 0; }
+.sort-list { list-style: none; padding: 0; margin: 0; }
+.sort-item { padding: 12px; border: 1px solid var(--sep); border-radius: var(--radius-lg); }
+.sort-item fieldset { border: 0; padding: 0; margin: 0; }
+.sort-item[data-state="right"] { border-color: var(--green-ink); background: var(--green-soft); }
+.sort-item[data-state="wrong"] { border-color: var(--red-ink); border-width: 2px; }
+.sort-text { font-weight: 600; padding: 0; }
+.sort-groups { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.sort-group { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--label-2); border-radius: 999px; cursor: pointer; }
+.sort-group[data-chosen] { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+.sort-group:has(:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.explore-frame { position: relative; border-radius: var(--radius-lg); overflow: hidden; }
+.explore-frame img { display: block; width: 100%; height: auto; }
+.turnfin-app .explore-marker { position: absolute; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; transform: translate(-50%, -50%); border-radius: 999px; border: 3px solid var(--bg-2); background: var(--accent); color: var(--on-accent); font: inherit; font-weight: 700; cursor: pointer; }
+.explore-marker[data-seen] { background: var(--bg-2); color: var(--accent); border-color: var(--accent); }
+.explore-marker[data-open] { outline: 3px solid var(--accent); outline-offset: 2px; }
+.explore-marker:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.explore-detail { padding: 16px; border-radius: var(--radius-lg); background: var(--fill-2); }
+.explore-detail h3 { margin: 0 0 8px; }
+.explore-row { width: 100%; text-align: left; font: inherit; }
+.pre-line { white-space: pre-line; }
+.lesson-embed { position: relative; width: 100%; aspect-ratio: 16 / 10; border-radius: var(--radius-lg); overflow: hidden; background: var(--fill-2); }
+.lesson-embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.lesson-locked { display: flex; flex-direction: column; gap: 12px; }
+.lesson-row-locked { opacity: 0.6; }
+
+/* Offline (e-learning phase 9): the line under the top row, and what Turnfin turned down. */
+.offline-bar, .offline-failed { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; width: calc(100% - 32px); max-width: 688px; margin: 12px auto 0; padding: 8px 8px 8px 16px; border-radius: var(--radius-lg); background: var(--bg-2); color: var(--label); }
+.offline-bar > svg { width: 20px; height: 20px; flex: none; color: var(--accent); }
+.offline-bar > p { flex: 1; min-width: 0; margin: 0; }
+.offline-failed { flex-direction: column; align-items: stretch; padding: 16px; }
+.offline-failed > p { margin: 0; }
+.offline-failed > [data-slot="button"] { align-self: flex-start; }
+.spin { animation: offline-spin 1s linear infinite; }
+@keyframes offline-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+/* Card-like shadcn Buttons (flip cards, flashcards, scenario and explore rows, the exam's
+   question dots and jump rows, tap to reveal, picture spots): they keep the Button's focus, hover
+   and press, but take the card's shape, wrap their text and grow with it. */
+.turnfin-app .ui-motion-press:is(.flip-card, .flashcard, .choice, .reveal-toggle, .exam-jump) { height: auto; white-space: normal; text-align: left; justify-content: flex-start; font-weight: 400; }
+.turnfin-app .ui-motion-press:is(.flip-card, .flashcard) { min-height: 140px; justify-content: center; text-align: center; border-radius: var(--radius-lg); border: 1px solid var(--label-2); }
+.turnfin-app .ui-motion-press.flashcard { min-height: 240px; }
+.turnfin-app .ui-motion-press.choice { min-height: 56px; border-radius: var(--radius-lg); border-color: var(--label-2); }
+.turnfin-app .ui-motion-press.reveal-toggle { width: 100%; min-height: 56px; justify-content: space-between; border-radius: 0; color: var(--label); font-weight: 600; }
+.turnfin-app .ui-motion-press.exam-jump { width: 100%; min-height: 64px; border-radius: var(--radius-lg); color: var(--label); }
+.turnfin-app .ui-motion-press.exam-dot { border-radius: var(--radius-lg); border-color: var(--label-2); }
+.turnfin-app .ui-motion-press.exam-dot[data-answered] { border-color: var(--accent-soft); background: var(--accent-soft); color: var(--accent-ink); }
+.turnfin-app .ui-motion-press.exam-dot[aria-current] { border-color: var(--accent); background: var(--accent); color: var(--on-accent); }
+.turnfin-app .ui-motion-press:is(.flip-card, .flashcard)[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
+.turnfin-app .explore-marker.ui-motion-press[data-seen] { background: var(--bg-2); color: var(--accent); border-color: var(--accent); }
+/* On paper the certificate and the record stand alone: their page headers drop away. */
+@media print { .certificate-page > [data-page-header], .no-print-back [data-page-header] [data-slot="button"] { display: none !important; } }
+
+/* Several things in one lesson (29 October 2026): a recording, a PDF and activities in the text. */
+.audio-block, .activity-block { padding: 16px; border: 1px solid var(--sep); border-radius: var(--radius-lg); background: var(--bg-2); }
+.activity-block { border-color: var(--accent); }
+.audio-block-label, .activity-block-label { display: flex; align-items: center; gap: 6px; margin: 0; font-weight: 600; }
+.audio-block-label svg, .activity-block-label svg { width: 16px; height: 16px; color: var(--accent); }
+.transcript { white-space: pre-line; margin: 0; }
+.file-view { display: block; width: 100%; height: 480px; border: 0; border-radius: var(--radius-lg); background: var(--fill-2); }
+@media (max-width: 767px) { .file-view { display: none; } }
+.audio-pinned { position: fixed; z-index: 40; left: max(20px, calc(50% - 352px)); right: max(20px, calc(50% - 352px)); bottom: calc(104px + env(safe-area-inset-bottom));
+  display: flex; align-items: center; gap: 8px; min-height: 56px; padding: 6px 6px 6px 16px; border-radius: var(--radius-capsule); background: var(--bg-2); color: var(--label); border: 1px solid var(--sep); }
+.audio-pinned > svg { flex: none; width: 20px; height: 20px; color: var(--accent); }
+.audio-pinned-text { flex: 1; min-width: 0; font-weight: 600; }

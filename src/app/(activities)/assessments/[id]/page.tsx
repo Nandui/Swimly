@@ -15,40 +15,20 @@ import { notFound } from "next/navigation";
 
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
 import {
-  BookOntoSession,
-  CancelBooking,
-  MarkNoShow,
-  RecordOutcome,
-} from "@/modules/activities/components/assessments/booking-actions";
+  ageLabel, ageRangeLabel, BOOKING_STATUS_META, type BookingRow, BookOntoSession, CancelBooking, fullName, getAssessmentSession, HOLDS_A_PLACE, isPast, MarkNoShow, MEDICAL_STATUS_META, RecordOutcome, SESSION_STATUS_META, sessionDay, type SessionDetail, sessionSpan,
+} from "@/modules/activities/features/assessments";
 import { Settings2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
-import { WrongClub } from "@/components/clubs/wrong-club";
-import {
-  SESSION_STATUS_META,
-  BOOKING_STATUS_META,
-  HOLDS_A_PLACE,
-  isPast,
-  sessionDay,
-  sessionSpan,
-} from "@/modules/activities/lib/assessments/constants";
-import {
-  getAssessmentSession,
-  type BookingRow,
-  type SessionDetail,
-} from "@/modules/activities/lib/assessments/data/assessments";
+import { WrongClub } from "@/components/ui/wrong-club";
 import { can } from "@/lib/authz";
 import { getCurrentClub } from "@/lib/clubs/current";
 import { formatDate, today } from "@/lib/format";
 import { screenPage } from "@/lib/page-guards";
-import {
-  MEDICAL_STATUS_META,
-  ageLabel,
-  fullName,
-} from "@/modules/activities/lib/students/constants";
 
 export const metadata: Metadata = { title: "Assessment" };
 
@@ -90,12 +70,12 @@ export default async function AssessmentSessionPage(
   const open = !session.cancelledAt;
 
   return (
-    <div className="min-w-0 flex flex-col gap-6">
-      <PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         back={{ href: isPast(session, today()) ? "/assessments?view=past" : "/assessments", label: "Assessments" }}
         title={sessionDay(session)}
         description={
           `${sessionSpan(session)} · ${session.programme.name} · ${session.type?.name ?? "kind not set"}` +
+          (ageRangeLabel(session) ? ` · ${ageRangeLabel(session)!.toLowerCase()}` : "") +
           (session.location ? ` · ${session.location}` : "") +
           (session.instructor
             ? ` · ${session.instructor.name}`
@@ -116,7 +96,7 @@ export default async function AssessmentSessionPage(
             ) : null}
           </>
         }
-      />
+      />}>
 
       <Lead>
         <Num>
@@ -141,8 +121,8 @@ export default async function AssessmentSessionPage(
         />
       ) : (
         <div className="min-w-0 flex flex-col gap-6">
-          <section className="pc-panel">
-            <h2 className="text-lg font-semibold">Booked</h2>
+          <section className="flex min-w-0 flex-col" aria-labelledby="booked-heading">
+            <div className="pc-section-head"><h2 id="booked-heading">Booked</h2><p>{holding.length}</p></div>
             {holding.length === 0 ? (
               <p className="text-sm text-ui-muted-foreground block">
                 Nobody is holding a place.
@@ -158,10 +138,8 @@ export default async function AssessmentSessionPage(
           </section>
 
           {gone.length > 0 ? (
-            <section className="pc-panel">
-              <h2 className="text-lg font-semibold">
-                Not coming
-              </h2>
+            <section className="flex min-w-0 flex-col" aria-labelledby="gone-heading">
+              <div className="pc-section-head"><h2 id="gone-heading">Not coming</h2><p>{gone.length}</p></div>
               <BookingTable
                 entries={gone}
                 session={session}
@@ -172,7 +150,7 @@ export default async function AssessmentSessionPage(
           ) : null}
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }
 

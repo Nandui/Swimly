@@ -1,29 +1,18 @@
+import { readdirSync, readFileSync } from "node:fs";
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import boundaries from "eslint-plugin-boundaries";
+import designTokens from "./scripts/lint/design-tokens.mjs";
 
-// Shared UI rules: primitives come from the local shadcn components.
-const uiImports = {
-  paths: [{ name: "radix-ui", message: "Use the local shadcn component so theme, touch sizes and accessibility stay consistent." }],
-  patterns: [{ group: ["@radix-ui/*", "@mui/*", "@mantine/*", "@headlessui/*", "antd", "antd/*"], message: "The staff app uses src/components/shadcn for UI primitives." }],
-};
-const uiSyntax = [
-  {
-    selector: "JSXOpeningElement[name.name=/^(button|select|textarea|label|details|summary|dialog|progress|meter|table|thead|tbody|tfoot|tr|th|td|hr)$/]",
-    message: "Use the installed shadcn primitive (or a shared ui composition) for this control.",
-  },
-  {
-    selector: "JSXOpeningElement[name.name='input']:not(:has(JSXAttribute[name.name='type'][value.value='hidden']))",
-    message: "Use shadcn Input, Checkbox, RadioGroup or Switch. Native hidden inputs are reserved for FormData bridges.",
-  },
-  {
-    selector: "JSXOpeningElement[name.name=/^(div|span|a)$/]:has(JSXAttribute[name.name='role'][value.value=/^(button|checkbox|radio|switch|tab|tablist|dialog|alertdialog|progressbar|menu|menuitem|combobox|listbox)$/])",
-    message: "Compose the matching shadcn component instead of building a custom interactive primitive.",
-  },
-];
+// Shared UI rules (scripts/lint/design-tokens.mjs): primitives come from the local shadcn
+// components. Turnfin Me and the Academy site use the same ones (apps/*/eslint.config.mjs).
+const { uiImports, uiSyntax } = designTokens;
 
-// Turnfin is Core (people, roles, sites, audit), Work modules (Docs, Refunds,
-// Training, HR, Rota) and Activities (Swim school first). See docs/architecture.md.
+// Turnfin is a modular monolith: Core (people, roles, sites, audit) and modules
+// (the swim school's module, called Activities here, and every other module). A module may
+// import Core and itself, never another module; Core imports no module. Only a
+// composition root may import every module. See AGENTS.md, Layers and dependencies.
 const activitiesFiles = [
   "src/modules/activities/**",
   "src/app/(activities)/**",
@@ -33,65 +22,241 @@ const activitiesFiles = [
   "src/app/api/curriculum-images/**",
   "src/app/api/operations/**",
 ];
-// Composition roots may import every module; the front desk (Reception Portal)
-// composes the Activities Add swimmer dialog by design.
+// Each module's files, except the swim school's: its folder, src/modules/<id>, and its routes.
+const moduleArea = (id, ...extra) => [`src/modules/${id}/**`, `src/app/${id}/**`, ...extra];
+const otherModules = {
+  docs: moduleArea("docs", "src/app/api/docs/**"),
+  "finance-requests": moduleArea("finance-requests", "src/app/(finance-requests)/**", "src/app/api/refunds/**"),
+  training: moduleArea("training", "src/app/api/cron/training/**"),
+  // Its pages are at /staff-qualifications: Admin's list of qualification types keeps /qualifications.
+  qualifications: moduleArea("qualifications", "src/app/staff-qualifications/**"),
+  hr: moduleArea("hr", "src/app/api/cron/hr/**"),
+  rota: moduleArea("rota"),
+  plan: moduleArea("plan"),
+  purchasing: moduleArea("purchasing"),
+  tasks: moduleArea("tasks", "src/app/api/cron/tasks/**"),
+  academy: moduleArea("academy", "src/app/api/academy/**"),
+  stock: moduleArea("stock"),
+  vouchers: moduleArea("vouchers"),
+  staffing: moduleArea("staffing"),
+  cctv: moduleArea("cctv"),
+  "site-monitoring": moduleArea("site-monitoring"),
+  maintenance: moduleArea("maintenance", "src/app/api/maintenance/**"),
+  // Its pages are at /risk-assessments.
+  risk: moduleArea("risk", "src/app/risk-assessments/**"),
+  incidents: moduleArea("incidents", "src/app/api/incidents/**", "src/app/api/cron/incidents/**", "src/app/footage/**", "src/app/wellbeing/**"),
+};
+const moduleFiles = { activities: activitiesFiles, ...otherModules };
+const allModuleFiles = Object.values(moduleFiles).flat();
+// Composition roots may import every module: the module wiring, and Turnfin
+// Me's records and daily digest, which gather each person's things from every module.
 const compositionRoots = [
+  "src/app/modules.ts",
   "src/modules/server.ts",
   "src/modules/session-hooks.ts",
-  "src/components/portal/reception-portal.tsx",
+  "src/lib/staff-api/records.ts",
+  "src/lib/staff-api/reminders.ts",
 ];
 const tests = ["src/**/*.test.ts", "src/**/*.test.tsx", "src/test/**"];
+const lintable = (globs) => globs.map((glob) => glob.endsWith("/**") ? `${glob}/*.{ts,tsx}` : glob);
 
 // Import boundaries.
 const notActivities = {
   group: ["@/modules/activities", "@/modules/activities/*", "@/app/(activities)/*", "@/app/(instructor)/*", "**/modules/activities/**"],
-  message: "Core and Work modules must not import Activities. Register a contribution (src/modules/contributions.ts) or add to a composition root instead.",
+  message: "Core and other modules must not import Activities. Register a contribution (src/modules/contributions.ts) or add to a composition root instead.",
 };
-const notWorkModules = {
-  group: ["@/lib/docs/*", "@/lib/refunds/*", "@/lib/training/*", "@/lib/hr/*", "@/lib/rota/*", "@/lib/purchasing/*", "@/lib/academy/*", "@/lib/tasks/*", "@/lib/vouchers/*", "@/components/vouchers/*", "@/components/docs/*", "@/components/refunds/*", "@/components/training/*", "@/components/hr/*", "@/components/rota/*", "@/components/purchasing/*", "@/components/academy/*", "@/components/tasks/*"],
-  message: "Activities depends on Core only, never on a Work module. Link to the module or add a Core seam.",
-};
+const moduleImports = (ids) => ids.flatMap((id) => [`@/modules/${id}`, `@/modules/${id}/*`, `@/app/${id}/*`]);
+const notModules = (ids, message) => ({ group: moduleImports(ids), message });
+const notOtherModules = notModules(Object.keys(otherModules), "Activities depends on Core only, never on another module. Link to its screens or add a Core seam.");
+const notCoreToModules = notModules(Object.keys(otherModules), "Core never imports a module. Register a contribution (src/modules/contributions.ts) or add to a composition root instead.");
+const notAnotherModule = (self) => notModules(Object.keys(otherModules).filter((id) => id !== self), "A module never imports another module. Link to its screens, or add a Core seam (src/modules/contributions.ts).");
+// The same rule by resolved path, so relative imports are caught too.
+const moduleZones = Object.entries(moduleFiles).flatMap(([id, target]) => Object.entries(moduleFiles)
+  .filter(([other]) => other !== id)
+  .map(([other, from]) => ({ target, from, message: `${id} must not import ${other}: modules meet only through Core seams and composition roots.` })));
 
-// Data boundaries (prisma/schema/*.prisma says which area owns each table).
+// Data boundaries: each prisma/schema/<owner>[.<part>].prisma file says who owns its
+// tables (core and base are Core's). A part queries only its own tables and
+// Core's; Activities reads Core only through src/lib/directory.ts.
+const schemaDir = new URL("./prisma/schema/", import.meta.url);
+const tablesByOwner = {};
+for (const file of readdirSync(schemaDir).filter((f) => f.endsWith(".prisma"))) {
+  const owner = ["core.prisma", "base.prisma"].includes(file) ? "core" : file.split(".")[0];
+  const models = [...readFileSync(new URL(file, schemaDir), "utf8").matchAll(/^model (\w+)/gm)].map((m) => m[1][0].toLowerCase() + m[1].slice(1));
+  tablesByOwner[owner] = [...(tablesByOwner[owner] ?? []), ...models];
+}
+for (const owner of Object.keys(tablesByOwner)) {
+  if (owner !== "core" && !moduleFiles[owner]) throw new Error(`prisma/schema/${owner}.prisma has no module in eslint.config.mjs.`);
+}
 const client = "/^(prisma|tx|db)$/";
-const coreTables = "user|club|siteArea|activityType|position|positionQualification|staffRole|organisation|department|userDepartment|roleAssignment|sharedDevice|sharedDeviceUser|qualificationType|qualification|qualificationEvidence|auditLog|staffSignInChallenge|staffSession|staffDetailChangeRequest|staffNotificationPreference|staffReminderLog";
-const activitiesTables = "programme|level|competency|student|course|enrolment|studentFollowUp|attendanceRecord|classNote|classCancellation|cancelledClassSwimmer|classCover|competencyResult|levelCompletion|assessmentSession|assessmentType|assessmentBooking|parentAccount|parentAccessRequest|parentSession|parentSignInChallenge|parentRateLimit|parentChildAccess|parentAssessmentPublication|parentBookingRequest|parentProgressEvent|parentChangeRequest|classPlannedTeacher";
+const tablesOf = (owners) => owners.flatMap((owner) => tablesByOwner[owner] ?? []);
+const notTables = (owners, message) => {
+  const tables = tablesOf(owners);
+  return tables.length ? [{ selector: `MemberExpression[object.name=${client}][property.name=/^(${tables.join("|")})$/]`, message }] : [];
+};
 const activitiesData = [
-  {
-    selector: `MemberExpression[object.name=${client}][property.name=/^(${coreTables})$/]`,
-    message: "Activities never queries Core tables. Use src/lib/directory.ts (people, sites) or another Core function.",
-  },
+  ...notTables(["core"], "Activities never queries Core tables. Use src/lib/directory.ts (people, sites) or another Core function."),
+  ...notTables(Object.keys(otherModules), "Activities never queries another module's tables."),
   {
     selector: "Property[key.name=/^(include|select|where|orderBy)$/] Property[key.name=/^(instructor|club|markedBy|by|coverBy|assessedBy|confirmedBy|bookedBy)$/][value.type=/^(ObjectExpression|Literal)$/]",
     message: "Do not join Core tables (User, Club) from an Activities query. Select the id and add names with withSites/withStaff from src/lib/directory.ts.",
   },
 ];
-const coreData = [
-  {
-    selector: `MemberExpression[object.name=${client}][property.name=/^(${activitiesTables})$/]`,
-    message: "Core and Work modules never query Activities tables. Register a contribution in src/modules/contributions.ts instead.",
-  },
+const coreData = notTables(Object.keys(moduleFiles), "Core never queries a module's tables. Register a contribution in src/modules/contributions.ts instead.");
+// Every module reads Core only through its functions, never its tables
+// (AGENTS.md, Data and writes): src/lib/directory.ts,
+// src/lib/qualifications.ts, src/lib/setup/activity-types.ts,
+// src/lib/people/records.ts, src/lib/audit.ts and the policy engine. Each entry
+// names the module's relations to Core tables, so joins are caught too.
+const coreThroughFunctions = {
+  docs: [],
+  "finance-requests": [],
+  purchasing: ["role", "site"],
+  tasks: ["site"],
+  incidents: [],
+  academy: ["organisation", "qualificationType", "qualification", "site", "tutor", "assessor", "user"],
+  stock: [],
+  vouchers: [],
+  staffing: [],
+  cctv: [],
+  "site-monitoring": [],
+  maintenance: [],
+  risk: [],
+  hr: [],
+  training: ["grantsType", "organisation", "user"],
+  qualifications: [],
+  rota: ["department", "organisation", "requiredType", "site", "type", "user"],
+  plan: [],
+};
+const coreJoins = (relations) => relations.length ? [{
+  selector: `Property[key.name=/^(include|select|where|orderBy)$/] Property[key.name=/^(${relations.join("|")})$/][value.type=/^(ObjectExpression|Literal)$/]`,
+  message: "Do not join Core tables from a module's query. Keep the id and ask Core's functions (src/lib/directory.ts and its neighbours) for names.",
+}] : [];
+const moduleData = (self) => [
+  ...notTables(Object.keys(moduleFiles).filter((id) => id !== self), "A module queries only its own tables and Core's. Ask the owning module through a seam (src/modules/contributions.ts)."),
+  ...(coreThroughFunctions[self] ? [
+    ...notTables(["core"], "This module reads Core through its functions (src/lib/directory.ts, src/lib/qualifications.ts, src/lib/setup/activity-types.ts, src/lib/people/records.ts, src/lib/policy), never Core tables."),
+    ...coreJoins(coreThroughFunctions[self]),
+  ] : []),
 ];
 
 // Each module's public API and email files are its own. Shared plumbing (the
 // public-API kit, the email sender) lives in Core: src/lib/public-api and
 // src/lib/email. A module never imports another module's copy.
 const modulePlumbing = [
-  { owner: ["src/lib/academy/**", "src/app/api/academy/**"], from: ["./src/lib/academy/public"] },
+  { owner: ["src/modules/academy/features/booking/**", "src/app/api/academy/**"], from: ["./src/modules/academy/features/booking/server"] },
   { owner: ["src/lib/staff-api/**", "src/app/api/staff/**"], from: ["./src/lib/staff-api/email.ts", "./src/lib/staff-api/http.ts"] },
-  { owner: activitiesFiles, from: ["./src/modules/activities/lib/parent/email.ts", "./src/modules/activities/lib/parent/http.ts", "./src/modules/activities/lib/parent/sign-in-email.ts"] },
+  { owner: activitiesFiles, from: ["./src/modules/activities/shared/parents/email.ts", "./src/modules/activities/shared/parents/http.ts", "./src/modules/activities/shared/parents/sign-in-email.ts"] },
 ];
-const plumbingRule = (skip) => ["error", {
-  zones: modulePlumbing.filter((m) => m !== skip).flatMap((m) => m.from.map((from) => ({
-    target: "./src",
-    from,
-    message: "That is another module's public API or email file. Use Core's src/lib/public-api or src/lib/email instead.",
-  }))),
+// One rule carries both: flat config replaces a rule's options rather than merging them.
+const restrictedPaths = (skip) => ["error", {
+  zones: [
+    ...moduleZones,
+    ...modulePlumbing.filter((m) => m !== skip).flatMap((m) => m.from.map((from) => ({
+      target: "./src",
+      from,
+      message: "That is another module's public API or email file. Use Core's src/lib/public-api or src/lib/email instead.",
+    }))),
+  ],
 }];
+
+// The target architecture's dependency table (AGENTS.md, Layers and dependencies), as errors
+// since 10 October 2026 (AGENTS.md, None), alongside the
+// module and data rules above.
+// Elements are folders (first match wins); single files that sit outside their
+// layer's folder are classified by file category instead.
+const layerElements = [
+  // A module's features and its shared folder, then the rest of the module
+  // (index.ts, module.ts, and the lib/components folders of modules not yet
+  // in the features shape).
+  { type: "feature", pattern: "src/modules/*/features/*", capture: ["module", "feature"], partialMatch: false },
+  { type: "module-shared", pattern: "src/modules/*/shared", capture: ["module"], partialMatch: false },
+  { type: "module", pattern: "src/modules/*", capture: ["module"], partialMatch: false },
+  { type: "ui", pattern: ["src/components/shadcn", "src/components/ui", "src/components/ui-kit"], partialMatch: false },
+  // Screens that combine modules: the home page, the frame and Turnfin Me's API.
+  { type: "front", pattern: ["src/components/home", "src/components/core", "src/components/workspace", "src/lib/staff-api"], partialMatch: false },
+  { type: "platform", pattern: ["src/platform", "src/lib"], partialMatch: false },
+  // Core's own screens (people, roles, sites, devices, help): the platform's admin UI.
+  { type: "admin", pattern: "src/components", partialMatch: false },
+  { type: "app", pattern: "src/app", partialMatch: false },
+];
+const layerFiles = [
+  { category: "composition", pattern: ["src/app/modules.ts", "src/modules/server.ts", "src/modules/session-hooks.ts", "src/lib/staff-api/records.ts", "src/lib/staff-api/reminders.ts"] },
+  { category: "platform", pattern: ["src/modules/registry.ts", "src/modules/contributions.ts", "src/modules/context.ts", "src/auth.ts", "src/lib/staff-api/notify.ts"] },
+  { category: "ui", pattern: ["src/lib/utils.ts", "src/lib/setup/lanes.ts", "src/components/theme-provider.tsx", "src/components/theme-toggle.tsx", "src/components/form-dialog.tsx", "src/components/confirm-action.tsx", "src/components/searchable-picker.tsx"] },
+  { category: "front", pattern: ["src/lib/home.ts", "src/lib/home-meta.ts"] },
+];
+const toEntry = { element: { type: "module", fileInternalPath: "index.ts" } };
+const layerPolicies = [
+  { from: { element: { type: "platform" } }, allow: { to: { element: { type: "platform" } } } },
+  { from: { element: { type: "ui" } }, allow: { to: { element: { type: "ui" } } } },
+  // A module's index.ts and module.ts use their own features; a feature uses
+  // its own files and its module's shared folder, never a sibling feature.
+  { from: { element: { type: "module" } }, allow: { to: [
+    { element: { types: { anyOf: ["platform", "ui"] } } },
+    { element: { types: { anyOf: ["module", "module-shared", "feature"] }, captured: { module: "{{ from.element.captured.module }}" } } },
+    toEntry,
+  ] } },
+  { from: { element: { type: "module-shared" } }, allow: { to: [
+    { element: { types: { anyOf: ["platform", "ui"] } } },
+    { element: { type: "module-shared", captured: { module: "{{ from.element.captured.module }}" } } },
+    toEntry,
+  ] } },
+  { from: { element: { type: "feature" } }, allow: { to: [
+    { element: { types: { anyOf: ["platform", "ui"] } } },
+    { element: { type: "module-shared", captured: { module: "{{ from.element.captured.module }}" } } },
+    { element: { type: "feature", captured: { module: "{{ from.element.captured.module }}", feature: "{{ from.element.captured.feature }}" } } },
+    toEntry,
+  ] } },
+  { from: { element: { types: { anyOf: ["front", "admin"] } } }, allow: { to: [{ element: { types: { anyOf: ["platform", "ui", "front", "admin"] } } }, toEntry] } },
+  { from: { element: { type: "app" } }, allow: { to: [
+    { element: { types: { anyOf: ["platform", "ui", "front", "admin", "app"] } } },
+    toEntry,
+    { element: { type: "feature", fileInternalPath: "index.ts" } },
+  ] } },
+  // Files classified on their own (layerFiles); later policies win.
+  { allow: { to: { file: { categories: { anyOf: ["platform", "ui"] } } } } },
+  { from: { element: { type: "ui" } }, disallow: { to: { file: { categories: "platform" } } } },
+  { from: { file: { categories: "platform" } }, disallow: { to: { element: { types: { anyOf: ["module", "front", "admin", "app"] } } } } },
+  { from: { file: { categories: "platform" } }, allow: { to: { element: { type: "platform" } } } },
+  { from: { file: { categories: "front" } }, allow: { to: [{ element: { types: { anyOf: ["platform", "ui", "front", "admin"] } } }, toEntry] } },
+  { from: { element: { types: { anyOf: ["front", "admin", "app"] } } }, allow: { to: { file: { categories: "front" } } } },
+  { from: { element: { type: "app" } }, allow: { to: { file: { categories: "composition" } } } },
+  // The platform loads the module wiring, as the registry loads app/modules.ts; front reads modules through it.
+  { from: { element: { types: { anyOf: ["platform", "front"] } } }, allow: { to: { file: { categories: "composition" } } } },
+  { from: { file: { categories: "platform" } }, allow: { to: { file: { categories: "composition" } } } },
+  { from: { file: { categories: "front" } }, allow: { to: { file: { categories: "composition" } } } },
+  { from: { file: { categories: "composition" } }, allow: { to: { element: { types: { anyOf: ["platform", "ui", "front", "module"] } } } } },
+];
 
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  // The UI rules (AGENTS.md, Screens): shadcn components and the theme only. No literal
+  // colours, one-off lengths or Tailwind arbitrary values, no inline styles, and every
+  // PageHeader in its page's PageShell. eslint-suppressions.json stays empty: never suppress
+  // these rules or disable them inline.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: [
+      ...tests,
+      "src/generated/**",
+      // Literal by necessity: email clients cannot read CSS variables, the browser
+      // theme-color meta needs a colour value, and Docs stores its palette in documents.
+      "src/**/*email.ts",
+      "src/app/layout.tsx",
+      "src/modules/docs/**/formatting.ts",
+    ],
+    plugins: { turnfin: designTokens },
+    rules: { "turnfin/no-literal-styles": "error", "turnfin/page-header-in-shell": "error" },
+  },
+  // The shadcn components are the library: they set a few positions the library computes.
+  {
+    files: ["src/**/*.tsx"],
+    ignores: [...tests, "src/components/shadcn/**", "src/generated/**"],
+    plugins: { turnfin: designTokens },
+    rules: { "turnfin/no-inline-styles": "error" },
+  },
   {
     files: ["src/**/*.{jsx,tsx}"],
     ignores: ["src/components/shadcn/**", "src/generated/**"],
@@ -104,35 +269,64 @@ const eslintConfig = defineConfig([
   // rule's options rather than merging them.
   {
     files: ["src/**/*.{ts,tsx}"],
-    ignores: [...activitiesFiles, ...compositionRoots, ...tests, "src/components/shadcn/**", "src/generated/**"],
+    ignores: [...allModuleFiles, ...compositionRoots, ...tests, "src/components/shadcn/**", "src/generated/**"],
     rules: {
-      "no-restricted-imports": ["error", { ...uiImports, patterns: [...uiImports.patterns, notActivities] }],
+      "no-restricted-imports": ["error", { ...uiImports, patterns: [...uiImports.patterns, notActivities, notCoreToModules] }],
       "no-restricted-syntax": ["error", ...uiSyntax, ...coreData],
     },
   },
   {
     files: ["src/components/shadcn/**/*.{ts,tsx}"],
-    rules: { "no-restricted-imports": ["error", { patterns: [notActivities] }] },
+    rules: { "no-restricted-imports": ["error", { patterns: [notActivities, notCoreToModules] }] },
   },
   {
-    files: activitiesFiles.map((glob) => `${glob}/*.{ts,tsx}`),
+    files: lintable(activitiesFiles),
     ignores: tests,
     rules: {
-      "no-restricted-imports": ["error", { ...uiImports, patterns: [...uiImports.patterns, notWorkModules] }],
+      "no-restricted-imports": ["error", { ...uiImports, patterns: [...uiImports.patterns, notOtherModules] }],
       "no-restricted-syntax": ["error", ...uiSyntax, ...activitiesData],
     },
   },
-  // Module plumbing: each owner may use its own files, never another's.
+  ...Object.entries(otherModules).map(([id, globs]) => ({
+    files: lintable(globs),
+    ignores: tests,
+    rules: {
+      "no-restricted-imports": ["error", { ...uiImports, patterns: [...uiImports.patterns, notActivities, notAnotherModule(id)] }],
+      "no-restricted-syntax": ["error", ...uiSyntax, ...moduleData(id)],
+    },
+  })),
+  // Module-to-module imports by path, and module plumbing: each owner may use
+  // its own files, never another's.
   {
     files: ["src/**/*.{ts,tsx}"],
     ignores: tests,
-    rules: { "import/no-restricted-paths": plumbingRule(null) },
+    rules: { "import/no-restricted-paths": restrictedPaths(null) },
   },
   ...modulePlumbing.map((owner) => ({
-    files: owner.owner.map((glob) => glob.endsWith("/**") ? `${glob}/*.{ts,tsx}` : glob),
+    files: lintable(owner.owner),
     ignores: tests,
-    rules: { "import/no-restricted-paths": plumbingRule(owner) },
+    rules: { "import/no-restricted-paths": restrictedPaths(owner) },
   })),
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: [...tests, "src/generated/**"],
+    plugins: { boundaries },
+    settings: { "boundaries/elements": layerElements, "boundaries/files": layerFiles },
+    rules: {
+      "boundaries/dependencies": ["error", {
+        default: "disallow",
+        message: "{{ from.element.types.[0] }} may not import {{ dependency.source }} (AGENTS.md, Layers and dependencies).",
+        policies: layerPolicies,
+      }],
+    },
+  },
+  // The glass material's lens filters are SVG filter primitives, neither a chart nor an icon:
+  // the one place outside the library that draws <svg>. Every other UI rule still applies.
+  // DESIGN.md (How it is built, 2): the lint rules follow the new kit.
+  {
+    files: ["src/components/ui-kit/glass.tsx"],
+    rules: { "no-restricted-syntax": ["error", ...uiSyntax.filter((rule) => !rule.selector.includes("'svg'")), ...coreData] },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

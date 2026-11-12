@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { actorFrom, can, needsStepUp, siteFilter, subjectFilter } from "./engine";
+import { actorFrom, can, needsStepUp, recentlyConfirmed, siteFilter, subjectFilter, STEP_UP_MS } from "./engine";
 import type { Actor, Directory, Scope } from "./types";
 
 /** A small LeisureWorld: two sites and a management chain.
@@ -84,4 +84,13 @@ test("PIN sessions and stale passwords never pass restricted step-up", () => {
   const base = { id: "maya", name: "maya", orgId: "lw", superadmin: true, primary: basic, assignments: [] };
   // docs.* is not restricted: no step-up whatever the session.
   assert.equal(needsStepUp(actorFrom({ ...base, authMethod: "pin", authAt: now }), "docs.manage", now), false);
+});
+
+test("a recent Google sign-in confirms it's you, as a password does; a PIN never", () => {
+  const now = Date.now();
+  const base = { id: "maya", name: "maya", orgId: "lw", superadmin: true, primary: basic, assignments: [] };
+  assert.equal(recentlyConfirmed(actorFrom({ ...base, authMethod: "google", authAt: now - 60_000 }), now), true);
+  assert.equal(recentlyConfirmed(actorFrom({ ...base, authMethod: "google", authAt: now - STEP_UP_MS - 1 }), now), false);
+  assert.equal(recentlyConfirmed(actorFrom({ ...base, authMethod: "password", authAt: now }), now), true);
+  assert.equal(recentlyConfirmed(actorFrom({ ...base, authMethod: "pin", authAt: now }), now), false);
 });

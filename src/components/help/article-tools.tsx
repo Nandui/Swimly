@@ -2,7 +2,7 @@
 
 import { Copy, Printer } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import { toast } from "@/lib/toast";
+import { toast } from "@/components/ui/toast";
 
 export function ArticleTools() {
   async function copy() {

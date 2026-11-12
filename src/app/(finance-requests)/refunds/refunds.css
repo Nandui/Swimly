@@ -1,0 +1,42 @@
+/* ── Refunds in Turnfin Glass (DESIGN.md) ─────────────────────────────────────────────────────
+   The list is the kit's figure tiles (pc-stat-label, data-compact) as filters, search and filters
+   on the ground, then the kit's grouped list. A request is a record page (ui-kit/record.tsx and
+   kit.css, .rec-*). This file holds only what is Refunds' own: the request form and its bar,
+   receipts, and the list's rows. */
+.turnfin-refunds .refund-content { min-width: 0; }
+.turnfin-refunds .refund-list .pc-row-trail { flex-wrap: nowrap; }
+
+/* A new request or a draft: the form, then the next action (beside it from 1280px). */
+.turnfin-refunds .refund-detail-columns { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-6); align-items: start; }
+.turnfin-refunds .refund-main,
+.turnfin-refunds .refund-request-form,
+.turnfin-refunds .refund-request-form > fieldset { display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; }
+/* The next action's buttons stack full width with the primary first, whatever their order. */
+.turnfin-refunds .refund-action-buttons { display: flex; flex-direction: column; gap: var(--space-2); }
+.turnfin-refunds .refund-action-buttons > [data-variant='default'] { order: -1; }
+
+/* Fields follow the width they have, not the screen; long text takes the whole row. */
+.turnfin-refunds .refund-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: var(--space-4); }
+.turnfin-refunds .refund-fields > .refund-wide { grid-column: 1 / -1; }
+
+/* Receipts: the file opens from the row; Remove sits beside it, never inside the link. */
+.turnfin-refunds .refund-file { flex-wrap: nowrap; padding-block: var(--space-2); }
+.turnfin-refunds .refund-file-link { display: flex; flex: 1 1 auto; align-items: center; gap: var(--space-3); min-width: 0; min-height: var(--control-height); border-radius: var(--radius-lg); color: inherit; text-decoration: none; }
+.turnfin-refunds .refund-file-link:hover .pc-row-title { text-decoration: underline; }
+
+/* A new request: the save and submit bar stays at the foot of the screen while filling in. */
+.turnfin-refunds .refund-submit-bar { position: sticky; bottom: var(--space-4); z-index: 10; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-4); padding: var(--space-3) var(--space-3) var(--space-3) var(--space-6); border-radius: var(--radius-card); background: var(--bg-2); box-shadow: var(--shadow-prominent); }
+.turnfin-refunds .refund-submit-buttons { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+html:has(.refund-submit-bar) { scroll-padding-bottom: 120px; }
+
+@media (min-width: 1280px) {
+  .turnfin-refunds .refund-detail-columns { grid-template-columns: minmax(0, 1fr) minmax(280px, 320px); }
+  .turnfin-refunds .refund-detail-columns > aside { position: sticky; top: 88px; }
+}
+/* Phones: "Log a refund request" stays a pill; the bar clears the tab bar. */
+@media (max-width: 767px) {
+  .turnfin-refunds .pc-phead-actions:has(> .refund-new) { width: auto; }
+  .turnfin-app .turnfin-refunds .pc-phead-actions > .refund-new.ui-motion-press { flex: none; }
+  .turnfin-refunds .refund-submit-bar { bottom: calc(var(--tf-bottom-space) + env(safe-area-inset-bottom)); padding-left: var(--space-4); }
+  html:has(.refund-submit-bar) { scroll-padding-bottom: 200px; }
+}

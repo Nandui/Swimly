@@ -1,7 +1,9 @@
 import { ClipboardCheck } from "lucide-react";
 
 import { plural } from "@/lib/format";
-import { CurriculumImage } from "@/modules/activities/components/curriculum/curriculum-image";
+import {
+  AddCompetency, AddLevel, ArchiveCompetency, ArchiveLevel, competencyCountLabel, type CompetencyDetail, CurriculumImage, EditCompetency, EditLevel, EditProgramme, getAssessmentTypes, getProgramme, type LevelDetail, MoveCompetency, MoveLevel,
+} from "@/modules/activities/features/curriculum";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
 import type { Metadata } from "next";
 import { cache } from "react";
@@ -9,31 +11,10 @@ import { notFound } from "next/navigation";
 
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
-import { EditProgramme } from "@/modules/activities/components/curriculum/programme-actions";
-import {
-  AddAssessmentType,
-  ArchiveAssessmentType,
-  EditAssessmentType,
-} from "@/modules/activities/components/assessments/type-actions";
-import { getAssessmentTypes } from "@/modules/activities/lib/assessments/data/assessments";
-import {
-  AddCompetency,
-  AddLevel,
-  ArchiveCompetency,
-  ArchiveLevel,
-  EditCompetency,
-  EditLevel,
-  MoveCompetency,
-  MoveLevel,
-} from "@/modules/activities/components/curriculum/level-actions";
-import { competencyCountLabel } from "@/modules/activities/lib/curriculum/constants";
-import {
-  getProgramme,
-  type CompetencyDetail,
-  type LevelDetail,
-} from "@/modules/activities/lib/curriculum/data/curriculum";
+import { AddAssessmentType, ArchiveAssessmentType, EditAssessmentType } from "@/modules/activities/features/assessments";
 import { screenPage } from "@/lib/page-guards";
 
 /** One query per request, shared by the page and its tab title. */
@@ -65,8 +46,7 @@ export default async function ProgrammePage(
   );
 
   return (
-    <div className="min-w-0 flex flex-col gap-6">
-      <PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         back={{ href: "/programmes", label: "Programmes" }}
         title={
           <span className="min-w-0 flex gap-2 items-center">
@@ -88,7 +68,7 @@ export default async function ProgrammePage(
             <AddLevel programmeId={programme.id} />
           </>
         }
-      />
+      />}>
 
       <Lead>
         <Num>{liveLevels.length}</Num>{" "}
@@ -116,8 +96,8 @@ export default async function ProgrammePage(
         </div>
       )}
 
-      <section className="pc-panel" aria-labelledby="assessment-kinds">
-        <div className="pc-panel-head">
+      <section className="flex min-w-0 flex-col" aria-labelledby="assessment-kinds">
+        <div className="pc-section-head">
           <h2 id="assessment-kinds">Kinds of assessment</h2>
           {programme.archivedAt ? null : (
             <AddAssessmentType
@@ -126,20 +106,20 @@ export default async function ProgrammePage(
             />
           )}
         </div>
-        <Lead>
+        <p className="pc-section-note">
           What an assessment session for this programme can be, such as new
           swimmers or mixed abilities. The desk picks one when adding a session.
-        </Lead>
+        </p>
         {assessmentTypes.length === 0 ? (
-          <EmptyState
+          <div className="pc-list"><EmptyState
             compact
             title="None yet"
             hint="Add one and it becomes something a session can be."
-          />
+          /></div>
         ) : (
-          <ul className="pc-rows">
+          <ul className="pc-list">
             {assessmentTypes.map((type) => (
-              <li key={type.id} className="pc-row [overflow-wrap:anywhere]">
+              <li key={type.id} className="pc-row wrap-anywhere">
                 <span className="pc-tile-icon">
                   <ClipboardCheck aria-hidden="true" />
                 </span>
@@ -164,7 +144,7 @@ export default async function ProgrammePage(
           </ul>
         )}
       </section>
-    </div>
+    </PageShell>
   );
 }
 
@@ -223,9 +203,9 @@ function LevelSection({
     .join(" · ");
 
   return (
-    <section className="pc-panel" aria-labelledby={headingId}>
-      <div className="flex flex-col gap-1">
-        <div className="pc-panel-head">
+    <section className="flex min-w-0 flex-col" aria-labelledby={headingId}>
+      <div className="flex flex-col">
+        <div className="pc-section-head">
           <h2
             id={headingId}
             className="min-w-0 flex gap-2 items-center flex-wrap"
@@ -242,11 +222,11 @@ function LevelSection({
             <ArchiveLevel level={level} />
           </div>
         </div>
-        <p className="text-sm text-ui-muted-foreground">{caption}</p>
+        <p className="pc-section-note">{caption}</p>
       </div>
 
       {level.competencies.length === 0 ? (
-        <EmptyState
+        <div className="pc-list"><EmptyState
           compact
           title="No competencies yet"
           hint={`Add the first competency and it becomes what completing ${level.name} means.`}
@@ -255,15 +235,15 @@ function LevelSection({
               <AddCompetency levelId={level.id} levelName={level.name} />
             )
           }
-        />
+        /></div>
       ) : (
         <>
-          <ul className="pc-rows">
+          <ul className="pc-list">
             {numberLive(level.competencies).map(
               ({ competency, position, first, last }) => (
                 <li
                   key={competency.id}
-                  className="pc-row [overflow-wrap:anywhere]"
+                  className="pc-row wrap-anywhere"
                 >
                   {position !== null ? (
                     <span className="pc-tile-icon font-semibold tabular-nums">

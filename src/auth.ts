@@ -1,6 +1,7 @@
 import { cache } from "react";
 import NextAuth, { type NextAuthConfig, type Session } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 import { CredentialsSignin } from "next-auth";
 import bcrypt from "bcryptjs";
 import { authCookies } from "@/lib/auth-cookies";
@@ -9,9 +10,11 @@ import { prisma } from "@/lib/prisma";
 import { mayPreview, previewedRole } from "@/lib/staff/preview";
 import { ADMINISTRATOR_PERMISSIONS } from "@/lib/staff/permissions";
 import { getCurrentClub } from "@/lib/clubs/current";
+import { appSwitchesOf, withAppSwitches } from "@/lib/apps/switches";
 import { currentSharedDevice, SHARED_SESSION_MAX_MS } from "@/lib/devices/shared-device";
 import { authorizePin } from "@/lib/devices/pin";
 import { mayWorkAnywhere, workDeviceRequired } from "@/lib/devices/work-device";
+import { googleSignIn, googleSignInAvailable, googleStaffAccount, recordGoogleSignIn } from "@/lib/google-sign-in";
 
 /** A correct password on a device this account may not work from. Raised only
  *  after the password matched, so it reveals nothing about other accounts. */
@@ -50,7 +53,7 @@ function providers(): NextAuthConfig["providers"] {
         // A password sign-in is fresh for step-up, clears any PIN lock, and on
         // a shared device adds the person to its quick-switch list (if they
         // have a PIN).
-        await prisma.user.update({ where: { id: user.id }, data: { passwordAt: new Date(), pinFailures: 0, pinLockedAt: null } });
+        await prisma.user.update({ where: { id: user.id }, data: { passwordAt: new Date(), lastSignInAt: new Date(), pinFailures: 0, pinLockedAt: null } });
         if (device && user.pinHash && user.orgId === device.orgId) {
           await prisma.sharedDeviceUser.upsert({
             where: { deviceId_userId: { deviceId: device.id, userId: user.id } },
@@ -73,6 +76,17 @@ function providers(): NextAuthConfig["providers"] {
       },
     }),
   ];
+
+  // Sign in with Google (src/lib/google-sign-in.ts): makes the account at a
+  // work-domain person's first sign-in, with no role until a manager gives one.
+  // Registered only when the Google client is configured; it reads
+  // AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET itself.
+  if (googleSignInAvailable()) {
+    // max_age=0: Google asks for the password every time, even when someone
+    // is still signed in to Google in this browser; googleSignIn refuses a
+    // sign-in Google didn't just check (shared PCs, 23 October 2026).
+    list.push(Google({ authorization: { params: { prompt: "select_account", max_age: "0" } } }));
+  }
 
   if (devSignInAllowed()) {
     list.push(
@@ -103,18 +117,38 @@ function providers(): NextAuthConfig["providers"] {
  *  `session.user.role` and never how the person signed in. */
 const {
   handlers,
-  signIn,
-  signOut,
   auth: nextAuth,
 } = NextAuth({
   session: { strategy: "jwt" },
   cookies: authCookies(),
-  pages: { signIn: "/sign-in" },
+  // Errors land on the sign-in page too, which says what went wrong in plain words.
+  pages: { signIn: "/sign-in", error: "/sign-in" },
   providers: providers(),
   callbacks: {
+    // Google proves who someone is. The account is found or made and refreshed
+    // from Google here; it opens only with a role. A refusal returns to the
+    // sign-in page with its reason.
+    async signIn({ account, profile }) {
+      if (account?.provider !== "google") return true;
+      const found = await googleSignIn(profile, account.access_token);
+      return "refused" in found ? `/sign-in?error=${found.refused}` : true;
+    },
     // The token carries who, and how and when they proved it: never what they
     // may do. A PIN switch is marked, so restricted data asks for the password.
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, profile }) {
+      if (account?.provider === "google") {
+        // The token's subject is the staff account, never Google's own id.
+        const found = await googleStaffAccount(profile);
+        if ("refused" in found) return null;
+        token.sub = found.user.id;
+        token.name = found.user.name;
+        token.email = found.user.email;
+        delete token.picture;
+        token.authMethod = "google";
+        token.authAt = Date.now();
+        token.sharedDevice = await recordGoogleSignIn(found.user);
+        return token;
+      }
       if (user) {
         token.sub = user.id;
         token.authMethod = account?.provider === "pin" ? "pin" : account?.provider === "dev-admin" ? "dev" : "password";
@@ -139,7 +173,7 @@ const {
   },
 });
 
-export { handlers, signIn, signOut };
+export { handlers };
 
 /** The signed-in person's own sites, read from the sign-in cookie alone: the full session
  *  (`auth`) needs the working site first, so the working site cannot ask it. `sites` empty
@@ -182,10 +216,11 @@ export const auth = cache(async function auth(): Promise<Session | null> {
   const session = await nextAuth();
 
   if (session?.user?.id) {
-    const current = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: ACCOUNT_SELECT,
-    });
+    // The working site does not depend on the account row, so both are read at once.
+    const [current, siteId] = await Promise.all([
+      prisma.user.findUnique({ where: { id: session.user.id }, select: ACCOUNT_SELECT }),
+      currentSiteForSession(),
+    ]);
     // Deleted or deactivated reads as signed out. The cookie survives; the
     // access does not.
     if (!current?.isActive) return null;
@@ -193,11 +228,11 @@ export const auth = cache(async function auth(): Promise<Session | null> {
     // timer did (a tablet left on the deck overnight).
     if (session.user.sharedDevice && (!session.user.authAt || Date.now() - session.user.authAt > SHARED_SESSION_MAX_MS)) return null;
 
-    const siteId = await currentSiteForSession();
     const user = sessionUserFor(current, siteId);
     if (!user) return null;
 
-    return { ...session, user: { ...session.user, ...(await wearPreview(user, current, siteId)) } };
+    // The picture is the one Google last gave (src/lib/google-sign-in.ts); none shows initials.
+    return { ...session, user: { ...session.user, ...(await switched(await wearPreview(user, current, siteId), current.orgId, siteId)), image: current.avatarUrl ?? null } };
   }
 
   if (process.env.NODE_ENV === "production" || process.env.DEV_AUTH_BYPASS !== "1") {
@@ -216,12 +251,19 @@ export const auth = cache(async function auth(): Promise<Session | null> {
   if (!user) return null;
 
   return {
-    user: await wearPreview(user, admin, siteId),
+    user: { ...(await switched(await wearPreview(user, admin, siteId), admin.orgId, siteId)), image: admin.avatarUrl ?? null },
     expires: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
   };
 });
 
 type SessionUser = Omit<Session["user"], "image">;
+
+/** The session with the app switches applied at the working site (src/lib/apps/switches.ts):
+ *  an app that is off here is gone from its permissions, so its pages, actions and menus are
+ *  too. Applied last, so a role preview loses the same apps. */
+async function switched(user: SessionUser, orgId: string | null, siteId: string | null): Promise<SessionUser> {
+  return withAppSwitches(user, await appSwitchesOf(orgId), siteId);
+}
 
 /** On a dev build, an account that may manage roles can ask to see the app
  *  as another role. The person stays the same — id, name, email, sites — and

@@ -15,7 +15,7 @@ function devLog(env = process.env) {
   return env.NODE_ENV !== "production" && env.STAFF_EMAIL_DEV_LOG === "true";
 }
 
-export function staffEmailConfig(env = process.env): GoogleEmailConfig {
+function staffEmailConfig(env = process.env): GoogleEmailConfig {
   return emailSender("Turnfin Me", env) ?? unavailable();
 }
 
@@ -33,8 +33,8 @@ function finSrc(): string {
 }
 
 /* The emails in Poolside Clear v2. Mail clients cannot read CSS variables, so the light and dark
-   hex values are copied from src/app/docs/poolside.css (canvas, surface, ink, ink-muted, primary,
-   on-primary); keep them in step. Sizes stay on the v2 scale: 12, 14, 18 and 28px. */
+   hex values are copied from src/app/theme/glass.css (bg, bg-2, label, label-2, accent,
+   on-accent); keep them in step. Sizes stay on the v2 scale: 12, 14, 18 and 28px. */
 const INK = "color:#0f1b2d";
 const MUTED = "color:#56627a";
 const BODY = "font-size:14px;line-height:20px";

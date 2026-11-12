@@ -1,4 +1,6 @@
 import type { Prisma } from "@/generated/prisma/client";
+import { minimumOf, roleFor, togetherOf, weekHoursOf, type AreaTogether, type RoleNeeds, type WeekHour } from "@/lib/setup/area-staffing";
+import type { SiteFilter, SubjectFilter } from "@/lib/policy/types";
 import { ADMINISTRATOR_PERMISSIONS } from "@/lib/staff/permissions";
 
 /** Core's directory of people and sites, for modules.
@@ -14,8 +16,9 @@ import { ADMINISTRATOR_PERMISSIONS } from "@/lib/staff/permissions";
 
 export type StaffRef = { id: string; name: string };
 export type SiteRef = { id: string; name: string };
-/** A site with whether it is archived, for callers that filter or label on it. */
-export type SiteStatusRef = SiteRef & { archivedAt: Date | null };
+/** A site with whether it is archived and its short code (e.g. "BT"), for
+ *  callers that filter, label or number on it. */
+export type SiteStatusRef = SiteRef & { archivedAt: Date | null; code: string | null };
 
 type Db = Pick<Prisma.TransactionClient, "user" | "club">;
 
@@ -34,10 +37,18 @@ export async function staffByIds(ids: readonly (string | null | undefined)[], db
   return new Map(rows.map((row) => [row.id, row]));
 }
 
+/** Each person's main site (`primaryClubId`), or null when they have none. */
+export async function mainSitesByIds(ids: readonly (string | null | undefined)[], db?: Db): Promise<Map<string, string | null>> {
+  const wanted = unique(ids);
+  if (wanted.length === 0) return new Map();
+  const rows = await (await client(db)).user.findMany({ where: { id: { in: wanted } }, select: { id: true, primaryClubId: true } });
+  return new Map(rows.map((row) => [row.id, row.primaryClubId]));
+}
+
 export async function sitesByIds(ids: readonly (string | null | undefined)[], db?: Db): Promise<Map<string, SiteStatusRef>> {
   const wanted = unique(ids);
   if (wanted.length === 0) return new Map();
-  const rows = await (await client(db)).club.findMany({ where: { id: { in: wanted } }, select: { id: true, name: true, archivedAt: true } });
+  const rows = await (await client(db)).club.findMany({ where: { id: { in: wanted } }, select: { id: true, name: true, archivedAt: true, code: true } });
   return new Map(rows.map((row) => [row.id, row]));
 }
 
@@ -75,6 +86,61 @@ export async function areaNamesAt(siteId: string, db?: Pick<Prisma.TransactionCl
   return rows.map((row) => row.name);
 }
 
+/** A site's areas (Admin, Areas), in order, with how many lanes each has (0 for none): what a
+ *  "where" that may name lanes picks from (a class, an assessment, a short course session). */
+export async function areaLanesAt(siteId: string, db?: Pick<Prisma.TransactionClient, "siteArea">): Promise<{ name: string; lanes: number }[]> {
+  return (db ?? (await import("@/lib/prisma")).prisma).siteArea.findMany({ where: { siteId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { name: true, lanes: true } });
+}
+
+/** A site's areas (Admin, Areas), in order, with how many lanes each has (0 for none), the daily
+ *  hours it is open and its minimum staff: what the rota's activities and bookings pick from and
+ *  book lanes in, and what it checks staffing against. */
+export async function areasAt(siteId: string, db?: Pick<Prisma.TransactionClient, "siteArea" | "position">): Promise<AreaAt[]> {
+  const client = db ?? (await import("@/lib/prisma")).prisma;
+  const rows = await client.siteArea.findMany({ where: { siteId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    select: { id: true, name: true, lanes: true, openFrom: true, openUntil: true, weekHours: true, together: true, departmentId: true, parentId: true, orgId: true,
+      staffing: { orderBy: { sortOrder: "asc" }, select: { count: true, positionId: true, qualificationTypeId: true, qualificationType: { select: { name: true } }, activityTypeId: true, fromMinutes: true, untilMinutes: true, activityType: { select: { name: true } } } } } });
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  const roles = rows.length ? await rolesNeeding(rows[0].orgId, client) : [];
+  return rows.map(({ staffing, weekHours, together, departmentId, parentId, orgId: _org, ...area }) => {
+    void _org;
+    const parent = parentId ? byId.get(parentId) ?? null : null;
+    return { ...area, weekHours: weekHoursOf(weekHours), together: togetherOf(together),
+      minimums: staffing.map((m) => staffLine(m, roles)),
+      parentId: parent?.id ?? null, parentName: parent?.name ?? null, departmentId: parent ? parent.departmentId : departmentId };
+  });
+}
+/** Every role (Admin, Positions) with the qualifications it needs, in Admin's order: what names
+ *  an area's staff lines. */
+export async function rolesNeeding(orgId: string, db?: Pick<Prisma.TransactionClient, "position">): Promise<RoleNeeds[]> {
+  const rows = await (db ?? (await import("@/lib/prisma")).prisma).position.findMany({ where: { orgId }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    select: { id: true, name: true, archivedAt: true, requires: { select: { typeId: true } }, _count: { select: { holders: true } } } });
+  return rows.map((r) => ({ id: r.id, name: r.name, archived: !!r.archivedAt, holders: r._count.holders, typeIds: r.requires.map((q) => q.typeId) }));
+}
+/** A stored staff line as an area's minimum, a line of staff on duty named by its role; a line
+ *  on an activity has none. */
+export function staffLine(m: Parameters<typeof minimumOf>[0] & { positionId: string | null }, roles: readonly RoleNeeds[]): AreaMinimumAt {
+  const role = m.activityTypeId ? null : roleFor({ roleId: m.positionId, typeId: m.qualificationTypeId }, roles);
+  return { ...minimumOf(m), roleId: role?.id ?? null, roleName: role?.name ?? null };
+}
+/** One open area with its site, as `areasAt` gives it; null once archived or gone. */
+export async function areaById(id: string, db?: Pick<Prisma.TransactionClient, "siteArea" | "position">): Promise<(AreaAt & { siteId: string }) | null> {
+  const row = await (db ?? (await import("@/lib/prisma")).prisma).siteArea.findFirst({ where: { id, archivedAt: null }, select: { siteId: true } });
+  if (!row) return null;
+  const area = (await areasAt(row.siteId, db)).find((a) => a.id === id);
+  return area ? { ...area, siteId: row.siteId } : null;
+}
+/** An area as `areasAt` gives it: its hours (`hoursOn`) and the staff it needs then, "2 Lifeguard
+ *  holding Pool Lifeguard", `typeId` null for anyone and `roleName` null when no role is named. */
+export type AreaMinimumAt = { count: number; typeId: string | null; typeName: string | null; roleId: string | null; roleName: string | null;
+  activityTypeId: string | null; activityName: string | null; from: number | null; until: number | null };
+export type AreaAt = { id: string; name: string; lanes: number; openFrom: number | null; openUntil: number | null; weekHours: WeekHour[]; minimums: AreaMinimumAt[];
+  /** Staff in another area covering this one while both are open. */
+  together: AreaTogether[];
+  /** The area it is part of (Pool for the 25 m), and the department whose area it is (a
+   *  sub-area's is its parent's); null for none. */
+  parentId: string | null; parentName: string | null; departmentId: string | null };
+
 /** Live sites in the order people see them, e.g. for a public site picker. */
 export async function liveSites(db?: Db): Promise<SiteRef[]> {
   return (await client(db)).club.findMany({ where: { archivedAt: null }, select: { id: true, name: true }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }] });
@@ -87,7 +153,7 @@ export async function liveSiteIds(db?: Db): Promise<string[]> {
 }
 
 /** A site that no longer exists still needs a label rather than a crash. */
-const missingSite = (id: string): SiteStatusRef => ({ id, name: "Removed site", archivedAt: null });
+const missingSite = (id: string): SiteStatusRef => ({ id, name: "Removed site", archivedAt: null, code: null });
 
 /** Adds `as` (e.g. `club`) to each row, as `{ id, name }`, from the site id in `key` (e.g. `clubId`). */
 export async function withSites<K extends string, A extends string, T extends { [P in K]: string }>(
@@ -125,4 +191,330 @@ export async function withSite<K extends string, A extends string, T extends { [
 /** One row's version of `withStaff`. */
 export async function withOneStaff<K extends string, A extends string, T extends { [P in K]: string | null }>(row: T, key: K, as: A, db?: Db) {
   return (await withStaff([row], key, as, db))[0];
+}
+
+/** A person as modules that follow the organisation chart see them: their
+ *  role and its permissions, their main site and their live departments with
+ *  each department's site. No passwords or personal details. */
+export type StaffProfile = {
+  id: string; name: string; email: string; isActive: boolean; isSuperadmin: boolean; primarySiteId: string | null;
+  role: { id: string; name: string; permissions: string[] } | null;
+  departments: { id: string; siteId: string | null }[];
+};
+
+const profileSelect = { id: true, name: true, email: true, isActive: true, isSuperadmin: true, primaryClubId: true,
+  departments: { select: { departmentId: true, department: { select: { clubId: true, archivedAt: true } } } },
+  staffRole: { select: { id: true, name: true, permissions: true } },
+} as const;
+
+function profile(user: { id: string; name: string; email: string; isActive: boolean; isSuperadmin: boolean; primaryClubId: string | null;
+  departments: { departmentId: string; department: { clubId: string | null; archivedAt: Date | null } }[];
+  staffRole: { id: string; name: string; permissions: string[] } | null;
+}): StaffProfile {
+  return { id: user.id, name: user.name, email: user.email, isActive: user.isActive, isSuperadmin: user.isSuperadmin, primarySiteId: user.primaryClubId,
+    role: user.staffRole, departments: user.departments.filter((d) => !d.department.archivedAt).map((d) => ({ id: d.departmentId, siteId: d.department.clubId })) };
+}
+
+/** One person's profile, or null when the account no longer exists. */
+export async function staffProfile(id: string): Promise<StaffProfile | null> {
+  const user = await (await client()).user.findUnique({ where: { id }, select: profileSelect });
+  return user ? profile(user) : null;
+}
+
+/** Every account's profile, by name, active or not. */
+export async function staffProfiles(): Promise<StaffProfile[]> {
+  return (await (await client()).user.findMany({ select: profileSelect, orderBy: { name: "asc" } })).map(profile);
+}
+
+/** The organisation chart's live sites and departments and every role, each
+ *  in the order Admin shows them. */
+export async function organisationChart(): Promise<{ sites: SiteRef[]; departments: SiteRef[]; roles: SiteRef[] }> {
+  const { prisma } = await import("@/lib/prisma");
+  const order = [{ sortOrder: "asc" as const }, { name: "asc" as const }];
+  const [sites, departments, roles] = await Promise.all([
+    prisma.club.findMany({ where: { archivedAt: null }, orderBy: order, select: { id: true, name: true } }),
+    prisma.department.findMany({ where: { archivedAt: null }, orderBy: order, select: { id: true, name: true } }),
+    prisma.staffRole.findMany({ orderBy: order, select: { id: true, name: true } }),
+  ]);
+  return { sites, departments, roles };
+}
+
+/** Every site, archived ones too, in the order people see them (e.g. a filter over past records). */
+export async function allSites(db?: Db): Promise<SiteRef[]> {
+  return (await client(db)).club.findMany({ select: { id: true, name: true }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }] });
+}
+
+/** This site with its organisation when it is live, else null. Read inside a
+ *  module's transaction so the check and the write see the same data. */
+export async function liveSiteById(id: string, db?: Db): Promise<(SiteRef & { orgId: string | null }) | null> {
+  return (await client(db)).club.findFirst({ where: { id, archivedAt: null }, select: { id: true, name: true, orgId: true } });
+}
+
+/** The sites a person works at (`User.siteIds`): empty means every site, as it
+ *  does on the account; also empty when the account no longer exists. */
+export async function staffSiteIds(id: string, db?: Db): Promise<string[]> {
+  return (await (await client(db)).user.findUnique({ where: { id }, select: { siteIds: true } }))?.siteIds ?? [];
+}
+
+/** A person with their role's stored permissions (null without a role), for a
+ *  module that decides who to notify from its own access rules. */
+export type StaffAccess = StaffRef & { email: string; isActive: boolean; rolePermissions: string[] | null };
+const accessSelect = { id: true, name: true, email: true, isActive: true, staffRole: { select: { permissions: true } } } as const;
+const access = (u: { id: string; name: string; email: string; isActive: boolean; staffRole: { permissions: string[] } | null }): StaffAccess =>
+  ({ id: u.id, name: u.name, email: u.email, isActive: u.isActive, rolePermissions: u.staffRole?.permissions ?? null });
+
+export async function staffAccess(id: string, db?: Db): Promise<StaffAccess | null> {
+  const user = await (await client(db)).user.findUnique({ where: { id }, select: accessSelect });
+  return user ? access(user) : null;
+}
+
+/** Active accounts with their role's permissions; only these ids when given. */
+export async function activeStaffAccess(ids?: readonly string[], db?: Db): Promise<StaffAccess[]> {
+  return (await (await client(db)).user.findMany({ where: { isActive: true, ...(ids ? { id: { in: [...ids] } } : {}) }, select: accessSelect })).map(access);
+}
+
+/** An organisation's live sites with their short codes, in order. */
+export async function liveSitesOf(orgId: string | null, db?: Db): Promise<Array<SiteRef & { code: string | null }>> {
+  return (await client(db)).club.findMany({ where: { orgId: orgId ?? undefined, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true, code: true } });
+}
+
+/** An organisation's live sites that a capability reaches (a policy `SiteFilter`), in order. */
+export async function liveSitesWithin(orgId: string | null, sites: SiteFilter, db?: Db): Promise<SiteRef[]> {
+  const rows = await liveSitesOf(orgId, db);
+  return rows.filter((row) => sites.kind === "all" || sites.siteIds.has(row.id)).map(({ id, name }) => ({ id, name }));
+}
+
+/** Every organisation's live site ids, for scheduled jobs that run per organisation. */
+export async function liveSitesByOrganisation(db?: Db): Promise<Map<string, string[]>> {
+  const rows = await (await client(db)).club.findMany({ where: { archivedAt: null, orgId: { not: null } }, select: { id: true, orgId: true } });
+  const byOrg = new Map<string, string[]>();
+  for (const row of rows) byOrg.set(row.orgId!, [...(byOrg.get(row.orgId!) ?? []), row.id]);
+  return byOrg;
+}
+
+/** A site's name, archived or not; "Removed site" when it no longer exists. */
+export async function siteName(id: string, db?: Db): Promise<string> {
+  return (await sitesByIds([id], db)).get(id)?.name ?? "Removed site";
+}
+
+/** An organisation's name, for what goes outside Turnfin (a purchase order emailed to a
+ *  supplier); empty when there is none. */
+/** A site's postal address, one line per line; empty when none is set. */
+export async function siteAddress(id: string): Promise<string> {
+  return (await (await client()).club.findUnique({ where: { id }, select: { address: true } }))?.address ?? "";
+}
+
+/** Each site's reception phone, for the public (the parents app); empty when none is set. */
+export async function sitePhones(ids: readonly string[], db?: Db): Promise<Map<string, string>> {
+  if (!ids.length) return new Map();
+  const rows = await (await client(db)).club.findMany({ where: { id: { in: [...new Set(ids)] } }, select: { id: true, phone: true } });
+  return new Map(rows.map((r) => [r.id, r.phone]));
+}
+
+export async function organisationName(id: string | null): Promise<string> {
+  if (!id) return "";
+  const { prisma } = await import("@/lib/prisma");
+  return (await prisma.organisation.findUnique({ where: { id }, select: { name: true } }))?.name ?? "";
+}
+
+/* Staff with their job titles, for lists of people. */
+
+export type StaffCard = StaffRef & { jobTitle: string | null };
+
+export async function staffCardsByIds(ids: readonly (string | null | undefined)[], db?: Db): Promise<Map<string, StaffCard>> {
+  const wanted = unique(ids);
+  if (wanted.length === 0) return new Map();
+  const rows = await (await client(db)).user.findMany({ where: { id: { in: wanted } }, select: { id: true, name: true, jobTitle: true } });
+  return new Map(rows.map((row) => [row.id, row]));
+}
+
+/** `withStaff`, with each person's job title as well; a removed account reads "Former staff". */
+export async function withStaffCards<K extends string, A extends string, T extends { [P in K]: string }>(
+  rows: T[], key: K, as: A, db?: Db,
+): Promise<Array<T & { [P in A]: StaffCard }>> {
+  const people = await staffCardsByIds(rows.map((row) => row[key]), db);
+  return rows.map((row) => ({ ...row, [as]: people.get(row[key]) ?? { id: row[key], name: "Former staff", jobTitle: null } }) as T & { [P in A]: StaffCard });
+}
+
+/** Active staff in this organisation (only these people, when given), by name, with job titles. */
+export async function activeStaffCards(orgId: string | null, ids?: readonly string[] | null, db?: Db): Promise<StaffCard[]> {
+  return (await client(db)).user.findMany({ where: { orgId: orgId ?? undefined, isActive: true, ...(ids ? { id: { in: [...ids] } } : {}) }, orderBy: { name: "asc" }, select: { id: true, name: true, jobTitle: true } });
+}
+
+/** Of these people, the active ones in this organisation, by id and name. */
+export async function activeStaffAmong(orgId: string | null, ids: readonly string[], db?: Db): Promise<StaffRef[]> {
+  return (await client(db)).user.findMany({ where: { id: { in: [...ids] }, orgId: orgId ?? undefined, isActive: true }, select: { id: true, name: true } });
+}
+
+/** Which of these people still have an active account. */
+export async function activeStaffIds(ids: readonly string[], db?: Db): Promise<Set<string>> {
+  if (ids.length === 0) return new Set();
+  const rows = await (await client(db)).user.findMany({ where: { id: { in: [...new Set(ids)] }, isActive: true }, select: { id: true } });
+  return new Set(rows.map((row) => row.id));
+}
+
+/** Each person's line manager (the "their team" link HR keeps), by person id; null when none is set. */
+export async function lineManagersOf(ids: readonly string[], db?: Db): Promise<Map<string, StaffRef | null>> {
+  const wanted = unique(ids);
+  if (wanted.length === 0) return new Map();
+  const rows = await (await client(db)).user.findMany({ where: { id: { in: wanted } }, select: { id: true, manager: { select: { id: true, name: true } } } });
+  return new Map(rows.map((row) => [row.id, row.manager]));
+}
+
+/** Ids of the people in this organisation whose name contains `query`. */
+export async function staffIdsNamed(orgId: string | null, query: string, db?: Db): Promise<string[]> {
+  const rows = await (await client(db)).user.findMany({ where: { orgId: orgId ?? undefined, name: { contains: query, mode: "insensitive" } }, select: { id: true } });
+  return rows.map((row) => row.id);
+}
+
+/** Active staff in this organisation a capability covers, by name, with their job title and role
+ *  (so a module can act on everyone holding a role at once). */
+export async function activeStaffWithRoles(orgId: string | null, people: SubjectFilter, db?: Db) {
+  return (await client(db)).user.findMany({
+    where: { orgId: orgId ?? undefined, isActive: true, ...(people.kind === "all" ? {} : { id: { in: [...people.userIds] } }) },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, jobTitle: true, staffRole: { select: { id: true, name: true } } },
+  });
+}
+
+/** An organisation's live positions, in order. */
+export async function livePositionsOf(orgId: string | null): Promise<SiteRef[]> {
+  const { prisma } = await import("@/lib/prisma");
+  return prisma.position.findMany({ where: { orgId: orgId ?? undefined, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } });
+}
+
+/* Departments. */
+
+type DepartmentDb = Pick<Prisma.TransactionClient, "department" | "userDepartment">;
+async function departmentClient(db?: DepartmentDb): Promise<DepartmentDb> {
+  return db ?? (await import("@/lib/prisma")).prisma;
+}
+
+/** The live departments a site uses: its own and the organisation-wide ones, in order. */
+export async function departmentsForSite(orgId: string | null, siteId: string, db?: DepartmentDb): Promise<SiteRef[]> {
+  return (await departmentClient(db)).department.findMany({
+    where: { orgId: orgId ?? undefined, archivedAt: null, OR: [{ clubId: null }, { clubId: siteId }] },
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true },
+  });
+}
+
+/** A department in this organisation (live only, unless `liveOnly` is false); null when there is none. */
+export async function departmentById(id: string, orgId: string, opts: { liveOnly?: boolean } = {}, db?: DepartmentDb): Promise<SiteRef | null> {
+  return (await departmentClient(db)).department.findFirst({ where: { id, orgId, ...(opts.liveOnly === false ? {} : { archivedAt: null }) }, select: { id: true, name: true } });
+}
+
+/** The departments a person belongs to, their main one first. */
+export async function departmentIdsOf(userId: string, db?: DepartmentDb): Promise<string[]> {
+  const rows = await (await departmentClient(db)).userDepartment.findMany({ where: { userId }, orderBy: { isPrimary: "desc" }, select: { departmentId: true } });
+  return rows.map((row) => row.departmentId);
+}
+
+/* Staff for rules about age (young workers). Their dates of birth are personal: the caller
+ * uses them for those rules only and never shows them. */
+
+export type StaffAge = StaffRef & { dateOfBirth: Date | null };
+
+export async function staffAgesByIds(ids: readonly string[], db?: Db): Promise<StaffAge[]> {
+  if (ids.length === 0) return [];
+  return (await client(db)).user.findMany({ where: { id: { in: [...new Set(ids)] } }, select: { id: true, name: true, dateOfBirth: true } });
+}
+
+/** Contracted minutes a week by person, for the ones who have them set (Staff page). */
+export async function contractMinutesByIds(ids: readonly string[], db?: Db): Promise<Map<string, number>> {
+  if (ids.length === 0) return new Map();
+  const rows = await (await client(db)).user.findMany({ where: { id: { in: [...new Set(ids)] }, contractMinutes: { not: null } }, select: { id: true, contractMinutes: true } });
+  return new Map(rows.map((r) => [r.id, r.contractMinutes!]));
+}
+
+/** Active staff in this organisation who work at the site (or at every site), by name. */
+export async function activeStaffAgesAtSite(orgId: string | null, siteId: string, db?: Db): Promise<StaffAge[]> {
+  return (await client(db)).user.findMany({
+    where: { orgId: orgId ?? undefined, isActive: true, OR: [{ siteIds: { has: siteId } }, { siteIds: { isEmpty: true } }] },
+    orderBy: { name: "asc" }, select: { id: true, name: true, dateOfBirth: true },
+  });
+}
+
+/** Everyone, active or not, who works at the site or at every site. */
+export async function staffIdsAtSite(siteId: string, db?: Db): Promise<string[]> {
+  const rows = await (await client(db)).user.findMany({ where: { OR: [{ siteIds: { has: siteId } }, { siteIds: { isEmpty: true } }] }, select: { id: true } });
+  return rows.map((row) => row.id);
+}
+
+/** A person's organisation and whether they are active, with their name; null when there is no such account. */
+export async function staffStatus(id: string, db?: Db): Promise<(StaffRef & { orgId: string | null; isActive: boolean }) | null> {
+  return (await client(db)).user.findUnique({ where: { id }, select: { id: true, name: true, orgId: true, isActive: true } });
+}
+
+/** A site's organisation, archived or not; null when there is no such site. */
+export async function siteOrganisation(id: string, db?: Db): Promise<string | null> {
+  return (await (await client(db)).club.findUnique({ where: { id }, select: { orgId: true } }))?.orgId ?? null;
+}
+
+/* Roles, by id and name only. Modules ask for permissions, never role names;
+ * these are for rules a module keeps per role (e.g. who approves purchases). */
+export type RoleRef = { id: string; name: string };
+type RoleDb = Pick<Prisma.TransactionClient, "staffRole" | "user">;
+async function roleClient(db?: RoleDb): Promise<RoleDb> {
+  return db ?? (await import("@/lib/prisma")).prisma;
+}
+
+/** Every role, by name. */
+export async function allRoles(db?: RoleDb): Promise<RoleRef[]> {
+  return (await roleClient(db)).staffRole.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } });
+}
+
+export async function roleById(id: string, db?: RoleDb): Promise<RoleRef | null> {
+  return (await roleClient(db)).staffRole.findFirst({ where: { id }, select: { id: true, name: true } });
+}
+
+export async function rolesByIds(ids: readonly (string | null | undefined)[], db?: RoleDb): Promise<Map<string, RoleRef>> {
+  const wanted = unique(ids);
+  if (wanted.length === 0) return new Map();
+  const rows = await (await roleClient(db)).staffRole.findMany({ where: { id: { in: wanted } }, select: { id: true, name: true } });
+  return new Map(rows.map((row) => [row.id, row]));
+}
+
+/** Adds `as` (e.g. `role`) to each row from the role id in `key`; a removed role reads "Removed role". */
+export async function withRoles<K extends string, A extends string, T extends { [P in K]: string }>(
+  rows: T[], key: K, as: A, db?: RoleDb,
+): Promise<Array<T & { [P in A]: RoleRef }>> {
+  const roles = await rolesByIds(rows.map((row) => row[key]), db);
+  return rows.map((row) => ({ ...row, [as]: roles.get(row[key]) ?? { id: row[key], name: "Removed role" } }) as T & { [P in A]: RoleRef });
+}
+
+/** The role a person holds, or null. */
+export async function staffRoleIdOf(userId: string, db?: RoleDb): Promise<string | null> {
+  return (await (await roleClient(db)).user.findUnique({ where: { id: userId }, select: { staffRoleId: true } }))?.staffRoleId ?? null;
+}
+
+/** A staff member in this organisation, for a module that keeps them as a
+ *  participant (e.g. an Academy candidate): name, work email and date of birth.
+ *  Null when there is no such account, or it is inactive and `activeOnly`. */
+export type StaffContact = StaffRef & { email: string; dateOfBirth: Date | null };
+export async function staffContact(id: string, orgId: string | null, opts: { activeOnly?: boolean } = {}, db?: Db): Promise<StaffContact | null> {
+  return (await client(db)).user.findFirst({
+    where: { id, orgId: orgId ?? undefined, ...(opts.activeOnly ? { isActive: true } : {}) },
+    select: { id: true, name: true, email: true, dateOfBirth: true },
+  });
+}
+
+/** Active staff in this organisation who work at the site (or at every site), by name, with their job title. */
+export async function activeStaffAtSite(orgId: string | null, siteId: string, db?: Db): Promise<Array<StaffRef & { jobTitle: string | null }>> {
+  return (await client(db)).user.findMany({
+    where: { orgId: orgId ?? undefined, isActive: true, OR: [{ siteIds: { has: siteId } }, { siteIds: { isEmpty: true } }] },
+    orderBy: { name: "asc" }, select: { id: true, name: true, jobTitle: true },
+  });
+}
+
+/** Active staff in an organisation with what places them: role, live departments, sites and
+ *  position (Training's compliance rules and matrix). No personal details. */
+export type PlacedStaff = StaffRef & { roleId: string | null; departmentIds: string[]; siteIds: string[]; positionId: string | null };
+export async function activePlacedStaff(orgId: string | null, people: SubjectFilter = { kind: "all" }, db?: Db & DepartmentDb): Promise<PlacedStaff[]> {
+  const rows = await (await client(db)).user.findMany({
+    where: { orgId: orgId ?? undefined, isActive: true, ...(people.kind === "all" ? {} : { id: { in: [...people.userIds] } }) },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, staffRoleId: true, siteIds: true, positionId: true, departments: { select: { departmentId: true, department: { select: { archivedAt: true } } } } },
+  });
+  return rows.map((u) => ({ id: u.id, name: u.name, roleId: u.staffRoleId, siteIds: u.siteIds, positionId: u.positionId,
+    departmentIds: u.departments.filter((d) => !d.department.archivedAt).map((d) => d.departmentId) }));
 }

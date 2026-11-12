@@ -48,6 +48,9 @@ export const GUIDE_SCREENSHOTS: Record<string, Placement[]> = {
   "report-absence": [
     { image: "rota-absence", step: "Fill in who and when", caption: "Choose who is off, from when and why; the last day can wait until you know it.", alt: "Report an absence dialog with Who is off, First day off, Reason, an optional Last day off and Note." },
   ],
+  "hr-report": [
+    { image: "hr-report", step: "Fill it in", caption: "A report asks what it is about, what happened and when, and nothing else.", alt: "Report dialog for a fictional colleague with the choices Conduct, Performance, Attendance and Safety, the What happened field, and the day and time." },
+  ],
   "hr-note": [
     { image: "hr-note", step: "Choose who can read it", caption: "Each note says who can read it: only you, anyone with their HR record, or the person too.", alt: "Add a note dialog for a fictional colleague with the note field and Who can read it choices: Only me, On their record and Shared with them." },
   ],
@@ -60,7 +63,7 @@ export const GUIDE_SCREENSHOTS: Record<string, Placement[]> = {
   "parent-access": [{ image: "parent-profile", step: "Approve the guardian’s email", caption: "Approval names the swimmer, the guardian’s email and your reason for granting access.", alt: "Approve parent email dialog for a fictional swimmer with the guardian’s email and a reason field." }],
   "parent-accounts": [{ image: "parent-accounts", step: "Confirm the account change", caption: "Suspending ends the parent’s current sessions and affects all their linked swimmers.", alt: "Suspend parent account dialog naming sample.parent@example.test, with a reason field and Suspend account." }],
   "publish-parent-assessment": [{ image: "parent-publication", step: "Choose Publish to the parent app", caption: "Check the session, then set a booking deadline in Ireland time or leave it blank to close at the start.", alt: "Publish assessment to the parent app dialog with a fictional session, an optional booking deadline and a reason." }],
-  "get-started": [{ image: "workspace", step: "Plan today’s work", caption: "The fin and the module’s page bar run along the top, the tools bar with the site picker sits on the right, and your modules are down the left.", alt: "Swim school Schedule in the frame: the fin, the page bar with Schedule selected, the tools bar with swimmer search, the Hillview site picker and the account menu, and the modules bar down the left." }],
+  "get-started": [{ image: "workspace", step: "Plan today’s work", caption: "The fin and the app’s page bar run along the top, the tools bar with the site picker sits on the right, and your apps are down the left.", alt: "Swim school Schedule in the frame: the fin, the page bar with Schedule selected, the tools bar with swimmer search, the Hillview site picker and the account menu, and the app rail down the left." }],
   "switch-sites": [
     { image: "site-menu", step: "Choose the site you are working at", caption: "Open the site picker in the tools bar and choose the site you are working at.", alt: "Working site menu open from the tools bar, with Hillview selected and Riverside available.", scope: "desk" },
     { image: "instructor-site", step: "Choose the site you are working at", caption: "The site picker is in the pool deck’s top bar.", alt: "Pool deck top bar with the Working site menu open and both fictional sites listed.", scope: "instructor" },
@@ -71,7 +74,7 @@ export const GUIDE_SCREENSHOTS: Record<string, Placement[]> = {
   ],
   "account-password": [{ image: "password", step: "Enter the password details", caption: "Enter the current password and the new password twice.", alt: "Account page in the frame with Appearance and the Change password panel: Current password, New password and New password again." }],
   "missing-access": [
-    { image: "roles", step: "Ask for the access needed for your task", caption: "An administrator checks the level your role has in each module.", alt: "Edit role dialog with the name, home page name and description, then a row of levels for each module, such as None, Desk and Manage for Swim school.", scope: "desk" },
+    { image: "roles", step: "Ask for the access needed for your task", caption: "An administrator checks the level your role has in each app.", alt: "Edit role dialog with the name, home page name and description, then a row of levels for each app, such as None, Desk and Manage for Swim school.", scope: "desk" },
     { image: "instructor-home", step: "Check the workspace", caption: "The pool deck has its own frame with Classes and Swimmers, and no desk pages.", alt: "Pool deck classes page with the fin, Classes and Swimmers in the page bar, the site picker, Help and the account menu.", scope: "instructor" },
   ],
   "saving-and-connection": [{ image: "save-conflict", step: "Resolve changes made by someone else", caption: "Compare the saved attendance with your draft before choosing which to keep.", alt: "Attendance conflict notice showing a swimmer saved as Absent against a Late draft, with Use saved attendance and Save my version." }],
@@ -115,16 +118,16 @@ export const GUIDE_SCREENSHOTS: Record<string, Placement[]> = {
   "cancel-class-session": [{ image: "cancel-session", step: "Record the reason", caption: "This confirmation cancels one session and records why it cannot run.", alt: "Cancel this session? dialog with the class, date and time, a fictional reason for cancellation, Keep session and Confirm cancellation." }],
   "billing-follow-up": [{ image: "billing", step: "Record the handoff", caption: "After contacting billing, save a handoff note against the affected swimmers.", alt: "Cancelled Otters session awaiting billing, with the reason, the affected fictional swimmers, a billing handoff note and Mark billing notified." }],
   "analytics": [
-    { image: "analytics", step: "Compare swimmers and places", caption: "Current swimmer totals sit alongside this Monday–Sunday week’s recorded activity.", alt: "Analytics page in the frame with fictional swimmer totals, this week’s enrolment activity, places by level and cancellations." },
-    { image: "analytics-reception", step: "Compare reception activity", caption: "Reception activity groups recorded actions by person, with a daily breakdown for each.", alt: "Reception activity report with fictional staff, weekly enrolment and unenrolment totals, and daily breakdown controls." },
-    { image: "analytics-instructors", step: "Check instructor attendance", caption: "Find missing or partial attendance, then inspect the class and the staff who saved marks.", alt: "Instructor attendance report with fictional instructors, saved and missing registers, and dated class details." },
+    { image: "analytics", step: "Start with the Overview", caption: "The Overview opens with the suite's grouped pages and one tray of filters, then the swim school in eight figures.", alt: "Analytics Overview with the grouped pages, the period, sites and programme filters, and fictional figures for swimmers, places filled, waiting list, joiners and leavers." },
+    { image: "analytics-reception", step: "See how the desk is doing", caption: "Reception shows the desk's work, how many jobs were done on time and what is still waiting.", alt: "Reception analytics with fictional figures for work done, jobs on time, jobs still waiting, new swimmer records and places undone within a day." },
+    { image: "analytics-instructors", step: "Use the older reports", caption: "Registers finds missing or partial attendance, then shows the class and the staff who saved marks.", alt: "Registers report with fictional instructors, saved and missing registers, and dated class details." },
   ],
   "manage-curriculum": [
     { image: "programme", step: "Open or add a programme", caption: "A programme contains the ordered levels used at every site.", alt: "Add a programme dialog with a fictional name, a description and an optional image." },
     { image: "curriculum", step: "Describe the competencies", caption: "State the skill clearly and add instructor guidance when needed.", alt: "Add a competency to Otters dialog with What the swimmer has to do and Notes for the instructor." },
   ],
   "manage-staff": [{ image: "staff", step: "Add the person", caption: "Create an individual account and choose its role.", alt: "Add a person dialog with a fictional name and email, the role picker and a temporary password field." }],
-  "manage-roles": [{ image: "roles", step: "Choose a level in each module", caption: "Pick a level for each module; the line under each row says what it allows.", alt: "Edit role dialog with the name, home page name and description, then a row of levels for each module, such as None, Desk and Manage for Swim school." }],
+  "manage-roles": [{ image: "roles", step: "Choose a level in each app", caption: "Pick a level for each app; the line under each row says what it allows.", alt: "Edit role dialog with the name, home page name and description, then a row of levels for each app, such as None, Desk and Manage for Swim school." }],
   "manage-clubs": [{ image: "clubs", step: "Add or rename a site", caption: "A new site starts with an empty timetable and uses the shared records.", alt: "Add a site dialog explaining that swimmers, programmes and progress are shared, with a fictional site name." }],
   "activity-log": [{ image: "activity", step: "Read the entry", caption: "Each entry identifies the change, the person and the time.", alt: "Activity page in the frame listing fictional changes with what happened, who and when." }],
 };

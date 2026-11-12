@@ -1,0 +1,445 @@
+// Incidents (owner request, 11 October 2026): accidents,
+// incidents and near misses at a site, reported by a duty manager or supervisor
+// (owner decision, 12 October 2026), triaged by the centre
+// or operations manager and, when serious, signed off by the operations manager.
+// Tables carry the module prefix (AGENTS.md, Data and writes).
+
+/// One report. The reporter's words are locked when it is submitted; later
+/// corrections are addenda in `IncidentEvent`.
+model IncidentReport {
+  id                String    @id @default(cuid())
+  /// Shown as INC-00042.
+  number            Int       @unique @default(autoincrement())
+  orgId             String?
+  siteId            String
+  /// One of the site's areas (Admin, Areas) or free text when it has none.
+  area              String    @default("")
+  /// accident | incident | near_miss
+  kind              String
+  /// See `incidentCategories` in src/modules/incidents/shared/types.ts.
+  category          String
+  /// The site's own date and time, as the reporter saw the clock.
+  occurredOn        String
+  occurredAt        String
+  /// What happened, in the reporter's words.
+  description       String
+  /// What was done straight away: made safe, pool cleared, area closed.
+  immediateAction   String    @default("")
+  /// reported | investigating | closed
+  status            String    @default("reported")
+  /// Set at submission when the report says ambulance, hospital, a rescue or a
+  /// dangerous occurrence: the managers are alerted at once.
+  serious           Boolean   @default(false)
+  reporterId        String
+  reporterName      String
+  /// Who first told the reporter about it (name and role), when they didn't see
+  /// it themselves. Empty when they did.
+  raisedBy          String    @default("")
+
+  severityActual    Int?
+  severityPotential Int?
+  /// Whether it must be reported to the Health and Safety Authority, decided at triage.
+  hsaReportable     Boolean?
+  /// Someone died (Irish law, S.I. 370/2016 reg. 225): the HSA or the Gardaí are
+  /// told at once by the quickest means, and the written report is due within
+  /// 5 working days rather than 10.
+  hsaFatal          Boolean   @default(false)
+  /// The date the HSA report is due by (10 working days after the event, 5 for a death).
+  hsaDueOn          String?
+  /// The IR1 or IR3 reference, or the date it was sent.
+  hsaReference      String    @default("")
+  /// Who told a child's parent or guardian, and when, in their words.
+  parentInformed    String    @default("")
+  /// The triage questions for this kind of report (owner request, 19 October
+  /// 2026), such as the Garda incident number for a theft: key to a yes/no or
+  /// a short answer. See src/modules/incidents/shared/triage-guides.ts.
+  triageAnswers     Json      @default("{}")
+  triageNote        String    @default("")
+  triagedById       String?
+  triagedByName     String?
+  triagedAt         DateTime?
+  closeNote         String    @default("")
+  closedById        String?
+  closedByName      String?
+  closedAt          DateTime?
+  /// The investigation (phase 2, 12 October 2026): up to five "why?" answers,
+  /// each asking why of the one before, and the root cause they lead to.
+  whys              String[]  @default([])
+  rootCause         String    @default("")
+
+  version           Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  people        IncidentPerson[]
+  witnesses     IncidentWitness[]
+  events        IncidentEvent[]
+  reads         IncidentAccessEvent[]
+  notifications IncidentNotification[]
+  statements    IncidentStatement[]
+  actions       IncidentAction[]
+  files         IncidentFile[]
+  footageRequests IncidentFootageRequest[]
+  footage       IncidentFootage[]
+  wellbeingChecks IncidentWellbeingCheck[]
+  hazardLinks   IncidentHazardLink[]
+
+  @@index([siteId, status])
+  @@index([reporterId])
+  @@map("incidents_reports")
+}
+
+/// Someone involved: hurt, or at the centre of it. Injury and treatment are
+/// shown only to people who investigate, and every read is logged.
+model IncidentPerson {
+  id         String   @id @default(cuid())
+  reportId   String
+  /// public | swimmer | staff | contractor
+  type       String
+  /// The staff member, when it was one of the team (phase 3): their injury then
+  /// shows on their HR personal file. Never set for anyone else.
+  userId     String?
+  /// child | adult
+  ageGroup   String
+  name       String   @default("")
+  contact    String   @default("")
+  injured    Boolean  @default(false)
+  bodyPart   String   @default("")
+  injury     String   @default("")
+  firstAid   String   @default("")
+  firstAidBy String   @default("")
+  ambulance  Boolean  @default(false)
+  hospital   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  report IncidentReport @relation(fields: [reportId], references: [id], onDelete: Restrict)
+
+  @@index([reportId])
+  @@index([userId])
+  @@map("incidents_people")
+}
+
+/// Someone who saw it, and how to reach them for a statement.
+model IncidentWitness {
+  id        String   @id @default(cuid())
+  reportId  String
+  name      String
+  contact   String   @default("")
+  createdAt DateTime @default(now())
+
+  report IncidentReport @relation(fields: [reportId], references: [id], onDelete: Restrict)
+
+  @@index([reportId])
+  @@map("incidents_witnesses")
+}
+
+/// The report's history: submitted, triaged, closed, and every addendum.
+model IncidentEvent {
+  id        String   @id @default(cuid())
+  reportId  String
+  actorId   String
+  actorName String
+  /// One of `incidentActions` in shared/types.ts: submit, triage, close, addendum,
+  /// statement, investigation, action_*, file_*, reopen, export.
+  action    String
+  note      String   @default("")
+  createdAt DateTime @default(now())
+
+  report IncidentReport @relation(fields: [reportId], references: [id], onDelete: Restrict)
+
+  @@index([reportId, createdAt])
+  @@map("incidents_events")
+}
+
+/// Every time someone other than the reporter opened a report's injury details.
+model IncidentAccessEvent {
+  id        String   @id @default(cuid())
+  reportId  String
+  actorId   String
+  actorName String
+  createdAt DateTime @default(now())
+
+  report IncidentReport @relation(fields: [reportId], references: [id], onDelete: Restrict)
+
+  @@index([reportId, createdAt])
+  @@map("incidents_access_events")
+}
+
+/// An alert email about a serious report: queued in the same transaction as
+/// the report, sent straight after it commits.
+model IncidentNotification {
+  id          String    @id @default(cuid())
+  reportId    String
+  /// A staff member's id, or "unassigned" when nobody could be alerted.
+  recipientId String
+  /// PENDING | SENT | FAILED
+  status      String    @default("PENDING")
+  error       String?
+  createdAt   DateTime  @default(now())
+  sentAt      DateTime?
+
+  report IncidentReport @relation(fields: [reportId], references: [id], onDelete: Restrict)
+
+  @@index([reportId])
+  @@map("incidents_notifications")
+}
+
+/// A statement taken during an investigation: someone's own account, written
+/// down by the investigator. Locked once saved; a correction is a new statement.
+model IncidentStatement {
+  id             String   @id @default(cuid())
+  reportId       String
+  /// Who gave it, and as what ("Aoife, lifeguard on the slide").
+  givenBy        String
+  givenAs        String   @default("")
+  /// The day it was given (YYYY-MM-DD).
+  takenOn        String
+  text           String
+  recordedById   String
+  recordedByName String
+  createdAt      DateTime @default(now())
+
+  report IncidentReport @relation(fields: [reportId], references: [id], onDelete: Restrict)
+
+  @@index([reportId])
+  @@map("incidents_statements")
+}
+
+/// A corrective action: what will change so it does not happen again, who
+/// owns it and by when. A report closes only when none is left open.
+model IncidentAction {
+  id                String    @id @default(cuid())
+  reportId          String
+  title             String
+  ownerId           String
+  ownerName         String
+  /// YYYY-MM-DD
+  dueOn             String
+  /// open | done | cancelled
+  status            String    @default("open")
+  /// What was done, or why it was dropped.
+  note              String    @default("")
+  doneById          String?
+  doneByName        String?
+  doneAt            DateTime?
+  createdById       String
+  createdByName     String
+  createdAt         DateTime  @default(now())
+  /// The emails to the owner: when it was given to them, the day before it is
+  /// due and the day after it was due. An error stays for the investigators.
+  assignedEmailAt   DateTime?
+  dueEmailAt        DateTime?
+  overdueEmailAt    DateTime?
+  emailError        String?
+
+  report IncidentReport @relation(fields: [reportId], references: [id], onDelete: Restrict)
+
+  @@index([reportId])
+  @@index([status, dueOn])
+  @@index([ownerId, status])
+  @@map("incidents_actions")
+}
+
+/// A photo or document added to a report. Kept in the database like refund
+/// receipts; removing one hides it but keeps the record.
+model IncidentFile {
+  id          String    @id @default(cuid())
+  reportId    String
+  name        String
+  mime        String
+  size        Int
+  bytes       Bytes
+  addedById   String
+  addedByName String
+  createdAt   DateTime  @default(now())
+  removedAt   DateTime?
+  removedById String?
+
+  report IncidentReport @relation(fields: [reportId], references: [id], onDelete: Restrict)
+
+  @@index([reportId])
+  @@map("incidents_files")
+}
+
+/// A request for CCTV footage (owner request, 19 October 2026): emailed to
+/// whoever holds it, a staff member or anyone with an email address such as
+/// the security company, with a link that uploads to this request and nothing
+/// else. The link's token is kept only as a hash. It stops working when it
+/// expires, is cancelled, is sent again (a new link) or the report closes.
+model IncidentFootageRequest {
+  id              String    @id @default(cuid())
+  reportId        String
+  recipientName   String
+  recipientEmail  String
+  /// The staff member, when it was one of the team.
+  recipientUserId String?
+  /// What is needed: which cameras, where, between which times. The upload
+  /// page shows this and nothing else of the report.
+  details         String
+  tokenHash       String    @unique
+  expiresAt       DateTime
+  /// open | cancelled
+  status          String    @default("open")
+  requestedById   String
+  requestedByName String
+  emailedAt       DateTime?
+  emailError      String?
+  cancelledAt     DateTime?
+  cancelledByName String?
+  createdAt       DateTime  @default(now())
+
+  report  IncidentReport    @relation(fields: [reportId], references: [id], onDelete: Restrict)
+  footage IncidentFootage[]
+
+  @@index([reportId])
+  @@map("incidents_footage_requests")
+}
+
+/// A video sent through a footage request's link. Stored in the private Blob
+/// store (videos are far too big for the database), streamed only to people
+/// who triage at the report's site. A row is written when an upload starts
+/// and marked received once the store has the whole file; removing one hides
+/// it but keeps the record and the video.
+model IncidentFootage {
+  id          String    @id @default(cuid())
+  requestId   String
+  reportId    String
+  name        String
+  mime        String
+  size        BigInt
+  /// Where it is in the Blob store, and its address there once received.
+  pathname    String    @unique
+  url         String    @default("")
+  /// The name the person uploading it gave, and their note.
+  uploadedBy  String
+  note        String    @default("")
+  createdAt   DateTime  @default(now())
+  receivedAt  DateTime?
+  removedAt   DateTime?
+  removedById String?
+
+  request IncidentFootageRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  report  IncidentReport         @relation(fields: [reportId], references: [id], onDelete: Restrict)
+
+  @@index([requestId])
+  @@index([reportId])
+  @@map("incidents_footage")
+}
+
+/// Incidents' own settings, one row per organisation (owner request, 22 October
+/// 2026). Changed in Incidents > Settings by someone with Manage.
+model IncidentsSettings {
+  orgId         String   @id
+  /// Who gets wellbeing check requests (HR), as stored: "a@x, b@y"; empty for nobody yet.
+  wellbeingTo   String   @default("")
+  /// Copied (CC) on every wellbeing check request to HR, such as the operations
+  /// manager (owner request, 22 October 2026), as stored; empty for nobody.
+  wellbeingCc   String   @default("")
+  /// Copied on requests about one site only, by site id: { "<siteId>": "a@x, b@y" }
+  /// (owner request, 22 October 2026: "each site might require a different CC person").
+  wellbeingCcBySite Json @default("{}")
+  changedById   String?
+  changedByName String?
+  updatedAt     DateTime @updatedAt
+
+  @@map("incidents_settings")
+}
+
+/// A request to HR to check on someone's wellbeing after an incident (owner
+/// request, 22 October 2026), modelled on CCTV footage requests: emailed to the
+/// addresses in Incidents > Settings with a link that opens this request and
+/// nothing else, where HR records what they did, when, and what happens next.
+/// The link's token is kept only as a hash. It stops working when it expires,
+/// is cancelled, is sent again (a new link) or HR says nothing more is needed.
+/// What HR writes is shown only to Incidents: Manage at the site and to whoever asked.
+model IncidentWellbeingCheck {
+  id              String    @id @default(cuid())
+  reportId        String
+  /// What it asks of HR (owner request, 22 October 2026): wellbeing (check on
+  /// someone) | inform (a staff member was in the incident; HR may follow up).
+  kind            String    @default("wellbeing")
+  /// When letting HR know, what HR may need to follow up: time_off |
+  /// return_to_work | support | conduct (HR_FOLLOW_UPS in the feature's rules.ts).
+  followUps       String[]  @default([])
+  /// When letting HR know, whether the link also shows what happened, as written
+  /// on the report, and the person's injury. Never for a wellbeing check.
+  shareReport     Boolean   @default(false)
+  /// Who the check is for, and the staff member when it is one of the team.
+  personName      String
+  personUserId    String?
+  /// Why, in the words of whoever asked. The link shows this and nothing else of the report.
+  reason          String
+  /// The addresses it was sent to, as sent ("a@x, b@y").
+  sentTo          String
+  tokenHash       String    @unique
+  expiresAt       DateTime
+  /// open | done | cancelled
+  status          String    @default("open")
+  requestedById   String
+  requestedByName String
+  emailedAt       DateTime?
+  emailError      String?
+  cancelledAt     DateTime?
+  cancelledByName String?
+  doneAt          DateTime?
+  createdAt       DateTime  @default(now())
+
+  report  IncidentReport          @relation(fields: [reportId], references: [id], onDelete: Restrict)
+  updates IncidentWellbeingUpdate[]
+
+  @@index([reportId])
+  @@map("incidents_wellbeing_checks")
+}
+
+/// What HR recorded through the link: who, the day of the check, what they did
+/// and what is expected now. Never changed or deleted once saved.
+model IncidentWellbeingUpdate {
+  id        String   @id @default(cuid())
+  checkId   String
+  reportId  String
+  /// The name the HR person typed.
+  byName    String
+  /// The day they did it, as YYYY-MM-DD.
+  doneOn    String
+  whatDone  String
+  /// What happens now; empty when nothing more is expected.
+  nextSteps String   @default("")
+  /// They said nothing more is needed, which finished the check.
+  finished  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  check IncidentWellbeingCheck @relation(fields: [checkId], references: [id], onDelete: Restrict)
+
+  @@index([checkId])
+  @@map("incidents_wellbeing_updates")
+}
+
+/// A hazard from the site's risk assessments that whoever triages linked to the report (owner,
+/// 10 November 2026, D29). The hazard belongs to another app: this keeps its id, and its words
+/// and where it opens as they were when it was linked. Hidden when removed.
+model IncidentHazardLink {
+  id          String    @id @default(cuid())
+  orgId       String?
+  reportId    String
+  hazardId    String
+  /// "RA-BT-0001-HZ-003"
+  hazardRef   String
+  hazard      String
+  /// The assessment it is on: "RA-BT-0001 Main pool".
+  assessment  String
+  href        String
+  note        String    @default("")
+  /// The assessment's writers were asked to look at it again.
+  reviewAsked Boolean   @default(false)
+  addedById   String
+  addedByName String
+  createdAt   DateTime  @default(now())
+  removedAt   DateTime?
+  removedById String?
+
+  report IncidentReport @relation(fields: [reportId], references: [id], onDelete: Restrict)
+
+  @@index([reportId])
+  @@index([hazardId])
+  @@map("incidents_hazard_links")
+}

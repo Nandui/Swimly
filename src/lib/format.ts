@@ -199,6 +199,32 @@ export function isDateOnly(value: unknown): value is string {
   return Number.isFinite(date.getTime()) && toDateOnlyString(date) === value;
 }
 
+const WALL_CLOCK_IN_SCHOOL_TIME = new Intl.DateTimeFormat("en-GB", {
+  timeZone: SCHOOL_TIMEZONE, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+});
+
+/** A day and minutes past midnight at the pool → the instant, without the server's
+ *  timezone. Ambiguous autumn times use the earlier occurrence; nonexistent
+ *  spring times are null. */
+export function dublinInstant(date: string, minutes: number): Date | null {
+  if (!isDateOnly(date) || !Number.isInteger(minutes) || minutes < 0 || minutes >= 1440) return null;
+  const desired = new Date(`${date}T00:00:00Z`).getTime() + minutes * 60_000;
+  // Dublin's civil time is UTC or UTC+1. Match the wall time explicitly.
+  for (const offset of [60, 0]) {
+    const instant = new Date(desired - offset * 60_000);
+    const parts = Object.fromEntries(WALL_CLOCK_IN_SCHOOL_TIME.formatToParts(instant).map((p) => [p.type, p.value]));
+    if (`${parts.year}-${parts.month}-${parts.day}` === date && Number(parts.hour) * 60 + Number(parts.minute) === minutes) return instant;
+  }
+  return null;
+}
+
+/** `YYYY-MM-DD` moved by whole days, in UTC so it never crosses a clock change. */
+export function addDaysIso(iso: string, days: number): string {
+  const date = parseDateOnly(iso);
+  date.setUTCDate(date.getUTCDate() + days);
+  return toDateOnlyString(date);
+}
+
 /** A `@db.Date` value back to `YYYY-MM-DD`, for round-tripping through a URL
  *  or a form field. */
 export function toDateOnlyString(value: Date): string {
@@ -226,6 +252,29 @@ export function ageInYears(dateOfBirth: Date, now: Date = new Date()): number {
     age -= 1;
   }
   return age;
+}
+
+/** Whole years old on a day, both written "YYYY-MM-DD": the age rule for a
+ *  course, a shift or a report on a given date. */
+export function ageOn(dateOfBirth: string, on: string): number {
+  const [y, m, d] = dateOfBirth.split("-").map(Number);
+  const [ty, tm, td] = on.split("-").map(Number);
+  return ty - y - (tm < m || (tm === m && td < d) ? 1 : 0);
+}
+
+const EURO = new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" });
+
+/** Cents as staff read money: "€1,234.50". The only money formatter. */
+export function euro(cents: number): string {
+  return EURO.format(cents / 100);
+}
+
+/** An amount a person typed ("350", "350.00", "€1,250.50") as cents; null
+ *  when it is not an amount. */
+export function centsOf(value: string): number | null {
+  const clean = value.trim().replace(/[€,\s]/g, "");
+  if (!/^\d+(\.\d{1,2})?$/.test(clean)) return null;
+  return Math.round(Number(clean) * 100);
 }
 
 /** Up to two initials from a person's name, for an avatar fallback. The only initials helper:

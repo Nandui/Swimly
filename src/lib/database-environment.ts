@@ -5,7 +5,7 @@
  *  Branch and PR previews use their own development database, marked
  *  `DATABASE_ENVIRONMENT=development`: they apply migrations to it on every
  *  deploy and can never be mistaken for production. A preview without the
- *  mark never migrates. See docs/database-operations.md. */
+ *  mark never migrates. See docs/operations.md. */
 
 type Env = Record<string, string | undefined>;
 

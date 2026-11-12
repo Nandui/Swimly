@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { ThemeProvider } from "@/components/theme-provider";
-import { ToastBridge } from "@/lib/toast";
+import { ToastBridge } from "@/components/ui/toast";
 import { TooltipProvider } from "@/components/shadcn/tooltip";
 import { THEME_COOKIE, parseThemeMode } from "@/lib/theme-mode";
 import { APP_NAME, TITLE_TEMPLATE } from "@/lib/app";
@@ -12,13 +12,12 @@ import { DevelopmentRolePreview } from "@/components/staff/development-role-prev
 import { YourModulesProvider } from "@/components/workspace/your-modules";
 import { modulesFor } from "@/modules/context";
 import { getCurrentClub } from "@/lib/clubs/current";
-// Poolside Clear across the whole app: its typeface, self-hosted in every
-// environment, and its tokens and system rules (scoped to .turnfin-app on <body>).
-import "@fontsource/plus-jakarta-sans/400.css";
-import "@fontsource/plus-jakarta-sans/600.css";
-import "@fontsource/plus-jakarta-sans/700.css";
+// Turnfin Glass (DESIGN.md): its tokens come in through globals.css (theme/glass.css), its kit
+// and frame through theme/kit.css.
 import "./globals.css";
-import "./docs/poolside.css";
+import "./theme/kit.css";
+import { GlassRoot } from "@/components/ui-kit/glass";
+import { manrope } from "./fonts";
 
 /** One template all the way down: a layout that sets a title must also set
  *  TITLE_TEMPLATE. The browser and home-screen icons are the fin, from the
@@ -26,24 +25,20 @@ import "./docs/poolside.css";
  *  may set `icons` (one entry would turn the file icon off on that route). */
 export const metadata: Metadata = {
   title: { default: APP_NAME, template: TITLE_TEMPLATE },
-  description: "Swim school, pool deck, refunds, documents, training, rota and HR for leisure centre teams, in one place.",
+  description: "Classes, pool deck, finance requests, documents, training, rota and HR for leisure centre teams, in one place.",
 };
 
 /** `viewportFit: cover` lets the page run under the notch and the home
  *  indicator, which is what makes `env(safe-area-inset-*)` non-zero — the
  *  deck's save bar pads by it. The theme colours tint the browser chrome to
- *  match the ground in each mode, the same rule as the body background in
- *  poolside.css: --pc-canvas below 768px, where the frame is the page, and
- *  --pc-outer from 768px, where the frame sits on the outer ground. */
+ *  match the ground in each mode: --bg in theme/glass.css, at every width. */
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light) and (max-width: 767px)", color: "#eef2f6" },
-    { media: "(prefers-color-scheme: dark) and (max-width: 767px)", color: "#0c1320" },
-    { media: "(prefers-color-scheme: light) and (min-width: 768px)", color: "#f7f9fb" },
-    { media: "(prefers-color-scheme: dark) and (min-width: 768px)", color: "#070c14" },
+    { media: "(prefers-color-scheme: light)", color: "#0062b1" },
+    { media: "(prefers-color-scheme: dark)", color: "#0062b1" },
   ],
 };
 
@@ -70,10 +65,12 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     // The appearance provider updates this attribute when the preference changes.
     <html
       lang="en"
+      className={manrope.variable}
       suppressHydrationWarning
       data-theme={mode === "system" ? undefined : mode}
     >
       <body className="turnfin-app">
+        <GlassRoot />
         <ThemeProvider initialMode={mode}>
           <TooltipProvider>
             <ToastBridge />
@@ -86,6 +83,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                 ids={session?.user ? modulesFor(session).map((m) => m.id) : []}
                 role={session?.user?.roleName ?? ""}
                 site={site}
+                picture={session?.user?.image ?? null}
               >
                 {children}
               </YourModulesProvider>

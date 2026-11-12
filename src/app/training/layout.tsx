@@ -3,13 +3,13 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { pageSession } from "@/lib/page-guards";
 import { TITLE_TEMPLATE } from "@/lib/app";
-import { trainingAccess } from "@/lib/training/access";
-import { TrainingShell } from "@/components/training/shell";
+import { trainingAccess, TrainingShell } from "@/modules/training/features/workspace";
 import '../workspace/module-workspace.css';
+import './lesson.css';
 
 export const metadata: Metadata = { title: { default: "Training", template: TITLE_TEMPLATE } };
 
-/** The Training Manage surface. Opens for anyone with the Training screen and
+/** Training's managing side. Opens for anyone with the Training screen and
  *  a Training capability at any scope (a department or team role counts);
  *  every page limits records to the people that capability covers. */
 export default async function TrainingLayout({ children }: { children: ReactNode }) {

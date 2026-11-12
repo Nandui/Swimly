@@ -6,16 +6,17 @@ import { ActionButton, ConfirmAction } from "@/components/confirm-action";
 import { Field, FormDialog } from "@/components/form-dialog";
 
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/shadcn/textarea";
 import {
   createClub,
   setClubArchived,
   updateClub,
 } from "@/lib/clubs/actions/clubs";
 
-type Club = { id: string; name: string; code?: string | null; archivedAt: Date | null };
+type Club = { id: string; name: string; code?: string | null; address?: string; phone?: string; archivedAt: Date | null };
 
 function readInput(formData: FormData) {
-  return { name: String(formData.get("name") ?? ""), code: String(formData.get("code") ?? "") };
+  return { name: String(formData.get("name") ?? ""), code: String(formData.get("code") ?? ""), address: String(formData.get("address") ?? ""), phone: String(formData.get("phone") ?? "") };
 }
 
 function ClubFields({ club }: { club?: Club }) {
@@ -31,8 +32,14 @@ function ClubFields({ club }: { club?: Club }) {
         placeholder="Riverside"
       />
     </Field>
-      <Field label="Short code" htmlFor="code" hint="Two to four letters, for example BT. Purchase order numbers use it: PO-BT-00001.">
-        <Input id="code" name="code" maxLength={4} defaultValue={club?.code ?? ""} placeholder="DO" className="w-28 uppercase" />
+      <Field label="Short code" htmlFor="code" hint="Two to four letters, for example BT. Purchase order numbers start with it: BT-OCT-0042.">
+        <Input id="code" name="code" maxLength={4} defaultValue={club?.code ?? ""} placeholder="DO" className="[&_input]:w-28 [&_input]:uppercase" />
+      </Field>
+      <Field label="Address" optional htmlFor="address" hint="One line per line, with the Eircode. Suppliers deliver purchase orders here.">
+        <Textarea id="address" name="address" rows={4} maxLength={400} defaultValue={club?.address ?? ""} />
+      </Field>
+      <Field label="Reception phone" optional htmlFor="phone" hint="The number the public ring. The parents app shows it when a course is full.">
+        <Input id="phone" name="phone" type="tel" maxLength={30} defaultValue={club?.phone ?? ""} placeholder="021 000 0000" />
       </Field>
     </>
   );

@@ -5,15 +5,16 @@ import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 
-/** The page states every module shares (DESIGN.md, "States"). A module's
+/** The page states every module shares. A module's
  *  `not-found.tsx` and `error.tsx` render these inside its frame; the root
  *  ones put the same content on the sign-in canvas (AuthFrame). */
 
-export const NOT_FOUND_TITLE = "This page isn’t available";
+const NOT_FOUND_TITLE = "This page isn’t available";
 /** One answer for "missing" and "not in your role": a refused page declines
  *  to exist (src/lib/page-guards.ts), so the copy never confirms either. */
-export const NOT_FOUND_HINT = "It may have moved, or your role doesn’t include it. Ask your manager if you need it.";
+const NOT_FOUND_HINT = "It may have moved, or your role doesn’t include it. Ask your manager if you need it.";
 
 /** A page or record that does not exist, or that the role does not open. */
 export function PageNotFound({
@@ -28,8 +29,7 @@ export function PageNotFound({
   actionLabel?: string;
 }) {
   return (
-    <div className="min-w-0 flex flex-col gap-6">
-      <PageHeader title="Page not found" />
+    <PageShell spacing="roomy" header={<PageHeader title="Page not found" />}>
       <div className="pc-panel">
         <EmptyState
           as="h2"
@@ -39,7 +39,7 @@ export function PageNotFound({
           action={<Button asChild><Link href={href}>{actionLabel}</Link></Button>}
         />
       </div>
-    </div>
+    </PageShell>
   );
 }
 
@@ -69,14 +69,13 @@ export function PageError({
   hint?: string;
 }) {
   return (
-    <div className="min-w-0 flex flex-col gap-6">
-      <PageHeader title={title} />
+    <PageShell spacing="roomy" header={<PageHeader title={title} />}>
       <Notice
         tone="error"
         title="Could not load this page."
         description={hint}
         actions={<Button onClick={() => retry()}>Try again</Button>}
       />
-    </div>
+    </PageShell>
   );
 }

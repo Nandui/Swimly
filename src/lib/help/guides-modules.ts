@@ -1,6 +1,6 @@
 import type { HelpArticle } from "./types";
 
-/** The everyday guides for Home and the Work modules beyond the swim school. Each topic shows
+/** The everyday guides for Home and every app beyond the swim school. Each topic shows
  *  only to people who can open its module (HELP_CATEGORY_SCREENS). Check labels against the
  *  module's components: src/components/{refunds,docs,training,rota,hr}. */
 export const MODULE_GUIDES: HelpArticle[] = [
@@ -12,20 +12,20 @@ export const MODULE_GUIDES: HelpArticle[] = [
     steps: [
       { title: "Check what is waiting for you", text: "Waiting for you lists the things that need someone with your access, such as parent updates, practical sign-offs, refunds to decide or qualifications expiring. The number is how many; choose a row to open that list." },
       { title: "Read the day at your site", text: "Classes today and Today at your site summarise the classes, assessments, people on shift and people off at the site in the tools bar. Choose Open schedule for the full day." },
-      { title: "Start a common task", text: "Quick actions start the tasks your role does most, such as adding a swimmer, logging a refund request or reporting an absence. Each one opens the module that does it." },
+      { title: "Start a common task", text: "Quick actions start the tasks your role does most, such as adding a swimmer, logging a refund request or reporting an absence. Each one opens the app that does it." },
       { title: "Use Turnfin Me for your own things", text: "Your own training, required reading, qualifications, shifts and the HR notes shared with you are in Turnfin Me on your phone, not here. Sign in to it with your work email; it sends you a code." },
     ],
     result: "You can see what needs doing today and go straight to it, while your own records stay on your phone.",
-    troubleshooting: [{ question: "Why is my home page different from a colleague’s?", answer: "It follows your role and your sites. Someone with no Refunds level sees no refunds to decide. Ask your manager if a module you need is missing." }],
+    troubleshooting: [{ question: "Why is my home page different from a colleague’s?", answer: "It follows your role and your sites. Someone with no Finance requests level sees no refunds to decide. Ask your manager if an app you need is missing." }],
     related: ["get-started", "switch-sites", "missing-access"],
   },
   {
     slug: "log-refund", title: "Log a refund request", category: "refunds", scopes: ["desk"],
     summary: "Send a customer’s refund request to finance with the details they need to decide it.",
     keywords: ["refund", "money back", "customer", "request", "receipt", "finance", "draft", "reception"],
-    before: ["You need the Refunds: Use level. Have the customer’s details, what they paid for, the amount and the original payment reference to hand."],
+    before: ["You need the Finance requests: Use level. Have the customer’s details, what they paid for, the amount and the original payment reference to hand."],
     steps: [
-      { title: "Open Log a refund request", text: "In Refunds, choose Log a refund request at the top right of Refund requests. Home’s quick actions have the same link." },
+      { title: "Open Log a refund request", text: "In Finance requests, open Refunds and choose Log a refund request at the top right. Home’s quick actions have the same link." },
       { title: "Fill in the customer and the payment", text: "Enter the customer name, choose the site and service, and describe what was purchased. Then add the requested refund, the original payment date and its reference from Legend, a receipt or your payment system, and the reason. Never enter card or bank details." },
       { title: "Save a draft or submit it", text: "Save draft keeps it in My drafts; a draft needs only the site and service, and you must save one to add receipts. When every detail is there, choose Submit to finance." },
       { title: "Follow it in My requests", text: "My requests shows each request you logged and where it is. If finance asks for more information, it comes back to you with their question; answer it and submit again." },
@@ -38,7 +38,7 @@ export const MODULE_GUIDES: HelpArticle[] = [
     slug: "decide-refund", title: "Decide a refund request", category: "refunds", scopes: ["desk"],
     summary: "Take responsibility for a request, approve or decline it, then record the payment.",
     keywords: ["refund", "approve", "decline", "finance", "payment", "request information", "pay", "review"],
-    before: ["You need the Refunds: Manage level. Nobody decides a request they logged themselves; another finance colleague does."],
+    before: ["You need the Finance requests: Manage level. Nobody decides a request they logged themselves; another finance colleague does."],
     steps: [
       { title: "Open the request", text: "Refund requests shows what needs your team’s action, with figures for Awaiting review, Needs information, Awaiting payment and Refunded. Search by name, member or RF number, then open the request." },
       { title: "Take responsibility for it", text: "Choose Take responsibility so colleagues know you are handling it. Read the customer, service, amount, reason and any receipts." },
@@ -113,7 +113,7 @@ export const MODULE_GUIDES: HelpArticle[] = [
     before: ["You need the Rota: Plan level for your department at the site, or Run. Choose the site in the tools bar first. The site's areas and the activity list are set up in Admin."],
     steps: [
       { title: "Open Plan", text: "In Rota choose Plan. It opens on your department's week; the strip of days counts the gaps on each. Choose a day." },
-      { title: "Add the activities", text: "Each area of the site (Main pool, Learner pool) has its own row. Choose the plus on an area, or Add activity: what it is (Lifeguarding, Teaching), the area, when, and how many people at once. Each place becomes a lane. Scroll over the day to zoom in, and drag it to move. Copy fills empty days from an earlier day or week." },
+      { title: "Add the activities", text: "Each area of the site (Main pool, Learner pool) has its own row. Choose the plus on an area, or Add activity: what it is (Lifeguarding, Teaching), the area, when, and how many staff at once (not how many swimmers it takes). Each place becomes a lane. Scroll over the day to zoom in, and drag it to move. Copy fills empty days from an earlier day or week." },
       { title: "Fill the gaps", text: "An amber block is a gap. Choose it and Who can fill it lists everyone, best fit first. Choose the plus beside a name. Warnings such as an expired qualification never stop you." },
       { title: "Share the week", text: "Choose Share week when it is ready. Your staff see their days in Turnfin Me, and hear about any change to them after that." },
     ],
@@ -187,10 +187,10 @@ export const MODULE_GUIDES: HelpArticle[] = [
     slug: "hr-note", title: "Add an HR note", category: "hr", scopes: ["desk"],
     summary: "Record what happened, when and what was agreed, and choose who can read it.",
     keywords: ["hr", "note", "record", "conversation", "personal file", "manager", "shared"],
-    before: ["You need the HR: Their team level for people you manage, or Everyone. HR is restricted: you confirm your password and every read is logged."],
+    before: ["You need the HR: Their sites level for the people at your sites, or Everyone. HR is restricted: you confirm your password and every read is logged."],
     steps: [
       { title: "Open the person’s HR record", text: "In HR, search for the person under People and open their record." },
-      { title: "Choose Add note", text: "Choose Add note. Keep to facts: what happened, when and what was agreed." },
+      { title: "Choose Add note", text: "Choose Add note, then what it is about: Conduct, Performance, Attendance, Safety or General. Keep to facts: what happened, when and what was agreed." },
       { title: "Choose who can read it", text: "Only me keeps it to you; On their record lets anyone who can read their HR record see it; Shared with them also shows it to the person in Turnfin Me. Choose Add note." },
     ],
     result: "The note is saved against your name on their record. You can withdraw it later with a reason.",
@@ -198,10 +198,24 @@ export const MODULE_GUIDES: HelpArticle[] = [
     related: ["hr-review"], action: "hr",
   },
   {
+    slug: "hr-report", title: "Report good work or an issue with a staff member", category: "hr", scopes: ["desk"],
+    summary: "Put a quick report on someone's HR file without opening it.",
+    keywords: ["hr", "report", "issue", "conduct", "performance", "attendance", "safety", "good work", "praise", "positive", "duty manager", "staff"],
+    before: ["You need the HR: Report level, or higher. You can report on the people you manage."],
+    steps: [
+      { title: "Open Report", text: "In HR, choose Report." },
+      { title: "Fill it in", text: "Choose the person and what it is about: Good work, Conduct, Performance, Attendance or Safety. Write what happened, keeping to facts, and when it happened." },
+      { title: "Send it", text: "Choose Send report. It goes on their HR file against your name. The person is not told." },
+    ],
+    result: "The centre managers for your site see it under Needs you until one of them reads it. You cannot open it again; if it is wrong, ask a centre manager to withdraw it.",
+    troubleshooting: [{ question: "Why isn't the person I want in the list?", answer: "You can report only on the people you manage. Ask an administrator to check that you are set as their manager under Admin › People." }],
+    related: ["hr-note"], action: "hr",
+  },
+  {
     slug: "hr-review", title: "Run a performance review", category: "hr", scopes: ["desk"],
     summary: "Start a review, write it as a draft and share it with the person to acknowledge.",
     keywords: ["hr", "review", "performance", "appraisal", "probation", "annual", "goals", "acknowledge"],
-    before: ["You need the HR: Their team level for people you manage, or Everyone."],
+    before: ["You need the HR: Their sites level for the people at your sites, or Everyone."],
     steps: [
       { title: "Start a review", text: "Open the person’s HR record and choose Start a review. Enter the review period, for example 2026 annual review, and choose Start draft." },
       { title: "Write the review", text: "Fill in the summary, strengths, goals for the next period and overall. It stays a draft that only you and superadmins can see; choose Save draft as you go." },
@@ -217,7 +231,7 @@ export const MODULE_GUIDES: HelpArticle[] = [
     keywords: ["voucher", "redeem", "code", "family swim", "free swim", "christmas", "community", "ticket", "used", "expired", "reception"],
     before: ["You need the Vouchers: Redeem level at the site. Have the voucher in front of you: its code is eight characters."],
     steps: [
-      { title: "Type the code", text: "Open Vouchers. Type the code printed on the voucher into Voucher code and choose Check voucher. Dashes, spaces and lower case do not matter." },
+      { title: "Type the code", text: "Open Vouchers and choose Redeem. Type the code printed on the voucher into Voucher code and choose Check voucher. Dashes, spaces and lower case do not matter." },
       { title: "Read what it gives", text: "The voucher shows what it gives, such as a family swim, who it was given to, the days it can be used and the sites that accept it. Valid means it can be used now." },
       { title: "Mark it as used", text: "Choose Mark as used. If you work at more than one site that accepts it, choose where under Used at first. Keep the voucher: its code will not work again." },
     ],

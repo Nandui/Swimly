@@ -1,4 +1,4 @@
-import { expandPermissions, isRestrictedPermission, type PermissionKey } from "@/lib/staff/permissions";
+import { expandPermissions, isRestrictedPermission, skipsStepUp, type PermissionKey } from "@/lib/staff/permissions";
 import type { Actor, Directory, Grant, Resource, Scope, SiteFilter, SubjectFilter } from "./types";
 
 /** The platform's single answer to "may this person do this, here, to them?".
@@ -12,15 +12,13 @@ import type { Actor, Directory, Grant, Resource, Scope, SiteFilter, SubjectFilte
  *  2. A superadmin reaches everything in their organisation.
  *  3. Otherwise a grant must hold the capability *and* its scope must cover
  *     the resource. Self-service (a person's own records) is not a grant:
- *     each module's My surface serves it, so holding no capability never
+ *     each module's self-service code (Turnfin Me) serves it, so holding no capability never
  *     hides your own training, and holding one never shows you more of yours. */
 
-export class AccessDenied extends Error {}
-
-/** A step-up window: restricted capabilities need a password check this recent. */
+/** A step-up window: restricted capabilities need a sign-in (Google or password) this recent. */
 export const STEP_UP_MS = 15 * 60 * 1000;
 
-export function grantsFor(actor: Actor, cap: PermissionKey): Grant[] {
+function grantsFor(actor: Actor, cap: PermissionKey): Grant[] {
   return actor.grants.filter((grant) => grant.permissions.has(cap));
 }
 
@@ -30,15 +28,18 @@ export function holdsAnywhere(actor: Actor, cap: PermissionKey): boolean {
   return actor.superadmin || grantsFor(actor, cap).length > 0;
 }
 
-/** Whether the session proved itself with a password (not a PIN) recently. */
+/** Whether the session proved itself recently with Google or a password, never
+ *  a PIN. Google is the way in (owner decision, 23 October 2026), so HR asks the
+ *  person to sign in with Google again; the developer login uses its password. */
 export function recentlyConfirmed(actor: Actor, now = Date.now()): boolean {
   if (actor.authMethod === "dev") return true;
-  return actor.authMethod === "password" && actor.authAt !== null && now - actor.authAt <= STEP_UP_MS;
+  return (actor.authMethod === "password" || actor.authMethod === "google") && actor.authAt !== null && now - actor.authAt <= STEP_UP_MS;
 }
 
-/** Restricted capabilities also need a fresh password (not a PIN) session. */
+/** Restricted capabilities also need a fresh Google or password (not a PIN) session,
+ *  except the few that read nothing (filing an HR report, D22). */
 export function needsStepUp(actor: Actor, cap: PermissionKey, now = Date.now()): boolean {
-  if (!isRestrictedPermission(cap)) return false;
+  if (!isRestrictedPermission(cap) || skipsStepUp(cap)) return false;
   return !recentlyConfirmed(actor, now);
 }
 
@@ -64,11 +65,6 @@ export async function can(actor: Actor, cap: PermissionKey, resource: Resource, 
   if (actor.superadmin) return true;
   for (const grant of grantsFor(actor, cap)) if (await scopeCovers(grant.scope, actor, resource, dir)) return true;
   return false;
-}
-
-export async function requireCap(actor: Actor, cap: PermissionKey, resource: Resource, dir: Directory) {
-  if (needsStepUp(actor, cap)) throw new AccessDenied("Confirm your password to open this.");
-  if (!(await can(actor, cap, resource, dir))) throw new AccessDenied(`You do not have permission to do that (${cap}).`);
 }
 
 /** Whose records a capability reaches, as ids a query can filter by. Unions
@@ -111,16 +107,24 @@ export function actorFrom(input: {
   assignments: { roleName: string; permissions: readonly string[]; scope: Scope }[];
   authMethod?: Actor["authMethod"];
   authAt?: number | null;
+  /** Permissions of apps switched off at the working site (src/lib/apps/switches.ts): no grant
+   *  gives them, and a superadmin keeps everything else as a grant rather than the bypass. */
+  withheld?: ReadonlySet<string>;
 }): Actor {
+  const withheld = input.withheld ?? new Set<string>();
+  const held = (keys: Set<PermissionKey>) => {
+    for (const key of withheld) keys.delete(key as PermissionKey);
+    return keys;
+  };
   const grants: Grant[] = [];
   if (input.primary) {
-    grants.push({ roleName: input.primary.name, permissions: expandPermissions(input.primary.permissions, { superadmin: input.superadmin }), scope: { kind: "all" } });
+    grants.push({ roleName: input.primary.name, permissions: held(expandPermissions(input.primary.permissions, { superadmin: input.superadmin })), scope: { kind: "all" } });
   }
   for (const assignment of input.assignments) {
-    grants.push({ roleName: assignment.roleName, permissions: expandPermissions(assignment.permissions), scope: assignment.scope });
+    grants.push({ roleName: assignment.roleName, permissions: held(expandPermissions(assignment.permissions)), scope: assignment.scope });
   }
   return {
-    id: input.id, name: input.name, orgId: input.orgId, superadmin: input.superadmin, grants,
+    id: input.id, name: input.name, orgId: input.orgId, superadmin: input.superadmin && withheld.size === 0, grants,
     authMethod: input.authMethod ?? "password", authAt: input.authAt ?? null,
   };
 }

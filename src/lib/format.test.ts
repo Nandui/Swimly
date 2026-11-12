@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  ageOn,
+  centsOf,
+  euro,
   formatDate,
   formatDateRange,
   formatDateTime,
@@ -49,6 +52,20 @@ test("counts agree with their noun", () => {
   assert.equal(plural(0, "swimmer"), "0 swimmers");
   assert.equal(plural(3, "class", "classes"), "3 classes");
   assert.equal(plural(1204, "swimmer"), "1,204 swimmers");
+});
+
+test("an age is whole years on the day asked about", () => {
+  assert.equal(ageOn("2018-10-17", "2026-10-16"), 7);
+  assert.equal(ageOn("2018-10-16", "2026-10-16"), 8);
+  assert.equal(ageOn("2010-10-24", "2026-10-24"), 16);
+  assert.equal(ageOn("2024-02-29", "2025-02-28"), 0);
+});
+
+test("money reads as euro and typed amounts become cents", () => {
+  assert.equal(euro(123450), "€1,234.50");
+  assert.equal(euro(0), "€0.00");
+  assert.deepEqual([centsOf("350"), centsOf("350.00"), centsOf("€1,250.50"), centsOf("€ 45.50")], [35000, 35000, 125050, 4550]);
+  assert.deepEqual([centsOf("abc"), centsOf(""), centsOf("1.234"), centsOf("-5")], [null, null, null, null]);
 });
 
 test("calendar validation rejects normalised and malformed dates", () => {

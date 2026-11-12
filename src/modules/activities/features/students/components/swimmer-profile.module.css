@@ -1,0 +1,148 @@
+/* The workspace owns the responsive page inset, matching Swimmers and Classes. */
+.profile {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--label);
+}
+/* The glance comes first in the DOM (phones read it first); from 850px it sits on the right. */
+.body {
+  display: grid;
+  gap: var(--space-7);
+  padding-top: var(--space-5);
+  align-items: start;
+}
+.main,
+.glance {
+  min-width: 0;
+}
+/* Chapters: one card each on the ground (DESIGN.md, Content), opened in place. */
+.chapters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.chapter {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-radius: var(--radius-card);
+  background: var(--bg-2);
+  box-shadow: var(--shadow-card);
+}
+.chapterTrigger {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: var(--control-height);
+  padding: var(--space-4) var(--space-5);
+  border: 0;
+  border-radius: var(--radius-card);
+  background: none;
+  color: var(--label);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: background-color var(--duration-fade) var(--ease);
+}
+.chapterTrigger:hover {
+  background: var(--bg-3);
+}
+.chapterTrigger:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.chapterContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 var(--space-5) var(--space-5);
+}
+/* Competency levels on the profile: the same card as a chapter. */
+.level {
+  min-width: 0;
+  border-radius: var(--radius-card);
+  background: var(--bg-2);
+  box-shadow: var(--shadow-card);
+}
+.levelContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 var(--space-5) var(--space-5);
+}
+/* Class picker: each class is a selectable row; the header lines up with the row's text
+   (16px inset + 16px radio + 12px gap). */
+.pickerHead {
+  padding: 0 17px 0 45px;
+  color: var(--label-2);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+}
+.picker .options label.option {
+  align-items: center;
+}
+.picker .options label.option:has(:disabled) {
+  cursor: not-allowed;
+}
+.briefEvent {
+  display: grid;
+  grid-template-columns: calc(var(--spacing) * 26) calc(var(--spacing) * 5) minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding-block: 12px;
+  min-height: 64px;
+}
+.briefEvent + .briefEvent {
+  border-top: 0.5px solid var(--sep);
+}
+.briefEvent time {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--label-2);
+}
+.briefEvent > svg {
+  color: var(--label-2);
+}
+@container (max-width: 700px) {
+  .briefEvent {
+    grid-template-columns: calc(var(--spacing) * 5) minmax(0, 1fr) auto;
+  }
+  .briefEvent time {
+    grid-column: 2 / -1;
+  }
+}
+@container (min-width: 850px) {
+  .body {
+    grid-template-columns: minmax(0, 1fr) calc(var(--spacing) * 80);
+  }
+  .glance {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .main {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
+/* Rows inside a level card part with an inset hairline, as rows in any card do (kit.css). */
+.level :global(.pc-rows) :global(.pc-row) {
+  margin-inline: calc(-1 * var(--space-3));
+  padding-inline: var(--space-3);
+  background: transparent;
+}
+.level :global(.pc-rows) {
+  gap: 0;
+}
+.level :global(.pc-rows) > :global(li) + :global(li) {
+  border-top: 0.5px solid var(--sep);
+}

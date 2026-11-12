@@ -7,35 +7,17 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/shadcn/collapsible";
-import { StartClass } from "@/modules/activities/components/instructor/start-class";
-import { RefreshClasses } from "@/modules/activities/components/instructor/refresh-classes";
-import { claimState } from "@/modules/activities/lib/attendance/claim-state";
 import {
-  instructorClassHref,
-  instructorHomeHref,
-} from "@/modules/activities/lib/attendance/navigation";
-import { weekdayOfIso } from "@/modules/activities/lib/attendance/dates";
-import { getCoversForDay } from "@/modules/activities/lib/attendance/data/cover";
-import { getRegisterStateForDay } from "@/modules/activities/lib/attendance/data/register";
-import {
-  courseName,
-  formatTime,
-  formatSessionTime,
-} from "@/modules/activities/lib/courses/constants";
-import type { CourseRow } from "@/modules/activities/lib/courses/data/courses";
-import { getCoursesOnDate } from "@/modules/activities/lib/courses/planned";
+  ATTENDANCE_RECORD_META, CANCELLATION_META, claimState, courseName, type CourseRow, formatSessionTime, formatTime, getCancellationsForDay, getCoursesOnDate, getMergesForDay, MERGE_META, getCoversForDay, getRegisterStateForDay, getTodayAssessments, InstructorAssessments, instructorClassHref, instructorHomeHref, RefreshClasses, StartClass, weekdayOfIso,
+} from "@/modules/activities/features/instructor";
 import { formatDate, formatDay, minutesNow, parseDateOnly, plural, today } from "@/lib/format";
 import { HOME_SESSION_META } from "@/lib/home-meta";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { EmptyState } from "@/components/ui-kit/empty-state";
-import { ATTENDANCE_RECORD_META } from "@/modules/activities/lib/attendance/constants";
 import { screenPage } from "@/lib/page-guards";
 import { can } from "@/lib/authz";
-import { getCancellationsForDay } from "@/modules/activities/lib/cancellations/data";
-import { CANCELLATION_META } from "@/modules/activities/lib/cancellations/constants";
 import { Tag } from "@/components/ui-kit/tag";
-import { InstructorAssessments } from "@/modules/activities/components/instructor/assessments";
-import { getTodayAssessments } from "@/modules/activities/lib/today/assessments";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 
 export const metadata: Metadata = { title: "Pool deck" };
@@ -51,19 +33,22 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
     day = weekdayOfIso(iso),
     now = minutesNow(),
     me = session.user.id;
-  const [courses, marked, covers, cancellations, assessments] = await Promise.all([
+  const [courses, marked, covers, cancellations, assessments, merges] = await Promise.all([
     getCoursesOnDate(iso),
     getRegisterStateForDay(day, iso),
     getCoversForDay(iso),
     getCancellationsForDay(iso),
     getTodayAssessments(iso),
+    getMergesForDay(iso),
   ]);
+  // A class merged into another today is taught there, so it leaves the lists like a cancelled one.
+  const off = (id: string) => cancellations.has(id) || merges.away.has(id);
   const mine = courses.filter(
       (c) => c.instructorId === me || covers.get(c.id)?.coverById === me,
     ),
     shown = tab === "all" ? courses : mine;
   const sections = groupClasses(
-    shown.filter(course => !cancellations.has(course.id)),
+    shown.filter(course => !off(course.id)),
     group,
     now,
   );
@@ -80,34 +65,32 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
       name = courseName(course),
       own = course.instructorId === me;
     const openHref = instructorClassHref(course.id, { tab, group, date: iso });
-    const cancelled = cancellations.get(course.id);
-    // The time block wears the class's own phase (a level section can hold several), with the
-    // state's icon and words beside the colour; "next" is the plain blue block.
-    const block = cancelled ? "off" : ({ earlier: "done", now: "now", later: "next" } as const)[phaseOf(course, now)];
+    const cancelled = cancellations.get(course.id), mergedAway = merges.away.get(course.id), joined = merges.into.get(course.id) ?? [];
+    // The class's own phase (a level section can hold several): on now and done say so beside the
+    // name, a cancelled class says it in the trail; what comes next needs no tag.
+    const block = cancelled || mergedAway ? "off" : ({ earlier: "done", now: "now", later: "next" } as const)[phaseOf(course, now)];
     const blockMeta = HOME_SESSION_META[block];
     const caption = [
       course.location || "Pool",
       plural(course._count.enrolments, "swimmer"),
       cancelled?.reason,
+      mergedAway ? `Joined ${mergedAway.intoClassName} at ${formatTime(mergedAway.intoStartMinutes)}` : null,
+      joined.length ? `+${plural(joined.reduce((n, j) => n + j._count.swimmers, 0), "swimmer")} from ${joined.map(j => `${j.fromClassName} ${formatTime(j.fromStartMinutes)}`).join(", ")}` : null,
       tab === "all" && state === "available" && !own ? course.instructor?.name ?? "No instructor assigned" : null,
       state === "shared" ? `Started by ${claim?.coverByName}` : null,
     ].filter(Boolean).join(" · ");
     return (
       <li key={course.id} className="pc-row">
-        <span className="pc-block w-24 flex-none" data-state={block}>
-          <span className="pc-block-time">
-            {formatTime(course.startMinutes)}
-            <small>to {formatTime(course.startMinutes + course.durationMinutes)}</small>
-          </span>
-          {block !== "next" ? <blockMeta.icon className="ml-auto" aria-hidden="true" /> : null}
-          <span className="sr-only">{blockMeta.label}</span>
+        <span className="w-16 shrink-0 font-semibold tabular-nums">
+          {formatTime(course.startMinutes)}
+          <span className="block text-xs font-normal text-ui-muted-foreground">to {formatTime(course.startMinutes + course.durationMinutes)}</span>
         </span>
         <div className="pc-row-body">
-          <h3 className="pc-row-title break-words">{name}</h3>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1"><h3 className="pc-row-title break-words">{name}</h3>{block === "now" || block === "done" ? <Tag meta={blockMeta} /> : null}</div>
           <p className="pc-row-hint break-words">{caption}</p>
         </div>
         <div className="pc-row-trail">
-          {cancelled ? <Tag meta={CANCELLATION_META.cancelled} /> : state !== "available" ? (
+          {cancelled ? <Tag meta={CANCELLATION_META.cancelled} /> : mergedAway ? <Tag meta={MERGE_META.away} /> : state !== "available" ? (
             <>
               <Tag meta={marked.has(course.id) ? ATTENDANCE_RECORD_META.taken : ATTENDANCE_RECORD_META.notTaken} />
               <Button asChild variant="outline">
@@ -138,24 +121,22 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
   function section(s: Section) {
     const when = group !== "time" ? null : s.phase === "now" ? "On now" : s.key === firstAhead ? "Next" : null;
     return (
-      <section key={s.key} aria-labelledby={`classes-${s.key}`} className="flex flex-col gap-3">
-        <div className="pc-panel-head">
+      <section key={s.key} aria-labelledby={`classes-${s.key}`} className="flex flex-col">
+        <div className="pc-section-head">
           <h2 id={`classes-${s.key}`} className="tabular-nums">{s.title}</h2>
-          <p className="pc-row-hint">
-            {[when, plural(s.courses.length, "class", "classes"), s.subtitle].filter(Boolean).join(" · ")}
-          </p>
+          <p>{plural(s.courses.length, "class", "classes")}</p>
         </div>
-        <ul className="pc-rows">{s.courses.map(row)}</ul>
+        {when || s.subtitle ? <p className="pc-section-note">{[when, s.subtitle].filter(Boolean).join(" · ")}</p> : null}
+        <ul className="pc-list">{s.courses.map(row)}</ul>
       </section>
     );
   }
-  const cancelledToday = shown.filter((course) => cancellations.has(course.id));
+  const cancelledToday = shown.filter((course) => off(course.id));
   const earlierCount = earlier.reduce((n, s) => n + s.courses.length, 0);
   return (
-    <>
-      <PageHeader title="Pool deck" description={formatDay(iso)} actions={<RefreshClasses />} />
+    <PageShell spacing="roomy" header={<PageHeader title="Pool deck" description={formatDay(iso)} actions={<RefreshClasses />} />}>
       <InstructorAssessments sessions={assessments} canRun={can(session, "assessments.run")} params={{ tab, group }} />
-      <section className="pc-panel" aria-label="Classes today">
+      <section className="flex min-w-0 flex-col gap-(--space-6)" aria-label="Classes today">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
           <SegmentedLinks label="Whose classes" items={[
             { href: href({ tab: "mine" }), label: "My classes", count: mine.length, current: tab === "mine" },
@@ -183,9 +164,9 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
           <>
             {listed.map(section)}
             {cancelledToday.length ? (
-              <section aria-labelledby="classes-cancelled" className="flex flex-col gap-3">
-                <div className="pc-panel-head"><h2 id="classes-cancelled">Cancelled today</h2></div>
-                <ul className="pc-rows">{cancelledToday.map(row)}</ul>
+              <section aria-labelledby="classes-cancelled" className="flex flex-col">
+                <div className="pc-section-head"><h2 id="classes-cancelled">{cancelledToday.some(c => cancellations.has(c.id)) ? cancelledToday.some(c => merges.away.has(c.id)) ? "Cancelled or merged today" : "Cancelled today" : "Merged today"}</h2><p>{cancelledToday.length}</p></div>
+                <ul className="pc-list">{cancelledToday.map(row)}</ul>
               </section>
             ) : null}
             {fold ? (
@@ -204,7 +185,7 @@ export default async function InstructorPage(props: PageProps<"/instructor">) {
           </>
         )}
       </section>
-    </>
+    </PageShell>
   );
 }
 

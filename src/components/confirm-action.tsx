@@ -15,7 +15,7 @@ import {
 } from "@/components/shadcn/alert-dialog";
 import { Notice } from "@/components/ui-kit/notice";
 import type { ActionResult } from "@/lib/action-result";
-import { toast } from "@/lib/toast";
+import { toast } from "@/components/ui/toast";
 import { withTimeout } from "@/lib/save-feedback";
 import { Trigger, useDialogTriggerFocus } from "@/components/form-dialog";
 
@@ -88,7 +88,7 @@ export function ConfirmAction({
         onOpenChange={(next) => (next ? setOpen(true) : close())}
       >
         <AlertDialogContent
-          className="max-h-[calc(100dvh-2rem)] overflow-y-auto"
+          className="max-h-(--overlay-max-height) overflow-y-auto"
           aria-busy={pending}
         >
           <AlertDialogHeader>

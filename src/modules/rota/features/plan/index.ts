@@ -1,0 +1,8 @@
+/** Planning the week: shifts, activities, breaks, copying and sharing a week.
+ *  Entry for the module and its routes. */
+export { ALL_DEPARTMENTS, planWeek } from "@/modules/rota/features/plan/server/data";
+export { planExport } from "@/modules/rota/features/plan/server/export";
+export { CopyDialog, NeedDialog, ShareWeek } from "@/modules/rota/shared/components/plan-dialogs";
+export { addDaysIso, mondayOf } from "@/modules/rota/shared/constants";
+export { ROTA_WEEK_META } from "@/modules/rota/shared/meta";
+export { duration } from "@/modules/rota/shared/shifts";

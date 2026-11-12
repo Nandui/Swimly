@@ -1,0 +1,220 @@
+// Plan (test) (owner decisions, 29 October 2026): the rota started again from first principles,
+// beside the old Rota, which stays as it is. A shift is a person at a site on a day; duty blocks
+// fill it; sessions are what's on and the duties they need; a gap is a needed place nobody fills.
+// Sites, departments, people and qualifications are Core's and read through its functions, so
+// these tables keep plain ids and carry the module prefix (AGENTS.md, Data and writes). Days are
+// the site's own dates as "YYYY-MM-DD"; times are minutes after midnight.
+
+/// Retired (owner, 2 November 2026): Plan reads Admin › Areas (Core's `SiteArea`), the one list
+/// Swim school and Rota use too. Left unread until one migration removes it, with the owner's yes.
+/// A place at a site where sessions happen: "Pool", or one of its parts, "Main pool" (one level
+/// of parts only). Lanes, when it has them, let a session take some and not others.
+model PlanArea {
+  id           String    @id @default(cuid())
+  orgId        String
+  siteId       String
+  name         String
+  /// The area it is part of; null for a whole area.
+  parentId     String?
+  /// How many lanes it has; 0 for none.
+  lanes        Int       @default(0)
+  /// The department it belongs to, for filtering; null for one the site shares.
+  departmentId String?
+  sortOrder    Int       @default(0)
+  archivedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  parent   PlanArea?     @relation("PlanAreaParts", fields: [parentId], references: [id], onDelete: Restrict)
+  parts    PlanArea[]    @relation("PlanAreaParts")
+  sessions PlanSession[]
+
+  @@index([orgId, siteId])
+  @@map("plan_areas")
+}
+
+/// What a person does for a stretch of their shift: Lifeguard, Swim teacher, Reception, Break.
+/// "Duty", not "job": the platform's jobs are people's roles (docs/roadmap.md, step 3).
+model PlanDuty {
+  id                  String    @id @default(cuid())
+  orgId               String
+  name                String
+  /// The department whose work it is; null for any department.
+  departmentId        String?
+  /// Who may do it; the plan warns, never blocks, when someone does not hold it on the day.
+  qualificationTypeId String?
+  /// A tag colour (green, blue, orange, red, purple, gray).
+  color               String    @default("blue")
+  /// The usual length, to place a block quickly; null for none.
+  defaultMinutes      Int?
+  /// A break: counts towards the breaks a shift is owed, never towards a session's need.
+  isBreak             Boolean   @default(false)
+  /// The duty swim classes and other commitments need (one place each).
+  forClasses          Boolean   @default(false)
+  archivedAt          DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  tasks  PlanDutyTask[]
+  needs  PlanSessionNeed[]
+  blocks PlanBlock[]
+
+  @@index([orgId])
+  @@map("plan_duties")
+}
+
+/// A small job a duty can come with: "Open the till" on Reception. Setup lists them by name only;
+/// the Day chooses which ones each person on the duty does, and from when to when
+/// (`PlanBlock.taskIds`, `taskMinutes` and `taskEndMinutes`; owner, 11 November 2026). Shown on the person's day, never ticked off: that
+/// is the Tasks app.
+model PlanDutyTask {
+  id        String @id @default(cuid())
+  dutyId    String
+  name      String
+  /// Retired (owner, 11 November 2026): the time is set on the Day, in `PlanBlock.taskMinutes`.
+  /// No longer read; new rows write "start". Waits for the owner's yes to be removed.
+  when      String
+  /// Retired with `when`.
+  atMinutes Int?
+  sortOrder Int    @default(0)
+
+  duty PlanDuty @relation(fields: [dutyId], references: [id], onDelete: Cascade)
+
+  @@index([dutyId])
+  @@map("plan_duty_tasks")
+}
+
+/// Something on at a site that needs staff: Pool open, Public swim, a school's lessons, a party.
+/// It repeats on its weekdays from its first to its last day (a one-off is a one-day repeat),
+/// except its skipped days. Sessions on the same area stack: their needs add up.
+model PlanSession {
+  id            String    @id @default(cuid())
+  orgId         String
+  siteId        String
+  title         String
+  /// Retired with `PlanArea`; `siteAreaId` is read instead.
+  areaId        String?
+  /// Where it is: Admin › Areas (Core's `SiteArea`), read through `src/lib/directory.ts`.
+  siteAreaId    String?
+  /// The area's lanes it takes, 1 up; empty for the whole area.
+  lanes         Int[]     @default([])
+  startMinutes  Int
+  endMinutes    Int
+  /// Monday = 0 to Sunday = 6.
+  weekdays      Int[]
+  firstDay      String
+  lastDay       String
+  skipDays      String[]  @default([])
+  note          String    @default("")
+  createdById   String
+  createdByName String
+  cancelledAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  area  PlanArea?         @relation(fields: [areaId], references: [id], onDelete: Restrict)
+  needs PlanSessionNeed[]
+  days  PlanSessionDay[]
+
+  @@index([orgId, siteId, lastDay])
+  @@map("plan_sessions")
+}
+
+/// The staff a session needs the whole time it runs: `count` people on `dutyId`.
+model PlanSessionNeed {
+  id        String @id @default(cuid())
+  sessionId String
+  dutyId    String
+  count     Int
+
+  session PlanSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  duty    PlanDuty    @relation(fields: [dutyId], references: [id], onDelete: Restrict)
+
+  @@index([sessionId])
+  @@map("plan_session_needs")
+}
+
+/// One day of a repeating session changed or called off: new times, or cancelled.
+model PlanSessionDay {
+  id           String  @id @default(cuid())
+  sessionId    String
+  date         String
+  cancelled    Boolean @default(false)
+  startMinutes Int?
+  endMinutes   Int?
+
+  session PlanSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, date])
+  @@map("plan_session_days")
+}
+
+/// A person working at a site on a day, on a department's plan. Built first; duty blocks fill it.
+model PlanShift {
+  id            String   @id @default(cuid())
+  orgId         String
+  siteId        String
+  /// The department whose plan it is on; the person may belong to another (borrowed).
+  departmentId  String
+  userId        String
+  date          String
+  startMinutes  Int
+  endMinutes    Int
+  note          String   @default("")
+  createdById   String
+  createdByName String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  blocks PlanBlock[]
+
+  @@index([orgId, siteId, date])
+  @@index([userId, date])
+  @@map("plan_shifts")
+}
+
+/// A stretch of a shift on one duty, filling a place on a session when it has one.
+model PlanBlock {
+  id           String   @id @default(cuid())
+  shiftId      String
+  dutyId       String
+  /// The session it fills (on the shift's day); null for a duty on its own, or a break.
+  sessionId    String?
+  startMinutes Int
+  endMinutes   Int
+  /// The duty's tasks this person does in this block (`PlanDutyTask` ids), chosen on the Day.
+  taskIds      String[] @default([])
+  /// When each of those tasks starts, in the same order, set on the Day.
+  taskMinutes  Int[]    @default([])
+  /// When each of those tasks ends, in the same order, set on the Day.
+  taskEndMinutes Int[]  @default([])
+  createdAt    DateTime @default(now())
+
+  shift PlanShift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  duty  PlanDuty  @relation(fields: [dutyId], references: [id], onDelete: Restrict)
+
+  @@index([shiftId])
+  @@index([sessionId])
+  @@map("plan_blocks")
+}
+
+/// Someone not to be planned from `firstDay` to `lastDay`: a holiday, sick. Plan's own simple
+/// record; absences and returns to work stay in the old Rota.
+model PlanOff {
+  id          String    @id @default(cuid())
+  orgId       String
+  userId      String
+  firstDay    String
+  lastDay     String
+  /// "holiday", "sick" or "other".
+  reason      String
+  note        String    @default("")
+  byId        String
+  byName      String
+  withdrawnAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([orgId, firstDay])
+  @@index([userId, firstDay])
+  @@map("plan_offs")
+}

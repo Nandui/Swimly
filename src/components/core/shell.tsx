@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { ADMIN_GROUPS, type CoreLinkKey } from '@/components/core/pages';
-import { ModuleShell } from '@/components/workspace/module-shell';
+import { ModuleShell } from '@/components/ui/module-shell';
 
 export type { CoreLinkKey };
 
@@ -22,11 +22,11 @@ export function CoreShell({ who, screens, children }: {
     { label: '', links: [{ href: '/core', label: 'Overview', icon: ADMIN_GROUPS[0].links[0].icon, active: pathname === '/core' }] },
     ...ADMIN_GROUPS.slice(1).map((g) => ({
       label: g.label,
-      links: g.links.filter((l) => screens.includes(l.key as CoreLinkKey)).map(({ href, label, icon }) => ({ href, label, icon, active: isOn(href) })),
+      links: g.links.filter((l) => screens.includes(l.key as CoreLinkKey)).map(({ href, label, icon, place }) => ({ href, label, icon, place, active: isOn(href) })),
     })).filter((g) => g.links.length),
   ];
   return (
-    <ModuleShell module="Admin" id="core" current="admin" who={who} groups={groups} scopeNote="Shared by every module">
+    <ModuleShell module="Admin" id="core" current="admin" who={who} groups={groups} scopeNote="Shared by every app">
       {children}
     </ModuleShell>
   );

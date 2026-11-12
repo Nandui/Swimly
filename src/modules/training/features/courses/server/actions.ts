@@ -1,0 +1,83 @@
+"use server";
+
+import { z } from "zod";
+import { fail, ok, onUniqueViolation, type ActionResult } from "@/lib/action-result";
+import { logAudit } from "@/lib/audit";
+import { prisma } from "@/lib/prisma";
+import { liveQualificationTypeById } from "@/lib/qualifications";
+import { requireTrainingActor } from "@/modules/training/shared/access";
+import { refresh } from "@/modules/training/shared/writes";
+
+// ---------------------------------------------------------------------------
+// Catalogue
+// ---------------------------------------------------------------------------
+
+const courseSchema = z.object({
+  title: z.string().trim().min(3, "Give the course a name.").max(120, "Keep the name under 120 characters."),
+  summary: z.string().trim().max(300, "Keep the summary under 300 characters."),
+  /** The old plain-text material. Courses are now built from lessons, so the dialog leaves it alone. */
+  content: z.string().trim().max(10000, "Keep the material under 10,000 characters.").optional(),
+  requiresSignoff: z.boolean(),
+  grantsTypeId: z.string().trim().max(64).transform((v) => v || null),
+  /** Where it sits in the catalogue, such as "Pool safety", and words to find it by (phase 3). */
+  category: z.string().trim().max(60, "Keep the category under 60 characters.").optional(),
+  tags: z.array(z.string().trim().max(30, "Keep each tag under 30 characters.")).max(10, "Use up to 10 tags.").optional()
+    .transform((tags) => tags && [...new Set(tags.map((t) => t.replace(/^#/, "")).filter(Boolean))]),
+  /** Open in Turnfin Me's catalogue, for staff to enrol themselves (phase 6). */
+  selfEnrol: z.boolean().optional(),
+  /** Lessons open one after another; courses to finish first; offered as a template (phase 8). */
+  lessonsInOrder: z.boolean().optional(),
+  prerequisiteIds: z.array(z.string().trim().min(1).max(64)).max(5, "Choose up to 5 courses to finish first.").optional().transform((ids) => ids && [...new Set(ids)]),
+  isTemplate: z.boolean().optional(),
+});
+export type CourseInput = z.input<typeof courseSchema>;
+
+export async function saveCourse(id: string | null, input: CourseInput): Promise<{ ok: true; id: string } | Extract<ActionResult, { ok: false }>> {
+  const who = await requireTrainingActor();
+  if (!who.manage || !who.orgId) return fail("Building the catalogue needs the Training catalogue permission.");
+  const parsed = courseSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+  const data = parsed.data;
+  let savedId = id ?? "";
+  const result = await onUniqueViolation(() => prisma.$transaction(async (tx) => {
+    if (data.grantsTypeId && !(await liveQualificationTypeById(data.grantsTypeId, who.orgId!, tx))) {
+      return fail("That qualification is no longer offered.");
+    }
+    if (data.prerequisiteIds?.length) {
+      if (id && data.prerequisiteIds.includes(id)) return fail("A course can't need itself first.");
+      const found = await tx.trainingCourse.findMany({ where: { id: { in: data.prerequisiteIds }, orgId: who.orgId! }, select: { id: true, prerequisiteIds: true } });
+      if (found.length !== data.prerequisiteIds.length) return fail("A course to finish first no longer exists.");
+      // Two courses that each need the other first could never be taken.
+      if (id && found.some((c) => c.prerequisiteIds.includes(id))) return fail("One of those courses already needs this one first, so neither could be taken.");
+    }
+    if (id) {
+      const existing = await tx.trainingCourse.findFirst({ where: { id, orgId: who.orgId! }, select: { title: true } });
+      if (!existing) return fail("That course no longer exists.");
+      await tx.trainingCourse.update({ where: { id }, data });
+      await logAudit({ actorId: who.id, actorName: who.name, action: "update", entity: "TrainingCourse", entityId: id, summary: `Updated the course ${data.title}` }, tx);
+    } else {
+      const created = await tx.trainingCourse.create({ data: { ...data, orgId: who.orgId!, createdById: who.id } });
+      savedId = created.id;
+      await logAudit({ actorId: who.id, actorName: who.name, action: "create", entity: "TrainingCourse", entityId: created.id, summary: `Added the course ${data.title}` }, tx);
+    }
+    return ok();
+  }), "There is already a course with that name.", "title");
+  if (!result.ok) return result;
+  refresh("/training/courses", `/training/courses/${savedId}`);
+  return { ok: true, id: savedId };
+}
+
+export async function setCourseArchived(id: string, archived: boolean): Promise<ActionResult> {
+  const who = await requireTrainingActor();
+  if (!who.manage) return fail("Building the catalogue needs the Training catalogue permission.");
+  const result = await prisma.$transaction(async (tx) => {
+    const course = await tx.trainingCourse.findFirst({ where: { id, orgId: who.orgId ?? undefined }, select: { title: true, archivedAt: true } });
+    if (!course) return fail("That course no longer exists.");
+    if (!!course.archivedAt === archived) return ok();
+    await tx.trainingCourse.update({ where: { id }, data: { archivedAt: archived ? new Date() : null } });
+    await logAudit({ actorId: who.id, actorName: who.name, action: archived ? "archive" : "restore", entity: "TrainingCourse", entityId: id, summary: `${archived ? "Retired" : "Restored"} the course ${course.title}` }, tx);
+    return ok();
+  });
+  if (result.ok) refresh("/training/courses");
+  return result;
+}

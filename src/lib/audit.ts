@@ -9,9 +9,12 @@
  *  months later, so it names what changed and to what — "email old → new", not
  *  "user updated". Diff old against new and say which fields moved. */
 
-import type { Prisma } from "@/generated/prisma/client";
+import { Prisma } from "@/generated/prisma/client";
+import { SCHOOL_TIMEZONE } from "@/lib/format";
 import { currentClubIdIfAny } from "@/lib/clubs/current";
+import type { SiteFilter } from "@/lib/policy/types";
 import { prisma } from "@/lib/prisma";
+import { SYSTEM_ACTOR_LABEL } from "@/lib/system-actor";
 
 type AuditInput = {
   actorId?: string | null;
@@ -42,31 +45,73 @@ type AuditInput = {
  *  missing here. */
 export const MODULE_OF_ENTITY: Readonly<Record<string, string>> = {
   // Admin: people, roles, sites and devices.
-  User: "Admin", StaffRole: "Admin", RoleAssignment: "Admin", Club: "Admin", Department: "Admin", Organisation: "Admin", SharedDevice: "Admin",
+  User: "Admin", StaffRole: "Admin", RoleAssignment: "Admin", Club: "Admin", Department: "Admin", Organisation: "Admin", SharedDevice: "Admin", AppSwitch: "Admin",
   // Swim school.
   Student: "Swim school", Enrolment: "Swim school", Course: "Swim school", LegendAgreementPrice: "Swim school", Programme: "Swim school", Level: "Swim school", Competency: "Swim school",
   AssessmentType: "Swim school", AssessmentSession: "Swim school", AssessmentBooking: "Swim school",
   ParentAccount: "Swim school", ParentSignInChallenge: "Swim school", ParentChildAccess: "Swim school", ParentAccessRequest: "Swim school",
   ParentChangeRequest: "Swim school", ParentAssessmentPublication: "Swim school",
-  // Training, including the qualifications it keeps.
-  TrainingCourse: "Training", TrainingAssignment: "Training", Qualification: "Training", QualificationType: "Training", QualificationEvidence: "Training",
-  // Refunds and Rota.
-  RefundRequest: "Refunds", RefundNotification: "Refunds",
+  // Training, and Qualifications, which keeps the qualifications people hold and their hours (D26).
+  TrainingCourse: "Training", TrainingAssignment: "Training", TrainingRule: "Training", TrainingEvidence: "Training", TrainingPath: "Training", TrainingPathEnrolment: "Training", TrainingSession: "Training",
+  TrainingHours: "Qualifications", TrainingHourTarget: "Qualifications", Qualification: "Qualifications", QualificationType: "Qualifications", QualificationEvidence: "Qualifications",
+  // Finance requests (Refunds and Coinage, D24) and Rota.
+  RefundRequest: "Finance requests", RefundNotification: "Finance requests",
+  CoinageRequest: "Finance requests", CoinageNotification: "Finance requests",
   AcademyCourseType: "Academy", AcademyCourse: "Academy", AcademySession: "Academy", AcademyCandidate: "Academy", AcademyCall: "Academy",
-  Supplier: "Purchasing", PurchaseProduct: "Purchasing", PurchaseApprovalRule: "Purchasing", PurchaseOrder: "Purchasing",
+  Supplier: "Purchasing", PurchaseProduct: "Purchasing", PurchaseApprovalRule: "Purchasing", PurchaseOrder: "Purchasing", PurchasingSettings: "Purchasing",
   TaskTemplate: "Tasks", Task: "Tasks", TaskAction: "Tasks", TaskSite: "Tasks",
+  IncidentReport: "Incidents", IncidentsSettings: "Incidents",
+  StaffingSettings: "Staffing", StaffingTeacher: "Staffing", StaffingSlot: "Staffing", StaffingBlock: "Staffing", StaffingShift: "Staffing", StaffingAck: "Staffing",
+  StaffingSwap: "Staffing", StaffingAttendance: "Staffing", StaffingStrike: "Staffing", StaffingExamSeason: "Staffing", StaffingExamAbsence: "Staffing",
+  StockCategory: "Stock", StockProduct: "Stock", StockTake: "Stock", StockTakeLine: "Stock",
+  CctvViewing: "CCTV log", CctvViewingNote: "CCTV log",
+  MonitoringAction: "Site Monitoring",
+  MaintenanceRequest: "Maintenance",
+  RiskAssessment: "Risk assessments",
   VoucherBatch: "Vouchers", Voucher: "Vouchers",
+  PaymentFailure: "Swim school",
+  PlanArea: "Plan (test)",
+  PlanDuty: "Plan (test)",
+  PlanSession: "Plan (test)",
+  PlanShift: "Plan (test)",
+  PlanBlock: "Plan (test)",
+  PlanOff: "Plan (test)",
+  ShortCourseType: "Swim school", ShortCourse: "Swim school", ShortCourseSession: "Swim school", ShortCourseParticipant: "Swim school",
   ActivityType: "Admin", SiteArea: "Admin", Position: "Admin",
   RotaShift: "Rota", RotaDayNote: "Rota", RotaActivity: "Rota", RotaAbsence: "Rota", RotaImport: "Rota", RotaDepartment: "Rota",
-  RotaNeed: "Rota", RotaAssignment: "Rota", RotaWeekShare: "Rota", RotaLog: "Rota", RotaRepeat: "Rota", RotaActivityType: "Rota", RotaPlanShift: "Rota", RotaBreak: "Rota",
+  RotaNeed: "Rota", RotaAssignment: "Rota", RotaAreaAssignment: "Rota", RotaWeekShare: "Rota", RotaLog: "Rota", RotaRepeat: "Rota", RotaActivityType: "Rota", RotaPlanShift: "Rota", RotaBreak: "Rota", RotaBookingKind: "Rota",
   // Planned from the rota, kept by the swim school.
   ClassPlannedTeacher: "Swim school",
 };
 
+export { SYSTEM_ACTOR_LABEL };
+
+/** The audited actions that change a swimmer's class place: enrolments,
+ *  waiting lists, moves and unenrolments. Only these are marked as system;
+ *  everything else such an account does still carries their own name. */
+export const PLACE_CHANGE_ACTIONS = ["enrol", "waitlist", "transfer", "transfer-out", "withdraw", "complete", "schedule-withdrawal", "cancel-withdrawal"] as const;
+const PLACE_CHANGES = new Set<string>(PLACE_CHANGE_ACTIONS);
+
+function marksAsSystem(entity: string, action: string) {
+  return entity === "Enrolment" && PLACE_CHANGES.has(action);
+}
+
+/** The name to show for a log entry: the system label for a system entry. */
+export function actorLabel(entry: { actorName: string; system: boolean }) {
+  return entry.system ? SYSTEM_ACTOR_LABEL : entry.actorName;
+}
+
+/** Whether this account's place changes are recorded as system, e.g. to warn
+ *  them in a move's confirmation. */
+export async function isSystemActor(actorId: string | null | undefined) {
+  if (!actorId) return false;
+  return (await prisma.user.findUnique({ where: { id: actorId }, select: { actsAsSystem: true } }))?.actsAsSystem === true;
+}
+
 /** Rows that belong to no club, so their audit entries belong to none either
  *  and show up in every club's activity. */
 // Organisation-level records (People core) belong to no single site either.
-const SHARED_ENTITIES = new Set(["User", "StaffRole", "Student", "Programme", "Level", "Competency", "AssessmentType", "Organisation", "Department", "RoleAssignment", "QualificationType", "Qualification", "SharedDevice", "TrainingCourse", "TrainingAssignment", "RotaAbsence", "RotaImport", "RotaDepartment", "Supplier", "PurchaseProduct", "PurchaseApprovalRule", "ActivityType", "Position"]);
+const SHARED_ENTITIES = new Set(["User", "StaffRole", "AppSwitch", "Student", "Programme", "Level", "Competency", "AssessmentType", "Organisation", "Department", "RoleAssignment", "QualificationType", "Qualification", "SharedDevice", "TrainingCourse", "TrainingAssignment", "TrainingRule", "TrainingEvidence", "TrainingPath", "TrainingPathEnrolment", "TrainingSession", "TrainingHours", "TrainingHourTarget", "RotaAbsence", "RotaImport", "RotaDepartment", "Supplier", "PurchaseProduct", "PurchaseApprovalRule", "PurchasingSettings", "IncidentsSettings", "StockCategory", "StockProduct", "StaffingSettings", "StaffingTeacher", "StaffingExamSeason", "ActivityType", "Position"]);
 
 /** @param db Pass the transaction client when the audit row must live or die
  *  with the write it describes. The default writes on its own connection,
@@ -85,7 +130,10 @@ export async function logAudit(
         : await currentClubIdIfAny();
 
   const moduleName = input.module ?? MODULE_OF_ENTITY[input.entity] ?? null;
-  await db.auditLog.create({ data: { ...input, clubId, module: moduleName } });
+  const system = marksAsSystem(input.entity, input.action) && input.actorId
+    ? (await db.user.findUnique({ where: { id: input.actorId }, select: { actsAsSystem: true } }))?.actsAsSystem === true
+    : false;
+  await db.auditLog.create({ data: { ...input, clubId, module: moduleName, ...(system ? { system } : {}) } });
 }
 
 /** Which of these audited actions were recorded for these records, e.g. to
@@ -98,4 +146,66 @@ export async function auditedActions(entity: string, entityIds: readonly string[
     select: { entityId: true, action: true },
   });
   return rows.filter((row): row is { entityId: string; action: string } => row.entityId !== null);
+}
+
+/** One module's audit trail, newest first, a page at a time: the rows at the
+ *  sites a capability reaches, plus the organisation-wide ones (no site). For
+ *  a module's own activity screen; the caller has checked the permission. */
+export async function moduleAuditTrail(module: string, sites: SiteFilter, page: { skip: number; take: number }) {
+  const where: Prisma.AuditLogWhereInput = {
+    module,
+    ...(sites.kind === "all" ? {} : { OR: [{ clubId: { in: [...sites.siteIds] } }, { clubId: null }] }),
+  };
+  const [rows, total] = await Promise.all([
+    prisma.auditLog.findMany({ where, orderBy: { createdAt: "desc" }, skip: page.skip, take: page.take, select: { id: true, actorName: true, system: true, action: true, summary: true, createdAt: true, clubId: true } }),
+    prisma.auditLog.count({ where }),
+  ]);
+  return { rows: rows.map(({ system, ...row }) => ({ ...row, actorName: actorLabel({ actorName: row.actorName, system }) })), total };
+}
+
+/** The audit trail of some records of one type, oldest first (the latest `take`): who did what and when. For an
+ *  audit pack of a person's or a course's records; the caller has checked the reader may see them. */
+export async function auditTrailFor(entity: string, entityIds: readonly string[], take = 1000) {
+  if (entityIds.length === 0) return [];
+  const rows = await prisma.auditLog.findMany({
+    where: { entity, entityId: { in: [...entityIds] } },
+    orderBy: { createdAt: "desc" }, take,
+    select: { id: true, entityId: true, actorName: true, system: true, action: true, summary: true, createdAt: true },
+  });
+  return rows.reverse().map(({ system, ...row }) => ({ ...row, actorName: actorLabel({ actorName: row.actorName, system }) }));
+}
+
+/** Who did how much, from the log (system entries left out): entries grouped by person, module, record type, action, site, local
+ *  day and hour, between two local dates (Europe/Dublin, both inclusive). For a manager's view of the work
+ *  done in some modules; counts only, never summaries. `siteIds` null means every site; otherwise the
+ *  entries at those sites plus the organisation-wide ones (no site), which belong to every site. The caller
+ *  has checked the reader may see this work. */
+export type AuditWorkRow = { actorId: string | null; actorName: string; module: string | null; entity: string; action: string; clubId: string | null; day: string; hour: number; count: number };
+export async function auditWorkload(query: { modules: readonly string[]; siteIds: readonly string[] | null; from: string; to: string }): Promise<AuditWorkRow[]> {
+  if (query.modules.length === 0 || query.siteIds?.length === 0) return [];
+  const local = Prisma.sql`(("createdAt" AT TIME ZONE 'UTC') AT TIME ZONE ${SCHOOL_TIMEZONE})`;
+  return prisma.$queryRaw<AuditWorkRow[]>(Prisma.sql`
+    SELECT "actorId", "actorName", module, entity, action, "clubId",
+      ${local}::date::text AS day, EXTRACT(HOUR FROM ${local})::int AS hour, COUNT(*)::int AS count
+    FROM "AuditLog"
+    WHERE module IN (${Prisma.join([...query.modules])}) AND NOT system
+      AND ${local}::date BETWEEN ${query.from}::date AND ${query.to}::date
+      ${query.siteIds ? Prisma.sql`AND ("clubId" IS NULL OR "clubId" IN (${Prisma.join([...query.siteIds])}))` : Prisma.empty}
+    GROUP BY "actorId", "actorName", module, entity, action, "clubId", day, hour`);
+}
+
+/** When each of some audited actions happened to records of one type, between two local dates
+ *  (Europe/Dublin, inclusive): who, where and when, never summaries. For timing work (how long a place
+ *  stood before it was undone). System entries come back marked, for the caller to leave out. Site filtering as in `auditWorkload`. */
+export type AuditEventRow = { entityId: string; action: string; actorId: string | null; actorName: string; clubId: string | null; at: Date; system: boolean };
+export async function auditEvents(query: { entity: string; actions: readonly string[]; siteIds: readonly string[] | null; from: string; to: string }): Promise<AuditEventRow[]> {
+  if (query.actions.length === 0 || query.siteIds?.length === 0) return [];
+  const local = Prisma.sql`(("createdAt" AT TIME ZONE 'UTC') AT TIME ZONE ${SCHOOL_TIMEZONE})`;
+  return prisma.$queryRaw<AuditEventRow[]>(Prisma.sql`
+    SELECT "entityId", action, "actorId", "actorName", "clubId", "createdAt" AS at, system
+    FROM "AuditLog"
+    WHERE entity = ${query.entity} AND action IN (${Prisma.join([...query.actions])}) AND "entityId" IS NOT NULL
+      AND ${local}::date BETWEEN ${query.from}::date AND ${query.to}::date
+      ${query.siteIds ? Prisma.sql`AND ("clubId" IS NULL OR "clubId" IN (${Prisma.join([...query.siteIds])}))` : Prisma.empty}
+    ORDER BY "createdAt"`);
 }

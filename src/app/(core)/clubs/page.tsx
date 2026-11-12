@@ -7,6 +7,7 @@ import { plural } from "@/lib/format";
 
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
 import {
   AddClub,
@@ -33,12 +34,11 @@ export default async function ClubsPage() {
   const archived = clubs.filter((club) => club.archivedAt);
 
   return (
-    <div className="min-w-0 flex flex-col gap-4">
-      <PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         title="Sites"
         description="Your sites. Swimmers, programmes and staff are shared; each site keeps its own timetable."
         actions={<AddClub />}
-      />
+      />}>
 
       {live.length === 0 ? (
         <EmptyState
@@ -48,26 +48,26 @@ export default async function ClubsPage() {
           action={<AddClub />}
         />
       ) : (
-        <section className="pc-panel" aria-label="Sites">
-          <p className="text-sm text-ui-muted-foreground">
-            {plural(live.length, "site")}. You are working at {current.name}; the site picker on Home and in Swim school changes that.
+        <section className="flex min-w-0 flex-col" aria-label="Sites">
+          <p className="pc-section-note">
+            {plural(live.length, "site")}. You are working at {current.name}; the site picker on Home and in Classes changes that.
           </p>
           <ClubList clubs={live} currentId={current.id} summaries={summaries} />
         </section>
       )}
 
       {archived.length > 0 ? (
-        <section className="pc-panel" aria-labelledby="sites-archived">
-          <div className="pc-panel-head">
-            <h2 id="sites-archived" className="text-lg font-semibold">Archived</h2>
+        <section className="flex min-w-0 flex-col" aria-labelledby="sites-archived">
+          <div className="pc-section-head">
+            <h2 id="sites-archived">Archived</h2>
           </div>
-          <p className="text-sm text-ui-muted-foreground">
+          <p className="pc-section-note">
             Not in the site picker. Everything recorded under them is still there.
           </p>
           <ClubList clubs={archived} currentId={current.id} summaries={summaries} archived />
         </section>
       ) : null}
-    </div>
+    </PageShell>
   );
 }
 
@@ -83,13 +83,17 @@ function ClubList({
   archived?: boolean;
 }) {
   return (
-    <ul className="pc-rows">
+    <ul className="pc-list">
       {clubs.map((club) => (
-        <li key={club.id} className="pc-row [overflow-wrap:anywhere]">
+        <li key={club.id} className="pc-row wrap-anywhere">
           <span className="pc-tile-icon" aria-hidden="true"><Building2 /></span>
           <div className="pc-row-body">
             <span className="pc-row-title">{club.name}</span>
+            {club.address ? <span className="pc-row-hint">{club.address.replace(/\n/g, ", ")}</span> : null}
+            {club.phone ? <span className="pc-row-hint">Reception {club.phone}</span> : null}
             {summaries.get(club.id) ? <span className="pc-row-hint">{summaries.get(club.id)}</span> : null}
+            {/* Added before 1.12.4 without an organisation: saving it once fixes it. */}
+            {!club.orgId && !archived ? <span className="pc-row-hint">Not yet in Incidents, Rota and the other apps. Open it with the pencil and choose Save changes to add it.</span> : null}
           </div>
           <div className="pc-row-trail">
             {club.code ? <Tag meta={CLUB_STATUS_META.code} label={club.code} /> : <span className="pc-row-hint">No short code</span>}

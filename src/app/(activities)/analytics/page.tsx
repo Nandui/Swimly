@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import { AnalyticsDashboard } from "@/modules/activities/components/analytics/dashboard";
-import { getAnalytics } from "@/modules/activities/lib/analytics/data";
+import { BusinessReport, getBusinessInsights } from "@/modules/activities/features/analytics";
 import { screenPage } from "@/lib/page-guards";
 
-export const metadata: Metadata = { title: "Analytics" };
+export const metadata: Metadata = { title: "Business · Analytics" };
 
-export default async function AnalyticsPage() {
+export default async function AnalyticsPage(props: PageProps<"/analytics">) {
   await screenPage("analytics");
-  return <AnalyticsDashboard data={await getAnalytics()} />;
+  return <BusinessReport data={await getBusinessInsights(await props.searchParams)} />;
 }

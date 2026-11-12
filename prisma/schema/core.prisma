@@ -62,7 +62,7 @@ model StaffRole {
   /// superadmin may edit it or assign it; administrators never inherit it.
   restricted  Boolean  @default(false)
   /// The role as the owner sets it: one level for each module (module id →
-  /// level key, see `src/modules/registry.ts` and docs/how-turnfin-works.md).
+  /// level key, see `src/modules/registry.ts` and docs/apps.md).
   /// Null for a role not yet converted. When set, `permissions` and `screens`
   /// are its translation, written on save by `src/lib/staff/levels.ts`.
   levels      Json?
@@ -123,6 +123,18 @@ model User {
   /// Wrong PINs since the last success; five lock the PIN until a password sign-in.
   pinFailures   Int       @default(0)
   pinLockedAt   DateTime?
+  /// Their swim school place changes (enrolments, moves, unenrolments) are
+  /// scripted development work: the log names them "System - scripted action
+  /// done via development" and analytics leave them out (owner request,
+  /// 21 October 2026). Set by a superadmin on the person's Staff page.
+  actsAsSystem  Boolean   @default(false)
+  /// Google's own id for the person (the `sub` claim), set at their first Sign in
+  /// with Google. Matched before the email, so a changed address stays one account.
+  googleId      String?   @unique
+  /// Their Google profile picture, refreshed at every Google sign-in. Null shows initials.
+  avatarUrl     String?
+  /// When they last signed in, by any route. Shown on the Staff page.
+  lastSignInAt  DateTime?
 
   // --- Own details, kept by the person in Turnfin Me and changed only after a
   // reviewer applies their request. Seen on Work by staff.manage only. ---
@@ -176,6 +188,7 @@ model User {
   assessmentOutcomesGiven AssessmentBooking[]   @relation("AssessmentAssessedBy")
   rotaAssignments         RotaAssignment[]      @relation("RotaAssignee")
   rotaPlanShifts          RotaPlanShift[]       @relation("RotaPlanShifts")
+  rotaAreaAssignments     RotaAreaAssignment[]  @relation("RotaAreaAssignee")
   academyTutoring         AcademyCourse[]       @relation("AcademyTutor")
   academyAssessing        AcademyCourse[]       @relation("AcademyAssessor")
   academyCandidacies      AcademyCandidate[]    @relation("AcademyCandidate")
@@ -217,6 +230,7 @@ model Organisation {
   rotaImports         RotaImport[]
   rotaChanges         RotaChange[]
   activityTypes       ActivityType[]
+  appSwitches         AppSwitch[]
 }
 
 /// A team such as Aquatics, Reception or Maintenance. Optionally tied to one
@@ -240,6 +254,7 @@ model Department {
   activityTypes  ActivityType[]
   rotaWeekShares RotaWeekShare[]
   rotaPlanShifts RotaPlanShift[]
+  areas          SiteArea[]
 
   @@unique([orgId, name])
   @@index([orgId, sortOrder])
@@ -313,6 +328,33 @@ model SharedDeviceUser {
   @@index([userId])
 }
 
+// ---------------------------------------------------------------------------
+// App switches: which apps are on, and where (docs/architecture.md)
+// ---------------------------------------------------------------------------
+
+/// Whether one app is on for an organisation: on everywhere, off, or on only
+/// at `siteIds`. No row means on everywhere, so an app nobody has switched
+/// stays as it was. Only a superadmin changes it, from Admin › Apps, with an
+/// audit row; switching back on keeps the row (`state` "on"). Read only
+/// through `src/lib/apps/switches.ts`.
+model AppSwitch {
+  id          String   @id @default(cuid())
+  orgId       String
+  /// The app's manifest id (`src/app/modules.ts`), e.g. "rota". Never renamed.
+  appId       String
+  /// "on" | "off" | "sites" (on only at `siteIds`).
+  state       String   @default("on")
+  siteIds     String[] @default([])
+  updatedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  organisation Organisation @relation(fields: [orgId], references: [id], onDelete: Restrict)
+
+  @@unique([orgId, appId])
+  @@map("app_switches")
+}
+
 /// A kind of certificate: NPLQ, First Aid, Swim Teacher licence. `validityMonths`
 /// suggests an expiry date when a qualification is recorded.
 model QualificationType {
@@ -331,6 +373,7 @@ model QualificationType {
   positions        PositionQualification[]
   academyTypes     AcademyCourseType[]
   rotaShifts       RotaShift[]
+  areaStaffing     SiteAreaStaffing[]
   rotaActivities   RotaActivity[]
   activityTypes    ActivityType[]
 
@@ -387,6 +430,9 @@ model AuditLog {
   summary     String
   /// Optional structured evidence for swimmer history. Older summaries remain readable.
   details     Json?
+  /// A place change by an account marked as system (`User.actsAsSystem`):
+  /// shown as the system, left out of analytics. The actor stays recorded.
+  system      Boolean  @default(false)
   createdAt   DateTime @default(now())
 
   actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
@@ -418,33 +464,39 @@ model Club {
   /// The site's short code, e.g. "BT" for Bishopstown: in purchase order
   /// numbers (PO-BT-00001) and anywhere a site needs two or three letters.
   code       String?   @unique
+  /// The site's postal address, one line per line: where suppliers deliver
+  /// purchase orders (owner request, 15 October 2026). Empty until set.
+  address    String    @default("")
+  /// The reception phone number the public ring, e.g. when a course in the
+  /// parents app is full (owner request, 21 October 2026). Empty until set.
+  phone      String    @default("")
 
-  organisation       Organisation?         @relation(fields: [orgId], references: [id], onDelete: Restrict)
-  programmes         Programme[]
-  students           Student[]
-  courses            Course[]
-  assessmentSessions AssessmentSession[]
-  departments        Department[]
-  rotaShifts         RotaShift[]
-  rotaBookings       RotaBooking[]
-  rotaDayNotes       RotaDayNote[]
-  rotaActivities     RotaActivity[]
-  rotaDepartments    RotaDepartment[]
-  purchaseOrders     PurchaseOrder[]
-  academyCourses     AcademyCourse[]
-  areas              SiteArea[]
-  purchaseCounter    PurchaseOrderCounter?
-  rotaNeeds          RotaNeed[]
-  rotaPlanShifts     RotaPlanShift[]
-  rotaBreaks         RotaBreak[]
-  rotaWeekShares     RotaWeekShare[]
-  rotaLogs           RotaLog[]
-  rotaRepeats        RotaRepeat[]
-  tasks              Task[]
-  taskActions        TaskAction[]
-  taskSite           TaskSite?
-  taskScores         TaskScoreSnapshot[]
-  vouchersRedeemed   Voucher[]
+  organisation        Organisation?         @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  programmes          Programme[]
+  students            Student[]
+  courses             Course[]
+  assessmentSessions  AssessmentSession[]
+  departments         Department[]
+  rotaShifts          RotaShift[]
+  rotaBookings        RotaBooking[]
+  rotaDayNotes        RotaDayNote[]
+  rotaActivities      RotaActivity[]
+  rotaDepartments     RotaDepartment[]
+  purchaseOrders      PurchaseOrder[]
+  academyCourses      AcademyCourse[]
+  areas               SiteArea[]
+  purchaseCounter     PurchaseOrderCounter?
+  rotaNeeds           RotaNeed[]
+  rotaAreaAssignments RotaAreaAssignment[]
+  rotaPlanShifts      RotaPlanShift[]
+  rotaBreaks          RotaBreak[]
+  rotaWeekShares      RotaWeekShare[]
+  rotaLogs            RotaLog[]
+  rotaRepeats         RotaRepeat[]
+  tasks               Task[]
+  taskActions         TaskAction[]
+  taskSite            TaskSite?
+  taskScores          TaskScoreSnapshot[]
 
   @@index([sortOrder])
 }
@@ -556,7 +608,7 @@ model ActivityType {
   orgId          String
   departmentId   String
   name           String
-  /// A key of ROTA_ACTIVITY_ICONS, so an activity shows the same icon everywhere.
+  /// A key of ACTIVITY_ICONS (src/lib/setup/meta.ts), so an activity shows the same icon everywhere.
   icon           String    @default("activity")
   requiredTypeId String?
   /// Swim classes arrive as this activity's needs, read from the timetable.
@@ -572,10 +624,38 @@ model ActivityType {
   requiredType QualificationType? @relation(fields: [requiredTypeId], references: [id], onDelete: SetNull)
   needs        RotaNeed[]
   repeats      RotaRepeat[]
+  subs         SubActivity[]
+  areaNeeds    SiteAreaStaffing[]
 
   @@unique([orgId, name])
   @@index([departmentId])
   @@map("RotaActivityType")
+}
+
+/// Something done while on an activity (owner, 20 October 2026): Till 1 has "Open the cash
+/// till" at the start, "Cash drop" at 11:00, "Answer the phone" any time, "Close the cash till"
+/// at the end. Usual ones are given to whoever is put on the activity; the plan can change them.
+model SubActivity {
+  id             String    @id @default(cuid())
+  activityTypeId String
+  name           String
+  /// "start", "end", "at" (at `atMinutes`) or "during" (any time while on the activity).
+  when           String    @default("during")
+  atMinutes      Int?
+  /// Its set times when it has more than one (owner, 21 October 2026: cash drops at 12:00 and
+  /// 16:00), in minutes from midnight; `atMinutes` keeps the first.
+  times          Int[]     @default([])
+  /// Given to whoever is put on the activity, unless the plan takes it off.
+  usual          Boolean   @default(true)
+  sortOrder      Int       @default(0)
+  archivedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  activityType ActivityType        @relation(fields: [activityTypeId], references: [id], onDelete: Cascade)
+  done         RotaAssignmentSub[]
+
+  @@index([activityTypeId])
 }
 
 /// A place at a site where work happens (owner decision, 7 October 2026): the
@@ -584,19 +664,74 @@ model ActivityType {
 /// from it. Modules store the area's name, and a rename reaches them through
 /// the area-rename contribution, so their records keep reading the same way.
 model SiteArea {
-  id         String    @id @default(cuid())
-  orgId      String
-  siteId     String
-  name       String
-  sortOrder  Int       @default(0)
-  archivedAt DateTime?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  id           String    @id @default(cuid())
+  orgId        String
+  siteId       String
+  name         String
+  /// How many lanes it has (owner request, 13 October 2026): a pool with lanes is booked whole
+  /// or by lane on the rota. 0 for an area without lanes (a gym, reception).
+  lanes        Int       @default(0)
+  /// When the area is open, in minutes from midnight (owner requests, 16 October 2026): its staff
+  /// needs apply then. These are every day's hours; `weekHours` changes them for a weekday.
+  openFrom     Int?
+  openUntil    Int?
+  /// A weekday's own hours, Monday first: `[{ "day": 6, "from": 540, "until": 1080 }]`, or no
+  /// times for closed that day. A weekday not listed keeps every day's hours.
+  weekHours    Json?
+  /// Staff in another area covering this one while both are open (owner request, 16 October
+  /// 2026: one lifeguard by the door between the main hall and the 18 m pool):
+  /// `[{ "withAreaId": "...", "count": 2, "typeId": "..." }]`. While both are open this area's
+  /// staff of that type are left off and the other area needs `count` of them in all.
+  together     Json?
+  /// The department whose area it is (owner, 20 October 2026: "a department can have sub
+  /// areas"); none for an area every department shares. A sub-area takes its parent's.
+  departmentId String?
+  /// The area it is part of, one level only: the 25 m and the 18 m are part of Pool.
+  parentId     String?
+  sortOrder    Int       @default(0)
+  archivedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  site Club @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  site       Club               @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  staffing   SiteAreaStaffing[]
+  department Department?        @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  parent     SiteArea?          @relation("SubAreas", fields: [parentId], references: [id], onDelete: SetNull)
+  subAreas   SiteArea[]         @relation("SubAreas")
 
   @@unique([siteId, name])
   @@index([orgId])
+}
+
+/// The staff an area needs while it is open (owner requests, 16 October 2026: "the 25 meter pool
+/// has a time to be open, and during that time it will need a specific amount of staff with
+/// specific qualifications"): one line per type, such as 2 holding a lifeguard qualification and
+/// 1 anyone. Each line is a need on the rota Plan with that many places to put staff on.
+model SiteAreaStaffing {
+  id                  String  @id @default(cuid())
+  areaId              String
+  count               Int
+  /// The role it asks for (owner request, 20 October 2026: a pool needs cover from lifeguards, not
+  /// from a certificate): its name on the rota. Empty on lines from before, which take the role
+  /// that needs their qualification.
+  positionId          String?
+  /// The qualification they need to hold, so who can fill it; empty for anyone.
+  qualificationTypeId String?
+  /// The activity they need to be on (owner, 21 October 2026: Reception needs at least one person
+  /// on Serving customers): only people on it in the area or its parts count. Empty for a line
+  /// that asks for staff on duty in the area.
+  activityTypeId      String?
+  /// When an activity line applies, in minutes from midnight; empty for whenever it is open.
+  fromMinutes         Int?
+  untilMinutes        Int?
+  sortOrder           Int     @default(0)
+
+  area              SiteArea           @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  position          Position?          @relation(fields: [positionId], references: [id], onDelete: SetNull)
+  qualificationType QualificationType? @relation(fields: [qualificationTypeId], references: [id], onDelete: Restrict)
+  activityType      ActivityType?      @relation(fields: [activityTypeId], references: [id], onDelete: Restrict)
+
+  @@index([areaId])
 }
 
 /// A job in the organisation (owner decision, 8 October 2026): Lifeguard, Swim teacher,
@@ -612,8 +747,9 @@ model Position {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
-  holders  User[]
-  requires PositionQualification[]
+  holders      User[]
+  requires     PositionQualification[]
+  areaStaffing SiteAreaStaffing[]
 
   @@unique([orgId, name])
 }

@@ -3,12 +3,13 @@ import UiLink from "next/link";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { Tag } from "@/components/ui-kit/tag";
 import { ApplyDetailChange, DeclineDetailChange } from "@/components/people/details-request-actions";
 import { formatDateTime } from "@/lib/format";
 import { notFound } from "next/navigation";
-import { requireHrActor } from "@/lib/hr/access";
+import { requireHrActor } from "@/modules/hr/features/details-requests";
 import { requireFreshSession } from "@/lib/policy/session";
 import { DETAIL_REQUEST_STATUS_META, listDetailRequests } from "@/lib/people/details-requests";
 
@@ -23,13 +24,12 @@ export default async function DetailRequestsPage({ searchParams }: { searchParam
   const done = (await searchParams).view === "done";
   const rows = await listDetailRequests(done ? "DONE" : "PENDING");
   return (
-    <>
-      <PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         title="Details changes"
         description={done
           ? "Recently decided changes to phone, address and emergency contacts"
           : "Phone, address and emergency contacts staff asked to update in Turnfin Me. Check each change, then apply it or decline it with a reply"}
-      />
+      />}>
       <SegmentedLinks label="Which requests" items={[
         { href: "/hr/details-requests", label: "Waiting", current: !done },
         { href: "/hr/details-requests?view=done", label: "Decided", current: done },
@@ -39,9 +39,9 @@ export default async function DetailRequestsPage({ searchParams }: { searchParam
       ) : rows.map((row) => {
         const status = DETAIL_REQUEST_STATUS_META[row.status];
         return (
-          <section key={row.id} className="pc-panel" aria-labelledby={`request-${row.id}`}>
-            <div className="pc-panel-head">
-              <h2 id={`request-${row.id}`} className="text-lg font-semibold"><UiLink className="underline-offset-4 hover:underline" href={`/hr/people/${row.person.id}`}>{row.person.name}</UiLink></h2>
+          <section key={row.id} className="rec-card" aria-labelledby={`request-${row.id}`}>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 id={`request-${row.id}`} className="text-headline"><UiLink className="underline-offset-4 hover:underline" href={`/hr/people/${row.person.id}`}>{row.person.name}</UiLink></h2>
               <Tag meta={status} />
             </div>
             <p className="text-sm text-ui-muted-foreground">{row.person.jobTitle ? `${row.person.jobTitle} · ` : ""}{formatDateTime(row.createdAt)}</p>
@@ -69,6 +69,6 @@ export default async function DetailRequestsPage({ searchParams }: { searchParam
           </section>
         );
       })}
-    </>
+    </PageShell>
   );
 }

@@ -1,25 +1,27 @@
-import { BadgeCheck, Building2, GraduationCap, History, KeyRound, LayoutDashboard, ListChecks, MapPin, Users, UsersRound, type LucideIcon } from "lucide-react";
+import { BadgeCheck, Building2, GraduationCap, History, KeyRound, LayoutDashboard, LayoutGrid, ListChecks, MapPin, Users, UsersRound, type LucideIcon } from "lucide-react";
 
 /** Admin's pages, once, grouped by topic (owner decision, 7 October 2026): the page bar
  *  (CoreShell) and the overview are built from this list. A plain module, so server pages read it. */
-export type CoreLinkKey = "staff" | "roles" | "departments" | "positions" | "clubs" | "areas" | "activity-list" | "qualifications" | "activity";
-export type AdminPage = { key: CoreLinkKey | "overview"; href: string; label: string; icon: LucideIcon; description: string };
+export type CoreLinkKey = "staff" | "roles" | "departments" | "positions" | "clubs" | "areas" | "apps" | "activity-list" | "qualifications" | "activity";
+export type AdminPage = { key: CoreLinkKey | "overview"; href: string; label: string; icon: LucideIcon; description: string; place?: "setup"; under?: string };
 
 export const ADMIN_GROUPS: { label: string; links: AdminPage[] }[] = [
   { label: "", links: [{ key: "overview", href: "/core", label: "Overview", icon: LayoutDashboard, description: "What waits to be checked, and every Admin page" }] },
   { label: "People", links: [
     { key: "staff", href: "/staff", label: "Staff", icon: Users, description: "Who can sign in, their roles, sites and work devices" },
-    { key: "roles", href: "/roles", label: "Roles", icon: KeyRound, description: "What each role can open and do, module by module" },
-    { key: "departments", href: "/departments", label: "Departments", icon: UsersRound, description: "The teams people work in; every activity belongs to one" },
-    { key: "positions", href: "/positions", label: "Positions", icon: BadgeCheck, description: "The jobs people hold, and the qualifications each needs" },
+    { key: "roles", href: "/roles", label: "Roles", icon: KeyRound, description: "What each role can open and do, app by app" },
+    { key: "departments", href: "/departments", label: "Departments", place: "setup", icon: UsersRound, description: "The teams people work in; every activity belongs to one" },
+    { key: "positions", href: "/positions", label: "Positions", place: "setup", icon: BadgeCheck, description: "The jobs people hold, and the qualifications each needs" },
   ] },
   { label: "Places", links: [
     { key: "clubs", href: "/clubs", label: "Sites", icon: Building2, description: "The sites, their short codes, and which one this device works at" },
-    { key: "areas", href: "/areas", label: "Areas", icon: MapPin, description: "Each site's pools, gym and reception, for the rota and swim classes" },
+    { key: "areas", href: "/areas", label: "Areas", place: "setup", icon: MapPin, description: "Each site's pools, gym and reception, for the rota and swim classes" },
+    // Superadmins only: a flag, not a screen, so no role can give it (docs/architecture.md, App switches).
+    { key: "apps", href: "/apps", label: "Apps", place: "setup", icon: LayoutGrid, description: "Which apps are on, and at which sites" },
   ] },
   { label: "Work", links: [
-    { key: "activity-list", href: "/activity-list", label: "Activities", icon: ListChecks, description: "What the rota plans and covers, and the qualification each needs" },
-    { key: "qualifications", href: "/qualifications", label: "Qualifications", icon: GraduationCap, description: "The certificates staff can hold, and how long they last" },
+    { key: "activity-list", href: "/activity-list", label: "Activities", place: "setup", icon: ListChecks, description: "What the rota plans and covers, and the qualification each needs" },
+    { key: "qualifications", href: "/qualifications", label: "Qualifications", place: "setup", icon: GraduationCap, description: "The certificates staff can hold, and how long they last" },
   ] },
   { label: "Log", links: [
     { key: "activity", href: "/activity", label: "Activity log", icon: History, description: "Who changed what, and when" },

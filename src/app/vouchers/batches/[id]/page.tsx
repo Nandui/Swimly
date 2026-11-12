@@ -2,84 +2,67 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Pencil, Printer } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/table";
+import { Figure, Figures } from "@/components/ui-kit/figure";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { CancelBatch } from "@/components/vouchers/batch-actions";
-import { BatchStateTag, VoucherStateTag } from "@/components/vouchers/status";
+import { PageShell } from "@/components/ui-kit/page-shell";
+import { RecordFact, RecordFacts, RecordSection } from "@/components/ui-kit/record";
 import { formatDate, formatDateTime, plural } from "@/lib/format";
-import { batchPage } from "@/lib/vouchers/data";
+import { batchPage, BatchStateTag, CancelBatch, VoucherStateTag } from "@/modules/vouchers/features/batches";
 
 export const metadata: Metadata = { title: "Voucher batch" };
 
-/** One batch: who it went to, how many were used, and every voucher in it.
- *  A voucher's code opens it on Redeem, where it is used, put right or cancelled. */
-export default async function BatchPage({ params }: { params: Promise<{ id: string }> }) {
+/** One batch: who it went to, how many were used, and every voucher in it. A voucher's code
+ *  opens it on Redeem, where it is used, put right or cancelled. */
+export default async function BatchPage({ params }: PageProps<"/vouchers/batches/[id]">) {
   const { batch: b, counts, canChange } = await batchPage((await params).id);
   const live = b.state !== "void";
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title={b.recipient} back={{ href: "/vouchers/batches", label: "Issued vouchers" }}
+    <PageShell spacing="roomy" header={<PageHeader title={b.recipient} back={{ href: "/vouchers/batches", label: "Issued vouchers" }}
         status={<BatchStateTag state={b.state} />}
         description={`${plural(b.quantity, `${b.service} voucher`)} · ${b.occasion} · ${formatDate(b.validFrom)} to ${formatDate(b.validUntil)}`}
         actions={live ? <>
           {canChange && counts.open ? <CancelBatch id={b.id} recipient={b.recipient} unused={counts.open} /> : null}
           {canChange ? <Button asChild variant="outline"><Link href={`/vouchers/batches/${b.id}/edit`}><Pencil aria-hidden="true" />Change</Link></Button> : null}
           {counts.open ? <Button asChild><Link href={`/vouchers/batches/${b.id}/print`}><Printer aria-hidden="true" />Print vouchers</Link></Button> : null}
-        </> : undefined} />
-
+        </> : undefined} />}>
       {b.voidedAt ? <Notice tone="error" title={`Cancelled by ${b.voidedByName ?? "a colleague"} on ${formatDate(b.voidedAt)}`} description={b.voidReason || undefined} /> : null}
-      {live && !canChange ? <Notice title="You can see this batch, not change it" description="It includes a site your role does not cover." /> : null}
+      {live && !canChange ? <Notice title="You can see this batch, not change it" description="It includes a site your level does not cover." /> : null}
 
-      <ul className="pc-stats" aria-label="This batch's vouchers">
-        {([["Used", counts.used], ["Still to use", counts.open], ["Expired unused", counts.expired], ["Cancelled", counts.void]] as const).map(([label, n]) => (
-          <li key={label} className="pc-stat"><span className={`pc-stat-figure${n ? "" : " text-ui-muted-foreground"}`}>{n}</span><span className="font-semibold">{label}</span></li>
-        ))}
-      </ul>
+      <Figures label="This batch's vouchers">
+        <Figure label="Used" value={counts.used} />
+        <Figure label="Still to use" value={counts.open} />
+        <Figure label="Expired unused" value={counts.expired} />
+        <Figure label="Cancelled" value={counts.void} />
+      </Figures>
 
-      <section aria-labelledby="batch-details" className="pc-panel">
-        <div className="pc-panel-head"><h2 id="batch-details">Details</h2></div>
-        <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
-          <Detail term="Contact">{[b.contactName, b.contactDetail].filter(Boolean).join(" · ") || "None recorded"}</Detail>
-          <Detail term="Accepted at">{b.siteNames.join(", ")}</Detail>
-          <Detail term="Made by">{b.createdByName}, {formatDate(b.createdAt)}</Detail>
-          <Detail term="Small print">{b.terms || "None"}</Detail>
-          {b.note ? <Detail term="Note for staff"><span className="whitespace-pre-line">{b.note}</span></Detail> : null}
-        </dl>
-      </section>
+      <RecordSection id="batch-details" title="Details">
+        <div className="pc-panel">
+          <RecordFacts>
+            <RecordFact label="Contact">{[b.contactName, b.contactDetail].filter(Boolean).join(" · ") || "None recorded"}</RecordFact>
+            <RecordFact label="Accepted at">{b.siteNames.join(", ")}</RecordFact>
+            <RecordFact label="Made by">{b.createdByName}, {formatDate(b.createdAt)}</RecordFact>
+            <RecordFact label="Small print" wide>{b.terms || "None"}</RecordFact>
+            {b.note ? <RecordFact label="Note for staff" wide>{b.note}</RecordFact> : null}
+          </RecordFacts>
+        </div>
+      </RecordSection>
 
-      <section aria-labelledby="batch-vouchers" className="pc-panel">
-        <div className="pc-panel-head"><h2 id="batch-vouchers">Vouchers · {b.vouchers.length}</h2></div>
-        <Table containerClassName="rounded-[var(--pc-radius-card)] border border-ui-border">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-14 px-3 text-right">No.</TableHead>
-              <TableHead className="px-3">Code</TableHead>
-              <TableHead className="px-3">Status</TableHead>
-              <TableHead className="px-3">Used</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {b.vouchers.map((v) => (
-              <TableRow key={v.id}>
-                <TableCell className="px-3 text-right text-ui-muted-foreground tabular-nums">{v.number}</TableCell>
-                <TableCell className="px-3"><Link href={`/vouchers?${new URLSearchParams({ code: v.code })}`} className="inline-flex min-h-11 items-center font-semibold tracking-wider tabular-nums underline-offset-4 hover:underline">{v.code}</Link></TableCell>
-                <TableCell className="px-3"><VoucherStateTag state={v.state} /></TableCell>
-                <TableCell className="px-3 whitespace-normal text-ui-muted-foreground">{v.redeemedAt ? [formatDateTime(v.redeemedAt), v.redeemedSiteName, v.redeemedByName ? `by ${v.redeemedByName}` : null].filter(Boolean).join(" · ") : "–"}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </section>
-    </div>
-  );
-}
-
-function Detail({ term, children }: { term: string; children: React.ReactNode }) {
-  return (
-    <div className="min-w-0">
-      <dt className="text-xs font-semibold tracking-wide text-ui-muted-foreground uppercase">{term}</dt>
-      <dd className="break-words">{children}</dd>
-    </div>
+      <RecordSection id="batch-vouchers" title="Vouchers" aside={<p>{b.vouchers.length}</p>} note="Choose a code to open that voucher on Redeem.">
+        <ul className="pc-list">
+          {b.vouchers.map((v) => (
+            <li key={v.id}>
+              <Link href={`/vouchers?${new URLSearchParams({ code: v.code })}`} className="pc-row">
+                <span className="pc-row-body">
+                  <span className="pc-row-title tracking-wider tabular-nums">{v.code}</span>
+                  <span className="pc-row-hint">{[`${v.number} of ${b.quantity}`, v.redeemedAt ? `used ${formatDateTime(v.redeemedAt)}` : null, v.redeemedSiteName, v.redeemedByName ? `by ${v.redeemedByName}` : null].filter(Boolean).join(" · ")}</span>
+                </span>
+                <span className="pc-row-trail"><VoucherStateTag state={v.state} /></span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </RecordSection>
+    </PageShell>
   );
 }

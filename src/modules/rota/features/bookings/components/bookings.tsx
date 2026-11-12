@@ -1,0 +1,158 @@
+"use client";
+
+import { useState } from "react";
+import { Pencil, Plus, X } from "lucide-react";
+import { Button } from "@/components/shadcn/button";
+import { Checkbox } from "@/components/shadcn/checkbox";
+import { Input } from "@/components/shadcn/input";
+import { Label } from "@/components/shadcn/label";
+import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
+import { Field, FormDialog } from "@/components/form-dialog";
+import { Notice } from "@/components/ui-kit/notice";
+import { AreaLanesFields, type AreaLanes } from "@/modules/rota/shared/components/area-lanes";
+import { cancelRepeat, editRepeat, saveKindStaff, saveRepeat, type RepeatInput } from "@/modules/rota/features/bookings/server/actions";
+import { formatDate } from "@/lib/format";
+import { BOOKING_KIND_META, BOOKING_KINDS, type BookingKind, WEEKDAY_LABELS, addDaysIso, bookingDates, nextWeekday } from "@/modules/rota/shared/constants";
+
+const THEME = "turnfin-module";
+type Option = { id: string; name: string };
+const WEEKDAYS = [0, 1, 2, 3, 4];
+const text = (formData: FormData, key: string) => String(formData.get(key) ?? "");
+
+/** A booking as the dialog shows it, to change one already made. Times are "09:30", dates ISO. */
+export type BookingValues = {
+  id: string; kind: string; title: string; typeId: string; place: string; lanes: number[]; start: string; end: string; places: number;
+  weekdays: number[]; firstDay: string; lastDay: string; skipDates: string[];
+};
+
+/** A booking that repeats (owner decision, 6 October 2026): school lessons, a party, lane hire.
+ *  In a pool with lanes it takes the whole pool or any set of lanes, and never a lane another
+ *  booking holds then (owner request, 13 October 2026). It is one activity on each of its days, from tomorrow on; each day is then planned and changed
+ *  on its own on the Plan. With `booking`, it changes one already made (owner request, 13 October
+ *  2026): only its days still to come, and its first day stays once it has started. */
+export function BookingDialog({ siteId, today, types, areas, booking, kindStaff }: { siteId: string; today: string; types: Option[]; areas: AreaLanes[]; booking?: BookingValues; kindStaff: Record<BookingKind, number> }) {
+  const tomorrow = addDaysIso(today, 1);
+  const start = nextWeekday(tomorrow, WEEKDAYS);
+  const started = !!booking && booking.firstDay <= today;
+  const initial = { days: booking?.weekdays ?? WEEKDAYS, firstDay: booking?.firstDay ?? start, lastDay: booking?.lastDay ?? start, skip: booking?.skipDates ?? [] };
+  const [days, setDays] = useState<number[]>(initial.days);
+  const [firstDay, setFirstDay] = useState(initial.firstDay);
+  const [lastDay, setLastDay] = useState(initial.lastDay);
+  const [skip, setSkip] = useState<string[]>(initial.skip);
+  const [skipDraft, setSkipDraft] = useState("");
+  // A new booking starts with the staff its kind needs (owner, 20 October 2026: lane hire none).
+  const startPlaces = String(booking?.places ?? kindStaff.school);
+  const [places, setPlaces] = useState(startPlaces);
+  const reset = () => { setDays(initial.days); setFirstDay(initial.firstDay); setLastDay(initial.lastDay); setSkip(initial.skip); setSkipDraft(""); setPlaces(startPlaces); };
+  // Only days still to come are made or changed.
+  const from = firstDay > today ? firstDay : tomorrow;
+  const inRange = skip.filter((d) => d >= from && d <= lastDay);
+  const sessions = firstDay && lastDay && lastDay >= from ? bookingDates(from, lastDay, days, inRange).length : 0;
+  const id = (name: string) => `booking-${booking?.id ?? "new"}-${name}`;
+  const values = (formData: FormData): RepeatInput => ({
+    siteId, kind: text(formData, "kind") as RepeatInput["kind"], title: text(formData, "title"), typeId: text(formData, "typeId"), place: text(formData, "place"),
+    start: text(formData, "start"), end: text(formData, "end"), places: Number(formData.get("places") ?? 1), weekdays: days, firstDay, lastDay, skipDates: inRange,
+    lanes: formData.getAll("lanes").map(String),
+  });
+  const typeKnown = !booking || types.some((t) => t.id === booking.typeId);
+  return (
+    <FormDialog portalClassName={THEME} width="sm:max-w-2xl" onOpen={reset}
+      trigger={booking ? <Button variant="outline"><Pencil aria-hidden="true" />Change</Button> : <Button><Plus aria-hidden="true" />New booking</Button>}
+      title={booking ? `Change ${booking.title}` : "New booking"}
+      description={booking ? "Changes reach its days still to come. Days that have come stay as they were." : "It adds its activity on each of its days, ready to plan who on the Plan."}
+      submitLabel={booking ? "Save changes" : "Save booking"} successMessage={booking ? "Booking changed" : "Booking saved"}
+      submit={(formData) => booking ? editRepeat(booking.id, values(formData)) : saveRepeat(values(formData))}>
+      <div className="grid items-end gap-4 sm:grid-cols-2">
+        <Field label="What it is" htmlFor={id("kind")}>
+          <NativeSelect id={id("kind")} name="kind" defaultValue={booking?.kind ?? "school"} className="min-h-11 w-full"
+            onChange={(e) => { if (!booking) setPlaces(String(kindStaff[e.target.value as BookingKind] ?? 1)); }}>
+            {BOOKING_KINDS.map((k) => <NativeSelectOption key={k} value={k}>{BOOKING_KIND_META[k].label}</NativeSelectOption>)}
+          </NativeSelect>
+        </Field>
+        <Field label="Who it is for" htmlFor={id("title")} hint="For example the school's name."><Input id={id("title")} name="title" defaultValue={booking?.title} required minLength={2} maxLength={80} className="min-h-11" /></Field>
+        <Field label="Activity it needs" htmlFor={id("type")} hint={typeKnown ? undefined : "Its activity is no longer on the list. Choose another."}>
+          <NativeSelect id={id("type")} name="typeId" required defaultValue={booking ? (typeKnown ? booking.typeId : "") : types[0]?.id ?? ""} className="min-h-11 w-full">
+            {typeKnown ? null : <NativeSelectOption value="" disabled>Choose the activity</NativeSelectOption>}
+            {types.map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.name}</NativeSelectOption>)}
+          </NativeSelect>
+        </Field>
+        <AreaLanesFields fid={id("where")} areas={areas} place={booking?.place} lanes={booking?.lanes} hint="The site's areas, kept in Admin. A pool with lanes is booked whole or by lane." />
+      </div>
+      <fieldset className="flex min-w-0 flex-col gap-2">
+        <legend className="mb-2 font-semibold">Which days</legend>
+        <div className="flex flex-wrap gap-x-4 gap-y-1">
+          {WEEKDAY_LABELS.map((label, i) => (
+            <div key={label} className="flex min-h-11 items-center gap-2">
+              <Checkbox id={id(`day-${i}`)} checked={days.includes(i)} onCheckedChange={(v) => setDays((d) => (v === true ? [...d, i].sort() : d.filter((x) => x !== i)))} />
+              <Label htmlFor={id(`day-${i}`)} className="font-normal">{label.slice(0, 3)}</Label>
+            </div>
+          ))}
+        </div>
+      </fieldset>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
+        <Field label="Starts" htmlFor={id("start")}><Input id={id("start")} name="start" type="time" required step={300} defaultValue={booking?.start ?? "09:30"} className="min-h-11" /></Field>
+        <Field label="Ends" htmlFor={id("end")}><Input id={id("end")} name="end" type="time" required step={300} defaultValue={booking?.end ?? "11:30"} className="min-h-11" /></Field>
+        <Field label="How many staff" htmlFor={id("places")} hint="0 if it needs none."><Input id={id("places")} name="places" type="number" required min={0} max={20} value={places} onChange={(e) => setPlaces(e.target.value)} className="min-h-11" /></Field>
+        <Field label="First day" htmlFor={id("first")} hint={started ? "It has started, so this stays." : undefined}><Input id={id("first")} type="date" required disabled={started} min={started ? undefined : tomorrow} value={firstDay} onChange={(e) => { setFirstDay(e.target.value); if (lastDay < e.target.value) setLastDay(e.target.value); }} className="min-h-11" /></Field>
+        <Field label="Last day" htmlFor={id("last")}><Input id={id("last")} type="date" required min={started ? today : firstDay} value={lastDay} onChange={(e) => setLastDay(e.target.value)} className="min-h-11" /></Field>
+      </div>
+      {lastDay > from ? (
+        <fieldset className="flex min-w-0 flex-col gap-2">
+          <legend className="mb-2 font-semibold">Dates it does not run <span className="font-normal text-ui-muted-foreground">(optional)</span></legend>
+          <div className="flex flex-wrap items-end gap-2">
+            <Field label="Date" htmlFor={id("skip")}>
+              <Input id={id("skip")} type="date" min={from} max={lastDay} value={skipDraft} onChange={(e) => setSkipDraft(e.target.value)} className="min-h-11" />
+            </Field>
+            <Button type="button" variant="outline" disabled={!skipDraft || skip.includes(skipDraft) || skipDraft < from || skipDraft > lastDay}
+              onClick={() => { setSkip((list) => [...list, skipDraft].sort()); setSkipDraft(""); }}><Plus aria-hidden="true" />Leave out</Button>
+          </div>
+          {inRange.length ? (
+            <ul className="flex flex-wrap gap-2" aria-label="Dates it does not run">
+              {inRange.map((d) => (
+                <li key={d} className="flex items-center gap-1 rounded-control bg-ui-muted pl-3">
+                  <span className="text-sm">{formatDate(new Date(`${d}T00:00:00Z`))}</span>
+                  <Button type="button" variant="ghost" size="icon" aria-label={`Run it on ${formatDate(new Date(`${d}T00:00:00Z`))} after all`} onClick={() => setSkip((list) => list.filter((x) => x !== d))}><X aria-hidden="true" /></Button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </fieldset>
+      ) : null}
+      <Notice title={sessions ? `${sessions} ${sessions === 1 ? "day" : "days"} ${started ? "still to come " : ""}on the plan` : started ? "No days still to come" : "No days yet"}
+        description={sessions ? (booking ? "Days it no longer runs leave the plan, with anyone on them, who are told. New days get the activity with its places to fill." : "Each day gets the activity with its places to fill.")
+          : started ? "It ends here: its days still to come leave the plan, with anyone on them." : "Choose the days, and a first and last day that include them."} />
+    </FormDialog>
+  );
+}
+
+/** Cancels the days still to come; anyone on them is told. Days that have come stay as they were. */
+export function CancelBooking({ id, label }: { id: string; label: string }) {
+  return (
+    <FormDialog portalClassName={THEME} destructive cancelLabel="Keep it"
+      trigger={<Button variant="outline"><X aria-hidden="true" />Cancel booking</Button>}
+      title={`Cancel ${label}?`} description="Its days still to come leave the plan, with anyone on them. Days that have come stay as they were."
+      submitLabel="Cancel booking" successMessage="Booking cancelled"
+      submit={() => cancelRepeat(id)}>
+      <p className="text-sm text-ui-muted-foreground">People on its days are told if their week is shared.</p>
+    </FormDialog>
+  );
+}
+
+/** How many staff each kind of booking needs (owner, 20 October 2026: a party yes, lane hire
+ *  none). A new booking starts with its kind's number; 0 keeps it off "Not covered yet". */
+export function KindStaffDialog({ siteId, kindStaff }: { siteId: string; kindStaff: Record<BookingKind, number> }) {
+  return (
+    <FormDialog portalClassName={THEME} trigger={<Button variant="outline">Staff each kind needs</Button>}
+      title="Staff each kind of booking needs" description="A new booking starts with this number, and you can change it on the booking. Use 0 for bookings that need no staff, such as lane hire. Bookings already made keep theirs."
+      submitLabel="Save" successMessage="Saved"
+      submit={(formData) => saveKindStaff({ siteId, staff: Object.fromEntries(BOOKING_KINDS.map((k) => [k, Number(formData.get(k) ?? 0)])) as Record<BookingKind, number> })}>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {BOOKING_KINDS.map((k) => (
+          <Field key={k} label={BOOKING_KIND_META[k].label} htmlFor={`kind-staff-${k}`}>
+            <Input id={`kind-staff-${k}`} name={k} type="number" required min={0} max={20} defaultValue={kindStaff[k]} className="min-h-11" />
+          </Field>
+        ))}
+      </div>
+    </FormDialog>
+  );
+}

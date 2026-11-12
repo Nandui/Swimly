@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
-import { TasksShell } from "@/components/tasks/shell";
+import { openActionCount, tasksAccess, TasksShell, tasksSites } from "@/modules/tasks/features/workspace";
 import { pageSession } from "@/lib/page-guards";
 import { TITLE_TEMPLATE } from "@/lib/app";
-import { tasksAccess } from "@/lib/tasks/access";
-import { openActionCount, tasksSites } from "@/lib/tasks/data";
 import '../workspace/module-workspace.css';
 
 export const metadata: Metadata = { title: { default: "Tasks", template: TITLE_TEMPLATE } };

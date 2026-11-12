@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
-import { formatCount } from "@/lib/format";
+
+/** "1,204": grouped like `formatCount` in lib/format.ts (the UI kit may not import the platform). */
+const COUNT = new Intl.NumberFormat("en-GB");
+const formatCount = (n: number) => COUNT.format(n);
 
 /** The one pager: Previous on the left, a centred caption, Next on the right.
  *  It sits at the foot of the list panel and hides itself when there is only

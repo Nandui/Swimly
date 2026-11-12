@@ -41,7 +41,7 @@ test("confirming converts roles that change nothing; roles that would gain wait"
   // The shipped Instructor also edits swimmers and enrolments, which is the
   // desk's work: as Desk plus Pool deck it would gain parent access, so it waits.
   const instructor = report.find((r) => r.name === "Instructor")!;
-  assert.match(instructor.levels, /Swim school: Desk/);
+  assert.match(instructor.levels, /Classes: Desk/);
   assert.ok(instructor.gains.includes("parents.manage"));
   assert.equal(await levelsOf("Instructor"), null);
   const audit = await fixture.prisma.auditLog.findMany({ where: { action: "convert-to-levels" } });

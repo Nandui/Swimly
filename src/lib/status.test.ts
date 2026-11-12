@@ -3,22 +3,50 @@ import test from "node:test";
 import { ACTIONS, actionMeta } from "@/lib/activity/constants";
 import { CLUB_STATUS_META } from "@/lib/clubs/constants";
 import { DEVICE_STATUS_META } from "@/lib/devices/meta";
-import { DOC_STATUS_META, RISK_BAND_TONE_META, UNCLASSIFIED_RISK_META, riskBandMeta } from "@/lib/docs/types";
+import { DOC_STATUS_META, RISK_BAND_TONE_META, UNCLASSIFIED_RISK_META, riskBandMeta } from "@/modules/docs/shared/types";
 import { HOME_ITEM_META, HOME_SESSION_META } from "@/lib/home-meta";
-import { NOTE_VISIBILITY_META, REVIEW_STATUS_META } from "@/lib/hr/constants";
+import { NOTE_VISIBILITY_META, REVIEW_STATUS_META } from "@/modules/hr/shared/constants";
 import { PERSON_STATUS_META, QUALIFICATION_STATE_META } from "@/lib/people/constants";
-import { refundStatuses } from "@/lib/refunds/types";
-import * as rota from "@/lib/rota/constants";
-import * as rotaMeta from "@/lib/rota/meta";
+import { incidentStatuses, seriousMeta, SEVERITY_META } from "@/modules/incidents";
+import { refundStatuses } from "@/modules/finance-requests";
+import { coinageStatuses } from "@/modules/finance-requests";
+import { MONITORING_STATUS_META } from "@/modules/site-monitoring";
+import { MAINTENANCE_STATUS_META, MAINTENANCE_URGENCY_META } from "@/modules/maintenance";
+import { RISK_BAND_META, RISK_REQUEST_META, RISK_REVIEW_META, RISK_STATUS_META } from "@/modules/risk";
+import { OFF_REASON_META } from "@/modules/plan";
+import { PAYMENT_STATUS_META } from "@/modules/activities/shared/payments/types";
+import * as shortCourses from "@/modules/activities/shared/short-courses/rules";
+import * as academy from "@/modules/academy";
+import { STOCK_CATEGORY_TONE_META, STOCK_CHANGE_META, STOCK_TAKE_META } from "@/modules/stock";
+import { BATCH_STATE_META as VOUCHER_BATCH_STATE_META, VOUCHER_STATE_META } from "@/modules/vouchers";
+import { CCTV_REASON_META } from "@/modules/cctv";
+import * as staffing from "@/modules/staffing";
+import * as rota from "@/modules/rota/shared/constants";
+import * as rotaMeta from "@/modules/rota/shared/meta";
 import { REACH_META, STAFF_STATUS_META } from "@/lib/staff/constants";
 import { ARCHIVAL_STATUS_META, type StatusMeta } from "@/lib/status";
-import { CERTIFICATE_STATUS_META, TRAINING_STATUS_META } from "@/lib/training/constants";
+import { TRAINING_STATUS_META } from "@/modules/training/shared/constants";
+import { CERTIFICATE_STATUS_META } from "@/modules/qualifications/shared/constants";
 
 const TONES = new Set(["green", "blue", "orange", "red", "purple", "gray"]);
 
 const MAPS: Record<string, Record<string, StatusMeta>> = {
   ACTIONS, CLUB_STATUS_META, DEVICE_STATUS_META, DOC_STATUS_META, RISK_BAND_TONE_META, HOME_ITEM_META, HOME_SESSION_META,
-  NOTE_VISIBILITY_META, REVIEW_STATUS_META, PERSON_STATUS_META, QUALIFICATION_STATE_META, refundStatuses,
+  NOTE_VISIBILITY_META, REVIEW_STATUS_META, PERSON_STATUS_META, QUALIFICATION_STATE_META, refundStatuses, coinageStatuses, incidentStatuses, SEVERITY_META, INCIDENT_SERIOUS: { serious: seriousMeta },
+  HEALTH_FORM_META: shortCourses.HEALTH_FORM_META, SHORT_COURSE_AREA_META: shortCourses.SHORT_COURSE_AREA_META, SHORT_COURSE_META: shortCourses.SHORT_COURSE_META,
+  SHORT_COURSE_PAYMENT_META: shortCourses.SHORT_COURSE_PAYMENT_META, SHORT_COURSE_PLACE_META: shortCourses.SHORT_COURSE_PLACE_META,
+  SHORT_COURSE_ONLINE_META: shortCourses.SHORT_COURSE_ONLINE_META, SHORT_COURSE_CALL_DUE_META: shortCourses.SHORT_COURSE_CALL_DUE_META,
+  SWIMMER_RECORD_META: shortCourses.SWIMMER_RECORD_META,
+  ...academy,
+  STOCK_CATEGORY_TONE_META, STOCK_CHANGE_META, STOCK_TAKE_META,
+  VOUCHER_STATE_META, VOUCHER_BATCH_STATE_META,
+  CCTV_REASON_META,
+  ...staffing.STAFFING_STATUS_MAPS,
+  MONITORING_STATUS_META,
+  MAINTENANCE_STATUS_META, MAINTENANCE_URGENCY_META,
+  RISK_ASSESSMENT_STATUS_META: RISK_STATUS_META, RISK_ASSESSMENT_BAND_META: RISK_BAND_META, RISK_REVIEW_META, RISK_REQUEST_META,
+  OFF_REASON_META,
+  PAYMENT_STATUS_META,
   ABSENCE_REASON_META: rota.ABSENCE_REASON_META, ROTA_CHANGE_REASON_META: rota.ROTA_CHANGE_REASON_META, BOOKING_KIND_META: rota.BOOKING_KIND_META,
   RETURN_FIT_META: rota.RETURN_FIT_META, ROTA_DAY_META: rotaMeta.ROTA_DAY_META, ROTA_WEEK_META: rotaMeta.ROTA_WEEK_META, ROTA_FIT_META: rotaMeta.ROTA_FIT_META,
   ROTA_SHIFT_NOTE_META: rotaMeta.ROTA_SHIFT_NOTE_META, ROTA_TIMEPOINT_META: rotaMeta.ROTA_TIMEPOINT_META, ROTA_CLASS_META: rotaMeta.ROTA_CLASS_META,

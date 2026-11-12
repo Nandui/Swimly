@@ -3,11 +3,12 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 import { Avatar as AvatarPrimitive } from "radix-ui"
-import { nameInitials } from "@/lib/format"
 
-/** Up to two initials from a person's name, for an avatar fallback: the one server-safe helper
- *  in lib/format.ts, re-exported so client callers keep importing it with the Avatar. */
-const initials = nameInitials
+/** Up to two initials from a person's name, for an avatar fallback. The UI kit may not import
+ *  the platform, so this mirrors `nameInitials` in lib/format.ts, which server pages use. */
+function initials(name: string): string {
+  return name.split(/\s+/).filter(Boolean).map((part) => part[0]).slice(0, 2).join("")
+}
 
 /** The Poolside Clear v2 avatar: "default" 32px (bars), "lg" 40px (rows),
  *  "xl" 64px (profile). `self` marks the signed-in person's own avatar with
@@ -56,7 +57,7 @@ function AvatarFallback({
     <AvatarPrimitive.Fallback
       data-slot="avatar-fallback"
       className={cn(
-        "flex size-full items-center justify-center rounded-full bg-ui-muted text-ui-foreground text-xs font-semibold shadow-[inset_0_0_0_1px_var(--ui-border)] group-data-[size=xl]/avatar:text-lg group-data-[self]/avatar:bg-ui-brand-soft group-data-[self]/avatar:text-ui-brand-ink group-data-[self]/avatar:shadow-none",
+        "flex size-full items-center justify-center rounded-full bg-ui-muted text-ui-foreground text-xs font-semibold inset-ring inset-ring-ui-border group-data-[size=xl]/avatar:text-lg group-data-[self]/avatar:bg-ui-brand-soft group-data-[self]/avatar:text-ui-brand-ink group-data-[self]/avatar:inset-ring-0",
         className
       )}
       {...props}

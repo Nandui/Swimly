@@ -5,13 +5,13 @@ import { isolatedPrisma } from "@/test/pglite-prisma";
 import { createHrTestDatabase } from "@/test/hr-database";
 import { createDocsTestDatabase } from "@/test/docs-database";
 import { serverModule } from "@/test/server-module";
-import { paragraph } from "@/lib/docs/content";
-import type { DocumentContent } from "@/lib/docs/types";
+import { paragraph } from "@/modules/docs/shared/content";
+import type { DocumentContent } from "@/modules/docs/shared/types";
 
 /** The staff API behind Turnfin Me, against real (in-memory) Postgres for the
  *  main, HR and Docs databases. It signs staff in by email code only, returns
  *  only the caller's own records through allowlisted responses, keeps HR
- *  behind a fresh code, and changes nothing until reviewers act on Work. */
+ *  behind a fresh code, and changes nothing until reviewers act in Turnfin. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let hr: Awaited<ReturnType<typeof createHrTestDatabase>>;
 let docs: Awaited<ReturnType<typeof createDocsTestDatabase>>;
@@ -72,7 +72,7 @@ before(async () => {
   sharedReview = randomUUID();
   await hr.db.query("INSERT INTO reviews (id, org_id, subject_user_id, reviewer_id, reviewer_name, period, status, summary, shared_at) VALUES ($1,$2,'riley','maya','Maya','2026 review','shared','Synthetic summary',now())", [sharedReview, ORG]);
   // Docs: two published documents; only one is assigned to Riley.
-  const { DocumentService } = await import("@/lib/docs/domain");
+  const { DocumentService } = await import("@/modules/docs/shared/domain");
   const service = new DocumentService(docs);
   const publish = async (title: string) => {
     const id = await service.create("jamie", docContent(title));
@@ -88,8 +88,8 @@ before(async () => {
   const doubles = {
     "@/lib/prisma": { prisma: db },
     "@/lib/staff-api/email": { sendStaffCode: async (email: string, code: string, purpose: string) => { sent.push({ email, code, purpose }); } },
-    "@/lib/hr/database": hr.module,
-    "@/lib/docs/runtime-database": { directoryDatabase: () => docs },
+    "@/modules/hr/shared/database": hr.module,
+    "@/modules/docs/shared/runtime-database": { directoryDatabase: () => docs },
     "@/lib/authz": { requireSession: async () => { throw new Error("no Work session in the staff API"); } },
     "@/lib/clubs/current": { currentClubIdIfAny: async () => null, currentClubId: async () => club.id },
     // No swim classes: the swim school is not part of the staff API.
@@ -158,7 +158,7 @@ test("HR needs a fresh code; only what is shared appears; the person acknowledge
   assert.ok((await hr.db.query("SELECT 1 FROM access_events WHERE actor_id='riley'")).length >= 1, "reading your own HR record is logged");
 });
 
-test("details changes and certificates change nothing until reviewed on Work", async () => {
+test("details changes and certificates change nothing until reviewed in Turnfin", async () => {
   assert.equal((await call("me", "PATCH", { phone: "111 222" })).status, 201);
   assert.equal((await fixture.prisma.user.findUniqueOrThrow({ where: { id: "riley" } })).phone, "000 000", "unchanged until applied");
   assert.equal((await call("me", "PATCH", { phone: "333" })).status, 409, "one request at a time");

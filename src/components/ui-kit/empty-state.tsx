@@ -8,9 +8,9 @@ import {
 } from "@/components/shadcn/empty";
 import { AppIcon, type AppIconName } from "./app-icon";
 
-/** The only empty state in Turnfin (DESIGN.md, "States"): the round icon tile,
+/** The only empty state in Turnfin: the round icon tile,
  *  a 600 title, one plain hint and at most one action. On the canvas it is a
- *  white panel (poolside.css); inside a panel or card it sits flat. `as` makes
+ *  white panel (kit.css); inside a panel or card it sits flat. `as` makes
  *  the title a heading when the empty state stands in for a section or page. */
 export function EmptyState({
   title,
@@ -37,7 +37,7 @@ export function EmptyState({
             <AppIcon name={icon} />
           </EmptyMedia>
         ) : null}
-        <EmptyTitle className={compact ? "text-sm" : undefined}>{Heading ? <Heading className="text-[length:inherit] leading-[inherit]">{title}</Heading> : title}</EmptyTitle>
+        <EmptyTitle className={compact ? "text-sm" : undefined}>{Heading ? <Heading className="text-inherit">{title}</Heading> : title}</EmptyTitle>
         {hint ? <EmptyDescription>{hint}</EmptyDescription> : null}
       </EmptyHeader>
       {action ? <EmptyContent>{action}</EmptyContent> : null}

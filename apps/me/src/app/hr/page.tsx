@@ -4,10 +4,15 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { CircleCheck, KeyRound } from "lucide-react";
 import { Frame } from "@/components/frame";
-import { EmptyRows, LoadError, Loading, Notice, Tag } from "@/components/ui";
+import { EmptyRows, LoadError, Loading, Notice, Section, Tag } from "@/components/ui";
 import { ApiError, api, session } from "@/lib/api";
 import { date } from "@/lib/format";
 import { REVIEW_META, REVIEW_OVERALL } from "@/lib/meta";
+import { Button } from "@/components/shadcn/button";
+import { PageShell } from "@/components/ui-kit/page-shell";
+import { PageHeader } from "@/components/ui-kit/page-header";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 type Review = { id: string; period: string; reviewer: string; status: string; summary: string; strengths: string; goals: string; overall: string | null; comment: string; sharedAt: string | null; acknowledgedAt: string | null };
 type HrRecord = { configured: boolean; notes: { id: string; author: string; body: string; createdAt: string }[]; reviews: Review[] };
@@ -74,30 +79,31 @@ export default function HrPage() {
 
   return (
     <Frame title="Shared by HR">
-      <div className="stack">
-        <div className="stack-sm"><h1>Shared by HR</h1><p className="muted">Reviews and notes your manager or HR chose to share with you. Private notes are never shown.</p></div>
+      <PageShell spacing="roomy" header={<PageHeader back={{ href: "/more", label: "More" }} title="Shared by HR" description="Reviews and notes your manager or HR chose to share with you. Private notes are never shown." />}>
         {failure ? <Notice title={failure} tone="error" live /> : null}
         {loadError ? <LoadError error={loadError} retry={load} /> : locked ? (
           <>
-            <section className="pc-panel" aria-labelledby="hr-confirm">
-              <h2 id="hr-confirm">Confirm it&apos;s you</h2>
-              <p>HR records need a fresh code, even when you are signed in. It lasts 15 minutes.</p>
-              <button type="button" className={challenge ? "button outline block" : "button block"} onClick={sendCode} disabled={busy}><KeyRound aria-hidden="true" />Email me a code</button>
-            </section>
+            <Section id="hr-confirm" title="Confirm it’s you">
+              <div className="pc-panel">
+                <p>HR records need a fresh code, even when you are signed in. It lasts 15 minutes.</p>
+                <Button type="button" variant={challenge ? "outline" : "default"} className="self-start max-md:self-stretch" onClick={sendCode} disabled={busy}><KeyRound aria-hidden="true" />Email me a code</Button>
+              </div>
+            </Section>
             {challenge ? (
+              <Section id="hr-code-title" title="Enter the code we just emailed you">
               <form className="pc-panel" onSubmit={confirm} aria-labelledby="hr-code-title">
-                <h2 id="hr-code-title">Enter the code we just emailed you</h2>
-                <div className="field"><label htmlFor="hr-code">Six-digit code</label><input id="hr-code" className="input tabular" inputMode="numeric" autoComplete="one-time-code" pattern="\d{6}" maxLength={6} placeholder="123456" required autoFocus value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} /></div>
-                <button type="submit" className="button block" disabled={busy || code.length !== 6}>Open</button>
+                <Input id="hr-code" label="Six-digit code" className="tabular-nums" inputMode="numeric" autoComplete="one-time-code" pattern="\d{6}" maxLength={6} placeholder="123456" required autoFocus value={code} onChange={(value) => setCode(value.replace(/\D/g, ""))} />
+                <Button type="submit" className="self-start max-md:self-stretch" disabled={busy || code.length !== 6}>Open</Button>
               </form>
+              </Section>
             ) : null}
           </>
         ) : !record ? <Loading /> : !record.configured ? <Notice title="HR records are not set up yet" /> : (
           <>
-            {record.reviews.length === 0 && record.notes.length === 0 ? <section className="pc-panel" aria-label="Shared with you"><EmptyRows>Nothing has been shared with you.</EmptyRows></section> : null}
+            {record.reviews.length === 0 && record.notes.length === 0 ? <Section label="Shared with you"><EmptyRows>Nothing has been shared with you.</EmptyRows></Section> : null}
             {record.reviews.map((r) => (
               <section key={r.id} className="pc-panel" aria-labelledby={`rv-${r.id}`}>
-                <div className="row"><h2 id={`rv-${r.id}`}>{r.period}</h2><Tag meta={REVIEW_META[r.status]} /></div>
+                <div className="flex flex-wrap items-center gap-2"><h2 id={`rv-${r.id}`}>{r.period}</h2><Tag meta={REVIEW_META[r.status]} /></div>
                 <p className="caption">From {r.reviewer}{r.sharedAt ? ` · shared ${date(r.sharedAt)}` : ""}</p>
                 {([["Summary", r.summary], ["Strengths", r.strengths], ["Goals for the next period", r.goals]] as const).map(([label, text]) => text ? (
                   <div key={label} className="stack-sm"><h3>{label}</h3><p className="pre">{text}</p></div>
@@ -107,27 +113,23 @@ export default function HrPage() {
                   <p className="caption">Acknowledged {date(r.acknowledgedAt)}{r.comment ? ` · your comment: ${r.comment}` : ""}</p>
                 ) : (
                   <div className="stack-sm">
-                    <div className="field">
-                      <label htmlFor={`c-${r.id}`}>Your comment (optional)</label>
-                      <textarea id={`c-${r.id}`} className="input" maxLength={2000} value={comments[r.id] ?? ""} onChange={(e) => setComments((prev) => ({ ...prev, [r.id]: e.target.value }))} />
-                      <span className="hint">Acknowledging says you have read it, not that you agree with every word.</span>
-                    </div>
-                    <button type="button" className="button block" onClick={() => acknowledge(r.id)} disabled={busy}><CircleCheck aria-hidden="true" />Acknowledge</button>
+                    <Textarea id={`c-${r.id}`} label="Your comment" optional description="Acknowledging says you have read it, not that you agree with every word." maxLength={2000}
+                      value={comments[r.id] ?? ""} onChange={(e) => setComments((prev) => ({ ...prev, [r.id]: e.target.value }))} />
+                    <Button type="button" className="self-start max-md:self-stretch" onClick={() => acknowledge(r.id)} disabled={busy}><CircleCheck aria-hidden="true" />Acknowledge</Button>
                   </div>
                 )}
               </section>
             ))}
             {record.notes.length > 0 ? (
-              <section className="pc-panel" aria-labelledby="hr-notes">
-                <div className="pc-panel-head"><h2 id="hr-notes">Notes</h2></div>
-                <ul className="pc-rows">{record.notes.map((n) => (
+              <Section id="hr-notes" title="Notes" aside={<p>{record.notes.length}</p>}>
+                <ul className="pc-list">{record.notes.map((n) => (
                   <li key={n.id} className="pc-row"><div className="pc-row-body stack-sm"><p className="caption">{n.author} · {date(n.createdAt)}</p><p className="pre">{n.body}</p></div></li>
                 ))}</ul>
-              </section>
+              </Section>
             ) : null}
           </>
         )}
-      </div>
+      </PageShell>
     </Frame>
   );
 }

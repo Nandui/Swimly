@@ -10,6 +10,7 @@ export const ACCOUNT_SELECT = {
   orgId: true,
   isSuperadmin: true,
   siteIds: true,
+  avatarUrl: true,
   staffRole: {
     select: { id: true, name: true, permissions: true, levels: true, extras: true, homeName: true },
   },
@@ -24,11 +25,13 @@ export type Account = {
   isSuperadmin: boolean;
   /** The sites this person works at; empty means every site. */
   siteIds?: string[];
+  /** Their Google picture, when they have signed in with Google. */
+  avatarUrl?: string | null;
   staffRole: {
     id: string;
     name: string;
     permissions: string[];
-    /** Set once the role uses levels (docs/how-turnfin-works.md). */
+    /** Set once the role uses levels (docs/architecture.md). */
     levels?: unknown;
     extras?: string[];
     homeName?: string | null;
@@ -37,7 +40,7 @@ export type Account = {
 
 /** Where part of a role applies beyond the flat checks: at one of the
  *  person's sites, or over their team. Only the policy engine reads these. */
-export type Grant = { roleName: string; permissions: string[]; scopeKind: string; scopeId: string };
+type Grant = { roleName: string; permissions: string[]; scopeKind: string; scopeId: string };
 
 /** An account with no role has no permissions and no way to be given any
  *  without an admin, so it reads as signed out rather than as a person who can
@@ -45,9 +48,9 @@ export type Grant = { roleName: string; permissions: string[]; scopeKind: string
  *
  *  `permissions` is the flat view pages and actions check: what this person
  *  may do **at the site they are working in**. `grants` carry what applies
- *  only at their other sites or over their team (HR "Their team"), which only
+ *  only at their other sites or over their team (HR Report), which only
  *  the policy engine (`src/lib/policy`) reads, against a specific person or
- *  record. One role each (docs/how-turnfin-works.md). */
+ *  record. One role each (docs/architecture.md). */
 export function sessionUserFor(account: Account, currentSiteId: string | null) {
   const role = account.staffRole;
   if (!role) return null;

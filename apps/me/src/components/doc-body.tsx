@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import { Separator } from "@/components/shadcn/separator";
+import { Table, TableBody, TableCell, TableHead, TableRow } from "@/components/shadcn/table";
 
 /** Renders a Docs document body (Tiptap JSON) as plain, safe HTML elements.
  *  Text is never injected as HTML; links must be http(s) or mailto; images
@@ -36,11 +38,11 @@ function render(node: Node, key: string): ReactNode {
     case "blockquote": return <blockquote key={key}>{kids}</blockquote>;
     case "codeBlock": return <pre key={key}><code>{kids}</code></pre>;
     case "hardBreak": return <br key={key} />;
-    case "horizontalRule": return <hr key={key} />;
-    case "table": return <table key={key}><tbody>{kids}</tbody></table>;
-    case "tableRow": return <tr key={key}>{kids}</tr>;
-    case "tableHeader": return <th key={key}>{kids}</th>;
-    case "tableCell": return <td key={key}>{kids}</td>;
+    case "horizontalRule": return <Separator key={key} />;
+    case "table": return <Table key={key}><TableBody>{kids}</TableBody></Table>;
+    case "tableRow": return <TableRow key={key}>{kids}</TableRow>;
+    case "tableHeader": return <TableHead key={key}>{kids}</TableHead>;
+    case "tableCell": return <TableCell key={key}>{kids}</TableCell>;
     case "image": return <p key={key} className="caption">An image is in this document. Open it in the library at work to see it.</p>;
     default: return kids.length ? <div key={key} className={node.type === "callout" ? "callout" : undefined}>{kids}</div> : null;
   }

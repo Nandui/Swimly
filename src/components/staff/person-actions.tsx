@@ -121,7 +121,7 @@ function PersonFields({
 }
 
 /** `defaultOpen` opens the dialog on arrival, for Admin's "Add a person" quick action (/staff?add=1). */
-export function AddPerson({ roles, defaultOpen = false }: { roles: RoleOption[]; defaultOpen?: boolean }) {
+export function AddPerson({ roles, defaultOpen = false, google = false }: { roles: RoleOption[]; defaultOpen?: boolean; google?: boolean }) {
   return (
     <FormDialog
       defaultOpen={defaultOpen}
@@ -132,7 +132,9 @@ export function AddPerson({ roles, defaultOpen = false }: { roles: RoleOption[];
         </Button>
       }
       title="Add a person"
-      description="They can sign in as soon as you save this. Nobody is emailed: you hand them the password yourself."
+      description={google
+        ? "They sign in with the Google account for this email, with this role, as soon as you save this. Nobody is emailed: tell them yourself. People who sign in with Google before you add them appear under Waiting for a role."
+        : "They can sign in as soon as you save this. Nobody is emailed: you hand them the password yourself."}
       submitLabel="Add a person"
       successMessage="Account created"
       submit={(formData) =>
@@ -143,16 +145,18 @@ export function AddPerson({ roles, defaultOpen = false }: { roles: RoleOption[];
       }
     >
       <PersonFields roles={roles} />
-      <Field label="Temporary password" htmlFor="password" hint={PASSWORD_HINT}>
-        <Input
-          id="password"
-          name="password"
-          type="text"
-          required
-          autoComplete="off"
-          minLength={MIN_PASSWORD_LENGTH}
-        />
-      </Field>
+      {google ? null : (
+        <Field label="Temporary password" htmlFor="password" hint={PASSWORD_HINT}>
+          <Input
+            id="password"
+            name="password"
+            type="text"
+            required
+            autoComplete="off"
+            minLength={MIN_PASSWORD_LENGTH}
+          />
+        </Field>
+      )}
     </FormDialog>
   );
 }
@@ -192,7 +196,9 @@ export function EditPerson({
   );
 }
 
-export function ResetPersonPassword({ person }: { person: Person }) {
+/** Everyone may sign in with a password beside Google (owner decision, 23 October
+ *  2026), so everyone gets this button. */
+export function ResetPersonPassword({ person }: { person: Person; google?: boolean }) {
   return (
     <FormDialog
       trigger={

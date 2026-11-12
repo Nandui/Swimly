@@ -1,20 +1,19 @@
 import type { Metadata } from "next";
 import { Pencil } from "lucide-react";
-import { BackLink } from "@/components/ui-kit/back-link";
 import { Button } from "@/components/shadcn/button";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
+import { RecordFacts } from "@/components/ui-kit/record";
 import { Tag } from "@/components/ui-kit/tag";
+import { CallDialog } from "@/modules/academy/features/calls";
 import {
-  CallDialog, CandidateDialog, ChecksDialog, CourseDialog, CourseStatusButton, RegisterDialog, ResultDialog, SessionDialog, WithdrawButton,
-} from "@/components/academy/forms";
-import { formatDate, formatDateTime, plural } from "@/lib/format";
-import { academyCourse, newCourseOptions } from "@/lib/academy/data";
-import {
-  ACADEMY_CALL_DUE_META, ACADEMY_COURSE_META, ACADEMY_KIND_META, ACADEMY_PAYMENT_META, ACADEMY_RESULT_META, callDue, euro, hoursLabel,
+  academyCourse, ACADEMY_CALL_DUE_META, ACADEMY_COURSE_META, ACADEMY_KIND_META, ACADEMY_PAYMENT_META, ACADEMY_RESULT_META, callDue, CandidateDialog, ChecksDialog,
+  CourseDialog, CourseStatusButton, euro, hoursLabel, LinkCandidateButton, newCourseOptions, RegisterDialog, ResultDialog, SessionDialog, SWIMMER_RECORD_META, WithdrawButton,
   type AcademyKind, type AcademyPayment, type AcademyResult,
-} from "@/lib/academy/rules";
+} from "@/modules/academy/features/courses";
+import { formatDate, formatDateTime, plural } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Academy course" };
 
@@ -26,7 +25,7 @@ const clock = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${S
  *  it on and changes its sessions. */
 export default async function AcademyCoursePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { course, candidates, canRun, canManage, areas, staff, today } = await academyCourse(id);
+  const { course, candidates, canRun, canManage, areas, staff, today, swimmerRecords, canOpenSwimmers } = await academyCourse(id);
   const options = canManage ? await newCourseOptions() : null;
   const kind = ACADEMY_KIND_META[course.type.kind as AcademyKind] ?? ACADEMY_KIND_META.other;
   const open = course.state !== "cancelled" && course.state !== "completed";
@@ -35,9 +34,7 @@ export default async function AcademyCoursePage({ params }: { params: Promise<{ 
   const grants = course.type.qualificationType?.name ?? null;
   const dates = course.first ? (course.last && course.last !== course.first ? `${day(course.first)} to ${day(course.last)}` : day(course.first)) : "no sessions yet";
   return (
-    <div className="flex flex-col gap-6">
-      <BackLink href="/academy" label="Courses" />
-      <PageHeader title={course.type.name} description={`${course.site.name} · ${dates}`}
+    <PageShell spacing="roomy" header={<PageHeader back={{ href: "/academy", label: "Academy courses" }} title={course.type.name} description={`${course.site.name} · ${dates}`}
         status={<><Tag meta={ACADEMY_COURSE_META[course.state]} /><Tag meta={kind} /></>}
         actions={canManage ? <>
           {options && open ? <CourseDialog course={{ id: course.id, siteId: course.siteId, typeId: course.typeId, capacity: course.capacity, priceCents: course.priceCents, tutorId: course.tutorId, assessorId: course.assessorId, note: course.note, bookOnline: course.bookOnline }}
@@ -46,12 +43,12 @@ export default async function AcademyCoursePage({ params }: { params: Promise<{ 
           {open ? <CourseStatusButton id={course.id} to="completed" label="Complete" title="Mark the course completed?" description="Every candidate needs a result or to have withdrawn first." /> : null}
           {open ? <CourseStatusButton id={course.id} to="cancelled" label="Cancel course" title="Cancel this course?" description="Its sessions leave the Rota. Candidates and their payments stay on the record; refunds are handled where they paid." destructive /> : null}
           {!open ? <CourseStatusButton id={course.id} to="planned" label="Reopen" title="Reopen this course?" description="It goes back to planned, and its sessions to the Rota." /> : null}
-        </> : undefined} />
+        </> : undefined} />}>
 
-      <section className="pc-panel" aria-labelledby="ac-facts">
-        <div className="pc-panel-head"><h2 id="ac-facts">About the course</h2></div>
-        <dl className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr))]">
-          {[
+      <section className="flex min-w-0 flex-col" aria-labelledby="ac-facts">
+        <div className="pc-section-head"><h2 id="ac-facts">About the course</h2></div>
+        <div className="rec-card">
+          <RecordFacts items={[
             ["Tutor", course.tutor.name],
             ["Assessor", course.assessor?.name ?? "The tutor"],
             ["Places", `${course.taken} of ${course.capacity} taken`],
@@ -61,21 +58,17 @@ export default async function AcademyCoursePage({ params }: { params: Promise<{ 
             ["Staff who pass get", grants ?? "Nothing on their record"],
             ["Still to pay", owed ? euro(owed) : "Nothing"],
             ["Online booking", course.bookOnline ? (open && course.state === "planned" ? "Open until it starts" : "Closed") : "Not online"],
-          ].map(([label, value]) => (
-            <div key={label} className="min-w-0"><dt className="text-xs font-semibold text-ui-muted-foreground">{label}</dt><dd className="mt-1 [overflow-wrap:anywhere]">{value}</dd></div>
-          ))}
-        </dl>
-        {course.note ? <p className="text-sm">{course.note}</p> : null}
+          ] as [string, React.ReactNode][]} />
+          {course.note ? <p className="text-sm">{course.note}</p> : null}
+        </div>
         {course.type.minHours && course.hours < course.type.minHours * 60 ? <Notice tone="warning" title="Not enough hours planned">{`The sessions add up to ${hoursLabel(course.hours)}; candidates need ${course.type.minHours} hours.`}</Notice> : null}
       </section>
 
-      <section className="pc-panel" aria-labelledby="ac-sessions">
-        <div className="pc-panel-head">
-          <div className="flex flex-col gap-1"><h2 id="ac-sessions">Sessions</h2><p className="pc-row-hint">Each shows on the Rota in its area for the tutor and assessor.</p></div>
-          {canManage && open ? <SessionDialog courseId={course.id} areas={areas} suggestDate={course.last ?? today} /> : null}
-        </div>
+      <section className="flex min-w-0 flex-col" aria-labelledby="ac-sessions">
+        <div className="pc-section-head"><h2 id="ac-sessions">Sessions</h2>{canManage && open ? <SessionDialog courseId={course.id} areas={areas} suggestDate={course.last ?? today} /> : null}</div>
+        <p className="pc-section-note">Each shows on the Rota in its area for the tutor and assessor.</p>
         {course.sessions.length === 0 ? <EmptyState compact icon="calendarDays" title="No sessions yet" hint={canManage ? "Add each day of the course with its times and area." : undefined} /> : (
-          <ul className="pc-rows">
+          <ul className="pc-list">
             {course.sessions.map((s) => {
               const there = s.attendance.filter((a) => a.minutes > 0).length;
               const marks = Object.fromEntries(s.attendance.map((a) => [a.candidateId, a.minutes]));
@@ -87,7 +80,7 @@ export default async function AcademyCoursePage({ params }: { params: Promise<{ 
                   </span>
                   <span className="pc-row-trail">
                     {canRun && open && s.date <= today ? <RegisterDialog session={{ id: s.id, label: `${day(s.date)}`, length: s.endMinutes - s.startMinutes, marks, taken: !!s.registerAt }}
-                      candidates={active.map((c) => ({ id: c.id, name: c.name }))} /> : null}
+                      candidates={active.map((c) => ({ id: c.id, name: c.name, memberNumber: c.swimmer?.memberNumber, medical: c.swimmer?.hasMedicalNotes }))} /> : null}
                     {canManage && open ? <SessionDialog courseId={course.id} areas={areas} session={{ id: s.id, date: s.date, startMinutes: s.startMinutes, endMinutes: s.endMinutes, place: s.place, note: s.note }}
                       trigger={<Button variant="outline" size="icon" aria-label={`Change the session on ${day(s.date)}`}><Pencil aria-hidden="true" /></Button>} /> : null}
                   </span>
@@ -98,14 +91,11 @@ export default async function AcademyCoursePage({ params }: { params: Promise<{ 
         )}
       </section>
 
-      <section className="pc-panel" aria-labelledby="ac-candidates">
-        <div className="pc-panel-head">
-          <div className="flex flex-col gap-1"><h2 id="ac-candidates">Candidates · {course.taken} of {course.capacity}</h2>
-            <p className="pc-row-hint">Staff and members of the public. Payment is taken elsewhere and recorded here.</p></div>
-          {canRun && open && course.taken < course.capacity ? <CandidateDialog courseId={course.id} staff={staff} priceCents={course.priceCents} /> : null}
-        </div>
+      <section className="flex min-w-0 flex-col" aria-labelledby="ac-candidates">
+        <div className="pc-section-head"><h2 id="ac-candidates">Candidates · {course.taken} of {course.capacity}</h2>{canRun && open && course.taken < course.capacity ? <CandidateDialog courseId={course.id} staff={staff} priceCents={course.priceCents} swimmerRecords={swimmerRecords} canOpenSwimmers={canOpenSwimmers} /> : null}</div>
+        <p className="pc-section-note">Staff and members of the public. Payment is taken elsewhere and recorded here.</p>
         {candidates.length === 0 ? <EmptyState compact icon="users" title="Nobody on the course yet" hint={canRun ? "Add each candidate with their payment." : undefined} /> : (
-          <ul className="pc-rows">
+          <ul className="pc-list">
             {candidates.map((c) => {
               const r = c.readiness;
               const checksDone = r.checks.filter((x) => x.done).length;
@@ -117,6 +107,7 @@ export default async function AcademyCoursePage({ params }: { params: Promise<{ 
                   <span className="pc-row-body">
                     <span className="pc-row-title">{c.name}{c.userId ? <span className="ml-2 text-xs font-normal text-ui-muted-foreground">Staff</span> : null}</span>
                     <span className="pc-row-hint">{[
+                      c.swimmer?.memberNumber ? `Member ${c.swimmer.memberNumber}` : null,
                       c.source === "online" ? `held online${c.reference ? ` ${c.reference}` : ""}, ${c.phone}` : null,
                       r.checks.length ? `checks ${checksDone} of ${r.checks.length}${missing.length ? ` (${missing.map((m) => m.detail === "Not done" ? m.label.toLowerCase() : m.detail.toLowerCase()).join(", ")})` : ""}` : null,
                       `${hoursLabel(c.attended)} attended${course.type.minHours ? ` of ${course.type.minHours}h` : ""}`,
@@ -127,16 +118,20 @@ export default async function AcademyCoursePage({ params }: { params: Promise<{ 
                   </span>
                   <span className="pc-row-trail flex-wrap">
                     {due ? <Tag meta={ACADEMY_CALL_DUE_META[due.due]} label={due.due === "overdue" ? due.label : `Call by ${due.label}`} /> : null}
+                    {c.swimmer?.hasMedicalNotes ? <Tag meta={SWIMMER_RECORD_META.medical} /> : null}
+                    {swimmerRecords && !c.userId && !c.swimmerId ? <Tag meta={SWIMMER_RECORD_META.unlinked} /> : null}
                     <Tag meta={ACADEMY_PAYMENT_META[c.payment as AcademyPayment] ?? ACADEMY_PAYMENT_META.owed} />
-                    {toCall ? <CallDialog primary={due?.due === "overdue"} course={`${course.type.name} at ${course.site.name}`} priceCents={course.priceCents}
+                    {toCall ? <CallDialog swimmerRecords={swimmerRecords} primary={due?.due === "overdue"} course={`${course.type.name} at ${course.site.name}`} priceCents={course.priceCents}
                       person={{ id: c.id, name: c.name, phone: c.phone, phone2: c.phone2, callTimes: c.callTimes, reference: c.reference, heldAt: formatDateTime(c.createdAt),
+                        linked: Boolean(c.swimmerId || c.userId), email: c.email, dateOfBirth: c.dateOfBirth,
                         calls: c.calls.map((x) => ({ outcome: x.outcome, byName: x.byName, at: formatDateTime(x.createdAt), note: x.note })) }} /> : null}
                     <Tag meta={ACADEMY_RESULT_META[c.status as AcademyResult] ?? ACADEMY_RESULT_META.booked} />
                     {c.status === "booked" && r.ready ? <span className="text-xs text-ui-muted-foreground">Ready for assessment</span> : null}
                     {canRun && open ? <>
                       {c.status !== "withdrawn" && r.checks.length ? <ChecksDialog candidate={c} asks={course.type.checks} /> : null}
                       {c.status !== "withdrawn" && course.first && course.first <= today ? <ResultDialog candidate={{ ...c, isStaff: !!c.userId }} today={today} grants={grants} /> : null}
-                      <CandidateDialog courseId={course.id} staff={staff} priceCents={course.priceCents} candidate={c}
+                      {swimmerRecords && !c.userId && !c.swimmerId && !toCall ? <LinkCandidateButton id={c.id} name={c.name} email={c.email} phone={c.phone} dateOfBirth={c.dateOfBirth} /> : null}
+                      <CandidateDialog courseId={course.id} staff={staff} priceCents={course.priceCents} candidate={c} swimmerRecords={swimmerRecords} canOpenSwimmers={canOpenSwimmers}
                         trigger={<Button variant="outline" size="icon" aria-label={`Change ${c.name}`}><Pencil aria-hidden="true" /></Button>} />
                       {c.status === "booked" || c.status === "withdrawn" ? <WithdrawButton id={c.id} name={c.name} withdrawn={c.status === "withdrawn"} /> : null}
                     </> : null}
@@ -146,8 +141,8 @@ export default async function AcademyCoursePage({ params }: { params: Promise<{ 
             })}
           </ul>
         )}
-        {active.length ? <p className="text-xs text-ui-muted-foreground">{plural(active.filter((c) => c.readiness.ready && c.status === "booked").length, "candidate")} ready for assessment. A staff member who passes gets {grants ?? "nothing"} on their record.</p> : null}
+        {active.length ? <p className="px-(--space-1) pt-(--space-3) text-xs text-ui-muted-foreground">{plural(active.filter((c) => c.readiness.ready && c.status === "booked").length, "candidate")} ready for assessment. A staff member who passes gets {grants ?? "nothing"} on their record.</p> : null}
       </section>
-    </div>
+    </PageShell>
   );
 }

@@ -1,10 +1,9 @@
+import { appRoute } from '@/lib/apps/switches';
 import { NextRequest } from 'next/server';
-import { requireActionMember } from '@/lib/docs/auth';
-import { database, listMembers } from '@/lib/docs/database';
-import { library, requirements, DomainError } from '@/lib/docs/domain';
-import { filterReading, readingCsv } from '@/lib/docs/reporting';
-import { readingReportScope } from '@/lib/docs/report-scope';
-export async function GET(request: NextRequest) {
+import {
+  database, DomainError, filterReading, library, listMembers, readingCsv, readingReportScope, requireActionMember, requirements,
+} from "@/modules/docs/features/reports";
+async function serveGet(request: NextRequest) {
   try {
     const m = await requireActionMember();
     const scope = await readingReportScope(m);
@@ -38,3 +37,5 @@ export async function GET(request: NextRequest) {
     });
   }
 }
+
+export const GET = appRoute("docs", serveGet);

@@ -1,10 +1,13 @@
 import "server-only";
 import { can, requireSession } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
+import { togetherOf, weekHoursOf } from "@/lib/setup/area-staffing";
+import { rolesNeeding, staffLine } from "@/lib/directory";
+import { lanesInPlace } from "@/lib/setup/lanes";
 import type { PermissionKey } from "@/lib/staff/permissions";
 
 /** The shared setup every module uses, read for Admin's pages and for the
- *  modules that pick from it (docs/admin-setup.md). Organisation-wide, so the
+ *  modules that pick from it. Organisation-wide, so the
  *  flat permission check is the right one: none of it belongs to a site's people. */
 
 async function viewer() {
@@ -19,7 +22,8 @@ export async function activityListPage() {
   const [types, departments, qualifications] = await Promise.all([
     prisma.activityType.findMany({
       where: { orgId }, orderBy: [{ archivedAt: { sort: "asc", nulls: "first" } }, { sortOrder: "asc" }, { name: "asc" }],
-      select: { id: true, name: true, icon: true, departmentId: true, requiredTypeId: true, fromClasses: true, archivedAt: true, department: { select: { name: true } }, requiredType: { select: { name: true } } },
+      select: { id: true, name: true, icon: true, departmentId: true, requiredTypeId: true, fromClasses: true, archivedAt: true, department: { select: { name: true } }, requiredType: { select: { name: true } },
+        subs: { where: { archivedAt: null }, orderBy: { sortOrder: "asc" }, select: { id: true, name: true, when: true, atMinutes: true, times: true, usual: true } } },
     }),
     prisma.department.findMany({ where: { orgId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } }),
     prisma.qualificationType.findMany({ where: { orgId, archivedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
@@ -27,7 +31,7 @@ export async function activityListPage() {
   return {
     canKeep: keeps("setup.activities"), departments, qualifications,
     types: types.map((t) => ({ id: t.id, name: t.name, icon: t.icon, departmentId: t.departmentId, departmentName: t.department.name, requiredTypeId: t.requiredTypeId,
-      requiredName: t.requiredType?.name ?? null, fromClasses: t.fromClasses, archived: !!t.archivedAt })),
+      requiredName: t.requiredType?.name ?? null, fromClasses: t.fromClasses, archived: !!t.archivedAt, subs: t.subs })),
   };
 }
 
@@ -36,15 +40,27 @@ export async function areasPage() {
   const { orgId, keeps } = await viewer();
   const sites = await prisma.club.findMany({
     where: { orgId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    select: { id: true, name: true, code: true, areas: { orderBy: [{ archivedAt: { sort: "asc", nulls: "first" } }, { sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true, archivedAt: true } } },
+    select: { id: true, name: true, code: true, areas: { orderBy: [{ archivedAt: { sort: "asc", nulls: "first" } }, { sortOrder: "asc" }, { name: "asc" }],
+      select: { id: true, name: true, lanes: true, archivedAt: true, openFrom: true, openUntil: true, weekHours: true, together: true, departmentId: true, parentId: true,
+        staffing: { orderBy: { sortOrder: "asc" }, select: { count: true, positionId: true, qualificationTypeId: true, qualificationType: { select: { name: true } }, activityTypeId: true, fromMinutes: true, untilMinutes: true, activityType: { select: { name: true } } } } } } },
   });
-  return { canKeep: keeps("setup.areas"), sites };
-}
-
-/** A site's open areas, in order: what a module's place field offers. */
-export async function areaNames(siteId: string) {
-  const rows = await prisma.siteArea.findMany({ where: { siteId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { name: true } });
-  return rows.map((r) => r.name);
+  // Departments for every site (none tied to a site) as well as each site's own.
+  const departments = await prisma.department.findMany({ where: { orgId, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true, clubId: true } });
+  const [qualifications, roles] = await Promise.all([
+    prisma.qualificationType.findMany({ where: { orgId, archivedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    orgId ? rolesNeeding(orgId) : [],
+  ]);
+  // What an area's line can ask people to be on (owner, 21 October 2026); swim classes come from the timetable.
+  const activities = await prisma.activityType.findMany({ where: { orgId, archivedAt: null, fromClasses: false }, orderBy: [{ department: { sortOrder: "asc" } }, { sortOrder: "asc" }, { name: "asc" }],
+    select: { id: true, name: true, department: { select: { name: true } } } });
+  return { canKeep: keeps("setup.areas"), qualifications, roles, activities: activities.map((a) => ({ id: a.id, name: a.name, departmentName: a.department.name })), sites: sites.map((site) => {
+    const areas = site.areas.map(({ staffing, weekHours, together, ...area }) => ({ ...area, weekHours: weekHoursOf(weekHours), together: togetherOf(together),
+      minimums: staffing.map((m) => staffLine(m, roles)) }));
+    // Each top-level area followed by its sub-areas (owner, 20 October 2026).
+    const top = areas.filter((a) => !a.parentId || !areas.some((p) => p.id === a.parentId));
+    return { ...site, departments: departments.filter((d) => !d.clubId || d.clubId === site.id).map(({ id, name }) => ({ id, name })),
+      areas: top.flatMap((a) => [a, ...areas.filter((c) => c.parentId === a.id)]) };
+  }) };
 }
 
 /** Why a "where" is not one of the site's areas, or null when it is (or is empty, or is the
@@ -56,12 +72,17 @@ export async function areaProblem(siteId: string, place: string, keep?: string |
   return found ? null : `Choose one of the site's areas. ${value} is not on the list; add it under Admin, Areas.`;
 }
 
-/** Open areas for several sites at once, keyed by site. */
-export async function areaNamesBySite(siteIds: readonly string[]) {
-  const rows = siteIds.length ? await prisma.siteArea.findMany({ where: { siteId: { in: [...siteIds] }, archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { siteId: true, name: true } }) : [];
-  const out = new Map<string, string[]>(siteIds.map((id) => [id, []]));
-  for (const r of rows) out.get(r.siteId)?.push(r.name);
-  return out;
+/** `areaProblem` for a "where" that may name lanes after its area ("Main pool, lanes 1 to 3"): the
+ *  area must be one of the site's, and the lanes ones it has. */
+export async function placeProblem(siteId: string, place: string, keep?: string | null) {
+  const value = place.trim();
+  if (!value || (keep && value.toLowerCase() === keep.trim().toLowerCase())) return null;
+  const area = value.split(",")[0].trim();
+  const found = await prisma.siteArea.findFirst({ where: { siteId, archivedAt: null, name: { equals: area, mode: "insensitive" } }, select: { name: true, lanes: true } });
+  if (!found) return `Choose one of the site's areas. ${area} is not on the list; add it under Admin, Areas.`;
+  const over = lanesInPlace(value).filter((l) => l > found.lanes);
+  if (!over.length) return null;
+  return found.lanes ? `${found.name} has ${found.lanes} ${found.lanes === 1 ? "lane" : "lanes"}, so there is no lane ${over.join(", ")}.` : `${found.name} has no lanes. Choose the whole area, or give it lanes in Admin, Areas.`;
 }
 
 /** Every position (archived last) with what it needs and how many hold it, for Admin's Positions page. */

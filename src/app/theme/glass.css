@@ -1,0 +1,199 @@
+/* Turnfin Sheet, the 2.0 theme (DESIGN.md, decision D20): every token of the design, in light and
+   dark. This file holds the values; DESIGN.md says what each one is for. The file keeps the name and
+   the token names it had under Turnfin Glass (D13) while step 5 re-themes the kit, so every screen
+   follows at once. Colours use light-dark(), so they follow `color-scheme` (the device, or the
+   person's choice in `data-theme` on <html>, globals.css). Shadows cannot, so their dark values sit
+   under the dark selectors at the end. shadcn's --ui-* names (shadcn.css) point here. Copied byte
+   for byte into Turnfin Me and the Academy site (scripts/lint/ui-rules.mjs). */
+:root {
+  /* The ground: the logo's deep blue behind the frame (sidebar, phone header, tab bar), the same in
+     both themes, with the fin as its only texture. Text on it is only on-ground or on-ground-2, which
+     keep 4.5:1 over the fin too. */
+  --ground: #0062b1;
+  --on-ground: #ffffff;
+  --on-ground-2: #ebf3fa;
+  --ground-fill: rgba(255, 255, 255, 0.14);
+  --fin-opacity: 0.1;
+  /* The sheet: the white page the work sits on, and the pale surface of tiles and cards on it. */
+  --sheet: light-dark(#ffffff, #0d151e);
+  --surface: light-dark(#f4f7fa, #16202b);
+
+  /* Colour on the sheet. Neutrals carry the interface; the logo blue means selected or the primary
+     action; orange needs action, green is done, red is serious, the cyan dot is live. */
+  --bg: var(--sheet);
+  --bg-2: var(--surface);
+  --bg-3: light-dark(#eef3f8, #1a2532);
+  --fill: light-dark(#e1e9f1, #243244);
+  --fill-2: light-dark(#e8eef4, #1f2a36);
+  --label: light-dark(#101b27, #eef3f8);
+  --label-2: light-dark(#52657a, #93a4b6);
+  --label-3: light-dark(#9aa9b8, #5d6e80);
+  --sep: light-dark(#e1e8ef, #1f2a36);
+  --accent: light-dark(#0062b1, #7cc0ff);
+  --accent-btn: #0062b1;
+  --accent-hi: light-dark(#00559a, #0a6fc4);
+  --accent-soft: light-dark(#e8f1fa, #16273a);
+  --accent-ink: light-dark(#0062b1, #7cc0ff);
+  --green: light-dark(#2fae5a, #30d158);
+  --green-ink: light-dark(#1d6b3a, #6fd08f);
+  --green-mark: light-dark(#1d6b3a, #30d158);
+  --on-green: light-dark(#ffffff, #000000);
+  --green-soft: light-dark(#e6f4ea, #12301d);
+  --orange: light-dark(#e35a1c, #ff8a4c);
+  --orange-ink: light-dark(#a8380a, #ffab78);
+  --orange-soft: light-dark(#fff0e6, #3a1d0e);
+  --red: light-dark(#d92d20, #ff6b62);
+  --red-ink: light-dark(#b42318, #ff8a80);
+  --red-badge: #c41c14;
+  --red-soft: light-dark(#fde8e7, #3a1514);
+  --live: light-dark(#08819a, #3fd0e6);
+  --scrim: light-dark(rgba(0, 20, 40, 0.32), rgba(0, 0, 0, 0.5));
+  --stage: #000000;
+  /* Text on the filled accent button. */
+  --on-accent: #ffffff;
+  /* The Docs content palette: text colours a writer picks (lighter in dark) and highlights, with
+     the dark ink that sits on a highlight in both themes. They belong to the document, not the
+     interface, so they keep their own values. */
+  --docs-blue: light-dark(#2563eb, #93c5fd);
+  --docs-teal: light-dark(#0f766e, #5eead4);
+  --docs-green: light-dark(#15803d, #86efac);
+  --docs-purple: light-dark(#9333ea, #d8b4fe);
+  --docs-red: light-dark(#dc2626, #fca5a5);
+  --docs-orange: light-dark(#c2410c, #fdba74);
+  --docs-mark-yellow: #fef08a;
+  --docs-mark-green: #bbf7d0;
+  --docs-mark-blue: #bfdbfe;
+  --docs-mark-pink: #fbcfe8;
+  --docs-mark-purple: #e9d5ff;
+  --docs-mark-orange: #fed7aa;
+  --on-pastel: #172033;
+
+  /* The kit's floating controls (the toolbar's groups, segmented controls, menus) keep the glass
+     names but are opaque soft fills now: no blur, rim light or lens (Sheet has no glass). */
+  --glass-fill: light-dark(#eef3f8, #1a2532);
+  --glass-fill-hi: light-dark(#e1e9f1, #243244);
+  --glass-spec: transparent;
+  --glass-spec-2: transparent;
+  --glass-glow: transparent;
+  --glass-shade: transparent;
+  --glass-edge: light-dark(rgba(16, 27, 39, 0.06), rgba(255, 255, 255, 0.06));
+  --glass-rim-a: transparent;
+  --glass-rim-b: transparent;
+  --glass-hi: transparent;
+  --glass-sel: light-dark(#ffffff, #2a3a4d);
+  --glass-blur: 0px;
+  --glass-saturate: 100%;
+  --glass-brightness: 1;
+  --glass-press-scale: 1.02;
+
+  /* Shadows (light; dark at the end). */
+  --shadow-sheet: 0 1px 2px rgba(0, 30, 60, 0.18), 0 18px 50px rgba(0, 30, 60, 0.28);
+  --shadow-selected: 0 2px 10px rgba(0, 0, 0, 0.15);
+  --shadow-float: 0 2px 6px rgba(0, 30, 60, 0.1), 0 12px 32px rgba(0, 30, 60, 0.18);
+  --shadow-glass: 0 1px 2px rgba(0, 30, 60, 0.06);
+  --shadow-card: none;
+  --shadow-prominent: 0 6px 16px rgba(0, 98, 177, 0.3);
+  /* Menus, toasts and the save bar: a floating shadow with a hairline edge. */
+  --shadow-overlay: var(--shadow-float), 0 0 0 0.5px var(--sep);
+  /* The soft ring around a focused field. */
+  --focus-halo: 0 0 0 4px var(--accent-soft);
+
+  /* Type: Manrope (--font-manrope, set by the root layout), then the system font. The scale is the
+     text-* utilities below. */
+  --font-text: var(--font-manrope, Manrope), system-ui, sans-serif;
+  --font-display: var(--font-manrope, Manrope), system-ui, sans-serif;
+  /* The running sizes the kit's rules use (DESIGN.md, Space, size and radius; D15). */
+  --type-caption: 12px;
+  --type-caption-leading: 16px;
+  --type-body: 15px;
+  --type-body-leading: 20px;
+  --type-title: 20px;
+  --type-title-leading: 25px;
+  --type-large-title: 34px;
+  --type-large-title-leading: 41px;
+  --type-figure: 34px;
+  --type-figure-leading: 40px;
+
+  /* Space, size and radius. */
+  --space-hair: 2px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 10px;
+  --space-4: 14px;
+  --space-5: 18px;
+  --space-6: 22px;
+  --space-7: 26px;
+  --space-8: 28px;
+  --control-height: 44px;
+  --row-height: 58px;
+  --row-height-deck: 64px;
+  --tabbar-height: 62px;
+  --sidebar-width: 248px;
+  --radius-xs: 6px;
+  --radius-sm: 9px;
+  --radius-md: 11px;
+  --radius-lg: 12px;
+  --radius-panel: 22px;
+  --radius-inspector: 22px;
+  --radius-card: 18px;
+  --radius-sheet: 28px;
+  --radius-capsule: 999px;
+  /* Layout limits (owner decision, 10 October 2026): overlays keep a 16px gutter; the narrowest
+     column of a tile, card or wide-column grid; a side rail; a search field before it wraps; the
+     pool deck's frame. */
+  --overlay-max-width: calc(100vw - 2rem);
+  --overlay-max-height: calc(100dvh - 2rem);
+  --tile-min: 10rem;
+  --card-min: 14rem;
+  --column-min: 22rem;
+  --rail-width: 20rem;
+  --field-min: 18rem;
+  --deck-width: 1180px;
+
+  /* Motion: damped springs sampled at 49 points (the design system's bundle.css). */
+  --spring: linear(0, 0.0196, 0.0708, 0.1434, 0.2292, 0.3216, 0.4153, 0.5066, 0.5927, 0.6717, 0.7425, 0.8045, 0.8578, 0.9026, 0.9394, 0.9689, 0.992, 1.0094, 1.0219, 1.0303, 1.0355, 1.0379, 1.0384, 1.0372, 1.035, 1.032, 1.0287, 1.0251, 1.0215, 1.018, 1.0148, 1.0118, 1.0092, 1.0069, 1.005, 1.0033, 1.002, 1.0009, 1.0001, 0.9995, 0.9991, 0.9988, 0.9986, 0.9985, 0.9985, 0.9986, 0.9987, 0.9988, 1);
+  --bounce: linear(0, 0.0405, 0.1446, 0.2877, 0.4487, 0.6105, 0.7604, 0.89, 0.9945, 1.0723, 1.1244, 1.1533, 1.163, 1.1575, 1.1413, 1.1184, 1.0923, 1.0659, 1.0412, 1.0197, 1.0023, 0.9892, 0.9803, 0.9753, 0.9735, 0.9742, 0.9767, 0.9803, 0.9845, 0.9889, 0.9929, 0.9965, 0.9994, 1.0016, 1.0031, 1.004, 1.0043, 1.0042, 1.0039, 1.0033, 1.0026, 1.0019, 1.0012, 1.0006, 1.0001, 0.9998, 0.9995, 0.9994, 1);
+  --smooth: linear(0, 0.0102, 0.0369, 0.0754, 0.1219, 0.1734, 0.2275, 0.2826, 0.3374, 0.3908, 0.4422, 0.4911, 0.5372, 0.5803, 0.6204, 0.6575, 0.6916, 0.7228, 0.7513, 0.7773, 0.8009, 0.8222, 0.8414, 0.8587, 0.8743, 0.8883, 0.9008, 0.912, 0.922, 0.9309, 0.9389, 0.946, 0.9523, 0.9579, 0.9628, 0.9672, 0.9711, 0.9745, 0.9776, 0.9803, 0.9826, 0.9847, 0.9866, 0.9882, 0.9897, 0.9909, 0.992, 0.993, 1);
+  /* Colour and opacity changes, which have nothing to overshoot. */
+  --ease: cubic-bezier(0.22, 0.8, 0.24, 1);
+  --duration-press: 120ms;
+  --duration-fade: 250ms;
+  --duration-spring: 600ms;
+  --duration-island: 700ms;
+  --duration-banner: 3200ms;
+}
+
+/* Phones and tablets read rows and text at body size, 17px (DESIGN.md, Type). */
+@media (max-width: 1099px) {
+  :root { --type-body: 17px; --type-body-leading: 22px; }
+}
+
+/* Dark shadows: deeper, one layer. */
+html[data-theme="dark"] {
+  --shadow-sheet: 0 18px 50px rgba(0, 0, 0, 0.45);
+  --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.5);
+  --shadow-glass: none;
+}
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) {
+    --shadow-sheet: 0 18px 50px rgba(0, 0, 0, 0.45);
+    --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.5);
+    --shadow-glass: none;
+  }
+}
+
+/* The type scale (DESIGN.md, Type). Numbers that line up or change add tabular-nums. */
+@utility text-window-title { font-family: var(--font-display); font-size: 38px; line-height: 44px; font-weight: 800; letter-spacing: -0.03em; }
+@utility text-large-title { font-family: var(--font-display); font-size: 34px; line-height: 41px; font-weight: 800; letter-spacing: -0.03em; }
+@utility text-title-1 { font-family: var(--font-display); font-size: 28px; line-height: 34px; font-weight: 800; letter-spacing: -0.025em; }
+@utility text-title-2 { font-family: var(--font-display); font-size: 22px; line-height: 28px; font-weight: 800; letter-spacing: -0.02em; }
+@utility text-title-3 { font-family: var(--font-display); font-size: 20px; line-height: 25px; font-weight: 800; letter-spacing: -0.015em; }
+@utility text-headline { font-size: 17px; line-height: 22px; font-weight: 700; letter-spacing: -0.01em; }
+@utility text-body { font-size: 17px; line-height: 22px; font-weight: 400; letter-spacing: -0.01em; }
+@utility text-body-desk { font-size: 15px; line-height: 20px; font-weight: 400; letter-spacing: -0.01em; }
+@utility text-subheadline { font-size: 15px; line-height: 20px; font-weight: 500; letter-spacing: -0.01em; }
+@utility text-footnote { font-size: 13px; line-height: 18px; font-weight: 400; letter-spacing: 0; }
+@utility text-caption { font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0; }
+@utility text-caption-2 { font-size: 11px; line-height: 13px; font-weight: 550; letter-spacing: 0; }
+@utility text-figure { font-family: var(--font-display); font-size: 34px; line-height: 40px; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+@utility text-figure-ring { font-family: var(--font-display); font-size: 30px; line-height: 34px; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { ScheduleCalendar } from "@/modules/activities/components/today/calendar";
+import { ScheduleCalendar } from "@/modules/activities/features/today";
 import { screenPage } from "@/lib/page-guards";
-import { getSchedule } from "@/modules/activities/lib/schedule/data";
+import { getSchedule } from "@/modules/activities/features/schedule";
 
 export const metadata: Metadata = { title: "Schedule" };
 

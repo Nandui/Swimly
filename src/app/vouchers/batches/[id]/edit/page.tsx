@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { BatchForm } from "@/components/vouchers/batch-form";
-import { batchForm } from "@/lib/vouchers/data";
+import { PageShell } from "@/components/ui-kit/page-shell";
+import { BatchForm, batchForm } from "@/modules/vouchers/features/batches";
 
 export const metadata: Metadata = { title: "Change a batch" };
 
-/** Change a batch's details, dates or sites. Vouchers already printed keep
- *  working: the codes do not change. */
-export default async function EditBatchPage({ params }: { params: Promise<{ id: string }> }) {
-  const data = await batchForm((await params).id);
+/** Change a batch's details, dates or sites. Vouchers already printed keep working: the codes do
+ *  not change. */
+export default async function EditBatchPage({ params }: PageProps<"/vouchers/batches/[id]/edit">) {
+  const { id } = await params;
+  const data = await batchForm(id);
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title="Change this batch" back={data.existing ? { href: `/vouchers/batches/${data.existing.id}`, label: "The batch" } : undefined}
-        description="The codes stay the same, so vouchers already handed out keep working. Print them again if what is printed on them changes." />
+    <PageShell spacing="roomy" header={<PageHeader title="Change this batch" back={{ href: `/vouchers/batches/${id}`, label: "The batch" }}
+        description="The codes stay the same, so vouchers already handed out keep working. Print them again if what is printed on them changes." />}>
       <BatchForm sites={data.sites} today={data.today} suggestions={data.suggestions} existing={data.existing} />
-    </div>
+    </PageShell>
   );
 }

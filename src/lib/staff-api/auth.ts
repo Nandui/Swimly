@@ -4,8 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { StaffApiError, confirmRequired, unauthenticated } from "@/lib/staff-api/errors";
 import { sendStaffCode } from "@/lib/staff-api/email";
 import { emailSchema, idSchema, readBody } from "@/lib/staff-api/http";
-import { digest, opaqueToken, rateLimit, requestIp, sixDigitCode } from "@/lib/staff-api/security";
-import { bearerToken } from "@/lib/public-api/http";
+import { digest, opaqueToken, rateLimit, sixDigitCode } from "@/lib/staff-api/security";
+import { bearerToken, requestIp } from "@/lib/public-api/http";
 
 /** Turnfin Me sign-in: an email code every time, sent to the address on the
  *  person's Turnfin account; no password. A session lasts up to 12 hours (the
@@ -13,9 +13,9 @@ import { bearerToken } from "@/lib/public-api/http";
  *  valid for 15 minutes. Only active staff get codes; the response never says
  *  whether an address has an account. */
 
-export const SESSION_MS = 12 * 60 * 60 * 1000;
-export const CODE_MS = 10 * 60 * 1000;
-export const CONFIRM_MS = 15 * 60 * 1000;
+const SESSION_MS = 12 * 60 * 60 * 1000;
+const CODE_MS = 10 * 60 * 1000;
+const CONFIRM_MS = 15 * 60 * 1000;
 const MAX_ATTEMPTS = 5;
 
 export type StaffIdentity = { sessionId: string; confirmedAt: Date | null; user: { id: string; name: string; email: string; orgId: string } };

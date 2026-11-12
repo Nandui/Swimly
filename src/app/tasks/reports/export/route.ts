@@ -1,7 +1,6 @@
 import { auth } from "@/auth";
-import { tasksAccess } from "@/lib/tasks/access";
-import { taskReport } from "@/lib/tasks/data";
-import { TASK_STATE_META, clockOf, csvRows } from "@/lib/tasks/rules";
+import { csvFile } from "@/lib/csv";
+import { clockOf, TASK_STATE_META, taskReport, tasksAccess } from "@/modules/tasks/features/reports";
 
 /** The report as a CSV a spreadsheet opens safely (no formulas): `kind=scores` gives each site's
  *  score per day (frozen or provisional), otherwise every task in the range with the report's
@@ -14,16 +13,16 @@ export async function GET(request: Request) {
   const r = await taskReport(q);
   const scores = q.kind === "scores";
   const csv = scores
-    ? csvRows([
+    ? csvFile([
         ["Site", "Date", "Score (0-100)", "Tasks", "Frozen"],
         ...r.daily.map((d) => [d.siteName, d.date, d.score ?? "", d.count, d.frozen ? "Yes" : "Provisional"]),
       ])
-    : csvRows([
+    : csvFile([
         ["Site", "Date", "Task", "Due", "State", "Completed at", "By", "Approval", "Out of range", "Reason"],
         ...r.tasks.map((t) => [t.siteName, t.date, t.title, clockOf(t.dueAt), TASK_STATE_META[t.state].label, t.completedAt?.toISOString() ?? "", t.completedByName ?? "",
           t.approvedByName ? `Approved by ${t.approvedByName}` : t.state === "approval" ? "Waiting" : "Not required", t.exceptionList.join(" | "), t.reason]),
       ]);
-  return new Response(`﻿${csv}\r\n`, { headers: {
+  return new Response(csv, { headers: {
     "Content-Type": "text/csv; charset=utf-8", "Cache-Control": "no-store",
     "Content-Disposition": `attachment; filename="tasks-${scores ? "scores" : "report"}-${r.from}-to-${r.to}.csv"`,
   } });

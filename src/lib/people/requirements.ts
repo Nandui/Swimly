@@ -1,4 +1,5 @@
 import { CircleCheck, CircleX, Clock3, TriangleAlert } from "lucide-react";
+import { addDaysIso, toDateOnlyString as iso } from "@/lib/format";
 import type { StatusMeta } from "@/lib/status";
 
 /** What a person's position asks of them (owner decision, 8 October 2026): each qualification it
@@ -14,14 +15,9 @@ export const REQUIREMENT_META = {
 export type RequirementState = keyof typeof REQUIREMENT_META;
 
 /** Expiring = within 60 days, the usual renewal window (as `qualificationState`). */
-export const REQUIREMENT_WARNING_DAYS = 60;
+const REQUIREMENT_WARNING_DAYS = 60;
 
 type Held = { typeId: string; issuedOn: Date | null; expiresOn: Date | null; revokedAt: Date | null };
-const iso = (d: Date) => d.toISOString().slice(0, 10);
-function plusDays(day: string, n: number) {
-  const d = new Date(`${day}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + n);
-  return iso(d);
-}
 
 /** Each required qualification with the person's best record of it: the one valid longest, so a
  *  renewed certificate counts and an older expired one does not. Worst first. */
@@ -31,7 +27,7 @@ export function requirementStates(required: readonly { id: string; name: string 
     const records = held.filter((h) => h.typeId === type.id && !h.revokedAt && (!h.issuedOn || iso(h.issuedOn) <= on));
     const best = records.sort((a, b) => (b.expiresOn ? iso(b.expiresOn) : "9999") .localeCompare(a.expiresOn ? iso(a.expiresOn) : "9999"))[0];
     const expiresOn = best?.expiresOn ? iso(best.expiresOn) : null;
-    const state: RequirementState = !best ? "missing" : expiresOn && expiresOn < on ? "expired" : expiresOn && expiresOn <= plusDays(on, REQUIREMENT_WARNING_DAYS) ? "expiring" : "met";
+    const state: RequirementState = !best ? "missing" : expiresOn && expiresOn < on ? "expired" : expiresOn && expiresOn <= addDaysIso(on, REQUIREMENT_WARNING_DAYS) ? "expiring" : "met";
     return { typeId: type.id, name: type.name, state, expiresOn };
   }).sort((a, b) => order[a.state] - order[b.state] || a.name.localeCompare(b.name));
 }

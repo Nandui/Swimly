@@ -2,12 +2,10 @@ import type { Metadata } from "next";
 import { cache } from "react";
 import { Notice } from "@/components/ui-kit/notice";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Tag } from "@/components/ui-kit/tag";
-import { ArchiveTemplate, CopyTemplate } from "@/components/tasks/template-actions";
-import { TemplateEditor } from "@/components/tasks/template-editor";
+import { ArchiveTemplate, CopyTemplate, taskTemplate, TEMPLATE_STATUS_META, TemplateEditor } from "@/modules/tasks/features/templates";
 import { plural, today } from "@/lib/format";
-import { taskTemplate } from "@/lib/tasks/data";
-import { TEMPLATE_STATUS_META } from "@/lib/tasks/rules";
 
 /** One read per request, shared by the page and its tab title. */
 const load = cache(taskTemplate);
@@ -21,16 +19,15 @@ export default async function TaskTemplatePage({ params }: { params: Promise<{ i
   const { template, sites, roles } = await load((await params).id);
   const t = template!;
   return (
-    <>
-      <PageHeader back={{ href: "/tasks/templates", label: "Templates" }} title={t.title || "Untitled template"}
+    <PageShell header={<PageHeader back={{ href: "/tasks/templates", label: "Templates" }} title={t.title || "Untitled template"}
         description={t.used ? `It has made ${plural(t.used, "task")}. Changes apply to the tasks it makes from now on.` : "It has not made a task yet."}
         status={<Tag meta={TEMPLATE_STATUS_META[t.status]} />}
-        actions={<><CopyTemplate id={t.id} /><ArchiveTemplate id={t.id} archived={t.status === "archived"} /></>} />
+        actions={<><CopyTemplate id={t.id} /><ArchiveTemplate id={t.id} archived={t.status === "archived"} /></>} />}>
       {t.status === "archived" ? (
         <Notice tone="info" title="Archived" description="It makes no more tasks. Restore it as a draft to change it." />
       ) : (
         <TemplateEditor key={t.version} sites={sites} roles={roles} today={today()} template={t} />
       )}
-    </>
+    </PageShell>
   );
 }

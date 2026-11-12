@@ -4,11 +4,11 @@ import { cn } from "@/lib/utils"
 import { Slot } from "radix-ui"
 
 const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-2 text-sm font-semibold whitespace-nowrap transition-[color,background-color,border-color,box-shadow,opacity,translate] ui-motion-feedback ui-motion-press enabled:active:opacity-90 disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "inline-flex shrink-0 items-center justify-center gap-2 text-sm font-semibold whitespace-nowrap transition ui-motion-feedback ui-motion-press enabled:active:opacity-90 disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: "bg-ui-primary text-ui-primary-foreground hover:bg-ui-primary-hover",
+        default: "bg-(--accent-btn) text-ui-primary-foreground hover:bg-(--accent-hi)",
         destructive: "bg-ui-destructive",
         outline:
           "border bg-ui-background shadow-xs hover:bg-ui-accent hover:text-ui-accent-foreground dark:border-ui-input dark:bg-ui-input/30 dark:hover:bg-ui-input/50",

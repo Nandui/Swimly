@@ -86,6 +86,7 @@ model Programme {
   completions        LevelCompletion[]
   assessmentSessions AssessmentSession[]
   assessmentTypes    AssessmentType[]
+  manualPlacements   ManualPlacement[]
 
   @@unique([clubId, name])
   @@index([clubId, sortOrder])
@@ -117,6 +118,7 @@ model Level {
   enrolments         Enrolment[]
   completions        LevelCompletion[]
   assessmentOutcomes AssessmentBooking[]
+  manualPlacements   ManualPlacement[]
 
   @@unique([programmeId, name])
   @@index([programmeId, sortOrder])
@@ -194,11 +196,13 @@ model Student {
   completions          LevelCompletion[]
   assessmentBookings   AssessmentBooking[]
   cancelledSessions    CancelledClassSwimmer[]
+  mergedSessions       ClassMergeSwimmer[]
   parentAccess         ParentChildAccess[]
   parentAccessRequests ParentAccessRequest[]
   parentChangeRequests ParentChangeRequest[]
   parentProgress       ParentProgressEvent[]
   enrolmentFollowUps   StudentFollowUp[]
+  manualPlacements     ManualPlacement[]
 
   @@index([clubId, status, lastName, firstName])
   @@index([status, lastName, firstName])
@@ -241,6 +245,8 @@ model Course {
   covers          ClassCover[]
   assessedResults CompetencyResult[]
   cancellations   ClassCancellation[]
+  mergesAway      ClassMerge[]          @relation("ClassMergeFrom")
+  mergesIn        ClassMerge[]          @relation("ClassMergeInto")
   plannedTeachers ClassPlannedTeacher[]
 
   @@index([clubId, dayOfWeek, startMinutes])
@@ -290,6 +296,11 @@ model Enrolment {
   readyToMoveByName            String?
   readyToMoveLevelId           String?
   readyToMoveNote              String?
+  /// Why the swimmer left this class, a key from LEAVE_REASONS
+  /// (src/modules/activities/shared/enrolment/leave-reasons.ts). Set when a
+  /// place is withdrawn or its last lesson is scheduled; null before
+  /// 16 October 2026 and for finished or waitlist places.
+  leaveReason                  String?
   createdAt                    DateTime              @default(now())
   updatedAt                    DateTime              @updatedAt
 
@@ -304,6 +315,37 @@ model Enrolment {
   @@index([programmeId, status])
   @@index([status, legendAgreementStatus, startedOn])
   @@index([status, readyToMoveAt])
+}
+
+/// A swimmer the desk put on Awaiting enrolment by hand, at a level, without an
+/// assessment (owner request, 20 October 2026). It leaves the list the same way
+/// an assessment placement does, by a class place in its programme, or when
+/// someone takes it off; it is never deleted, so `removedAt` marks that.
+/// Ids of people are snapshots, as on every "who did this" here.
+model ManualPlacement {
+  id            String    @id @default(cuid())
+  /// The site whose list it is on. Core's id, stored without a relation.
+  clubId        String
+  studentId     String
+  programmeId   String
+  levelId       String
+  /// Why it was added by hand, shown on the list and in the swimmer's history.
+  reason        String
+  addedById     String?
+  addedByName   String
+  removedAt     DateTime?
+  removedById   String?
+  removedByName String?
+  removedReason String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  student   Student   @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  programme Programme @relation(fields: [programmeId], references: [id], onDelete: Restrict)
+  level     Level     @relation(fields: [levelId], references: [id], onDelete: Restrict)
+
+  @@index([clubId, removedAt])
+  @@index([studentId])
 }
 
 /// Append-only reception contact/work history shared across sites and programmes.
@@ -426,6 +468,56 @@ model CancelledClassSwimmer {
   @@index([studentId])
 }
 
+/// One day's class joined into another class at the same level, because there were not
+/// enough instructors or something happened on the day (owner request, 9 November 2026).
+/// The weekly timetable and enrolments stay as they are. On that date the swimmers listed
+/// here are on the host class's register, and their attendance is still recorded against
+/// their own class (`fromCourseId`), so it counts towards it. Undoing a merge deletes the
+/// row, with an audit entry, and is allowed only before any of them has been marked.
+/// Names and times are frozen, like a cancellation's, so the list reads true later.
+model ClassMerge {
+  id               String   @id @default(cuid())
+  clubId           String
+  date             DateTime @db.Date
+  fromCourseId     String
+  intoCourseId     String
+  levelName        String
+  programmeName    String
+  fromClassName    String
+  fromStartMinutes Int
+  intoClassName    String
+  intoStartMinutes Int
+  intoLocation     String?
+  /// Who was to teach the host class when they were merged.
+  instructorName   String?
+  reason           String
+  mergedById       String
+  mergedByName     String
+  mergedAt         DateTime @default(now())
+
+  fromCourse Course              @relation("ClassMergeFrom", fields: [fromCourseId], references: [id], onDelete: Restrict)
+  intoCourse Course              @relation("ClassMergeInto", fields: [intoCourseId], references: [id], onDelete: Restrict)
+  swimmers   ClassMergeSwimmer[]
+
+  @@unique([fromCourseId, date])
+  @@index([intoCourseId, date])
+  @@index([clubId, date])
+}
+
+model ClassMergeSwimmer {
+  id           String  @id @default(cuid())
+  mergeId      String
+  studentId    String
+  swimmerName  String
+  memberNumber String?
+
+  merge   ClassMerge @relation(fields: [mergeId], references: [id], onDelete: Cascade)
+  student Student    @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@unique([mergeId, studentId])
+  @@index([studentId])
+}
+
 /// The instructor who confirmed they are teaching this class on this date.
 /// Includes the scheduled instructor and substitutes. Created under the course
 /// lock before opening the register; an existing claim is never overwritten.
@@ -518,7 +610,7 @@ model LevelCompletion {
 /// Deliberately **not** a `Course`. A course is weekly and has no date; an
 /// assessment happens once. Modelling it as a course would put a repeating
 /// class in the timetable forever, and bolting dates onto `Course` would
-/// rebuild class sessions by accident — the seam DESIGN.md defers. This is
+/// rebuild class sessions by accident. This is
 /// the one place the app holds a dated event, and it is scoped to exactly
 /// this purpose.
 model AssessmentSession {
@@ -532,6 +624,10 @@ model AssessmentSession {
   location        String?
   /// Null means uncapped.
   capacity        Int?
+  /// Who can be assessed: whole years on the session's date, both ends included.
+  /// Null leaves that end open. Booking and placing both refuse a swimmer outside it.
+  minAge          Int?
+  maxAge          Int?
   instructorId    String?
   /// The programme this session places children into. An outcome is one of
   /// its levels, and nothing else.
@@ -627,6 +723,11 @@ model ParentAccount {
   email          String                 @unique
   name           String?
   phone          String?
+  /// "family" (a parent with children in lessons) or "adult" (books swimming courses
+  /// for themselves). One email is one kind; separate accounts, owner decision 21 Oct 2026.
+  kind           String                 @default("family")
+  /// An adult account's own swimmer record, made on their first course booking.
+  swimmerId      String?                @unique
   isActive       Boolean                @default(true)
   createdAt      DateTime               @default(now())
   updatedAt      DateTime               @updatedAt
@@ -812,4 +913,106 @@ model LegendAgreementPrice {
   updatedAt     DateTime @updatedAt
   updatedById   String?
   updatedByName String?
+}
+
+// Failed payments (owner, 2 November 2026; part of the swim school since D24): the direct debits that failed each month, from the bank's
+// failure sheet until reception has recovered each one. Legend stays the billing system: Turnfin
+// never takes money or changes a mandate, it only keeps who was contacted and how each ended.
+// Sites, people and swimmers are other owners' and read only through their functions, so the
+// tables keep plain ids and names. Failures are closed, never deleted.
+
+/// One monthly failure sheet as it was uploaded: which month, by whom, and what it added.
+model PaymentImport {
+  id             String   @id
+  orgId          String
+  /// The month the direct debits were collected, "2026-09".
+  month          String
+  fileName       String
+  /// Rows on the sheet with a reference, and how many of them were new (the rest were already in).
+  rows           Int
+  added          Int
+  totalCents     Int
+  /// The sheet's debits as a hash (`sheetFingerprintSource`): the same sheet uploaded again, under
+  /// any month, is refused. "" on uploads from before it was kept.
+  fingerprint    String   @default("")
+  uploadedById   String
+  uploadedByName String
+  createdAt      DateTime @default(now())
+
+  @@index([orgId, month])
+  @@index([orgId, fingerprint])
+  @@map("payment_imports")
+}
+
+/// One failed direct debit, and how it was recovered or why it ended.
+model PaymentFailure {
+  id            String                @id @default(cuid())
+  orgId         String
+  siteId        String
+  importId      String
+  /// The collection month, "2026-09".
+  month         String
+  /// The bank's reference, "A/LWC10244". One reference can fail twice in a month for different
+  /// amounts, so a debit is its reference, amount and `copy` within the month: uploading the same
+  /// sheet again adds nothing.
+  reference     String
+  /// 1 for the first row with this reference and amount on the month's sheet, 2 for a second.
+  copy          Int                   @default(1)
+  /// Legend's member number as on the sheet, "LWC10244"; "" when the sheet had none.
+  memberNumber  String                @default("")
+  /// The swimmer holding that member number when the sheet was uploaded; null for gym members
+  /// and anyone not on the swimmer records.
+  memberId      String?
+  /// The account holder's name as the bank gave it.
+  name          String
+  amountCents   Int
+  /// The bank's return code and its words, "AM04" "Insufficient Funds".
+  returnCode    String                @default("")
+  returnReason  String                @default("")
+  /// to_contact | contacted | paid | new_mandate | cancelled (`PAYMENT_STATUS_META`)
+  status        String                @default("to_contact")
+  attempts      Int                   @default(0)
+  lastContactAt DateTime?
+  /// The warning emails sent to the family, 0 to 3 (`shared/payments/emails.ts`), and when the first
+  /// and the latest went: the reminder and final notice fall due from the first.
+  emailsSent    Int                   @default(0)
+  firstEmailAt  DateTime?
+  lastEmailAt   DateTime?
+  /// What the last close said.
+  outcome       String                @default("")
+  version       Int                   @default(1)
+  closedAt      DateTime?
+  closedById    String?
+  closedByName  String?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  events        PaymentFailureEvent[]
+
+  @@unique([orgId, month, reference, amountCents, copy])
+  @@index([orgId, siteId, status])
+  @@index([memberId, status])
+  @@index([orgId, memberNumber])
+  @@map("payment_failures")
+}
+
+/// A failure's history: each contact and each change, with the note given. `operationId` makes a
+/// repeated press of the same button land once.
+model PaymentFailureEvent {
+  id          String         @id @default(cuid())
+  orgId       String
+  failureId   String
+  operationId String
+  actorId     String
+  actorName   String
+  action      String
+  /// For a contact: phone | text | email | desk, and no_answer | message | spoke.
+  method      String         @default("")
+  result      String         @default("")
+  note        String         @default("")
+  createdAt   DateTime       @default(now())
+  failure     PaymentFailure @relation(fields: [failureId], references: [id], onDelete: Restrict)
+
+  @@unique([failureId, operationId])
+  @@index([failureId, createdAt])
+  @@map("payment_failure_events")
 }

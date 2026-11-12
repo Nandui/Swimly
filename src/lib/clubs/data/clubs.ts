@@ -12,7 +12,10 @@ export async function getClubs() {
       id: true,
       name: true,
       code: true,
+      address: true,
+      phone: true,
       archivedAt: true,
+      orgId: true,
     },
   });
 }

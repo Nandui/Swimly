@@ -10,25 +10,17 @@ import { cn } from "@/lib/utils";
 
 import UiLink from "next/link";
 
-import { CurriculumImage } from "@/modules/activities/components/curriculum/curriculum-image";
+import {
+  AddProgramme, ArchiveProgramme, CurriculumImage, EditProgramme, getCurriculumSummary, getProgrammes, levelCountLabel, MoveProgramme,
+} from "@/modules/activities/features/curriculum";
 import { ARCHIVAL_STATUS_META } from "@/lib/status";
 import type { Metadata } from "next";
 
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { PageHeader } from "@/components/ui-kit/page-header";
+import { PageShell } from "@/components/ui-kit/page-shell";
 import { Lead, Num } from "@/components/ui-kit/prose";
 import { Tag } from "@/components/ui-kit/tag";
-import {
-  AddProgramme,
-  ArchiveProgramme,
-  EditProgramme,
-  MoveProgramme,
-} from "@/modules/activities/components/curriculum/programme-actions";
-import {
-  getCurriculumSummary,
-  getProgrammes,
-} from "@/modules/activities/lib/curriculum/data/curriculum";
-import { levelCountLabel } from "@/modules/activities/lib/curriculum/constants";
 import { screenPage } from "@/lib/page-guards";
 
 export const metadata: Metadata = { title: "Programmes" };
@@ -45,12 +37,11 @@ export default async function ProgrammesPage() {
   const archived = programmes.filter((p) => p.archivedAt);
 
   return (
-    <div className="min-w-0 flex flex-col gap-6">
-      <PageHeader
+    <PageShell spacing="roomy" header={<PageHeader
         title="Programmes"
         description="The curriculum: what a swimmer works through, in the order they work through it"
         actions={<AddProgramme />}
-      />
+      />}>
 
       {live.length === 0 ? (
         <EmptyState
@@ -60,7 +51,7 @@ export default async function ProgrammesPage() {
           action={<AddProgramme />}
         />
       ) : (
-        <section className="pc-panel" aria-label="Programmes in use">
+        <section className="flex min-w-0 flex-col gap-(--space-5)" aria-label="Programmes in use">
           <Lead>
             <Num>{summary.programmes}</Num>{" "}
             {summary.programmes === 1 ? "programme" : "programmes"}, holding{" "}
@@ -75,8 +66,8 @@ export default async function ProgrammesPage() {
       )}
 
       {archived.length > 0 ? (
-        <section className="pc-panel">
-          <h2 className="text-lg font-semibold">Archived</h2>
+        <section className="flex min-w-0 flex-col gap-(--space-3)" aria-labelledby="archived-heading">
+          <div className="pc-section-head mb-0"><h2 id="archived-heading">Archived</h2><p>{archived.length}</p></div>
           <Lead>
             Not offered any more. Everything recorded against them is still
             readable.
@@ -84,7 +75,7 @@ export default async function ProgrammesPage() {
           <ProgrammeTable programmes={archived} archived />
         </section>
       ) : null}
-    </div>
+    </PageShell>
   );
 }
 

@@ -1,0 +1,175 @@
+import type { DayOfWeek } from "@/generated/prisma/client";
+import { DAY_META } from "@/modules/activities/shared/courses/constants";
+import type { CourseRow } from "@/modules/activities/shared/courses/data/courses";
+
+export type FamilyMember = {
+  studentId: string;
+  name: string;
+  levelIds: string[];
+  currentCourseIds: string[];
+  /** Searched at a level they are not at ("what if"); nothing on the swimmer changes. */
+  whatIf?: boolean;
+};
+
+export type Placement = {
+  studentId: string;
+  name: string;
+  course: CourseRow;
+  alreadyIn: boolean;
+  whatIf?: boolean;
+};
+
+/** A level someone can be checked at: one with a class at this site, in curriculum order. */
+export type LevelOption = { id: string; name: string; programme: string };
+
+export function levelOptions(courses: CourseRow[]): LevelOption[] {
+  const levels = new Map(courses.filter((course) => !course.archivedAt).map((course) => [course.level.id, course.level]));
+  return [...levels.values()]
+    .sort((a, b) => a.programme.sortOrder - b.programme.sortOrder || a.programme.name.localeCompare(b.programme.name) ||
+      a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
+    .map((level) => ({ id: level.id, name: level.name, programme: level.programme.name }));
+}
+
+/** The group as it would be at the levels somebody is asking about (owner request, 21 October
+ *  2026: "what if this one was at that level and the other at the same they are in"). A swimmer
+ *  with an assumed level is searched at that level only. Their current class still counts as
+ *  theirs only if it is at that level; otherwise they would need a free place like anyone new.
+ *  Only the search changes: no enrolment or level is touched. */
+export function withLevels(members: FamilyMember[], assumed: Record<string, string>, courses: CourseRow[]): FamilyMember[] {
+  const levelOf = new Map(courses.map((course) => [course.id, course.levelId]));
+  return members.map((member) => {
+    const levelId = assumed[member.studentId];
+    if (!levelId) return member;
+    return { ...member, whatIf: true, levelIds: [levelId],
+      currentCourseIds: member.currentCourseIds.filter((id) => levelOf.get(id) === levelId) };
+  });
+}
+
+export type CombinationPage = {
+  combinations: Placement[][];
+  /** Last assignment shown. Continuing starts after it, without a result cap. */
+  next: string[] | null;
+};
+
+/** Enumerate assignments, not just one greedy answer. A cursor lets large
+ * families explore every combination without materialising their Cartesian
+ * product. Current places cost nothing; moving away does not promise that the
+ * old seat is freed, because Together does not make a transfer. */
+export function findCombinations(
+  members: FamilyMember[],
+  courses: CourseRow[],
+  { after = null, limit = 5, differentTimes = false }: {
+    after?: string[] | null;
+    limit?: number;
+    differentTimes?: boolean;
+  } = {},
+): CombinationPage {
+  if (!members.length || members.some((member) => !member.levelIds.length)) {
+    return { combinations: [], next: null };
+  }
+  const live = courses.filter((course) => !course.archivedAt);
+  const remaining = new Map(live.map((course) => [course.id,
+    course.capacity === null ? members.length : Math.max(0, course.capacity - course._count.enrolments),
+  ]));
+  const choices = members.map((member) => live
+    .filter((course) => member.levelIds.includes(course.levelId) || member.currentCourseIds.includes(course.id))
+    .map((course): Placement => ({ studentId: member.studentId, name: member.name, course,
+      alreadyIn: member.currentCourseIds.includes(course.id), ...(member.whatIf ? { whatIf: true } : {}) }))
+    .filter((placement) => placement.alreadyIn || remaining.get(placement.course.id)! > 0)
+    .sort((a, b) => Number(b.alreadyIn) - Number(a.alreadyIn) ||
+      a.course.startMinutes - b.course.startMinutes || a.course.id.localeCompare(b.course.id)));
+  if (choices.some((options) => !options.length)) return { combinations: [], next: null };
+
+  const cursor = after?.map((id, index) => choices[index]?.findIndex((p) => p.course.id === id));
+  const validCursor = cursor?.length === members.length && cursor.every((index) => index >= 0);
+  const selected: Placement[] = [];
+  const combinations: Placement[][] = [];
+  const pageSize = Math.max(1, Math.trunc(limit));
+
+  // Capacity matching prunes impossible branches, including overlapping levels,
+  // before enumerating siblings ahead of a swimmer who cannot fit anywhere.
+  function canFinish(from: number): boolean {
+    const seats = live.flatMap((course) => Array.from(
+      { length: Math.min(members.length, remaining.get(course.id) ?? 0) }, () => course.id));
+    const owners = new Map<number, number>();
+    function assign(member: number, visited: Set<number>): boolean {
+      if (choices[member].some((p) => p.alreadyIn)) return true;
+      for (let seat = 0; seat < seats.length; seat++) {
+        if (visited.has(seat) || !choices[member].some((p) => p.course.id === seats[seat])) continue;
+        visited.add(seat);
+        const owner = owners.get(seat);
+        if (owner === undefined || assign(owner, visited)) {
+          owners.set(seat, member);
+          return true;
+        }
+      }
+      return false;
+    }
+    for (let member = from; member < members.length; member++) {
+      if (!assign(member, new Set())) return false;
+    }
+    return true;
+  }
+
+  function visit(index: number, pastCursor: boolean) {
+    if (combinations.length > pageSize) return;
+    if (index === members.length) {
+      if (pastCursor && (!differentTimes || new Set(selected.map((p) => p.course.startMinutes)).size > 1)) {
+        combinations.push([...selected]);
+      }
+      return;
+    }
+    // Skip same-time permutations when looking for different-time options.
+    if (differentTimes) {
+      const times = new Set(selected.map((p) => p.course.startMinutes));
+      for (const options of choices.slice(index)) for (const p of options) {
+        if (p.alreadyIn || remaining.get(p.course.id)! > 0) times.add(p.course.startMinutes);
+      }
+      if (times.size < 2) return;
+    }
+    if (!canFinish(index)) return;
+    const start = pastCursor ? 0 : cursor![index];
+    for (let option = start; option < choices[index].length; option++) {
+      const placement = choices[index][option];
+      const free = remaining.get(placement.course.id)!;
+      if (!placement.alreadyIn && free <= 0) continue;
+      if (!placement.alreadyIn) remaining.set(placement.course.id, free - 1);
+      selected.push(placement);
+      visit(index + 1, pastCursor || option > cursor![index]);
+      selected.pop();
+      if (!placement.alreadyIn) remaining.set(placement.course.id, free);
+      if (combinations.length > pageSize) break;
+    }
+  }
+  visit(0, !validCursor);
+  const hasMore = combinations.length > pageSize;
+  if (hasMore) combinations.pop();
+  return { combinations, next: hasMore ? combinations.at(-1)!.map((p) => p.course.id) : null };
+}
+
+type SlotFit = { startMinutes: number; courses: CourseRow[] };
+type DayFit = { day: DayOfWeek; together: SlotFit[]; spread: CourseRow[] | null };
+export type TogetherResult = { days: DayFit[]; unplaced: FamilyMember[] };
+
+export function findTimesTogether(members: FamilyMember[], courses: CourseRow[]): TogetherResult {
+  const unplaced = members.filter((member) => !member.levelIds.length);
+  // Never label a partial family match as an option for everyone.
+  if (!members.length || unplaced.length) return { days: [], unplaced };
+  const live = courses.filter((course) => !course.archivedAt);
+  const days = [...new Set(live.map((course) => course.dayOfWeek))]
+    .sort((a, b) => DAY_META[a].index - DAY_META[b].index);
+  const out: DayFit[] = [];
+  for (const day of days) {
+    const onDay = live.filter((course) => course.dayOfWeek === day);
+    const together: SlotFit[] = [];
+    for (const startMinutes of [...new Set(onDay.map((c) => c.startMinutes))].sort((a, b) => a - b)) {
+      const atTime = onDay.filter((course) => course.startMinutes === startMinutes);
+      if (findCombinations(members, atTime, { limit: 1 }).combinations.length) {
+        together.push({ startMinutes, courses: atTime });
+      }
+    }
+    const spread = findCombinations(members, onDay, { limit: 1, differentTimes: true }).combinations.length ? onDay : null;
+    if (together.length || spread) out.push({ day, together, spread });
+  }
+  return { days: out, unplaced };
+}

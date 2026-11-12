@@ -15,13 +15,14 @@ import { Client } from "pg";
  *  Safety:
  *  - Production is read in one READ ONLY, REPEATABLE READ transaction, so the
  *    copy is a consistent snapshot.
- *  - It writes only to a database that already has the role-levels migration,
- *    which production does not have yet, and never to production's host.
+ *  - It writes only to a database that already has every migration
+ *    production has (so each copied column fits), never to production's
+ *    host, and the dry run names the host it would write to.
  *  - Dry run by default. Pass --confirm to replace dev's data, in one
  *    transaction: dev is emptied and filled, or left as it was.
  *
- *  Afterwards run `scripts/convert-roles-to-levels.ts` against dev, because
- *  production's roles have no levels yet.
+ *  If production's roles have no levels yet, run
+ *  `scripts/convert-roles-to-levels.ts` against dev afterwards.
  *
  *  Put the two unpooled connection strings in `.env.copy` (ignored by Git):
  *    PROD_DATABASE_URL=...   (Vercel → Storage → swimly-db)
@@ -33,7 +34,6 @@ import { Client } from "pg";
 
 config({ path: ".env.copy", quiet: true });
 
-const DEV_MARKER = "20261003120000_role_levels";
 /** Credentials and throttles, not data: they stay in production. */
 const SKIP = new Set(["_prisma_migrations", "ParentSession", "ParentSignInChallenge", "ParentRateLimit"]);
 const CHUNK = 500;
@@ -91,10 +91,13 @@ async function main() {
   await prod.connect();
   await dev.connect();
   try {
-    const marker = await dev.query("SELECT 1 FROM _prisma_migrations WHERE migration_name = $1 AND finished_at IS NOT NULL", [DEV_MARKER]);
-    if (marker.rowCount === 0) throw new Error(`DEV_DATABASE_URL does not have ${DEV_MARKER}. It is not the dev database, or its deploy has not finished. Nothing was written.`);
-    const prodMarker = await prod.query("SELECT 1 FROM _prisma_migrations WHERE migration_name = $1", [DEV_MARKER]);
-    if ((prodMarker.rowCount ?? 0) > 0) throw new Error("PROD_DATABASE_URL already has the dev migrations. Check the two addresses are the right way round. Nothing was written.");
+    // Dev must be at least as far on as production, so every copied column
+    // exists there. Previews migrate dev first, so it is usually ahead.
+    const applied = async (db: Client) => new Set((await db.query<{ migration_name: string }>("SELECT migration_name FROM _prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL")).rows.map((r) => r.migration_name));
+    const [prodApplied, devApplied] = [await applied(prod), await applied(dev)];
+    const behind = [...prodApplied].filter((m) => !devApplied.has(m));
+    if (behind.length) throw new Error(`DEV_DATABASE_URL is missing production's migrations (${behind.join(", ")}). Check the two addresses are the right way round, or wait for a preview deploy to finish. Nothing was written.`);
+    console.log(`Reading from ${new URL(prodUrl).host}, writing to ${new URL(devUrl).host}.`);
 
     const [prodTables, devTables] = [await tables(prod), await tables(dev)];
     const shared = [...prodTables].filter((t) => devTables.has(t) && !SKIP.has(t));
@@ -201,7 +204,7 @@ async function main() {
       await dev.query("ROLLBACK");
       throw error;
     }
-    console.log("\nCopied into the dev database. Now convert its roles to levels, then delete .env.copy.");
+    console.log("\nCopied into the dev database. Delete .env.copy now.");
   } finally {
     await prod.end();
     await dev.end();

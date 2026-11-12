@@ -5,7 +5,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Its own project root, not the Swimly repository around it: separate
-  // builds, and Work's dev server never triggers reloads here.
+  // builds, and Turnfin's dev server never triggers reloads here.
   turbopack: { root: process.cwd() },
   outputFileTracingRoot: process.cwd(),
   async headers() {
@@ -15,6 +15,14 @@ const nextConfig: NextConfig = {
         { key: "X-Content-Type-Options", value: "nosniff" },
         { key: "Referrer-Policy", value: "no-referrer" },
         { key: "X-Frame-Options", value: "DENY" },
+      ],
+    }, {
+      // The service worker that keeps pages for courses saved for offline:
+      // always checked for a new version.
+      source: "/sw.js",
+      headers: [
+        { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+        { key: "Content-Type", value: "application/javascript; charset=utf-8" },
       ],
     }];
   },

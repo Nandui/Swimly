@@ -31,13 +31,19 @@ Local adaptations:
   Radix still provides the keyboard behaviour, group semantics and checked
   state. Tabs has one variant (the soft pill bar); the underline `line`
   variant is gone.
+- Chart (20 October 2026) is shadcn's chart, taken from its registry source
+  because the CLI could not reach ui.shadcn.com from the build sandbox. It
+  depends on recharts 3. Its colours use `ui-` utilities and the theme's
+  `--pc-chart-*` and other tokens (now pointing at `src/app/theme/glass.css`) through the chart config; it keeps the
+  registry's own `style` for series colours, which is why `src/components/shadcn`
+  is the one folder the inline-style lint skips.
+- Progress is the one way to draw a bar for a share (analytics, meters).
 
 The booking sheet composes Table, Item, Tabs, Select, Command/Popover, Badge
 and Empty. Custom CSS expresses its time/level geometry and sticky headers.
 Lucide supplies icons; headings and text use semantic HTML.
 
-The source audit and conversion record is in
-[docs/shadcn-audit.md](../../../docs/shadcn-audit.md). `npm run lint` rejects
+`npm run lint` rejects
 visible native controls, custom interactive roles and competing UI libraries
 outside this directory. Hidden inputs used by form compositions remain native.
 When collapsing a form section, keep its content mounted and hide the closed

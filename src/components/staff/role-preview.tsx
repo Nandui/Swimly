@@ -5,7 +5,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/shadcn/dropdown-menu";
 import { previewRole } from "@/lib/staff/actions/preview";
-import { toast } from "@/lib/toast";
+import { toast } from "@/components/ui/toast";
 
 type RoleOption = { id: string; name: string; description: string | null };
 export type RolePreviewState = { roles: RoleOption[]; current: { id: string; name: string } | null; actualRoleName: string };
@@ -39,7 +39,7 @@ export function RolePreviewToggle({ compact = false }: { compact?: boolean }) {
         {pending ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Eye aria-hidden="true" />}
       </Button>
     </DropdownMenuTrigger>
-    <DropdownMenuContent side={compact ? "right" : "bottom"} align={compact ? "start" : "end"} className="w-72 max-w-[calc(100vw-2rem)]">
+    <DropdownMenuContent side={compact ? "right" : "bottom"} align={compact ? "start" : "end"} className="w-72 max-w-(--overlay-max-width)">
       <DropdownMenuLabel className="text-sm font-normal text-ui-foreground"><span className="block font-semibold">{current ? `Viewing as ${current.name}` : "See the app as"}</span><span className="block text-xs text-ui-muted-foreground">Dev build. You are {actualRoleName}.</span></DropdownMenuLabel>
       <DropdownMenuSeparator />
       <DropdownMenuRadioGroup value={current?.id ?? ""} onValueChange={choose}>{roles.map(role => <DropdownMenuRadioItem className="min-h-11" value={role.id} key={role.id}><span><span className="block">{role.name}</span>{role.description ? <span className="block text-xs text-ui-muted-foreground">{role.description}</span> : null}</span></DropdownMenuRadioItem>)}</DropdownMenuRadioGroup>

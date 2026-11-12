@@ -37,9 +37,9 @@ test("Swim school, Training and Rota apply only at the sites a person works at",
   assert.ok(!at("bishopstown").primaryPermissions.includes("enrolment.manage"));
 });
 
-test("HR Their team reaches only the holder's reports, never the flat checks", () => {
+test("HR Report reaches only the holder's reports, never the flat checks, and reads no files", () => {
   const user = sessionUserFor(levelled({ hr: "team" }), null)!;
-  assert.ok(!user.permissions.includes("hr.records.read"));
+  assert.ok(!user.permissions.includes("hr.reports.write"));
   assert.deepEqual(user.grants.map((g) => g.scopeKind), ["reports"]);
-  assert.ok(user.grants[0].permissions.includes("hr.reviews.write"));
+  assert.deepEqual(user.grants[0].permissions, ["hr.reports.write"]);
 });

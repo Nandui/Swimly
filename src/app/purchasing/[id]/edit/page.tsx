@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui-kit/page-header";
-import { OrderForm } from "@/components/purchasing/order-form";
-import { orderForm } from "@/lib/purchasing/data";
+import { PageShell } from "@/components/ui-kit/page-shell";
+import { OrderForm, orderForm } from "@/modules/purchasing/features/orders";
 
 export const metadata: Metadata = { title: "Change order" };
 
@@ -9,9 +9,8 @@ export const metadata: Metadata = { title: "Change order" };
 export default async function EditOrderPage({ params }: { params: Promise<{ id: string }> }) {
   const data = await orderForm((await params).id);
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title="Change purchase order" description="Change it and send it for approval again." back={data.existing ? { href: `/purchasing/${data.existing.id}`, label: "The order" } : undefined} />
+    <PageShell spacing="roomy" header={<PageHeader title="Change purchase order" description="Change it and send it for approval again." back={data.existing ? { href: `/purchasing/${data.existing.id}`, label: "The order" } : undefined} />}>
       <OrderForm sites={data.sites} suppliers={data.suppliers} rules={data.rules} roleNames={data.roleNames} existing={data.existing} />
-    </div>
+    </PageShell>
   );
 }

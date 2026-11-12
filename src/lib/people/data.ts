@@ -24,7 +24,6 @@ export async function getOrganisation() {
   ]);
   return { organisation, sites, departments, qualificationTypes };
 }
-export type Organisation = Awaited<ReturnType<typeof getOrganisation>>;
 
 export type QualificationState = "valid" | "expiring" | "expired" | "revoked";
 /** Expiring = within 60 days, the usual renewal window for NPLQ and first aid. */
@@ -39,19 +38,19 @@ export function qualificationState(q: { expiresOn: Date | null; revokedAt: Date 
 
 /** One person's account for Admin's Staff page: who they are, their role and
  *  where it applies. Their details (position, employment, contact,
- *  qualifications) are HR's, read through `src/lib/hr/records.ts`. */
+ *  qualifications) are HR's, read through `src/modules/hr/shared/records.ts`. */
 export async function getPersonDetail(userId: string) {
   const session = await requirePermission("staff.manage");
   const person = await prisma.user.findFirst({
     where: { id: userId, orgId: session.user.orgId ?? undefined },
     select: {
-      id: true, name: true, email: true, isActive: true, isSuperadmin: true, createdAt: true, passwordHash: true, siteIds: true,
+      id: true, name: true, email: true, isActive: true, isSuperadmin: true, actsAsSystem: true, createdAt: true, passwordHash: true, siteIds: true, googleId: true, lastSignInAt: true,
       staffRole: { select: { id: true, name: true, levels: true, extras: true, permissions: true, screens: true, homeName: true } },
     },
   });
   if (!person) return null;
   const sites = await prisma.club.findMany({ where: { id: { in: person.siteIds } }, select: { id: true, name: true } });
   const names = new Map(sites.map((row) => [row.id, row.name]));
-  const { passwordHash, ...rest } = person;
-  return { ...rest, hasPassword: Boolean(passwordHash), worksAt: person.siteIds.map((id) => ({ id, name: names.get(id) ?? "Removed site" })) };
+  const { passwordHash, googleId, ...rest } = person;
+  return { ...rest, hasPassword: Boolean(passwordHash), usesGoogle: Boolean(googleId), worksAt: person.siteIds.map((id) => ({ id, name: names.get(id) ?? "Removed site" })) };
 }
