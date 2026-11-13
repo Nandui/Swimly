@@ -107,6 +107,15 @@ Set in Vercel per environment; locally in `.env` (copy `.env.example`). Secrets 
 | `ANTHROPIC_API_KEY` | Training's course drafting with Claude; unset, it is off |
 | `INCIDENTS_EMAIL_DEV_LOG` | development only: print footage request emails instead of sending them |
 
+**Google Chat, for Plan (test)'s cover requests** ([D31](decisions.md))
+
+| Setting | Purpose |
+| --- | --- |
+| `PLAN_CHAT_CLIENT_EMAIL`, `PLAN_CHAT_PRIVATE_KEY` | the Chat app's service account, from its JSON key (`client_email`, `private_key`); Turnfin posts and updates cards as the app |
+| `PLAN_CHAT_PROJECT_NUMBER` | the Google Cloud project's number (digits, not its name); a request to `/api/plan/chat` is taken only when Google Chat signed it for this project |
+
+All three or none: without them Plan's Setup says Google Chat isn't set up, and nobody can be asked. In the Google Cloud project: switch on the Google Chat API; under its Configuration give the app a name, set the connection to **HTTP endpoint URL** `https://<host>/api/plan/chat`, the authentication audience to **Project Number**, and make it available to the Workspace; create a service account and a JSON key for it. Then add the app to each department's space in Google Chat and link the space in Plan, Set up. Google cannot reach a protected preview, so answering from Chat is tried on Production, in a space made for the test.
+
 **Turnfin Me** (`apps/me`)
 
 | Setting | Where | Purpose |

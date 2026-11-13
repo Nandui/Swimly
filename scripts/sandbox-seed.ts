@@ -18,6 +18,7 @@ export async function seed(ctx: Ctx) {
   await seedTraining(ctx.prisma);
   if (ctx.hrUrl) await seedHr(ctx.prisma, ctx.hrUrl);
   await seedRota(ctx.prisma);
+  await seedPlan(ctx.prisma);
   await seedAcademy(ctx.prisma);
   await seedShortCourses(ctx.prisma);
   await seedStock(ctx.prisma);
@@ -281,6 +282,31 @@ async function seedRota(db: PrismaClient) {
  *  two invented members of the public on it, one with a deposit and checks still to do. And an
  *  NPLQ course next month open for online booking, with three invented people who held a place
  *  online: one overdue after two unanswered calls, one due within a day, one held today. */
+/** Plan (test) at Hillview, enough to see a day and cover being asked for (D31): Public swim on
+ *  the main pool needs two lifeguards and Ciara fills one place each day; Aquatics has a Google
+ *  Chat space, and Sam has asked for tomorrow's other place, with three answers. Sam plans it. */
+async function seedPlan(db: PrismaClient) {
+  const ORG = "org_leisureworld", HILLVIEW = "club_churchfield";
+  const day = (offset: number) => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Dublin" }).format(new Date(Date.now() + offset * 86_400_000));
+  const by = { createdById: "sbx_sam", createdByName: "Sam Example" };
+  const pool = await db.siteArea.findUniqueOrThrow({ where: { siteId_name: { siteId: HILLVIEW, name: "Main pool" } }, select: { id: true } });
+  await db.planDuty.create({ data: { id: "plan_guard", orgId: ORG, name: "Lifeguard", departmentId: "dept_aquatics", qualificationTypeId: "qt_nplq", color: "blue" } });
+  await db.planSession.create({ data: { id: "plan_swim", orgId: ORG, siteId: HILLVIEW, title: "Public swim", siteAreaId: pool.id, startMinutes: 540, endMinutes: 780,
+    weekdays: [0, 1, 2, 3, 4, 5, 6], firstDay: day(-1), lastDay: day(30), ...by, needs: { create: { dutyId: "plan_guard", count: 2 } } } });
+  for (const offset of [0, 1, 2]) {
+    await db.planShift.create({ data: { orgId: ORG, siteId: HILLVIEW, departmentId: "dept_aquatics", userId: "sbx_ciara", date: day(offset), startMinutes: 540, endMinutes: 780, ...by,
+      blocks: { create: { dutyId: "plan_guard", sessionId: "plan_swim", startMinutes: 540, endMinutes: 780 } } } });
+  }
+  await db.planChatSpace.create({ data: { orgId: ORG, siteId: HILLVIEW, departmentId: "dept_aquatics", space: "spaces/SANDBOX", name: "Hillview aquatics (synthetic)", linkedById: "sbx_sam", linkedByName: "Sam Example" } });
+  await db.planCoverRequest.create({ data: { orgId: ORG, siteId: HILLVIEW, date: day(1), needKey: "s:plan_swim:plan_guard", dutyId: "plan_guard", sessionId: "plan_swim", departmentId: "dept_aquatics",
+    title: "Public swim", place: "Main pool", startMinutes: 540, endMinutes: 780, note: "Synthetic: report to the duty manager.", askedById: "sbx_sam", askedByName: "Sam Example",
+    offers: { create: [
+      { orgId: ORG, userId: "sbx_conor", answer: "yes", via: "chat" },
+      { orgId: ORG, userId: "sbx_riley", answer: "yes", via: "chat" },
+      { orgId: ORG, userId: "sbx_dylan", answer: "no", via: "chat" },
+    ] } } });
+}
+
 async function seedAcademy(db: PrismaClient) {
   const ORG = "org_leisureworld", HILLVIEW = "club_churchfield";
   const day = (offset: number) => { const d = new Date(); d.setUTCHours(0, 0, 0, 0); d.setUTCDate(d.getUTCDate() + offset); return d; };

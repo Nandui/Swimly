@@ -1,6 +1,8 @@
 import "server-only";
 import { notFound } from "next/navigation";
+import { staffByIds } from "@/lib/directory";
 import { isDateOnly, minutesNow, today } from "@/lib/format";
+import { prisma } from "@/lib/prisma";
 import { lanesInDetail, splitLocation } from "@/lib/setup/lanes";
 import { requirePlanActor } from "@/modules/plan/shared/access";
 import { areasOf, classesAt, dutiesOf, heldOn, offsBetween, peopleFor, qualificationNames, sessionsOf, shiftsAt, shiftsElsewhere } from "@/modules/plan/shared/data";
@@ -23,9 +25,16 @@ export async function planDay(params: { site?: string; date?: string; dept?: str
     plannableDepartments(who, site.id, site.orgId), mayManage(site.id, site.orgId), qualificationNames(site.orgId),
   ]);
   const userIds = [...new Set(shifts.map((s) => s.userId))];
-  const [people, offs, elsewhere, classes, held] = await Promise.all([
+  // Cover being asked for (D31): the requests still open this day, and the departments that have
+  // a Google Chat space here, so can be asked at all.
+  const [asked, spaces] = await Promise.all([
+    prisma.planCoverRequest.findMany({ where: { orgId: site.orgId, siteId: site.id, date, closedAt: null }, orderBy: { createdAt: "asc" }, include: { offers: { orderBy: { updatedAt: "asc" } } } }),
+    prisma.planChatSpace.findMany({ where: { orgId: site.orgId, siteId: site.id }, select: { departmentId: true } }),
+  ]);
+  const answeredIds = [...new Set(asked.flatMap((r) => r.offers.map((o) => o.userId)))];
+  const [people, offs, elsewhere, classes, held, answeredBy] = await Promise.all([
     peopleFor(site.orgId, site.id, userIds), offsBetween(site.orgId, date, date), shiftsElsewhere(site.orgId, site.id, userIds, date, date),
-    classesAt(site.id, userIds, date, date), heldOn(userIds),
+    classesAt(site.id, userIds, date, date), heldOn([...new Set([...userIds, ...answeredIds])]), staffByIds(answeredIds),
   ]);
   const dutyMap = new Map(duties.map((d) => [d.id, d]));
   const classDuty = duties.find((d) => d.forClasses) ?? null;
@@ -53,6 +62,21 @@ export async function planDay(params: { site?: string; date?: string; dept?: str
     classes: classes.all, elsewhere, classDutyId: classDuty?.id ?? null,
   });
   const mine = new Set(departments.mine.map((d) => d.id));
+  const offToday = new Set(offs.map((o) => o.userId));
+  // Each open request with its answers, and what whoever chooses should know about each person:
+  // an allowlist, never the rows.
+  const cover = asked.map((r) => {
+    const qualification = dutyMap.get(r.dutyId)?.qualificationTypeId ?? null;
+    return {
+      id: r.id, needKey: r.needKey, start: r.startMinutes, end: r.endMinutes, note: r.note, askedByName: r.askedByName,
+      department: departments.all.find((d) => d.id === r.departmentId)?.name ?? "A department", canChoose: mine.has(r.departmentId),
+      answers: r.offers.map((o) => {
+        const shift = shifts.find((s) => s.userId === o.userId);
+        return { userId: o.userId, name: answeredBy.get(o.userId)?.name ?? "Someone who has left", answer: o.answer === "yes" ? "yes" as const : "no" as const,
+          qualified: !qualification || heldToday(o.userId, qualification), off: offToday.has(o.userId), shift: shift ? { start: shift.start, end: shift.end } : null };
+      }),
+    };
+  });
   // For "free then", a class someone teaches counts as busy like a duty.
   const busyShifts = shifts.map((s) => ({ ...s, blocks: [...s.blocks, ...classes.all.filter((c) => c.userId === s.userId)
     .map((c) => ({ id: `class:${c.ref}`, shiftId: s.id, dutyId: classDuty?.id ?? "", sessionId: null, start: c.start, end: c.end, tasks: [] }))] }));
@@ -61,6 +85,7 @@ export async function planDay(params: { site?: string; date?: string; dept?: str
     /** The department picked to narrow the people shown, or null for every department. */
     department: departments.all.find((d) => d.id === params.dept) ?? null,
     occurrences, needs, classDutyId: classDuty?.id ?? null,
+    cover, askable: spaces.map((s) => s.departmentId).filter((id) => mine.has(id)),
     clashes: laneClashes(occurrences, new Map(areas.map((a) => [a.id, a.lanes]))),
     shifts: shifts.map((s) => ({
       ...s, canPlan: mine.has(s.departmentId),

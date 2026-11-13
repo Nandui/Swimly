@@ -243,7 +243,7 @@ Rules for every connected product:
 - It reaches Turnfin only through its versioned API, behind an `*_API_ENABLED` switch, with email-code sign-in, Bearer tokens and an exact origin allowlist.
 - Responses are mapped through allowlists, with tests; no raw rows leave Turnfin. Another person's record answers `NOT_FOUND`.
 - An API only grows (add fields and endpoints; never rename or remove in the same release).
-- **Turnfin and Turnfin Me stay separate.** Turnfin is the job, on work computers, and has no personal pages. A person's own training, reading, qualifications, shifts, HR and details belong to Turnfin Me. The self-service reads (`*/mine.ts`) and writes (`*/self.ts`) in each app serve the staff API only.
+- **Turnfin and Turnfin Me stay separate.** Turnfin is the job, on work computers, and has no personal pages. A person's own training, reading, qualifications, shifts, HR and details belong to Turnfin Me. The self-service reads (`*/mine.ts`) and writes (`*/self.ts`) in each app serve the staff API only. The one exception is answering a cover request in Google Chat ([D31](decisions.md)).
 - The **pool deck** is not a connected product: it is the swim school's poolside screens inside Turnfin, with the same sign-in and records.
 
 ## Databases

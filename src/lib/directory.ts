@@ -346,6 +346,14 @@ export async function activeStaffAmong(orgId: string | null, ids: readonly strin
   return (await client(db)).user.findMany({ where: { id: { in: [...ids] }, orgId: orgId ?? undefined, isActive: true }, select: { id: true, name: true } });
 }
 
+/** The active person in this organisation whose work email is this one, in any case: for a
+ *  caller another system has already identified by email (a click in Google Chat). */
+export async function activeStaffByEmail(orgId: string | null, email: string, db?: Db): Promise<StaffRef | null> {
+  const wanted = email.trim();
+  if (!wanted) return null;
+  return (await client(db)).user.findFirst({ where: { email: { equals: wanted, mode: "insensitive" }, orgId: orgId ?? undefined, isActive: true }, select: { id: true, name: true } });
+}
+
 /** Which of these people still have an active account. */
 export async function activeStaffIds(ids: readonly string[], db?: Db): Promise<Set<string>> {
   if (ids.length === 0) return new Set();

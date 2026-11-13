@@ -14,11 +14,14 @@ import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { toast } from "@/components/ui/toast";
 import { formatDay, formatTime, formatTimeRange } from "@/lib/format";
 import { BlockDialog } from "@/modules/plan/features/day/components/block-dialog";
+import { AskCoverDialog, CoverAnswers } from "@/modules/plan/features/day/components/cover";
 import { SessionDayDialog } from "@/modules/plan/features/day/components/session-day";
 import { planClassTeacher, removeBlock, saveBlock } from "@/modules/plan/features/day/server/actions";
+import { chooseCover, stopAsking } from "@/modules/plan/features/day/server/cover-actions";
 import type { PlanDayData } from "@/modules/plan/features/day/server/data";
 import { BlockTasks } from "@/modules/plan/features/day/components/task-ticks";
 import { lanesLabel } from "@/lib/setup/lanes";
+import { offerLine, openRequestFor } from "@/modules/plan/shared/cover";
 import { shiftIso, tasksOf, whatsOnRows, type BlockTask } from "@/modules/plan/shared/model";
 import { RemoveShiftDialog, ShiftDialog } from "@/modules/plan/shared/components/shift-dialog";
 
@@ -84,6 +87,8 @@ export function DayView({ data }: { data: PlanDayData }) {
       ariaLabel: `${i.label}, ${i.place}, ${formatTimeRange(i.start, i.end)}: ${sub}` }];
   });
   const needsSomeone = items.filter((i) => i.short > 0);
+  /** "Asked in Google Chat: 2 can cover", for each open request on these needs. */
+  const askedFor = (list: typeof needs) => data.cover.filter((r) => list.some((n) => n.key === r.needKey)).map((r) => `Asked in Google Chat: ${offerLine(r.answers).toLowerCase()}`);
 
   // People: one lane per shift, its duties, breaks, classes and free time.
   const personLanes = shown.map((s) => ({ key: s.id, label: `${nameOf(s.userId)} · ${formatTimeRange(s.start, s.end)}` }));
@@ -180,8 +185,17 @@ export function DayView({ data }: { data: PlanDayData }) {
         // A class has one teacher for all of it; anything else can be filled in parts.
         const candidates = (data.candidates[`${need.key}#${picked.index}`] ?? []).filter((c) => need.kind !== "class" || c.whole);
         if (!gap) return null;
+        // Asking staff who are not working then (D31): one open request for a stretch, its answers
+        // here, and Ask for the departments that can be asked (the duty's own, or any of mine).
+        const request = openRequestFor(data.cover, need.key, gap);
+        const dutyDepartment = duty(need.dutyId)?.departmentId ?? null;
+        const askable = data.departments.mine.filter((d) => data.askable.includes(d.id) && (!dutyDepartment || d.id === dutyDepartment));
         return { title: need.label, description: `${dutyName}, ${formatTimeRange(gap.start, gap.end)}: ${gap.short} short.`,
-          body: candidates.length === 0 ? <p className="text-sm text-ui-muted-foreground">Nobody is on shift then. Add a shift first.</p> : (
+          actions: request ? (request.canChoose ? <Button variant="outline" className="min-h-11" disabled={pending} onClick={() => run(() => stopAsking(request.id), "Stopped asking")}>Stop asking</Button> : null)
+            : askable.length && date >= data.today ? <AskCoverDialog siteId={site.id} date={date} needKey={need.key} what={`${dutyName} for ${need.label}`} start={gap.start} end={gap.end} departments={askable} /> : null,
+          body: <div className="flex flex-col gap-(--space-5)">
+          {request ? <CoverAnswers request={request} pending={pending} onChoose={(userId, name) => run(() => chooseCover(request.id, userId), `${name} put on`)} /> : null}
+          {candidates.length === 0 ? <p className="text-sm text-ui-muted-foreground">{request ? "Nobody is on shift then." : askable.length ? "Nobody is on shift then. Add a shift first, or ask staff in Google Chat." : "Nobody is on shift then. Add a shift first."}</p> : (
             <ul className="pc-list">
               {candidates.map((c) => {
                 const shift = shiftOf(c.shiftId);
@@ -202,7 +216,8 @@ export function DayView({ data }: { data: PlanDayData }) {
                 );
               })}
             </ul>
-          ) };
+          )}
+          </div> };
       }
     }
     const shift = shiftOf(picked.shiftId);
@@ -295,7 +310,7 @@ export function DayView({ data }: { data: PlanDayData }) {
             {needsSomeone.map((i) => (
               <li key={i.key} className="pc-row">
                 <span className="w-28 shrink-0 tabular-nums">{formatTimeRange(i.start, i.end)}</span>
-                <span className="pc-row-body"><span className="pc-row-title">{i.label}</span><span className="pc-row-hint">{i.where}</span></span>
+                <span className="pc-row-body"><span className="pc-row-title">{i.label}</span><span className="pc-row-hint">{[i.where, ...askedFor(i.needs)].join(" · ")}</span></span>
                 <span className="pc-row-trail">
                   <span className="pc-row-hint" data-tone="orange">{i.short} short</span>
                   <Button variant="outline" className="min-h-11" aria-label={`Fill ${i.label}`} onClick={() => setPicked({ kind: "item", key: i.key })}>Fill</Button>

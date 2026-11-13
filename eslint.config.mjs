@@ -32,7 +32,7 @@ const otherModules = {
   qualifications: moduleArea("qualifications", "src/app/staff-qualifications/**"),
   hr: moduleArea("hr", "src/app/api/cron/hr/**"),
   rota: moduleArea("rota"),
-  plan: moduleArea("plan"),
+  plan: moduleArea("plan", "src/app/api/plan/**"),
   purchasing: moduleArea("purchasing"),
   tasks: moduleArea("tasks", "src/app/api/cron/tasks/**"),
   academy: moduleArea("academy", "src/app/api/academy/**"),
