@@ -133,7 +133,7 @@ Turnfin is one frame holding apps ([PRODUCT.md](PRODUCT.md)). What it shows is w
 - Every page is one `PageShell` with one `PageHeader` holding its one H1, as now (AGENTS.md, "Screens"). Step 5 rebuilds both in this design: the header gains the eyebrow line, the meta line and the trailing action; on phones it moves onto the ground.
 - A page leads with what needs the person: a "Needs you" list, or the "Not covered yet" lane. Then what is happening now (figures, the day). Then the rest.
 - Lists are rows on the sheet itself, not boxed cards: each row is an icon tile (or avatar), two lines of text, a tag, and a chevron, with `radius-row` hover. Figures sit in `surface` tiles. Never boxes inside boxes.
-- A page that shows the day uses `DayTimeline`: blocks on the sheet, with the now line in `serious-ink`. Blocks that overlap in time take rows of their own within their lane, as Calendar stacks them; a hairline parts one lane from the next.
+- A page that shows the day uses `DayTimeline`: blocks on the sheet, with the now line in `serious-ink`. Blocks that overlap in time take rows of their own within their lane, as Calendar stacks them; a hairline parts one lane from the next. A block can carry `parts` (a duty's tasks): segments inside it in a deeper shade of its own tone, with the block's name in the stretch they leave free. Lanes can be grouped: an area's own lane first, in the label ink, then its lanes and sub-areas indented beneath, and a block that takes several of them is one block filling them all.
 
 ## Components
 

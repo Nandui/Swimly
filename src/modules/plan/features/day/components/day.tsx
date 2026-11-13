@@ -20,8 +20,9 @@ import { planClassTeacher, removeBlock, saveBlock } from "@/modules/plan/feature
 import { chooseCover, stopAsking } from "@/modules/plan/features/day/server/cover-actions";
 import type { PlanDayData } from "@/modules/plan/features/day/server/data";
 import { BlockTasks } from "@/modules/plan/features/day/components/task-ticks";
+import { lanesLabel } from "@/lib/setup/lanes";
 import { offerLine, openRequestFor } from "@/modules/plan/shared/cover";
-import { shiftIso, tasksOf, type BlockTask } from "@/modules/plan/shared/model";
+import { shiftIso, tasksOf, whatsOnRows, type BlockTask } from "@/modules/plan/shared/model";
 import { RemoveShiftDialog, ShiftDialog } from "@/modules/plan/shared/components/shift-dialog";
 
 type Picked = { kind: "item"; key: string } | { kind: "gap"; needKey: string; index: number }
@@ -30,9 +31,6 @@ type Picked = { kind: "item"; key: string } | { kind: "gap"; needKey: string; in
 /** The Day: what's on, area by area, with what still needs someone; each person's shift underneath;
  *  and one inspector for whichever block is picked: a thing on and its places, who could fill a gap,
  *  a duty to change and its tasks to give, free time to give a duty. */
-/** Where a name sits in a list, unknown ones last. */
-const rank = (list: readonly string[], name: string) => { const at = list.indexOf(name); return at < 0 ? list.length : at; };
-
 export function DayView({ data }: { data: PlanDayData }) {
   const router = useRouter();
   const [picked, setPicked] = useState<Picked | null>(null);
@@ -61,30 +59,32 @@ export function DayView({ data }: { data: PlanDayData }) {
   const hours = Array.from({ length: (to - from) / 60 + 1 }, (_, i) => ({ at: from + i * 60, label: formatTime(from + i * 60) }));
 
   // What's on (owner, 30 October 2026: "maybe the timeline should show what's on in each area"): one
-  // row per area, one block per thing on there (a session with all its duties, or a class). The block
-  // names it and says who is on it, or how many short in orange.
+  // block per thing on (a session with all its duties, or a class), which names it and says who is
+  // on it, or how many short in orange. Its rows are the areas, each with its lanes and parts
+  // beneath, and a block fills the lanes it takes (owner, 11 November 2026; `whatsOnRows`).
   const fillerOf = (f: { userId?: string; blockId?: string }) => f.userId ?? (f.blockId ? blockOwner.get(f.blockId)?.userId : undefined);
   const items = (() => {
-    const byKey = new Map<string, { key: string; label: string; where: string; start: number; end: number; sessionId: string | null; needs: typeof needs }>();
+    const byKey = new Map<string, { key: string; label: string; where: string; areaId: string | null; lanes: readonly number[]; start: number; end: number; sessionId: string | null; needs: typeof needs }>();
     for (const n of needs) {
       const key = n.sessionId ? `s:${n.sessionId}` : n.key;
-      const item = byKey.get(key) ?? { key, label: n.label, where: n.where, start: n.start, end: n.end, sessionId: n.sessionId, needs: [] };
+      const item = byKey.get(key) ?? { key, label: n.label, where: n.where, areaId: n.placeAreaId, lanes: n.placeLanes, start: n.start, end: n.end, sessionId: n.sessionId, needs: [] };
       item.needs.push(n);
       byKey.set(key, item);
     }
     return [...byKey.values()].map((item) => ({ ...item,
+      // "Main Pool, lanes 1 to 3" for a session that names its lanes; a class's place says them already.
+      place: item.sessionId && item.lanes.length ? `${item.where}, ${lanesLabel(item.lanes, data.areas.find((a) => a.id === item.areaId)?.lanes ?? 0).toLowerCase()}` : item.where,
       short: item.needs.reduce((m, n) => m + Math.max(0, ...n.gaps.map((g) => g.short)), 0),
       names: [...new Set(item.needs.flatMap((n) => n.fills.map((f) => fillerOf(f)).filter((u): u is string => Boolean(u))))],
     })).sort((a, b) => a.start - b.start || a.label.localeCompare(b.label));
   })();
-  const areaOrder = data.areas.map((a) => a.name);
-  const areaLanes = [...new Set(items.map((i) => i.where))]
-    .sort((a, b) => Number(a === "No area") - Number(b === "No area") || rank(areaOrder, a) - rank(areaOrder, b) || a.localeCompare(b))
-    .map((where) => ({ key: where, label: where }));
-  const itemBlocks: DayTimelineBlock[] = items.map((i) => {
+  const whatsOn = whatsOnRows(data.areas, items);
+  const itemBlocks: DayTimelineBlock[] = items.flatMap((i) => {
+    const at = whatsOn.placed.get(i.key);
+    if (!at) return [];
     const sub = i.short ? `${i.short} short` : i.names.length ? i.names.map(nameOf).join(", ") : "Covered";
-    return { key: `item|${i.key}`, lane: i.where, start: i.start, end: i.end, kind: i.short ? "gap" as const : "ok" as const, label: i.label, sub,
-      ariaLabel: `${i.label}, ${i.where}, ${formatTimeRange(i.start, i.end)}: ${sub}` };
+    return [{ key: `item|${i.key}`, lane: at.lane, lanes: at.lanes, start: i.start, end: i.end, kind: i.short ? "gap" as const : "ok" as const, label: i.label, sub,
+      ariaLabel: `${i.label}, ${i.place}, ${formatTimeRange(i.start, i.end)}: ${sub}` }];
   });
   const needsSomeone = items.filter((i) => i.short > 0);
   /** "Asked in Google Chat: 2 can cover", for each open request on these needs. */
@@ -102,8 +102,12 @@ export function DayView({ data }: { data: PlanDayData }) {
       ...s.blocks.map((b) => {
         const d = duty(b.dutyId);
         const label = d?.name ?? "Duty";
+        // The tasks given in this duty are drawn inside its block, each where it starts and ends
+        // (owner, 12 November 2026: "can the subtasks be shown in the timeline bar too?").
+        const given = tasksOf(b, d?.tasks ?? []);
         return { key: `block|${s.id}|${b.id}`, lane: s.id, start: b.start, end: b.end, kind: d?.isBreak ? "off" as const : "ok" as const, label,
-          sub: sessionTitle(b.sessionId) ?? undefined, ariaLabel: `${nameOf(s.userId)}: ${label}, ${formatTimeRange(b.start, b.end)}` };
+          sub: sessionTitle(b.sessionId) ?? undefined, parts: given.map((t) => ({ start: t.at, end: t.end, label: t.name })),
+          ariaLabel: [`${nameOf(s.userId)}: ${label}, ${formatTimeRange(b.start, b.end)}`, ...given.map((t) => `${t.name} ${formatTimeRange(t.at, t.end)}`)].join("; ") };
       }),
       ...s.classes.map((c) => ({ key: `class|${s.id}|${c.ref}`, lane: s.id, start: c.start, end: c.end, kind: "book" as const, label: c.title,
         sub: "Teaching", ariaLabel: `${nameOf(s.userId)}: teaching ${c.title}, ${formatTimeRange(c.start, c.end)}` })),
@@ -139,7 +143,7 @@ export function DayView({ data }: { data: PlanDayData }) {
       const item = items.find((i) => i.key === picked.key);
       if (!item) return null;
       const occurrence = occurrences.find((o) => o.sessionId === item.sessionId);
-      return { title: item.label, description: `${item.where} · ${formatTimeRange(item.start, item.end)}`,
+      return { title: item.label, description: `${item.place} · ${formatTimeRange(item.start, item.end)}`,
         body: (
           <div className="flex flex-col gap-(--space-5)">
             {item.needs.map((n) => (
@@ -293,7 +297,7 @@ export function DayView({ data }: { data: PlanDayData }) {
         <div className="pc-section-head"><h2 id="plan-on">What&apos;s on</h2>{items.length ? <p>{needsSomeone.length ? `${needsSomeone.length} need someone` : "All covered"}</p> : null}</div>
         {items.length === 0 ? <EmptyState compact icon="calendarDays" title="Nothing on needs staff this day" hint="Add what's on, and the duties it needs, in Setup." /> : (
           <div className="pc-panel">
-            <DayTimeline from={from} to={to} now={isToday ? data.now : -1} nowLabel={formatTime(data.now)} hours={hours} lanes={areaLanes} blocks={itemBlocks}
+            <DayTimeline from={from} to={to} now={isToday ? data.now : -1} nowLabel={formatTime(data.now)} hours={hours} lanes={whatsOn.rows} blocks={itemBlocks}
               label={`What's on at ${site.name}, area by area`} onSelect={pick} selected={pickedKey} />
           </div>
         )}

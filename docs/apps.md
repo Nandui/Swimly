@@ -105,7 +105,7 @@ The rota started again, on test at one site beside Rota ([D17](decisions.md)): s
 | Plan | plan shifts and duties for the departments they belong to, mark people off, and ask staff to cover a gap and choose who does |
 | Manage | plan every department, run today, and keep the duties, areas and what's on |
 
-Connects: reads people, departments, qualifications and the site's areas (Admin › Areas, shared with Classes and Rota); reads swim classes and plans their teachers through Classes' commitments. No Turnfin Me, home card or person file while it is on test. Asking staff to cover a gap reaches them in Google Chat ([D30](decisions.md)): a card in the department's space, answered from Chat at `/api/plan/chat`, once Manage has linked the space in Setup.
+Connects: reads people, departments, qualifications and the site's areas (Admin › Areas, shared with Classes and Rota); reads swim classes and booked assessments, and plans their teachers and assessors, through Classes' commitments. No Turnfin Me, home card or person file while it is on test. Asking staff to cover a gap reaches them in Google Chat ([D30](decisions.md)): a card in the department's space, answered from Chat at `/api/plan/chat`, once Manage has linked the space in Setup.
 
 ### Staffing
 *Module `staffing` · `/staffing/overview` · reach: sites · data: `staffing.prisma`*

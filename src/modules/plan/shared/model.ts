@@ -204,6 +204,52 @@ export function laneClashes(occurrences: readonly Occurrence[], laneCount: Reado
 }
 
 /** A task a duty can come with: Setup keeps only its name. */
+/** What's on's rows (owner, 11 November 2026: "group them per area and sub areas below it", "the
+ *  activity bar should grow to fill how many lanes it takes"). Each whole area with something on is
+ *  a group: its own row, then a row for each of its lanes and each of its parts (a part with lanes
+ *  has a row for each). An area with neither is one row. Places that match no area follow, each a
+ *  row, "No area" last. `areas` come wholes first then their parts, as `areasOf` gives them.
+ *
+ *  Where each thing sits: on the lanes it names; with none named, on all of the area's rows, so it
+ *  fills the area. Taking the whole area while something else is on there (the usual "Pool open")
+ *  it sits on the area's own row instead, clear of the lanes beneath. */
+export function whatsOnRows(
+  areas: readonly { id: string; name: string; parentId: string | null; lanes: number }[],
+  items: readonly (Span & { key: string; areaId: string | null; lanes: readonly number[]; where: string })[],
+): { rows: { key: string; label: string; under?: string }[]; placed: Map<string, { lane: string; lanes: string[] }> } {
+  const byId = new Map(areas.map((a) => [a.id, a]));
+  const wholeOf = (id: string | null) => { const a = id ? byId.get(id) : undefined; return a?.parentId ? byId.get(a.parentId) ?? a : a; };
+  const laneKeys = (a: { id: string; lanes: number }) => Array.from({ length: a.lanes }, (_, i) => `${a.id}#${i + 1}`);
+  const partRows = (p: { id: string; name: string; lanes: number }) => p.lanes > 0 ? laneKeys(p).map((key, i) => ({ key, label: `${p.name}, lane ${i + 1}` })) : [{ key: p.id, label: p.name }];
+  const beneath = (w: { id: string; lanes: number }) => [
+    ...laneKeys(w).map((key, i) => ({ key, label: `Lane ${i + 1}` })),
+    ...areas.filter((p) => p.parentId === w.id).flatMap(partRows),
+  ];
+  const rows: { key: string; label: string; under?: string }[] = [];
+  const placed = new Map<string, { lane: string; lanes: string[] }>();
+  const put = (key: string, keys: string[]) => placed.set(key, { lane: keys[0], lanes: keys.slice(1) });
+  for (const whole of areas.filter((a) => !a.parentId)) {
+    const here = items.filter((i) => wholeOf(i.areaId)?.id === whole.id);
+    if (!here.length) continue;
+    const under = beneath(whole);
+    rows.push({ key: whole.id, label: whole.name }, ...under.map((r) => ({ ...r, under: whole.id })));
+    for (const item of here) {
+      const area = byId.get(item.areaId ?? "") ?? whole;
+      const named = item.lanes.filter((l) => l >= 1 && l <= area.lanes).map((l) => `${area.id}#${l}`);
+      if (!under.length) put(item.key, [whole.id]);
+      else if (named.length) put(item.key, named);
+      else if (area.id !== whole.id) put(item.key, partRows(area).map((r) => r.key));
+      else put(item.key, here.some((o) => o.key !== item.key && overlaps(o, item)) ? [whole.id] : under.map((r) => r.key));
+    }
+  }
+  const loose = items.filter((i) => !placed.has(i.key));
+  for (const where of [...new Set(loose.map((i) => i.where))].sort((a, b) => Number(a === "No area") - Number(b === "No area") || a.localeCompare(b))) {
+    rows.push({ key: `where:${where}`, label: where });
+    for (const item of loose.filter((i) => i.where === where)) put(item.key, [`where:${where}`]);
+  }
+  return { rows, placed };
+}
+
 export type DutyTask = { id: string; name: string };
 
 /** The tasks a block brings, in time order: the ones chosen for it on the Day from its duty's

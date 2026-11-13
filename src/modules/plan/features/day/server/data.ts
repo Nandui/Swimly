@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { staffByIds } from "@/lib/directory";
 import { isDateOnly, minutesNow, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { lanesInDetail, splitLocation } from "@/lib/setup/lanes";
 import { requirePlanActor } from "@/modules/plan/shared/access";
 import { areasOf, classesAt, dutiesOf, heldOn, offsBetween, peopleFor, qualificationNames, sessionsOf, shiftsAt, shiftsElsewhere } from "@/modules/plan/shared/data";
 import { candidatesFor, fillsOf, gapsOf, laneClashes, needsOf, occurrencesOn, tasksOf, warningsOf } from "@/modules/plan/shared/model";
@@ -39,6 +40,7 @@ export async function planDay(params: { site?: string; date?: string; dept?: str
   const classDuty = duties.find((d) => d.forClasses) ?? null;
   const occurrences = occurrencesOn(sessions, date);
   const blocks = shifts.flatMap((s) => s.blocks);
+  const areaNames = areas.map((a) => a.name);
   const needs = needsOf(occurrences, classes.atSite, classDuty?.id ?? null, areas).map((need) => {
     const fills = fillsOf(need, blocks, classes.atSite);
     // Where it is, for What's on's rows: the Plan area, else the class's own place; and its name
@@ -46,7 +48,12 @@ export async function planDay(params: { site?: string; date?: string; dept?: str
     const place = need.kind === "class" ? classes.atSite.find((c) => `c:${c.source}:${c.ref}` === need.key)?.place.trim() ?? "" : "";
     const where = areas.find((a) => a.id === need.areaId)?.name ?? (place || "No area");
     const label = place && need.title.endsWith(`, ${place}`) ? need.title.slice(0, -place.length - 2) : need.title;
-    return { ...need, fills, gaps: gapsOf(need, fills), where, label };
+    // Its row in What's on: the area and the lanes it takes. A session names them itself; a class's
+    // place says them in words ("Main pool, lanes 1 to 3"), read as the swim school writes them.
+    const spot = splitLocation(place, areaNames);
+    const placeAreaId = need.areaId ?? areas.find((a) => a.name === spot.area)?.id ?? null;
+    const placeLanes = need.kind === "class" ? (spot.area ? lanesInDetail(spot.detail).lanes : []) : occurrences.find((o) => o.sessionId === need.sessionId)?.lanes ?? [];
+    return { ...need, fills, gaps: gapsOf(need, fills), where, label, placeAreaId, placeLanes };
   });
   const heldToday = (userId: string, typeId: string) => held(userId, typeId, date);
   const departmentOf = (userId: string) => people.find((p) => p.id === userId)?.departmentIds ?? [];
