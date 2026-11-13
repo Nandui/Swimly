@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Notice } from "@/components/ui-kit/notice";
 import { Tag } from "@/components/ui-kit/tag";
 import { formatDateRange, formatTimeRange } from "@/lib/format";
+import { LinkSpaceDialog, UnlinkSpaceDialog } from "@/modules/plan/features/setup/components/chat-dialogs";
 import { DutyDialog, RetireDialog, SessionDialog } from "@/modules/plan/features/setup/components/setup-dialogs";
 import type { PlanSetupData } from "@/modules/plan/features/setup/server/data";
 import { dutyColor, WEEKDAYS } from "@/modules/plan/shared/rules";
@@ -94,6 +95,31 @@ export function SetupView({ data }: { data: PlanSetupData }) {
                 </span> : null}
               </li>
             ))}
+          </ul>
+        )}
+      </section>
+
+      <section aria-labelledby="plan-chat" className="flex min-w-0 flex-col">
+        <div className="pc-section-head"><h2 id="plan-chat">Google Chat at {site.name}</h2></div>
+        <p className="pc-section-note">When a place on the Day has nobody to fill it, whoever plans the department can ask its staff to cover it. The request is posted to the department&apos;s space here, and staff answer from Google Chat.</p>
+        {data.chat.ready ? null : <Notice tone="info" title="Google Chat isn't set up for Turnfin yet" description="Once it is, add Turnfin to each department's space in Google Chat and link the space here." />}
+        {departments.length === 0 ? <EmptyState compact icon="users" title="No departments at this site" hint="Departments are kept in Admin." /> : (
+          <ul className="pc-list">
+            {departments.map((d) => {
+              const link = data.chat.links.find((l) => l.departmentId === d.id);
+              return (
+                <li key={d.id} className="pc-row">
+                  <span className="pc-row-body">
+                    <span className="pc-row-title">{d.name}</span>
+                    <span className="pc-row-hint">{link ? link.name : "No space linked, so nobody can be asked"}</span>
+                  </span>
+                  {manage && (data.chat.ready || link) ? <span className="pc-row-trail">
+                    {data.chat.ready ? <LinkSpaceDialog siteId={site.id} departmentId={d.id} department={d.name} current={link?.space ?? null} /> : null}
+                    {link ? <UnlinkSpaceDialog siteId={site.id} departmentId={d.id} department={d.name} /> : null}
+                  </span> : null}
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

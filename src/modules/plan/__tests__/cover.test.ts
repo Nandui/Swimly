@@ -5,13 +5,20 @@ import { serverModule } from "@/test/server-module";
 import { addDaysIso, today } from "@/lib/format";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 
-/** Asking staff to cover a gap (D30), end to end on an isolated database: asking needs the
- *  department's Google Chat space; people answer; whoever plans the department chooses a yes and
- *  Plan puts them on (a new shift, or theirs grown); stopping closes it. Invented people only. */
+/** Asking staff to cover a gap (D30), end to end on an isolated database with Google Chat faked:
+ *  a space is linked in Setup; asking posts a card there; people answer from Chat, matched by
+ *  email; whoever plans the department chooses a yes and Plan puts them on (a new shift, or theirs
+ *  grown); stopping closes it; the card follows each step. Invented people only. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let cover: typeof import("../features/day/server/cover-actions");
 let offers: typeof import("../shared/cover-offers");
 let day: typeof import("../features/day/server/data");
+let setup: typeof import("../features/setup/server/chat-actions");
+let events: typeof import("../features/chat/server/events");
+/** Google Chat, faked: what was posted and changed, and switches to make it fail or go unsigned. */
+type Sent = { text?: string; cardsV2?: { card: { header: { title: string }; sections: { widgets: Record<string, unknown>[] }[] } }[] };
+const chat = { posted: [] as { space: string; message: Sent }[], updated: [] as { name: string; message: Sent }[], down: false, signed: true, ready: true };
+const widgets = (m: Sent) => JSON.stringify(m.cardsV2?.[0].card.sections[0].widgets ?? []);
 const ORG = "org_leisureworld";
 type GrantRow = { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string };
 const state = { id: "sup", permissions: [] as string[], grants: [] as GrantRow[] };
@@ -47,6 +54,13 @@ before(async () => {
     "@/auth": { auth: async () => session() },
     // Other apps are faked: no classes that day, and nothing of theirs to plan.
     "@/modules/contributions": { commitmentsFor: async () => [], planCommitment: async () => ({ ok: false, error: "That can no longer be planned from here." }) },
+    "@/modules/plan/shared/chat": {
+      chatConfig: () => (chat.ready ? { clientEmail: "app@example.invalid", privateKey: "key", projectNumber: "1234567890" } : null),
+      chatSpaces: async () => { if (chat.down) throw new Error("down"); return [{ space: "spaces/EXAMPLE", name: "Pool team" }, { space: "spaces/OTHER", name: "Reception team" }]; },
+      postChatMessage: async (_c: unknown, space: string, message: Sent) => { if (chat.down) throw new Error("down"); chat.posted.push({ space, message }); return `${space}/messages/m${chat.posted.length}`; },
+      updateChatMessage: async (_c: unknown, name: string, message: Sent) => { if (chat.down) throw new Error("down"); chat.updated.push({ name, message }); },
+      fromGoogleChat: async () => chat.signed,
+    },
     "@/lib/authz": {
       AuthorizationError: class AuthorizationError extends Error {},
       requireSession: async () => session(),
@@ -64,13 +78,42 @@ before(async () => {
   cover = serverModule("src/modules/plan/features/day/server/cover-actions.ts", d);
   offers = serverModule("src/modules/plan/shared/cover-offers.ts", d);
   day = serverModule("src/modules/plan/features/day/server/data.ts", d);
+  setup = serverModule("src/modules/plan/features/setup/server/chat-actions.ts", d);
+  events = serverModule("src/modules/plan/features/chat/server/events.ts", d);
 });
 after(async () => { await fixture?.close(); });
 
-test("nobody can be asked until the department has a Google Chat space at the site", async () => {
+test("nobody can be asked until a manager links the department's Google Chat space in Setup", async () => {
   as("sup", ["plan.plan"]);
   assert.match(errorOf(await ask()), /no Google Chat space linked/);
-  await fixture.prisma.planChatSpace.create({ data: { orgId: ORG, siteId: site, departmentId: "d-pool", space: "spaces/EXAMPLE", name: "Pool team", linkedById: "sup", linkedByName: "sup" } });
+  assert.match(errorOf(await setup.linkChatSpace({ siteId: site, departmentId: "d-pool", space: "spaces/EXAMPLE" })), /manages the plan/);
+  assert.match(errorOf(await setup.chatSpacesToLink(site)), /manages the plan/);
+  as("sup", ["plan.view", "plan.plan", "plan.manage"]);
+  const found = await setup.chatSpacesToLink(site);
+  assert.deepEqual(found.ok && found.spaces.map((s) => s.name), ["Pool team", "Reception team"]);
+  assert.match(errorOf(await setup.linkChatSpace({ siteId: site, departmentId: "d-pool", space: "spaces/NOT-MINE" })), /isn't in that space/);
+  assert.match(errorOf(await setup.linkChatSpace({ siteId: site, departmentId: "d-gone", space: "spaces/EXAMPLE" })), /isn't at this site/);
+  chat.ready = false;
+  assert.match(errorOf(await setup.linkChatSpace({ siteId: site, departmentId: "d-pool", space: "spaces/EXAMPLE" })), /isn't set up/);
+  chat.ready = true;
+  assert.deepEqual(await setup.linkChatSpace({ siteId: site, departmentId: "d-pool", space: "spaces/EXAMPLE" }), { ok: true });
+  const row = await fixture.prisma.planChatSpace.findFirstOrThrow();
+  assert.deepEqual([row.space, row.name, row.linkedByName], ["spaces/EXAMPLE", "Pool team", "sup"], "the space's name comes from Google");
+});
+
+test("a request Google Chat won't take is stopped again: nobody was asked", async () => {
+  as("sup", ["plan.plan"]);
+  chat.down = true;
+  assert.match(errorOf(await ask()), /didn't take the request/);
+  chat.down = false;
+  const rows = await fixture.prisma.planCoverRequest.findMany();
+  assert.deepEqual(rows.map((r) => [r.outcome, r.chatMessage]), [["stopped", null]]);
+  await fixture.prisma.planCoverRequest.deleteMany();
+  await fixture.prisma.auditLog.deleteMany({ where: { entity: "PlanCoverRequest" } });
+  chat.ready = false;
+  assert.match(errorOf(await ask()), /isn't set up/);
+  chat.ready = true;
+  assert.equal(await fixture.prisma.planCoverRequest.count(), 0);
 });
 
 test("whoever plans the department asks, once for a stretch, inside the session, for a day to come", async () => {
@@ -84,6 +127,45 @@ test("whoever plans the department asks, once for a stretch, inside the session,
   assert.match(errorOf(await ask({ start: h(11), end: h(13) })), /already being asked/);
   const row = await fixture.prisma.planCoverRequest.findFirstOrThrow();
   assert.deepEqual([row.title, row.dutyId, row.sessionId, row.departmentId, row.askedByName], ["Public swim", "guard", "swim", "d-pool", "sup"]);
+  // Its card went to the department's space, with the two buttons, and the request remembers it.
+  assert.equal(chat.posted.length, 1);
+  const [{ space, message }] = chat.posted;
+  assert.equal(space, "spaces/EXAMPLE");
+  assert.equal(row.chatMessage, "spaces/EXAMPLE/messages/m1");
+  assert.match(message.text ?? "", /^Cover needed: Lifeguard for Public swim, /);
+  assert.match(widgets(message), /I can cover.*Can't/);
+  assert.match(widgets(message), /Report to the duty manager/);
+  assert.match(widgets(message), /Nobody has answered yet/);
+});
+
+/** A click on a card, as Google Chat sends it. */
+const click = (requestId: string, answer: string, email: string, message = "spaces/EXAMPLE/messages/m1") => events.handleChatEvent(new Request("https://turnfin.example/api/plan/chat", {
+  method: "POST", headers: { authorization: "Bearer signed.by.google" },
+  body: JSON.stringify({ type: "CARD_CLICKED", user: { name: "users/1", email, type: "HUMAN" }, message: { name: message },
+    common: { invokedFunction: "plan.cover.answer", parameters: { request: requestId, answer } } }),
+}));
+
+test("a click in Google Chat is that person's answer, matched by email; the card then names who can cover", async () => {
+  const { id } = await fixture.prisma.planCoverRequest.findFirstOrThrow();
+  chat.signed = false;
+  assert.equal((await click(id, "yes", "cal@example.invalid")).status, 401, "anything Google did not sign is refused");
+  chat.signed = true;
+  const said = await (await click(id, "yes", "CAL@example.invalid")).json();
+  assert.equal(said.actionResponse.type, "UPDATE_MESSAGE");
+  assert.match(widgets(said), /Can cover: cal/);
+  const stranger = await (await click(id, "yes", "who@example.invalid")).json();
+  assert.equal(stranger.privateMessageViewer.name, "users/1", "only they see it");
+  assert.match(stranger.text, /couldn't find your Turnfin account/);
+  assert.deepEqual(await (await click(id, "yes", "bea@example.invalid", "spaces/OTHER/messages/x")).json(), {}, "a button on another card answers nothing");
+  assert.deepEqual(await (await click(id, "maybe", "bea@example.invalid")).json(), {});
+  const took = await (await click(id, "no", "cal@example.invalid")).json();
+  assert.match(widgets(took), /Nobody has answered yet/, "a no is not named on the card");
+  const rows = await fixture.prisma.planCoverOffer.findMany();
+  assert.deepEqual(rows.map((o) => `${o.userId} ${o.answer} ${o.via}`), ["cal no chat"]);
+  await fixture.prisma.planCoverOffer.deleteMany();
+  await fixture.prisma.auditLog.deleteMany({ where: { entity: "PlanCoverOffer" } });
+  const added = await (await events.handleChatEvent(new Request("https://turnfin.example/api/plan/chat", { method: "POST", headers: { authorization: "Bearer signed.by.google" }, body: JSON.stringify({ type: "ADDED_TO_SPACE" }) }))).json();
+  assert.match(added.text, /link this space to a department/);
 });
 
 test("people answer yes or no; the latest answer is kept, and the same answer twice writes once", async () => {
@@ -133,6 +215,13 @@ test("choosing a yes gives them a shift for the stretch and the duty, and closes
   assert.match(errorOf(await offers.recordCoverAnswer({ requestId: id, userId: "cal", answer: "yes", via: "chat" })), /already covered/);
   const audit = await fixture.prisma.auditLog.findMany({ where: { actorId: "sup", entity: { in: ["PlanShift", "PlanBlock", "PlanCoverRequest"] } }, orderBy: { createdAt: "asc" } });
   assert.deepEqual(audit.map((a) => `${a.entity} ${a.action}`).sort(), ["PlanBlock create", "PlanCoverRequest create", "PlanCoverRequest update", "PlanShift create"]);
+  // The card lost its buttons and says who covers it; a late click gets a private word.
+  const last = chat.updated[chat.updated.length - 1];
+  assert.equal(last.name, "spaces/EXAMPLE/messages/m1");
+  assert.match(widgets(last.message), /Covered by ann/);
+  assert.doesNotMatch(widgets(last.message), /I can cover/);
+  const late = await (await click(id, "yes", "cal@example.invalid")).json();
+  assert.match(late.text, /already covered/);
 });
 
 test("someone already working that day has their shift grown to take the stretch in", async () => {
@@ -156,10 +245,18 @@ test("stopping closes it: nobody is put on, and nobody can answer or be chosen a
   await offers.recordCoverAnswer({ requestId: id, userId: "bea", answer: "yes", via: "chat" });
   as("viewer", ["plan.view"]);
   assert.match(errorOf(await cover.stopAsking(id)), /can't plan that department/);
+  as("sup", ["plan.view", "plan.plan", "plan.manage"]);
+  assert.match(errorOf(await setup.unlinkChatSpace({ siteId: site, departmentId: "d-pool" })), /still being asked to cover one gap/);
   as("sup", ["plan.plan"]);
   assert.deepEqual(await cover.stopAsking(id), { ok: true });
+  assert.match(widgets(chat.updated[chat.updated.length - 1].message), /No longer needed/);
   assert.match(errorOf(await cover.stopAsking(id)), /already stopped/);
   assert.match(errorOf(await cover.chooseCover(id, "bea")), /already stopped/);
   assert.match(errorOf(await offers.recordCoverAnswer({ requestId: id, userId: "ann", answer: "yes", via: "chat" })), /Nobody is being asked/);
   assert.equal(await db.planShift.count({ where: { userId: "bea" } }), 0);
+  as("sup", ["plan.view", "plan.plan", "plan.manage"]);
+  assert.deepEqual(await setup.unlinkChatSpace({ siteId: site, departmentId: "d-pool" }), { ok: true });
+  assert.equal(await db.planChatSpace.count(), 0);
+  as("sup", ["plan.plan"]);
+  assert.match(errorOf(await ask({ date: addDaysIso(DAY, 2) })), /no Google Chat space linked/);
 });

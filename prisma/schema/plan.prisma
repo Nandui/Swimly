@@ -264,6 +264,8 @@ model PlanCoverRequest {
   note          String    @default("")
   askedById     String
   askedByName   String
+  /// Its card in Google Chat ("spaces/…/messages/…"), to change it as answers come in.
+  chatMessage   String?
   closedAt      DateTime?
   /// "filled" (someone was chosen) or "stopped".
   outcome       String?

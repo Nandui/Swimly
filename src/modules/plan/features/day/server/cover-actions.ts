@@ -8,14 +8,16 @@ import { today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { planCommitment } from "@/modules/contributions";
 import { requirePlanActor } from "@/modules/plan/shared/access";
+import { chatConfig } from "@/modules/plan/shared/chat";
 import { coverAskSchema, openRequestFor, shiftCovering, stillToCover, type CoverAskInput } from "@/modules/plan/shared/cover";
+import { postCoverCard, refreshCoverCard } from "@/modules/plan/shared/cover-chat";
 import { areasOf, classesAt, dutiesOf, sessionsOf } from "@/modules/plan/shared/data";
 import { needsOf, occurrencesOn } from "@/modules/plan/shared/model";
 import { clock, firstIssue } from "@/modules/plan/shared/rules";
 import { mayPlanDepartment, viewableSite } from "@/modules/plan/shared/scope";
 
-/** Asking staff to cover a gap on the Day (D30): ask, choose one of the people who said yes, or
- *  stop asking. Whoever plans the department asked does all three. Choosing puts the person on:
+/** Asking staff to cover a gap on the Day (D30): ask (which posts a card to the department's
+ *  Google Chat space), choose one of the people who said yes, or stop asking; the card follows. Whoever plans the department asked does all three. Choosing puts the person on:
  *  a shift for the stretch (or their shift that day grown to take it in), then the duty or the
  *  class. Warnings never stop it; they show on the Day as for anyone else. */
 
@@ -58,6 +60,7 @@ export async function askForCover(input: CoverAskInput): Promise<ActionResult> {
   if (!(await mayPlanDepartment(who, site.id, site.orgId, department.id))) return fail(CANT_PLAN);
   const space = await prisma.planChatSpace.findUnique({ where: { siteId_departmentId: { siteId: site.id, departmentId: department.id } }, select: { id: true } });
   if (!space) return fail(`${department.name} has no Google Chat space linked at ${site.name} yet, so there is nobody to ask.`);
+  if (!chatConfig()) return fail("Google Chat isn't set up for Turnfin yet, so there is nobody to ask.");
   const result = await prisma.$transaction(async (tx) => {
     const open = await tx.planCoverRequest.findMany({ where: { orgId: site.orgId, siteId: site.id, date: v.date, needKey: need.key, closedAt: null },
       select: { needKey: true, startMinutes: true, endMinutes: true } });
@@ -68,9 +71,20 @@ export async function askForCover(input: CoverAskInput): Promise<ActionResult> {
     } });
     await logAudit({ actorId: who.id, actorName: who.name, action: "create", entity: "PlanCoverRequest", entityId: row.id, clubId: site.id,
       summary: `Asked ${department.name} to cover ${describe(row, duty.name)}` }, tx);
-    return ok();
+    return { ok: true as const, id: row.id, what: describe(row, duty.name) };
   });
   if (!result.ok) return result;
+  // The card goes out once the request is kept. If Chat won't take it nobody was asked, so the
+  // request is stopped again rather than left looking as if staff had seen it.
+  if (!(await postCoverCard(result.id))) {
+    await prisma.$transaction(async (tx) => {
+      await tx.planCoverRequest.update({ where: { id: result.id }, data: { closedAt: new Date(), outcome: "stopped", closedById: who.id, closedByName: who.name } });
+      await logAudit({ actorId: who.id, actorName: who.name, action: "update", entity: "PlanCoverRequest", entityId: result.id, clubId: site.id,
+        summary: `Could not post to Google Chat, so nobody was asked to cover ${result.what}` }, tx);
+    });
+    revalidatePath("/plan", "layout");
+    return fail("Google Chat didn't take the request, so nobody was asked. Try again in a moment.");
+  }
   revalidatePath("/plan", "layout");
   return ok();
 }
@@ -99,6 +113,7 @@ export async function stopAsking(id: string): Promise<ActionResult> {
     return ok();
   });
   if (!result.ok) return result;
+  await refreshCoverCard(request.id);
   revalidatePath("/plan", "layout");
   return ok();
 }
@@ -150,6 +165,7 @@ export async function chooseCover(requestId: string, userId: string): Promise<Ac
     return ok();
   });
   if (!result.ok) return result;
+  await refreshCoverCard(request.id);
   revalidatePath("/plan", "layout");
   return ok();
 }

@@ -35,6 +35,7 @@ CREATE TABLE "plan_cover_requests" (
     "note" TEXT NOT NULL DEFAULT '',
     "askedById" TEXT NOT NULL,
     "askedByName" TEXT NOT NULL,
+    "chatMessage" TEXT,
     "closedAt" TIMESTAMP(3),
     "outcome" TEXT,
     "chosenUserId" TEXT,
