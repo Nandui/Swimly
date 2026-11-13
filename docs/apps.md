@@ -6,7 +6,7 @@ Every app inside Turnfin: what it is for, its levels, where they reach, what it 
 
 ## Front of house
 
-Reception works in two apps: **Classes** and **Finance requests** ([D24](decisions.md), [roadmap step 8](roadmap.md#8-fewer-front-of-house-apps)). The Academy is in Team.
+Reception works in three apps: **Classes**, **Finance requests** ([D24](decisions.md), [roadmap step 8](roadmap.md#8-fewer-front-of-house-apps)) and **Vouchers** ([D30](decisions.md)). The Academy is in Team.
 
 ### Classes
 *Module `activities` (app id `swim-school`) · starter page `/swim-school` · reach: sites · data: `activities.prisma`, `activities.short-courses.prisma`*
@@ -38,6 +38,18 @@ Refunds and coinage for the tills, asked for at the desk and decided by finance 
 | --- | --- |
 | Use | log a customer's refund request or ask for coinage for a till, and follow them |
 | Manage | decide refund and coinage requests, record payments and orders. Nobody decides their own |
+
+### Vouchers
+*Module `vouchers` · `/vouchers/overview` · reach: sites · data: `vouchers.prisma`*
+
+The vouchers given to communities and organisations at times like Christmas, usually a family swim: who got how many, and which have been used.
+
+| Level | Gives |
+| --- | --- |
+| Redeem | check any voucher's code, and mark it as used at their sites |
+| Manage | also make a batch of vouchers for an organisation, print, change and cancel it, put right a voucher marked as used by mistake and cancel one voucher |
+
+A code can be checked from any site, so reception can say where it is accepted; using it needs Redeem at that site. A batch shows to whoever manages vouchers at one of its sites, and changing or cancelling it needs every one of them.
 
 ## Poolside
 

@@ -14,6 +14,7 @@ import "@/modules/incidents/module";
 import "@/modules/tasks/module";
 import "@/modules/academy/module";
 import "@/modules/stock/module";
+import "@/modules/vouchers/module";
 import "@/modules/staffing/module";
 import "@/modules/cctv/module";
 import "@/modules/site-monitoring/module";

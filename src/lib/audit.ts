@@ -68,6 +68,7 @@ export const MODULE_OF_ENTITY: Readonly<Record<string, string>> = {
   MonitoringAction: "Site Monitoring",
   MaintenanceRequest: "Maintenance",
   RiskAssessment: "Risk assessments",
+  VoucherBatch: "Vouchers", Voucher: "Vouchers",
   PaymentFailure: "Swim school",
   PlanArea: "Plan (test)",
   PlanDuty: "Plan (test)",

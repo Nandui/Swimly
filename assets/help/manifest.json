@@ -259,6 +259,14 @@
     "width": 1280,
     "height": 800
   },
+  "voucher-batch": {
+    "width": 1280,
+    "height": 800
+  },
+  "voucher-redeem": {
+    "width": 1280,
+    "height": 800
+  },
   "waitlist": {
     "width": 768,
     "height": 420

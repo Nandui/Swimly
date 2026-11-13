@@ -6,6 +6,13 @@ The decisions Turnfin 2.0 stands on, newest first. Each says what was decided, w
 
 ---
 
+### D30 · 12 November 2026 · Vouchers for communities and organisations
+
+**Vouchers**, a new app in Front of house, tracks the vouchers the centre gives to communities and organisations at certain times of year, Christmas for one, usually for a family swim. A **batch** is one gift to one organisation under an occasion ("Christmas 2026"); every voucher in it has its own code, printed on a sheet Turnfin makes, and reception marks it as used once. Each batch names the sites that accept it. Levels **Redeem** and **Manage** at the person's sites ([apps.md](apps.md#vouchers)).
+**Why:** who was given vouchers and which came back was not recorded anywhere, so a voucher could not be checked at the desk and nobody could say how many were used.
+**What it keeps simple:** the occasion, the organisation and the service are words typed on the batch (earlier ones are offered), not lists to keep; a batch's number of vouchers is fixed once made, because the codes may be printed; a voucher works once.
+**Follows:** reception now works in three apps, which roadmap step 8 had brought down to two; the owner asked for this one in Front of house. No new plug and no events. Its tables are `voucher_batches` and `vouchers` (`prisma/schema/vouchers.prisma`). Not built: scanning a code, emailing vouchers, vouchers that work more than once and a report across years.
+
 ### D29 · 10 November 2026 · Risk assessments, brought over from Risk Management
 
 **Risk assessments**, a new app in Managers, keeps each site's risk assessments: one for each area, job or activity, its hazards rated before controls and with them in place, sign-off by its owner, reviews on a schedule and requests for another look. It replaces the standalone Risk Management app ([Nandui/project-risk](https://github.com/Nandui/project-risk)) for assessments. Levels **View**, **Write** and **Manage** at the person's sites, and one extra, **Can give the executive sign-off**, never on an assessment they own. Turnfin's Incidents stays the record for incidents: whoever triages a report can link the hazards it involved and ask for their assessment to be reviewed.

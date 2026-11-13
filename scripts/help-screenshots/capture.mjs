@@ -44,6 +44,8 @@ const plans = [
   { id: 'home', as: 'maya', steps: [{ go: '/' }] },
   { id: 'refund-new', as: 'noah', steps: [{ go: '/refunds/new' }] },
   { id: 'refund-decision', as: 'maya', steps: [{ go: '/refunds' }, { link: /Sam Example/ }] },
+  { id: 'voucher-redeem', as: 'noah', steps: [{ go: '/vouchers?code=7K3M-9QXD' }] },
+  { id: 'voucher-batch', as: 'alex', steps: [{ go: '/vouchers/batches' }, { link: /Sample Community Centre/ }] },
   { id: 'docs-home', steps: [{ go: '/docs' }] },
   { id: 'docs-new', steps: [{ go: '/docs/documents/new' }] },
   { id: 'training-assign', steps: [{ go: '/training' }, { click: 'Assign training' }], shot: 'dialog' },

@@ -14,6 +14,7 @@ import { siteMonitoringModule } from "@/modules/site-monitoring/manifest";
 import { staffingModule } from "@/modules/staffing/manifest";
 import { stockModule } from "@/modules/stock/manifest";
 import { tasksModule } from "@/modules/tasks/manifest";
+import { vouchersModule } from "@/modules/vouchers/manifest";
 import { trainingModule } from "@/modules/training/manifest";
 import { qualificationsModule } from "@/modules/qualifications/manifest";
 
@@ -25,6 +26,7 @@ import { qualificationsModule } from "@/modules/qualifications/manifest";
 export const modules = [
   swimSchoolModule,
   financeRequestsModule,
+  vouchersModule,
   poolDeckModule,
   tasksModule,
   incidentsModule,

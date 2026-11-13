@@ -1,0 +1,68 @@
+// Vouchers (owner request, 12 November 2026, D30): at certain times of year, Christmas for one,
+// the centre gives vouchers for a service (usually a family swim) to communities and
+// organisations. A batch is one gift to one of them; each voucher in it has its own code, printed
+// on it and used once at reception. Sites and staff are the platform's and read only through its
+// functions, so these tables keep plain ids and carry the module prefix (AGENTS.md, Data and writes).
+
+/// One gift of vouchers to one community or organisation.
+model VoucherBatch {
+  id            String    @id @default(cuid())
+  orgId         String
+  /// What it was given for, e.g. "Christmas 2026". Batches are listed under it.
+  occasion      String
+  /// Who received them: a school, charity, club or community group.
+  recipient     String
+  contactName   String    @default("")
+  /// Their email or phone, as staff would use it.
+  contactDetail String    @default("")
+  /// What each voucher gives, e.g. "Family swim".
+  service       String
+  /// How many vouchers were made. Never changes: the codes are printed.
+  quantity      Int
+  validFrom     DateTime  @db.Date
+  validUntil    DateTime  @db.Date
+  /// The sites that accept it (`Club.id`), at least one.
+  siteIds       String[]
+  /// The small print on each voucher.
+  terms         String    @default("")
+  /// For staff only, never printed.
+  note          String    @default("")
+  createdById   String
+  createdByName String
+  /// Cancelled: its unused vouchers stop working; used ones stay in the record.
+  voidedAt      DateTime?
+  voidedByName  String?
+  voidReason    String    @default("")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  vouchers Voucher[]
+
+  @@index([orgId, createdAt])
+  @@map("voucher_batches")
+}
+
+/// One voucher: a code that works once, while its batch is valid.
+model Voucher {
+  id             String    @id @default(cuid())
+  orgId          String
+  batchId        String
+  /// Its place in the batch, from 1, printed as "3 of 30".
+  number         Int
+  /// "7K3M-9QXD": printed on the voucher and typed at reception.
+  code           String    @unique
+  redeemedAt     DateTime?
+  /// The site it was used at (`Club.id`).
+  redeemedSiteId String?
+  redeemedById   String?
+  redeemedByName String?
+  /// Cancelled on its own, e.g. reported lost.
+  voidedAt       DateTime?
+  voidedByName   String?
+
+  batch VoucherBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@unique([batchId, number])
+  @@index([orgId, redeemedSiteId, redeemedAt])
+  @@map("vouchers")
+}

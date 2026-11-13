@@ -27,6 +27,12 @@ export const GUIDE_SCREENSHOTS: Record<string, Placement[]> = {
   "sign-off-training": [
     { image: "training-signoff", step: "Sign it off or send it back", caption: "Each row shows who is ready, the course and their note, with Not yet and Sign off beside it.", alt: "Training Sign-off page with a fictional lifeguard ready for the pool rescue refresher, and Not yet and Sign off buttons." },
   ],
+  "redeem-voucher": [
+    { image: "voucher-redeem", step: "Read what it gives", caption: "A checked voucher shows what it gives, who it was given to, when and where it can be used, and Mark as used when it is valid.", alt: "Redeem a voucher at a fictional site: the Voucher code field with Check voucher, then the checked code tagged Valid with Gives, Given to, Can be used and Accepted at, a Mark as used button, and Latest used at your sites underneath." },
+  ],
+  "give-vouchers": [
+    { image: "voucher-batch", step: "Follow how many are used", caption: "A batch counts its vouchers used and still to use, then lists every voucher with its code and state.", alt: "A voucher batch for a fictional community centre tagged Running, with Cancel batch, Change and Print vouchers, figures for Used, Still to use, Expired unused and Cancelled, the batch details with its contact and small print, and the start of the list of its twelve vouchers." },
+  ],
   "do-task": [
     { image: "tasks-today", step: "Open Today", caption: "Today shows the site’s figures, the day and its filters, the tasks in groups and the site at a glance.", alt: "Tasks Today at a fictional site: Completed, Remaining, Awaiting approval, Open actions and Score figures, the day with its search, status and tag filters, the Still to do group of task rows with their due times and states, and the At a glance panel with the site's area, time zone, opening and closing." },
   ],

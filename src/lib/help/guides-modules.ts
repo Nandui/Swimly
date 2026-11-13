@@ -225,4 +225,40 @@ export const MODULE_GUIDES: HelpArticle[] = [
     troubleshooting: [{ question: "I shared it too early.", answer: "A shared review cannot be edited. Add a note to their record with the correction, or start another review." }],
     related: ["hr-note"], action: "hr",
   },
+  {
+    slug: "redeem-voucher", title: "Redeem a voucher", category: "vouchers", scopes: ["desk"],
+    summary: "Check the code on a voucher a customer hands in, then mark it as used.",
+    keywords: ["voucher", "redeem", "code", "family swim", "free swim", "christmas", "community", "ticket", "used", "expired", "reception"],
+    before: ["You need the Vouchers: Redeem level at the site. Have the voucher in front of you: its code is eight characters."],
+    steps: [
+      { title: "Type the code", text: "Open Vouchers and choose Redeem. Type the code printed on the voucher into Voucher code and choose Check voucher. Dashes, spaces and lower case do not matter." },
+      { title: "Read what it gives", text: "The voucher shows what it gives, such as a family swim, who it was given to, the days it can be used and the sites that accept it. Valid means it can be used now." },
+      { title: "Mark it as used", text: "Choose Mark as used. If you work at more than one site that accepts it, choose where under Used at first. Keep the voucher: its code will not work again." },
+    ],
+    result: "The voucher shows Used with the time, the site and your name, and it is listed under Latest used at your sites.",
+    troubleshooting: [
+      { question: "It says No voucher has the code.", answer: "Check each character against the voucher. Codes never use 0, 1, I, L or O, so a round character is a Q, D or 8 and an upright one is a T, J or 7." },
+      { question: "It says Already used, Expired, Not valid yet or Cancelled.", answer: "The voucher cannot be used now, and the message says why. Do not accept it; ask your manager if the customer disagrees." },
+      { question: "I marked the wrong voucher as used.", answer: "Tell someone with the Vouchers: Manage level. They check the code and choose Mark as not used, and the change is recorded." },
+    ],
+    related: ["give-vouchers"], action: "vouchers",
+  },
+  {
+    slug: "give-vouchers", title: "Give vouchers to an organisation", category: "vouchers", scopes: ["desk"],
+    summary: "Make a batch of vouchers for a community or organisation, print them and see how many were used.",
+    keywords: ["voucher", "batch", "give", "issue", "organisation", "community", "school", "charity", "christmas", "print", "cancel", "family swim"],
+    before: ["You need the Vouchers: Manage level at every site the vouchers will be accepted at."],
+    steps: [
+      { title: "Start a batch", text: "In Vouchers, choose Issued, then Give vouchers. A batch is one gift to one community or organisation." },
+      { title: "Say what, for whom and when", text: "Enter the Occasion, such as Christmas 2026, who they are Given to, what Each voucher gives and How many vouchers. Choose the first and last day they can be used and tick the sites under Accepted at. Then choose Make the vouchers." },
+      { title: "Print them", text: "On the batch, choose Print vouchers, then Print or save as PDF. Each voucher is a card with its own code to cut out and hand over." },
+      { title: "Follow how many are used", text: "Issued lists every batch under its occasion with how many were used. Open a batch to see each voucher; choose a code to open it on Redeem." },
+    ],
+    result: "The organisation has its vouchers, reception can check each code, and you can see what was used.",
+    troubleshooting: [
+      { question: "Can I add more vouchers to a batch?", answer: "No. The number is fixed because the codes may already be printed. Make another batch for the same organisation and occasion." },
+      { question: "They lost a voucher, or the batch was made by mistake.", answer: "Open the voucher from the batch and choose Cancel this voucher, or choose Cancel batch to stop every unused voucher in it. Neither can be undone." },
+    ],
+    related: ["redeem-voucher"], action: "vouchers",
+  },
 ];

@@ -10,9 +10,9 @@ test("every module belongs to a known group, and lists show them group by group"
   assert.deepEqual(groupModules(allModules()).flatMap((g) => g.modules), [...allModules()]);
 });
 
-test("the front of house holds Classes (the swim school, with short courses) and finance requests", () => {
+test("the front of house holds Classes (the swim school, with short courses), finance requests and vouchers", () => {
   const front = groupModules(allModules()).find((g) => g.key === "front-of-house")!;
-  assert.deepEqual(front.modules.map((m) => m.id), ["swim-school", "finance-requests"]);
+  assert.deepEqual(front.modules.map((m) => m.id), ["swim-school", "finance-requests", "vouchers"]);
   assert.equal(front.label, "Front of house");
 });
 
