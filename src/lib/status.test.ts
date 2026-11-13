@@ -18,6 +18,7 @@ import { PAYMENT_STATUS_META } from "@/modules/activities/shared/payments/types"
 import * as shortCourses from "@/modules/activities/shared/short-courses/rules";
 import * as academy from "@/modules/academy";
 import { STOCK_CATEGORY_TONE_META, STOCK_CHANGE_META, STOCK_TAKE_META } from "@/modules/stock";
+import { BATCH_STATE_META as VOUCHER_BATCH_STATE_META, VOUCHER_STATE_META } from "@/modules/vouchers";
 import { CCTV_REASON_META } from "@/modules/cctv";
 import * as staffing from "@/modules/staffing";
 import * as rota from "@/modules/rota/shared/constants";
@@ -38,6 +39,7 @@ const MAPS: Record<string, Record<string, StatusMeta>> = {
   SWIMMER_RECORD_META: shortCourses.SWIMMER_RECORD_META,
   ...academy,
   STOCK_CATEGORY_TONE_META, STOCK_CHANGE_META, STOCK_TAKE_META,
+  VOUCHER_STATE_META, VOUCHER_BATCH_STATE_META,
   CCTV_REASON_META,
   ...staffing.STAFFING_STATUS_MAPS,
   MONITORING_STATUS_META,

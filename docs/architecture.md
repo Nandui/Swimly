@@ -21,7 +21,7 @@ flowchart TB
     front["Front: Home, Admin, the staff API"]
     subgraph Apps["Apps (src/modules/&lt;id&gt;)"]
       a1["Classes · Pool deck · Analytics"]
-      a2["Finance requests · Academy"]
+      a2["Finance requests · Vouchers · Academy"]
       a3["Tasks · Incidents · Rota · Training · Qualifications"]
       a4["Docs · HR · CCTV log · Site Monitoring · Maintenance · Risk assessments"]
       a5["Purchasing · Stock · next app"]

@@ -298,6 +298,18 @@ export const PERMISSIONS = [
     description: "Keep the product list and its categories, and delete a count at the sites this role covers. Includes counting.",
   },
   {
+    key: "vouchers.redeem",
+    group: "Vouchers",
+    label: "Redeem vouchers",
+    description: "Check a voucher's code and mark it as used at the sites this role covers.",
+  },
+  {
+    key: "vouchers.manage",
+    group: "Vouchers",
+    label: "Give out vouchers",
+    description: "Make batches of vouchers for communities and organisations at the sites this role covers, print them, cancel them and see which were used. Includes redeeming.",
+  },
+  {
     key: "staffing.read",
     group: "Staffing",
     label: "See pool staffing",
@@ -577,6 +589,7 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "short-courses.manage": ["short-courses.run", "short-courses.read"],
   "stock.count": ["stock.read"],
   "stock.manage": ["stock.count", "stock.read"],
+  "vouchers.manage": ["vouchers.redeem"],
   "staffing.run": ["staffing.read"],
   "staffing.supervise": ["staffing.run", "staffing.read"],
   "staffing.manage": ["staffing.supervise", "staffing.run", "staffing.read"],

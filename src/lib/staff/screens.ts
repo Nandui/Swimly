@@ -140,6 +140,7 @@ export const SCREENS = [
   { key: "tasks", label: "Tasks", path: "/tasks", description: "A separate workspace for each site's daily checks and logs: tasks from templates on a schedule, readings with acceptable ranges, approval, follow-up actions and scores.", requires: "tasks.complete" },
   { key: "short-courses", label: "Short courses", path: "/short-courses", description: "Six and eight week courses at the pool, the gym or the studio: places, payment, waiting lists and registers.", requires: "short-courses.read" },
   { key: "academy", label: "Academy", path: "/academy", description: "A separate workspace for the Academy's lifeguard and swim teacher courses: candidates, checks, payment, registers and results.", requires: "academy.read" },
+  { key: "vouchers", label: "Vouchers", path: "/vouchers", description: "A separate workspace for the vouchers given to communities and organisations: batches with a code on every voucher, printed, then marked as used at reception.", requires: "vouchers.redeem" },
   { key: "stock", label: "Stock", path: "/stock", description: "A separate workspace for stock taking: count what is on the shelf at each site on a phone or tablet, keep the product list and compare two counts.", requires: "stock.read" },
   { key: "staffing", label: "Staffing", path: "/staffing", description: "A separate workspace for rostering part-time pool staff (swim teachers and lifeguards): two-week rota blocks on contracted hours, acknowledgements, swaps, call-offs, strikes and exam seasons.", requires: "staffing.read" },
   { key: "cctv", label: "CCTV log", path: "/cctv", description: "A separate workspace for managers: a record of every time CCTV footage is checked, who checked it, why, what they looked for and what they saw.", requires: "cctv.record" },
@@ -181,7 +182,7 @@ export function visibleScreens(permissions: ReadonlySet<PermissionKey>): Set<Scr
  *  - Core: the organisation itself (people, roles, sites, the activity log),
  *    shared by every module and opened in the Core workspace.
  *  - Activities: the swim school (desk and office) and the pool deck.
- *  - Every other app: Docs, Refunds, Coinage, Training, HR, Rota, Purchasing, Stock, Academy, Short courses, Tasks, Incidents, the CCTV log, Site Monitoring, Maintenance, Risk assessments, Plan (test) and Payments.
+ *  - Every other app: Docs, Refunds, Coinage, Training, HR, Rota, Purchasing, Stock, Vouchers, Academy, Short courses, Tasks, Incidents, the CCTV log, Site Monitoring, Maintenance, Risk assessments, Plan (test) and Payments.
  *
  *  A new screen must be added to exactly one of these; a test checks it.
  *  Separate modules never imply access to the swim-school workspace. */
@@ -190,7 +191,7 @@ export const ACTIVITIES_SCREENS = [
   "analytics", "duty", "cancellations", "calendar", "instructor", "students", "courses",
   "together", "assessments", "awaiting-enrolment", "legend-agreements", "programmes", "payments", "short-courses",
 ] as const satisfies readonly ScreenKey[];
-export const OTHER_APP_SCREENS = ["docs", "refunds", "coinage", "training", "staff-qualifications", "hr", "rota", "purchasing", "stock", "academy", "tasks", "incidents", "cctv", "site-monitoring", "maintenance", "risk-assessments", "plan", "staffing"] as const satisfies readonly ScreenKey[];
+export const OTHER_APP_SCREENS = ["docs", "refunds", "coinage", "training", "staff-qualifications", "hr", "rota", "purchasing", "stock", "vouchers", "academy", "tasks", "incidents", "cctv", "site-monitoring", "maintenance", "risk-assessments", "plan", "staffing"] as const satisfies readonly ScreenKey[];
 
 const CORE = new Set<string>(CORE_SCREENS);
 const SWIM_SCHOOL = new Set<string>(ACTIVITIES_SCREENS);

@@ -145,6 +145,20 @@ async function seedHelpExamples(db: PrismaClient) {
     paymentReference: "EXAMPLE-0042", reason: "Synthetic: the family moved away before the course started.", submittedAt: day(-1),
     events: { create: [{ operationId: randomUUID(), actorId: "sbx_noah", actorName: "Noah Example", action: "submit", snapshot: {} }] },
   } });
+  // Vouchers Alex gave a community centre for Christmas: twelve family swims at both sites,
+  // three already used at Riverside. The first code is the one Help's screenshot checks.
+  const dateOnly = (offset: number) => new Date(`${day(offset).toISOString().slice(0, 10)}T00:00:00Z`);
+  const codes = ["7K3M-9QXD", "4HTW-2RNB", "8PXC-6FJA", "3VQG-7MKE", "9DNR-5YHT", "2WJB-8CXP", "6FAM-4QVK", "5TGE-3ZRH", "7YCK-9BWN", "4MXP-6DTJ", "8RHA-2GQV", "3KBN-5WFY"];
+  await db.voucherBatch.create({ data: {
+    orgId: "org_leisureworld", occasion: "Christmas 2026", recipient: "Sample Community Centre", contactName: "Jo Sample", contactDetail: "jo.sample@example.test",
+    service: "Family swim", quantity: codes.length, validFrom: dateOnly(-7), validUntil: dateOnly(60), siteIds: ["club_bishopstown", "club_churchfield"],
+    terms: "One use only. Hand this voucher in at reception. Subject to availability and the pool timetable. No cash value; not for resale.",
+    note: "Synthetic: collected by Jo at Riverside reception.", createdById: "sbx_alex", createdByName: "Alex Example",
+    vouchers: { create: codes.map((code, i) => ({
+      orgId: "org_leisureworld", number: i + 1, code,
+      ...(i >= 1 && i <= 3 ? { redeemedAt: new Date(day(i - 4).getTime() + (10 + i) * 3_600_000), redeemedSiteId: "club_bishopstown", redeemedById: "sbx_noah", redeemedByName: "Noah Example" } : {}),
+    })) },
+  } });
 }
 
 /** Training: Liam, the swim school manager, runs training (Training: Manage). Riley is

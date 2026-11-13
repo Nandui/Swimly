@@ -4,13 +4,23 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 3.19.0 · 13 November 2026 · Ask for cover in Google Chat
+## 3.20.0 · 13 November 2026 · Ask for cover in Google Chat
 
 - **In Plan (test), you can ask staff to cover a gap.** On the Day, open something that needs someone, press **Fill**, then **Ask in Google Chat**. Set the times, add a note if you like, and press **Ask**.
 - **The request appears in your department's Google Chat space.** Staff press **I can cover** or **Can't** there. They do not need to open Turnfin.
 - **You choose who covers it.** The gap shows who answered, and whether each person is already working that day or is missing the qualification. Press **Choose** and they are put on the plan, with a shift for that time.
 - **Stop asking** closes the request if you no longer need anyone. The message in Google Chat says so.
 - A manager links each department to its space first, in Plan, under **Set up**. Until a department has a space, **Ask in Google Chat** does not show for it.
+
+## 3.19.0 · 12 November 2026 · Vouchers
+
+- **Vouchers is a new app in Front of house**, for the vouchers we give to communities and organisations at times like Christmas, such as a family swim.
+- **At reception, open Vouchers and type the code printed on the voucher.** It shows what the voucher gives, who it was given to, the days it can be used and the sites that accept it. If it says **Valid**, choose **Mark as used**. A voucher works once: a second try says when and where it was used.
+- **Whoever gives vouchers out chooses Issued, then Give vouchers:** the occasion, the organisation, what each voucher gives, how many, the first and last day, and the sites that accept them. Every voucher gets its own code. **Print vouchers** makes a sheet of cards to cut out.
+- **Issued shows how many vouchers were given and used**, for each occasion and each organisation.
+- **A mistake can be put right.** Someone with Vouchers Manage can mark a voucher as not used, cancel a lost voucher, or cancel a whole batch with a reason.
+- Your manager sets who has Vouchers in Admin, Roles. Until then only administrators see it.
+
 ## 3.18.0 · 12 November 2026 · What's on, area by area with its lanes
 
 - **In Plan (test), What's on on the Day is now grouped by area.** Each area that has lanes or parts shows its name, then a row for each lane and each part beneath it. An area with neither is one row, as before.
