@@ -31,7 +31,7 @@ export async function planSetup(params: { site?: string }) {
   ]);
   return {
     who, sites, site, today: from, manage, duties, areas, departments,
-    /** Google Chat (D30): whether Turnfin can reach it at all, and each department's space here. */
+    /** Google Chat (D31): whether Turnfin can reach it at all, and each department's space here. */
     chat: { ready: chatConfig() !== null, links: spaces.map((s) => ({ departmentId: s.departmentId, space: s.space, name: s.name || "A Google Chat space" })) },
     // The link to Admin › Areas only for those who can open it; the page checks again.
     canOpenAreas: canSee(await requireSession(), "areas"),

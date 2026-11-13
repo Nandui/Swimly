@@ -5,7 +5,7 @@ import { serverModule } from "@/test/server-module";
 import { addDaysIso, today } from "@/lib/format";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 
-/** Asking staff to cover a gap (D30), end to end on an isolated database with Google Chat faked:
+/** Asking staff to cover a gap (D31), end to end on an isolated database with Google Chat faked:
  *  a space is linked in Setup; asking posts a card there; people answer from Chat, matched by
  *  email; whoever plans the department chooses a yes and Plan puts them on (a new shift, or theirs
  *  grown); stopping closes it; the card follows each step. Invented people only. */

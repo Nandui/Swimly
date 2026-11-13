@@ -185,7 +185,7 @@ export function DayView({ data }: { data: PlanDayData }) {
         // A class has one teacher for all of it; anything else can be filled in parts.
         const candidates = (data.candidates[`${need.key}#${picked.index}`] ?? []).filter((c) => need.kind !== "class" || c.whole);
         if (!gap) return null;
-        // Asking staff who are not working then (D30): one open request for a stretch, its answers
+        // Asking staff who are not working then (D31): one open request for a stretch, its answers
         // here, and Ask for the departments that can be asked (the duty's own, or any of mine).
         const request = openRequestFor(data.cover, need.key, gap);
         const dutyDepartment = duty(need.dutyId)?.departmentId ?? null;

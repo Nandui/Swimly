@@ -25,7 +25,7 @@ export async function planDay(params: { site?: string; date?: string; dept?: str
     plannableDepartments(who, site.id, site.orgId), mayManage(site.id, site.orgId), qualificationNames(site.orgId),
   ]);
   const userIds = [...new Set(shifts.map((s) => s.userId))];
-  // Cover being asked for (D30): the requests still open this day, and the departments that have
+  // Cover being asked for (D31): the requests still open this day, and the departments that have
   // a Google Chat space here, so can be asked at all.
   const [asked, spaces] = await Promise.all([
     prisma.planCoverRequest.findMany({ where: { orgId: site.orgId, siteId: site.id, date, closedAt: null }, orderBy: { createdAt: "asc" }, include: { offers: { orderBy: { updatedAt: "asc" } } } }),

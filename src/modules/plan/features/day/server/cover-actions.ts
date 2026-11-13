@@ -16,7 +16,7 @@ import { needsOf, occurrencesOn } from "@/modules/plan/shared/model";
 import { clock, firstIssue } from "@/modules/plan/shared/rules";
 import { mayPlanDepartment, viewableSite } from "@/modules/plan/shared/scope";
 
-/** Asking staff to cover a gap on the Day (D30): ask (which posts a card to the department's
+/** Asking staff to cover a gap on the Day (D31): ask (which posts a card to the department's
  *  Google Chat space), choose one of the people who said yes, or stop asking; the card follows. Whoever plans the department asked does all three. Choosing puts the person on:
  *  a shift for the stretch (or their shift that day grown to take it in), then the duty or the
  *  class. Warnings never stop it; they show on the Day as for anyone else. */

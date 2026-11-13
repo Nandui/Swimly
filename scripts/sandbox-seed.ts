@@ -268,7 +268,7 @@ async function seedRota(db: PrismaClient) {
  *  two invented members of the public on it, one with a deposit and checks still to do. And an
  *  NPLQ course next month open for online booking, with three invented people who held a place
  *  online: one overdue after two unanswered calls, one due within a day, one held today. */
-/** Plan (test) at Hillview, enough to see a day and cover being asked for (D30): Public swim on
+/** Plan (test) at Hillview, enough to see a day and cover being asked for (D31): Public swim on
  *  the main pool needs two lifeguards and Ciara fills one place each day; Aquatics has a Google
  *  Chat space, and Sam has asked for tomorrow's other place, with three answers. Sam plans it. */
 async function seedPlan(db: PrismaClient) {

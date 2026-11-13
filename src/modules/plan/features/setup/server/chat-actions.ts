@@ -9,7 +9,7 @@ import { requirePlanActor } from "@/modules/plan/shared/access";
 import { chatConfig, chatSpaces } from "@/modules/plan/shared/chat";
 import { mayManage, viewableSite } from "@/modules/plan/shared/scope";
 
-/** Setup's Google Chat links, Manage only (D30): which Chat space a department's cover requests
+/** Setup's Google Chat links, Manage only (D31): which Chat space a department's cover requests
  *  go to at a site. A space can be linked once Turnfin's Chat app has been added to it. */
 
 const NOT_SET_UP = "Google Chat isn't set up for Turnfin yet.";

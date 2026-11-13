@@ -1,4 +1,4 @@
--- Plan (test): asking staff to cover a gap (D30). The Google Chat space each department's
+-- Plan (test): asking staff to cover a gap (D31). The Google Chat space each department's
 -- requests go to at a site, the requests, and each person's answer. Additive.
 -- CreateTable
 CREATE TABLE "plan_chat_spaces" (

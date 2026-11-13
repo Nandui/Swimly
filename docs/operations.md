@@ -107,7 +107,7 @@ Set in Vercel per environment; locally in `.env` (copy `.env.example`). Secrets 
 | `ANTHROPIC_API_KEY` | Training's course drafting with Claude; unset, it is off |
 | `INCIDENTS_EMAIL_DEV_LOG` | development only: print footage request emails instead of sending them |
 
-**Google Chat, for Plan (test)'s cover requests** ([D30](decisions.md))
+**Google Chat, for Plan (test)'s cover requests** ([D31](decisions.md))
 
 | Setting | Purpose |
 | --- | --- |

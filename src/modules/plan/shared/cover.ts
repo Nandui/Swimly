@@ -2,7 +2,7 @@ import { z } from "zod";
 import { isDateOnly } from "@/lib/format";
 import type { Span } from "@/modules/plan/shared/model";
 
-/** Asking staff to cover a gap (owner, 12 November 2026, D30), pure and client-safe: a gap on the
+/** Asking staff to cover a gap (owner, 12 November 2026, D31), pure and client-safe: a gap on the
  *  Day is posted to its department's Google Chat space; staff answer yes or no; whoever plans the
  *  department chooses one of the yeses, and Plan puts them on. Nothing here blocks on a warning. */
 

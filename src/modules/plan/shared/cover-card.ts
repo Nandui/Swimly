@@ -1,6 +1,6 @@
 import { formatDay, formatTimeRange } from "@/lib/format";
 
-/** The card a cover request is in Google Chat (D30), pure. It says what is on, where, when and
+/** The card a cover request is in Google Chat (D31), pure. It says what is on, where, when and
  *  any note, never why anyone is off. While it is open it carries the two buttons; once it stops,
  *  it says how it ended and the buttons go. */
 

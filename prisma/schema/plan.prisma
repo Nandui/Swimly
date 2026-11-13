@@ -220,7 +220,7 @@ model PlanOff {
 }
 
 /// Where a department's cover requests are posted at a site: one Google Chat space (owner, 12
-/// November 2026, D30). Without one, nobody can be asked for that department there.
+/// November 2026, D31). Without one, nobody can be asked for that department there.
 model PlanChatSpace {
   id            String   @id @default(cuid())
   orgId         String
@@ -240,7 +240,7 @@ model PlanChatSpace {
   @@map("plan_chat_spaces")
 }
 
-/// A gap on the Day that staff are asked to cover (D30): what's on, the duty and the stretch, as
+/// A gap on the Day that staff are asked to cover (D31): what's on, the duty and the stretch, as
 /// they read when asked. Staff offer; whoever plans the department chooses one, and Plan puts
 /// them on. It stops when someone is chosen or the asking is stopped.
 model PlanCoverRequest {

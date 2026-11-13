@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { chatConfig, postChatMessage, updateChatMessage } from "@/modules/plan/shared/chat";
 import { coverCard, type CoverCardInput } from "@/modules/plan/shared/cover-card";
 
-/** A cover request's card in Google Chat (D30): what it says now, posting it to the department's
+/** A cover request's card in Google Chat (D31): what it says now, posting it to the department's
  *  space, and bringing it up to date as people answer and when it stops. */
 
 /** The card as it should read now, with where it goes and where it already is. */

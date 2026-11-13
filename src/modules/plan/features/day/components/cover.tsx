@@ -14,7 +14,7 @@ import { offerLine } from "@/modules/plan/shared/cover";
 
 export type CoverRequest = PlanDayData["cover"][number];
 
-/** Ask the department's staff, in its Google Chat space, to cover a stretch nobody fills (D30).
+/** Ask the department's staff, in its Google Chat space, to cover a stretch nobody fills (D31).
  *  `departments` are the ones that can be asked: one when the duty has its own, else a choice. */
 export function AskCoverDialog({ siteId, date, needKey, what, start, end, departments, onDone }: {
   siteId: string; date: string; needKey: string; what: string; start: number; end: number; departments: { id: string; name: string }[]; onDone?: () => void;

@@ -7,7 +7,7 @@ import { COVER_ANSWER_FUNCTION } from "@/modules/plan/shared/cover-card";
 import { coverCardOf } from "@/modules/plan/shared/cover-chat";
 import { recordCoverAnswer } from "@/modules/plan/shared/cover-offers";
 
-/** What Google Chat tells Plan (test)'s Chat app (D30), at `/api/plan/chat`: the app was added
+/** What Google Chat tells Plan (test)'s Chat app (D31), at `/api/plan/chat`: the app was added
  *  to a space, or someone pressed a button on a cover request's card. Nobody is signed in to
  *  Turnfin here. Google's signature on the request proves it is Chat speaking, and Chat names
  *  the person, who is matched to their Turnfin account by email. A click changes one thing only:

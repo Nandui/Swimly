@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma";
 import type { CoverAnswer } from "@/modules/plan/shared/cover";
 import { clock } from "@/modules/plan/shared/rules";
 
-/** One person's answer to a cover request (D30): "I can cover" or "Can't", their latest one kept.
+/** One person's answer to a cover request (D31): "I can cover" or "Can't", their latest one kept.
  *
  *  Not a server action, on purpose: nobody is signed in to Turnfin when this runs. The caller has
  *  already proved who is answering (Google Chat's signed request names the person, matched to
