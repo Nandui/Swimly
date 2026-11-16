@@ -549,46 +549,6 @@ body.turnfin-app { background: var(--bg); }
   .turnfin-app .live-dot::after { animation: none; }
 }
 
-/* DayCalendar (ui-kit/day-calendar.tsx): time runs down, each column is a place someone must be,
-   and the red now line runs across. One grid: the hours first, then each group of columns under
-   its name (subgrid, so every head and every hour lines up). An hour is 56px tall, so half an
-   hour holds one line of words. On phones the caller shows one group at a time (`data-only`). */
-.turnfin-app .day-cal { min-width: 0; overflow-x: auto; }
-.turnfin-app .day-cal-grid { display: grid; grid-auto-flow: column; grid-template-columns: 48px; grid-auto-columns: minmax(120px, 1fr); grid-template-rows: auto auto auto; min-width: min-content; }
-.turnfin-app :is(.day-cal-axis, .day-cal-group) { display: grid; grid-row: 1 / 4; grid-template-rows: subgrid; min-width: 0; }
-.turnfin-app .day-cal-group { grid-template-columns: subgrid; }
-.turnfin-app .day-cal-head { grid-row: 1; grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; min-height: 44px; padding: 0 8px 4px; border-left: 1px solid var(--fill); }
-.turnfin-app .day-cal-head > h3 { margin: 0; font-size: 15px; line-height: 20px; font-weight: 650; }
-.turnfin-app .day-cal-col-name { grid-row: 2; min-width: 0; padding: 0 8px 8px; overflow: hidden; border-left: 0.5px solid var(--sep); color: var(--label-2); font-size: 12px; line-height: 16px; font-weight: 550; white-space: nowrap; text-overflow: ellipsis; }
-.turnfin-app .day-cal-head + .day-cal-col-name { border-left: 1px solid var(--fill); }
-.turnfin-app .day-cal-hours { grid-row: 3; position: relative; display: grid; grid-auto-rows: 56px; border-top: 0.5px solid var(--sep); }
-.turnfin-app .day-cal-hour { padding-right: 8px; color: var(--label-2); font-size: 11px; line-height: 13px; font-weight: 550; font-variant-numeric: tabular-nums; text-align: right; translate: 0 -7px; }
-.turnfin-app .day-cal-hour[data-edge='start'] { translate: 0 2px; }
-.turnfin-app .day-cal-pill { position: absolute; right: 4px; z-index: 3; padding: 1px 6px; border-radius: var(--radius-xs); background: var(--red-badge); color: #ffffff; font-size: 11px; line-height: 15px; font-weight: 650; white-space: nowrap; translate: 0 -50%; }
-.turnfin-app .day-cal-col { grid-row: 3; position: relative; min-width: 0; border-top: 0.5px solid var(--sep); border-left: 0.5px solid var(--sep); background: repeating-linear-gradient(to bottom, transparent 0 55.5px, var(--sep) 55.5px 56px); }
-.turnfin-app .day-cal-col[data-edge='group'] { border-left: 1px solid var(--fill); }
-.turnfin-app .day-cal-now { position: absolute; left: 0; right: 0; z-index: 3; height: 1.5px; margin-top: -0.75px; background: var(--red); pointer-events: none; }
-.turnfin-app .day-cal-block { position: absolute; left: 3px; right: 3px; z-index: 2; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 0; min-width: 0; margin: 1px 0; padding: 4px 8px 4px 10px; overflow: hidden; border: 1px solid transparent; border-radius: var(--radius-sm); background: var(--day-cal-bg); color: var(--day-cal-ink); font-size: 12px; line-height: 15px; font-weight: 600; text-align: left; white-space: nowrap; transition: background-color 450ms var(--ease), color 450ms var(--ease); }
-.turnfin-app :is(.day-cal-name, .day-cal-sub, .day-cal-task) { display: block; flex: none; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
-.turnfin-app .day-cal-sub { font-weight: 450; font-variant-numeric: tabular-nums; opacity: 0.9; }
-.turnfin-app .day-cal-task { margin-top: 2px; font-size: 11px; line-height: 13px; font-weight: 550; }
-.turnfin-app .day-cal-strip { position: absolute; left: 0; width: 4px; background: var(--day-cal-ink); }
-.turnfin-app .day-cal-block[data-short] { justify-content: center; padding-top: 0; padding-bottom: 0; }
-.turnfin-app .day-cal-block[data-short] :is(.day-cal-sub, .day-cal-task) { display: none; }
-.turnfin-app .day-cal-block[data-kind='on'] { --day-cal-bg: var(--accent-soft); --day-cal-ink: var(--accent-ink); }
-.turnfin-app .day-cal-block[data-kind='gap'] { --day-cal-bg: var(--orange-soft); --day-cal-ink: var(--orange-ink); border: 1.5px dashed var(--orange-ink); }
-.turnfin-app .day-cal-block[data-kind='break'] { --day-cal-bg: var(--fill-2); --day-cal-ink: var(--label-2); }
-.turnfin-app .day-cal-block[data-kind='free'] { --day-cal-bg: transparent; --day-cal-ink: var(--label-2); border: 1.5px dashed var(--label-3); }
-.turnfin-app [data-slot='button'].day-cal-block { align-items: flex-start; justify-content: flex-start; gap: 0; min-height: 0; height: auto; padding: 4px 8px 4px 10px; border-radius: var(--radius-sm); background: var(--day-cal-bg); color: var(--day-cal-ink); font-size: 12px; line-height: 15px; text-align: left; cursor: pointer; }
-.turnfin-app [data-slot='button'].day-cal-block[data-short] { justify-content: center; padding-top: 0; padding-bottom: 0; }
-.turnfin-app [data-slot='button'].day-cal-block:hover:not(:disabled) { background: var(--day-cal-bg); color: var(--day-cal-ink); filter: brightness(0.97); }
-.turnfin-app [data-slot='button'].day-cal-block[aria-expanded='true'] { box-shadow: 0 0 0 2px var(--bg-2), 0 0 0 4px var(--accent); }
-.turnfin-app [data-slot='button'].day-cal-block:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-@media (max-width: 639px) {
-  .turnfin-app .day-cal[data-only] .day-cal-group:not([data-on]) { display: none; }
-  .turnfin-app .day-cal-grid { grid-auto-columns: minmax(84px, 1fr); }
-}
-
 /* A block that opens an Inspector is the kit's Button (DayTimeline `onSelect`): the button's own
    size, capsule and fill give way to the block's, and the open one is ringed in fin blue. */
 .turnfin-app [data-slot='button'].day-tl-block { align-items: flex-start; justify-content: center; gap: 0; min-height: 0; height: auto; padding: 0 8px 0 11px; border-radius: var(--radius-sm); font-size: 12px; line-height: 15px; text-align: left; cursor: pointer; }
