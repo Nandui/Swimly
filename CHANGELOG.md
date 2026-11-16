@@ -4,6 +4,15 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.22.0 · 17 November 2026 · The Day, area by area
+
+- **In Plan (test), the Day is now one timeline instead of two.** Each area has its own heading. Under it you see what's on there, a **Needs someone** line where nobody is on yet, and a line for each person working in that area.
+- **Someone who works in two areas has a line under each**, showing only their time there.
+- **Not in an area** comes last: breaks, free time and duties that belong to no area, a line per person. Press a **Free** block to put that person on a duty.
+- **Copy a day.** Press **Copy a day** to bring in another day's plan. The same day last week is offered first, or pick any day from the last four weeks. Anyone marked off, or already planned that day, is skipped.
+- **On a phone, the day is a list under each area**, with **Fill** and **Open** on each line.
+- Everything you could do before is still there: fill, put on, take off, change, give tasks, change or remove a shift, and ask in Google Chat.
+
 ## 3.21.1 · 16 November 2026 · The Day is back to how it was
 
 - **In Plan (test), the Day looks and works as it did before the calendar.** The calendar layout from 3.21.0 has been taken away while we work out a better one. What's on, Needs someone, People, To check and Tasks are back where they were.
