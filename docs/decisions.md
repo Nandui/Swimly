@@ -6,6 +6,12 @@ The decisions Turnfin 2.0 stands on, newest first. Each says what was decided, w
 
 ---
 
+### D32 · 16 November 2026 · Plan (test)'s Day is a calendar
+
+The owner found the Day "not great and confused", asked for timeline layouts to choose from, and chose the **calendar**: time runs down the page and each column is a place someone must be, area by area, with the people on a break or free at the end. A place nobody fills is an orange block where the person would stand.
+**Why:** reading across the now line says who is where, and a gap sits in the column it belongs to, so nothing has to be matched between two timelines and a list.
+**Follows:** a new kit component, `DayCalendar` ([DESIGN.md](../DESIGN.md)), approved by this choice. It uses only tokens the kit already has. Every action the Day had is kept, in the same Inspector. `DayTimeline` stays for Home and the app starter pages.
+
 ### D31 · 12 November 2026 · Plan (test) asks for cover in Google Chat
 
 When a place on the Day has nobody to fill it, whoever plans that department can **ask staff to cover it in Google Chat**: Turnfin posts the request to the department's Chat space at that site, staff answer **I can cover** or **Can't** from Chat, the planner **chooses** one of the yeses, and Plan puts that person on (a shift for the stretch, or their shift that day grown to take it in, then the duty or the class). A request stops when someone is chosen or the planner stops asking. Staff offer; a planner always decides (owner's choice, same day). A one-off need that is not on the Day yet is added as a one-day session and asked for the same way.
