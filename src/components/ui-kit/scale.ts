@@ -30,5 +30,10 @@ export function stretchOf(start: number, end: number) {
   return `left-${step(start, POSITION_STEPS)}/${POSITION_STEPS} right-${POSITION_STEPS - step(end, POSITION_STEPS)}/${POSITION_STEPS}`;
 }
 
+/** A stretch down the axis, from `start` to `end` (fractions of the whole): top and bottom edges. */
+export function spanOf(start: number, end: number) {
+  return `top-${step(start, POSITION_STEPS)}/${POSITION_STEPS} bottom-${POSITION_STEPS - step(end, POSITION_STEPS)}/${POSITION_STEPS}`;
+}
+
 /** A share of a ring (ProgressRing): `progress-at-37` for 37%. */
 export function progressOf(fraction: number) { return `progress-at-${step(fraction, SIZE_STEPS)}`; }
