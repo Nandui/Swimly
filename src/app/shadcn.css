@@ -96,12 +96,10 @@
    hundredths, places along a timeline or picture in five-hundredths, and grid lines for
    timelines. Pages never set them inline (owner rule, 20 October 2026). */
 @source inline("{w,h}-{0..100}/100");
-@source inline("{left,right,top,bottom}-{0..500}/500");
+@source inline("{left,right,top}-{0..500}/500");
 /* Timeline grid places (TimelineGrid): 5-minute columns over a day and its lanes. */
 @source inline("{col-start,col-end,row-start,row-end}-{1..300}");
 @source inline("row-span-{1..20}");
-/* A group of columns in a calendar (DayCalendar): how many of the grid's columns it takes. */
-@source inline("col-span-{1..40}");
 /* A share of a ring (ProgressRing, scale.ts progressOf), in hundredths. */
 @source inline("progress-at-{0..100}");
 @utility progress-at-* { --progress-at: calc(--value(integer) * 1%); }
