@@ -6,13 +6,14 @@ import { useRouter } from "next/navigation";
 import { CalendarDays, ChevronLeft, ChevronRight, UserPlus } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
-import { DayTimeline, type DayTimelineBlock } from "@/components/ui-kit/day-timeline";
+import { DayCalendar, type DayCalendarBlock, type DayCalendarGroup } from "@/components/ui-kit/day-calendar";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Inspector } from "@/components/ui-kit/inspector";
 import { Notice } from "@/components/ui-kit/notice";
-import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
+import { SegmentedChoice, SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { toast } from "@/components/ui/toast";
 import { formatDay, formatTime, formatTimeRange } from "@/lib/format";
+import { calendarOf, freeTimeOf } from "@/modules/plan/features/day/calendar";
 import { BlockDialog } from "@/modules/plan/features/day/components/block-dialog";
 import { AskCoverDialog, CoverAnswers } from "@/modules/plan/features/day/components/cover";
 import { SessionDayDialog } from "@/modules/plan/features/day/components/session-day";
@@ -22,18 +23,22 @@ import type { PlanDayData } from "@/modules/plan/features/day/server/data";
 import { BlockTasks } from "@/modules/plan/features/day/components/task-ticks";
 import { lanesLabel } from "@/lib/setup/lanes";
 import { offerLine, openRequestFor } from "@/modules/plan/shared/cover";
-import { shiftIso, tasksOf, whatsOnRows, type BlockTask } from "@/modules/plan/shared/model";
+import { shiftIso, tasksOf, type BlockTask } from "@/modules/plan/shared/model";
 import { RemoveShiftDialog, ShiftDialog } from "@/modules/plan/shared/components/shift-dialog";
 
 type Picked = { kind: "item"; key: string } | { kind: "gap"; needKey: string; index: number }
-  | { kind: "block"; shiftId: string; blockId: string } | { kind: "free"; shiftId: string; start: number; end: number } | { kind: "class"; shiftId: string; ref: string };
+  | { kind: "block"; shiftId: string; blockId: string } | { kind: "spare"; start: number; end: number } | { kind: "person"; shiftId: string };
 
-/** The Day: what's on, area by area, with what still needs someone; each person's shift underneath;
- *  and one inspector for whichever block is picked: a thing on and its places, who could fill a gap,
- *  a duty to change and its tasks to give, free time to give a duty. */
+/** The Day as a calendar (owner's choice, 16 November 2026): time runs down and each column is a
+ *  place someone must be, area by area, with the people on a break or free at the end. What still
+ *  needs someone is an orange block where the person would stand, and is named again above the
+ *  calendar. One inspector serves whichever block is picked: who could fill a gap, a duty to
+ *  change and its tasks to give, a thing on and everyone on it, the people free to give a duty,
+ *  one person's whole day. */
 export function DayView({ data }: { data: PlanDayData }) {
   const router = useRouter();
   const [picked, setPicked] = useState<Picked | null>(null);
+  const [area, setArea] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const dateInput = useRef<HTMLInputElement>(null);
   const { site, date, needs, shifts, duties, people, occurrences, department } = data;
@@ -42,6 +47,7 @@ export function DayView({ data }: { data: PlanDayData }) {
   const shown = department ? shifts.filter((s) => s.departmentId === department.id) : shifts;
   const nameOf = (userId: string) => people.find((p) => p.id === userId)?.name ?? "Someone";
   const duty = (id: string) => duties.find((d) => d.id === id);
+  const dutyName = (id: string) => duty(id)?.name ?? "Duty";
   const shiftOf = (id: string) => shifts.find((s) => s.id === id);
   const blockOwner = new Map(shifts.flatMap((s) => s.blocks.map((b) => [b.id, s] as const)));
   const sessionTitle = (id: string | null) => occurrences.find((o) => o.sessionId === id)?.title ?? null;
@@ -58,15 +64,13 @@ export function DayView({ data }: { data: PlanDayData }) {
   }, [needs, shifts]);
   const hours = Array.from({ length: (to - from) / 60 + 1 }, (_, i) => ({ at: from + i * 60, label: formatTime(from + i * 60) }));
 
-  // What's on (owner, 30 October 2026: "maybe the timeline should show what's on in each area"): one
-  // block per thing on (a session with all its duties, or a class), which names it and says who is
-  // on it, or how many short in orange. Its rows are the areas, each with its lanes and parts
-  // beneath, and a block fills the lanes it takes (owner, 11 November 2026; `whatsOnRows`).
+  // Each thing on (a session with all its duties, or a class): the Inspector lists everyone on it.
   const fillerOf = (f: { userId?: string; blockId?: string }) => f.userId ?? (f.blockId ? blockOwner.get(f.blockId)?.userId : undefined);
+  const itemKeyOf = (n: { sessionId: string | null; key: string }) => n.sessionId ? `s:${n.sessionId}` : n.key;
   const items = (() => {
     const byKey = new Map<string, { key: string; label: string; where: string; areaId: string | null; lanes: readonly number[]; start: number; end: number; sessionId: string | null; needs: typeof needs }>();
     for (const n of needs) {
-      const key = n.sessionId ? `s:${n.sessionId}` : n.key;
+      const key = itemKeyOf(n);
       const item = byKey.get(key) ?? { key, label: n.label, where: n.where, areaId: n.placeAreaId, lanes: n.placeLanes, start: n.start, end: n.end, sessionId: n.sessionId, needs: [] };
       item.needs.push(n);
       byKey.set(key, item);
@@ -74,54 +78,50 @@ export function DayView({ data }: { data: PlanDayData }) {
     return [...byKey.values()].map((item) => ({ ...item,
       // "Main Pool, lanes 1 to 3" for a session that names its lanes; a class's place says them already.
       place: item.sessionId && item.lanes.length ? `${item.where}, ${lanesLabel(item.lanes, data.areas.find((a) => a.id === item.areaId)?.lanes ?? 0).toLowerCase()}` : item.where,
-      short: item.needs.reduce((m, n) => m + Math.max(0, ...n.gaps.map((g) => g.short)), 0),
-      names: [...new Set(item.needs.flatMap((n) => n.fills.map((f) => fillerOf(f)).filter((u): u is string => Boolean(u))))],
-    })).sort((a, b) => a.start - b.start || a.label.localeCompare(b.label));
+    }));
   })();
-  const whatsOn = whatsOnRows(data.areas, items);
-  const itemBlocks: DayTimelineBlock[] = items.flatMap((i) => {
-    const at = whatsOn.placed.get(i.key);
-    if (!at) return [];
-    const sub = i.short ? `${i.short} short` : i.names.length ? i.names.map(nameOf).join(", ") : "Covered";
-    return [{ key: `item|${i.key}`, lane: at.lane, lanes: at.lanes, start: i.start, end: i.end, kind: i.short ? "gap" as const : "ok" as const, label: i.label, sub,
-      ariaLabel: `${i.label}, ${i.place}, ${formatTimeRange(i.start, i.end)}: ${sub}` }];
-  });
-  const needsSomeone = items.filter((i) => i.short > 0);
-  /** "Asked in Google Chat: 2 can cover", for each open request on these needs. */
-  const askedFor = (list: typeof needs) => data.cover.filter((r) => list.some((n) => n.key === r.needKey)).map((r) => `Asked in Google Chat: ${offerLine(r.answers).toLowerCase()}`);
 
-  // People: one lane per shift, its duties, breaks, classes and free time.
-  const personLanes = shown.map((s) => ({ key: s.id, label: `${nameOf(s.userId)} · ${formatTimeRange(s.start, s.end)}` }));
-  const personBlocks: DayTimelineBlock[] = shown.flatMap((s) => {
-    const busy = [...s.blocks.map((b) => ({ start: b.start, end: b.end })), ...s.classes.map((c) => ({ start: c.start, end: c.end }))].sort((a, b) => a.start - b.start);
-    const free: { start: number; end: number }[] = [];
-    let at = s.start;
-    for (const b of busy) { if (b.start > at) free.push({ start: at, end: Math.min(b.start, s.end) }); at = Math.max(at, b.end); }
-    if (at < s.end) free.push({ start: at, end: s.end });
-    return [
-      ...s.blocks.map((b) => {
-        const d = duty(b.dutyId);
-        const label = d?.name ?? "Duty";
-        // The tasks given in this duty are drawn inside its block, each where it starts and ends
-        // (owner, 12 November 2026: "can the subtasks be shown in the timeline bar too?").
-        const given = tasksOf(b, d?.tasks ?? []);
-        return { key: `block|${s.id}|${b.id}`, lane: s.id, start: b.start, end: b.end, kind: d?.isBreak ? "off" as const : "ok" as const, label,
-          sub: sessionTitle(b.sessionId) ?? undefined, parts: given.map((t) => ({ start: t.at, end: t.end, label: t.name })),
-          ariaLabel: [`${nameOf(s.userId)}: ${label}, ${formatTimeRange(b.start, b.end)}`, ...given.map((t) => `${t.name} ${formatTimeRange(t.at, t.end)}`)].join("; ") };
-      }),
-      ...s.classes.map((c) => ({ key: `class|${s.id}|${c.ref}`, lane: s.id, start: c.start, end: c.end, kind: "book" as const, label: c.title,
-        sub: "Teaching", ariaLabel: `${nameOf(s.userId)}: teaching ${c.title}, ${formatTimeRange(c.start, c.end)}` })),
-      ...free.filter((f) => f.end > f.start).map((f) => ({ key: `free|${s.id}|${f.start}|${f.end}`, lane: s.id, start: f.start, end: f.end, kind: "next" as const,
-        label: "Free", ariaLabel: `${nameOf(s.userId)}: free ${formatTimeRange(f.start, f.end)}` })),
-    ];
-  });
+  // Everything that still needs someone, soonest first: the line above the calendar names the next
+  // one, and the list under it holds them all with what staff answered in Google Chat (D31).
+  const short = needs.flatMap((n) => n.gaps.map((g, index) => ({ need: n, index, start: g.start, end: g.end, short: g.short,
+    asked: data.cover.filter((r) => r.needKey === n.key).map((r) => `Asked in Google Chat: ${offerLine(r.answers).toLowerCase()}`) })))
+    .sort((a, b) => a.start - b.start || a.end - b.end);
+  const shortThings = new Set(short.map((g) => itemKeyOf(g.need))).size;
+  const nextShort = (isToday ? short.find((g) => g.end > data.now) : undefined) ?? short[0];
+
+  // The calendar (calendar.ts decides the columns; the words are decided here).
+  const calendar = calendarOf({ areas: data.areas, needs, shifts, shown, dutyName, isBreak: (id) => Boolean(duty(id)?.isBreak),
+    words: { classes: "Classes", otherDuties: "Other duties", notOn: "Not on anything", onBreak: "On a break", free: "Free" } });
+  const groups: DayCalendarGroup[] = calendar.map((g) => ({ key: g.key, label: g.label,
+    note: g.short ? <span className="pc-row-hint" data-tone="orange">{g.short === 1 ? "1 needs someone" : `${g.short} need someone`}</span> : undefined,
+    columns: g.columns.map((c) => ({ key: c.key, label: c.label, blocks: c.entries.map((e): DayCalendarBlock => {
+      const range = formatTimeRange(e.start, e.end);
+      const names = e.userIds.map(nameOf);
+      const where = `${g.label}, ${c.label}`;
+      if (e.kind === "gap") return { key: e.key, pick: e.pick, start: e.start, end: e.end, kind: e.kind, label: "Needs someone", sub: range, detail: e.what ?? undefined,
+        ariaLabel: `${where}: needs someone${e.what ? ` for ${e.what}` : ""}, ${range}` };
+      if (e.kind === "free") return { key: e.key, pick: e.pick, start: e.start, end: e.end, kind: e.kind, label: names.length > 2 ? `${names.length} free` : names.join(", "), sub: range,
+        ariaLabel: `Free, ${range}: ${names.join(", ")}` };
+      if (e.kind === "break") return { key: e.key, pick: e.pick, start: e.start, end: e.end, kind: e.kind, label: names[0] ?? "Break", sub: range, ariaLabel: `On a break: ${names[0] ?? "someone"}, ${range}` };
+      // The tasks given in a duty are drawn inside its block, each where it starts and ends
+      // (owner, 12 November 2026: "can the subtasks be shown in the timeline bar too?").
+      const [kind, shiftId, blockId] = e.pick.split("|");
+      const block = kind === "block" ? shiftOf(shiftId)?.blocks.find((b) => b.id === blockId) : undefined;
+      const given = block ? tasksOf(block, duty(block.dutyId)?.tasks ?? []) : [];
+      return { key: e.key, pick: e.pick, start: e.start, end: e.end, kind: e.kind, label: names[0] ?? "Filled", sub: range, detail: e.what ?? undefined,
+        parts: given.map((t) => ({ start: t.at, end: t.end, label: `${formatTime(t.at)} ${t.name}` })),
+        ariaLabel: [`${where}: ${names[0] ?? "filled"}${e.what ? `, ${e.what}` : ""}, ${range}`, ...given.map((t) => `${t.name} ${formatTimeRange(t.at, t.end)}`)].join("; ") };
+    }) })) }));
+  // Phones show one area at a time: the first that needs someone, until another is chosen.
+  const only = groups.find((g) => g.key === area)?.key ?? (calendar.find((g) => g.short > 0) ?? calendar[0])?.key;
 
   function pick(key: string) {
-    const [kind, a, b, c] = key.split("|");
-    if (kind === "item") setPicked({ kind, key: a });
-    else if (kind === "block") setPicked({ kind, shiftId: a, blockId: b });
-    else if (kind === "class") setPicked({ kind, shiftId: a, ref: b });
-    else if (kind === "free") setPicked({ kind, shiftId: a, start: Number(b), end: Number(c) });
+    const parts = key.split("|");
+    const kind = parts[0];
+    if (kind === "item") setPicked({ kind, key: parts.slice(1).join("|") });
+    else if (kind === "gap") setPicked({ kind, needKey: parts.slice(1, -1).join("|"), index: Number(parts[parts.length - 1]) });
+    else if (kind === "block") setPicked({ kind, shiftId: parts[1], blockId: parts[2] });
+    else if (kind === "spare") setPicked({ kind, start: Number(parts[1]), end: Number(parts[2]) });
   }
   const close = () => setPicked(null);
   const run = (work: () => Promise<{ ok: boolean; error?: string }>, done: string) => start(async () => {
@@ -136,7 +136,10 @@ export function DayView({ data }: { data: PlanDayData }) {
     toast.success("Tasks saved"); router.refresh();
   });
 
-  const pickedKey = picked?.kind === "item" ? `item|${picked.key}` : null;
+  const pickedKey = !picked ? null : picked.kind === "item" ? `item|${picked.key}` : picked.kind === "gap" ? `gap|${picked.needKey}|${picked.index}`
+    : picked.kind === "block" ? `block|${picked.shiftId}|${picked.blockId}` : picked.kind === "spare" ? `spare|${picked.start}|${picked.end}` : null;
+  /** From a gap or a duty to the thing on it belongs to: everyone on it, and its times this day. */
+  const seeAll = (key: string, label: string) => <Button variant="ghost" className="min-h-11 self-start" onClick={() => setPicked({ kind: "item", key })}>See everyone on {label}</Button>;
   const inspector = (() => {
     if (!picked) return null;
     if (picked.kind === "item") {
@@ -179,7 +182,7 @@ export function DayView({ data }: { data: PlanDayData }) {
     if (picked.kind === "gap") {
       const need = needs.find((n) => n.key === picked.needKey);
       if (!need) return null;
-      const dutyName = duty(need.dutyId)?.name ?? "Duty";
+      const what = dutyName(need.dutyId);
       {
         const gap = need.gaps[picked.index];
         // A class has one teacher for all of it; anything else can be filled in parts.
@@ -190,9 +193,9 @@ export function DayView({ data }: { data: PlanDayData }) {
         const request = openRequestFor(data.cover, need.key, gap);
         const dutyDepartment = duty(need.dutyId)?.departmentId ?? null;
         const askable = data.departments.mine.filter((d) => data.askable.includes(d.id) && (!dutyDepartment || d.id === dutyDepartment));
-        return { title: need.label, description: `${dutyName}, ${formatTimeRange(gap.start, gap.end)}: ${gap.short} short.`,
+        return { title: need.label, description: `${what}, ${need.where}, ${formatTimeRange(gap.start, gap.end)}: ${gap.short} short.`,
           actions: request ? (request.canChoose ? <Button variant="outline" className="min-h-11" disabled={pending} onClick={() => run(() => stopAsking(request.id), "Stopped asking")}>Stop asking</Button> : null)
-            : askable.length && date >= data.today ? <AskCoverDialog siteId={site.id} date={date} needKey={need.key} what={`${dutyName} for ${need.label}`} start={gap.start} end={gap.end} departments={askable} /> : null,
+            : askable.length && date >= data.today ? <AskCoverDialog siteId={site.id} date={date} needKey={need.key} what={`${what} for ${need.label}`} start={gap.start} end={gap.end} departments={askable} /> : null,
           body: <div className="flex flex-col gap-(--space-5)">
           {request ? <CoverAnswers request={request} pending={pending} onChoose={(userId, name) => run(() => chooseCover(request.id, userId), `${name} put on`)} /> : null}
           {candidates.length === 0 ? <p className="text-sm text-ui-muted-foreground">{request ? "Nobody is on shift then." : askable.length ? "Nobody is on shift then. Add a shift first, or ask staff in Google Chat." : "Nobody is on shift then. Add a shift first."}</p> : (
@@ -217,8 +220,29 @@ export function DayView({ data }: { data: PlanDayData }) {
               })}
             </ul>
           )}
+          {seeAll(itemKeyOf(need), need.label)}
           </div> };
       }
+    }
+    if (picked.kind === "spare") {
+      // Everyone free in this stretch, each with the whole of their own free time around it.
+      const free = shown.flatMap((s) => freeTimeOf(s).filter((f) => f.start <= picked.start && f.end >= picked.end).map((f) => ({ shift: s, ...f })));
+      if (!free.length) return null;
+      return { title: free.length === 1 ? `${nameOf(free[0].shift.userId)} is free` : `${free.length} people are free`, description: formatTimeRange(picked.start, picked.end),
+        body: (
+          <ul className="pc-list">
+            {free.map((f) => (
+              <li key={f.shift.id} className="pc-row">
+                <span className="pc-row-body"><span className="pc-row-title">{nameOf(f.shift.userId)}</span><span className="pc-row-hint">Free {formatTimeRange(f.start, f.end)}</span></span>
+                <span className="pc-row-trail">
+                  {f.shift.canPlan ? <BlockDialog draft={{ shiftId: f.shift.id, dutyId: "", sessionId: null, start: f.start, end: f.end, tasks: [] }} duties={dutyOptions}
+                    sessions={sessionOptions} who={nameOf(f.shift.userId)} onDone={close} trigger={<Button className="min-h-11" aria-label={`Put ${nameOf(f.shift.userId)} on a duty`}>Put on a duty</Button>} /> : null}
+                  <Button variant="ghost" className="min-h-11" aria-label={`See ${nameOf(f.shift.userId)}'s day`} onClick={() => setPicked({ kind: "person", shiftId: f.shift.id })}>See day</Button>
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) };
     }
     const shift = shiftOf(picked.shiftId);
     if (!shift) return null;
@@ -228,18 +252,37 @@ export function DayView({ data }: { data: PlanDayData }) {
         trigger={<Button variant="outline" className="min-h-11">Change shift</Button>} />
       <RemoveShiftDialog id={shift.id} name={name} date={date} trigger={<Button variant="ghost" className="min-h-11">Remove shift</Button>} />
     </> : null;
-    if (picked.kind === "class") {
-      const c = shift.classes.find((x) => x.ref === picked.ref);
-      return { title: c?.title ?? "Class", description: c ? `${name} teaches, ${formatTimeRange(c.start, c.end)}.` : undefined,
-        body: <p className="text-sm text-ui-muted-foreground">Change the teacher from the class&apos;s line in What&apos;s on.</p>, actions: shiftActions };
-    }
-    if (picked.kind === "free") {
-      return { title: `${name} is free`, description: formatTimeRange(picked.start, picked.end),
-        actions: <>
-          {shift.canPlan ? <BlockDialog draft={{ shiftId: shift.id, dutyId: "", sessionId: null, start: picked.start, end: picked.end, tasks: [] }} duties={dutyOptions}
-            sessions={sessionOptions} who={name} onDone={close} trigger={<Button className="min-h-11">Put on a duty</Button>} /> : null}
-          {shiftActions}
-        </> };
+    if (picked.kind === "person") {
+      // One person's whole day in order: each duty and break opens, a class opens the class, and
+      // free time can be given a duty.
+      const rows = [
+        ...shift.blocks.map((b) => ({ key: `b${b.id}`, start: b.start, end: b.end, label: dutyName(b.dutyId), hint: sessionTitle(b.sessionId),
+          action: <Button variant="outline" className="min-h-11" aria-label={`Open ${dutyName(b.dutyId)}, ${formatTimeRange(b.start, b.end)}`} onClick={() => setPicked({ kind: "block", shiftId: shift.id, blockId: b.id })}>Open</Button> })),
+        ...shift.classes.map((c) => {
+          const need = needs.find((n) => n.kind === "class" && n.classRef === c.ref);
+          return { key: `c${c.ref}`, start: c.start, end: c.end, label: c.title, hint: "Teaching" as string | null,
+            action: need ? <Button variant="outline" className="min-h-11" aria-label={`Open ${c.title}`} onClick={() => setPicked({ kind: "item", key: need.key })}>Open</Button> : null };
+        }),
+        ...freeTimeOf(shift).map((f) => ({ key: `f${f.start}`, start: f.start, end: f.end, label: "Free", hint: null as string | null,
+          action: shift.canPlan ? <BlockDialog draft={{ shiftId: shift.id, dutyId: "", sessionId: null, start: f.start, end: f.end, tasks: [] }} duties={dutyOptions}
+            sessions={sessionOptions} who={name} onDone={close} trigger={<Button variant="outline" className="min-h-11" aria-label={`Put ${name} on a duty, ${formatTimeRange(f.start, f.end)}`}>Put on a duty</Button>} /> : null })),
+      ].sort((x, y) => x.start - y.start || x.end - y.end);
+      return { title: name, description: `On shift ${formatTimeRange(shift.start, shift.end)}`,
+        body: (
+          <div className="flex flex-col gap-(--space-5)">
+            {shift.warnings.length ? <Notice tone="warning" title="To check" description={shift.warnings.join(" ")} /> : null}
+            <ul className="pc-list">
+              {rows.map((r) => (
+                <li key={r.key} className="pc-row">
+                  <span className="w-28 shrink-0 tabular-nums">{formatTimeRange(r.start, r.end)}</span>
+                  <span className="pc-row-body"><span className="pc-row-title">{r.label}</span>{r.hint ? <span className="pc-row-hint">{r.hint}</span> : null}</span>
+                  {r.action}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ),
+        actions: shiftActions };
     }
     const block = shift.blocks.find((b) => b.id === picked.blockId);
     if (!block) return null;
@@ -253,6 +296,10 @@ export function DayView({ data }: { data: PlanDayData }) {
         ? <BlockTasks key={`${block.id}|${mine.map((t) => `${t.id}@${t.at}-${t.end}`).join("|")}`} idPrefix={`plan-give-${block.id}`} tasks={d.tasks} block={block} given={mine} pending={pending} onSave={(v) => giveTasks(block, v)} />
         : given.length ? <ul className="pc-list">{given.map((t) => <li key={`${t.name}${t.at}`} className="pc-row"><span className="w-28 shrink-0 tabular-nums">{formatTimeRange(t.at, t.end)}</span><span className="pc-row-body">{t.name}</span></li>)}</ul>
         : shift.canPlan && d && !d.isBreak ? <p className="text-sm text-ui-muted-foreground">{d.name} has no tasks to give. {data.manage ? "Add them to the duty in Setup." : "A manager adds them to the duty in Setup."}</p> : null,
+      more: <>
+        {block.sessionId ? seeAll(`s:${block.sessionId}`, sessionTitle(block.sessionId) ?? "this") : null}
+        <Button variant="ghost" className="min-h-11 self-start" onClick={() => setPicked({ kind: "person", shiftId: shift.id })}>See {name}&apos;s day</Button>
+      </>,
       actions: shift.canPlan ? <>
         <BlockDialog draft={{ ...block, id: block.id }} duties={dutyOptions} sessions={sessionOptions} who={name} onDone={close} trigger={<Button className="min-h-11">Change</Button>} />
         <Button variant="outline" className="min-h-11" disabled={pending} onClick={() => run(() => removeBlock(block.id), "Taken off")}>Take off</Button>
@@ -260,7 +307,7 @@ export function DayView({ data }: { data: PlanDayData }) {
       </> : shiftActions };
   })();
 
-  const toCheck = shown.filter((s) => s.warnings.length);
+  const toCheck = shown.filter((s) => s.warnings.length).length;
   const tasks = shown.flatMap((s) => s.tasks.map((t) => ({ ...t, who: nameOf(s.userId) }))).sort((a, b) => a.at - b.at || a.end - b.end);
 
   return (
@@ -293,27 +340,35 @@ export function DayView({ data }: { data: PlanDayData }) {
       {data.classDutyId ? null : <Notice tone="info" title="Classes aren't shown yet" description="Mark one duty as the one classes need, in Setup, to see swim classes and plan their teachers here." />}
       {data.clashes.map((c) => <Notice key={`${c.a}${c.b}`} tone="warning" title={c.text} />)}
 
+      {nextShort ? <Notice tone="warning" title={shortThings === 1 ? "1 thing on needs someone" : `${shortThings} things on need someone`}
+        description={`${isToday ? "Next" : "First"}: ${dutyName(nextShort.need.dutyId)} for ${nextShort.need.label}, ${nextShort.need.where}, ${formatTimeRange(nextShort.start, nextShort.end)}.`}
+        actions={<Button className="min-h-11" onClick={() => setPicked({ kind: "gap", needKey: nextShort.need.key, index: nextShort.index })}>Fill</Button>} /> : null}
+
       <section aria-labelledby="plan-on" className="flex min-w-0 flex-col">
-        <div className="pc-section-head"><h2 id="plan-on">What&apos;s on</h2>{items.length ? <p>{needsSomeone.length ? `${needsSomeone.length} need someone` : "All covered"}</p> : null}</div>
-        {items.length === 0 ? <EmptyState compact icon="calendarDays" title="Nothing on needs staff this day" hint="Add what's on, and the duties it needs, in Setup." /> : (
-          <div className="pc-panel">
-            <DayTimeline from={from} to={to} now={isToday ? data.now : -1} nowLabel={formatTime(data.now)} hours={hours} lanes={whatsOn.rows} blocks={itemBlocks}
-              label={`What's on at ${site.name}, area by area`} onSelect={pick} selected={pickedKey} />
+        <div className="pc-section-head"><h2 id="plan-on">Who is where</h2>{needs.length ? <p>{shortThings ? `${shortThings} need someone` : "All covered"}</p> : null}</div>
+        {groups.length === 0 ? <EmptyState compact icon="calendarDays" title="Nothing is planned this day" hint={canAddShift ? "Add a shift, or add what's on and the duties it needs in Setup." : "A manager adds what's on, and the duties it needs, in Setup."} /> : (
+          <div className="flex min-w-0 flex-col gap-(--space-3)">
+            {groups.length > 1 ? <div className="sm:hidden"><SegmentedChoice aria-label="Area shown" value={only} onValueChange={setArea}
+              options={groups.map((g, i) => ({ value: g.key, label: g.label, count: calendar[i].short || undefined }))} /></div> : null}
+            <div className="pc-panel">
+              <DayCalendar from={from} to={to} now={isToday ? data.now : -1} nowLabel={formatTime(data.now)} hours={hours} groups={groups} only={only}
+                label={`${site.name}, who is where through the day`} onSelect={pick} selected={pickedKey} />
+            </div>
           </div>
         )}
       </section>
 
-      {needsSomeone.length ? (
+      {short.length ? (
         <section aria-labelledby="plan-needs" className="flex min-w-0 flex-col">
-          <div className="pc-section-head"><h2 id="plan-needs">Needs someone</h2><p>{needsSomeone.length}</p></div>
+          <div className="pc-section-head"><h2 id="plan-needs">Needs someone</h2><p>{short.length}</p></div>
           <ul className="pc-list">
-            {needsSomeone.map((i) => (
-              <li key={i.key} className="pc-row">
-                <span className="w-28 shrink-0 tabular-nums">{formatTimeRange(i.start, i.end)}</span>
-                <span className="pc-row-body"><span className="pc-row-title">{i.label}</span><span className="pc-row-hint">{[i.where, ...askedFor(i.needs)].join(" · ")}</span></span>
+            {short.map((g) => (
+              <li key={`${g.need.key}#${g.index}`} className="pc-row">
+                <span className="w-28 shrink-0 tabular-nums">{formatTimeRange(g.start, g.end)}</span>
+                <span className="pc-row-body"><span className="pc-row-title">{dutyName(g.need.dutyId)} for {g.need.label}</span><span className="pc-row-hint">{[g.need.where, ...g.asked].join(" · ")}</span></span>
                 <span className="pc-row-trail">
-                  <span className="pc-row-hint" data-tone="orange">{i.short} short</span>
-                  <Button variant="outline" className="min-h-11" aria-label={`Fill ${i.label}`} onClick={() => setPicked({ kind: "item", key: i.key })}>Fill</Button>
+                  <span className="pc-row-hint" data-tone="orange">{g.short} short</span>
+                  <Button variant="outline" className="min-h-11" aria-label={`Fill ${dutyName(g.need.dutyId)} for ${g.need.label}, ${formatTimeRange(g.start, g.end)}`} onClick={() => setPicked({ kind: "gap", needKey: g.need.key, index: g.index })}>Fill</Button>
                 </span>
               </li>
             ))}
@@ -321,31 +376,24 @@ export function DayView({ data }: { data: PlanDayData }) {
         </section>
       ) : null}
 
-      <section aria-labelledby="plan-people" className="flex min-w-0 flex-col">
-        <div className="pc-section-head"><h2 id="plan-people">People</h2>{shown.length ? <p>{shown.length} on</p> : null}</div>
-        {shown.length === 0 ? <EmptyState compact icon="users" title={department ? `Nobody is planned in ${department.name} this day` : "Nobody is planned this day"} hint={canAddShift ? "Add a shift, or plan the week first." : undefined} /> : (
-          <div className="pc-panel">
-            <DayTimeline from={from} to={to} now={isToday ? data.now : -1} nowLabel={formatTime(data.now)} hours={hours} lanes={personLanes} blocks={personBlocks}
-              label={`People at ${site.name}`} onSelect={pick} selected={null} />
-          </div>
-        )}
-      </section>
-
       <div className="grid gap-(--space-7) lg:grid-cols-2">
-        <section aria-labelledby="plan-check" className="flex min-w-0 flex-col">
-          <div className="pc-section-head"><h2 id="plan-check">To check</h2>{toCheck.length ? <p>{toCheck.length}</p> : null}</div>
-          {toCheck.length === 0 ? <p className="pc-section-note">Nothing to check.</p> : (
+        <section aria-labelledby="plan-people" className="flex min-w-0 flex-col">
+          <div className="pc-section-head"><h2 id="plan-people">People</h2>{shown.length ? <p>{toCheck ? `${shown.length} on · ${toCheck} to check` : `${shown.length} on`}</p> : null}</div>
+          {shown.length === 0 ? <EmptyState compact icon="users" title={department ? `Nobody is planned in ${department.name} this day` : "Nobody is planned this day"} hint={canAddShift ? "Add a shift, or plan the week first." : undefined} /> : (
             <ul className="pc-list">
-              {toCheck.map((s) => (
-                <li key={s.id} className="pc-row"><span className="pc-row-body"><span className="pc-row-title">{nameOf(s.userId)}</span>
-                  {s.warnings.map((w) => <span key={w} className="pc-row-hint" data-tone="orange">{w}</span>)}</span></li>
+              {shown.map((s) => (
+                <li key={s.id} className="pc-row">
+                  <span className="pc-row-body"><span className="pc-row-title">{nameOf(s.userId)}</span><span className="pc-row-hint">{formatTimeRange(s.start, s.end)}</span>
+                    {s.warnings.map((w) => <span key={w} className="pc-row-hint" data-tone="orange">{w}</span>)}</span>
+                  <Button variant="outline" className="min-h-11" aria-label={`See ${nameOf(s.userId)}'s day`} onClick={() => setPicked({ kind: "person", shiftId: s.id })}>See day</Button>
+                </li>
               ))}
             </ul>
           )}
         </section>
         <section aria-labelledby="plan-tasks" className="flex min-w-0 flex-col">
           <div className="pc-section-head"><h2 id="plan-tasks">Tasks</h2>{tasks.length ? <p>{tasks.length}</p> : null}</div>
-          {tasks.length === 0 ? <p className="pc-section-note">No tasks given yet. Pick someone&apos;s duty under People to choose its tasks and their times.</p> : (
+          {tasks.length === 0 ? <p className="pc-section-note">No tasks given yet. Pick someone&apos;s duty in the calendar to choose its tasks and their times.</p> : (
             <ul className="pc-list">
               {tasks.map((t, i) => <li key={`${t.who}${t.name}${t.at}${i}`} className="pc-row"><span className="w-28 shrink-0 tabular-nums">{formatTimeRange(t.at, t.end)}</span>
                 <span className="pc-row-body"><span className="pc-row-title">{t.name}</span><span className="pc-row-hint">{t.who}</span></span></li>)}
@@ -355,7 +403,7 @@ export function DayView({ data }: { data: PlanDayData }) {
       </div>
 
       <Inspector open={inspector !== null} onOpenChange={(open) => { if (!open) close(); }} title={inspector?.title ?? ""} description={inspector?.description}
-        actions={inspector?.actions ?? undefined}>{inspector?.body ?? null}</Inspector>
+        actions={inspector?.actions ?? undefined}>{inspector?.body || inspector?.more ? <div className="flex flex-col gap-(--space-5)">{inspector?.body}{inspector?.more}</div> : null}</Inspector>
     </div>
   );
 }

@@ -284,7 +284,8 @@ async function seedRota(db: PrismaClient) {
  *  online: one overdue after two unanswered calls, one due within a day, one held today. */
 /** Plan (test) at Hillview, enough to see a day and cover being asked for (D31): Public swim on
  *  the main pool needs two lifeguards and Ciara fills one place each day; Aquatics has a Google
- *  Chat space, and Sam has asked for tomorrow's other place, with three answers. Sam plans it. */
+ *  Chat space, and Sam has asked for tomorrow's other place, with three answers. Sam plans it.
+ *  Today also has a desk, a class in the learner pool, breaks, a task and a duty given by itself. */
 async function seedPlan(db: PrismaClient) {
   const ORG = "org_leisureworld", HILLVIEW = "club_churchfield";
   const day = (offset: number) => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Dublin" }).format(new Date(Date.now() + offset * 86_400_000));
@@ -297,6 +298,28 @@ async function seedPlan(db: PrismaClient) {
     await db.planShift.create({ data: { orgId: ORG, siteId: HILLVIEW, departmentId: "dept_aquatics", userId: "sbx_ciara", date: day(offset), startMinutes: 540, endMinutes: 780, ...by,
       blocks: { create: { dutyId: "plan_guard", sessionId: "plan_swim", startMinutes: 540, endMinutes: 780 } } } });
   }
+  // Today is a fuller day, to see the Day's calendar: a second lifeguard with a break and a task,
+  // a duty given by itself, a desk covered only in the morning, a class nobody is on yet, and
+  // someone free.
+  const [learner, desk] = await Promise.all(["Learner pool", "Front desk"].map((name) => db.siteArea.findUniqueOrThrow({ where: { siteId_name: { siteId: HILLVIEW, name } }, select: { id: true } })));
+  await db.planDutyTask.create({ data: { id: "plan_task_test", dutyId: "plan_guard", name: "Pool test", when: "start" } });
+  await db.planDuty.createMany({ data: [
+    { id: "plan_break", orgId: ORG, name: "Break", isBreak: true, defaultMinutes: 30, color: "gray" },
+    { id: "plan_desk", orgId: ORG, name: "Receptionist", departmentId: "dept_reception", color: "purple" },
+    { id: "plan_clean", orgId: ORG, name: "Cleaning", departmentId: "dept_aquatics", color: "green" },
+  ] });
+  const daily = { orgId: ORG, siteId: HILLVIEW, weekdays: [0, 1, 2, 3, 4, 5, 6], firstDay: day(0), lastDay: day(30), ...by };
+  await db.planSession.create({ data: { ...daily, id: "plan_aqua", title: "Aqua fit", siteAreaId: learner.id, startMinutes: 660, endMinutes: 720, needs: { create: { dutyId: "plan_guard", count: 1 } } } });
+  await db.planSession.create({ data: { ...daily, id: "plan_desk_open", title: "Desk open", siteAreaId: desk.id, startMinutes: 480, endMinutes: 960, needs: { create: { dutyId: "plan_desk", count: 1 } } } });
+  const shift = { orgId: ORG, siteId: HILLVIEW, date: day(0), ...by };
+  await db.planShift.create({ data: { ...shift, departmentId: "dept_aquatics", userId: "sbx_conor", startMinutes: 420, endMinutes: 900, blocks: { create: [
+    { dutyId: "plan_guard", sessionId: "plan_swim", startMinutes: 540, endMinutes: 660, taskIds: ["plan_task_test"], taskMinutes: [540], taskEndMinutes: [570] },
+    { dutyId: "plan_break", startMinutes: 660, endMinutes: 690 },
+    { dutyId: "plan_guard", sessionId: "plan_swim", startMinutes: 690, endMinutes: 780 },
+    { dutyId: "plan_clean", startMinutes: 780, endMinutes: 840 },
+  ] } } });
+  await db.planShift.create({ data: { ...shift, departmentId: "dept_aquatics", userId: "sbx_dylan", startMinutes: 600, endMinutes: 840, blocks: { create: [{ dutyId: "plan_break", startMinutes: 720, endMinutes: 750 }] } } });
+  await db.planShift.create({ data: { ...shift, departmentId: "dept_reception", userId: "sbx_maya", startMinutes: 480, endMinutes: 720, blocks: { create: [{ dutyId: "plan_desk", sessionId: "plan_desk_open", startMinutes: 480, endMinutes: 720 }] } } });
   await db.planChatSpace.create({ data: { orgId: ORG, siteId: HILLVIEW, departmentId: "dept_aquatics", space: "spaces/SANDBOX", name: "Hillview aquatics (synthetic)", linkedById: "sbx_sam", linkedByName: "Sam Example" } });
   await db.planCoverRequest.create({ data: { orgId: ORG, siteId: HILLVIEW, date: day(1), needKey: "s:plan_swim:plan_guard", dutyId: "plan_guard", sessionId: "plan_swim", departmentId: "dept_aquatics",
     title: "Public swim", place: "Main pool", startMinutes: 540, endMinutes: 780, note: "Synthetic: report to the duty manager.", askedById: "sbx_sam", askedByName: "Sam Example",
