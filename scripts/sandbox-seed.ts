@@ -320,6 +320,12 @@ async function seedPlan(db: PrismaClient) {
   ] } } });
   await db.planShift.create({ data: { ...shift, departmentId: "dept_aquatics", userId: "sbx_dylan", startMinutes: 600, endMinutes: 840, blocks: { create: [{ dutyId: "plan_break", startMinutes: 720, endMinutes: 750 }] } } });
   await db.planShift.create({ data: { ...shift, departmentId: "dept_reception", userId: "sbx_maya", startMinutes: 480, endMinutes: 720, blocks: { create: [{ dutyId: "plan_desk", sessionId: "plan_desk_open", startMinutes: 480, endMinutes: 720 }] } } });
+  // The same day last week has a plan too, so today can copy it: Riley on the pool, and Dylan,
+  // who is already planned today and so is skipped.
+  for (const userId of ["sbx_riley", "sbx_dylan"]) {
+    await db.planShift.create({ data: { orgId: ORG, siteId: HILLVIEW, departmentId: "dept_aquatics", userId, date: day(-7), startMinutes: 540, endMinutes: 840, ...by,
+      blocks: { create: [{ dutyId: "plan_guard", sessionId: "plan_swim", startMinutes: 540, endMinutes: 780 }] } } });
+  }
   await db.planChatSpace.create({ data: { orgId: ORG, siteId: HILLVIEW, departmentId: "dept_aquatics", space: "spaces/SANDBOX", name: "Hillview aquatics (synthetic)", linkedById: "sbx_sam", linkedByName: "Sam Example" } });
   await db.planCoverRequest.create({ data: { orgId: ORG, siteId: HILLVIEW, date: day(1), needKey: "s:plan_swim:plan_guard", dutyId: "plan_guard", sessionId: "plan_swim", departmentId: "dept_aquatics",
     title: "Public swim", place: "Main pool", startMinutes: 540, endMinutes: 780, note: "Synthetic: report to the duty manager.", askedById: "sbx_sam", askedByName: "Sam Example",

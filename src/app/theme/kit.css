@@ -502,6 +502,8 @@ body.turnfin-app { background: var(--bg); }
    its own lane first in the label ink, its parts indented beneath, and each block placed by its
    rows, so one that takes several lanes fills them. */
 .turnfin-app .day-tl { display: grid; grid-template-columns: 90px minmax(0, 1fr); column-gap: var(--space-3); min-width: 0; }
+/* Lanes named after people need room for a whole name (`labels="wide"`). */
+.turnfin-app .day-tl[data-labels='wide'] { grid-template-columns: 152px minmax(0, 1fr); }
 .turnfin-app .day-tl-axis { position: relative; height: 20px; color: var(--label-2); font-size: 11px; line-height: 13px; font-weight: 550; font-variant-numeric: tabular-nums; }
 .turnfin-app .day-tl-hour { position: absolute; top: 2px; translate: -50% 0; white-space: nowrap; }
 .turnfin-app .day-tl-hour[data-edge='start'] { translate: 0 0; }
@@ -538,7 +540,7 @@ body.turnfin-app { background: var(--bg); }
 /* Phones: the blocks alone, their names left to the words a screen reader reads and the rows
    below the card. */
 @media (max-width: 767px) {
-  .turnfin-app .day-tl { grid-template-columns: minmax(0, 1fr); }
+  .turnfin-app .day-tl, .turnfin-app .day-tl[data-labels='wide'] { grid-template-columns: minmax(0, 1fr); }
   .turnfin-app :is(.day-tl-corner, .day-tl-labels) { display: none; }
   .turnfin-app .day-tl-lane { grid-auto-rows: 30px; }
   .turnfin-app .day-tl-block { padding: 0; font-size: 0; }

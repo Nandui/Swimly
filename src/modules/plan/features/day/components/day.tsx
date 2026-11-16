@@ -6,14 +6,16 @@ import { useRouter } from "next/navigation";
 import { CalendarDays, ChevronLeft, ChevronRight, UserPlus } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
-import { DayTimeline, type DayTimelineBlock } from "@/components/ui-kit/day-timeline";
+import { DayTimeline, type DayTimelineBlock, type DayTimelineLane } from "@/components/ui-kit/day-timeline";
 import { EmptyState } from "@/components/ui-kit/empty-state";
 import { Inspector } from "@/components/ui-kit/inspector";
 import { Notice } from "@/components/ui-kit/notice";
 import { SegmentedLinks } from "@/components/ui-kit/segmented-links";
 import { toast } from "@/components/ui/toast";
 import { formatDay, formatTime, formatTimeRange } from "@/lib/format";
+import { dayByArea } from "@/modules/plan/features/day/by-area";
 import { BlockDialog } from "@/modules/plan/features/day/components/block-dialog";
+import { CopyDayButton } from "@/modules/plan/features/day/components/copy-day";
 import { AskCoverDialog, CoverAnswers } from "@/modules/plan/features/day/components/cover";
 import { SessionDayDialog } from "@/modules/plan/features/day/components/session-day";
 import { planClassTeacher, removeBlock, saveBlock } from "@/modules/plan/features/day/server/actions";
@@ -22,15 +24,19 @@ import type { PlanDayData } from "@/modules/plan/features/day/server/data";
 import { BlockTasks } from "@/modules/plan/features/day/components/task-ticks";
 import { lanesLabel } from "@/lib/setup/lanes";
 import { offerLine, openRequestFor } from "@/modules/plan/shared/cover";
-import { shiftIso, tasksOf, whatsOnRows, type BlockTask } from "@/modules/plan/shared/model";
+import { shiftIso, tasksOf, type BlockTask } from "@/modules/plan/shared/model";
 import { RemoveShiftDialog, ShiftDialog } from "@/modules/plan/shared/components/shift-dialog";
 
 type Picked = { kind: "item"; key: string } | { kind: "gap"; needKey: string; index: number }
-  | { kind: "block"; shiftId: string; blockId: string } | { kind: "free"; shiftId: string; start: number; end: number } | { kind: "class"; shiftId: string; ref: string };
+  | { kind: "block"; shiftId: string; blockId: string } | { kind: "free"; shiftId: string; start: number; end: number };
 
-/** The Day: what's on, area by area, with what still needs someone; each person's shift underneath;
- *  and one inspector for whichever block is picked: a thing on and its places, who could fill a gap,
- *  a duty to change and its tasks to give, free time to give a duty. */
+/** The Day, area by area on one timeline (owner, 16 November 2026: "person by person per area",
+ *  and never two timelines to match up): each area heads its own rows, what's on there, what still
+ *  needs someone, then a line for every person who works there with their time in that area. What
+ *  belongs to no area (breaks, free time, a duty given by itself) comes last, a line per person.
+ *  One inspector serves whichever block is picked: a thing on and its places, who could fill a gap,
+ *  a duty to change and its tasks to give, free time to give a duty. Phones read the same day as
+ *  lists, area by area, because a timeline that narrow cannot hold words. */
 export function DayView({ data }: { data: PlanDayData }) {
   const router = useRouter();
   const [picked, setPicked] = useState<Picked | null>(null);
@@ -58,10 +64,7 @@ export function DayView({ data }: { data: PlanDayData }) {
   }, [needs, shifts]);
   const hours = Array.from({ length: (to - from) / 60 + 1 }, (_, i) => ({ at: from + i * 60, label: formatTime(from + i * 60) }));
 
-  // What's on (owner, 30 October 2026: "maybe the timeline should show what's on in each area"): one
-  // block per thing on (a session with all its duties, or a class), which names it and says who is
-  // on it, or how many short in orange. Its rows are the areas, each with its lanes and parts
-  // beneath, and a block fills the lanes it takes (owner, 11 November 2026; `whatsOnRows`).
+  // Each thing on (a session with all its duties, or a class): the Inspector lists everyone on it.
   const fillerOf = (f: { userId?: string; blockId?: string }) => f.userId ?? (f.blockId ? blockOwner.get(f.blockId)?.userId : undefined);
   const items = (() => {
     const byKey = new Map<string, { key: string; label: string; where: string; areaId: string | null; lanes: readonly number[]; start: number; end: number; sessionId: string | null; needs: typeof needs }>();
@@ -74,54 +77,78 @@ export function DayView({ data }: { data: PlanDayData }) {
     return [...byKey.values()].map((item) => ({ ...item,
       // "Main Pool, lanes 1 to 3" for a session that names its lanes; a class's place says them already.
       place: item.sessionId && item.lanes.length ? `${item.where}, ${lanesLabel(item.lanes, data.areas.find((a) => a.id === item.areaId)?.lanes ?? 0).toLowerCase()}` : item.where,
-      short: item.needs.reduce((m, n) => m + Math.max(0, ...n.gaps.map((g) => g.short)), 0),
-      names: [...new Set(item.needs.flatMap((n) => n.fills.map((f) => fillerOf(f)).filter((u): u is string => Boolean(u))))],
-    })).sort((a, b) => a.start - b.start || a.label.localeCompare(b.label));
+    }));
   })();
-  const whatsOn = whatsOnRows(data.areas, items);
-  const itemBlocks: DayTimelineBlock[] = items.flatMap((i) => {
-    const at = whatsOn.placed.get(i.key);
-    if (!at) return [];
-    const sub = i.short ? `${i.short} short` : i.names.length ? i.names.map(nameOf).join(", ") : "Covered";
-    return [{ key: `item|${i.key}`, lane: at.lane, lanes: at.lanes, start: i.start, end: i.end, kind: i.short ? "gap" as const : "ok" as const, label: i.label, sub,
-      ariaLabel: `${i.label}, ${i.place}, ${formatTimeRange(i.start, i.end)}: ${sub}` }];
-  });
-  const needsSomeone = items.filter((i) => i.short > 0);
-  /** "Asked in Google Chat: 2 can cover", for each open request on these needs. */
-  const askedFor = (list: typeof needs) => data.cover.filter((r) => list.some((n) => n.key === r.needKey)).map((r) => `Asked in Google Chat: ${offerLine(r.answers).toLowerCase()}`);
 
-  // People: one lane per shift, its duties, breaks, classes and free time.
-  const personLanes = shown.map((s) => ({ key: s.id, label: `${nameOf(s.userId)} · ${formatTimeRange(s.start, s.end)}` }));
-  const personBlocks: DayTimelineBlock[] = shown.flatMap((s) => {
-    const busy = [...s.blocks.map((b) => ({ start: b.start, end: b.end })), ...s.classes.map((c) => ({ start: c.start, end: c.end }))].sort((a, b) => a.start - b.start);
-    const free: { start: number; end: number }[] = [];
-    let at = s.start;
-    for (const b of busy) { if (b.start > at) free.push({ start: at, end: Math.min(b.start, s.end) }); at = Math.max(at, b.end); }
-    if (at < s.end) free.push({ start: at, end: s.end });
-    return [
-      ...s.blocks.map((b) => {
-        const d = duty(b.dutyId);
-        const label = d?.name ?? "Duty";
+  // The one timeline (by-area.ts decides what sits where; the words are decided here). Every row
+  // is also a line of `rows`, which phones read as lists under each area's name.
+  const dutyName = (id: string | null) => (id ? duty(id)?.name : null) ?? "Duty";
+  const byArea = dayByArea({ areas: data.areas, needs, shifts, shown, isBreak: (id) => Boolean(duty(id)?.isBreak) });
+  const REST = "rest";
+  const lanes: DayTimelineLane[] = [];
+  const blocks: DayTimelineBlock[] = [];
+  const sections: { key: string; label: string; note: string | null; rows: { key: string; start: number; end: number; title: string; hint: string; tone?: "orange"; open: string }[] }[] = [];
+  for (const g of byArea.groups) {
+    const head = `a|${g.key}`;
+    const rows: (typeof sections)[number]["rows"] = [];
+    lanes.push({ key: head, label: g.label });
+    for (const i of g.items) {
+      const sub = i.short ? `${i.short} short` : i.userIds.length ? i.userIds.map(nameOf).join(", ") : "Covered";
+      blocks.push({ key: `item|${i.key}`, lane: head, start: i.start, end: i.end, kind: i.short ? "gap" : "ok", label: i.label, sub, ariaLabel: `${g.label}: ${i.label}, ${formatTimeRange(i.start, i.end)}: ${sub}` });
+    }
+    if (g.gaps.length) lanes.push({ key: `n|${g.key}`, label: "Needs someone", under: head });
+    for (const x of g.gaps) {
+      const key = `gap|${x.needKey}|${x.index}`;
+      const what = `${dutyName(x.dutyId)} for ${x.label}`;
+      // "Asked in Google Chat: 2 can cover", for each open request on this need (D31).
+      const asked = data.cover.filter((r) => r.needKey === x.needKey).map((r) => `Asked in Google Chat: ${offerLine(r.answers).toLowerCase()}`);
+      blocks.push({ key, lane: `n|${g.key}`, start: x.start, end: x.end, kind: "gap", label: dutyName(x.dutyId), sub: `${x.short} short`, ariaLabel: [`${g.label} needs someone: ${what}, ${formatTimeRange(x.start, x.end)}, ${x.short} short`, ...asked].join(". ") });
+      rows.push({ key, start: x.start, end: x.end, title: "Needs someone", hint: [what, `${x.short} short`, ...asked].join(" · "), tone: "orange", open: key });
+    }
+    for (const p of g.people) {
+      const lane = `p|${g.key}|${p.userId}`;
+      const name = nameOf(p.userId);
+      lanes.push({ key: lane, label: name, under: head });
+      for (const st of p.stints) {
         // The tasks given in this duty are drawn inside its block, each where it starts and ends
         // (owner, 12 November 2026: "can the subtasks be shown in the timeline bar too?").
-        const given = tasksOf(b, d?.tasks ?? []);
-        return { key: `block|${s.id}|${b.id}`, lane: s.id, start: b.start, end: b.end, kind: d?.isBreak ? "off" as const : "ok" as const, label,
-          sub: sessionTitle(b.sessionId) ?? undefined, parts: given.map((t) => ({ start: t.at, end: t.end, label: t.name })),
-          ariaLabel: [`${nameOf(s.userId)}: ${label}, ${formatTimeRange(b.start, b.end)}`, ...given.map((t) => `${t.name} ${formatTimeRange(t.at, t.end)}`)].join("; ") };
-      }),
-      ...s.classes.map((c) => ({ key: `class|${s.id}|${c.ref}`, lane: s.id, start: c.start, end: c.end, kind: "book" as const, label: c.title,
-        sub: "Teaching", ariaLabel: `${nameOf(s.userId)}: teaching ${c.title}, ${formatTimeRange(c.start, c.end)}` })),
-      ...free.filter((f) => f.end > f.start).map((f) => ({ key: `free|${s.id}|${f.start}|${f.end}`, lane: s.id, start: f.start, end: f.end, kind: "next" as const,
-        label: "Free", ariaLabel: `${nameOf(s.userId)}: free ${formatTimeRange(f.start, f.end)}` })),
-    ];
-  });
+        const block = st.blockId ? shiftOf(st.shiftId ?? "")?.blocks.find((b) => b.id === st.blockId) : undefined;
+        const given = block ? tasksOf(block, duty(block.dutyId)?.tasks ?? []) : [];
+        const key = block && st.shiftId ? `block|${st.shiftId}|${block.id}` : `class|${st.itemKey}|${p.userId}`;
+        const label = block ? dutyName(st.dutyId) : "Teaching";
+        blocks.push({ key, lane, start: st.start, end: st.end, kind: block ? "ok" : "book", label, sub: st.what, parts: given.map((t) => ({ start: t.at, end: t.end, label: t.name })),
+          ariaLabel: [`${g.label}, ${name}: ${label}, ${st.what}, ${formatTimeRange(st.start, st.end)}`, ...given.map((t) => `${t.name} ${formatTimeRange(t.at, t.end)}`)].join("; ") });
+        rows.push({ key: `${key}|${st.start}`, start: st.start, end: st.end, title: name, hint: `${label} · ${st.what}`, open: key });
+      }
+    }
+    sections.push({ key: g.key, label: g.label, note: g.short ? (g.short === 1 ? "1 needs someone" : `${g.short} need someone`) : null, rows: rows.sort((x, y) => x.start - y.start || x.end - y.end) });
+  }
+  if (byArea.rest.length) {
+    const rows: (typeof sections)[number]["rows"] = [];
+    lanes.push({ key: REST, label: "Not in an area" });
+    for (const line of byArea.rest) {
+      const lane = `r|${line.shiftId}`;
+      const name = nameOf(line.userId);
+      lanes.push({ key: lane, label: name, under: REST });
+      for (const st of line.stints) {
+        const key = st.blockId ? `block|${line.shiftId}|${st.blockId}` : `free|${line.shiftId}|${st.start}|${st.end}`;
+        const label = st.kind === "free" ? "Free" : dutyName(st.dutyId);
+        blocks.push({ key, lane, start: st.start, end: st.end, kind: st.kind === "free" ? "next" : st.kind === "break" ? "off" : "ok", label, ariaLabel: `${name}: ${label}, ${formatTimeRange(st.start, st.end)}` });
+        rows.push({ key, start: st.start, end: st.end, title: name, hint: label, open: key });
+      }
+    }
+    sections.push({ key: REST, label: "Not in an area", note: null, rows: rows.sort((x, y) => x.start - y.start || x.end - y.end) });
+  }
+  const needsSomeone = byArea.groups.reduce((sum, g) => sum + g.short, 0);
 
   function pick(key: string) {
-    const [kind, a, b, c] = key.split("|");
-    if (kind === "item") setPicked({ kind, key: a });
-    else if (kind === "block") setPicked({ kind, shiftId: a, blockId: b });
-    else if (kind === "class") setPicked({ kind, shiftId: a, ref: b });
-    else if (kind === "free") setPicked({ kind, shiftId: a, start: Number(b), end: Number(c) });
+    const parts = key.split("|");
+    const kind = parts[0];
+    if (kind === "item") setPicked({ kind, key: parts.slice(1).join("|") });
+    else if (kind === "class") setPicked({ kind: "item", key: parts.slice(1, -1).join("|") });
+    else if (kind === "gap") setPicked({ kind, needKey: parts.slice(1, -1).join("|"), index: Number(parts[parts.length - 1]) });
+    else if (kind === "block") setPicked({ kind, shiftId: parts[1], blockId: parts[2] });
+    else if (kind === "free") setPicked({ kind, shiftId: parts[1], start: Number(parts[2]), end: Number(parts[3]) });
   }
   const close = () => setPicked(null);
   const run = (work: () => Promise<{ ok: boolean; error?: string }>, done: string) => start(async () => {
@@ -136,7 +163,8 @@ export function DayView({ data }: { data: PlanDayData }) {
     toast.success("Tasks saved"); router.refresh();
   });
 
-  const pickedKey = picked?.kind === "item" ? `item|${picked.key}` : null;
+  const pickedKey = !picked ? null : picked.kind === "item" ? `item|${picked.key}` : picked.kind === "gap" ? `gap|${picked.needKey}|${picked.index}`
+    : picked.kind === "block" ? `block|${picked.shiftId}|${picked.blockId}` : `free|${picked.shiftId}|${picked.start}|${picked.end}`;
   const inspector = (() => {
     if (!picked) return null;
     if (picked.kind === "item") {
@@ -228,11 +256,6 @@ export function DayView({ data }: { data: PlanDayData }) {
         trigger={<Button variant="outline" className="min-h-11">Change shift</Button>} />
       <RemoveShiftDialog id={shift.id} name={name} date={date} trigger={<Button variant="ghost" className="min-h-11">Remove shift</Button>} />
     </> : null;
-    if (picked.kind === "class") {
-      const c = shift.classes.find((x) => x.ref === picked.ref);
-      return { title: c?.title ?? "Class", description: c ? `${name} teaches, ${formatTimeRange(c.start, c.end)}.` : undefined,
-        body: <p className="text-sm text-ui-muted-foreground">Change the teacher from the class&apos;s line in What&apos;s on.</p>, actions: shiftActions };
-    }
     if (picked.kind === "free") {
       return { title: `${name} is free`, description: formatTimeRange(picked.start, picked.end),
         actions: <>
@@ -281,8 +304,11 @@ export function DayView({ data }: { data: PlanDayData }) {
           <Button asChild variant="outline" size="icon" className="min-h-11 min-w-11"><Link href={link(shiftIso(date, 1))} aria-label="The day after"><ChevronRight aria-hidden="true" /></Link></Button>
           {isToday ? null : <Button asChild variant="ghost" className="min-h-11"><Link href={link(data.today)}>Today</Link></Button>}
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+        {canAddShift && data.copyDays.length ? <CopyDayButton siteId={site.id} date={date} days={data.copyDays} /> : null}
         {canAddShift ? <ShiftDialog siteId={site.id} draft={{ userId: "", departmentId: (data.departments.mine.find((d) => d.id === department?.id) ?? data.departments.mine[0])?.id ?? "", date, start: 7 * 60, end: 15 * 60, note: "" }}
           people={people} departments={data.departments.mine} trigger={<Button variant="outline" className="min-h-11"><UserPlus aria-hidden="true" />Add a shift</Button>} /> : null}
+        </div>
       </div>
 
       {data.departments.all.length > 1 ? (
@@ -294,41 +320,32 @@ export function DayView({ data }: { data: PlanDayData }) {
       {data.clashes.map((c) => <Notice key={`${c.a}${c.b}`} tone="warning" title={c.text} />)}
 
       <section aria-labelledby="plan-on" className="flex min-w-0 flex-col">
-        <div className="pc-section-head"><h2 id="plan-on">What&apos;s on</h2>{items.length ? <p>{needsSomeone.length ? `${needsSomeone.length} need someone` : "All covered"}</p> : null}</div>
-        {items.length === 0 ? <EmptyState compact icon="calendarDays" title="Nothing on needs staff this day" hint="Add what's on, and the duties it needs, in Setup." /> : (
-          <div className="pc-panel">
-            <DayTimeline from={from} to={to} now={isToday ? data.now : -1} nowLabel={formatTime(data.now)} hours={hours} lanes={whatsOn.rows} blocks={itemBlocks}
-              label={`What's on at ${site.name}, area by area`} onSelect={pick} selected={pickedKey} />
-          </div>
-        )}
-      </section>
-
-      {needsSomeone.length ? (
-        <section aria-labelledby="plan-needs" className="flex min-w-0 flex-col">
-          <div className="pc-section-head"><h2 id="plan-needs">Needs someone</h2><p>{needsSomeone.length}</p></div>
-          <ul className="pc-list">
-            {needsSomeone.map((i) => (
-              <li key={i.key} className="pc-row">
-                <span className="w-28 shrink-0 tabular-nums">{formatTimeRange(i.start, i.end)}</span>
-                <span className="pc-row-body"><span className="pc-row-title">{i.label}</span><span className="pc-row-hint">{[i.where, ...askedFor(i.needs)].join(" · ")}</span></span>
-                <span className="pc-row-trail">
-                  <span className="pc-row-hint" data-tone="orange">{i.short} short</span>
-                  <Button variant="outline" className="min-h-11" aria-label={`Fill ${i.label}`} onClick={() => setPicked({ kind: "item", key: i.key })}>Fill</Button>
-                </span>
-              </li>
+        <div className="pc-section-head"><h2 id="plan-on">The day, area by area</h2>{needs.length ? <p>{needsSomeone ? `${needsSomeone} need someone` : "All covered"}</p> : null}</div>
+        {lanes.length === 0 ? <EmptyState compact icon="calendarDays" title={department ? `Nothing is planned in ${department.name} this day` : "Nothing is planned this day"}
+          hint={canAddShift ? "Add a shift, copy another day, or add what's on and the duties it needs in Setup." : "A manager adds what's on, and the duties it needs, in Setup."} /> : <>
+          <div className="max-md:hidden"><div className="pc-panel">
+            <DayTimeline from={from} to={to} now={isToday ? data.now : -1} nowLabel={formatTime(data.now)} hours={hours} lanes={lanes} blocks={blocks}
+              label={`${site.name}, area by area`} onSelect={pick} selected={pickedKey} labels="wide" />
+          </div></div>
+          <div className="flex flex-col gap-(--space-5) md:hidden">
+            {sections.map((sec) => (
+              <section key={sec.key} aria-label={sec.label} className="flex min-w-0 flex-col">
+                <div className="pc-section-head"><h3 className="font-semibold">{sec.label}</h3>{sec.note ? <p>{sec.note}</p> : null}</div>
+                {sec.rows.length === 0 ? <p className="pc-section-note">Nobody is on here yet.</p> : (
+                  <ul className="pc-list">
+                    {sec.rows.map((r) => (
+                      <li key={r.key} className="pc-row">
+                        <span className="w-24 shrink-0 tabular-nums">{formatTimeRange(r.start, r.end)}</span>
+                        <span className="pc-row-body"><span className="pc-row-title">{r.title}</span><span className="pc-row-hint" data-tone={r.tone}>{r.hint}</span></span>
+                        <Button variant={r.tone ? "default" : "outline"} className="min-h-11" aria-label={`${r.tone ? "Fill" : "Open"}: ${r.title}, ${r.hint}, ${formatTimeRange(r.start, r.end)}`} onClick={() => pick(r.open)}>{r.tone ? "Fill" : "Open"}</Button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
             ))}
-          </ul>
-        </section>
-      ) : null}
-
-      <section aria-labelledby="plan-people" className="flex min-w-0 flex-col">
-        <div className="pc-section-head"><h2 id="plan-people">People</h2>{shown.length ? <p>{shown.length} on</p> : null}</div>
-        {shown.length === 0 ? <EmptyState compact icon="users" title={department ? `Nobody is planned in ${department.name} this day` : "Nobody is planned this day"} hint={canAddShift ? "Add a shift, or plan the week first." : undefined} /> : (
-          <div className="pc-panel">
-            <DayTimeline from={from} to={to} now={isToday ? data.now : -1} nowLabel={formatTime(data.now)} hours={hours} lanes={personLanes} blocks={personBlocks}
-              label={`People at ${site.name}`} onSelect={pick} selected={null} />
           </div>
-        )}
+        </>}
       </section>
 
       <div className="grid gap-(--space-7) lg:grid-cols-2">
@@ -345,7 +362,7 @@ export function DayView({ data }: { data: PlanDayData }) {
         </section>
         <section aria-labelledby="plan-tasks" className="flex min-w-0 flex-col">
           <div className="pc-section-head"><h2 id="plan-tasks">Tasks</h2>{tasks.length ? <p>{tasks.length}</p> : null}</div>
-          {tasks.length === 0 ? <p className="pc-section-note">No tasks given yet. Pick someone&apos;s duty under People to choose its tasks and their times.</p> : (
+          {tasks.length === 0 ? <p className="pc-section-note">No tasks given yet. Pick someone&apos;s duty in the timeline to choose its tasks and their times.</p> : (
             <ul className="pc-list">
               {tasks.map((t, i) => <li key={`${t.who}${t.name}${t.at}${i}`} className="pc-row"><span className="w-28 shrink-0 tabular-nums">{formatTimeRange(t.at, t.end)}</span>
                 <span className="pc-row-body"><span className="pc-row-title">{t.name}</span><span className="pc-row-hint">{t.who}</span></span></li>)}

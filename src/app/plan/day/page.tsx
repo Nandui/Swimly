@@ -11,7 +11,7 @@ export default async function PlanDayPage({ searchParams }: { searchParams: Prom
   const data = await planDay(await searchParams);
   return (
     <PageShell spacing="roomy" header={<PageHeader title="Day"
-        description={data.site ? `What's on at ${data.site.name}, who fills it, and each person's duties. Pick a gap to see who could fill it.` : undefined} />}>
+        description={data.site ? `${data.site.name}, area by area: what's on, who is there and what still needs someone. Pick any block to change it.` : undefined} />}>
       {data.site === null ? <EmptyState icon="building" title="No site to plan" hint="Your role doesn't cover a site where Plan (test) is on." /> : <DayView data={data} />}
     </PageShell>
   );
