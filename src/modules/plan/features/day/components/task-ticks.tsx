@@ -18,7 +18,7 @@ export function TaskTicks({ idPrefix, tasks, block, value, onChange, disabled }:
 }) {
   return (
     <fieldset className="flex flex-col gap-1">
-      <legend className="font-semibold">Tasks</legend>
+      <legend className="font-semibold">Positions</legend>
       <p className="text-sm text-ui-muted-foreground">Tick the ones they do, and set when each starts and ends.</p>
       {tasks.map((t) => {
         const given = value.find((x) => x.id === t.id);
@@ -54,9 +54,9 @@ export function BlockTasks({ idPrefix, tasks, block, given, pending, onSave }: {
       <TaskTicks idPrefix={idPrefix} tasks={tasks} block={block} value={draft} onChange={setDraft} disabled={pending} />
       {changed ? (
         <div className="flex flex-wrap items-center gap-2">
-          <Button className="min-h-11" disabled={pending || outside} onClick={() => onSave(draft)}>Save tasks</Button>
+          <Button className="min-h-11" disabled={pending || outside} onClick={() => onSave(draft)}>Save positions</Button>
           <Button variant="ghost" className="min-h-11" disabled={pending} onClick={() => setDraft(given)}>Undo</Button>
-          {outside ? <p className="text-sm text-ui-muted-foreground">Keep each task inside the duty, with its end after its start.</p> : null}
+          {outside ? <p className="text-sm text-ui-muted-foreground">Keep each position inside the time they are on, with its end after its start.</p> : null}
         </div>
       ) : null}
     </div>

@@ -11,7 +11,7 @@ export default async function PlanSetupPage({ searchParams }: { searchParams: Pr
   const data = await planSetup(await searchParams);
   return (
     <PageShell spacing="roomy" header={<PageHeader title="Setup"
-        description="The duties people do, the areas, and what's on with the staff it needs. Gaps on the Day come from here." />}>
+        description="The kinds of work people do, the areas, and the activities with the staff each needs. Gaps on the Day come from here." />}>
       {data.site === null ? <EmptyState icon="building" title="No site to plan" hint="Your role doesn't cover a site where Plan (test) is on." /> : <SetupView data={data} />}
     </PageShell>
   );

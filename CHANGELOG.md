@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.25.0 · 17 November 2026 · Plan (test) says Activities
+
+- **In Plan (test), "What's on" is now called Activities.** Anything that needs staff at a time is an activity: the pool being open, a lesson block, a booking.
+- **"Duties" are now called Kinds of work**, such as Lifeguard or Receptionist. You keep them in Set up as before.
+- **"Tasks" are now called Positions**, such as Chair 1 or Till. You still give someone a position, and its times, from the Day.
+- Only the words have changed. Everything you have planned is as it was, and works the same way.
+
 ## 3.24.0 · 17 November 2026 · Day (new), one department at a time
 
 - **Plan (test) has a second way to see a day, called Day (new)**, beside the Day. Both show and change the same plan, so you can try the new one without losing anything.

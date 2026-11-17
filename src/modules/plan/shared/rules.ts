@@ -41,7 +41,7 @@ const span = (v: { start: number; end: number }) => v.end > v.start;
 const spanMessage = { message: "The end must be after the start.", path: ["end"] };
 
 export const dutySchema = z.object({
-  name: z.string().trim().min(2, "Name the duty.").max(60),
+  name: z.string().trim().min(2, "Name the kind of work.").max(60),
   departmentId: optionalId,
   qualificationTypeId: optionalId,
   color: z.enum(DUTY_COLORS),
@@ -51,14 +51,14 @@ export const dutySchema = z.object({
   tasks: z.array(z.object({
     /** A task already on the duty keeps its id, so the days it was chosen on keep it. */
     id: z.string().min(1).optional(),
-    name: z.string().trim().min(2, "Name each task.").max(80),
+    name: z.string().trim().min(2, "Name each position.").max(80),
   })).max(20).default([]),
-}).refine((d) => !(d.isBreak && d.forClasses), { message: "A break can't be the duty classes need.", path: ["forClasses"] });
+}).refine((d) => !(d.isBreak && d.forClasses), { message: "A break can't be the kind of work classes need.", path: ["forClasses"] });
 export type DutyInput = z.input<typeof dutySchema>;
 
 export const sessionSchema = z.object({
   siteId: id,
-  title: z.string().trim().min(2, "Say what's on.").max(80),
+  title: z.string().trim().min(2, "Name the activity.").max(80),
   areaId: optionalId,
   lanes: z.array(z.number().int().min(1).max(20)).max(20).default([]),
   start: minutes,
@@ -71,7 +71,7 @@ export const sessionSchema = z.object({
   needs: z.array(z.object({ dutyId: id, count: z.number().int().min(1, "Each line needs at least one person.").max(20) })).max(10).default([]),
 }).refine(span, spanMessage)
   .refine((s) => s.lastDay >= s.firstDay, { message: "The last day can't be before the first.", path: ["lastDay"] })
-  .refine((s) => new Set(s.needs.map((n) => n.dutyId)).size === s.needs.length, { message: "Name each duty once, with how many.", path: ["needs"] });
+  .refine((s) => new Set(s.needs.map((n) => n.dutyId)).size === s.needs.length, { message: "Name each kind of work once, with how many.", path: ["needs"] });
 export type SessionInput = z.input<typeof sessionSchema>;
 
 export const sessionDaySchema = z.object({
@@ -86,12 +86,12 @@ export const shiftSchema = z.object({
 export type ShiftInput = z.input<typeof shiftSchema>;
 
 export const blockSchema = z.object({
-  shiftId: id, dutyId: z.string().min(1, "Choose the duty."), sessionId: optionalId, start: minutes, end: minutes,
+  shiftId: id, dutyId: z.string().min(1, "Choose the kind of work."), sessionId: optionalId, start: minutes, end: minutes,
   /** The duty's tasks this person does in the block, each from `at` to `end`; none unless chosen. */
   tasks: z.array(z.object({ id: z.string().min(1), at: minutes, end: minutes })).max(20).default([]),
 }).refine(span, spanMessage)
-  .refine((b) => b.tasks.every((t) => t.end > t.at), { message: "Each task's end must be after its start.", path: ["tasks"] })
-  .refine((b) => new Set(b.tasks.map((t) => t.id)).size === b.tasks.length, { message: "Give each task once.", path: ["tasks"] });
+  .refine((b) => b.tasks.every((t) => t.end > t.at), { message: "Each position's end must be after its start.", path: ["tasks"] })
+  .refine((b) => new Set(b.tasks.map((t) => t.id)).size === b.tasks.length, { message: "Give each position once.", path: ["tasks"] });
 export type BlockInput = z.input<typeof blockSchema>;
 
 export const offSchema = z.object({

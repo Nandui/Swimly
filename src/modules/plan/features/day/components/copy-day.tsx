@@ -22,7 +22,7 @@ export function CopyDayButton({ siteId, date, days }: { siteId: string; date: st
   return (
     <FormDialog portalClassName="turnfin-module" trigger={<Button variant="outline" className="min-h-11"><Copy aria-hidden="true" />Copy a day</Button>}
       title={`Copy another day into ${formatDay(date)}?`}
-      description="Each shift is copied at the same times with its duties and tasks. Duties for something that isn't on this day are left out. Anyone marked off, or already planned this day, is skipped."
+      description="Each shift is copied at the same times with what the person is on and their positions. Anything for an activity that isn't on this day is left out. Anyone marked off, or already planned this day, is skipped."
       submitLabel="Copy" successMessage="Day copied" onOpen={() => setFrom(first.date)} onSuccess={() => router.refresh()}
       submit={async () => { const result = await copyDayPlan(siteId, from, date); return result.ok ? { ok: true } : result; }}>
       <ChoiceField id="plan-copy-day" label="Copy from" value={from} onChange={setFrom} options={options} empty="Choose a day" />

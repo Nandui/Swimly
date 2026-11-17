@@ -45,7 +45,7 @@ export function DayView({ data }: { data: PlanDayData }) {
 
   // The one timeline (by-area.ts decides what sits where; the words are decided here). Every row
   // is also a line of `rows`, which phones read as lists under each area's name.
-  const dutyName = (id: string | null) => (id ? duty(id)?.name : null) ?? "Duty";
+  const dutyName = (id: string | null) => (id ? duty(id)?.name : null) ?? "Work";
   const byArea = dayByArea({ areas: data.areas, needs, shifts, shown, isBreak: (id) => Boolean(duty(id)?.isBreak) });
   const REST = "rest";
   const lanes: DayTimelineLane[] = [];
@@ -123,13 +123,13 @@ export function DayView({ data }: { data: PlanDayData }) {
           ...data.departments.all.map((d) => ({ href: link(date, d.id), label: d.name, current: d.id === department?.id }))]} />
       ) : null}
 
-      {data.classDutyId ? null : <Notice tone="info" title="Classes aren't shown yet" description="Mark one duty as the one classes need, in Setup, to see swim classes and plan their teachers here." />}
+      {data.classDutyId ? null : <Notice tone="info" title="Classes aren't shown yet" description="Mark one kind of work as the one classes need, in Setup, to see swim classes and plan their teachers here." />}
       {data.clashes.map((c) => <Notice key={`${c.a}${c.b}`} tone="warning" title={c.text} />)}
 
       <section aria-labelledby="plan-on" className="flex min-w-0 flex-col">
         <div className="pc-section-head"><h2 id="plan-on">The day, area by area</h2>{needs.length ? <p>{needsSomeone ? `${needsSomeone} need someone` : "All covered"}</p> : null}</div>
         {lanes.length === 0 ? <EmptyState compact icon="calendarDays" title={department ? `Nothing is planned in ${department.name} this day` : "Nothing is planned this day"}
-          hint={canAddShift ? "Add a shift, copy another day, or add what's on and the duties it needs in Setup." : "A manager adds what's on, and the duties it needs, in Setup."} /> : <>
+          hint={canAddShift ? "Add a shift, copy another day, or add activities and the staff they need in Setup." : "A manager adds activities, and the staff they need, in Setup."} /> : <>
           <div className="max-md:hidden"><div className="pc-panel">
             <DayTimeline from={from} to={to} now={isToday ? data.now : -1} nowLabel={formatTime(data.now)} hours={hours} lanes={lanes} blocks={blocks}
               label={`${site.name}, area by area`} onSelect={inspector.pick} selected={inspector.pickedKey} labels="wide" />
@@ -168,8 +168,8 @@ export function DayView({ data }: { data: PlanDayData }) {
           )}
         </section>
         <section aria-labelledby="plan-tasks" className="flex min-w-0 flex-col">
-          <div className="pc-section-head"><h2 id="plan-tasks">Tasks</h2>{tasks.length ? <p>{tasks.length}</p> : null}</div>
-          {tasks.length === 0 ? <p className="pc-section-note">No tasks given yet. Pick someone&apos;s duty in the timeline to choose its tasks and their times.</p> : (
+          <div className="pc-section-head"><h2 id="plan-tasks">Positions</h2>{tasks.length ? <p>{tasks.length}</p> : null}</div>
+          {tasks.length === 0 ? <p className="pc-section-note">No positions given yet. Pick what someone is on in the timeline to give them a position and its times.</p> : (
             <ul className="pc-list">
               {tasks.map((t, i) => <li key={`${t.who}${t.name}${t.at}${i}`} className="pc-row"><span className="w-28 shrink-0 tabular-nums">{formatTimeRange(t.at, t.end)}</span>
                 <span className="pc-row-body"><span className="pc-row-title">{t.name}</span><span className="pc-row-hint">{t.who}</span></span></li>)}

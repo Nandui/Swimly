@@ -28,9 +28,9 @@ export function DutyDialog({ trigger, draft, departments, qualifications }: { tr
   const set = <K extends keyof DutyDraft>(key: K, value: DutyDraft[K]) => setF((x) => ({ ...x, [key]: value }));
   const setTask = (i: number, change: Partial<DutyDraft["tasks"][number]>) => set("tasks", f.tasks.map((t, j) => j === i ? { ...t, ...change } : t));
   return (
-    <FormDialog portalClassName={P} trigger={trigger} width="sm:max-w-xl" title={draft.id ? `Change ${draft.name}` : "Add a duty"}
-      description="A duty is what someone does for a stretch of their shift: Lifeguard, Swim teacher, Reception, Break."
-      submitLabel={draft.id ? "Save duty" : "Add duty"} successMessage="Duty saved" onOpen={() => setF(draft)} onSuccess={() => router.refresh()}
+    <FormDialog portalClassName={P} trigger={trigger} width="sm:max-w-xl" title={draft.id ? `Change ${draft.name}` : "Add a kind of work"}
+      description="A kind of work is what someone does for a stretch of their shift: Lifeguard, Swim teacher, Reception, Break."
+      submitLabel={draft.id ? "Save" : "Add"} successMessage="Saved" onOpen={() => setF(draft)} onSuccess={() => router.refresh()}
       submit={() => saveDuty({ name: f.name, departmentId: f.departmentId || null, qualificationTypeId: f.qualificationTypeId || null, color: dutyColor(f.color),
         defaultMinutes: f.defaultMinutes, isBreak: f.isBreak, forClasses: f.forClasses,
         tasks: f.tasks.map((t) => ({ id: t.id, name: t.name })) }, draft.id)}>
@@ -50,18 +50,18 @@ export function DutyDialog({ trigger, draft, departments, qualifications }: { tr
         </Field>
       </div>
       <Tick id="plan-duty-break" label="This is a break" checked={f.isBreak} onChange={(v) => setF((x) => ({ ...x, isBreak: v, forClasses: v ? false : x.forClasses }))} />
-      {f.isBreak ? null : <Tick id="plan-duty-classes" label="Swim classes need this duty (one place each)" checked={f.forClasses} onChange={(v) => set("forClasses", v)} />}
+      {f.isBreak ? null : <Tick id="plan-duty-classes" label="Swim classes need this kind of work (one place each)" checked={f.forClasses} onChange={(v) => set("forClasses", v)} />}
       <fieldset className="flex flex-col gap-3">
-        <legend className="font-semibold">Tasks it can come with</legend>
-        <p className="text-sm text-ui-muted-foreground">Just name them here. On the Day, you choose which ones each person on this duty does, and at what time.</p>
+        <legend className="font-semibold">Positions it can come with</legend>
+        <p className="text-sm text-ui-muted-foreground">Just name them here, such as Chair 1, Roaming, Till or Phones. On the Day, you choose which one each person takes, and from when to when.</p>
         {f.tasks.map((t, i) => (
           <div key={i} className="flex items-end gap-2 [&>*:first-child]:flex-1">
-            <Field label="Task" htmlFor={`plan-task-${i}`}><Input id={`plan-task-${i}`} className="min-h-11" maxLength={80} value={t.name} onChange={(e) => setTask(i, { name: e.target.value })} /></Field>
-            <Button type="button" variant="ghost" size="icon" className="min-h-11 min-w-11" aria-label={`Remove ${t.name || "this task"}`}
+            <Field label="Position" htmlFor={`plan-task-${i}`}><Input id={`plan-task-${i}`} className="min-h-11" maxLength={80} value={t.name} onChange={(e) => setTask(i, { name: e.target.value })} /></Field>
+            <Button type="button" variant="ghost" size="icon" className="min-h-11 min-w-11" aria-label={`Remove ${t.name || "this position"}`}
               onClick={() => set("tasks", f.tasks.filter((_, j) => j !== i))}><Trash2 aria-hidden="true" /></Button>
           </div>
         ))}
-        <div><Button type="button" variant="outline" className="min-h-11" onClick={() => set("tasks", [...f.tasks, { name: "" }])}><Plus aria-hidden="true" />Add a task</Button></div>
+        <div><Button type="button" variant="outline" className="min-h-11" onClick={() => set("tasks", [...f.tasks, { name: "" }])}><Plus aria-hidden="true" />Add a position</Button></div>
       </fieldset>
     </FormDialog>
   );
@@ -81,12 +81,12 @@ export function SessionDialog({ trigger, siteId, today, draft, areas, duties }: 
   const area = areas.find((a) => a.id === f.areaId);
   const toggle = <T,>(list: T[], item: T) => list.includes(item) ? list.filter((x) => x !== item) : [...list, item];
   return (
-    <FormDialog portalClassName={P} trigger={trigger} width="sm:max-w-2xl" title={draft.id ? `Change ${draft.title}` : "Add what's on"}
+    <FormDialog portalClassName={P} trigger={trigger} width="sm:max-w-2xl" title={draft.id ? `Change ${draft.title}` : "Add an activity"}
       description="Something that needs staff: the pool open, a school's lessons, a party. It repeats on the days you choose."
       submitLabel={draft.id ? "Save" : "Add"} successMessage="Saved" onOpen={() => { setF(draft); }} onSuccess={() => router.refresh()}
       submit={() => saveSession({ siteId, title: f.title, areaId: f.areaId || null, lanes: f.lanes, start: f.start, end: f.end, weekdays: f.weekdays,
         firstDay: f.firstDay, lastDay: f.lastDay, skipDays: f.skipDays, note: f.note, needs: f.needs }, draft.id)}>
-      <Field label="What's on" htmlFor="plan-s-title" hint="Pool open, Public swim, Lessons: Example School, Party."><Input id="plan-s-title" required maxLength={80} className="min-h-11" value={f.title} onChange={(e) => set("title", e.target.value)} /></Field>
+      <Field label="Activity" htmlFor="plan-s-title" hint="Pool open, Public swim, Lessons: Example School, Party."><Input id="plan-s-title" required maxLength={80} className="min-h-11" value={f.title} onChange={(e) => set("title", e.target.value)} /></Field>
       <div className="grid gap-4 sm:grid-cols-3">
         <ChoiceField id="plan-s-area" label="Area" value={f.areaId} onChange={(v) => setF((x) => ({ ...x, areaId: v, lanes: [] }))} options={areas} empty="None" optional />
         <TimeField id="plan-s-start" label="From" value={f.start} onChange={(v) => set("start", v ?? 0)} />
@@ -118,13 +118,13 @@ export function SessionDialog({ trigger, siteId, today, draft, areas, duties }: 
         <p className="text-sm text-ui-muted-foreground">Only what this adds: the pool&apos;s own lifeguards go on Pool open, not on each booking.</p>
         {f.needs.map((n, i) => (
           <div key={i} className="flex flex-wrap items-end gap-2 *:min-w-28 [&>*:first-child]:flex-1">
-            <ChoiceField id={`plan-s-need-${i}`} label="Duty" value={n.dutyId} onChange={(v) => set("needs", f.needs.map((x, j) => j === i ? { ...x, dutyId: v } : x))} options={duties} empty="Choose a duty" />
+            <ChoiceField id={`plan-s-need-${i}`} label="Kind of work" value={n.dutyId} onChange={(v) => set("needs", f.needs.map((x, j) => j === i ? { ...x, dutyId: v } : x))} options={duties} empty="Choose a duty" />
             <Field label="How many" htmlFor={`plan-s-count-${i}`}><Input id={`plan-s-count-${i}`} type="number" min={1} max={20} className="min-h-11" value={n.count}
               onChange={(e) => set("needs", f.needs.map((x, j) => j === i ? { ...x, count: Number(e.target.value) || 1 } : x))} /></Field>
             <Button type="button" variant="ghost" size="icon" className="min-h-11 min-w-11" aria-label="Remove this line" onClick={() => set("needs", f.needs.filter((_, j) => j !== i))}><Trash2 aria-hidden="true" /></Button>
           </div>
         ))}
-        <div><Button type="button" variant="outline" className="min-h-11" onClick={() => set("needs", [...f.needs, { dutyId: "", count: 1 }])}><Plus aria-hidden="true" />Add a duty</Button></div>
+        <div><Button type="button" variant="outline" className="min-h-11" onClick={() => set("needs", [...f.needs, { dutyId: "", count: 1 }])}><Plus aria-hidden="true" />Add a kind of work</Button></div>
       </fieldset>
       <Field label="Note" htmlFor="plan-s-note" optional><Textarea id="plan-s-note" rows={2} maxLength={500} value={f.note} onChange={(e) => set("note", e.target.value)} /></Field>
     </FormDialog>
@@ -135,8 +135,8 @@ export function SessionDialog({ trigger, siteId, today, draft, areas, duties }: 
 export function RetireDialog({ kind, id, name }: { kind: "duty" | "session"; id: string; name: string }) {
   const router = useRouter();
   const words = {
-    duty: { title: `Take ${name} off the duties?`, description: "Days already planned keep it. It can't be chosen again.", submit: "Take off", run: () => archiveDuty(id) },
-    session: { title: `Call off ${name} from today?`, description: "Its days so far stay as they were. Anyone planned on it from today keeps the duty, without the session.", submit: "Call off", run: () => cancelSession(id) },
+    duty: { title: `Take ${name} off the kinds of work?`, description: "Days already planned keep it. It can't be chosen again.", submit: "Take off", run: () => archiveDuty(id) },
+    session: { title: `Call off ${name} from today?`, description: "Its days so far stay as they were. Anyone planned on it from today stays on their kind of work, without the activity.", submit: "Call off", run: () => cancelSession(id) },
   }[kind];
   return (
     <FormDialog portalClassName={P} trigger={<Button variant="ghost" className="min-h-11">{kind === "session" ? "Call off" : "Take off"}</Button>} destructive cancelLabel="Keep it"

@@ -168,9 +168,9 @@ export function warningsOf(input: {
     for (let i = 0; i < blocks.length; i++) {
       const b = blocks[i];
       const duty = input.duties.get(b.dutyId);
-      const name = duty?.name ?? "A duty";
+      const name = duty?.name ?? "Work";
       if (b.start < s.start || b.end > s.end) say("outside", `${name} ${clock(b.start)}–${clock(b.end)} runs outside the shift.`);
-      if (blocks.slice(i + 1).some((o) => overlaps(o, b))) say("overlap", `${name} ${clock(b.start)}–${clock(b.end)} overlaps another duty.`);
+      if (blocks.slice(i + 1).some((o) => overlaps(o, b))) say("overlap", `${name} ${clock(b.start)}–${clock(b.end)} overlaps something else they are on.`);
       if (duty?.qualificationTypeId && !duty.isBreak && !input.held(s.userId, duty.qualificationTypeId))
         say("qualification", `${name} needs ${input.qualificationNames.get(duty.qualificationTypeId) ?? "a qualification"}, not held on the day.`);
     }
@@ -178,7 +178,7 @@ export function warningsOf(input: {
       // Only Swim school's own classes: an Academy course has its own trainers' rules.
       if (c.source === SWIM_CLASSES && classDuty?.qualificationTypeId && overlaps(c, s) && !input.held(s.userId, classDuty.qualificationTypeId))
         say("qualification", `Teaching ${c.title} needs ${input.qualificationNames.get(classDuty.qualificationTypeId) ?? "a qualification"}, not held on the day.`);
-      if (blocks.some((b) => overlaps(b, c))) say("class", `Teaching ${c.title} ${clock(c.start)}–${clock(c.end)} during another duty.`);
+      if (blocks.some((b) => overlaps(b, c))) say("class", `Teaching ${c.title} ${clock(c.start)}–${clock(c.end)} during something else they are on.`);
       else if (overlaps(c, s) && (c.start < s.start || c.end > s.end)) say("class", `Teaching ${c.title} ${clock(c.start)}–${clock(c.end)}, past the shift's times.`);
     }
     const owed = breakMinutesOwed(s.end - s.start);

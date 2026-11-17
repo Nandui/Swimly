@@ -109,13 +109,13 @@ Connects: reads commitments and qualifications; person file; shift-change emails
 ### Plan (test)
 *Module `plan` · `/plan/overview` · reach: sites · data: `plan.prisma`*
 
-The rota started again, on test at one site beside Rota ([D17](decisions.md)): shifts first, the duties in them, what's on and the gaps.
+The rota started again, on test at one site beside Rota ([D17](decisions.md)): shifts first, the activities people are on, and the gaps ([D33](decisions.md): what's on and duties are one list, Activities).
 
 | Level | Gives |
 | --- | --- |
 | View | see the plan at their sites |
-| Plan | plan shifts and duties for the departments they belong to, mark people off, and ask staff to cover a gap and choose who does |
-| Manage | plan every department, run today, and keep the duties, areas and what's on |
+| Plan | plan shifts and who is on each activity for the departments they belong to, mark people off, and ask staff to cover a gap and choose who does |
+| Manage | plan every department, run today, and keep the kinds of work, areas and activities |
 
 Connects: reads people, departments, qualifications and the site's areas (Admin › Areas, shared with Classes and Rota); reads swim classes and booked assessments, and plans their teachers and assessors, through Classes' commitments. No Turnfin Me, home card or person file while it is on test. Asking staff to cover a gap reaches them in Google Chat ([D31](decisions.md)): a card in the department's space, answered from Chat at `/api/plan/chat`, once Manage has linked the space in Setup.
 

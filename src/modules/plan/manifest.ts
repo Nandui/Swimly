@@ -10,7 +10,7 @@ export const planModule: ModuleManifest = {
   id: "plan",
   group: "team",
   name: "Plan (test)",
-  description: "Who works when at each site, on which duties, with the gaps in what's on",
+  description: "Who works when at each site, on which activities, with the gaps nobody fills",
   icon: CalendarRange,
   href: "/plan/overview",
   logName: "Plan (test)",
@@ -18,8 +18,8 @@ export const planModule: ModuleManifest = {
     reach: "sites",
     levels: [
       { key: "view", label: "View", help: "See the plan at their sites.", permissions: ["plan.view"] },
-      { key: "plan", label: "Plan", help: "Plan shifts and duties for the departments they belong to, and mark people off.", permissions: ["plan.plan"] },
-      { key: "manage", label: "Manage", help: "Plan every department, run today, and keep the duties, areas and what's on.", permissions: ["plan.manage"] },
+      { key: "plan", label: "Plan", help: "Plan shifts and who is on each activity for the departments they belong to, and mark people off.", permissions: ["plan.plan"] },
+      { key: "manage", label: "Manage", help: "Plan every department, run today, and keep the kinds of work, areas and activities.", permissions: ["plan.manage"] },
     ],
   },
 };

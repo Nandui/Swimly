@@ -12,7 +12,7 @@ export function CopyWeekButton({ siteId, departmentId, week, departmentName }: {
   return (
     <FormDialog portalClassName="turnfin-module" trigger={<Button variant="outline" className="min-h-11"><Copy aria-hidden="true" />Copy last week</Button>}
       title={`Copy last week's ${departmentName} plan?`}
-      description="Each shift moves on a week with its duties. Fills of sessions that no longer run are left out. Anyone marked off, or already planned here that day, is skipped."
+      description="Each shift moves on a week with what the person is on. Anything for an activity that no longer runs is left out. Anyone marked off, or already planned here that day, is skipped."
       submitLabel="Copy last week" successMessage="Last week copied" onSuccess={() => router.refresh()}
       submit={async () => { const result = await copyLastWeek(siteId, departmentId, week); return result.ok ? { ok: true } : result; }}>
       {null}

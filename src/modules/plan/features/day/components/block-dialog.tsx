@@ -33,16 +33,16 @@ export function BlockDialog({ trigger, draft, duties, sessions, who, onDone }: {
   }
   return (
     <FormDialog portalClassName="turnfin-module" trigger={trigger} width="sm:max-w-lg"
-      title={draft.id ? `Change ${who}'s duty` : `Put ${who} on a duty`}
+      title={draft.id ? `Change what ${who} is on` : `Put ${who} on`}
       description="It has to fit inside their shift, and inside the session when it fills one."
-      submitLabel={draft.id ? "Save duty" : "Put on"} successMessage={draft.id ? "Duty saved" : "Duty added"}
+      submitLabel={draft.id ? "Save" : "Put on"} successMessage={draft.id ? "Saved" : "Put on"}
       onOpen={() => setF(draft)} onSuccess={() => { router.refresh(); onDone?.(); }}
       submit={() => saveBlock({ shiftId: f.shiftId, dutyId: f.dutyId, sessionId: f.sessionId, start: f.start, end: f.end,
         tasks: f.tasks.filter((x) => tasks.some((t) => t.id === x.id)) }, draft.id)}>
-      <ChoiceField id="plan-block-duty" label="Duty" value={f.dutyId} onChange={chooseDuty} options={duties} empty="Choose a duty" />
+      <ChoiceField id="plan-block-duty" label="Kind of work" value={f.dutyId} onChange={chooseDuty} options={duties} empty="Choose a kind of work" />
       {fitting.length ? (
-        <ChoiceField id="plan-block-session" label="For" value={f.sessionId ?? ""} onChange={(v) => set("sessionId", v || null)} optional empty="Nothing in particular"
-          options={fitting.map((s) => ({ id: s.id, name: s.title }))} hint="Filling a place on what's on closes its gap." />
+        <ChoiceField id="plan-block-session" label="Activity" value={f.sessionId ?? ""} onChange={(v) => set("sessionId", v || null)} optional empty="No activity"
+          options={fitting.map((s) => ({ id: s.id, name: s.title }))} hint="Filling a place on an activity closes its gap." />
       ) : null}
       <div className="grid grid-cols-2 gap-4">
         <TimeField id="plan-block-start" label="From" value={f.start} onChange={(v) => setSpan({ start: v ?? 0, end: f.end })} />
