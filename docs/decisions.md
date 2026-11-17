@@ -6,6 +6,14 @@ The decisions Turnfin 2.0 stands on, newest first. Each says what was decided, w
 
 ---
 
+### D32 · 17 November 2026 · Plan (test) tries a Day built from what each department needs
+
+Plan (test) gains **Day (new)** (`/plan/day-new`) beside the Day: the same day **one department at a time**, read as **what the department needs** and then **who is in**. The owner's words: "our operations go around the needs of the business". What runs for three hours or more has a line of its own, filled stretch by stretch; bookings and lessons share a line; a duty given by itself is other work; then each person on shift.
+
+**Why:** the Day, area by area, was busy and hard to read, and four mockups that led with people or showed every department at once were too. One department on screen, needs first, was the shape the owner chose.
+
+**Follows:** it is a second view of the same plan: no new tables, the same reads, actions and inspector as the Day, and the same levels. A need belongs to the department its duty belongs to; a duty with no department shows in every department. The Day stays until the owner chooses between them; the one not chosen is then removed (PRODUCT.md, "Modern"). **Agreed but not built:** needs that appear every day without being a session in Setup, picking someone who is not on shift and adding their shift in the same step, a week overview of needs against days, and a quieter mark for a break nobody covers.
+
 ### D31 · 12 November 2026 · Plan (test) asks for cover in Google Chat
 
 When a place on the Day has nobody to fill it, whoever plans that department can **ask staff to cover it in Google Chat**: Turnfin posts the request to the department's Chat space at that site, staff answer **I can cover** or **Can't** from Chat, the planner **chooses** one of the yeses, and Plan puts that person on (a shift for the stretch, or their shift that day grown to take it in, then the duty or the class). A request stops when someone is chosen or the planner stops asking. Staff offer; a planner always decides (owner's choice, same day). Those who can cover wait in a **queue**, in the order they said so, shown on the card and on the Day; the planner assigns from it, usually the first, and may pass over someone the plan warns about (owner, 17 November 2026). Saying no and then yes again goes to the back. A one-off need that is not on the Day yet is added as a one-day session and asked for the same way.

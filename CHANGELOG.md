@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.24.0 · 17 November 2026 · Day (new), one department at a time
+
+- **Plan (test) has a second way to see a day, called Day (new)**, beside the Day. Both show and change the same plan, so you can try the new one without losing anything.
+- **It shows one department at a time.** Pick the department at the top; each one says how many places it still has to fill.
+- **First, what the department needs.** Anything that runs for three hours or more, such as the pool being open, has a line of its own that reads who is on it through the day and where nobody is. Bookings and lessons share one line, and other work is on another.
+- **Then, who is in.** Each person on shift has a line with what they are doing, their breaks and their free time.
+- **Pick any block to change it**, as on the Day: fill a place, put someone on a duty, change a shift or ask staff to cover.
+
 ## 3.23.0 · 17 November 2026 · Cover requests have a queue
 
 - **In Plan (test), people who can cover a gap now wait in a queue**, in the order they pressed **I can cover** in Google Chat. The first to answer is first.
