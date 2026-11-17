@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { lanesInDetail, splitLocation } from "@/lib/setup/lanes";
 import { requirePlanActor } from "@/modules/plan/shared/access";
 import { areasOf, classesAt, dutiesOf, heldOn, offsBetween, peopleFor, qualificationNames, sessionsOf, shiftsAt, shiftsElsewhere } from "@/modules/plan/shared/data";
-import { candidatesFor, fillsOf, gapsOf, laneClashes, needsOf, occurrencesOn, tasksOf, warningsOf } from "@/modules/plan/shared/model";
+import { candidatesFor, fillsOf, gapsOf, laneClashes, needsOf, occurrencesOn, shiftIso, tasksOf, warningsOf } from "@/modules/plan/shared/model";
 import { mayManage, pickSiteId, planSites, plannableDepartments, viewableSite } from "@/modules/plan/shared/scope";
 
 /** The Day: what's on with its gaps, then each person's shift with their duties, breaks, the tasks
@@ -31,6 +31,10 @@ export async function planDay(params: { site?: string; date?: string; dept?: str
     prisma.planCoverRequest.findMany({ where: { orgId: site.orgId, siteId: site.id, date, closedAt: null }, orderBy: { createdAt: "asc" }, include: { offers: { orderBy: { updatedAt: "asc" } } } }),
     prisma.planChatSpace.findMany({ where: { orgId: site.orgId, siteId: site.id }, select: { departmentId: true } }),
   ]);
+  // The days this one could be copied from: the four weeks before it that have shifts on a plan
+  // the person may plan, newest first. Only counts leave here.
+  const copyable = departments.mine.length === 0 ? [] : await prisma.planShift.groupBy({ by: ["date"], _count: { _all: true }, orderBy: { date: "desc" },
+    where: { orgId: site.orgId, siteId: site.id, departmentId: { in: departments.mine.map((d) => d.id) }, date: { gte: shiftIso(date, -28), lt: date } } });
   const answeredIds = [...new Set(asked.flatMap((r) => r.offers.map((o) => o.userId)))];
   const [people, offs, elsewhere, classes, held, answeredBy] = await Promise.all([
     peopleFor(site.orgId, site.id, userIds), offsBetween(site.orgId, date, date), shiftsElsewhere(site.orgId, site.id, userIds, date, date),
@@ -85,6 +89,8 @@ export async function planDay(params: { site?: string; date?: string; dept?: str
     /** The department picked to narrow the people shown, or null for every department. */
     department: departments.all.find((d) => d.id === params.dept) ?? null,
     occurrences, needs, classDutyId: classDuty?.id ?? null,
+    /** Days this one can be copied from, newest first, each with how many shifts it has. */
+    copyDays: copyable.map((d) => ({ date: d.date, shifts: d._count._all })),
     cover, askable: spaces.map((s) => s.departmentId).filter((id) => mine.has(id)),
     clashes: laneClashes(occurrences, new Map(areas.map((a) => [a.id, a.lanes]))),
     shifts: shifts.map((s) => ({

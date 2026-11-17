@@ -3,15 +3,15 @@
 import { revalidatePath } from "next/cache";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { logAudit } from "@/lib/audit";
-import { isDateOnly } from "@/lib/format";
+import { isDateOnly, today } from "@/lib/format";
 import { staffByIds } from "@/lib/directory";
 import { prisma } from "@/lib/prisma";
 import { planCommitment } from "@/modules/contributions";
 import { requirePlanActor } from "@/modules/plan/shared/access";
-import { sessionsOf } from "@/modules/plan/shared/data";
-import { occurrencesOn } from "@/modules/plan/shared/model";
+import { offsBetween, sessionsOf, shiftsAt } from "@/modules/plan/shared/data";
+import { copyDay, occurrencesOn } from "@/modules/plan/shared/model";
 import { blockSchema, clock, firstIssue, sessionDaySchema, type BlockInput, type SessionDayInput } from "@/modules/plan/shared/rules";
-import { mayManage, mayPlanDepartment, viewableSite } from "@/modules/plan/shared/scope";
+import { mayManage, mayPlanDepartment, plannableDepartments, viewableSite } from "@/modules/plan/shared/scope";
 
 /** The Day's writes: put someone on a duty (filling a session's place or not), take them off it,
  *  choose who teaches a class (kept by its own app), and change or call off one day of a session. */
@@ -122,4 +122,39 @@ export async function setSessionDay(input: SessionDayInput & { restore?: boolean
   });
   revalidatePath("/plan", "layout");
   return ok();
+}
+
+/** Copy another day's plan into this one (owner, 16 November 2026: "the option to copy from another
+ *  day should one exist"): the shifts of the departments the person may plan, at the same times,
+ *  with their duties and the tasks chosen for them, and who filled each session that also runs
+ *  this day. Skips people marked off and never touches a shift already on this day. */
+export async function copyDayPlan(siteId: string, from: string, to: string): Promise<ActionResult & { copied?: number }> {
+  const who = await requirePlanActor();
+  if (!isDateOnly(from) || !isDateOnly(to)) return fail("Choose a day to copy.");
+  if (from === to) return fail("Choose another day to copy from.");
+  if (to < today()) return fail("A day that has passed can't be planned.");
+  const site = await viewableSite(siteId);
+  if (!site) return fail("That site is not open.");
+  const mine = new Set((await plannableDepartments(who, site.id, site.orgId)).mine.map((d) => d.id));
+  if (!mine.size) return fail("You can't plan a department at this site.");
+  const [source, here, sessions] = await Promise.all([shiftsAt(site.orgId, site.id, from, from), shiftsAt(site.orgId, site.id, to, to), sessionsOf(site.orgId, site.id, to, to)]);
+  const theirs = source.filter((s) => mine.has(s.departmentId));
+  if (!theirs.length) return fail("That day has no shifts you can copy.");
+  const offs = await offsBetween(site.orgId, to, to, theirs.map((s) => s.userId));
+  const running = new Set(occurrencesOn(sessions, to).map((o) => o.sessionId));
+  const copies = copyDay(theirs, to, { existing: here.map((s) => s.userId), offOn: (userId) => offs.some((o) => o.userId === userId), runsOn: (sessionId) => running.has(sessionId) });
+  if (!copies.length) return fail("Everyone on that day's plan is already planned this day, or marked off.");
+  await prisma.$transaction(async (tx) => {
+    for (const s of copies) {
+      await tx.planShift.create({ data: {
+        orgId: site.orgId, siteId: site.id, departmentId: s.departmentId, userId: s.userId, date: to, startMinutes: s.start, endMinutes: s.end, note: s.note,
+        createdById: who.id, createdByName: who.name,
+        blocks: { create: s.blocks.map((b) => ({ dutyId: b.dutyId, sessionId: b.sessionId, startMinutes: b.start, endMinutes: b.end, taskIds: b.tasks.map((t) => t.id), taskMinutes: b.tasks.map((t) => t.at), taskEndMinutes: b.tasks.map((t) => t.end) })) },
+      } });
+    }
+    await logAudit({ actorId: who.id, actorName: who.name, action: "create", entity: "PlanShift", clubId: site.id,
+      summary: `Copied ${copies.length} shift${copies.length === 1 ? "" : "s"} from ${from} to ${to}` }, tx);
+  });
+  revalidatePath("/plan", "layout");
+  return { ok: true, copied: copies.length };
 }

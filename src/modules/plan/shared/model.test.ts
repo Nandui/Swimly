@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
-  breakMinutesOwed, candidatesFor, copyWeek, fillsOf, gapsOf, laneClashes, mondayOf, needsOf, occurrencesOn, tasksOf, warningsOf, weekdayOfIso, whatsOnRows,
+  breakMinutesOwed, candidatesFor, copyDay, copyWeek, fillsOf, gapsOf, laneClashes, mondayOf, needsOf, occurrencesOn, tasksOf, warningsOf, weekdayOfIso, whatsOnRows,
   type Block, type ClassItem, type DutyRef, type SessionDef, type Shift,
 } from "./model";
 
@@ -143,6 +143,16 @@ test("copying a week moves shifts on seven days, keeps fills of sessions still r
   ];
   const copied = copyWeek(last, { existing: [{ userId: "c", date: "2026-11-06" }], offOn: (u) => u === "b", runsOn: (id) => id !== "school" });
   assert.deepEqual(copied.map((s) => [s.userId, s.date, s.blocks.map((b) => b.id)]), [["a", THU, ["own"]]]);
+});
+
+test("copying a day keeps the times and the fills of sessions that run that day, skips the off and the already planned", () => {
+  const from = [
+    shift({ id: "1", userId: "a", date: "2026-10-29", blocks: [block({ sessionId: "school" }), block({ id: "own", sessionId: null })] }),
+    shift({ id: "2", userId: "b", date: "2026-10-29" }),
+    shift({ id: "3", userId: "c", date: "2026-10-29" }),
+  ];
+  const copied = copyDay(from, "2026-11-03", { existing: ["c"], offOn: (u) => u === "b", runsOn: (id) => id !== "school" });
+  assert.deepEqual(copied.map((s) => [s.userId, s.date, s.start, s.blocks.map((b) => b.id)]), [["a", "2026-11-03", from[0].start, ["own"]]]);
 });
 
 /** What's on's rows: a pool of three lanes with a part, a gym with neither, and a place no area matches. */

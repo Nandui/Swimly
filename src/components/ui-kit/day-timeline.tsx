@@ -46,7 +46,7 @@ export type DayTimelineLane = { key: string; label: string; under?: string };
  *  own within their lane, as Calendar stacks them, so no two are ever drawn over each other. Lanes
  *  can be grouped (`under`): the group's own lane first, its parts beneath, and a block that takes
  *  several of them grows to fill them (owner, 11 November 2026). */
-export function DayTimeline({ from, to, now, nowLabel, hours, lanes, blocks, label, onSelect, selected = null }: {
+export function DayTimeline({ from, to, now, nowLabel, hours, lanes, blocks, label, onSelect, selected = null, labels }: {
   from: number;
   to: number;
   now: number;
@@ -59,6 +59,8 @@ export function DayTimeline({ from, to, now, nowLabel, hours, lanes, blocks, lab
   label: string;
   onSelect?: (key: string) => void;
   selected?: string | null;
+  /** "wide" gives the lane names room for a person's whole name. */
+  labels?: "wide";
 }) {
   const span = Math.max(1, to - from);
   const at = (minutes: number) => (minutes - from) / span;
@@ -92,7 +94,7 @@ export function DayTimeline({ from, to, now, nowLabel, hours, lanes, blocks, lab
     );
   };
   return (
-    <div role="group" aria-label={label} className="day-tl">
+    <div role="group" aria-label={label} className="day-tl" data-labels={labels}>
       <span aria-hidden="true" className="day-tl-corner" />
       <div aria-hidden="true" className="day-tl-axis">
         {hours.map((hour, index) => (

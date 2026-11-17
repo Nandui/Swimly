@@ -147,11 +147,13 @@ test("call-offs: a text is never on time and is a strike; strikes climb the ladd
   as("dm", [], [at(bishopstown, ["staffing.run"])]);
   const day = today();
   const make = (name: string) => fixture.prisma.staffingShift.create({ data: { orgId: ORG, siteId: bishopstown, blockId, date: new Date(`${addDaysIso(day, 2)}T00:00:00Z`), startMin: 960, endMin: 1080, role: "teaching", name, userId: "bea" } });
+  // The calls were made yesterday morning: a call "today at 08:00" is in the future before 8 AM and is refused.
+  const called = addDaysIso(day, -1);
   const first = await make("First");
-  assert.equal((await todayActions.logAttendance(first.id, { kind: "call_off", calledOn: day, calledAt: "08:00", method: "phone", reason: "sick" })).ok, true);
+  assert.equal((await todayActions.logAttendance(first.id, { kind: "call_off", calledOn: called, calledAt: "08:00", method: "phone", reason: "sick" })).ok, true);
   assert.equal(await fixture.prisma.staffingStrike.count({ where: { userId: "bea" } }), 0, "a properly reported sick day is not a strike");
   const second = await make("Second");
-  assert.equal((await todayActions.logAttendance(second.id, { kind: "call_off", calledOn: day, calledAt: "08:00", method: "text", reason: "sick" })).ok, true);
+  assert.equal((await todayActions.logAttendance(second.id, { kind: "call_off", calledOn: called, calledAt: "08:00", method: "text", reason: "sick" })).ok, true);
   const third = await make("Third");
   assert.equal((await todayActions.logAttendance(third.id, { kind: "late", minutesLate: 75, sentHome: true })).ok, true);
   const bea = await fixture.prisma.staffingStrike.findMany({ where: { userId: "bea" }, orderBy: { number: "asc" } });
@@ -170,12 +172,13 @@ test("call-offs: a text is never on time and is a strike; strikes climb the ladd
 test("an exam absence after the season's deadline is approved, unpaid, with a strike; without a notice it is refused", async () => {
   as("sup", [], [at(bishopstown, ["staffing.supervise"])]);
   const exam = await fixture.prisma.staffingShift.create({ data: { orgId: ORG, siteId: bishopstown, blockId, date: new Date("2026-12-08T00:00:00Z"), startMin: 615, endMin: 795, role: "teaching", name: "Exam day", userId: "ann" } });
-  // Asked today with the notice: on time until the UCC winter deadline (16 November), late after it.
+  // Asked on 4 November with the notice, before the UCC winter deadline (16 November): on time,
+  // whatever day the test runs, because the day asked is what counts.
   const asked = await requests.recordExamAbsence(exam.id, { requestedOn: "2026-11-04", requestedTime: "09:00", noticeSentOn: "2026-10-20" });
   assert.equal(asked.ok, true);
   const row = await fixture.prisma.staffingExamAbsence.findFirstOrThrow({ where: { shiftId: exam.id } });
   assert.equal(row.status, "approved");
-  assert.equal(row.outcome, today() <= "2026-11-16" ? "on_time" : "late_notice");
+  assert.equal(row.outcome, "on_time");
   assert.equal((await fixture.prisma.staffingShift.findUniqueOrThrow({ where: { id: exam.id } })).status, "absent_approved");
   const none = await fixture.prisma.staffingShift.create({ data: { orgId: ORG, siteId: bishopstown, blockId, date: new Date("2026-12-09T00:00:00Z"), startMin: 615, endMin: 795, role: "teaching", name: "No notice", userId: "ann" } });
   assert.equal((await requests.recordExamAbsence(none.id, { requestedOn: "2026-11-04", requestedTime: "09:00", noticeSentOn: null })).ok, true);

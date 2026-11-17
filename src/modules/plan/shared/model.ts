@@ -296,3 +296,15 @@ export function copyWeek<S extends Shift>(last: readonly S[], input: { existing:
     return [{ ...s, date, blocks: s.blocks.filter((b) => !b.sessionId || input.runsOn(b.sessionId, date)) }];
   });
 }
+
+/** One day's shifts copied to another day: each shift at the same times with its blocks (session
+ *  fills only where that session runs on the new day), skipping people marked off then and anyone
+ *  who already has a shift on the plan that day. */
+export function copyDay<S extends Shift>(from: readonly S[], date: string, input: { existing: readonly string[]; offOn: (userId: string) => boolean; runsOn: (sessionId: string) => boolean }) {
+  const taken = new Set(input.existing);
+  return from.flatMap((s) => {
+    if (taken.has(s.userId) || input.offOn(s.userId)) return [];
+    taken.add(s.userId);
+    return [{ ...s, date, blocks: s.blocks.filter((b) => !b.sessionId || input.runsOn(b.sessionId)) }];
+  });
+}
