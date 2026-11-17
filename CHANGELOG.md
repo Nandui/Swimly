@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.26.0 · 17 November 2026 · Everything someone is on is an activity
+
+- **In Plan (test), you now put someone on an activity**, or on a break. You no longer pick a kind of work by itself: choose what they are on from the day's activities.
+- **Adding an activity is one form.** Give it a name, where and when, and the one kind of work it needs with how many people.
+- **If the kind of work is not on the list, make it there and then**: choose "A new kind of work", name it and pick its department. Set its qualification later under Kinds of work.
+- **Work that used to be given by itself, such as pool checks, is added as an activity** in Set up. It then shows on the Day as needing someone until somebody is on it.
+- Anything already planned stays as it is. An activity made earlier with two kinds of work keeps both.
+
 ## 3.25.0 · 17 November 2026 · Plan (test) says Activities
 
 - **In Plan (test), "What's on" is now called Activities.** Anything that needs staff at a time is an activity: the pool being open, a lesson block, a booking.

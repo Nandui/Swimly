@@ -10,7 +10,7 @@ import { planCommitment } from "@/modules/contributions";
 import { requirePlanActor } from "@/modules/plan/shared/access";
 import { offsBetween, sessionsOf, shiftsAt } from "@/modules/plan/shared/data";
 import { copyDay, occurrencesOn } from "@/modules/plan/shared/model";
-import { blockSchema, clock, firstIssue, sessionDaySchema, type BlockInput, type SessionDayInput } from "@/modules/plan/shared/rules";
+import { blockSchema, clock, firstIssue, sessionDaySchema, type BlockInput, type SessionDayInput, mayStandAlone } from "@/modules/plan/shared/rules";
 import { mayManage, mayPlanDepartment, plannableDepartments, viewableSite } from "@/modules/plan/shared/scope";
 
 /** The Day's writes: put someone on a duty (filling a session's place or not), take them off it,
@@ -32,6 +32,11 @@ export async function saveBlock(input: BlockInput, id?: string): Promise<ActionR
   if (v.start < shift.startMinutes || v.end > shift.endMinutes) return fail(`Keep it inside the shift, ${clock(shift.startMinutes)} to ${clock(shift.endMinutes)}, or change the shift first.`);
   const duty = await prisma.planDuty.findFirst({ where: { id: v.dutyId, orgId: site.orgId, archivedAt: null }, include: { tasks: { orderBy: { sortOrder: "asc" } } } });
   if (!duty) return fail("That kind of work is no longer on the list.");
+  // Work belongs to an activity (D33): only a break stands by itself, and a block that already did.
+  if (!v.sessionId) {
+    const before = id ? await prisma.planBlock.findFirst({ where: { id, shiftId: shift.id }, select: { sessionId: true } }) : null;
+    if (!mayStandAlone({ isBreak: duty.isBreak, before })) return fail("Choose the activity they are on. If it isn't on the list, a manager adds it in Setup.");
+  }
   // The tasks chosen for it come from the duty's own list in Setup; each runs for a stretch inside
   // the block, set here on the Day.
   const tasks = v.tasks.flatMap((t) => { const task = duty.tasks.find((x) => x.id === t.id); return task ? [{ id: task.id, name: task.name, at: t.at, end: t.end }] : []; })
@@ -43,7 +48,7 @@ export async function saveBlock(input: BlockInput, id?: string): Promise<ActionR
   if (v.sessionId) {
     const [session] = (await sessionsOf(site.orgId, site.id, shift.date, shift.date)).filter((s) => s.id === v.sessionId);
     const on = session ? occurrencesOn([session], shift.date)[0] : null;
-    if (!session || !on) return fail("That session isn't on that day.");
+    if (!session || !on) return fail("That activity isn't on that day.");
     if (duty.isBreak || !session.needs.some((n) => n.dutyId === duty.id)) return fail(`${session.title} doesn't need ${duty.name}.`);
     if (v.start < on.start || v.end > on.end) return fail(`${session.title} runs ${clock(on.start)} to ${clock(on.end)}; keep it inside that.`);
     sessionTitle = session.title;
