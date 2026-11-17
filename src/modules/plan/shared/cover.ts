@@ -45,7 +45,14 @@ export function shiftCovering(shift: Span | null, span: Span): Span & { changed:
   return { start, end, changed: start !== shift.start || end !== shift.end };
 }
 
-/** How many said yes and no, for one line: "2 can cover · 1 can't". */
+/** A place in the queue, in words: "1st", "2nd", "3rd", "11th". People who can cover wait in the
+ *  order they said so (owner, 17 November 2026); whoever plans the department assigns from it. */
+export function queuePlace(n: number): string {
+  const tens = n % 100, ones = n % 10;
+  return `${n}${tens >= 11 && tens <= 13 ? "th" : ones === 1 ? "st" : ones === 2 ? "nd" : ones === 3 ? "rd" : "th"}`;
+}
+
+/** How many said yes and no, for one line: "2 in the queue · 1 can't". */
 export function offerCounts(offers: readonly { answer: string }[]) {
   const yes = offers.filter((o) => o.answer === "yes").length;
   return { yes, no: offers.length - yes };
@@ -53,5 +60,5 @@ export function offerCounts(offers: readonly { answer: string }[]) {
 export function offerLine(offers: readonly { answer: string }[]): string {
   const { yes, no } = offerCounts(offers);
   if (!yes && !no) return "No answers yet";
-  return [yes ? `${yes} can cover` : null, no ? `${no} can't` : null].filter(Boolean).join(" · ");
+  return [yes ? `${yes} in the queue` : null, no ? `${no} can't` : null].filter(Boolean).join(" · ");
 }

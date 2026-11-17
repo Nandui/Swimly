@@ -145,14 +145,14 @@ const click = (requestId: string, answer: string, email: string, message = "spac
     common: { invokedFunction: "plan.cover.answer", parameters: { request: requestId, answer } } }),
 }));
 
-test("a click in Google Chat is that person's answer, matched by email; the card then names who can cover", async () => {
+test("a click in Google Chat is that person's answer, matched by email; the card then shows the queue", async () => {
   const { id } = await fixture.prisma.planCoverRequest.findFirstOrThrow();
   chat.signed = false;
   assert.equal((await click(id, "yes", "cal@example.invalid")).status, 401, "anything Google did not sign is refused");
   chat.signed = true;
   const said = await (await click(id, "yes", "CAL@example.invalid")).json();
   assert.equal(said.actionResponse.type, "UPDATE_MESSAGE");
-  assert.match(widgets(said), /Can cover: cal/);
+  assert.match(widgets(said), /In the queue: 1\. cal/);
   const stranger = await (await click(id, "yes", "who@example.invalid")).json();
   assert.equal(stranger.privateMessageViewer.name, "users/1", "only they see it");
   assert.match(stranger.text, /couldn't find your Turnfin account/);
@@ -182,17 +182,32 @@ test("people answer yes or no; the latest answer is kept, and the same answer tw
   assert.equal(audit[0].module, "Plan (test)");
 });
 
-test("the Day shows the request with its answers, by name, and who may choose", async () => {
+test("the Day shows the request with its queue, first to answer first, and who may assign", async () => {
   as("sup", ["plan.plan"]);
   const data = await day.planDay({ site, date: DAY });
   assert.ok(data.site);
   assert.deepEqual(data.askable, ["d-pool"]);
   const [request] = data.cover;
   assert.deepEqual([request.needKey, request.department, request.canChoose, request.note], [KEY, "Pool", true, "Report to the duty manager"]);
-  assert.deepEqual(request.answers, [
-    { userId: "ann", name: "ann", answer: "yes", qualified: true, off: false, shift: null },
-    { userId: "bea", name: "bea", answer: "no", qualified: true, off: false, shift: null },
+  assert.deepEqual(request.answers.map(({ at, ...rest }) => rest), [
+    { userId: "ann", name: "ann", answer: "yes", place: 1, qualified: true, off: false, shift: null },
+    { userId: "bea", name: "bea", answer: "no", place: null, qualified: true, off: false, shift: null },
   ]);
+  assert.ok(request.answers.every((a) => a.at.length > 0), "each answer says when it was given");
+  // Cal says yes after Ann, so is second; saying no and yes again goes to the back, behind anyone since.
+  const { id } = await fixture.prisma.planCoverRequest.findFirstOrThrow();
+  await offers.recordCoverAnswer({ requestId: id, userId: "cal", answer: "yes", via: "chat" });
+  const queued = (await day.planDay({ site, date: DAY }));
+  assert.ok(queued.site);
+  assert.deepEqual(queued.cover[0].answers.filter((a) => a.place).map((a) => `${a.place} ${a.userId}`), ["1 ann", "2 cal"]);
+  await offers.recordCoverAnswer({ requestId: id, userId: "ann", answer: "no", via: "chat" });
+  await offers.recordCoverAnswer({ requestId: id, userId: "ann", answer: "yes", via: "chat" });
+  const again = (await day.planDay({ site, date: DAY }));
+  assert.ok(again.site);
+  assert.deepEqual(again.cover[0].answers.filter((a) => a.place).map((a) => `${a.place} ${a.userId}`), ["1 cal", "2 ann"]);
+  assert.match(widgets(chat.posted[0].message), /Nobody has answered yet/, "the first card is as it was posted");
+  await fixture.prisma.planCoverOffer.deleteMany({ where: { userId: "cal" } });
+  await fixture.prisma.auditLog.deleteMany({ where: { entity: "PlanCoverOffer", actorId: { in: ["cal"] } } });
   as("viewer", ["plan.view"]);
   const seen = await day.planDay({ site, date: DAY });
   assert.ok(seen.site);

@@ -17,7 +17,7 @@ export type CoverCardInput = {
   end: number;
   note: string;
   askedByName: string;
-  /** The people who said they can cover, in the order they answered. */
+  /** The queue: the people who said they can cover, in the order they answered. */
   canCover: string[];
   /** Null while open. */
   outcome: "filled" | "stopped" | null;
@@ -26,11 +26,11 @@ export type CoverCardInput = {
 
 const firstName = (name: string) => name.trim().split(/\s+/)[0] || name;
 
-/** The one line under the buttons: who can cover so far, or how it ended. */
+/** The one line under the buttons: the queue so far, first to answer first, or how it ended. */
 export function coverStatus(card: Pick<CoverCardInput, "canCover" | "outcome" | "chosenName">): string {
   if (card.outcome === "filled") return `Covered by ${card.chosenName ?? "someone"}. Thank you.`;
   if (card.outcome === "stopped") return "No longer needed.";
-  return card.canCover.length ? `Can cover: ${card.canCover.map(firstName).join(", ")}` : "Nobody has answered yet.";
+  return card.canCover.length ? `In the queue: ${card.canCover.map((name, i) => `${i + 1}. ${firstName(name)}`).join(", ")}` : "Nobody has answered yet.";
 }
 
 /** The line of text Chat shows in a notification, where a card can't be seen. */

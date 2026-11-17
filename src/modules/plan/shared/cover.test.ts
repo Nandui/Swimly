@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { coverAskSchema, offerLine, openRequestFor, shiftCovering, stillToCover } from "@/modules/plan/shared/cover";
+import { coverAskSchema, offerLine, openRequestFor, queuePlace, shiftCovering, stillToCover } from "@/modules/plan/shared/cover";
 
 const h = (n: number) => n * 60;
 
@@ -25,8 +25,12 @@ test("a chosen person's shift takes the stretch in: new, grown, or left alone", 
 
 test("answers read as one line", () => {
   assert.equal(offerLine([]), "No answers yet");
-  assert.equal(offerLine([{ answer: "yes" }, { answer: "yes" }, { answer: "no" }]), "2 can cover · 1 can't");
+  assert.equal(offerLine([{ answer: "yes" }, { answer: "yes" }, { answer: "no" }]), "2 in the queue · 1 can't");
   assert.equal(offerLine([{ answer: "no" }]), "1 can't");
+});
+
+test("a place in the queue reads as people say it", () => {
+  assert.deepEqual([1, 2, 3, 4, 11, 12, 13, 21, 22, 103].map(queuePlace), ["1st", "2nd", "3rd", "4th", "11th", "12th", "13th", "21st", "22nd", "103rd"]);
 });
 
 test("asking needs a day, a need and a stretch that ends after it starts", () => {
