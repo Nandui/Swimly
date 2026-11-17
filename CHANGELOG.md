@@ -11,6 +11,11 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - **The message in Google Chat shows the queue too**, such as "In the queue: 1. Ana, 2. Ben", so everyone can see where they stand.
 - Someone who presses **Can't** and later **I can cover** joins the back of the queue.
 
+## 3.22.1 · 17 November 2026 · See the password you typed
+
+- **Password boxes now have an eye button at the end.** Press it to see what you typed, and press it again to hide it. It is on the sign-in page, on **Change your password** in your Account, and wherever Turnfin asks you to confirm your password.
+- PIN boxes stay hidden, because PINs are typed on shared work devices with people nearby.
+
 ## 3.22.0 · 17 November 2026 · The Day, area by area
 
 - **In Plan (test), the Day is now one timeline instead of two.** Each area has its own heading. Under it you see what's on there, a **Needs someone** line where nobody is on yet, and a line for each person working in that area.
