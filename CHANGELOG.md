@@ -4,6 +4,11 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.22.1 · 17 November 2026 · See the password you typed
+
+- **Password boxes now have an eye button at the end.** Press it to see what you typed, and press it again to hide it. It is on the sign-in page, on **Change your password** in your Account, and wherever Turnfin asks you to confirm your password.
+- PIN boxes stay hidden, because PINs are typed on shared work devices with people nearby.
+
 ## 3.22.0 · 17 November 2026 · The Day, area by area
 
 - **In Plan (test), the Day is now one timeline instead of two.** Each area has its own heading. Under it you see what's on there, a **Needs someone** line where nobody is on yet, and a line for each person working in that area.
