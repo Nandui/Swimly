@@ -11,7 +11,7 @@ import { liveQualificationTypeById } from "@/lib/qualifications";
 import { prisma } from "@/lib/prisma";
 import { requirePlanActor } from "@/modules/plan/shared/access";
 import { shiftIso } from "@/modules/plan/shared/model";
-import { dutySchema, firstIssue, sessionSchema, type DutyInput, type SessionInput } from "@/modules/plan/shared/rules";
+import { dutySchema, firstIssue, kindsOfWorkProblem, sessionSchema, type DutyInput, type SessionInput } from "@/modules/plan/shared/rules";
 import { mayManage, viewableSite } from "@/modules/plan/shared/scope";
 
 /** Setup's writes, Manage only: duties (the organisation's) and sessions (a site's). Areas are
@@ -78,7 +78,8 @@ export async function archiveDuty(id: string): Promise<ActionResult> {
   return ok();
 }
 
-/** Add or change a session: what's on, where, when it repeats and the duties it needs. */
+/** Add or change a session (an activity): where, when it repeats and the one kind of work it needs
+ *  (D33), which can be made here with it. */
 export async function saveSession(input: SessionInput, id?: string): Promise<ActionResult> {
   const who = await requirePlanActor();
   const parsed = sessionSchema.safeParse(input);
@@ -93,13 +94,24 @@ export async function saveSession(input: SessionInput, id?: string): Promise<Act
   } else if (v.lanes.length) return fail("Choose the area before its lanes.");
   const duties = await prisma.planDuty.findMany({ where: { orgId: site.orgId, archivedAt: null, id: { in: v.needs.map((n) => n.dutyId) } } });
   if (duties.length !== v.needs.length || duties.some((d) => d.isBreak)) return fail("Each line needs a kind of work from the list, and a break can't be one.");
+  if (v.newDuty?.departmentId && !(await departmentById(v.newDuty.departmentId, site.orgId))) return fail("That department is no longer open.");
   const skipDays = [...new Set(v.skipDays)].filter((d) => d >= v.firstDay && d <= v.lastDay).sort();
   const result = await prisma.$transaction(async (tx) => {
-    const existing = id ? await tx.planSession.findFirst({ where: { id, orgId: site.orgId, siteId: site.id, cancelledAt: null } }) : null;
-    if (id && !existing) return fail("That session no longer exists.");
+    const existing = id ? await tx.planSession.findFirst({ where: { id, orgId: site.orgId, siteId: site.id, cancelledAt: null }, include: { needs: { select: { id: true } } } }) : null;
+    if (id && !existing) return fail("That activity no longer exists.");
+    const problem = kindsOfWorkProblem(v.needs.length + (v.newDuty ? 1 : 0), existing ? existing.needs.length : null);
+    if (problem) return fail(problem);
+    const lines = v.needs.map((n) => ({ dutyId: n.dutyId, count: n.count }));
+    if (v.newDuty) {
+      const twin = await tx.planDuty.findFirst({ where: { orgId: site.orgId, archivedAt: null, name: { equals: v.newDuty.name, mode: "insensitive" } } });
+      if (twin) return fail(`There is already a kind of work called ${twin.name}. Choose it from the list.`);
+      const made = await tx.planDuty.create({ data: { orgId: site.orgId, name: v.newDuty.name, departmentId: v.newDuty.departmentId } });
+      await logAudit({ actorId: who.id, actorName: who.name, action: "create", entity: "PlanDuty", entityId: made.id, clubId: null, summary: `Added the kind of work ${made.name}, with ${v.title}` }, tx);
+      lines.push({ dutyId: made.id, count: v.newDuty.count });
+    }
     const data = { title: v.title, siteAreaId: v.areaId, lanes: [...new Set(v.lanes)].sort((a, b) => a - b), startMinutes: v.start, endMinutes: v.end,
       weekdays: [...new Set(v.weekdays)].sort(), firstDay: v.firstDay, lastDay: v.lastDay, skipDays, note: v.note };
-    const needs = { create: v.needs.map((n) => ({ dutyId: n.dutyId, count: n.count })) };
+    const needs = { create: lines };
     const row = existing
       ? await tx.planSession.update({ where: { id: existing.id }, data: { ...data, needs: { deleteMany: {}, ...needs } } })
       : await tx.planSession.create({ data: { ...data, orgId: site.orgId, siteId: site.id, createdById: who.id, createdByName: who.name, needs } });

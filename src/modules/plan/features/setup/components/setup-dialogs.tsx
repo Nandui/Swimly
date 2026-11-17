@@ -70,22 +70,32 @@ export function DutyDialog({ trigger, draft, departments, qualifications }: { tr
 export type SessionDraft = { id?: string; title: string; areaId: string; lanes: number[]; start: number; end: number; weekdays: number[];
   firstDay: string; lastDay: string; skipDays: string[]; note: string; needs: { dutyId: string; count: number }[] };
 
-/** Add or change what's on: where, when it repeats, the days it doesn't run, and the duties it needs.
- *  Sessions on the same area add up, so a booking lists only the staff it adds. */
-export function SessionDialog({ trigger, siteId, today, draft, areas, duties }: {
-  trigger: React.ReactNode; siteId: string; today: string; draft: SessionDraft; areas: (Ref & { lanes: number })[]; duties: Ref[];
+/** A new activity starts with its one line, empty. */
+const opened = (draft: SessionDraft): SessionDraft => (draft.id || draft.needs.length ? draft : { ...draft, needs: [{ dutyId: "", count: 1 }] });
+const NEW_KIND = "new";
+const noKind = { name: "", departmentId: "" };
+
+/** Add or change an activity: where, when it repeats, the days it doesn't run, and the one kind of
+ *  work it needs, with how many (D33). The kind of work can be made here, by name, when it is not
+ *  on the list yet. Activities on the same area add up, so a booking lists only the staff it adds.
+ *  One made before the rule keeps its lines, and can lose them, but gains no more. */
+export function SessionDialog({ trigger, siteId, today, draft, areas, duties, departments }: {
+  trigger: React.ReactNode; siteId: string; today: string; draft: SessionDraft; areas: (Ref & { lanes: number })[]; duties: Ref[]; departments: Ref[];
 }) {
   const router = useRouter();
-  const [f, setF] = useState(draft);
+  const [f, setF] = useState(() => opened(draft));
+  const [kind, setKind] = useState(noKind);
+  const making = f.needs.length === 1 && f.needs[0].dutyId === NEW_KIND;
   const set = <K extends keyof SessionDraft>(key: K, value: SessionDraft[K]) => setF((x) => ({ ...x, [key]: value }));
   const area = areas.find((a) => a.id === f.areaId);
   const toggle = <T,>(list: T[], item: T) => list.includes(item) ? list.filter((x) => x !== item) : [...list, item];
   return (
     <FormDialog portalClassName={P} trigger={trigger} width="sm:max-w-2xl" title={draft.id ? `Change ${draft.title}` : "Add an activity"}
       description="Something that needs staff: the pool open, a school's lessons, a party. It repeats on the days you choose."
-      submitLabel={draft.id ? "Save" : "Add"} successMessage="Saved" onOpen={() => { setF(draft); }} onSuccess={() => router.refresh()}
+      submitLabel={draft.id ? "Save" : "Add"} successMessage="Saved" onOpen={() => { setF(opened(draft)); setKind(noKind); }} onSuccess={() => router.refresh()}
       submit={() => saveSession({ siteId, title: f.title, areaId: f.areaId || null, lanes: f.lanes, start: f.start, end: f.end, weekdays: f.weekdays,
-        firstDay: f.firstDay, lastDay: f.lastDay, skipDays: f.skipDays, note: f.note, needs: f.needs }, draft.id)}>
+        firstDay: f.firstDay, lastDay: f.lastDay, skipDays: f.skipDays, note: f.note, needs: making ? [] : f.needs,
+        newDuty: making ? { name: kind.name, departmentId: kind.departmentId || null, count: f.needs[0].count } : null }, draft.id)}>
       <Field label="Activity" htmlFor="plan-s-title" hint="Pool open, Public swim, Lessons: Example School, Party."><Input id="plan-s-title" required maxLength={80} className="min-h-11" value={f.title} onChange={(e) => set("title", e.target.value)} /></Field>
       <div className="grid gap-4 sm:grid-cols-3">
         <ChoiceField id="plan-s-area" label="Area" value={f.areaId} onChange={(v) => setF((x) => ({ ...x, areaId: v, lanes: [] }))} options={areas} empty="None" optional />
@@ -114,17 +124,24 @@ export function SessionDialog({ trigger, siteId, today, draft, areas, duties }: 
         <SkipDaysCalendar firstDay={f.firstDay} lastDay={f.lastDay} weekdays={f.weekdays} skipDays={f.skipDays} today={today} onChange={(v) => set("skipDays", v)} />
       </fieldset>
       <fieldset className="flex flex-col gap-2">
-        <legend className="font-semibold">Staff it needs the whole time</legend>
+        <legend className="font-semibold">Who it needs the whole time</legend>
         <p className="text-sm text-ui-muted-foreground">Only what this adds: the pool&apos;s own lifeguards go on Pool open, not on each booking.</p>
         {f.needs.map((n, i) => (
           <div key={i} className="flex flex-wrap items-end gap-2 *:min-w-28 [&>*:first-child]:flex-1">
-            <ChoiceField id={`plan-s-need-${i}`} label="Kind of work" value={n.dutyId} onChange={(v) => set("needs", f.needs.map((x, j) => j === i ? { ...x, dutyId: v } : x))} options={duties} empty="Choose a duty" />
+            <ChoiceField id={`plan-s-need-${i}`} label="Kind of work" value={n.dutyId} onChange={(v) => set("needs", f.needs.map((x, j) => j === i ? { ...x, dutyId: v } : x))} options={f.needs.length === 1 ? [...duties, { id: NEW_KIND, name: "A new kind of work" }] : duties} empty="Choose a kind of work" />
             <Field label="How many" htmlFor={`plan-s-count-${i}`}><Input id={`plan-s-count-${i}`} type="number" min={1} max={20} className="min-h-11" value={n.count}
               onChange={(e) => set("needs", f.needs.map((x, j) => j === i ? { ...x, count: Number(e.target.value) || 1 } : x))} /></Field>
-            <Button type="button" variant="ghost" size="icon" className="min-h-11 min-w-11" aria-label="Remove this line" onClick={() => set("needs", f.needs.filter((_, j) => j !== i))}><Trash2 aria-hidden="true" /></Button>
+            {f.needs.length > 1 ? <Button type="button" variant="ghost" size="icon" className="min-h-11 min-w-11" aria-label="Remove this line" onClick={() => set("needs", f.needs.filter((_, j) => j !== i))}><Trash2 aria-hidden="true" /></Button> : null}
           </div>
         ))}
-        <div><Button type="button" variant="outline" className="min-h-11" onClick={() => set("needs", [...f.needs, { dutyId: "", count: 1 }])}><Plus aria-hidden="true" />Add a kind of work</Button></div>
+        {making ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Name of the new kind of work" htmlFor="plan-s-kind-name" hint="Lifeguard, Receptionist, Pool checks."><Input id="plan-s-kind-name" required maxLength={60} className="min-h-11" value={kind.name} onChange={(e) => setKind((k) => ({ ...k, name: e.target.value }))} /></Field>
+            <ChoiceField id="plan-s-kind-dept" label="Department" value={kind.departmentId} onChange={(v) => setKind((k) => ({ ...k, departmentId: v }))} options={departments} empty="Any department" optional
+              hint="Its qualification, colour and positions are set under Kinds of work." />
+          </div>
+        ) : null}
+        {f.needs.length > 1 ? <p className="text-sm text-ui-muted-foreground">An activity now names one kind of work. This one was made before that, so it keeps its lines; you can take one off, but not add another.</p> : null}
       </fieldset>
       <Field label="Note" htmlFor="plan-s-note" optional><Textarea id="plan-s-note" rows={2} maxLength={500} value={f.note} onChange={(e) => set("note", e.target.value)} /></Field>
     </FormDialog>
