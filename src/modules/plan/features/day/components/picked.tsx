@@ -74,7 +74,7 @@ export function useDayInspector(data: PlanDayData) {
   const giveTasks = (block: { id: string; shiftId: string; dutyId: string; sessionId: string | null; start: number; end: number }, tasks: BlockTask[]) => start(async () => {
     const result = await saveBlock({ shiftId: block.shiftId, dutyId: block.dutyId, sessionId: block.sessionId, start: block.start, end: block.end, tasks }, block.id);
     if (!result.ok) { toast.error(result.error ?? "That didn't save."); return; }
-    toast.success("Tasks saved"); router.refresh();
+    toast.success("Positions saved"); router.refresh();
   });
 
   const pickedKey = !picked ? null : picked.kind === "item" ? `item|${picked.key}` : picked.kind === "gap" ? `gap|${picked.needKey}|${picked.index}`
@@ -89,8 +89,8 @@ export function useDayInspector(data: PlanDayData) {
         body: (
           <div className="flex flex-col gap-(--space-5)">
             {item.needs.map((n) => (
-              <section key={n.key} aria-label={duty(n.dutyId)?.name ?? "Duty"} className="flex flex-col gap-1">
-                <h3 className="font-semibold">{duty(n.dutyId)?.name ?? "Duty"}{n.count > 1 ? ` × ${n.count}` : ""}</h3>
+              <section key={n.key} aria-label={duty(n.dutyId)?.name ?? "Work"} className="flex flex-col gap-1">
+                <h3 className="font-semibold">{duty(n.dutyId)?.name ?? "Work"}{n.count > 1 ? ` × ${n.count}` : ""}</h3>
                 <ul className="pc-list">
                   {n.fills.map((f, i) => {
                     const who = fillerOf(f);
@@ -121,7 +121,7 @@ export function useDayInspector(data: PlanDayData) {
     if (picked.kind === "gap") {
       const need = needs.find((n) => n.key === picked.needKey);
       if (!need) return null;
-      const dutyName = duty(need.dutyId)?.name ?? "Duty";
+      const dutyName = duty(need.dutyId)?.name ?? "Work";
       const gap = need.gaps[picked.index];
       if (!gap) return null;
       // A class has one teacher for all of it; anything else can be filled in parts.
@@ -172,7 +172,7 @@ export function useDayInspector(data: PlanDayData) {
       return { title: `${name} is free`, description: formatTimeRange(picked.start, picked.end),
         actions: <>
           {shift.canPlan ? <BlockDialog draft={{ shiftId: shift.id, dutyId: "", sessionId: null, start: picked.start, end: picked.end, tasks: [] }} duties={dutyOptions}
-            sessions={sessionOptions} who={name} onDone={close} trigger={<Button className="min-h-11">Put on a duty</Button>} /> : null}
+            sessions={sessionOptions} who={name} onDone={close} trigger={<Button className="min-h-11">Put on</Button>} /> : null}
           {shiftActions}
         </> };
     }
@@ -183,11 +183,11 @@ export function useDayInspector(data: PlanDayData) {
     // the ones this person does and sets when each starts and ends; everyone else reads the ones given.
     const given = tasksOf(block, d?.tasks ?? []);
     const mine = block.tasks.filter((x) => d?.tasks.some((t) => t.id === x.id));
-    return { title: `${name}: ${d?.name ?? "Duty"}`, description: [formatTimeRange(block.start, block.end), sessionTitle(block.sessionId)].filter(Boolean).join(" · "),
+    return { title: `${name}: ${d?.name ?? "Work"}`, description: [formatTimeRange(block.start, block.end), sessionTitle(block.sessionId)].filter(Boolean).join(" · "),
       body: shift.canPlan && d?.tasks.length
         ? <BlockTasks key={`${block.id}|${mine.map((t) => `${t.id}@${t.at}-${t.end}`).join("|")}`} idPrefix={`plan-give-${block.id}`} tasks={d.tasks} block={block} given={mine} pending={pending} onSave={(v) => giveTasks(block, v)} />
         : given.length ? <ul className="pc-list">{given.map((t) => <li key={`${t.name}${t.at}`} className="pc-row"><span className="w-28 shrink-0 tabular-nums">{formatTimeRange(t.at, t.end)}</span><span className="pc-row-body">{t.name}</span></li>)}</ul>
-        : shift.canPlan && d && !d.isBreak ? <p className="text-sm text-ui-muted-foreground">{d.name} has no tasks to give. {data.manage ? "Add them to the duty in Setup." : "A manager adds them to the duty in Setup."}</p> : null,
+        : shift.canPlan && d && !d.isBreak ? <p className="text-sm text-ui-muted-foreground">{d.name} has no positions to give. {data.manage ? "Add them to the kind of work in Setup." : "A manager adds them to the kind of work in Setup."}</p> : null,
       actions: shift.canPlan ? <>
         <BlockDialog draft={{ ...block, id: block.id }} duties={dutyOptions} sessions={sessionOptions} who={name} onDone={close} trigger={<Button className="min-h-11">Change</Button>} />
         <Button variant="outline" className="min-h-11" disabled={pending} onClick={() => run(() => removeBlock(block.id), "Taken off")}>Take off</Button>

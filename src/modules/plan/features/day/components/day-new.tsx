@@ -28,7 +28,7 @@ export function DayNewView({ data }: { data: PlanDayData }) {
   const department = data.department ?? data.departments.mine[0] ?? data.departments.all[0] ?? null;
   const nameOf = (userId: string) => people.find((p) => p.id === userId)?.name ?? "Someone";
   const duty = (id: string | null) => (id ? duties.find((d) => d.id === id) : undefined);
-  const dutyName = (id: string | null) => duty(id)?.name ?? "Duty";
+  const dutyName = (id: string | null) => duty(id)?.name ?? "Work";
   const dutyDepartment = (id: string) => duty(id)?.departmentId ?? null;
   const link = (d: string, dept: string | null = department?.id ?? null) => `/plan/day-new?${new URLSearchParams({ site: site.id, date: d, ...(dept ? { dept } : {}) })}`;
   const isToday = date === data.today;
@@ -103,13 +103,13 @@ export function DayNewView({ data }: { data: PlanDayData }) {
         <SegmentedLinks label="Department" items={data.departments.all.map((d) => ({ href: link(date, d.id), label: d.name, count: short.get(d.id) ? `${short.get(d.id)} to fill` : undefined, current: d.id === department.id }))} />
       ) : null}
 
-      {data.classDutyId ? null : <Notice tone="info" title="Classes aren't shown yet" description="Mark one duty as the one classes need, in Setup, to see swim classes and plan their teachers here." />}
+      {data.classDutyId ? null : <Notice tone="info" title="Classes aren't shown yet" description="Mark one kind of work as the one classes need, in Setup, to see swim classes and plan their teachers here." />}
       {data.clashes.map((c) => <Notice key={`${c.a}${c.b}`} tone="warning" title={c.text} />)}
 
       <section aria-labelledby="plan-dept" className="flex min-w-0 flex-col">
         <div className="pc-section-head"><h2 id="plan-dept">What {department.name} needs, and who is in</h2>{nothing ? null : <p>{day.short ? `${day.short} to fill` : "All covered"}</p>}</div>
         {nothing ? <EmptyState compact icon="calendarDays" title={`Nothing is planned in ${department.name} this day`}
-          hint={canAddShift ? "Add a shift, copy another day, or add what's on and the duties it needs in Setup." : "A manager adds what's on, and the duties it needs, in Setup."} /> : <>
+          hint={canAddShift ? "Add a shift, copy another day, or add activities and the staff they need in Setup." : "A manager adds activities, and the staff they need, in Setup."} /> : <>
           <div className="max-md:hidden"><div className="pc-panel">
             <DayTimeline from={from} to={to} now={isToday ? data.now : -1} nowLabel={formatTime(data.now)} hours={hours} lanes={lanes} blocks={blocks}
               label={`${department.name} at ${site.name}`} onSelect={inspector.pick} selected={inspector.pickedKey} labels="wide" />

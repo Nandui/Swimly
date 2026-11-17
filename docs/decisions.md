@@ -6,6 +6,16 @@ The decisions Turnfin 2.0 stands on, newest first. Each says what was decided, w
 
 ---
 
+### D33 · 17 November 2026 · Plan (test): what's on and duties become one list, Activities
+
+In Plan (test), everything that needs staff at a time is an **activity**: the pool or the desk being open, a lesson block, pool checks, closing down. **What's on** and a **duty given by itself** become this one list. An activity names **one kind of work**, how many people, where, from when to when, and the days it repeats. **Kinds of work** (today's duties: Lifeguard, Receptionist) stay as a short setup list, because the qualification and the department are written there once. A **booking** is its own kind of entry in the same list: it also says who booked it and a contact, the space it takes, how many are coming and a note for staff; its staffing is typed in on each booking, and it can name more than one kind of work. On the Day a booking is filled exactly as an activity is.
+
+Someone put on an activity can be given **a short note** and **a position** from that kind of work's list (Chair 1, Roaming; Till, Phones) for all or part of their time. Checklists, ticking work off and work with no fixed time are not Plan's: they belong to another tool.
+
+**Why:** the owner's words: "duties and what's on share some of the same principles". An activity such as pool checks, every day at 11:00 for one person, had no home: it was not something "on", and a duty alone has no time, days or headcount, so it could never show as unfilled. One list removes the question of which of the two a thing is.
+
+**Follows:** the tables keep their names (AGENTS.md): `plan_sessions` holds activities and bookings, `plan_duties` the kinds of work, `plan_duty_tasks` the positions. What is added only adds: a kind on `plan_sessions` and a booking's details, and a note on `plan_blocks`. Today's tasks given inside a duty with a start and an end are already positions for part of the time, so they are renamed, not removed. Breaks stay as they are, and swim lessons keep arriving from Classes. Blocks already given to a duty by itself keep working until they are moved to activities, which waits for the owner's yes. **Not built yet:** all of it; the steps are in the pull requests that follow. **Open:** where the Bookings page sits, since Plan (test) already lists five work pages until the owner chooses between the Day and Day (new) (D32).
+
 ### D32 · 17 November 2026 · Plan (test) tries a Day built from what each department needs
 
 Plan (test) gains **Day (new)** (`/plan/day-new`) beside the Day: the same day **one department at a time**, read as **what the department needs** and then **who is in**. The owner's words: "our operations go around the needs of the business". What runs for three hours or more has a line of its own, filled stretch by stretch; bookings and lessons share a line; a duty given by itself is other work; then each person on shift.

@@ -29,7 +29,7 @@ async function requireDutyManager() {
 
 export async function saveDuty(input: DutyInput, id?: string): Promise<ActionResult> {
   const who = await requireDutyManager();
-  if (!who) return fail("Only someone who manages the plan can change the duties.");
+  if (!who) return fail("Only someone who manages the plan can change the kinds of work.");
   const parsed = dutySchema.safeParse(input);
   if (!parsed.success) return fail(firstIssue(parsed.error));
   const v = parsed.data;
@@ -37,9 +37,9 @@ export async function saveDuty(input: DutyInput, id?: string): Promise<ActionRes
   if (v.qualificationTypeId && !(await liveQualificationTypeById(v.qualificationTypeId, who.orgId))) return fail("That qualification is no longer on the list.");
   const result = await prisma.$transaction(async (tx) => {
     const existing = id ? await tx.planDuty.findFirst({ where: { id, orgId: who.orgId, archivedAt: null } }) : null;
-    if (id && !existing) return fail("That duty is no longer on the list.");
+    if (id && !existing) return fail("That kind of work is no longer on the list.");
     const twin = await tx.planDuty.findFirst({ where: { orgId: who.orgId, archivedAt: null, name: { equals: v.name, mode: "insensitive" }, ...(id ? { id: { not: id } } : {}) } });
-    if (twin) return fail(`There is already a duty called ${twin.name}.`);
+    if (twin) return fail(`There is already a kind of work called ${twin.name}.`);
     // One duty is the one classes need: marking this one moves the mark here.
     if (v.forClasses) await tx.planDuty.updateMany({ where: { orgId: who.orgId, forClasses: true, ...(id ? { id: { not: id } } : {}) }, data: { forClasses: false } });
     const data = { name: v.name, departmentId: v.departmentId, qualificationTypeId: v.qualificationTypeId, color: v.color, defaultMinutes: v.defaultMinutes, isBreak: v.isBreak, forClasses: v.forClasses };
@@ -58,7 +58,7 @@ export async function saveDuty(input: DutyInput, id?: string): Promise<ActionRes
       } } })
       : await tx.planDuty.create({ data: { ...data, orgId: who.orgId, tasks: { create: added } } });
     await logAudit({ actorId: who.id, actorName: who.name, action: existing ? "update" : "create", entity: "PlanDuty", entityId: row.id, clubId: null,
-      summary: `${existing ? "Changed" : "Added"} the duty ${row.name}` }, tx);
+      summary: `${existing ? "Changed" : "Added"} the kind of work ${row.name}` }, tx);
     return ok();
   });
   if (result.ok) refresh();
@@ -67,12 +67,12 @@ export async function saveDuty(input: DutyInput, id?: string): Promise<ActionRes
 
 export async function archiveDuty(id: string): Promise<ActionResult> {
   const who = await requireDutyManager();
-  if (!who) return fail("Only someone who manages the plan can change the duties.");
+  if (!who) return fail("Only someone who manages the plan can change the kinds of work.");
   const duty = await prisma.planDuty.findFirst({ where: { id, orgId: who.orgId, archivedAt: null } });
-  if (!duty) return fail("That duty is no longer on the list.");
+  if (!duty) return fail("That kind of work is no longer on the list.");
   await prisma.$transaction(async (tx) => {
     await tx.planDuty.update({ where: { id }, data: { archivedAt: new Date(), forClasses: false } });
-    await logAudit({ actorId: who.id, actorName: who.name, action: "archive", entity: "PlanDuty", entityId: id, clubId: null, summary: `Took ${duty.name} off the duties` }, tx);
+    await logAudit({ actorId: who.id, actorName: who.name, action: "archive", entity: "PlanDuty", entityId: id, clubId: null, summary: `Took ${duty.name} off the kinds of work` }, tx);
   });
   refresh();
   return ok();
@@ -85,14 +85,14 @@ export async function saveSession(input: SessionInput, id?: string): Promise<Act
   if (!parsed.success) return fail(firstIssue(parsed.error));
   const v = parsed.data;
   const site = await viewableSite(v.siteId);
-  if (!site || !(await mayManage(site.id, site.orgId))) return fail("Only someone who manages the plan here can change what's on.");
+  if (!site || !(await mayManage(site.id, site.orgId))) return fail("Only someone who manages the plan here can change the activities.");
   if (v.areaId) {
     const area = await areaById(v.areaId);
     if (!area || area.siteId !== site.id) return fail("That area is no longer on the list.");
     if (v.lanes.some((l) => l > area.lanes)) return fail(area.lanes ? `${area.name} has ${area.lanes} lanes.` : `${area.name} has no lanes; take the whole area.`);
   } else if (v.lanes.length) return fail("Choose the area before its lanes.");
   const duties = await prisma.planDuty.findMany({ where: { orgId: site.orgId, archivedAt: null, id: { in: v.needs.map((n) => n.dutyId) } } });
-  if (duties.length !== v.needs.length || duties.some((d) => d.isBreak)) return fail("Each line needs a duty from the list, and a break can't be one.");
+  if (duties.length !== v.needs.length || duties.some((d) => d.isBreak)) return fail("Each line needs a kind of work from the list, and a break can't be one.");
   const skipDays = [...new Set(v.skipDays)].filter((d) => d >= v.firstDay && d <= v.lastDay).sort();
   const result = await prisma.$transaction(async (tx) => {
     const existing = id ? await tx.planSession.findFirst({ where: { id, orgId: site.orgId, siteId: site.id, cancelledAt: null } }) : null;
@@ -119,7 +119,7 @@ export async function cancelSession(id: string): Promise<ActionResult> {
   const session = await prisma.planSession.findFirst({ where: { id, orgId: who.orgId ?? undefined, cancelledAt: null } });
   if (!session) return fail("That session no longer exists.");
   const site = await viewableSite(session.siteId);
-  if (!site || !(await mayManage(site.id, site.orgId))) return fail("Only someone who manages the plan here can change what's on.");
+  if (!site || !(await mayManage(site.id, site.orgId))) return fail("Only someone who manages the plan here can change the activities.");
   await prisma.$transaction(async (tx) => {
     if (session.firstDay < from) await tx.planSession.update({ where: { id }, data: { lastDay: [session.lastDay, shiftIso(from, -1)].sort()[0] } });
     else await tx.planSession.update({ where: { id }, data: { cancelledAt: new Date() } });

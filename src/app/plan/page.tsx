@@ -11,7 +11,7 @@ export default async function PlanWeekPage({ searchParams }: { searchParams: Pro
   const data = await planWeek(await searchParams);
   return (
     <PageShell spacing="roomy" header={<PageHeader title="Week"
-        description={data.site ? `Shifts at ${data.site.name}${"department" in data && data.department ? ` for ${data.department.name}` : ""}. Open a day to give people their duties.` : undefined} />}>
+        description={data.site ? `Shifts at ${data.site.name}${"department" in data && data.department ? ` for ${data.department.name}` : ""}. Open a day to say what each person is on.` : undefined} />}>
       {data.site === null ? <EmptyState icon="building" title="No site to plan" hint="Your role doesn't cover a site where Plan (test) is on." /> : <WeekView data={data} />}
     </PageShell>
   );

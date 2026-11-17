@@ -76,7 +76,7 @@ export function WeekView({ data }: { data: PlanWeekData }) {
                               <ShiftDialog siteId={site.id} draft={{ ...shift, id: shift.id }} people={people} departments={departments.mine}
                                 trigger={<Button variant="outline" className="h-auto min-h-11 flex-col items-start gap-0 tabular-nums">
                                   <span>{formatTimeRange(shift.start, shift.end)}</span>
-                                  <span className="text-sm font-normal">{shift.blocks.length ? plural(shift.blocks.length, "duty", "duties") : "No duties yet"}</span>
+                                  <span className="text-sm font-normal">{shift.blocks.length ? `On ${plural(shift.blocks.length, "thing", "things")}` : "Not on anything yet"}</span>
                                 </Button>} />
                             ) : <span className="tabular-nums">{formatTimeRange(shift.start, shift.end)}</span>
                           ) : canPlan && !off ? (

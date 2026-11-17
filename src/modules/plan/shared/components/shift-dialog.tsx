@@ -22,7 +22,7 @@ export function ShiftDialog({ trigger, siteId, draft, people, departments, perso
   return (
     <FormDialog portalClassName="turnfin-module" trigger={trigger} width="sm:max-w-lg"
       title={draft.id ? `${person?.name ?? "Shift"}, ${draft.date}` : "Add a shift"}
-      description={draft.id ? "Change the times or the plan it is on. Their duties stay." : "Put someone on at this site. Give them duties on the Day."}
+      description={draft.id ? "Change the times or the plan it is on. What they are on stays." : "Put someone on at this site. Say what they are on from the Day."}
       submitLabel={draft.id ? "Save shift" : "Add shift"} successMessage={draft.id ? "Shift saved" : "Shift added"}
       onOpen={() => setF(draft)} onSuccess={() => router.refresh()}
       submit={() => saveShift({ siteId, departmentId: f.departmentId, userId: f.userId, date: f.date, start: f.start, end: f.end, note: f.note }, draft.id)}>
@@ -45,7 +45,7 @@ export function RemoveShiftDialog({ trigger, id, name, date }: { trigger: React.
   const router = useRouter();
   return (
     <FormDialog portalClassName="turnfin-module" trigger={trigger} destructive cancelLabel="Keep it"
-      title={`Remove ${name}'s shift on ${date}?`} description="Their duties that day go too. The change is kept in the activity log."
+      title={`Remove ${name}'s shift on ${date}?`} description="What they were on that day goes too. The change is kept in the activity log."
       submitLabel="Remove shift" successMessage="Shift removed" onSuccess={() => router.refresh()} submit={() => removeShift(id)}>
       {null}
     </FormDialog>

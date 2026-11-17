@@ -51,7 +51,7 @@ export async function askForCover(input: CoverAskInput): Promise<ActionResult> {
   const found = await needOn(site, v.date, v.needKey);
   if (!found) return fail("That isn't on that day any more.");
   const { need, duty, place } = found;
-  if (!duty) return fail("That duty is no longer on the list.");
+  if (!duty) return fail("That kind of work is no longer on the list.");
   if (v.start < need.start || v.end > need.end) return fail(`${need.title} runs ${clock(need.start)} to ${clock(need.end)}; ask inside that.`);
   // The duty's own department is asked; a duty any department does needs one chosen.
   const departmentId = duty.departmentId ?? v.departmentId;
@@ -132,7 +132,7 @@ export async function chooseCover(requestId: string, userId: string): Promise<Ac
     : stillToCover({ start: request.startMinutes, end: request.endMinutes }, found?.need ?? null);
   if (!found || !span) return fail(`${request.title} isn't on then any more. Stop asking instead.`);
   const { need, duty } = found;
-  if (!duty) return fail("That duty is no longer on the list. Stop asking instead.");
+  if (!duty) return fail("That kind of work is no longer on the list. Stop asking instead.");
   const theirs = await prisma.planShift.findFirst({ where: { orgId: site.orgId, siteId: site.id, userId: person.id, date: request.date }, select: { departmentId: true } });
   if (theirs && theirs.departmentId !== request.departmentId && !(await mayPlanDepartment(who, site.id, site.orgId, theirs.departmentId)))
     return fail(`${person.name} already has a shift here that day on another department's plan. Ask whoever plans it to change it first.`);

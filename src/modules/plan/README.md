@@ -2,6 +2,8 @@
 
 **Purpose:** plans who works when at each site, on which duties.
 
+**The words** ([D33](../../../docs/decisions.md)): on screen, what's on is an **activity**, a duty is a **kind of work** and a task is a **position**. The code and the tables keep their first names (`PlanSession`, `PlanDuty`, `PlanDutyTask`), so below a session is an activity, a duty a kind of work and a task a position.
+
 Its levels are in [docs/apps.md](../../../docs/apps.md#plan-test); why it exists is [D17](../../../docs/decisions.md). It runs on test beside Rota, which stays as it is.
 
 ## Features
