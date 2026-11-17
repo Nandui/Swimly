@@ -10,7 +10,7 @@ import { formatTimeRange } from "@/lib/format";
 import { askForCover } from "@/modules/plan/features/day/server/cover-actions";
 import type { PlanDayData } from "@/modules/plan/features/day/server/data";
 import { ChoiceField, TimeField } from "@/modules/plan/shared/components/fields";
-import { offerLine } from "@/modules/plan/shared/cover";
+import { offerLine, queuePlace } from "@/modules/plan/shared/cover";
 
 export type CoverRequest = PlanDayData["cover"][number];
 
@@ -41,9 +41,10 @@ export function AskCoverDialog({ siteId, date, needKey, what, start, end, depart
   );
 }
 
-/** Who has answered a request, the yeses first, each with what to know before choosing them. */
+/** Who has answered a request: the queue of people who can cover, first to answer first, each
+ *  with what to know before assigning them; then anyone who can't. */
 export function CoverAnswers({ request, pending, onChoose }: { request: CoverRequest; pending: boolean; onChoose: (userId: string, name: string) => void }) {
-  const answers = [...request.answers].sort((a, b) => Number(b.answer === "yes") - Number(a.answer === "yes"));
+  const answers = [...request.answers].sort((a, b) => (a.place ?? Infinity) - (b.place ?? Infinity));
   return (
     <section aria-label="Asked in Google Chat" className="flex flex-col gap-1">
       <h3 className="font-semibold">Asked in Google Chat</h3>
@@ -56,11 +57,13 @@ export function CoverAnswers({ request, pending, onChoose }: { request: CoverReq
             <li key={a.userId} className="pc-row">
               <span className="pc-row-body">
                 <span className="pc-row-title">{a.name}</span>
-                <span className="pc-row-hint">{a.answer === "no" ? "Can't cover" : [a.shift ? `On shift ${formatTimeRange(a.shift.start, a.shift.end)}` : "Not working this day",
+                <span className="pc-row-hint">{a.place === null ? "Can't cover" : [`${queuePlace(a.place)} in the queue`, `answered ${a.at}`,
+                  a.shift ? `On shift ${formatTimeRange(a.shift.start, a.shift.end)}` : "Not working this day",
                   a.qualified ? null : "Not qualified", a.off ? "Marked off" : null].filter(Boolean).join(" · ")}</span>
               </span>
-              {a.answer === "yes" && request.canChoose
-                ? <Button className="min-h-11" variant={a.qualified && !a.off ? "default" : "outline"} disabled={pending} onClick={() => onChoose(a.userId, a.name)}>Choose</Button> : null}
+              {a.place !== null && request.canChoose
+                ? <Button className="min-h-11" variant={a.place === 1 && a.qualified && !a.off ? "default" : "outline"} disabled={pending}
+                    aria-label={`Assign ${a.name}`} onClick={() => onChoose(a.userId, a.name)}>Assign</Button> : null}
             </li>
           ))}
         </ul>

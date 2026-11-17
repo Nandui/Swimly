@@ -4,6 +4,13 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.23.0 · 17 November 2026 · Cover requests have a queue
+
+- **In Plan (test), people who can cover a gap now wait in a queue**, in the order they pressed **I can cover** in Google Chat. The first to answer is first.
+- **On the Day, the gap lists the queue**: each person's place, when they answered, and whether they are already working that day or missing the qualification. Press **Assign** beside the person you want, usually the first, and they are put on the plan.
+- **The message in Google Chat shows the queue too**, such as "In the queue: 1. Ana, 2. Ben", so everyone can see where they stand.
+- Someone who presses **Can't** and later **I can cover** joins the back of the queue.
+
 ## 3.22.1 · 17 November 2026 · See the password you typed
 
 - **Password boxes now have an eye button at the end.** Press it to see what you typed, and press it again to hide it. It is on the sign-in page, on **Change your password** in your Account, and wherever Turnfin asks you to confirm your password.

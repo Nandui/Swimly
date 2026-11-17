@@ -1,7 +1,7 @@
 import "server-only";
 import { notFound } from "next/navigation";
 import { staffByIds } from "@/lib/directory";
-import { isDateOnly, minutesNow, today } from "@/lib/format";
+import { formatDateTime, isDateOnly, minutesNow, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { lanesInDetail, splitLocation } from "@/lib/setup/lanes";
 import { requirePlanActor } from "@/modules/plan/shared/access";
@@ -67,16 +67,20 @@ export async function planDay(params: { site?: string; date?: string; dept?: str
   });
   const mine = new Set(departments.mine.map((d) => d.id));
   const offToday = new Set(offs.map((o) => o.userId));
-  // Each open request with its answers, and what whoever chooses should know about each person:
-  // an allowlist, never the rows.
+  // Each open request with its answers, and what whoever assigns should know about each person:
+  // an allowlist, never the rows. Those who can cover are a queue, in the order they said so
+  // (answers come oldest first); a no has no place in it.
   const cover = asked.map((r) => {
     const qualification = dutyMap.get(r.dutyId)?.qualificationTypeId ?? null;
+    const queue = r.offers.filter((o) => o.answer === "yes").map((o) => o.userId);
     return {
       id: r.id, needKey: r.needKey, start: r.startMinutes, end: r.endMinutes, note: r.note, askedByName: r.askedByName,
       department: departments.all.find((d) => d.id === r.departmentId)?.name ?? "A department", canChoose: mine.has(r.departmentId),
       answers: r.offers.map((o) => {
         const shift = shifts.find((s) => s.userId === o.userId);
         return { userId: o.userId, name: answeredBy.get(o.userId)?.name ?? "Someone who has left", answer: o.answer === "yes" ? "yes" as const : "no" as const,
+          /** Their place in the queue, 1 up, or null for a no; and when they answered. */
+          place: o.answer === "yes" ? queue.indexOf(o.userId) + 1 : null, at: formatDateTime(o.updatedAt),
           qualified: !qualification || heldToday(o.userId, qualification), off: offToday.has(o.userId), shift: shift ? { start: shift.start, end: shift.end } : null };
       }),
     };

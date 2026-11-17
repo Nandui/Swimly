@@ -97,9 +97,9 @@ test("an open card says what, where and when, with the two buttons carrying the 
   assert.doesNotMatch(widgetsOf({ ...card, place: "", note: "" }), /Where|Note/);
 });
 
-test("the last line follows the request: who can cover by first name, then how it ended, without buttons", () => {
+test("the last line follows the request: the queue by first name, in order, then how it ended, without buttons", () => {
   assert.equal(coverStatus(card), "Nobody has answered yet.");
-  assert.equal(coverStatus({ ...card, canCover: ["Conor Example", "Riley Example"] }), "Can cover: Conor, Riley");
+  assert.equal(coverStatus({ ...card, canCover: ["Conor Example", "Riley Example"] }), "In the queue: 1. Conor, 2. Riley");
   assert.equal(coverStatus({ ...card, outcome: "filled", chosenName: "Conor Example" }), "Covered by Conor Example. Thank you.");
   assert.equal(coverStatus({ ...card, outcome: "stopped" }), "No longer needed.");
   assert.doesNotMatch(widgetsOf({ ...card, outcome: "filled", chosenName: "Conor Example" }), /I can cover|plan\.cover\.answer/);
