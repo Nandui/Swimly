@@ -17,6 +17,8 @@ let blockData: typeof import("../features/blocks/server/data");
 let todayActions: typeof import("../features/today/server/actions");
 let requests: typeof import("../features/requests/server/actions");
 let strikes: typeof import("../features/strikes/server/actions");
+let preferences: typeof import("../features/preferences/server/data");
+let checkReminders: typeof import("../features/preferences/server/reminders");
 const ORG = "org_leisureworld";
 type GrantRow = { roleName: string; permissions: string[]; screens: string[]; scopeKind: string; scopeId: string };
 const state = { id: "sup", permissions: [] as string[], grants: [] as GrantRow[] };
@@ -62,6 +64,8 @@ before(async () => {
   todayActions = serverModule("src/modules/staffing/features/today/server/actions.ts", d);
   requests = serverModule("src/modules/staffing/features/requests/server/actions.ts", d);
   strikes = serverModule("src/modules/staffing/features/strikes/server/actions.ts", d);
+  preferences = serverModule("src/modules/staffing/features/preferences/server/data.ts", d);
+  checkReminders = serverModule("src/modules/staffing/features/preferences/server/reminders.ts", d);
 });
 after(async () => { await fixture?.close(); });
 
@@ -185,4 +189,36 @@ test("an exam absence after the season's deadline is approved, unpaid, with a st
   const refused = await fixture.prisma.staffingExamAbsence.findFirstOrThrow({ where: { shiftId: none.id } });
   assert.equal(refused.status, "refused");
   assert.equal((await fixture.prisma.staffingStrike.findUniqueOrThrow({ where: { id: refused.strikeId! } })).stage, "serious_misconduct_referral");
+});
+
+test("the preference check: staff on the rota are asked once, who changed is listed, and times that can't fit a contract are flagged (D35)", async () => {
+  const db = fixture.prisma;
+  const day = today(), monday = mondayOf(day);
+  as("sup", ["staffing.manage"], [at(bishopstown, ["staffing.manage"])]);
+  // A check that opened this Monday and is still open tonight.
+  assert.equal((await setup.saveSettings({ strikeCountingFrom: "2026-01-01", checkFrom: monday, checkCloseDays: 6, checkCloseTime: "23:55" })).ok, true);
+  const onRota = (await db.staffingTeacher.findMany({ where: { orgId: ORG } })).map((r) => r.userId).sort();
+  assert.ok(onRota.includes("ann"));
+  // Ann can work Wednesdays only: far less than her ten contracted hours in the places here.
+  const modes = ["none", "none", "any", "none", "none", "none", "none"], zeros = Array(7).fill(0);
+  await db.staffUsualWeek.create({ data: { orgId: ORG, userId: "ann", modes, starts: zeros, ends: zeros } });
+  const page = (await preferences.availabilityPage(bishopstown))!;
+  assert.equal(page.check.open, true);
+  assert.equal(page.check.current!.opensOn, monday);
+  const ann = page.people.find((p) => p.id === "ann")!;
+  assert.equal(page.people[0].id, "ann", "people who can't fit their contract come first");
+  assert.equal(ann.change, "in_check");
+  assert.equal(ann.contractMinutes, 600);
+  assert.ok(ann.fit && ann.fit.short > 0 && ann.fit.fits < 600);
+  const others = page.people.filter((p) => p.id !== "ann");
+  assert.ok(others.every((p) => p.usual === null && p.change === null && p.fit === null), "nobody else has said");
+  // The reminder: one line each, once a check, and nothing once the check has closed.
+  const items = await checkReminders.preferenceCheckReminderItems(day);
+  assert.deepEqual(items.map((i) => i.userId).sort(), onRota);
+  assert.ok(items.every((i) => i.kind === "staffing-check" && i.ref === `check:${monday}`));
+  assert.match(items[0].line, /If nothing has changed, do nothing/);
+  assert.deepEqual(await checkReminders.preferenceCheckReminderItems(addDaysIso(monday, 7)), [], "closed: nobody is asked until the next check");
+  // Supervise at another site does not open this one's list.
+  as("sup", [], [at(churchfield, ["staffing.supervise"])]);
+  await assert.rejects(() => preferences.availabilityPage(bishopstown), NotFound);
 });

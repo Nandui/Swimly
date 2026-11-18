@@ -131,7 +131,7 @@ Rota blocks for part-time pool staff (swim teachers and lifeguards) on contracte
 | Supervise | also keep slots and the staff on the rota, build and publish blocks, decide swaps and exam absences, hold second strike conversations |
 | Manage | also change published shifts, handle referrals, keep exam seasons and settings |
 
-Connects: reads people, contracted hours, dates of birth and qualifications through the platform's functions. Its home card shows chats, blocks to publish, swaps to decide, staff to phone and referrals. No Turnfin Me yet.
+Connects: reads people, contracted hours, dates of birth, qualifications and the times staff said they can usually work through the platform's functions. Its home card shows chats, blocks to publish, swaps to decide, staff to phone, changed times after a preference check, referrals and staff whose times cannot fit their contract. In Turnfin Me, staff send the times they can work, and every four weeks the daily reminder email asks them whether those have changed ([D35](decisions.md)); nothing else of Staffing's is there yet.
 
 ### Training
 *Module `training` · `/training/overview` · reach: sites · data: `training.prisma`*

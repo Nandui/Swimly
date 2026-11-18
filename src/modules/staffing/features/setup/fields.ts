@@ -2,7 +2,7 @@ import type { StaffingSettings } from "@/modules/staffing/shared/rules";
 
 /** The settings form's fields, with their labels: a plain module so the settings page and its dialog share them. */
 type NumberKey = { [K in keyof StaffingSettings]: StaffingSettings[K] extends number ? K : never }[keyof StaffingSettings];
-type TimeKey = "publishTime" | "lateShiftFrom" | "lateShiftCallBy" | "earlyShiftCallBy";
+type TimeKey = "publishTime" | "lateShiftFrom" | "lateShiftCallBy" | "earlyShiftCallBy" | "checkCloseTime";
 export const NUMBERS: [NumberKey, string, string][] = [
   ["startOffsetWeeks", "Weeks ahead a block starts", "Published on the Friday, starting this many weeks later."],
   ["minNoticeHours", "Minimum notice, hours", "Legal minimum 24."],
@@ -18,11 +18,14 @@ export const NUMBERS: [NumberKey, string, string][] = [
   ["examDeadlineDays", "Exam absences due, days before", ""],
   ["clashFlag", "Short-notice clash flag at", "Per semester."],
   ["strikeDueDays", "Strike 2 and 3 due within, days", ""],
+  ["checkEveryWeeks", "Preference check every, weeks", "At least 1."],
+  ["checkCloseDays", "Preference check closes, days after", "2 is the Wednesday."],
 ];
 export const TIMES: [TimeKey, string, string][] = [
   ["publishTime", "Publish by, on the Friday", ""],
   ["lateShiftFrom", "A late shift starts from", "Open question: assumed noon until HR confirms."],
   ["lateShiftCallBy", "Late shift: call by, same day", ""],
   ["earlyShiftCallBy", "Early shift: call by, the day before", ""],
+  ["checkCloseTime", "Preference check closes at", ""],
 ];
 

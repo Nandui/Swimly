@@ -4,6 +4,7 @@ import {
 } from "lucide-react";
 import { z } from "zod";
 import { addDaysIso, ageOn, dublinInstant, parseDateOnly } from "@/lib/format";
+import { minutesThatFit, outsideUsualWeek, type UsualWeek } from "@/lib/people/usual-week";
 import type { StatusMeta } from "@/lib/status";
 
 /** Staffing's rules, pure and client-safe (docs/staffing.md): the settings and their defaults, the
@@ -40,6 +41,12 @@ export const settingsSchema = z.object({
   clashFlag: hours(10).default(3),
   strikeCountingFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use a date.").default("2027-01-25"),
   strikeDueDays: hours(60).default(7),
+  /** The preference check (D35): the first Monday staff are asked whether the times they can work
+   *  have changed, how many weeks until the next, and when it closes (days after the Monday). */
+  checkFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use a date.").default("2026-12-07"),
+  checkEveryWeeks: z.coerce.number().int().min(1).max(52).default(4),
+  checkCloseDays: hours(6).default(2),
+  checkCloseTime: clock.default("17:00"),
   /** The qualification types each role needs, from Admin's list. Null checks nothing. */
   teachingTypeId: z.string().nullable().default(null),
   lifeguardTypeId: z.string().nullable().default(null),
@@ -204,7 +211,7 @@ export const EXAM_OUTCOME_META = {
   no_notice: { label: "No college notice: refused, referral", color: "red", icon: ShieldAlert },
 } satisfies Record<ExamOutcome, StatusMeta>;
 
-export const FIT_KINDS = ["contract", "qualification", "vetting", "overlap", "rest", "weekly", "young"] as const;
+export const FIT_KINDS = ["contract", "qualification", "vetting", "overlap", "rest", "weekly", "young", "usual"] as const;
 export type FitKind = (typeof FIT_KINDS)[number];
 export const FIT_META = {
   contract: { label: "Not on their contract", color: "red", icon: LifeBuoy },
@@ -214,6 +221,7 @@ export const FIT_META = {
   rest: { label: "Short rest", color: "orange", icon: Timer },
   weekly: { label: "Over the weekly cap", color: "orange", icon: Scale },
   young: { label: "Under 18", color: "orange", icon: UserRound },
+  usual: { label: "Outside the times they gave", color: "orange", icon: Clock },
 } satisfies Record<FitKind, StatusMeta>;
 
 /* ---------- Dates ---------- */
@@ -376,6 +384,8 @@ export type FitPerson = {
   quals: readonly { typeId: string; expiresOn: string | null }[];
   /** Their other shifts, at any site. */
   shifts: readonly FitShift[];
+  /** The times they said they can usually work (D35); missing when they have not said. */
+  usual?: UsualWeek | null;
 };
 export type Fit = { kind: FitKind; text: string };
 
@@ -407,6 +417,9 @@ export function fitWarnings(shift: FitShift, p: FitPerson, s: StaffingSettings):
   const week = others.filter((o) => o.date >= monday && o.date <= sunday).reduce((n, o) => n + minutesOf(o), 0) + minutesOf(shift);
   if (week > s.weeklyCapHours * 60) out.push({ kind: "weekly", text: `${formatHours(week)} that week, over the ${s.weeklyCapHours}-hour cap unless overtime is approved.` });
   if (young) out.push({ kind: "young", text: "Under 18 on that day: check the young workers' limits." });
+  // Preferences guide, never limit: a shift outside the times they gave is said, like the rest.
+  const outside = outsideUsualWeek(p.usual ?? undefined, shift.date, shift.startMin, shift.endMin);
+  if (outside) out.push({ kind: "usual", text: outside });
   return out;
 }
 
@@ -458,9 +471,66 @@ export function placesFor(startsOn: string, slots: readonly SlotForBlock[], prev
   return out;
 }
 
+/* ---------- The preference check (D35) ---------- */
+
+/** One preference check: the Monday staff are asked whether the times they can work have changed,
+ *  and when it closes. No answer means no change, so a check is only its dates: nothing is stored. */
+export type PreferenceCheck = { opensOn: string; closesOn: string; closesAt: Date };
+type CheckSettings = Pick<StaffingSettings, "checkFrom" | "checkEveryWeeks" | "checkCloseDays" | "checkCloseTime">;
+
+function checkOn(opensOn: string, s: CheckSettings): PreferenceCheck {
+  const closesOn = addDaysIso(opensOn, s.checkCloseDays);
+  return { opensOn, closesOn, closesAt: dublinInstant(closesOn, toMinutes(s.checkCloseTime)) ?? parseDateOnly(closesOn) };
+}
+
+/** The check a day belongs to (the latest to have opened; null before the first) and the next. */
+export function preferenceChecks(day: string, s: CheckSettings): { current: PreferenceCheck | null; next: PreferenceCheck } {
+  const step = s.checkEveryWeeks * 7;
+  const days = Math.round((parseDateOnly(day).getTime() - parseDateOnly(s.checkFrom).getTime()) / 86_400_000);
+  if (days < 0) return { current: null, next: checkOn(s.checkFrom, s) };
+  const done = Math.floor(days / step);
+  return { current: checkOn(addDaysIso(s.checkFrom, done * step), s), next: checkOn(addDaysIso(s.checkFrom, (done + 1) * step), s) };
+}
+
+/** Still taking changes. */
+export const checkOpen = (check: PreferenceCheck, now: Date) => now.getTime() <= check.closesAt.getTime();
+/** How long after a check closes its changes still wait on Home: through the Friday they are
+ *  applied on, and the weekend after. */
+export const CHECK_APPLY_DAYS = 5;
+
+export const CHECK_CHANGES = ["in_check", "after_check"] as const;
+export type CheckChange = (typeof CHECK_CHANGES)[number];
+export const CHECK_CHANGE_META = {
+  in_check: { label: "Changed in this check", color: "blue", icon: CalendarClock },
+  after_check: { label: "Changed after the deadline", color: "orange", icon: Hourglass },
+} satisfies Record<CheckChange, StatusMeta>;
+
+/** Whether a person's times changed in a check, after it closed, or not since it opened. A change
+ *  after the deadline waits for the next check unless it is a real timetable change. */
+export function changeInCheck(changedAt: Date | null, check: PreferenceCheck | null): CheckChange | null {
+  if (!changedAt || !check) return null;
+  const opens = dublinInstant(check.opensOn, 0) ?? parseDateOnly(check.opensOn);
+  if (changedAt.getTime() < opens.getTime()) return null;
+  return changedAt.getTime() <= check.closesAt.getTime() ? "in_check" : "after_check";
+}
+
+export const CONTRACT_FIT_META = {
+  short: { label: "Can't fit contracted hours", color: "red", icon: Scale },
+} satisfies Record<"short", StatusMeta>;
+
+/** Whether the times a person gave leave room for their contracted hours, in the weekly places
+ *  their contract covers at the sites they work at. Null when they have not said or have no
+ *  contracted hours. Short is for the centre manager: times cannot simply remove contracted hours. */
+export function contractFit(usual: UsualWeek | null | undefined, contract: ContractKind, contractMinutes: number | null,
+  slots: readonly { weekday: number; role: string; startMin: number; endMin: number }[]): { fits: number; short: number } | null {
+  if (!usual || contractMinutes === null) return null;
+  const fits = minutesThatFit(usual, slots.filter((slot) => contractCovers(contract, slot.role)));
+  return { fits, short: Math.max(0, contractMinutes - fits) };
+}
+
 /* ---------- Who could take a shift (BR-5.3 steps 3 and 4, BR-8.6) ---------- */
 
-export type Candidate = { id: string; name: string; contract: ContractKind; dateOfBirth: string | null; quals: FitPerson["quals"]; contractMinutes: number | null; wantsMore: boolean; strikes: number };
+export type Candidate = { id: string; name: string; contract: ContractKind; dateOfBirth: string | null; quals: FitPerson["quals"]; contractMinutes: number | null; wantsMore: boolean; strikes: number; usual?: UsualWeek | null };
 const SERIOUS: readonly FitKind[] = ["contract", "qualification", "vetting", "overlap"];
 
 /** Everyone who could take a shift, best first: nothing serious in the way, then people below
@@ -478,3 +548,12 @@ export function rankFits(shift: FitShift, people: readonly Candidate[], shifts: 
     return { ...p, warnings, week, belowContract, tier, serious };
   }).sort((a, b) => Number(a.serious) - Number(b.serious) || a.tier - b.tier || a.warnings.length - b.warnings.length || a.strikes - b.strikes || a.name.localeCompare(b.name));
 }
+
+/** Every status map above, for the platform's tone check (src/lib/status.test.ts). */
+export const STAFFING_STATUS_MAPS = {
+  STAFFING_ACK_STATE_META: ACK_STATE_META, STAFFING_ATTENDANCE_META: ATTENDANCE_META, STAFFING_BLOCK_STATE_META: BLOCK_STATE_META,
+  STAFFING_CHECK_CHANGE_META: CHECK_CHANGE_META, STAFFING_CONTRACT_FIT_META: CONTRACT_FIT_META,
+  STAFFING_COLLEGE_META: COLLEGE_META, STAFFING_CONTRACT_KIND_META: CONTRACT_KIND_META, STAFFING_EXAM_OUTCOME_META: EXAM_OUTCOME_META,
+  STAFFING_FIT_META: FIT_META, STAFFING_HOURS_META: HOURS_META, STAFFING_REQUEST_FLAG_META: REQUEST_FLAG_META, STAFFING_SHIFT_STATUS_META: SHIFT_STATUS_META, STAFFING_SLOT_ROLE_META: SLOT_ROLE_META,
+  STAFFING_STRIKE_CAUSE_META: STRIKE_CAUSE_META, STAFFING_STRIKE_STAGE_META: STRIKE_STAGE_META, STAFFING_SWAP_STATUS_META: SWAP_STATUS_META,
+};

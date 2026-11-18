@@ -66,7 +66,7 @@ In `vercel.json`, times in UTC, each guarded by `CRON_SECRET`:
 | `/api/cron/tasks` | 01:30 | makes yesterday's and today's tasks at every site and freezes yesterday's score |
 | `/api/cron/training` | 05:30 | runs every training rule: assigns courses to people who never finished them or are due again |
 | `/api/cron/incidents` | 06:00 | reminds each owner of an incident action due tomorrow or overdue |
-| `/api/cron/reminders` | 07:00 | each person's daily digest from Turnfin Me |
+| `/api/cron/reminders` | 07:00 | each person's daily digest from Turnfin Me, with Staffing's preference check on the days one is open |
 | `/api/cron/hr` | 07:00 | emails yesterday's HR reports, by person, to the addresses in HR > Settings (every site, or by the person's main site) (once a day; nothing on a day with no reports) |
 
 ## Settings

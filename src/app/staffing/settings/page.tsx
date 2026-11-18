@@ -16,7 +16,7 @@ export default async function StaffingSettingsPage() {
   return (
     <PageShell spacing="roomy" header={<PageHeader title="Settings" description="The numbers Staffing's rules use. Warnings never refuse; these decide when they show." actions={<SettingsDialog settings={settings} types={types} />} />}>
       <RecordSection id="stf-set-times-h" title="Deadlines">
-        <RecordFacts items={[...TIMES.map(([k, label]) => [label, settings[k]] as [string, string]), ["Strikes count from", formatShortDay(settings.strikeCountingFrom)]]} />
+        <RecordFacts items={[...TIMES.map(([k, label]) => [label, settings[k]] as [string, string]), ["Strikes count from", formatShortDay(settings.strikeCountingFrom)], ["First preference check", formatShortDay(settings.checkFrom)]]} />
       </RecordSection>
       <RecordSection id="stf-set-numbers-h" title="Numbers">
         <RecordFacts items={NUMBERS.map(([k, label]) => [label, String(settings[k])] as [string, string])} />

@@ -8,14 +8,16 @@ What it does and why is in [docs/staffing.md](../../../docs/staffing.md); its le
 - `blocks` — rota blocks (`/staffing`, `/staffing/blocks/[id]`): starting a block from the slots and the block before, putting people on places, publishing, acknowledgements.
 - `today` — the duty manager's day (`/staffing/today`): logging call-offs, late arrivals and no-shows, covering gaps.
 - `requests` — swaps and exam absences (`/staffing/requests`).
+- `preferences` — when staff can work (`/staffing/availability`, under Blocks; Supervise): the preference check's dates and everyone on the rota at a site with the times they gave, who changed in the check and who cannot fit their contracted hours; and the check's line in Turnfin Me's reminder email ([D35](../../../docs/decisions.md)).
 - `strikes` — the strike ladder's steps and each person's strikes (`/staffing/strikes`).
 - `setup` — slots, staff, exam seasons and settings.
 - `workspace` — the frame, its page list, the access check and the home card.
 
-`shared/` holds the pure rules (`rules.ts`), what the reads and writes share (`server.ts`: sites, the pool staff, settings, recording a strike), the access check and the screen kit (the person picker with warnings).
+`shared/` holds the pure rules (`rules.ts`), what the reads and writes share (`server.ts`: sites, the pool staff with the times they gave, those times against the check and the contract, settings, recording a strike), the access check and the screen kit (the person picker with warnings).
 
 ## Front door (index.ts)
 - `STAFFING_STATUS_MAPS` — the status maps, for the platform's tone check.
+- `preferenceCheckReminderItems(on)` — one line for each person on the rota while a preference check is open, for the daily reminder email (`src/lib/staff-api/reminders.ts`); empty on any other day.
 
 ## Data owned
 `StaffingSettings`, `StaffingTeacher`, `StaffingSlot`, `StaffingBlock`, `StaffingShift`, `StaffingAck`, `StaffingSwap`, `StaffingAttendance`, `StaffingStrike`, `StaffingExamSeason`, `StaffingExamAbsence`.
@@ -25,12 +27,12 @@ What it does and why is in [docs/staffing.md](../../../docs/staffing.md); its le
 - Listens to: none.
 
 ## Registration (module.ts)
-- Home card: return-to-work chats due, blocks to publish, swaps to decide, staff to phone, second conversations, referrals.
+- Home card: return-to-work chats due, blocks to publish, swaps to decide, staff to phone, second conversations, changed times to use after a preference check, referrals, staff whose times cannot fit their contract.
 
 ## Permissions
 - `staffing.read`, `staffing.run`, `staffing.supervise`, `staffing.manage`.
 
 ## Depends on
 - Platform: auth and the session, the policy engine, audit, the database client, format helpers, home cards.
-- Core reads through its functions only: people, sites, contracted minutes and dates of birth (`src/lib/directory.ts`), qualifications (`src/lib/qualifications.ts`).
+- Core reads through its functions only: people, sites, contracted minutes, dates of birth and the times people said they can usually work (`src/lib/directory.ts`, `src/lib/people/usual-week.ts`), qualifications (`src/lib/qualifications.ts`).
 - Other modules: none.

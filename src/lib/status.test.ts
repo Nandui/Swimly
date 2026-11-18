@@ -20,7 +20,8 @@ import * as academy from "@/modules/academy";
 import { STOCK_CATEGORY_TONE_META, STOCK_CHANGE_META, STOCK_TAKE_META } from "@/modules/stock";
 import { BATCH_STATE_META as VOUCHER_BATCH_STATE_META, VOUCHER_STATE_META } from "@/modules/vouchers";
 import { CCTV_REASON_META } from "@/modules/cctv";
-import * as staffing from "@/modules/staffing";
+// Staffing's front door also serves the daily reminder email (server code), so its tag maps are read where they are kept, as Rota's are.
+import * as staffing from "@/modules/staffing/shared/rules";
 import * as rota from "@/modules/rota/shared/constants";
 import * as rotaMeta from "@/modules/rota/shared/meta";
 import { REACH_META, STAFF_STATUS_META } from "@/lib/staff/constants";
