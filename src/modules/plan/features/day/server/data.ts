@@ -5,7 +5,7 @@ import { formatDateTime, isDateOnly, minutesNow, today } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { lanesInDetail, splitLocation } from "@/lib/setup/lanes";
 import { requirePlanActor } from "@/modules/plan/shared/access";
-import { areasOf, classesAt, dutiesOf, heldOn, offsBetween, peopleFor, qualificationNames, sessionsOf, shiftsAt, shiftsElsewhere } from "@/modules/plan/shared/data";
+import { areasOf, classesAt, dutiesOf, heldOn, offsBetween, peopleFor, qualificationNames, sessionsOf, shiftsAt, shiftsElsewhere, usualWeeksOf } from "@/modules/plan/shared/data";
 import { candidatesFor, fillsOf, gapsOf, laneClashes, needsOf, occurrencesOn, shiftIso, tasksOf, warningsOf } from "@/modules/plan/shared/model";
 import { mayManage, pickSiteId, planSites, plannableDepartments, viewableSite } from "@/modules/plan/shared/scope";
 
@@ -36,9 +36,10 @@ export async function planDay(params: { site?: string; date?: string; dept?: str
   const copyable = departments.mine.length === 0 ? [] : await prisma.planShift.groupBy({ by: ["date"], _count: { _all: true }, orderBy: { date: "desc" },
     where: { orgId: site.orgId, siteId: site.id, departmentId: { in: departments.mine.map((d) => d.id) }, date: { gte: shiftIso(date, -28), lt: date } } });
   const answeredIds = [...new Set(asked.flatMap((r) => r.offers.map((o) => o.userId)))];
-  const [people, offs, elsewhere, classes, held, answeredBy] = await Promise.all([
+  const [people, offs, elsewhere, classes, held, answeredBy, usual] = await Promise.all([
     peopleFor(site.orgId, site.id, userIds), offsBetween(site.orgId, date, date), shiftsElsewhere(site.orgId, site.id, userIds, date, date),
     classesAt(site.id, userIds, date, date), heldOn([...new Set([...userIds, ...answeredIds])]), staffByIds(answeredIds),
+    usualWeeksOf(userIds),
   ]);
   const dutyMap = new Map(duties.map((d) => [d.id, d]));
   const classDuty = duties.find((d) => d.forClasses) ?? null;
@@ -63,7 +64,7 @@ export async function planDay(params: { site?: string; date?: string; dept?: str
   const departmentOf = (userId: string) => people.find((p) => p.id === userId)?.departmentIds ?? [];
   const warnings = warningsOf({
     shifts, duties: dutyMap, qualificationNames: qNames, held: heldToday, off: new Set(offs.map((o) => o.userId)),
-    classes: classes.all, elsewhere, classDutyId: classDuty?.id ?? null,
+    classes: classes.all, elsewhere, classDutyId: classDuty?.id ?? null, usual,
   });
   const mine = new Set(departments.mine.map((d) => d.id));
   const offToday = new Set(offs.map((o) => o.userId));

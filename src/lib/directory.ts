@@ -2,6 +2,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { minimumOf, roleFor, togetherOf, weekHoursOf, type AreaTogether, type RoleNeeds, type WeekHour } from "@/lib/setup/area-staffing";
 import type { SiteFilter, SubjectFilter } from "@/lib/policy/types";
 import { ADMINISTRATOR_PERMISSIONS } from "@/lib/staff/permissions";
+import { usualWeekOf, type UsualDay } from "@/lib/people/usual-week";
 
 /** Core's directory of people and sites, for modules.
  *
@@ -525,4 +526,14 @@ export async function activePlacedStaff(orgId: string | null, people: SubjectFil
   });
   return rows.map((u) => ({ id: u.id, name: u.name, roleId: u.staffRoleId, siteIds: u.siteIds, positionId: u.positionId,
     departmentIds: u.departments.filter((d) => !d.department.archivedAt).map((d) => d.departmentId) }));
+}
+
+/** The times these people said they can usually work (D34, D35), by person, with when their week
+ *  last changed; anyone missing has not said. A guide for whoever plans them, never a limit. */
+export async function usualWeeksByIds(ids: readonly string[]): Promise<Map<string, { days: UsualDay[]; changedAt: Date }>> {
+  const wanted = unique(ids);
+  if (wanted.length === 0) return new Map();
+  const { prisma } = await import("@/lib/prisma");
+  const rows = await prisma.staffUsualWeek.findMany({ where: { userId: { in: wanted } }, select: { userId: true, modes: true, starts: true, ends: true, updatedAt: true } });
+  return new Map(rows.map((r) => [r.userId, { days: usualWeekOf(r), changedAt: r.updatedAt }]));
 }

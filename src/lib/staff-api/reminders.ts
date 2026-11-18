@@ -4,16 +4,19 @@ import { prisma } from "@/lib/prisma";
 import { sendStaffReminder } from "@/lib/staff-api/email";
 import { meSettings } from "@/lib/staff-api/notify";
 import { trainingReminderItems } from "@/modules/training";
+import { preferenceCheckReminderItems } from "@/modules/staffing";
 import { appOn } from "@/lib/apps/switches";
 
 /** Reminder emails for Turnfin Me. The daily job sends each person one short
  *  digest of things that are new since the last one: training due within 3
  *  days or overdue, a qualification crossing 60, 30 or 7 days or expired (theirs, and their
  *  team's for a line manager), and
- *  required reading past its deadline. Each item is logged, so nothing is sent
+ *  required reading past its deadline, and Staffing's preference check (D35: has
+ *  the week you can work changed?), which is part of the rostering procedure and
+ *  has no preference to turn it off. Each item is logged, so nothing is sent
  *  twice. Shift changes are sent when they happen. A person's preferences
  *  (Reminders in Turnfin Me) turn each kind off. Emails never carry HR content.
- *  A composition root: Training and Docs each say what is due; shift changes
+ *  A composition root: Training, Docs and Staffing each say what is due; shift changes
  *  go out from `notify.ts`. */
 
 type Prefs = { trainingDue: boolean; qualificationExpiry: boolean; readingOverdue: boolean; shiftChanges: boolean };
@@ -58,6 +61,7 @@ export async function runReminders(now = new Date()) {
     ...(await appOn("training") ? await trainingReminderItems(on) : []),
     ...await qualificationItems(on),
     ...(await appOn("docs") ? await readingReminderItems(on) : []),
+    ...(await appOn("staffing") ? await preferenceCheckReminderItems(on) : []),
   ];
   const userIds = [...new Set(items.map((i) => i.userId))];
   const [prefs, users, logged] = await Promise.all([
@@ -66,7 +70,7 @@ export async function runReminders(now = new Date()) {
     prisma.staffReminderLog.findMany({ where: { userId: { in: userIds } }, select: { userId: true, kind: true, ref: true } }),
   ]);
   const seen = new Set(logged.map((l) => `${l.userId}|${l.kind}|${l.ref}`));
-  const wanted = (i: Item, p: Prefs) => (i.kind.startsWith("training") ? p.trainingDue : i.kind.startsWith("qualification") ? p.qualificationExpiry : p.readingOverdue);
+  const wanted = (i: Item, p: Prefs) => (i.kind === "staffing-check" ? true : i.kind.startsWith("training") ? p.trainingDue : i.kind.startsWith("qualification") ? p.qualificationExpiry : p.readingOverdue);
   let sent = 0;
   for (const user of users) {
     const fresh = items.filter((i) => i.userId === user.id && wanted(i, prefs(user.id)) && !seen.has(`${i.userId}|${i.kind}|${i.ref}`));

@@ -117,7 +117,7 @@ The rota started again, on test at one site beside Rota ([D17](decisions.md)): s
 | Plan | plan shifts and who is on each activity for the departments they belong to, mark people off, and ask staff to cover a gap and choose who does |
 | Manage | plan every department, run today, and keep the kinds of work, areas and activities |
 
-Connects: reads people, departments, qualifications and the site's areas (Admin › Areas, shared with Classes and Rota); reads swim classes and booked assessments, and plans their teachers and assessors, through Classes' commitments. No Turnfin Me, home card or person file while it is on test. Asking staff to cover a gap reaches them in Google Chat ([D31](decisions.md)): a card in the department's space, answered from Chat at `/api/plan/chat`, once Manage has linked the space in Setup.
+Connects: reads people, departments, qualifications and the site's areas (Admin › Areas, shared with Classes and Rota); reads swim classes and booked assessments, and plans their teachers and assessors, through Classes' commitments. No Turnfin Me, home card or person file while it is on test. It reads the times staff said they can usually work from the platform, as a guide that never limits whoever plans ([D34](decisions.md), [D35](decisions.md)). Asking staff to cover a gap reaches them in Google Chat ([D31](decisions.md)): a card in the department's space, answered from Chat at `/api/plan/chat`, once Manage has linked the space in Setup.
 
 ### Staffing
 *Module `staffing` · `/staffing/overview` · reach: sites · data: `staffing.prisma`*
@@ -131,7 +131,7 @@ Rota blocks for part-time pool staff (swim teachers and lifeguards) on contracte
 | Supervise | also keep slots and the staff on the rota, build and publish blocks, decide swaps and exam absences, hold second strike conversations |
 | Manage | also change published shifts, handle referrals, keep exam seasons and settings |
 
-Connects: reads people, contracted hours, dates of birth and qualifications through the platform's functions. Its home card shows chats, blocks to publish, swaps to decide, staff to phone and referrals. No Turnfin Me yet.
+Connects: reads people, contracted hours, dates of birth, qualifications and the times staff said they can usually work through the platform's functions. Its home card shows chats, blocks to publish, swaps to decide, staff to phone, changed times after a preference check, referrals and staff whose times cannot fit their contract. In Turnfin Me, staff send the times they can work, and every four weeks the daily reminder email asks them whether those have changed ([D35](decisions.md)); nothing else of Staffing's is there yet.
 
 ### Training
 *Module `training` · `/training/overview` · reach: sites · data: `training.prisma`*

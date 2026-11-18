@@ -4,6 +4,17 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.27.0 · 18 November 2026 · Tell your planner when you can work
+
+- **In Turnfin Me, say when you can usually work.** Open More, then When I can work. For each day of the week choose any time, between two times, or can't work, and send it. Change it whenever your week changes.
+- **It is a guide.** Whoever plans your shifts sees it and still decides, so you may be asked to work outside it. Shifts already published do not change.
+- **Swim teachers and lifeguards: a check every four weeks.** From Monday 7 December, your Turnfin Me email asks whether the times you can work have changed. If they have, update them by the Wednesday at 17:00. If nothing has changed, do nothing: your times stay as they are.
+- **In Staffing, a new page under Blocks: When staff can work.** Pool deck supervisors see everyone on the rota with the times they gave, who changed them in the latest check, and who changed them after the deadline. Home tells you when there are changes to use in the next rota.
+- **Staffing warns when a shift is outside the times someone gave**, on a block, when you choose someone for a place, on a swap and when covering a gap. It never stops you.
+- **Centre managers: Staffing flags anyone whose times can't fit their contracted hours**, on Home and on the new page, so you can meet them.
+- **In Plan (test), the Week shows the times beside each day**, such as "Can work 16:00 to 21:00" or "Can't work", and the Day warns when a shift is outside them.
+- This is for sites that use Staffing or Plan (test). At other sites, tell your manager as you do now.
+
 ## 3.26.0 · 17 November 2026 · Everything someone is on is an activity
 
 - **In Plan (test), you now put someone on an activity**, or on a break. You no longer pick a kind of work by itself: choose what they are on from the day's activities.

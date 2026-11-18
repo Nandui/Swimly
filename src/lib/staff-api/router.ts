@@ -13,7 +13,7 @@ const ROUTES: Record<string, string[]> = {
   "auth/request-code": ["POST"], "auth/verify-code": ["POST"], "auth/confirm": ["POST"], "auth/confirm/verify": ["POST"], "auth/logout": ["POST"],
   home: ["GET"], me: ["GET", "PATCH"], qualifications: ["GET"], "qualifications/evidence": ["POST"],
   training: ["GET"], "training/plan": ["GET"], "training/search": ["GET"], "training/saved": ["GET"], "training/record": ["GET"], "training/catalogue": ["GET"],
-  "training/refresher": ["GET"], "training/refresher/answer": ["POST"], reading: ["GET"], shifts: ["GET"], hr: ["GET"], notifications: ["GET", "PUT"],
+  "training/refresher": ["GET"], "training/refresher/answer": ["POST"], reading: ["GET"], shifts: ["GET"], availability: ["GET", "PUT"], hr: ["GET"], notifications: ["GET", "PUT"],
 };
 
 export async function handleStaffRequest(request: Request, path: string[]) {
@@ -87,6 +87,7 @@ export async function handleStaffRequest(request: Request, path: string[]) {
       return json(reading[2] ? await records.acknowledgeReading(request, identity, id) : await records.readingItem(identity, id));
     }
     if (route === "shifts") return json(await records.shifts(request, identity));
+    if (route === "availability") return json(method === "PUT" ? await records.saveAvailability(request, identity) : await records.availability(identity));
     if (route === "hr") return json(await records.hr(identity));
     if (review) return json(await records.acknowledgeReview(request, identity, parseInput(idSchema, review[1])));
     if (route === "notifications") return json(method === "PUT" ? await records.saveNotifications(request, identity) : await records.notifications(identity));

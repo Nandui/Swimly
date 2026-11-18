@@ -3,8 +3,10 @@ import { logAudit } from "@/lib/audit";
 import { isDateOnly, parseDateOnly, today, toDateOnlyString } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { acknowledgeReviewFor, hrConfigured, logOwnHrRead, mySharedHr } from "@/modules/hr";
-import { myQualifications } from "@/lib/people/mine";
+import { myQualifications, myUsualWeek } from "@/lib/people/mine";
+import { saveMyUsualWeek } from "@/lib/people/self";
 import { myDays } from "@/modules/rota";
+import { staffSiteIds } from "@/lib/directory";
 import { docsReading } from "@/modules/docs";
 import { myHours } from "@/modules/qualifications";
 import {
@@ -17,7 +19,7 @@ import { StaffApiError, notFound } from "@/lib/staff-api/errors";
 import { idSchema, parseInput, readBody } from "@/lib/staff-api/http";
 import { rateLimit } from "@/lib/staff-api/security";
 import { requireConfirmed, type StaffIdentity } from "@/lib/staff-api/auth";
-import { appOn } from "@/lib/apps/switches";
+import { appOn, sitesWhereOn } from "@/lib/apps/switches";
 
 /** Everything Turnfin Me can read or do, for the signed-in person only. Every
  *  response is built field by field from an allowlist: no swimmers, refunds,
@@ -544,6 +546,40 @@ export async function shifts(request: Request, identity: StaffIdentity) {
       ...d.shift.parts.flatMap((p) => p.breaks.map((b) => ({ kind: "break" as const, startMinutes: b.start, endMinutes: b.end, label: b.paid ? "Paid break" : "Unpaid break", icon: "break", place: "", needs: null, warning: null }))),
     ].sort((a, b) => a.startMinutes - b.startMinutes),
   })) };
+}
+
+// ---------------------------------------------------------------------------
+// When I can work: the person's usual week, kept by the platform (D34, D35)
+// ---------------------------------------------------------------------------
+
+/** The apps that plan people from their usual week. It is offered only to people who work at a
+ *  site where one of them is on (no sites on the account means every site), so nobody is asked
+ *  for something nobody reads. Anyone else is told it is not available. */
+const USUAL_WEEK_READERS = ["plan", "staffing"] as const;
+
+async function requireUsualWeekRead(identity: StaffIdentity) {
+  const mine = await staffSiteIds(identity.user.id);
+  for (const app of USUAL_WEEK_READERS) {
+    const on = mine.length ? (await sitesWhereOn(app, mine, identity.user.orgId)).length > 0 : await appOn(app, { orgId: identity.user.orgId });
+    if (on) return;
+  }
+  throw new StaffApiError(404, "NOT_AVAILABLE", "That is not available.");
+}
+
+export async function availability(identity: StaffIdentity) {
+  await requireUsualWeekRead(identity);
+  const week = await myUsualWeek(identity.user.id);
+  return { said: week.said, days: week.days.map((d) => ({ mode: d.mode, start: d.start, end: d.end })), updatedAt: week.updatedAt?.toISOString() ?? null };
+}
+
+export async function saveAvailability(request: Request, identity: StaffIdentity) {
+  await requireUsualWeekRead(identity);
+  // The platform checks the shape and says what is wrong in the person's words; here only the size.
+  const input = await readBody(request, z.object({ days: z.array(z.unknown()).max(7) }).strict());
+  await rateLimit(`availability:${identity.user.id}`, 20, 3600);
+  const result = await saveMyUsualWeek({ id: identity.user.id, name: identity.user.name, orgId: identity.user.orgId }, input);
+  if (!result.ok) throw new StaffApiError(400, "INVALID_REQUEST", result.error);
+  return availability(identity);
 }
 
 // ---------------------------------------------------------------------------

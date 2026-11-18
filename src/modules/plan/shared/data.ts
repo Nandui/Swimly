@@ -1,5 +1,5 @@
 import "server-only";
-import { activePlacedStaff, activeStaffAtSite, areasAt, staffByIds } from "@/lib/directory";
+import { activePlacedStaff, activeStaffAtSite, areasAt, staffByIds, usualWeeksByIds } from "@/lib/directory";
 import { qualificationsHeldBy, qualificationTypesOf } from "@/lib/qualifications";
 import { prisma } from "@/lib/prisma";
 import { commitmentsFor } from "@/modules/contributions";
@@ -80,6 +80,12 @@ export async function offsBetween(orgId: string, from: string, to: string, userI
     where: { orgId, withdrawnAt: null, firstDay: { lte: to }, lastDay: { gte: from }, ...(userIds ? { userId: { in: [...userIds] } } : {}) },
     orderBy: { firstDay: "asc" }, select: { id: true, userId: true, firstDay: true, lastDay: true, reason: true, note: true },
   });
+}
+
+/** The times these people said they can usually work, by person; anyone missing has not said.
+ *  The platform keeps them (D35); Plan reads them as a guide. */
+export async function usualWeeksOf(userIds: readonly string[]) {
+  return new Map([...await usualWeeksByIds(userIds)].map(([id, week]) => [id, week.days]));
 }
 
 /** Classes and other apps' commitments at the site, day by day (and these people's elsewhere,

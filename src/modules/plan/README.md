@@ -29,7 +29,7 @@ Declared in `prisma/schema/plan.prisma`:
 - `plan_offs` (`PlanOff`) — people marked off.
 - `plan_chat_spaces`, `plan_cover_requests`, `plan_cover_offers` (`PlanChatSpace`, `PlanCoverRequest`, `PlanCoverOffer`) — the Google Chat space each department's cover requests go to at a site, the gaps staff were asked to cover, and each person's latest answer.
 
-No relations to Core tables: sites, departments, people and qualifications are read through Core's functions. Nothing is read from Rota's tables.
+No relations to Core tables: sites, departments, people, qualifications and the times people said they can usually work ([D35](../../../docs/decisions.md): the Week shows them beside each day, the Day warns "Outside the times they gave", and neither stops a shift) are read through Core's functions. Nothing is read from Rota's tables.
 
 ## Events
 - Emits: none.

@@ -1,3 +1,5 @@
+import { outsideUsualWeek, type UsualWeek } from "@/lib/people/usual-week";
+
 /** Plan (test)'s day, worked out from scratch and pure (model.test.ts), with the owner's rules of
  *  29 October 2026:
  *  - A shift is built first: a person at a site on a day. Duty blocks fill it.
@@ -138,7 +140,7 @@ export function breakMinutesOwed(shiftMinutes: number): number {
 /** Swim school's classes, the commitments the class duty's qualification is checked for. */
 export const SWIM_CLASSES = "activities.classes";
 
-export type Warning = { shiftId: string; kind: "qualification" | "overlap" | "outside" | "off" | "class" | "break"; text: string };
+export type Warning = { shiftId: string; kind: "qualification" | "overlap" | "outside" | "off" | "class" | "break" | "usual"; text: string };
 
 const clock = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 const overlaps = (a: Span, b: Span) => a.start < b.end && b.start < a.end;
@@ -156,12 +158,16 @@ export function warningsOf(input: {
   elsewhere: readonly Shift[];
   /** The duty classes need, for its qualification. */
   classDutyId?: string | null;
+  /** The times each person said they can usually work, Monday first; anyone missing has not said. */
+  usual?: ReadonlyMap<string, UsualWeek>;
 }): Warning[] {
   const classDuty = input.classDutyId ? input.duties.get(input.classDutyId) : undefined;
   const out: Warning[] = [];
   for (const s of input.shifts) {
     const say = (kind: Warning["kind"], text: string) => out.push({ shiftId: s.id, kind, text });
     if (input.off.has(s.userId)) say("off", "Marked off this day.");
+    const usual = outsideUsualWeek(input.usual?.get(s.userId), s.date, s.start, s.end);
+    if (usual) say("usual", usual);
     const others = [...input.shifts.filter((o) => o.id !== s.id && o.userId === s.userId), ...input.elsewhere.filter((o) => o.userId === s.userId)];
     if (others.some((o) => overlaps(o, s))) say("overlap", "On another shift at the same time.");
     const blocks = [...s.blocks].sort((a, b) => a.start - b.start);

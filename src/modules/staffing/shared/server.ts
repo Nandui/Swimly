@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Prisma } from "@/generated/prisma/client";
 import { logAudit } from "@/lib/audit";
-import { activeStaffIds, contractMinutesByIds, liveSiteById, liveSitesWithin, staffAgesByIds, staffByIds } from "@/lib/directory";
+import { activeStaffIds, contractMinutesByIds, liveSiteById, liveSitesOf, liveSitesWithin, staffAgesByIds, staffByIds, staffIdsAtSite, usualWeeksByIds } from "@/lib/directory";
 import { toDateOnlyString, today } from "@/lib/format";
 import { currentActor, mayFor, sitesFor } from "@/lib/policy/session";
 import { prisma } from "@/lib/prisma";
@@ -12,7 +12,7 @@ import { qualificationsHeldBy } from "@/lib/qualifications";
 import type { PermissionKey } from "@/lib/staff/permissions";
 import { requireStaffingActor } from "@/modules/staffing/shared/access";
 import {
-  readSettings, semesterOf, strikeCounted, strikeDue, strikeStage, type ContractKind, type StaffingSettings, type StrikeCause,
+  changeInCheck, contractFit, preferenceChecks, readSettings, semesterOf, strikeCounted, strikeDue, strikeStage, type ContractKind, type StaffingSettings, type StrikeCause,
 } from "@/modules/staffing/shared/rules";
 
 /** What Staffing's reads and writes share: the pages to refresh, access at a site, the settings,
@@ -69,13 +69,14 @@ export async function pickSite(siteId: string | undefined) {
 }
 
 /** Everyone on the Staffing rota (swim teachers and lifeguards) who is still active, with what the warnings need:
- *  contract, college, contracted minutes, date of birth and qualifications. */
+ *  contract, college, contracted minutes, date of birth, qualifications and the times they said
+ *  they can usually work (the platform keeps those, D35). */
 export async function poolStaff(orgId: string | null, db: Db = prisma) {
   const rows = await db.staffingTeacher.findMany({ where: { orgId: orgId ?? undefined } });
   const active = await activeStaffIds(rows.map((r) => r.userId));
   const kept = rows.filter((r) => active.has(r.userId));
   const ids = kept.map((r) => r.userId);
-  const [names, ages, contracts, quals] = await Promise.all([staffByIds(ids), staffAgesByIds(ids), contractMinutesByIds(ids), qualificationsHeldBy(ids)]);
+  const [names, ages, contracts, quals, usual] = await Promise.all([staffByIds(ids), staffAgesByIds(ids), contractMinutesByIds(ids), qualificationsHeldBy(ids), usualWeeksByIds(ids)]);
   const dob = new Map(ages.map((a) => [a.id, a.dateOfBirth]));
   return kept.map((r) => ({
     id: r.userId,
@@ -86,7 +87,25 @@ export async function poolStaff(orgId: string | null, db: Db = prisma) {
     contractMinutes: contracts.get(r.userId) ?? null,
     dateOfBirth: dob.get(r.userId) ? toDateOnlyString(dob.get(r.userId)!) : null,
     quals: quals.filter((q) => q.userId === r.userId && !q.revokedAt).map((q) => ({ typeId: q.typeId, expiresOn: q.expiresOn ? toDateOnlyString(q.expiresOn) : null })),
+    usual: usual.get(r.userId)?.days ?? null,
+    usualChangedAt: usual.get(r.userId)?.changedAt ?? null,
   })).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** Everyone on the rota who works at a site, with the times they gave (D35): whether they changed
+ *  in the preference check `day` belongs to, and whether they leave room for their contracted
+ *  hours in the weekly places at the sites they work at. */
+export async function preferencesAt(orgId: string | null, siteId: string, settings: StaffingSettings, day = today(), db: Db = prisma) {
+  const [people, sites] = await Promise.all([poolStaff(orgId, db), liveSitesOf(orgId)]);
+  const worksAt = new Map(await Promise.all(sites.map(async (s) => [s.id, new Set(await staffIdsAtSite(s.id))] as const)));
+  const here = worksAt.get(siteId) ?? new Set(await staffIdsAtSite(siteId));
+  const slots = await db.staffingSlot.findMany({ where: { orgId: orgId ?? undefined, archivedAt: null }, select: { siteId: true, weekday: true, role: true, startMin: true, endMin: true } });
+  const { current } = preferenceChecks(day, settings);
+  return people.filter((p) => here.has(p.id)).map((p) => ({
+    id: p.id, name: p.name, contract: p.contract, contractMinutes: p.contractMinutes, usual: p.usual, changedAt: p.usualChangedAt,
+    change: changeInCheck(p.usualChangedAt, current),
+    fit: contractFit(p.usual, p.contract, p.contractMinutes, slots.filter((slot) => worksAt.get(slot.siteId)?.has(p.id))),
+  }));
 }
 
 /** Every shift these people have between two days, at any site, for the warnings. */

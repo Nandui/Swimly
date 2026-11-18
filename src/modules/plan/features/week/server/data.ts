@@ -2,7 +2,7 @@ import "server-only";
 import { notFound } from "next/navigation";
 import { today } from "@/lib/format";
 import { requirePlanActor } from "@/modules/plan/shared/access";
-import { dutiesOf, offsBetween, peopleFor, shiftsAt } from "@/modules/plan/shared/data";
+import { dutiesOf, offsBetween, peopleFor, shiftsAt, usualWeeksOf } from "@/modules/plan/shared/data";
 import { mondayOf, shiftIso } from "@/modules/plan/shared/model";
 import { pickSiteId, planSites, plannableDepartments, viewableSite } from "@/modules/plan/shared/scope";
 
@@ -26,13 +26,15 @@ export async function planWeek(params: { site?: string; week?: string; dept?: st
   const own = department ? people.filter((p) => p.departmentIds.includes(department.id)) : [];
   const borrowed = people.filter((p) => !own.includes(p) && shifts.some((s) => s.userId === p.id));
   const rows = [...own, ...borrowed];
-  const offs = await offsBetween(site.orgId, monday, sunday, rows.map((p) => p.id));
+  const rowIds = rows.map((p) => p.id);
+  const [offs, usual] = await Promise.all([offsBetween(site.orgId, monday, sunday, rowIds), usualWeeksOf(rowIds)]);
   // Shifts the same people have on other departments' plans here, so a double booking shows.
   const otherPlans = all.filter((s) => s.departmentId !== department?.id && rows.some((p) => p.id === s.userId));
   return {
     who, sites, site, monday, days, today: today(), departments, department,
     canPlan: Boolean(department && departments.mine.some((d) => d.id === department.id)),
-    rows: rows.map((p) => ({ ...p, borrowed: borrowed.includes(p) })),
+    /** `usual`: the times they said they can usually work, Monday first (D34); null when they have not said. */
+    rows: rows.map((p) => ({ ...p, borrowed: borrowed.includes(p), usual: usual.get(p.id) ?? null })),
     people, shifts, otherPlans, offs, duties,
   } as const;
 }

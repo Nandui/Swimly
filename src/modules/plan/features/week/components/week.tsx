@@ -9,11 +9,13 @@ import { formatDateRange, formatDayMonth, formatTimeRange, formatWeekday, plural
 import { CopyWeekButton } from "@/modules/plan/features/week/components/copy-week";
 import type { PlanWeekData } from "@/modules/plan/features/week/server/data";
 import { shiftIso } from "@/modules/plan/shared/model";
+import { usualDayText } from "@/lib/people/usual-week";
 import { offReasonMeta } from "@/modules/plan/shared/rules";
 import { RemoveShiftDialog, ShiftDialog } from "@/modules/plan/shared/components/shift-dialog";
 
 /** The Week: the department's people down the side, Monday to Sunday across, each day's shift (with
- *  how many duties it has), who is off, and anyone also on another department's plan that day. */
+ *  how many duties it has), who is off, the times they said they can usually work that day (D34)
+ *  and anyone also on another department's plan that day. */
 export function WeekView({ data }: { data: PlanWeekData }) {
   const { site, department, days, monday, rows, shifts, offs, otherPlans, canPlan, departments, people } = data;
   const link = (change: Record<string, string>) => `/plan?${new URLSearchParams({ site: site.id, week: monday, ...(department ? { dept: department.id } : {}), ...change })}`;
@@ -63,7 +65,8 @@ export function WeekView({ data }: { data: PlanWeekData }) {
                   <TableHead scope="row" className="min-w-36">
                     <span className="flex flex-col"><span>{p.name}</span>{p.borrowed ? <span className="text-sm font-normal text-ui-muted-foreground">Borrowed</span> : null}</span>
                   </TableHead>
-                  {days.map((date) => {
+                  {days.map((date, weekday) => {
+                    const usual = usualDayText(p.usual?.[weekday]);
                     const shift = shifts.find((s) => s.userId === p.id && s.date === date);
                     const off = offs.find((o) => o.userId === p.id && o.firstDay <= date && o.lastDay >= date);
                     const elsewhere = otherPlans.filter((s) => s.userId === p.id && s.date === date);
@@ -85,6 +88,7 @@ export function WeekView({ data }: { data: PlanWeekData }) {
                           ) : null}
                           {shift && canPlan ? <RemoveShiftDialog id={shift.id} name={p.name} date={date}
                             trigger={<Button variant="link" className="h-auto p-0 text-sm">Remove</Button>} /> : null}
+                          {usual ? <span className="text-sm text-ui-muted-foreground tabular-nums">{usual}</span> : null}
                           {elsewhere.map((s) => <span key={s.id} className="text-sm text-ui-muted-foreground tabular-nums">Also {departmentName(s.departmentId)} {formatTimeRange(s.start, s.end)}</span>)}
                         </div>
                       </TableCell>

@@ -165,13 +165,14 @@ export function SettingsDialog({ settings, types }: { settings: StaffingSettings
       title="Staffing settings" description="For the whole organisation. Every change is logged." submitLabel="Save settings" successMessage="Settings saved" onSuccess={refresh}
       submit={(fd) => saveSettings({
         ...Object.fromEntries(NUMBERS.map(([k]) => [k, text(fd, k)])), ...Object.fromEntries(TIMES.map(([k]) => [k, text(fd, k)])),
-        strikeCountingFrom: text(fd, "strikeCountingFrom"),
+        strikeCountingFrom: text(fd, "strikeCountingFrom"), checkFrom: text(fd, "checkFrom"),
         teachingTypeId: text(fd, "teachingTypeId") || null, lifeguardTypeId: text(fd, "lifeguardTypeId") || null, vettingTypeId: text(fd, "vettingTypeId") || null,
       })}>
       <div className="grid gap-4 sm:grid-cols-2">
         {TIMES.map(([k, label, hint]) => <Field key={k} label={label} htmlFor={`stf-set-${k}`} hint={hint || undefined}><Input id={`stf-set-${k}`} name={k} type="time" required defaultValue={settings[k]} className="min-h-11" /></Field>)}
         {NUMBERS.map(([k, label, hint]) => <Field key={k} label={label} htmlFor={`stf-set-${k}`} hint={hint || undefined}><Input id={`stf-set-${k}`} name={k} type="number" inputMode="numeric" min={0} required defaultValue={settings[k]} className="min-h-11" /></Field>)}
         <Field label="Strikes count from" htmlFor="stf-set-count" hint="Before this, strikes are logged but not counted."><Input id="stf-set-count" name="strikeCountingFrom" type="date" required defaultValue={settings.strikeCountingFrom} className="min-h-11" /></Field>
+        <Field label="First preference check" htmlFor="stf-set-check" hint="A Monday. Staff are asked then, and every few weeks after."><Input id="stf-set-check" name="checkFrom" type="date" required defaultValue={settings.checkFrom} className="min-h-11" /></Field>
       </div>
       {pick("teachingTypeId", "Swim teacher qualification")}
       {pick("lifeguardTypeId", "Lifeguard qualification")}

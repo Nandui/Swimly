@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { dublinInstant } from "@/lib/format";
+import type { UsualDay } from "@/lib/people/usual-week";
 import {
-  ackState, attendanceStrike, blockState, contractCovers, examOutcome, fitWarnings, hoursAgainstContract, judgeCallOff, mondayOf, nextBlockStart, placesFor, rankFits,
+  ackState, attendanceStrike, blockState, changeInCheck, checkOpen, contractCovers, contractFit, preferenceChecks, examOutcome, fitWarnings, hoursAgainstContract, judgeCallOff, mondayOf, nextBlockStart, placesFor, rankFits,
   publishDeadline, readSettings, semesterOf, STAFFING_DEFAULTS as S, strikeCounted, strikeDue, strikeStage, swapAllowed, swapExpired, type FitPerson,
 } from "@/modules/staffing/shared/rules";
 
@@ -158,4 +159,61 @@ test("who could take a shift: below contract first, then extra hours with no str
   const shifts = [{ id: "x", userId: "busy", date: "2026-12-08", startMin: 600, endMin: 700, role: "teaching" }];
   const ranked = rankFits({ date: "2026-12-08", startMin: 615, endMin: 795, role: "teaching" }, people, shifts, S);
   assert.deepEqual(ranked.map((r) => r.id), ["short", "more", "struck", "busy"]);
+});
+
+/* ---------- The times staff gave, and the preference check (D35) ---------- */
+
+const anyTime: UsualDay = { mode: "any", start: null, end: null }, cantWork: UsualDay = { mode: "none", start: null, end: null };
+
+test("the preference check opens every four weeks from 7 December and closes on the Wednesday at 17:00", () => {
+  const before = preferenceChecks("2026-12-06", S);
+  assert.equal(before.current, null, "nothing has opened yet");
+  assert.equal(before.next.opensOn, "2026-12-07");
+  const first = preferenceChecks("2026-12-08", S).current!;
+  assert.deepEqual([first.opensOn, first.closesOn], ["2026-12-07", "2026-12-09"]);
+  assert.equal(first.closesAt.toISOString(), at("2026-12-09", "17:00").toISOString());
+  // The owner's dates (email of 18 November 2026).
+  const opens: string[] = [];
+  for (let day = "2026-12-07"; opens.length < 7; day = preferenceChecks(day, S).next.opensOn) opens.push(preferenceChecks(day, S).current!.opensOn);
+  assert.deepEqual(opens, ["2026-12-07", "2027-01-04", "2027-02-01", "2027-03-01", "2027-03-29", "2027-04-26", "2027-05-24"]);
+  assert.equal(preferenceChecks("2027-01-03", S).current!.opensOn, "2026-12-07", "the day before the next check still belongs to the last");
+  assert.equal(checkOpen(first, at("2026-12-09", "17:00")), true);
+  assert.equal(checkOpen(first, at("2026-12-09", "17:05")), false);
+});
+
+test("a change counts in the check it was sent in; after the deadline it is marked, and before it opened it is old news", () => {
+  const check = preferenceChecks("2026-12-08", S).current;
+  assert.equal(changeInCheck(null, check), null, "they have not said");
+  assert.equal(changeInCheck(at("2026-12-06", "12:00"), check), null);
+  assert.equal(changeInCheck(at("2026-12-08", "09:00"), check), "in_check");
+  assert.equal(changeInCheck(at("2026-12-10", "09:00"), check), "after_check");
+  assert.equal(changeInCheck(at("2026-12-08", "09:00"), null), null, "no check has opened");
+});
+
+test("a shift outside the times they gave is warned about, and never pushes a name down as a serious warning does", () => {
+  // 10 December 2026 is a Thursday: they can work Thursdays from 16:00 to 21:00.
+  const usual: UsualDay[] = [anyTime, anyTime, anyTime, { mode: "between", start: 16 * 60, end: 21 * 60 }, cantWork, anyTime, anyTime];
+  const person: FitPerson = { contract: "swim_teacher", dateOfBirth: null, quals: [], shifts: [], usual };
+  const morning = { date: "2026-12-10", startMin: 9 * 60, endMin: 12 * 60, role: "teaching" };
+  assert.deepEqual(fitWarnings(morning, person, S).map((w) => [w.kind, w.text]), [["usual", "Outside the times they gave: Thursdays 16:00\u201321:00."]]);
+  assert.deepEqual(fitWarnings({ ...morning, startMin: 17 * 60, endMin: 20 * 60 }, person, S), [], "inside their times");
+  assert.deepEqual(fitWarnings(morning, { ...person, usual: null }, S), [], "they have not said");
+  const ranked = rankFits(morning, [{ id: "a", name: "Ann", contract: "swim_teacher", dateOfBirth: null, quals: [], contractMinutes: null, wantsMore: false, strikes: 0, usual }], [], S);
+  assert.equal(ranked[0].serious, false, "a guide, never a limit");
+});
+
+test("contracted hours against the times they gave: only places their contract covers, wholly inside their times", () => {
+  const usual: UsualDay[] = [anyTime, cantWork, anyTime, anyTime, anyTime, anyTime, anyTime];
+  const slots = [
+    { weekday: 2, role: "teaching", startMin: 615, endMin: 795 }, // Tuesday: they can't work
+    { weekday: 3, role: "teaching", startMin: 615, endMin: 795 }, // Wednesday: 3 hours
+    { weekday: 3, role: "lifeguard", startMin: 14 * 60, endMin: 18 * 60 }, // Wednesday: 4 hours, lifeguards only
+  ];
+  assert.deepEqual(contractFit(usual, "swim_teacher", 600, slots), { fits: 180, short: 420 });
+  assert.deepEqual(contractFit(usual, "swim_teacher_lifeguard", 600, slots), { fits: 420, short: 180 });
+  assert.deepEqual(contractFit(usual, "swim_teacher", 180, slots), { fits: 180, short: 0 });
+  assert.equal(contractFit(null, "swim_teacher", 600, slots), null, "they have not said");
+  assert.equal(contractFit(usual, "swim_teacher", null, slots), null, "no contracted hours on their Staff page");
+  assert.equal(contractFit(usual, "swim_teacher", 600, []), null, "no places set up yet: nobody is flagged");
+  assert.equal(contractFit(usual, "swim_teacher", 600, slots.slice(2)), null, "only lifeguard places: nothing their contract covers");
 });

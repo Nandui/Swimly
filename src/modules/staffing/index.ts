@@ -1,13 +1,8 @@
 /** Staffing's front door (docs/architecture.md, How apps talk): the only file other apps, the
- *  platform and the front may import. The status maps are here for the platform's tone check. */
-import {
-  ACK_STATE_META, ATTENDANCE_META, BLOCK_STATE_META, COLLEGE_META, CONTRACT_KIND_META, EXAM_OUTCOME_META, FIT_META, HOURS_META, REQUEST_FLAG_META, SHIFT_STATUS_META,
-  SLOT_ROLE_META, STRIKE_CAUSE_META, STRIKE_STAGE_META, SWAP_STATUS_META,
-} from "@/modules/staffing/shared/rules";
+ *  platform and the front may import. The status maps are for the platform's tone check, which
+ *  reads them where they are kept (shared/rules.ts), because this file also serves the daily
+ *  reminder email (server code). */
+export { STAFFING_STATUS_MAPS } from "@/modules/staffing/shared/rules";
 
-export const STAFFING_STATUS_MAPS = {
-  STAFFING_ACK_STATE_META: ACK_STATE_META, STAFFING_ATTENDANCE_META: ATTENDANCE_META, STAFFING_BLOCK_STATE_META: BLOCK_STATE_META,
-  STAFFING_COLLEGE_META: COLLEGE_META, STAFFING_CONTRACT_KIND_META: CONTRACT_KIND_META, STAFFING_EXAM_OUTCOME_META: EXAM_OUTCOME_META,
-  STAFFING_FIT_META: FIT_META, STAFFING_HOURS_META: HOURS_META, STAFFING_REQUEST_FLAG_META: REQUEST_FLAG_META, STAFFING_SHIFT_STATUS_META: SHIFT_STATUS_META, STAFFING_SLOT_ROLE_META: SLOT_ROLE_META,
-  STAFFING_STRIKE_CAUSE_META: STRIKE_CAUSE_META, STAFFING_STRIKE_STAGE_META: STRIKE_STAGE_META, STAFFING_SWAP_STATUS_META: SWAP_STATUS_META,
-};
+/** The preference check line for the daily reminder email to Turnfin Me (D35). */
+export { preferenceCheckReminderItems } from "@/modules/staffing/features/preferences/server/reminders";
