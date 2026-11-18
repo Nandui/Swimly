@@ -578,6 +578,25 @@ model QualificationEvidence {
   @@index([userId])
 }
 
+/// The times a person says they can usually work, one row each, sent from Turnfin Me (D34, D35).
+/// A fact about the person, beside their contracted hours: it guides whoever plans them and never
+/// limits them. No row means they have not said. `updatedAt` moves only when the week changes.
+model StaffUsualWeek {
+  id        String   @id @default(cuid())
+  orgId     String
+  userId    String   @unique
+  /// Monday to Sunday, seven of each. "any" (any time), "none" (can't work that day) or "between".
+  modes     String[]
+  /// A "between" day's first and last minute after midnight; 0 for the other two.
+  starts    Int[]
+  ends      Int[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@index([orgId])
+  @@map("staff_usual_weeks")
+}
+
 /// Which reminder emails a person wants. No row means every reminder is on.
 model StaffNotificationPreference {
   userId              String   @id

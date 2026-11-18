@@ -13,8 +13,7 @@ import { coinageStatuses } from "@/modules/finance-requests";
 import { MONITORING_STATUS_META } from "@/modules/site-monitoring";
 import { MAINTENANCE_STATUS_META, MAINTENANCE_URGENCY_META } from "@/modules/maintenance";
 import { RISK_BAND_META, RISK_REQUEST_META, RISK_REVIEW_META, RISK_STATUS_META } from "@/modules/risk";
-// Plan's front door also serves Turnfin Me (server code, D34), so its tag map is read where it is kept, as Rota's is.
-import { OFF_REASON_META } from "@/modules/plan/shared/rules";
+import { OFF_REASON_META } from "@/modules/plan";
 import { PAYMENT_STATUS_META } from "@/modules/activities/shared/payments/types";
 import * as shortCourses from "@/modules/activities/shared/short-courses/rules";
 import * as academy from "@/modules/academy";

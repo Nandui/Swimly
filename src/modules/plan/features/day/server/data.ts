@@ -39,7 +39,7 @@ export async function planDay(params: { site?: string; date?: string; dept?: str
   const [people, offs, elsewhere, classes, held, answeredBy, usual] = await Promise.all([
     peopleFor(site.orgId, site.id, userIds), offsBetween(site.orgId, date, date), shiftsElsewhere(site.orgId, site.id, userIds, date, date),
     classesAt(site.id, userIds, date, date), heldOn([...new Set([...userIds, ...answeredIds])]), staffByIds(answeredIds),
-    usualWeeksOf(site.orgId, userIds),
+    usualWeeksOf(userIds),
   ]);
   const dutyMap = new Map(duties.map((d) => [d.id, d]));
   const classDuty = duties.find((d) => d.forClasses) ?? null;

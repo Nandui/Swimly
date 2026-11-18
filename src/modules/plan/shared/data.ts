@@ -1,10 +1,9 @@
 import "server-only";
-import { activePlacedStaff, activeStaffAtSite, areasAt, staffByIds } from "@/lib/directory";
+import { activePlacedStaff, activeStaffAtSite, areasAt, staffByIds, usualWeeksByIds } from "@/lib/directory";
 import { qualificationsHeldBy, qualificationTypesOf } from "@/lib/qualifications";
 import { prisma } from "@/lib/prisma";
 import { commitmentsFor } from "@/modules/contributions";
 import type { ClassItem, DutyRef, DutyTask, SessionDef, Shift } from "@/modules/plan/shared/model";
-import { USUAL_MODES, type UsualDay } from "@/modules/plan/shared/rules";
 
 /** What Plan (test) reads for one site over some days, for the Week and Day screens: the setup,
  *  what's on, the shifts, who is off, the classes from other apps and who holds which
@@ -83,20 +82,10 @@ export async function offsBetween(orgId: string, from: string, to: string, userI
   });
 }
 
-/** A stored usual week as seven days, Monday first. A day that does not read right is any time. */
-export function usualWeekOf(row: { modes: string[]; starts: number[]; ends: number[] }): UsualDay[] {
-  return Array.from({ length: 7 }, (_, i): UsualDay => {
-    const mode = USUAL_MODES.find((m) => m === row.modes[i]) ?? "any";
-    if (mode !== "between") return { mode, start: null, end: null };
-    return row.ends[i] > row.starts[i] ? { mode, start: row.starts[i], end: row.ends[i] } : { mode: "any", start: null, end: null };
-  });
-}
-
-/** The times these people said they can usually work (D34), by person; anyone missing has not said. */
-export async function usualWeeksOf(orgId: string, userIds: readonly string[]) {
-  if (!userIds.length) return new Map<string, UsualDay[]>();
-  const rows = await prisma.planAvailability.findMany({ where: { orgId, userId: { in: [...userIds] } }, select: { userId: true, modes: true, starts: true, ends: true } });
-  return new Map(rows.map((r) => [r.userId, usualWeekOf(r)]));
+/** The times these people said they can usually work, by person; anyone missing has not said.
+ *  The platform keeps them (D35); Plan reads them as a guide. */
+export async function usualWeeksOf(userIds: readonly string[]) {
+  return new Map([...await usualWeeksByIds(userIds)].map(([id, week]) => [id, week.days]));
 }
 
 /** Classes and other apps' commitments at the site, day by day (and these people's elsewhere,

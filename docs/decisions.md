@@ -6,6 +6,12 @@ The decisions Turnfin 2.0 stands on, newest first. Each says what was decided, w
 
 ---
 
+### D35 · 18 November 2026 · The usual week is the platform's, and Staffing asks about it every four weeks
+
+The times a person says they can usually work (D34) are kept by the **platform**, beside their contracted hours, in `staff_usual_weeks` (`StaffUsualWeek`, one row a person). Plan (test) and Staffing both read them through the directory (`usualWeeksByIds`); the person writes only their own, in Turnfin Me. Turnfin Me offers it to anyone who works at a site where Plan (test) or Staffing is on. The owner chose the platform over keeping it in Plan (test) or giving Staffing its own (same day as D34, before D34's table was released, so nothing is copied or dropped).
+**Why:** the rostering procedure for swim teachers and lifeguards (owner's email, 18 November 2026) runs in Staffing at both centres, and Plan (test) is on trial at one site. A second availability in Staffing would have staff say the same thing twice.
+**Follows:** it stays a **guide, never a limit**. Staffing warns "Outside the times they gave" wherever it warns about anything else (a block, Choose, a swap, cover). The **preference check** is not a record: every four weeks from a first Monday (settings; 7 December 2026), Staffing puts one line in the daily reminder email to everyone on its rota, asking them to update their week by Wednesday 17:00 if it has changed. No answer means no change, so there is nothing to chase and no round to store; "who changed" is the date each person's week last changed, against the check's dates. Someone whose times cannot fit their contracted hours in the site's places is flagged for the centre manager (Manage). **Not built:** dated days, the record of the centre manager's meeting, and the two-day rule for a new timetable outside a check.
+
 ### D34 · 18 November 2026 · Plan (test): staff say when they can usually work
 
 Each member of staff can send **the times they can usually work**: for each weekday, any time, between two times, or not at all. They send it in **Turnfin Me** (More › When I can work) and change it when their week changes. Whoever plans them sees it in Plan (test): beside each day on the Week, and as a warning on the Day when a shift falls outside it. The owner chose Plan (test) over Staffing and Rota, a usual week over dated days, and a guide over a limit (same day).

@@ -3,9 +3,9 @@ import { logAudit } from "@/lib/audit";
 import { isDateOnly, parseDateOnly, today, toDateOnlyString } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { acknowledgeReviewFor, hrConfigured, logOwnHrRead, mySharedHr } from "@/modules/hr";
-import { myQualifications } from "@/lib/people/mine";
+import { myQualifications, myUsualWeek } from "@/lib/people/mine";
+import { saveMyUsualWeek } from "@/lib/people/self";
 import { myDays } from "@/modules/rota";
-import { myUsualWeek, saveMyUsualWeek } from "@/modules/plan";
 import { staffSiteIds } from "@/lib/directory";
 import { docsReading } from "@/modules/docs";
 import { myHours } from "@/modules/qualifications";
@@ -549,26 +549,32 @@ export async function shifts(request: Request, identity: StaffIdentity) {
 }
 
 // ---------------------------------------------------------------------------
-// When I can work: the person's usual week, for whoever plans them (Plan, D34)
+// When I can work: the person's usual week, kept by the platform (D34, D35)
 // ---------------------------------------------------------------------------
 
-/** Plan reads it only where it is on, so it is offered only to people who work at such a site
- *  (no sites on the account means every site). Anyone else is told it is not available. */
-async function requirePlanAtMySites(identity: StaffIdentity) {
+/** The apps that plan people from their usual week. It is offered only to people who work at a
+ *  site where one of them is on (no sites on the account means every site), so nobody is asked
+ *  for something nobody reads. Anyone else is told it is not available. */
+const USUAL_WEEK_READERS = ["plan", "staffing"] as const;
+
+async function requireUsualWeekRead(identity: StaffIdentity) {
   const mine = await staffSiteIds(identity.user.id);
-  const on = mine.length ? (await sitesWhereOn("plan", mine, identity.user.orgId)).length > 0 : await appOn("plan", { orgId: identity.user.orgId });
-  if (!on) throw new StaffApiError(404, "NOT_AVAILABLE", "That is not available.");
+  for (const app of USUAL_WEEK_READERS) {
+    const on = mine.length ? (await sitesWhereOn(app, mine, identity.user.orgId)).length > 0 : await appOn(app, { orgId: identity.user.orgId });
+    if (on) return;
+  }
+  throw new StaffApiError(404, "NOT_AVAILABLE", "That is not available.");
 }
 
 export async function availability(identity: StaffIdentity) {
-  await requirePlanAtMySites(identity);
+  await requireUsualWeekRead(identity);
   const week = await myUsualWeek(identity.user.id);
   return { said: week.said, days: week.days.map((d) => ({ mode: d.mode, start: d.start, end: d.end })), updatedAt: week.updatedAt?.toISOString() ?? null };
 }
 
 export async function saveAvailability(request: Request, identity: StaffIdentity) {
-  await requirePlanAtMySites(identity);
-  // Plan checks the shape and says what is wrong in the person's words; here only the size.
+  await requireUsualWeekRead(identity);
+  // The platform checks the shape and says what is wrong in the person's words; here only the size.
   const input = await readBody(request, z.object({ days: z.array(z.unknown()).max(7) }).strict());
   await rateLimit(`availability:${identity.user.id}`, 20, 3600);
   const result = await saveMyUsualWeek({ id: identity.user.id, name: identity.user.name, orgId: identity.user.orgId }, input);
@@ -630,7 +636,7 @@ export async function saveNotifications(request: Request, identity: StaffIdentit
  *  switched off in the person's organisation answers "not available", as an unset one does. */
 function appOfRoute(route: string): string | null {
   const [first] = route.split("/");
-  return ({ training: "training", reading: "docs", shifts: "rota", hr: "hr", availability: "plan" } as Record<string, string>)[first] ?? null;
+  return ({ training: "training", reading: "docs", shifts: "rota", hr: "hr" } as Record<string, string>)[first] ?? null;
 }
 
 export async function requireAppOn(identity: StaffIdentity, route: string) {

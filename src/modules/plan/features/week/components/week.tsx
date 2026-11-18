@@ -9,7 +9,8 @@ import { formatDateRange, formatDayMonth, formatTimeRange, formatWeekday, plural
 import { CopyWeekButton } from "@/modules/plan/features/week/components/copy-week";
 import type { PlanWeekData } from "@/modules/plan/features/week/server/data";
 import { shiftIso } from "@/modules/plan/shared/model";
-import { offReasonMeta, usualDayText } from "@/modules/plan/shared/rules";
+import { usualDayText } from "@/lib/people/usual-week";
+import { offReasonMeta } from "@/modules/plan/shared/rules";
 import { RemoveShiftDialog, ShiftDialog } from "@/modules/plan/shared/components/shift-dialog";
 
 /** The Week: the department's people down the side, Monday to Sunday across, each day's shift (with

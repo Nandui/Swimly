@@ -1,3 +1,5 @@
+import { outsideUsualWeek, type UsualWeek } from "@/lib/people/usual-week";
+
 /** Plan (test)'s day, worked out from scratch and pure (model.test.ts), with the owner's rules of
  *  29 October 2026:
  *  - A shift is built first: a person at a site on a day. Duty blocks fill it.
@@ -143,22 +145,6 @@ export type Warning = { shiftId: string; kind: "qualification" | "overlap" | "ou
 const clock = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 const overlaps = (a: Span, b: Span) => a.start < b.end && b.start < a.end;
 
-/** One weekday of the times a person said they can usually work (D34; `UsualDay` in rules.ts). */
-export type UsualTimes = { mode: string; start: number | null; end: number | null };
-const WEEKDAY_NAMES = ["Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays", "Saturdays", "Sundays"] as const;
-
-/** What to say when a shift falls outside the times its person said they can usually work (D34),
- *  or null: they have not said, any time suits that weekday, or the shift is inside their times.
- *  `week` is Monday first, as they sent it. */
-export function outsideUsual(week: readonly UsualTimes[] | undefined, date: string, span: Span): string | null {
-  const weekday = weekdayOfIso(date);
-  const day = week?.[weekday];
-  if (!day || day.mode === "any") return null;
-  if (day.mode === "none" || day.start === null || day.end === null) return `Outside the times they gave: they can't work ${WEEKDAY_NAMES[weekday]}.`;
-  if (span.start >= day.start && span.end <= day.end) return null;
-  return `Outside the times they gave: ${WEEKDAY_NAMES[weekday]} ${clock(day.start)}–${clock(day.end)}.`;
-}
-
 /** What to warn about on each shift of a day. `held` says whether a person holds a qualification on
  *  the day; `off` is who is marked off; `classes` are every class that day, any site, by teacher;
  *  `elsewhere` their shifts at other sites that day. */
@@ -173,14 +159,14 @@ export function warningsOf(input: {
   /** The duty classes need, for its qualification. */
   classDutyId?: string | null;
   /** The times each person said they can usually work, Monday first; anyone missing has not said. */
-  usual?: ReadonlyMap<string, readonly UsualTimes[]>;
+  usual?: ReadonlyMap<string, UsualWeek>;
 }): Warning[] {
   const classDuty = input.classDutyId ? input.duties.get(input.classDutyId) : undefined;
   const out: Warning[] = [];
   for (const s of input.shifts) {
     const say = (kind: Warning["kind"], text: string) => out.push({ shiftId: s.id, kind, text });
     if (input.off.has(s.userId)) say("off", "Marked off this day.");
-    const usual = outsideUsual(input.usual?.get(s.userId), s.date, s);
+    const usual = outsideUsualWeek(input.usual?.get(s.userId), s.date, s.start, s.end);
     if (usual) say("usual", usual);
     const others = [...input.shifts.filter((o) => o.id !== s.id && o.userId === s.userId), ...input.elsewhere.filter((o) => o.userId === s.userId)];
     if (others.some((o) => overlaps(o, s))) say("overlap", "On another shift at the same time.");

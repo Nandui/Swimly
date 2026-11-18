@@ -27,7 +27,7 @@ export async function planWeek(params: { site?: string; week?: string; dept?: st
   const borrowed = people.filter((p) => !own.includes(p) && shifts.some((s) => s.userId === p.id));
   const rows = [...own, ...borrowed];
   const rowIds = rows.map((p) => p.id);
-  const [offs, usual] = await Promise.all([offsBetween(site.orgId, monday, sunday, rowIds), usualWeeksOf(site.orgId, rowIds)]);
+  const [offs, usual] = await Promise.all([offsBetween(site.orgId, monday, sunday, rowIds), usualWeeksOf(rowIds)]);
   // Shifts the same people have on other departments' plans here, so a double booking shows.
   const otherPlans = all.filter((s) => s.departmentId !== department?.id && rows.some((p) => p.id === s.userId));
   return {

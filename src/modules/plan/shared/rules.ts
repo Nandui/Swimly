@@ -121,27 +121,5 @@ export const offSchema = z.object({
 }).refine((o) => o.lastDay >= o.firstDay, { message: "The last day can't be before the first.", path: ["lastDay"] });
 export type OffInput = z.input<typeof offSchema>;
 
-/** The times a person says they can usually work (D34): for each weekday, Monday first, any time,
- *  not at all, or between two times. It guides whoever plans and never limits them. */
-export const USUAL_MODES = ["any", "none", "between"] as const;
-export type UsualDay = { mode: (typeof USUAL_MODES)[number]; start: number | null; end: number | null };
-export type UsualWeek = readonly UsualDay[];
-export const ANY_WEEK: UsualWeek = WEEKDAYS.map(() => ({ mode: "any", start: null, end: null }));
-
-const usualDay = z.object({ mode: z.enum(USUAL_MODES), start: minutes.nullable().default(null), end: minutes.nullable().default(null) }).strict()
-  .refine((d) => d.mode !== "between" || (d.start !== null && d.end !== null), { message: "Give both times for each day you can work part of.", path: ["start"] })
-  .refine((d) => d.mode !== "between" || d.start === null || d.end === null || d.end > d.start, spanMessage)
-  // Times mean something only on a "between" day: the other two never keep them.
-  .transform((d): UsualDay => d.mode === "between" ? d : { mode: d.mode, start: null, end: null });
-export const usualWeekSchema = z.object({ days: z.array(usualDay).length(7, "Say something for each day, Monday to Sunday.") }).strict();
-export type UsualWeekInput = z.input<typeof usualWeekSchema>;
-
-/** A day of the usual week in a planner's words: "Can't work", "Can work 16:00 to 21:00", or null
- *  when any time suits (nothing to say). */
-export function usualDayText(day: UsualDay | undefined): string | null {
-  if (!day || day.mode === "any") return null;
-  return day.mode === "none" || day.start === null || day.end === null ? "Can't work" : `Can work ${clock(day.start)} to ${clock(day.end)}`;
-}
-
 /** A Zod failure as the one sentence to show. */
 export const firstIssue = (error: z.ZodError) => error.issues[0]?.message ?? "Check the details and try again.";

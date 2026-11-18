@@ -135,7 +135,7 @@ test("every endpoint returns only the caller's own records, with no work data", 
   assert.equal(home.reviewsToAcknowledge, 1, "a count only; HR content needs a fresh code");
 });
 
-test("when I can work: a person sends their own usual week, and only where Plan is on at their sites", async () => {
+test("when I can work: a person sends their own usual week, and only where an app that plans from it is on at their sites", async () => {
   const db = fixture.prisma;
   const first = await (await call("availability")).json();
   assert.equal(first.said, false);
@@ -150,18 +150,21 @@ test("when I can work: a person sends their own usual week, and only where Plan 
   assert.deepEqual(Object.keys(body).sort(), ["days", "said", "updatedAt"]);
   assert.deepEqual(body.days.slice(0, 2), [{ mode: "between", start: 960, end: 1260 }, { mode: "none", start: null, end: null }]);
   await call("availability", "PUT", { days });
-  const rows = await db.planAvailability.findMany();
+  const rows = await db.staffUsualWeek.findMany();
   assert.deepEqual(rows.map((r) => r.userId), ["riley"], "one row a person, and only the caller's");
-  const audit = await db.auditLog.findMany({ where: { entity: "PlanAvailability" } });
-  assert.equal(audit.length, 2, "each send is in the activity log");
+  const audit = await db.auditLog.findMany({ where: { entity: "StaffUsualWeek" } });
+  assert.equal(audit.length, 1, "sending the same week again changes nothing");
   assert.match(audit[0].summary, /Monday: can work 16:00 to 21:00; Tuesday: can't work/);
   assert.equal(audit[0].actorId, "riley");
-  // Plan on at another site only: someone who does not work there is not asked.
+  // Plan (test) and Staffing, the apps that plan from it, on at another site only: someone who
+  // does not work there is not asked. One of them on at their site is enough.
   const club = await db.club.findFirstOrThrow({ where: { orgId: ORG } });
   await db.user.update({ where: { id: "riley" }, data: { siteIds: [club.id] } });
-  await db.appSwitch.create({ data: { orgId: ORG, appId: "plan", state: "sites", siteIds: ["another-site"] } });
+  await db.appSwitch.createMany({ data: ["plan", "staffing"].map((appId) => ({ orgId: ORG, appId, state: "sites", siteIds: ["another-site"] })) });
   assert.equal((await call("availability")).status, 404);
   assert.equal((await call("availability", "PUT", { days })).status, 404);
+  await db.appSwitch.deleteMany({ where: { appId: "staffing" } });
+  assert.equal((await call("availability")).status, 200, "Staffing is on at their site");
   await db.appSwitch.deleteMany({ where: { appId: "plan" } });
   await db.user.update({ where: { id: "riley" }, data: { siteIds: [] } });
 });

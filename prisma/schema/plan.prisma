@@ -299,22 +299,3 @@ model PlanCoverOffer {
   @@unique([requestId, userId])
   @@map("plan_cover_offers")
 }
-
-/// The times a person says they can usually work, one row each, sent from Turnfin Me (D34). It
-/// guides whoever plans and never limits them: a shift outside it is warned about, as a missing
-/// qualification is. No row means they have not said.
-model PlanAvailability {
-  id        String   @id @default(cuid())
-  orgId     String
-  userId    String   @unique
-  /// Monday to Sunday, seven of each. "any" (any time), "none" (can't work that day) or "between".
-  modes     String[]
-  /// A "between" day's first and last minute after midnight; 0 for the other two.
-  starts    Int[]
-  ends      Int[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([orgId])
-  @@map("plan_availability")
-}
