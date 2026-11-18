@@ -76,6 +76,7 @@ export const MODULE_OF_ENTITY: Readonly<Record<string, string>> = {
   PlanShift: "Plan (test)",
   PlanBlock: "Plan (test)",
   PlanOff: "Plan (test)",
+  PlanAvailability: "Plan (test)",
   PlanChatSpace: "Plan (test)",
   PlanCoverRequest: "Plan (test)",
   PlanCoverOffer: "Plan (test)",

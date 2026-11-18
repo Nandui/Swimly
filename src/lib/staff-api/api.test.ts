@@ -135,6 +135,37 @@ test("every endpoint returns only the caller's own records, with no work data", 
   assert.equal(home.reviewsToAcknowledge, 1, "a count only; HR content needs a fresh code");
 });
 
+test("when I can work: a person sends their own usual week, and only where Plan is on at their sites", async () => {
+  const db = fixture.prisma;
+  const first = await (await call("availability")).json();
+  assert.equal(first.said, false);
+  assert.deepEqual(first.days.map((d: { mode: string }) => d.mode), Array(7).fill("any"));
+  const days = [{ mode: "between", start: 960, end: 1260 }, { mode: "none", start: 60, end: 120 }, ...Array(5).fill({ mode: "any", start: null, end: null })];
+  assert.equal((await call("availability", "PUT", { days: days.slice(1) })).status, 400, "all seven days");
+  assert.equal((await call("availability", "PUT", { days: [{ mode: "between", start: 1260, end: 960 }, ...days.slice(1)] })).status, 400);
+  assert.equal((await call("availability", "PUT", { days, userId: "ava" })).status, 400, "nobody names another person");
+  const saved = await call("availability", "PUT", { days });
+  assert.equal(saved.status, 200);
+  const body = await saved.json();
+  assert.deepEqual(Object.keys(body).sort(), ["days", "said", "updatedAt"]);
+  assert.deepEqual(body.days.slice(0, 2), [{ mode: "between", start: 960, end: 1260 }, { mode: "none", start: null, end: null }]);
+  await call("availability", "PUT", { days });
+  const rows = await db.planAvailability.findMany();
+  assert.deepEqual(rows.map((r) => r.userId), ["riley"], "one row a person, and only the caller's");
+  const audit = await db.auditLog.findMany({ where: { entity: "PlanAvailability" } });
+  assert.equal(audit.length, 2, "each send is in the activity log");
+  assert.match(audit[0].summary, /Monday: can work 16:00 to 21:00; Tuesday: can't work/);
+  assert.equal(audit[0].actorId, "riley");
+  // Plan on at another site only: someone who does not work there is not asked.
+  const club = await db.club.findFirstOrThrow({ where: { orgId: ORG } });
+  await db.user.update({ where: { id: "riley" }, data: { siteIds: [club.id] } });
+  await db.appSwitch.create({ data: { orgId: ORG, appId: "plan", state: "sites", siteIds: ["another-site"] } });
+  assert.equal((await call("availability")).status, 404);
+  assert.equal((await call("availability", "PUT", { days })).status, 404);
+  await db.appSwitch.deleteMany({ where: { appId: "plan" } });
+  await db.user.update({ where: { id: "riley" }, data: { siteIds: [] } });
+});
+
 test("completing own training records the qualification it grants", async () => {
   const done = await (await call(`training/${rileyAssignment}/complete`, "POST", { note: "Read it" })).json();
   assert.equal(done.state, "completed");

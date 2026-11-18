@@ -4,6 +4,7 @@ import { qualificationsHeldBy, qualificationTypesOf } from "@/lib/qualifications
 import { prisma } from "@/lib/prisma";
 import { commitmentsFor } from "@/modules/contributions";
 import type { ClassItem, DutyRef, DutyTask, SessionDef, Shift } from "@/modules/plan/shared/model";
+import { USUAL_MODES, type UsualDay } from "@/modules/plan/shared/rules";
 
 /** What Plan (test) reads for one site over some days, for the Week and Day screens: the setup,
  *  what's on, the shifts, who is off, the classes from other apps and who holds which
@@ -80,6 +81,22 @@ export async function offsBetween(orgId: string, from: string, to: string, userI
     where: { orgId, withdrawnAt: null, firstDay: { lte: to }, lastDay: { gte: from }, ...(userIds ? { userId: { in: [...userIds] } } : {}) },
     orderBy: { firstDay: "asc" }, select: { id: true, userId: true, firstDay: true, lastDay: true, reason: true, note: true },
   });
+}
+
+/** A stored usual week as seven days, Monday first. A day that does not read right is any time. */
+export function usualWeekOf(row: { modes: string[]; starts: number[]; ends: number[] }): UsualDay[] {
+  return Array.from({ length: 7 }, (_, i): UsualDay => {
+    const mode = USUAL_MODES.find((m) => m === row.modes[i]) ?? "any";
+    if (mode !== "between") return { mode, start: null, end: null };
+    return row.ends[i] > row.starts[i] ? { mode, start: row.starts[i], end: row.ends[i] } : { mode: "any", start: null, end: null };
+  });
+}
+
+/** The times these people said they can usually work (D34), by person; anyone missing has not said. */
+export async function usualWeeksOf(orgId: string, userIds: readonly string[]) {
+  if (!userIds.length) return new Map<string, UsualDay[]>();
+  const rows = await prisma.planAvailability.findMany({ where: { orgId, userId: { in: [...userIds] } }, select: { userId: true, modes: true, starts: true, ends: true } });
+  return new Map(rows.map((r) => [r.userId, usualWeekOf(r)]));
 }
 
 /** Classes and other apps' commitments at the site, day by day (and these people's elsewhere,

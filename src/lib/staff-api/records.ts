@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { acknowledgeReviewFor, hrConfigured, logOwnHrRead, mySharedHr } from "@/modules/hr";
 import { myQualifications } from "@/lib/people/mine";
 import { myDays } from "@/modules/rota";
+import { myUsualWeek, saveMyUsualWeek } from "@/modules/plan";
+import { staffSiteIds } from "@/lib/directory";
 import { docsReading } from "@/modules/docs";
 import { myHours } from "@/modules/qualifications";
 import {
@@ -17,7 +19,7 @@ import { StaffApiError, notFound } from "@/lib/staff-api/errors";
 import { idSchema, parseInput, readBody } from "@/lib/staff-api/http";
 import { rateLimit } from "@/lib/staff-api/security";
 import { requireConfirmed, type StaffIdentity } from "@/lib/staff-api/auth";
-import { appOn } from "@/lib/apps/switches";
+import { appOn, sitesWhereOn } from "@/lib/apps/switches";
 
 /** Everything Turnfin Me can read or do, for the signed-in person only. Every
  *  response is built field by field from an allowlist: no swimmers, refunds,
@@ -547,6 +549,34 @@ export async function shifts(request: Request, identity: StaffIdentity) {
 }
 
 // ---------------------------------------------------------------------------
+// When I can work: the person's usual week, for whoever plans them (Plan, D34)
+// ---------------------------------------------------------------------------
+
+/** Plan reads it only where it is on, so it is offered only to people who work at such a site
+ *  (no sites on the account means every site). Anyone else is told it is not available. */
+async function requirePlanAtMySites(identity: StaffIdentity) {
+  const mine = await staffSiteIds(identity.user.id);
+  const on = mine.length ? (await sitesWhereOn("plan", mine, identity.user.orgId)).length > 0 : await appOn("plan", { orgId: identity.user.orgId });
+  if (!on) throw new StaffApiError(404, "NOT_AVAILABLE", "That is not available.");
+}
+
+export async function availability(identity: StaffIdentity) {
+  await requirePlanAtMySites(identity);
+  const week = await myUsualWeek(identity.user.id);
+  return { said: week.said, days: week.days.map((d) => ({ mode: d.mode, start: d.start, end: d.end })), updatedAt: week.updatedAt?.toISOString() ?? null };
+}
+
+export async function saveAvailability(request: Request, identity: StaffIdentity) {
+  await requirePlanAtMySites(identity);
+  // Plan checks the shape and says what is wrong in the person's words; here only the size.
+  const input = await readBody(request, z.object({ days: z.array(z.unknown()).max(7) }).strict());
+  await rateLimit(`availability:${identity.user.id}`, 20, 3600);
+  const result = await saveMyUsualWeek({ id: identity.user.id, name: identity.user.name, orgId: identity.user.orgId }, input);
+  if (!result.ok) throw new StaffApiError(400, "INVALID_REQUEST", result.error);
+  return availability(identity);
+}
+
+// ---------------------------------------------------------------------------
 // HR: what has been shared with the person (needs a fresh code)
 // ---------------------------------------------------------------------------
 
@@ -600,7 +630,7 @@ export async function saveNotifications(request: Request, identity: StaffIdentit
  *  switched off in the person's organisation answers "not available", as an unset one does. */
 function appOfRoute(route: string): string | null {
   const [first] = route.split("/");
-  return ({ training: "training", reading: "docs", shifts: "rota", hr: "hr" } as Record<string, string>)[first] ?? null;
+  return ({ training: "training", reading: "docs", shifts: "rota", hr: "hr", availability: "plan" } as Record<string, string>)[first] ?? null;
 }
 
 export async function requireAppOn(identity: StaffIdentity, route: string) {

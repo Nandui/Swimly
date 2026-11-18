@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
-  breakMinutesOwed, candidatesFor, copyDay, copyWeek, fillsOf, gapsOf, laneClashes, mondayOf, needsOf, occurrencesOn, tasksOf, warningsOf, weekdayOfIso, whatsOnRows,
+  breakMinutesOwed, candidatesFor, copyDay, copyWeek, fillsOf, gapsOf, laneClashes, mondayOf, needsOf, occurrencesOn, outsideUsual, tasksOf, warningsOf, weekdayOfIso, whatsOnRows,
   type Block, type ClassItem, type DutyRef, type SessionDef, type Shift,
 } from "./model";
 
@@ -98,6 +98,21 @@ test("warnings: off, overlap, outside the shift, qualification, class clash and 
   assert.deepEqual(warningsOf({ ...base, shifts: [ok], classes: [teaching] }), []);
   const unqualified = { ...base, duties: new Map([...duties, ["teacher", { ...duties.get("teacher")!, qualificationTypeId: "teach" }]]), held: (_: string, typeId: string) => typeId !== "teach" };
   assert.deepEqual(kinds(warningsOf({ ...unqualified, shifts: [ok], classes: [teaching], classDutyId: "teacher" })), ["qualification"]);
+});
+
+test("a shift outside the times its person gave is warned about, never refused (D34)", () => {
+  const any = { mode: "any", start: null, end: null }, none = { mode: "none", start: null, end: null };
+  // THU is a Thursday: index 3, Monday first.
+  const week = [any, any, any, { mode: "between", start: h(16), end: h(21) }, none, any, any];
+  assert.equal(outsideUsual(undefined, THU, { start: h(7), end: h(15) }), null, "they have not said");
+  assert.equal(outsideUsual(week, "2026-11-04", { start: h(7), end: h(15) }), null, "any time on Wednesdays");
+  assert.equal(outsideUsual(week, THU, { start: h(16), end: h(21) }), null, "inside their times");
+  assert.equal(outsideUsual(week, THU, { start: h(15), end: h(19) }), "Outside the times they gave: Thursdays 16:00–21:00.");
+  assert.equal(outsideUsual(week, "2026-11-06", { start: h(9), end: h(12) }), "Outside the times they gave: they can't work Fridays.");
+  const base = { duties, qualificationNames: new Map<string, string>(), held: () => true, off: new Set<string>(), classes: [] as ClassItem[], elsewhere: [] as Shift[] };
+  const early = shift({ userId: "v", start: h(9), end: h(12) });
+  assert.deepEqual(warningsOf({ ...base, shifts: [early], usual: new Map([["v", week]]) }).map((w) => w.kind), ["usual"]);
+  assert.deepEqual(warningsOf({ ...base, shifts: [early], usual: new Map([["someone-else", week]]) }), []);
 });
 
 test("lanes taken twice at once clash; the whole area open alongside lanes does not", () => {

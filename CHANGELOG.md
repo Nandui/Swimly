@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.27.0 · 18 November 2026 · Tell your planner when you can work
+
+- **In Turnfin Me, say when you can usually work.** Open More, then When I can work. For each day of the week choose any time, between two times, or can't work, and send it. Change it whenever your week changes.
+- **It is a guide.** Whoever plans your shifts sees it and still decides, so you may be asked to work outside it.
+- **In Plan (test), the Week shows it beside each day**, such as "Can work 16:00 to 21:00" or "Can't work".
+- **The Day warns when a shift is outside the times someone gave.** It never stops you planning the shift.
+- This is for sites that use Plan (test). At other sites, tell your manager as you do now.
+
 ## 3.26.0 · 17 November 2026 · Everything someone is on is an activity
 
 - **In Plan (test), you now put someone on an activity**, or on a break. You no longer pick a kind of work by itself: choose what they are on from the day's activities.
