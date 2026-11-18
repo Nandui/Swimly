@@ -519,12 +519,15 @@ export const CONTRACT_FIT_META = {
 } satisfies Record<"short", StatusMeta>;
 
 /** Whether the times a person gave leave room for their contracted hours, in the weekly places
- *  their contract covers at the sites they work at. Null when they have not said or have no
- *  contracted hours. Short is for the centre manager: times cannot simply remove contracted hours. */
+ *  their contract covers at the sites they work at. Null when there is nothing to judge: they
+ *  have not said, have no contracted hours, or no such places are set up yet. Short is for the
+ *  centre manager: times cannot simply remove contracted hours. */
 export function contractFit(usual: UsualWeek | null | undefined, contract: ContractKind, contractMinutes: number | null,
   slots: readonly { weekday: number; role: string; startMin: number; endMin: number }[]): { fits: number; short: number } | null {
   if (!usual || contractMinutes === null) return null;
-  const fits = minutesThatFit(usual, slots.filter((slot) => contractCovers(contract, slot.role)));
+  const covered = slots.filter((slot) => contractCovers(contract, slot.role));
+  if (covered.length === 0) return null;
+  const fits = minutesThatFit(usual, covered);
   return { fits, short: Math.max(0, contractMinutes - fits) };
 }
 

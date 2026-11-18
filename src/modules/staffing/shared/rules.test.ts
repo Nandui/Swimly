@@ -214,4 +214,6 @@ test("contracted hours against the times they gave: only places their contract c
   assert.deepEqual(contractFit(usual, "swim_teacher", 180, slots), { fits: 180, short: 0 });
   assert.equal(contractFit(null, "swim_teacher", 600, slots), null, "they have not said");
   assert.equal(contractFit(usual, "swim_teacher", null, slots), null, "no contracted hours on their Staff page");
+  assert.equal(contractFit(usual, "swim_teacher", 600, []), null, "no places set up yet: nobody is flagged");
+  assert.equal(contractFit(usual, "swim_teacher", 600, slots.slice(2)), null, "only lifeguard places: nothing their contract covers");
 });
