@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
-import { Check, ClipboardPaste, Copy, CopyPlus, Rocket, Send } from "lucide-react";
+import { ArrowRight, Check, ClipboardPaste, Copy, CopyPlus, Rocket, Send } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/shadcn/dialog";
 import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
 import { RadioGroup } from "@/components/shadcn/radio-group";
 import { Field, FormDialog } from "@/components/form-dialog";
@@ -17,7 +19,7 @@ import { toast } from "@/components/ui/toast";
 import { Notice } from "@/components/ui-kit/notice";
 import { THEME } from "@/modules/training/shared/components/dialog-kit";
 import { IMPORT_COLUMNS, parseQuestions } from "@/modules/training/shared/import";
-import { fileSrc, LESSON_KIND_META, type LessonKind } from "@/modules/training/shared/lessons";
+import { fileSrc, LESSON_KIND_META, type LessonKind, type PublishIssue } from "@/modules/training/shared/lessons";
 import { QUESTION_KIND_META } from "@/modules/training/shared/questions";
 import { COURSE_TEMPLATES } from "@/modules/training/shared/templates";
 import { publishCourse } from "@/modules/training/features/builder/server/actions";
@@ -328,7 +330,39 @@ export function ReviewComments({ courseId, lessonId, comments, canComment, lesso
 // Publishing
 // ---------------------------------------------------------------------------
 
-export function PublishCourse({ courseId, title, changed, published, openAssignments, canRetake, finished }: {
+/** What to fix before publishing, each with the lesson or questions to open. */
+function NotReadyToPublish({ courseId, title, label, problems }: { courseId: string; title: string; label: string; problems: PublishIssue[] }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild><Button type="button" className="min-h-11"><Rocket aria-hidden="true" />{label}</Button></DialogTrigger>
+      <DialogContent portalClassName={THEME} className="flex max-h-(--overlay-max-height) flex-col sm:max-w-xl" showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle>{title} is not ready to publish yet</DialogTitle>
+          <DialogDescription>{problems.length === 1 ? "One thing needs fixing first." : `${problems.length} things need fixing first.`} Open each one, fix it and save, then publish.</DialogDescription>
+        </DialogHeader>
+        <ul className="pc-rows min-h-0 overflow-y-auto">
+          {problems.map((p) => {
+            const href = p.lessonId ? `/training/courses/${courseId}?lesson=${p.lessonId}` : p.sectionId ? `/training/courses/${courseId}?questions=${p.sectionId}` : null;
+            return (
+              <li key={`${p.lessonId ?? p.sectionId ?? ""}:${p.text}`} className="pc-row items-start">
+                <span className="pc-row-body gap-2">
+                  <span className="text-sm">{p.text}</span>
+                  {href ? <Button asChild variant="outline" className="min-h-11 self-start"><Link href={href} onClick={() => setOpen(false)}>{p.lessonId ? "Open the lesson" : "Open its questions"}<ArrowRight aria-hidden="true" /></Link></Button> : null}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+        <DialogFooter showCloseButton />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function PublishCourse({ courseId, title, changed, published, openAssignments, canRetake, finished, problems = [] }: {
+  /** What stops the draft being published. With any, the button says what to fix instead of publishing. */
+  problems?: PublishIssue[];
   courseId: string; title: string; changed: boolean; published: { number: number } | null; openAssignments: number;
   /** May assign (the Manage level), so may ask people to take it again. */
   canRetake: boolean;
@@ -339,6 +373,7 @@ export function PublishCourse({ courseId, title, changed, published, openAssignm
   const [retake, setRetake] = useState(false);
   if (!changed) return <Button type="button" className="min-h-11" disabled><Rocket aria-hidden="true" />Published</Button>;
   const next = published ? published.number + 1 : 1;
+  if (problems.length) return <NotReadyToPublish courseId={courseId} title={title} label={published ? `Publish version ${next}` : "Publish"} problems={problems} />;
   return (
     <FormDialog
       portalClassName={THEME}

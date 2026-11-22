@@ -10,7 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { filterAllows } from "@/lib/policy/engine";
 import { subjectsFor } from "@/lib/policy/session";
 import { requireTrainingActor, type TrainingActor } from "@/modules/training/shared/access";
-import { cleanDoc, cleanLessonData, docActivities, docBlocks, EMBED_SOURCES, embedFor, isLessonKind, LESSON_KIND_META, lessonFiles, MAX_LESSONS, MAX_SECTIONS, frozenOutline, plainTextDoc, publishProblems, startingLessonData, videoFor, type LessonKind } from "@/modules/training/shared/lessons";
+import { cleanDoc, cleanLessonData, docActivities, docBlocks, docTooLong, EMBED_SOURCES, embedFor, isLessonKind, LESSON_KIND_META, lessonFiles, MAX_LESSONS, MAX_SECTIONS, frozenOutline, plainTextDoc, publishProblems, startingLessonData, videoFor, type LessonKind } from "@/modules/training/shared/lessons";
 import { refresh } from "@/modules/training/shared/writes";
 import { MAX_QUESTIONS, QUESTION_KINDS, normaliseQuestion, questionFiles, questionProblem, QUESTION_KIND_META, readExam, type ExamSettings, type QuestionOption } from "@/modules/training/shared/questions";
 import { loadDraft } from "@/modules/training/features/builder/server/draft";
@@ -47,7 +47,8 @@ async function lessonFor(tx: Prisma.TransactionClient, who: { orgId: string }, l
 const audit = (who: TrainingActor, tx: Prisma.TransactionClient, action: string, courseId: string, summary: string) =>
   logAudit({ actorId: who.id, actorName: who.name, action, entity: "TrainingCourse", entityId: courseId, summary }, tx);
 
-const done = (courseId: string) => refresh("/training/courses", `/training/courses/${courseId}`);
+/** The builder and its preview both show the draft, so both are redrawn. */
+const done = (courseId: string) => refresh("/training/courses", `/training/courses/${courseId}`, `/training/courses/${courseId}/preview`);
 
 const titleSchema = z.string().trim().min(2, "Give it a name.").max(120, "Keep the name under 120 characters.");
 
@@ -185,6 +186,8 @@ export async function saveLesson(lessonId: string, input: LessonInput): Promise<
     raw = parsed.data.body ? JSON.parse(parsed.data.body) : null;
     rawData = parsed.data.data ? JSON.parse(parsed.data.data) : null;
   } catch { return fail("The lesson could not be read. Reload and try again."); }
+  // Too long would be stored as an empty lesson: refuse it, and keep what was saved before.
+  if (docTooLong(raw)) return fail("This lesson is too long to save. Split it into two lessons.");
   const body = cleanDoc(raw);
   let courseId = "";
   const result = await prisma.$transaction(async (tx) => {

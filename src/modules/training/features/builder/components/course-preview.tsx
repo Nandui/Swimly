@@ -170,6 +170,11 @@ export function CoursePreview({ courseId, outline, lessonId, requiresSignoff }: 
         {lesson.kind === "EMBED" && embedFor(lesson.videoUrl) ? (
           <div className="tf-embed"><iframe src={embedFor(lesson.videoUrl)!.src} title={`${embedFor(lesson.videoUrl)!.provider}: ${lesson.title}`} loading="lazy" allow="fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" /></div>
         ) : null}
+        {lesson.kind === "READING" && !lesson.body ? (
+          <Notice tone="warning" title="This lesson has nothing in it yet" actions={
+            <Button asChild variant="outline" className="min-h-11"><Link href={`/training/courses/${courseId}?lesson=${lesson.id}`}>Open the lesson</Link></Button>
+          }>Learners would get an empty screen, so the course can&apos;t be published until it has text, media or an activity.</Notice>
+        ) : null}
         <DataPreview kind={lesson.kind} data={lesson.data} fileId={lesson.fileId} />
         {lesson.kind === "FILE" && lesson.fileId ? (
           <Button asChild variant="outline" className="min-h-11 self-start"><a href={`/training/files/${lesson.fileId}`} target="_blank" rel="noopener noreferrer"><FileText aria-hidden="true" />Open the file</a></Button>

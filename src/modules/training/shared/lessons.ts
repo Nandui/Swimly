@@ -171,11 +171,19 @@ function cleanNode(node: DocNode, depth: number): DocNode | null {
   return out;
 }
 
+const cleanedDoc = (value: unknown) => !value || typeof value !== "object" || (value as DocNode).type !== "doc" ? null : cleanNode(value as DocNode, 0);
+
+/** Whether a lesson's text is over the size `cleanDoc` keeps, so saving can say
+ *  so instead of storing an empty lesson. */
+export function docTooLong(value: unknown) {
+  const doc = cleanedDoc(value);
+  return !!doc && JSON.stringify(doc).length > MAX_BODY_CHARS;
+}
+
 /** Keeps only what the lesson renderers draw, with safe links and images that
  *  are this app's own files. Null when there is nothing left or it is too big. */
 export function cleanDoc(value: unknown): DocNode | null {
-  if (!value || typeof value !== "object" || (value as DocNode).type !== "doc") return null;
-  const doc = cleanNode(value as DocNode, 0);
+  const doc = cleanedDoc(value);
   if (!doc || !doc.content?.length || JSON.stringify(doc).length > MAX_BODY_CHARS) return null;
   return docText(doc).trim() || docImages(doc).length || docChecks(doc).length || docFiles(doc).length || docVideos(doc).length || docBlocks(doc).length ? doc : null;
 }
@@ -442,13 +450,26 @@ export const frozenOutline = (outline: Outline): Outline => ({
   })) })),
 });
 
-/** What stops a draft being published, worded for its author. Empty when it can go. */
-export function publishProblems(outline: Outline): string[] {
-  const problems: string[] = [];
-  const lessons = outline.sections.flatMap((s) => s.lessons.map((l) => ({ ...l, section: s.title })));
-  if (!lessons.length) problems.push("Add at least one lesson.");
-  for (const section of outline.sections) if (!section.lessons.length) problems.push(`The section “${section.title}” has no lessons. Add one or remove the section.`);
+/** One thing that stops a draft being published, with the lesson or section to open to fix it. */
+export type PublishIssue = { text: string; lessonId: string | null; sectionId: string | null };
+
+/** What stops a draft being published, worded for its author. Empty when it can
+ *  go. A lesson or section whose name is used twice is told apart by where it
+ *  is. `sectionId` is set when the fix is in that section's questions. */
+export function publishIssues(outline: Outline): PublishIssue[] {
+  const issues: PublishIssue[] = [];
+  const add = (text: string, lessonId: string | null = null, sectionId: string | null = null) => issues.push({ text, lessonId, sectionId });
+  const twice = (names: string[], name: string) => names.filter((n) => n.trim().toLowerCase() === name.trim().toLowerCase()).length > 1;
+  const sectionNames = outline.sections.map((s) => s.title);
+  const sectionName = (s: { title: string }, i: number) => twice(sectionNames, s.title) ? `section ${i + 1}, “${s.title}”` : `the section “${s.title}”`;
+  const lessons = outline.sections.flatMap((s, si) => s.lessons.map((l, li) => ({ ...l, at: `lesson ${li + 1} of section ${si + 1}` })));
+  const lessonNames = lessons.map((l) => l.title);
+  if (!lessons.length) add("Add at least one lesson.");
+  outline.sections.forEach((section, i) => {
+    if (!section.lessons.length) add(`${twice(sectionNames, section.title) ? `Section ${i + 1}, “${section.title}”,` : `The section “${section.title}”`} has no lessons. Add one or remove the section.`);
+  });
   for (const lesson of lessons) {
+    const problems: string[] = [];
     if (lesson.kind === "READING" && !lesson.body) problems.push(`“${lesson.title}” has nothing in it yet. Add text, media or an activity.`);
     if (lesson.kind === "VIDEO" && !videoFor(lesson.videoUrl)) problems.push(`“${lesson.title}” needs a video link starting https://.`);
     if (lesson.kind === "FILE" && !lesson.fileId) problems.push(`“${lesson.title}” needs a file.`);
@@ -458,7 +479,7 @@ export function publishProblems(outline: Outline): string[] {
     if (activities.length > MAX_ACTIVITY_BLOCKS) problems.push(`“${lesson.title}” has ${activities.length} activities. A lesson can hold up to ${MAX_ACTIVITY_BLOCKS}: move some into another lesson.`);
     for (const b of activities) {
       const same = activities.filter((x) => x.kind === b.kind);
-      const name = `${LESSON_KIND_META[b.kind].label}${same.length > 1 ? ` ${same.indexOf(b) + 1}` : ""} in ${lesson.title}`;
+      const name = `${LESSON_KIND_META[b.kind].label}${same.length > 1 ? ` ${same.indexOf(b) + 1}` : ""} in ${lesson.title}${twice(lessonNames, lesson.title) ? `, ${lesson.at}` : ""}`;
       problems.push(...activityProblems(b.kind, name, b.data, b.fileId));
     }
     for (const kind of ONCE_PER_LESSON) {
@@ -474,18 +495,24 @@ export function publishProblems(outline: Outline): string[] {
     for (const id of docChecks(lesson.body)) {
       if (!outline.questions.some((q) => q.id === id)) problems.push(`A knowledge check in “${lesson.title}” uses a question that has been removed. Take it out or choose another.`);
     }
+    // Two lessons with one name: say which, so the author opens the right one.
+    const named = `“${lesson.title}”`;
+    for (const text of problems) add(twice(lessonNames, lesson.title) && text.includes(named) ? text.replace(named, `${named} (${lesson.at})`) : text, lesson.id);
   }
-  for (const section of outline.sections) {
+  outline.sections.forEach((section, i) => {
     const quiz = section.lessons.find(lessonHasQuiz);
-    if (quiz && !outline.questions.some((q) => q.sectionId === section.id)) problems.push(`The quiz “${quiz.title}” needs questions: add them to the section “${section.title}”.`);
-  }
+    if (quiz && !outline.questions.some((q) => q.sectionId === section.id)) add(`The quiz “${quiz.title}” needs questions: add them to ${sectionName(section, i)}.`, null, section.id);
+  });
   outline.questions.forEach((q, i) => {
     const problem = questionProblem(q);
-    if (problem) problems.push(`Question ${i + 1} (“${q.prompt.slice(0, 40) || "no text"}”): ${problem}`);
+    if (problem) add(`Question ${i + 1} (“${q.prompt.slice(0, 40) || "no text"}”): ${problem}`, null, q.sectionId);
   });
-  if (outline.exam && !outline.questions.length) problems.push("The final exam needs questions. Add them to a section, or turn the exam off.");
-  return problems;
+  if (outline.exam && !outline.questions.length) add("The final exam needs questions. Add them to a section, or turn the exam off.");
+  return issues;
 }
+
+/** The same as plain sentences, as Publish answers with. */
+export const publishProblems = (outline: Outline): string[] => publishIssues(outline).map((issue) => issue.text);
 
 const dataText = (data: LessonData | null) => [
   ...(data?.steps ?? []).flatMap((s) => [s.text, ...s.choices.flatMap((c) => [c.text, c.feedback])]),

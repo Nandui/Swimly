@@ -2,7 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { qualificationTypesByIds } from "@/lib/qualifications";
 import { requireTrainingActor } from "@/modules/training/shared/access";
-import { frozenOutline, readOutline } from "@/modules/training/shared/lessons";
+import { frozenOutline, publishIssues, readOutline } from "@/modules/training/shared/lessons";
 import { readObservation } from "@/modules/training/shared/on-the-job";
 import { DRAFT_SELECT, draftOutline } from "@/modules/training/features/builder/server/draft";
 
@@ -44,6 +44,8 @@ export async function courseForBuilder(courseId: string) {
       grantsType: grants ? { id: grants.id, name: grants.name, validityMonths: grants.validityMonths } : null,
     },
     draft,
+    // What stops it being published, for the Publish button.
+    problems: publishIssues(frozenOutline(draft)),
     practical: readObservation(row.observation),
     files: row.files,
     published: published && { number: published.number, publishedAt: published.publishedAt, publishedByName: published.publishedByName, lessonCount: published.lessonCount },

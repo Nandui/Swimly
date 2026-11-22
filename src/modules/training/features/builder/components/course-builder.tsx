@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useEffectEvent, useMemo, useState, useTransition } from "react";
 import type { JSONContent } from "@tiptap/react";
 import { ArrowDown, ArrowUp, ChevronDown, CircleCheck, ClipboardCheck, Eye, FilePlus2, GraduationCap, ListChecks, MessageSquare, Pencil, Plus, Sparkles, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
@@ -19,7 +19,7 @@ import { Figure, Figures } from "@/components/ui-kit/figure";
 import { Notice } from "@/components/ui-kit/notice";
 import { cn } from "@/lib/utils";
 import { THEME } from "@/modules/training/shared/components/dialog-kit";
-import { frozenOutline, LESSON_KIND_META, lessonMinutes, lessonShows, pageFromLesson, publishProblems, type Outline, type OutlineLesson } from "@/modules/training/shared/lessons";
+import { frozenOutline, LESSON_KIND_META, lessonMinutes, lessonShows, pageFromLesson, publishIssues, type Outline, type OutlineLesson } from "@/modules/training/shared/lessons";
 import { blankedPrompt } from "@/modules/training/shared/questions";
 import {
   addLesson, addSection, moveLesson, moveSection, removeLesson, removeSection, renameSection, saveLesson, startFromOldText,
@@ -270,7 +270,7 @@ function AddLessonDialog({ sectionId, sectionTitle, onAdded }: { sectionId: stri
 // ---------------------------------------------------------------------------
 
 function StartPanel({ courseId, title, draft, canEdit, changed, comments }: { courseId: string; title: string; draft: Outline; canEdit: boolean; changed: boolean; comments: ReviewComment[] }) {
-  const problems = useMemo(() => publishProblems(frozenOutline(draft)), [draft]);
+  const problems = useMemo(() => publishIssues(frozenOutline(draft)), [draft]);
   const tips = useMemo(() => qualityTips(frozenOutline(draft)), [draft]);
   const openComments = comments.filter((c) => !c.resolvedAt).length;
   const lessons = draft.sections.flatMap((s) => s.lessons);
@@ -293,7 +293,15 @@ function StartPanel({ courseId, title, draft, canEdit, changed, comments }: { co
       </Figures>
       {problems.length ? (
         <Notice tone="warning" title="Before you can publish">
-          <ul className="list-disc pl-5">{problems.map((p) => <li key={p}>{p}</li>)}</ul>
+          <ul className="flex list-disc flex-col gap-2 pl-5">
+            {problems.map((p) => (
+              <li key={`${p.lessonId ?? p.sectionId ?? ""}:${p.text}`}>
+                {p.text}{" "}
+                {p.lessonId ? <Link href={hrefFor(courseId, p.lessonId)} className="font-medium underline underline-offset-4">Open the lesson</Link>
+                  : p.sectionId ? <Link href={questionsHref(courseId, p.sectionId)} className="font-medium underline underline-offset-4">Open its questions</Link> : null}
+              </li>
+            ))}
+          </ul>
         </Notice>
       ) : !changed ? (
         <Notice tone="success" title="Learners have this version">Change a lesson and publish again when you want learners to get the change.</Notice>
@@ -375,7 +383,11 @@ function LessonEditor({ courseId, lesson, files, onUploaded, canEdit, position, 
   const [body, setBody] = useState<JSONContent | null>(() => pageFromLesson(lesson) as JSONContent | null);
   const [minutes, setMinutes] = useState(lesson.minutes ? String(lesson.minutes) : "");
   const [dirty, setDirty] = useState(converted);
-  const change = <T,>(set: (value: T) => void) => (value: T) => { set(value); setDirty(true); };
+  // Changed by the author since it opened or was saved, so it is saved before they leave.
+  const [touched, setTouched] = useState(false);
+  const [leaving, startLeaving] = useTransition();
+  const [stuck, setStuck] = useState<{ href: string; error: string } | null>(null);
+  const change = <T,>(set: (value: T) => void) => (value: T) => { set(value); setDirty(true); setTouched(true); };
   useEffect(() => {
     if (!dirty) return;
     const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); };
@@ -383,9 +395,33 @@ function LessonEditor({ courseId, lesson, files, onUploaded, canEdit, position, 
     return () => window.removeEventListener("beforeunload", warn);
   }, [dirty]);
   const Icon = LESSON_KIND_META[lessonShows({ kind: "READING", body: body as OutlineLesson["body"] })].icon;
-  const save = () => act(() => saveLesson(lesson.id, {
-    title, body: body ? JSON.stringify(body) : null, videoUrl: "", fileId: "", minutes: minutes.trim() ? Number(minutes) : null, data: null, page: true,
-  }), () => { setDirty(false); toast.success("Lesson saved"); });
+  const send = () => saveLesson(lesson.id, {
+    title: title.trim() || lesson.title, body: body ? JSON.stringify(body) : null, videoUrl: "", fileId: "", minutes: minutes.trim() ? Number(minutes) : null, data: null, page: true,
+  });
+  const save = () => act(send, () => { setDirty(false); setTouched(false); setStuck(null); toast.success("Lesson saved"); });
+  // Preview, another lesson or any other page: what was changed is saved first,
+  // so the preview shows it and nothing typed is lost by moving on.
+  const leave = useEffectEvent((href: string) => startLeaving(async () => {
+    const result = await send();
+    if (!result.ok) { setStuck({ href, error: result.error ?? "That didn't save. Try again." }); return; }
+    setDirty(false); setTouched(false); setStuck(null);
+    toast.success("Lesson saved");
+    router.push(href);
+  }));
+  useEffect(() => {
+    if (!touched || !canEdit) return;
+    const onClick = (event: MouseEvent) => {
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || !(event.target instanceof Element)) return;
+      const link = event.target.closest("a[href]");
+      if (!(link instanceof HTMLAnchorElement) || link.target === "_blank" || link.hasAttribute("download") || link.origin !== window.location.origin) return;
+      if (link.pathname === window.location.pathname && link.search === window.location.search) return;
+      event.preventDefault();
+      event.stopPropagation();
+      leave(`${link.pathname}${link.search}${link.hash}`);
+    };
+    document.addEventListener("click", onClick, true);
+    return () => document.removeEventListener("click", onClick, true);
+  }, [touched, canEdit]);
   return (
     <section className="flex min-w-0 flex-col" aria-labelledby="lesson-heading">
       <div className="pc-section-head">
@@ -399,6 +435,12 @@ function LessonEditor({ courseId, lesson, files, onUploaded, canEdit, position, 
       </div>
       <p className="pc-section-note">Lesson {position.index + 1} of {position.total}</p>
       <div className="rec-card gap-5">
+
+      {stuck ? (
+        <Notice tone="error" live="alert" title="This lesson could not be saved" actions={
+          <Button type="button" variant="outline" className="min-h-11" onClick={() => { setDirty(false); setTouched(false); router.push(stuck.href); }}>Leave without saving</Button>
+        }>{stuck.error} Fix it and save, or leave and lose what you changed here.</Notice>
+      ) : null}
 
       <Input id="lesson-title" label="Lesson name" value={title} onChange={change(setTitle)} required maxLength={120} disabled={!canEdit} />
 
@@ -426,8 +468,8 @@ function LessonEditor({ courseId, lesson, files, onUploaded, canEdit, position, 
             run={async () => { const result = await removeLesson(lesson.id); if (result.ok) { setDirty(false); router.push(hrefFor(courseId)); } return result; }}
           />
           <div className="flex items-center gap-3">
-            <span className="text-sm text-ui-muted-foreground" role="status">{dirty ? "Unsaved changes" : "Saved to the draft"}</span>
-            <Button type="button" className="min-h-11" disabled={pending || !dirty || !title.trim()} onClick={save}><Upload aria-hidden="true" />Save lesson</Button>
+            <span className="text-sm text-ui-muted-foreground" role="status">{leaving ? "Saving…" : dirty ? "Not saved yet. It saves when you leave this lesson." : "Saved to the draft"}</span>
+            <Button type="button" className="min-h-11" disabled={pending || leaving || !dirty || !title.trim()} onClick={save}><Upload aria-hidden="true" />Save lesson</Button>
           </div>
         </div>
       ) : null}

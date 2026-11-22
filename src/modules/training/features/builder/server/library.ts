@@ -198,7 +198,7 @@ export async function copyIntoSection(sectionId: string, sourceCourseId: string,
     await audit(who, tx, "update", courseId, `Copied ${[lessons.length ? `${lessons.length} ${lessons.length === 1 ? "lesson" : "lessons"}` : null, questions.length ? `${questions.length} ${questions.length === 1 ? "question" : "questions"}` : null].filter(Boolean).join(" and ")} from ${source.title} into ${target.title} in ${target.course.title}`);
     return ok();
   });
-  if (result.ok) refresh("/training/courses", `/training/courses/${courseId}`);
+  if (result.ok) refresh("/training/courses", `/training/courses/${courseId}`, `/training/courses/${courseId}/preview`);
   return result;
 }
 
@@ -247,7 +247,7 @@ export async function setCourseCover(courseId: string, fileId: string | null): P
     await audit(who, tx, "update", courseId, fileId ? `Set the cover picture of ${course.title}` : `Took the cover picture off ${course.title}`);
     return ok();
   });
-  if (result.ok) refresh("/training/courses", `/training/courses/${courseId}`);
+  if (result.ok) refresh("/training/courses", `/training/courses/${courseId}`, `/training/courses/${courseId}/preview`);
   return result;
 }
 

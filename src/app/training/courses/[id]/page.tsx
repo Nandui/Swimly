@@ -18,7 +18,7 @@ export default async function CourseBuilderPage({ params, searchParams }: { para
   const [{ id }, { lesson, questions, exam, practical }] = await Promise.all([params, searchParams]);
   const [data, types] = await Promise.all([courseForBuilder(id), listQualificationTypeOptions()]);
   if (!data) notFound();
-  const { who, course, draft, practical: checklist, files, published, changed, openAssignments, report, comments, versions, finished, courses, categories, feedback } = data;
+  const { who, course, draft, problems, practical: checklist, files, published, changed, openAssignments, report, comments, versions, finished, courses, categories, feedback } = data;
   const canEdit = who.manage && !course.archivedAt;
   const state = !published ? "draft" : changed ? "changed" : "published";
   return (
@@ -35,7 +35,7 @@ export default async function CourseBuilderPage({ params, searchParams }: { para
             {who.manage ? <DuplicateCourse courseId={course.id} title={course.title} /> : null}
             <Button asChild variant="outline" className="min-h-11"><Link href={`/training/courses/${course.id}/insight`}><ChartColumn aria-hidden="true" />Insight</Link></Button>
             <Button asChild variant="outline" className="min-h-11"><Link href={`/training/courses/${course.id}/preview`}><Eye aria-hidden="true" />Preview</Link></Button>
-            {canEdit ? <PublishCourse courseId={course.id} title={course.title} changed={changed} published={published} openAssignments={openAssignments} canRetake={who.assign} finished={finished} /> : null}
+            {canEdit ? <PublishCourse courseId={course.id} title={course.title} changed={changed} published={published} openAssignments={openAssignments} canRetake={who.assign} finished={finished} problems={problems} /> : null}
           </>
         }
       />}>
