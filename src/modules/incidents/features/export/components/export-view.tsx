@@ -32,7 +32,7 @@ function Facts({ rows }: { rows: [string, ReactNode][] }) {
   );
 }
 
-/** The whole record of one report, laid out to print or save as a PDF. */
+/** The whole record of one report, to read on screen. The PDF is drawn by `server/pdf.ts`. */
 export function ExportView({ data }: { data: IncidentExport }) {
   const { report: r } = data;
   const level = r.severityActual && r.severityPotential ? levelOf(r.severityActual, r.severityPotential) : null;

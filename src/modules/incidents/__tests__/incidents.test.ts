@@ -18,6 +18,7 @@ let emails: typeof import("../features/investigation/server/emails");
 let files: typeof import("../features/files/server/files");
 let insights: typeof import("../features/insights/server/data");
 let exporter: typeof import("../features/export/server/data");
+let pdf: typeof import("../features/export/server/pdf");
 let staff: typeof import("../features/staff/server/file");
 let home: typeof import("../features/reports/server/home");
 const ORG = "org_leisureworld";
@@ -71,6 +72,7 @@ before(async () => {
   files = serverModule("src/modules/incidents/features/files/server/files.ts", d);
   insights = serverModule("src/modules/incidents/features/insights/server/data.ts", d);
   exporter = serverModule("src/modules/incidents/features/export/server/data.ts", d);
+  pdf = serverModule("src/modules/incidents/features/export/server/pdf.ts", d);
   staff = serverModule("src/modules/incidents/features/staff/server/file.ts", d);
   home = serverModule("src/modules/incidents/features/reports/server/home.ts", d);
 });
@@ -263,6 +265,9 @@ test("a staff injury reaches their HR file, the insights count it, and only a ma
   const full = await exporter.incidentExport(id);
   assert.equal(full.report.people.length, 2);
   assert.equal(await fixture.prisma.incidentEvent.count({ where: { reportId: id, action: "export" } }), 1, "every opening is in the history");
+  const document = await pdf.incidentPdf(full);
+  assert.equal(document.subarray(0, 5).toString("latin1"), "%PDF-", "the full record downloads as a PDF document");
+  assert.ok(document.includes("/Type /Page"), "with at least one page");
   assert.deepEqual((await insights.incidentInsights({})).toReview, [], "nothing is past its keeping period yet");
 });
 

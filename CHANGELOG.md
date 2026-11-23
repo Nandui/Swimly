@@ -4,6 +4,12 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.27.0 · 23 November 2026 · Incident reports as a proper PDF
+
+- **A report's full record now downloads as a PDF document.** Open a report, choose **Full record**, then **Download PDF**. You get a file named after the report, such as INC-00042.pdf, ready to send to the insurer.
+- **It is laid out as a report**: the report's number and site at the top, then what happened, the people involved, triage, the investigation, closing, the list of files and the history, with the page number and a confidential note on every page.
+- As before, only the people who manage Incidents at the report's site can get it, and every download shows in the report's history.
+
 ## 3.26.0 · 17 November 2026 · Everything someone is on is an activity
 
 - **In Plan (test), you now put someone on an activity**, or on a break. You no longer pick a kind of work by itself: choose what they are on from the day's activities.
