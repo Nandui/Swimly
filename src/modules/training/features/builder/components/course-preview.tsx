@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, CircleCheck, ExternalLink, FileText, Flag, MapPin } from "lucide-react";
+import { ArrowLeft, ArrowRight, CircleCheck, ExternalLink, FileText, Flag, GraduationCap, ListChecks, MapPin } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Progress } from "@/components/shadcn/progress";
 import { Notice } from "@/components/ui-kit/notice";
 import { cn } from "@/lib/utils";
 import { LessonBody } from "@/modules/training/shared/components/lesson-body";
-import { embedFor, fileSrc, LESSON_KIND_META, lessonMinutes, lessonShows, lessonPlace, outlineLessons, videoFor, type Outline } from "@/modules/training/shared/lessons";
+import { embedFor, fileSrc, LESSON_KIND_META, lessonHasQuiz, lessonMinutes, lessonShows, lessonPlace, outlineLessons, videoFor, type Outline } from "@/modules/training/shared/lessons";
 import { blankedPrompt, paperSize, QUESTION_KIND_META, type Question } from "@/modules/training/shared/questions";
 import type { LessonData, LessonKind } from "@/modules/training/shared/lessons";
 import { heightOf, leftOf, topOf, widthOf } from "@/components/ui-kit/scale";
@@ -145,16 +145,126 @@ function DataPreview({ kind, data, fileId }: { kind: string; data: LessonData | 
 
 /** The draft as a learner sees it in Turnfin Me: one lesson per screen with
  *  Back and Next, and the outline beside it. Nothing here records progress. */
-export function CoursePreview({ courseId, outline, lessonId, requiresSignoff }: { courseId: string; outline: Outline; lessonId: string | null; requiresSignoff: boolean }) {
+export function CoursePreview({ courseId, outline, lessonId, questionsOf = null, exam = false, requiresSignoff }: {
+  courseId: string; outline: Outline; lessonId: string | null; requiresSignoff: boolean;
+  /** The section whose questions are shown in place of a lesson. */
+  questionsOf?: string | null;
+  /** The final exam is shown in place of a lesson. */
+  exam?: boolean;
+}) {
   const lessons = outlineLessons(outline);
-  const place = lessonPlace(outline, lessonId ?? lessons[0]?.id ?? "");
-  const href = (id: string) => `/training/courses/${courseId}/preview?lesson=${id}`;
-  if (!place) return <Notice title="Nothing to preview yet">Add a lesson to the course first.</Notice>;
+  const base = `/training/courses/${courseId}/preview`;
+  const href = (id: string) => `${base}?lesson=${id}`;
+  const questionSection = questionsOf ? outline.sections.find((s) => s.id === questionsOf) ?? null : null;
+  const examOpen = exam && !!outline.exam && !questionSection;
+  const place = questionSection || examOpen ? null : lessonPlace(outline, lessonId ?? lessons[0]?.id ?? "");
+  if (!place && !questionSection && !examOpen) return <Notice title="Nothing to preview yet">Add a lesson to the course first.</Notice>;
+  return (
+    <div className="grid gap-6 lg:grid-cols-main-rail items-start">
+      {questionSection ? <SectionQuestions outline={outline} section={questionSection} />
+        : examOpen ? <ExamPreview outline={outline} lastLesson={lessons.at(-1)?.id ? href(lessons.at(-1)!.id) : null} requiresSignoff={requiresSignoff} />
+        : <LessonPreview courseId={courseId} outline={outline} place={place!} href={href} examHref={`${base}?exam=1`} requiresSignoff={requiresSignoff} />}
+      <nav aria-labelledby="preview-outline" className="flex min-w-0 flex-col">
+        <div className="pc-section-head"><h2 id="preview-outline">Outline</h2></div>
+        <div className="rec-card">
+        {outline.sections.map((s) => {
+          const count = outline.questions.filter((q) => q.sectionId === s.id).length;
+          return (
+          <div key={s.id} className="flex flex-col gap-1">
+            <h3 className="text-xs font-semibold text-ui-muted-foreground">{s.title}</h3>
+            <ol className="flex flex-col gap-1">
+              {s.lessons.map((l) => {
+                const Icon = l.id === place?.lesson.id ? CircleCheck : LESSON_KIND_META[lessonShows(l)].icon;
+                return (
+                  <li key={l.id}><Link href={href(l.id)} aria-current={l.id === place?.lesson.id ? "page" : undefined} className={cn("tf-outline-row", l.id === place?.lesson.id && "is-current")}>
+                    <Icon aria-hidden="true" /><span className="min-w-0 flex-1 truncate">{l.title}</span>
+                  </Link></li>
+                );
+              })}
+              {count ? (
+                <li><Link href={`${base}?questions=${s.id}`} aria-current={questionSection?.id === s.id ? "page" : undefined} className={cn("tf-outline-row", questionSection?.id === s.id && "is-current")}>
+                  <ListChecks aria-hidden="true" /><span className="min-w-0 flex-1 truncate">Questions</span><span className="text-xs tabular-nums">{count}</span>
+                </Link></li>
+              ) : null}
+            </ol>
+          </div>
+          );
+        })}
+        {outline.exam ? (
+          <Link href={`${base}?exam=1`} aria-current={examOpen ? "page" : undefined} className={cn("tf-outline-row", examOpen && "is-current")}>
+            <GraduationCap aria-hidden="true" /><span className="min-w-0 flex-1 truncate">Final exam</span>
+          </Link>
+        ) : null}
+        </div>
+      </nav>
+    </div>
+  );
+}
+
+/** One section's questions with their answers, and where learners meet them. */
+function SectionQuestions({ outline, section }: { outline: Outline; section: Outline["sections"][number] }) {
+  const questions = outline.questions.filter((q) => q.sectionId === section.id);
+  const quiz = section.lessons.find(lessonHasQuiz);
+  return (
+    <article className="rec-card gap-5" aria-labelledby="preview-questions">
+      <div className="flex flex-col gap-2">
+        <p className="text-xs font-semibold text-ui-muted-foreground">{section.title} · {questions.length} {questions.length === 1 ? "question" : "questions"}</p>
+        <h2 id="preview-questions" className="text-title-2">Questions</h2>
+      </div>
+      {quiz || outline.exam ? (
+        <Notice title="Where learners get these">
+          {quiz ? `In the practice quiz in “${quiz.title}”, one at a time, with the answer straight away.` : ""}{quiz && outline.exam ? " " : ""}{outline.exam ? "In the final exam, which draws from every section's questions." : ""} Here you see every question with its answer.
+        </Notice>
+      ) : (
+        <Notice tone="warning" title="Learners don't get these questions yet">Add a Practice quiz to a lesson in this section, or turn on the final exam. Until then they only show here and in the builder.</Notice>
+      )}
+      <QuestionsPreview questions={questions} />
+    </article>
+  );
+}
+
+/** The final exam for its author: its rules, then every question it can ask with the answer. */
+function ExamPreview({ outline, lastLesson, requiresSignoff }: { outline: Outline; lastLesson: string | null; requiresSignoff: boolean }) {
+  const rules = outline.exam!, bank = outline.questions.length, paper = paperSize(rules, bank);
+  return (
+    <article className="rec-card gap-5" aria-labelledby="preview-exam">
+      <div className="flex flex-col gap-2">
+        <p className="text-xs font-semibold text-ui-muted-foreground">After the last lesson</p>
+        <h2 id="preview-exam" className="text-title-2">Final exam</h2>
+      </div>
+      <Notice title={`Learners answer ${paper} ${paper === 1 ? "question" : "questions"} and need ${rules.passMark}% to pass`}>
+        {paper < bank ? `Each person gets ${paper} of the ${bank} questions, picked at random. ` : "The questions come in a different order for each person. "}
+        {`They have ${rules.attempts} ${rules.attempts === 1 ? "try" : "tries"}${rules.timeLimit ? ` and ${rules.timeLimit} minutes each time` : ""}. `}
+        {rules.testOut ? "They may sit it before the lessons to skip them. " : ""}
+        {requiresSignoff ? "After passing, they ask a trainer to sign the course off. " : ""}
+        Here you see every question with its answer; learners never see the answers.
+      </Notice>
+      {outline.sections.map((s) => {
+        const questions = outline.questions.filter((q) => q.sectionId === s.id);
+        return questions.length ? (
+          <section key={s.id} className="flex flex-col gap-2" aria-label={`Questions from ${s.title}`}>
+            <h3 className="font-semibold">{s.title}</h3>
+            <QuestionsPreview questions={questions} />
+          </section>
+        ) : null;
+      })}
+      {bank ? null : <Notice tone="warning" title="The exam has no questions yet">Add questions to a section in the builder.</Notice>}
+      {lastLesson ? (
+        <div className="flex border-t border-ui-border pt-4">
+          <Button asChild variant="outline" className="min-h-11"><Link href={lastLesson}><ArrowLeft aria-hidden="true" />Back</Link></Button>
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+function LessonPreview({ courseId, outline, place, href, examHref, requiresSignoff }: {
+  courseId: string; outline: Outline; place: NonNullable<ReturnType<typeof lessonPlace>>; href: (id: string) => string; examHref: string; requiresSignoff: boolean;
+}) {
   const { lesson, section, index, total, prev, next } = place;
   const video = lesson.kind === "VIDEO" ? videoFor(lesson.videoUrl) : null;
   const minutes = lessonMinutes(lesson);
   return (
-    <div className="grid gap-6 lg:grid-cols-main-rail items-start">
       <article className="rec-card gap-5" aria-labelledby="preview-lesson">
         <div className="flex flex-col gap-2">
           <p className="text-xs font-semibold text-ui-muted-foreground">{section.title} · lesson {index + 1} of {total}{minutes ? ` · ${minutes} min` : ""}</p>
@@ -197,33 +307,12 @@ export function CoursePreview({ courseId, outline, lessonId, requiresSignoff }: 
           {prev ? <Button asChild variant="outline" className="min-h-11"><Link href={href(prev)}><ArrowLeft aria-hidden="true" />Back</Link></Button> : <span />}
           {next ? (
             <Button asChild className="min-h-11"><Link href={href(next)}>{lesson.kind === "VIDEO" ? "Watched it, next" : "Done, next lesson"}<ArrowRight aria-hidden="true" /></Link></Button>
+          ) : outline.exam ? (
+            <Button asChild className="min-h-11"><Link href={examHref}>Done, on to the final exam<ArrowRight aria-hidden="true" /></Link></Button>
           ) : (
-            <span className="text-sm text-ui-muted-foreground">Last lesson. The learner then {outline.exam
-              ? `sits the final exam: ${paperSize(outline.exam, outline.questions.length)} questions, pass mark ${outline.exam.passMark}%${requiresSignoff ? ", then asks a trainer to sign it off" : ""}`
-              : requiresSignoff ? "asks a trainer to sign it off" : "marks the course as done"}.</span>
+            <span className="text-sm text-ui-muted-foreground">Last lesson. The learner then {requiresSignoff ? "asks a trainer to sign it off" : "marks the course as done"}.</span>
           )}
         </div>
       </article>
-      <nav aria-labelledby="preview-outline" className="flex min-w-0 flex-col">
-        <div className="pc-section-head"><h2 id="preview-outline">Outline</h2></div>
-        <div className="rec-card">
-        {outline.sections.map((s) => (
-          <div key={s.id} className="flex flex-col gap-1">
-            <h3 className="text-xs font-semibold text-ui-muted-foreground">{s.title}</h3>
-            <ol className="flex flex-col gap-1">
-              {s.lessons.map((l) => {
-                const Icon = l.id === lesson.id ? CircleCheck : LESSON_KIND_META[lessonShows(l)].icon;
-                return (
-                  <li key={l.id}><Link href={href(l.id)} aria-current={l.id === lesson.id ? "page" : undefined} className={cn("tf-outline-row", l.id === lesson.id && "is-current")}>
-                    <Icon aria-hidden="true" /><span className="min-w-0 flex-1 truncate">{l.title}</span>
-                  </Link></li>
-                );
-              })}
-            </ol>
-          </div>
-        ))}
-        </div>
-      </nav>
-    </div>
   );
 }
