@@ -10,7 +10,11 @@ const nextConfig: NextConfig = {
     "/api/parent/v1/**": ["./assets/email/*.png"],
     // Purchase order emails carry the logo; the server action runs from the order pages.
     "/purchasing/**": ["./assets/email/*.png"],
+    // The incident report PDF is set in the app's type family.
+    "/api/incidents/export/*": ["./assets/pdf/*.ttf"],
   },
+  /** pdfkit reads its own data files at run time, so it is loaded from node_modules, not bundled. */
+  serverExternalPackages: ["pdfkit"],
   experimental: {
     // A 2 MB curriculum image plus multipart form overhead.
     serverActions: { bodySizeLimit: "3mb" },

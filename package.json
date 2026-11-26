@@ -1,6 +1,6 @@
 {
   "name": "swimly",
-  "version": "3.26.1",
+  "version": "3.27.1",
   "private": true,
   "sideEffects": [
     "*.css",
@@ -51,6 +51,7 @@
     "mammoth": "^1.13.0",
     "next": "16.3.2",
     "next-auth": "^5.0.0-beta.32",
+    "pdfkit": "^0.21.0",
     "pg": "^8.23.0",
     "radix-ui": "^1.6.7",
     "react": "19.2.8",
@@ -67,6 +68,7 @@
     "@electric-sql/pglite": "^0.4.3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pdfkit": "^0.17.7",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "dotenv": "^17.4.2",

@@ -4,13 +4,19 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 3.26.1 · 22 November 2026 · Course lessons save themselves, and Publish says what to fix
+## 3.27.1 · 26 November 2026 · Course lessons save themselves, and Publish says what to fix
 
 - **A lesson you changed in the course builder now saves when you leave it.** Before, opening Preview or another lesson without pressing Save lesson lost what you had written, so the preview showed the old lesson and the lesson could end up empty.
 - **Publish now tells you exactly which lesson needs fixing.** If two lessons have the same name, it says which one, for example "lesson 1 of section 3", with an Open the lesson button that takes you straight there.
 - The same list on the course overview has a link beside each thing to fix.
 - In Preview, a lesson with nothing in it now says so, with a button to open it.
 - A lesson that is too long to save now says so and keeps what you had, where before it could be saved as empty.
+
+## 3.27.0 · 23 November 2026 · Incident reports as a proper PDF
+
+- **A report's full record now downloads as a PDF document.** Open a report, choose **Full record**, then **Download PDF**. You get a file named after the report, such as INC-00042.pdf, ready to send to the insurer.
+- **It is laid out as a report**: the report's number and site at the top, then what happened, the people involved, triage, the investigation, closing, the list of files and the history, with the page number and a confidential note on every page.
+- As before, only the people who manage Incidents at the report's site can get it, and every download shows in the report's history.
 
 ## 3.26.0 · 17 November 2026 · Everything someone is on is an activity
 

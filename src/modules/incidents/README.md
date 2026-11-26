@@ -13,7 +13,7 @@ Its levels are in [docs/apps.md](../../../docs/apps.md); the rules live in `shar
 - `wellbeing` — Ask HR: asking HR, by email to the addresses in Incidents › Settings (`/incidents/settings`), to check on someone after an incident, or letting HR know a staff member was in it (what HR may follow up, and optionally what happened and their injury); HR records what they did, when and what happens next through a no-sign-in link (`/wellbeing/[token]`). What HR writes is read only by Manage at the site and whoever asked.
 - `hazards` — linking the hazards a report involved, from the site's risk assessments, and asking for an assessment to be reviewed (on `/incidents/[id]`, for those who triage at the site). The hazards are another app's, read through the hazard register plug; a link keeps the hazard's words as they were.
 - `insights` — trends for those who triage and the reports past their keeping period (`/incidents/insights`).
-- `export` — one report's full record to print or save as a PDF for the insurer (`/incidents/[id]/export`, Manage).
+- `export` — one report's full record to read (`/incidents/[id]/export`) and download as a PDF document for the insurer (`/api/incidents/export/[id]`, drawn by `server/pdf.ts` with pdfkit in the fonts in `assets/pdf`), Manage.
 - `staff` — a staff member's incidents and injuries for their HR personal file and subject access export (registered in `module.ts`).
 - `reports` — the lists (`/incidents`), one report's page (`/incidents/[id]`), the starter-page and Home counts, and the form's sites and areas.
 - `workspace` — the Incidents frame and its one page list (`pages.ts`) for the page bar and the starter page `/incidents/overview`.
