@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.28.0 · 26 November 2026 · Instructors can be set from another app
+
+- **Another of our apps can now tell Turnfin who teaches a class.** When it does, the instructor shows on the Rota's Plan and in Classes straight away, just as if someone had chosen them on the Plan.
+- **The Plan is still where the instructor lives.** You can change them there as before, and whichever was changed last is what stands.
+- Only staff who can take a register can be given a class this way, and a lesson that has started or is cancelled cannot be changed.
+- **The log shows the app's name** beside anything it sets, so you can always tell what a person chose and what the other app did.
+- Nothing changes until the other app is connected.
+
 ## 3.27.1 · 26 November 2026 · Flashcards that turn over
 
 - **Flashcards in Training now turn over like real cards.** Tap or click a card, or press Space or Enter, and it flips to show the back. Tap again to turn it back.

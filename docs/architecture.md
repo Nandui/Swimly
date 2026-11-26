@@ -238,9 +238,10 @@ Only a superadmin makes another; the last active superadmin cannot be removed. T
 | **Turnfin Me** | each member of staff, on their phone | `apps/me` | `/api/staff/v1` (`src/lib/staff-api`, `src/app/api/staff/v1`) | `STAFF_AUTH_SECRET`, `STAFF_API_ALLOWED_ORIGINS` |
 | **Parent app** | parents | separate repository, [Nandui/swimly-public-app](https://github.com/Nandui/swimly-public-app) | `/api/parent/v1`, contract in [parent-api.openapi.json](parent-api.openapi.json); staff controls at `/api/parent-admin/v1` | `PARENT_AUTH_SECRET`, `PARENT_API_ALLOWED_ORIGINS` |
 | **Academy booking site** | the public | `apps/academy` | `/api/academy/v1` (the Academy's booking API) | `ACADEMY_AUTH_SECRET`, `ACADEMY_API_ALLOWED_ORIGINS` |
+| **Another app of the centre's** (a scheduler, for example; [D34](decisions.md)) | that app's server, never a browser or a person | outside this repository | `/api/classes/v1` (Classes' timetable and who teaches each lesson; `src/modules/activities/features/classes-api`) | a key per app in `CLASSES_API_KEYS`, kept as its SHA-256; no origin is allowed |
 
 Rules for every connected product:
-- It reaches Turnfin only through its versioned API, behind an `*_API_ENABLED` switch, with email-code sign-in, Bearer tokens and an exact origin allowlist.
+- It reaches Turnfin only through its versioned API, behind an `*_API_ENABLED` switch, with email-code sign-in, Bearer tokens and an exact origin allowlist. The classes API is called by another app's server, so it has no sign-in and no origins: each app sends its own key, is rate limited by name, and is the name in the log for what it changes.
 - Responses are mapped through allowlists, with tests; no raw rows leave Turnfin. Another person's record answers `NOT_FOUND`.
 - An API only grows (add fields and endpoints; never rename or remove in the same release).
 - **Turnfin and Turnfin Me stay separate.** Turnfin is the job, on work computers, and has no personal pages. A person's own training, reading, qualifications, shifts, HR and details belong to Turnfin Me. The self-service reads (`*/mine.ts`) and writes (`*/self.ts`) in each app serve the staff API only. The one exception is answering a cover request in Google Chat ([D31](decisions.md)).

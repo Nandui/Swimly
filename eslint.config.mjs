@@ -19,6 +19,7 @@ const activitiesFiles = [
   "src/app/(instructor)/**",
   "src/app/api/parent/**",
   "src/app/api/parent-admin/**",
+  "src/app/api/classes/**",
   "src/app/api/curriculum-images/**",
   "src/app/api/operations/**",
 ];

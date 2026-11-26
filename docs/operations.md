@@ -150,6 +150,15 @@ All three or none: without them Plan's Setup says Google Chat isn't set up, and 
 | `ACADEMY_EMAIL_DEV_LOG` | Turnfin, development | print booking codes instead of emailing |
 | `NEXT_PUBLIC_ACADEMY_API_URL`, `NEXT_PUBLIC_ACADEMY_NAME` | the site | the API address and the name it shows |
 
+**Classes API** (another app's server; [architecture.md](architecture.md#connected-products))
+
+| Setting | Purpose |
+| --- | --- |
+| `CLASSES_API_ENABLED` | `true` turns on `/api/classes/v1` |
+| `CLASSES_API_KEYS` | who may call it: `App name:hash` entries separated by commas, one per app. The hash is the SHA-256 of that app's key; Turnfin never holds the key. A malformed entry switches the API off |
+
+`npx tsx scripts/classes-api-key.ts "App name"` prints a new key (for that app's own settings, shown once) and the entry to add. It writes nothing. To end an app's access, take its entry out and redeploy; to change a key, replace the entry. Each app may make 120 requests a minute. The endpoints are listed at the top of `src/modules/activities/features/classes-api/server/router.ts`.
+
 **Operations and the sandbox**
 
 | Setting | Purpose |

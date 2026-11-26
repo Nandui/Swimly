@@ -4,14 +4,13 @@ import { prisma } from "@/lib/prisma";
 import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import { visibleScreens, type ScreenKey } from "@/lib/staff/screens";
 import { registerAppCourses, registerAreaRename, registerCommitments, registerEmailBookings, registerHomeCard, registerMemberDirectory, registerMemberHistory, registerMemberNotices, registerSiteSummary, type Commitment, type HomeIcon, type HomeItem, type HomeSession, registerSearch } from "@/modules/contributions";
-import { formatTime, isDateOnly, minutesNow, parseDateOnly, plural, today } from "@/lib/format";
-import { logAudit } from "@/lib/audit";
-import { staffByIds } from "@/lib/directory";
+import { formatTime, minutesNow, parseDateOnly, plural, today } from "@/lib/format";
 import { weekdayOfIso } from "@/modules/activities/shared/attendance/dates";
 import { getCoversForDay } from "@/modules/activities/shared/attendance/data/cover";
 import { getCancellationsForDay } from "@/modules/activities/shared/cancellations/data";
 import { courseName } from "@/modules/activities/shared/courses/constants";
 import { USUAL_INSTRUCTOR_UNTIL, getCoursesOnDate } from "@/modules/activities/shared/courses/planned";
+import { planClassTeacher } from "@/modules/activities/shared/courses/plan-teacher";
 import { getAwaitingEnrolment } from "@/modules/activities/features/enrolment/server/data/awaiting-enrolment";
 import { getTodayAssessments } from "@/modules/activities/shared/today/assessments";
 import { sessionState } from "@/modules/activities/shared/today/calendar";
@@ -72,30 +71,8 @@ registerCommitments({
     }
     return out;
   },
-  /** Plan who teaches a class on a date: the plan is the class's teacher that day. The class's
-   *  start record (ClassCover) is never written here: it is made when the class starts. */
-  async plan({ ref, siteId, date, userId, by }) {
-    if (!isDateOnly(date)) return { ok: false, error: "Choose a date." };
-    const course = await prisma.course.findFirst({ where: { id: ref, clubId: siteId, archivedAt: null }, select: { id: true, dayOfWeek: true, instructorId: true, name: true, level: { select: { name: true } } } });
-    if (!course) return { ok: false, error: "That class is no longer on the timetable." };
-    if (weekdayOfIso(date) !== course.dayOfWeek) return { ok: false, error: "That class does not run on that day." };
-    const on = parseDateOnly(date);
-    if (await prisma.classCancellation.findFirst({ where: { courseId: ref, date: on }, select: { id: true } })) return { ok: false, error: "That class is cancelled that day." };
-    if (await prisma.classCover.findFirst({ where: { courseId: ref, date: on }, select: { id: true } })) return { ok: false, error: "That class has already started; its teacher is recorded on the register." };
-    const teacher = userId ? (await staffByIds([userId])).get(userId) : null;
-    if (userId && !teacher) return { ok: false, error: "That person is no longer active." };
-    const label = `${courseName(course)} on ${date}`;
-    await prisma.$transaction(async (tx) => {
-      await tx.classPlannedTeacher.upsert({
-        where: { courseId_date: { courseId: ref, date: on } },
-        create: { courseId: ref, date: on, teacherId: userId, teacherName: teacher?.name ?? null, setById: by.id, setByName: by.name },
-        update: { teacherId: userId, teacherName: teacher?.name ?? null, setById: by.id, setByName: by.name },
-      });
-      await logAudit({ actorId: by.id, actorName: by.name, action: "update", entity: "ClassPlannedTeacher", entityId: ref, clubId: siteId,
-        summary: `Planned ${label} with ${teacher?.name ?? "nobody yet"}` }, tx);
-    });
-    return { ok: true };
-  },
+  /** Plan who teaches a class on a date: the plan is the class's teacher that day. */
+  plan: planClassTeacher,
 });
 
 /** What each site runs in Aquatics: live programmes, active swimmers and live classes. */

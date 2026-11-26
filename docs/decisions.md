@@ -6,6 +6,14 @@ The decisions Turnfin 2.0 stands on, newest first. Each says what was decided, w
 
 ---
 
+### D34 · 26 November 2026 · Another app may plan who teaches a class, through an API
+
+Classes gains an API (`/api/classes/v1`) for another app of the centre's. It reads the timetable (each lesson's time, name and programme, with the class's id and that day's instructor) and may say who teaches a lesson. The owner's words: "allow the instructors name to be assigned externally by another app via api and update turnfin side".
+
+**Why:** who teaches is being worked out in another app, and typing it again on the Plan is double work.
+
+**Follows:** the rota's Plan stays the one record of who teaches a class (owner decision, 16 October 2026). The API does not add a second field: it writes the same plan the Plan writes (`ClassPlannedTeacher`, through `planClassTeacher`), with the same checks (the class runs that day, is not cancelled and has not started), so the Plan and Classes show it at once and whoever changes it last, there or through the API, is what stands. Only staff who can take a register can be named. It is server to server: a key per app, kept as its SHA-256 in `CLASSES_API_KEYS`, ended by taking the entry out; 120 requests a minute per app; the log names the app. It answers with times and names only, never a swimmer or a contact. **Not done by the API:** it does not add the lesson to the person's shift on the Plan or tell them, as choosing them from a department's Plan does. **Open:** which app will call it, and whether that app should also set shifts.
+
 ### D33 · 17 November 2026 · Plan (test): what's on and duties become one list, Activities
 
 In Plan (test), everything that needs staff at a time is an **activity**: the pool or the desk being open, a lesson block, pool checks, closing down. **What's on** and a **duty given by itself** become this one list. An activity names **one kind of work**, how many people, where, from when to when, and the days it repeats. **Kinds of work** (today's duties: Lifeguard, Receptionist) stay as a short setup list, because the qualification and the department are written there once. A **booking** is its own kind of entry in the same list: it also says who booked it and a contact, the space it takes, how many are coming and a note for staff; its staffing is typed in on each booking, and it can name more than one kind of work. On the Day a booking is filled exactly as an activity is.
