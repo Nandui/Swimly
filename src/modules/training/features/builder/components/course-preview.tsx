@@ -4,6 +4,7 @@ import { Button } from "@/components/shadcn/button";
 import { Progress } from "@/components/shadcn/progress";
 import { Notice } from "@/components/ui-kit/notice";
 import { cn } from "@/lib/utils";
+import { FlashcardsPreview } from "@/modules/training/features/builder/components/flashcards-preview";
 import { LessonBody } from "@/modules/training/shared/components/lesson-body";
 import { embedFor, fileSrc, LESSON_KIND_META, lessonHasQuiz, lessonMinutes, lessonShows, lessonPlace, outlineLessons, videoFor, type Outline } from "@/modules/training/shared/lessons";
 import { blankedPrompt, paperSize, QUESTION_KIND_META, type Question } from "@/modules/training/shared/questions";
@@ -46,7 +47,7 @@ function QuestionsPreview({ questions }: { questions: Question[] }) {
 }
 
 /** A Scenario, Flashcards or Checklist lesson laid out for its author: every
- *  scene with where each choice leads, every card front and back, every item. */
+ *  scene with where each choice leads, the cards to flip through, every item. */
 function DataPreview({ kind, data, fileId }: { kind: string; data: LessonData | null; fileId: string | null }) {
   if (kind === "SCENARIO") {
     const steps = data?.steps ?? [];
@@ -77,22 +78,7 @@ function DataPreview({ kind, data, fileId }: { kind: string; data: LessonData | 
       </div>
     );
   }
-  if (kind === "FLASHCARDS") {
-    return (
-      <ul className="tf-flip-cards">
-        {(data?.cards ?? []).map((c) => (
-          <li key={c.id} className="tf-flip-card">
-            <div className="tf-flip-front">
-              {/* eslint-disable-next-line @next/next/no-img-element -- a private file served by this app */}
-              {c.imageId ? <img src={fileSrc(c.imageId)} alt="" loading="lazy" /> : null}
-              <p>{c.front}</p>
-            </div>
-            <div className="tf-flip-back"><p>{c.back}</p></div>
-          </li>
-        ))}
-      </ul>
-    );
-  }
+  if (kind === "FLASHCARDS") return <FlashcardsPreview cards={data?.cards ?? []} />;
   if (kind === "SORTING") {
     const groups = data?.groups ?? [], sorts = data?.sorts ?? [];
     return (

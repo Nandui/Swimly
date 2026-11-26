@@ -4,7 +4,7 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
-## 3.27.1 · 26 November 2026 · Course lessons save themselves, Preview shows the questions
+## 3.27.2 · 26 November 2026 · Course lessons save themselves, Preview shows the questions
 
 - **A lesson you changed in the course builder now saves when you leave it.** Before, opening Preview or another lesson without pressing Save lesson lost what you had written, so the preview showed the old lesson and the lesson could end up empty.
 - **Publish now tells you exactly which lesson needs fixing.** If two lessons have the same name, it says which one, for example "lesson 1 of section 3", with an Open the lesson button that takes you straight there.
@@ -12,6 +12,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 - **Preview now shows the questions.** Each section's questions are in the preview outline with their right answers, and the final exam has its own page at the end showing how many questions learners get, the pass mark and every question it can ask.
 - In Preview, a lesson with nothing in it now says so, with a button to open it.
 - A lesson that is too long to save now says so and keeps what you had, where before it could be saved as empty.
+
+## 3.27.1 · 26 November 2026 · Flashcards that turn over
+
+- **Flashcards in Training now turn over like real cards.** Tap or click a card, or press Space or Enter, and it flips to show the back. Tap again to turn it back.
+- **Go back and forward through the deck** with **Previous** and **Next** (or the arrow keys), and see where you are, such as "3 of 12".
+- After turning a card you still say **I knew it** or **Not yet**. At the end you see how many you know, and the ones you didn't come round again until you know them all.
+- The small flip cards inside a lesson's text turn over the same way.
+- **Course builders:** Preview now plays a Flashcards lesson one card at a time, as learners get it, instead of listing every front and back.
 
 ## 3.27.0 · 23 November 2026 · Incident reports as a proper PDF
 

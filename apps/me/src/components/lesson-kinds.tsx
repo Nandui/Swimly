@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Check, ChevronRight, RotateCcw, RotateCw, ThumbsUp, Undo2 } from "lucide-react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { Check, ChevronLeft, ChevronRight, RotateCcw, ThumbsUp, Undo2 } from "lucide-react";
 import { CourseImage } from "@/components/question";
 import { Button } from "@/components/shadcn/button";
 import { Checkbox } from "@/components/shadcn/checkbox";
 import { Label } from "@/components/shadcn/label";
+import { TurnCard } from "@/components/turn-card";
 import { Bar, Notice } from "@/components/ui";
 import { apiFile } from "@/lib/api";
 
@@ -70,52 +71,84 @@ export function ScenarioPlayer({ assignmentId, steps, onFinished }: { assignment
 // Flashcards
 // ---------------------------------------------------------------------------
 
-/** Look at the front, think, turn it over, then say whether you knew it.
- *  Cards you didn't know come back until you know them all. */
+/** Proper flashcards: one card at a time, turned over with a tap, Space or
+ *  Enter, with Previous and Next (the arrow keys too) and "Card 3 of 12". Once
+ *  a card is turned the learner says whether they knew it; the ones they
+ *  didn't come round again until they know them all, which finishes the lesson. */
 export function CardDeck({ assignmentId, cards, onFinished }: { assignmentId: string; cards: Card[]; onFinished: () => void }) {
-  const [queue, setQueue] = useState(cards.map((c) => c.id));
+  // The cards of this round, where we are in it, and every card known so far.
+  const [deck, setDeck] = useState(() => cards.map((c) => c.id));
+  const [at, setAt] = useState(0);
   const [flipped, setFlipped] = useState(false);
+  const [known, setKnown] = useState<ReadonlySet<string>>(() => new Set());
   const [rounds, setRounds] = useState(1);
-  const [known, setKnown] = useState(0);
-  const [roundLeft, setRoundLeft] = useState(cards.length);
-  const card = cards.find((c) => c.id === queue[0]);
-  useEffect(() => { if (cards.length && !queue.length) onFinished(); }, [queue.length, cards.length, onFinished]);
+  const cardButton = useRef<HTMLButtonElement>(null);
+  const allKnown = cards.length > 0 && cards.every((c) => known.has(c.id));
+  useEffect(() => { if (allKnown) onFinished(); }, [allKnown, onFinished]);
+  // After "I knew it" or "Not yet" the buttons go, so the keyboard returns to the next card.
+  const refocus = useRef(false);
+  useEffect(() => { if (refocus.current) { refocus.current = false; cardButton.current?.focus(); } });
   if (!cards.length) return <Notice title="This lesson has no cards yet" />;
+  const card = cards.find((c) => c.id === deck[at]);
+  // Each card is a new button, so a keyboard that was on the card stays on the card.
+  function go(to: number) { refocus.current = document.activeElement === cardButton.current; setAt(Math.max(0, Math.min(deck.length, to))); setFlipped(false); }
+  function round(ids: string[], number: number) { setDeck(ids); setRounds(number); setAt(0); setFlipped(false); }
   if (!card) {
+    const left = cards.filter((c) => !known.has(c.id));
     return (
       <section className="pc-panel stack" aria-labelledby="deck-done">
-        <h2 id="deck-done" role="status">You know all {cards.length} cards</h2>
-        <p className="muted">{rounds === 1 ? "First time through. Nicely done." : `It took ${rounds} rounds. Come back to them any time.`}</p>
-        <Button type="button" variant="outline" className="self-start max-md:self-stretch" onClick={() => { setQueue(cards.map((c) => c.id)); setKnown(0); setRounds(1); setRoundLeft(cards.length); setFlipped(false); }}><RotateCcw aria-hidden="true" />Go through them again</Button>
+        {allKnown ? (
+          <>
+            <h2 id="deck-done" role="status">You know all {cards.length} cards</h2>
+            <p className="muted">{rounds === 1 ? "First time through. Nicely done." : `It took ${rounds} rounds. Come back to them any time.`}</p>
+            <Button type="button" variant="outline" className="self-start max-md:self-stretch" onClick={() => { setKnown(new Set()); round(cards.map((c) => c.id), 1); }}><RotateCcw aria-hidden="true" />Go through them again</Button>
+          </>
+        ) : (
+          <>
+            <h2 id="deck-done" role="status">You know {known.size} of {cards.length} cards</h2>
+            <p className="muted">{left.length === 1 ? "One card is left to learn. It comes round again now." : `${left.length} cards are left to learn. They come round again now.`}</p>
+            <div className="lesson-nav">
+              <Button type="button" variant="outline" onClick={() => go(deck.length - 1)}><ChevronLeft aria-hidden="true" />Back</Button>
+              <Button type="button" onClick={() => round(left.map((c) => c.id), rounds + 1)}><RotateCcw aria-hidden="true" />{left.length === 1 ? "Go through the card left" : `Go through the ${left.length} left`}</Button>
+            </div>
+          </>
+        )}
       </section>
     );
   }
   function answer(knew: boolean) {
-    setFlipped(false);
-    if (knew) setKnown((n) => n + 1);
-    const [first, ...rest] = queue;
-    const next = knew ? rest : [...rest, first];
-    // When the last card of this round is answered, the ones still not known make the next round.
-    const left = roundLeft - 1;
-    if (left === 0 && next.length) { setRounds((r) => r + 1); setRoundLeft(next.length); } else setRoundLeft(left);
-    setQueue(next);
+    const next = new Set(known);
+    if (knew) next.add(card!.id); else next.delete(card!.id);
+    setKnown(next);
+    // Knowing the last one ends the deck there and then; otherwise on to the next card.
+    go(cards.every((c) => next.has(c.id)) ? deck.length : at + 1);
+    refocus.current = true;
+  }
+  function keys(event: KeyboardEvent<HTMLElement>) {
+    if (event.key === "ArrowRight") { event.preventDefault(); go(at + 1); }
+    if (event.key === "ArrowLeft" && at > 0) { event.preventDefault(); go(at - 1); }
   }
   return (
-    <section className="stack" aria-label="Flashcards">
-      <p className="caption tabular" aria-live="polite">{known} of {cards.length} known · {queue.length} to go</p>
-      <div aria-hidden="true"><Bar max={cards.length} value={known} label="Cards known" /></div>
-      <Button type="button" variant="outline" className="flashcard" aria-pressed={flipped} onClick={() => setFlipped(!flipped)}>
-        <span className="caption">{flipped ? "Back" : "Front"} · tap to turn over</span>
-        {!flipped && card.imageId ? <CourseImage assignmentId={assignmentId} fileId={card.imageId} alt="" className="choice-image" /> : null}
-        <span className="flashcard-text" aria-live="polite">{flipped ? card.back : card.front}</span>
-        <RotateCw aria-hidden="true" className="flip-icon" />
-      </Button>
+    <section className="stack" aria-label="Flashcards" onKeyDown={keys}>
+      <div aria-hidden="true"><Bar max={cards.length} value={known.size} label="Cards known" /></div>
+      <p className="sr-only" role="status">Card {at + 1} of {deck.length}, {flipped ? "back" : "front"}. {known.size} of {cards.length} known.</p>
+      <TurnCard key={card.id} ref={cardButton} className="flashcard" flipped={flipped} onFlip={() => setFlipped(!flipped)}
+        front={<>
+          {card.imageId ? <CourseImage assignmentId={assignmentId} fileId={card.imageId} alt="" className="choice-image" /> : null}
+          <span className="flashcard-text">{card.front}</span>
+        </>}
+        back={<span className="flashcard-text">{card.back}</span>} />
+      <div className="deck-nav">
+        <Button type="button" variant="outline" disabled={at === 0} onClick={() => go(at - 1)}><ChevronLeft aria-hidden="true" />Previous</Button>
+        <p className="tabular deck-count" aria-hidden="true">{at + 1} of {deck.length}</p>
+        <Button type="button" variant="outline" onClick={() => go(at + 1)}>{at + 1 === deck.length ? "Finish" : "Next"}<ChevronRight aria-hidden="true" /></Button>
+      </div>
       {flipped ? (
         <div className="lesson-nav">
           <Button type="button" variant="outline" onClick={() => answer(false)}><Undo2 aria-hidden="true" />Not yet</Button>
           <Button type="button" onClick={() => answer(true)}><ThumbsUp aria-hidden="true" />I knew it</Button>
         </div>
-      ) : <p className="caption">Think of the answer, then turn the card over.</p>}
+      ) : <p className="caption">Think of the answer, then turn the card over. {known.size} of {cards.length} known so far.</p>}
     </section>
   );
 }

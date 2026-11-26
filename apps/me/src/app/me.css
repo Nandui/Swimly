@@ -142,8 +142,18 @@ html:has(.tf-bottom) { scroll-padding-bottom: calc(112px + env(safe-area-inset-b
 .reveal-body { padding: 0 16px 16px; }
 .reveal-body > * + * { margin-top: 12px; }
 .flip-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
-.flip-card, .flashcard { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; min-height: 140px; padding: 20px 16px; border: 1px solid var(--label-2); border-radius: var(--radius-lg); background: var(--bg-2); color: var(--label); font: inherit; text-align: center; cursor: pointer; transition: background-color 160ms var(--ease), border-color 160ms var(--ease); }
-.flip-card[aria-pressed="true"], .flashcard[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
+/* Flip cards and flashcards turn over: the button is the card's footprint, its two faces sit
+   back to back in one grid cell (so the card is as tall as its longer side) and the pair rotates.
+   The hidden face goes invisible halfway through the turn, so it is never read out or read aloud. */
+.flip-card, .flashcard { display: flex; min-height: 140px; padding: 0; border: 0; border-radius: var(--radius-lg); background: none; color: var(--label); font: inherit; text-align: center; cursor: pointer; perspective: 1200px; }
+.card-turn { display: grid; flex: 1; align-self: stretch; min-width: 0; transform-style: preserve-3d; transition: transform 500ms var(--ease); }
+[aria-pressed="true"] > .card-turn { transform: rotateY(180deg); }
+.card-face { position: relative; grid-area: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; min-width: 0; padding: 20px 16px 36px; border: 1px solid var(--label-2); border-radius: var(--radius-lg); background: var(--bg-2); backface-visibility: hidden; -webkit-backface-visibility: hidden; transition: visibility 0s linear 250ms, border-color 160ms var(--ease); }
+.card-face[data-side="back"] { transform: rotateY(180deg); border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
+.card-face[aria-hidden="true"] { visibility: hidden; }
+:is(.flip-card, .flashcard):hover .card-face { border-color: var(--accent); }
+.deck-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.deck-count { margin: 0; font-weight: 600; }
 .flip-face, .flip-text { display: block; font-weight: 600; overflow-wrap: anywhere; }
 .flip-icon { position: absolute; right: 12px; bottom: 12px; width: 16px; height: 16px; opacity: 0.6; }
 .flashcard { min-height: 240px; }
@@ -167,7 +177,7 @@ html:has(.tf-bottom) { scroll-padding-bottom: calc(112px + env(safe-area-inset-b
 .turnfin-app .blank-input[data-slot="input"] { display: inline-block; width: 9em; min-height: 40px; margin: 0 4px; padding: 4px 10px; vertical-align: baseline; }
 
 @media (prefers-reduced-motion: reduce) {
-  .reveal-toggle > svg, .flip-card, .flashcard { transition: none; } }
+  .reveal-toggle > svg, .card-turn, .card-face { transition: none; } }
 
 /* A certificate for finished training (e-learning phase 4): on screen as a card, on paper alone. */
 .certificate { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px 24px 28px; border: 1px solid var(--label-2); border-radius: var(--radius-lg); background: var(--bg-2); text-align: center; overflow: hidden; }
@@ -286,7 +296,8 @@ html[data-text] .turnfin-app [data-slot="input"] { font-size: max(16px, var(--ty
    question dots and jump rows, tap to reveal, picture spots): they keep the Button's focus, hover
    and press, but take the card's shape, wrap their text and grow with it. */
 .turnfin-app .ui-motion-press:is(.flip-card, .flashcard, .choice, .reveal-toggle, .exam-jump) { height: auto; white-space: normal; text-align: left; justify-content: flex-start; font-weight: 400; }
-.turnfin-app .ui-motion-press:is(.flip-card, .flashcard) { min-height: 140px; justify-content: center; text-align: center; border-radius: var(--radius-lg); border: 1px solid var(--label-2); }
+.turnfin-app .ui-motion-press:is(.flip-card, .flashcard) { min-height: 140px; padding: 0; justify-content: center; text-align: center; border: 0; border-radius: var(--radius-lg); }
+.turnfin-app .ui-motion-press:is(.flip-card, .flashcard), .turnfin-app .ui-motion-press:is(.flip-card, .flashcard):hover { background: none; box-shadow: none; }
 .turnfin-app .ui-motion-press.flashcard { min-height: 240px; }
 .turnfin-app .ui-motion-press.choice { min-height: 56px; border-radius: var(--radius-lg); border-color: var(--label-2); }
 .turnfin-app .ui-motion-press.reveal-toggle { width: 100%; min-height: 56px; justify-content: space-between; border-radius: 0; color: var(--label); font-weight: 600; }
@@ -294,7 +305,8 @@ html[data-text] .turnfin-app [data-slot="input"] { font-size: max(16px, var(--ty
 .turnfin-app .ui-motion-press.exam-dot { border-radius: var(--radius-lg); border-color: var(--label-2); }
 .turnfin-app .ui-motion-press.exam-dot[data-answered] { border-color: var(--accent-soft); background: var(--accent-soft); color: var(--accent-ink); }
 .turnfin-app .ui-motion-press.exam-dot[aria-current] { border-color: var(--accent); background: var(--accent); color: var(--on-accent); }
-.turnfin-app .ui-motion-press:is(.flip-card, .flashcard)[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
+.turnfin-app .ui-motion-press:is(.flip-card, .flashcard)[aria-pressed="true"] { background: none; color: var(--label); }
+.turnfin-app .ui-motion-press:is(.flip-card, .flashcard):focus-visible { box-shadow: 0 0 0 1px var(--accent), var(--focus-halo); }
 .turnfin-app .explore-marker.ui-motion-press[data-seen] { background: var(--bg-2); color: var(--accent); border-color: var(--accent); }
 /* On paper the certificate and the record stand alone: their page headers drop away. */
 @media print { .certificate-page > [data-page-header], .no-print-back [data-page-header] [data-slot="button"] { display: none !important; } }
