@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { ChevronDown, ChevronLeft, ChevronRight, CircleHelp, ExternalLink, FileDown, RotateCw } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, CircleHelp, ExternalLink, FileDown } from "lucide-react";
 import { answered, QuestionField, type Answer, type LearnerQuestion } from "@/components/question";
 import { Button } from "@/components/shadcn/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/shadcn/collapsible";
 import { Separator } from "@/components/shadcn/separator";
 import { Table, TableBody, TableCell, TableHead, TableRow } from "@/components/shadcn/table";
 import { Tabs as TabSet, TabsContent, TabsList, TabsTrigger } from "@/components/shadcn/tabs";
+import { TurnCard } from "@/components/turn-card";
 import { Bar, Notice } from "@/components/ui";
 import { ActivityBlock, AudioBlock, FileView, SlidesBlock } from "@/components/lesson-blocks";
 import type { Embed } from "@/components/lesson-kinds-more";
@@ -57,11 +58,8 @@ function Reveal({ title, children }: { title: ReactNode; children: ReactNode }) 
 function FlipCard({ front, back }: { front: ReactNode; back: ReactNode }) {
   const [flipped, setFlipped] = useState(false);
   return (
-    <Button type="button" variant="outline" className="flip-card" aria-pressed={flipped} onClick={() => setFlipped(!flipped)}>
-      <span className="caption">{flipped ? "Back" : "Front"} · tap to turn over</span>
-      <span className="flip-face">{flipped ? back : front}</span>
-      <RotateCw aria-hidden="true" className="flip-icon" />
-    </Button>
+    <TurnCard className="flip-card" flipped={flipped} onFlip={() => setFlipped(!flipped)}
+      front={<span className="flip-face">{front}</span>} back={<span className="flip-face">{back}</span>} />
   );
 }
 

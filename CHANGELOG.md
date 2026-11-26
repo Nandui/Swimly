@@ -4,6 +4,14 @@ Patch notes for everyone who uses Turnfin at the swim school, the desk and the o
 
 **How versions are numbered:** the middle number goes up when something new arrives (an app, a screen, a new way of working), and the last number when something is fixed or tidied without changing how you work. This list starts on 3 October 2026, when Turnfin moved to its new look; earlier changes are not listed.
 
+## 3.27.1 · 26 November 2026 · Flashcards that turn over
+
+- **Flashcards in Training now turn over like real cards.** Tap or click a card, or press Space or Enter, and it flips to show the back. Tap again to turn it back.
+- **Go back and forward through the deck** with **Previous** and **Next** (or the arrow keys), and see where you are, such as "3 of 12".
+- After turning a card you still say **I knew it** or **Not yet**. At the end you see how many you know, and the ones you didn't come round again until you know them all.
+- The small flip cards inside a lesson's text turn over the same way.
+- **Course builders:** Preview now plays a Flashcards lesson one card at a time, as learners get it, instead of listing every front and back.
+
 ## 3.27.0 · 23 November 2026 · Incident reports as a proper PDF
 
 - **A report's full record now downloads as a PDF document.** Open a report, choose **Full record**, then **Download PDF**. You get a file named after the report, such as INC-00042.pdf, ready to send to the insurer.

@@ -68,6 +68,21 @@
 .tf-flip-front::before { content: "Front"; }
 .tf-flip-back::before { content: "Back"; }
 .tf-flip-front img { max-height: 8rem; width: auto; }
+/* A Flashcards lesson in Preview turns over as it does in Turnfin Me: the button is the card's
+   footprint, its two faces sit back to back in one grid cell and the pair rotates. The hidden
+   face goes invisible halfway through the turn. */
+.turnfin-app .ui-motion-press.tf-deck-card.tf-deck-card.tf-deck-card:is(*, :hover) { display: flex; height: auto; min-height: 15rem; padding: 0; border: 0; border-radius: var(--radius-lg); background: none; box-shadow: none; color: var(--label); font-weight: 400; white-space: normal; text-align: center; perspective: 1200px; }
+.turnfin-app .ui-motion-press.tf-deck-card.tf-deck-card.tf-deck-card:focus-visible { outline: 2px solid var(--ui-ring); outline-offset: 2px; }
+.tf-deck-turn { display: grid; flex: 1; align-self: stretch; min-width: 0; transform-style: preserve-3d; transition: transform 500ms var(--ease); }
+.tf-deck-card[aria-pressed="true"] > .tf-deck-turn { transform: rotateY(180deg); }
+.tf-deck-face { position: relative; grid-area: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; min-width: 0; padding: 20px 16px 36px; border: 1px solid var(--sep); border-radius: var(--radius-lg); background: var(--fill-2); backface-visibility: hidden; -webkit-backface-visibility: hidden; transition: visibility 0s linear 250ms, border-color 160ms var(--ease); }
+.tf-deck-face[data-side="back"] { transform: rotateY(180deg); border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
+.tf-deck-face[aria-hidden="true"] { visibility: hidden; }
+.tf-deck-card:hover .tf-deck-face { border-color: var(--accent); }
+.tf-deck-face img { max-height: 8rem; width: auto; border-radius: var(--radius-lg); }
+.tf-deck-text { font-size: 1.25rem; line-height: 1.75rem; font-weight: 600; overflow-wrap: anywhere; }
+.tf-deck-icon { position: absolute; right: 12px; bottom: 12px; opacity: 0.6; }
+@media (prefers-reduced-motion: reduce) { .tf-deck-turn, .tf-deck-face { transition: none; } }
 .tf-stepper { display: flex; flex-direction: column; gap: 8px; counter-reset: tf-step; }
 .tf-step { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 12px 16px 12px 52px; border-radius: var(--radius-lg); background: var(--fill-2); counter-increment: tf-step; }
 .tf-step::before { content: counter(tf-step); position: absolute; left: 14px; top: 12px; display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 999px; background: var(--accent-btn); color: var(--on-accent); font-size: 12px; font-weight: 700; }
