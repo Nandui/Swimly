@@ -14,6 +14,7 @@ Every doc, once. Each fact lives in one place and the others link to it. Add a n
 | [decisions.md](decisions.md) | the decisions 2.0 stands on, and how to add one | before changing something fundamental |
 | [../DESIGN.md](../DESIGN.md) | the 2.0 design, Turnfin Sheet: principles, tokens, frame, components, motion, states, forms, accessibility, how it is built, the screen checklist | before any visual change |
 | [parent-api.openapi.json](parent-api.openapi.json) | the parent app's API contract | changing `/api/parent/v1` |
+| [classes-api.md](classes-api.md), [classes-api.openapi.json](classes-api.openapi.json) | the classes API for an outside app: the developer's guide and the contract | changing `/api/classes/v1`, or handing it to an outside developer |
 | [../CHANGELOG.md](../CHANGELOG.md) | what changed for staff, release by release (shown at `/whats-new`) | shipping something staff will notice |
 
 Next to the code: each module's `src/modules/<id>/README.md` lists its features, front door, tables, events, permissions and dependencies.

@@ -156,3 +156,15 @@ test("each app is limited to 120 requests a minute", async () => {
   assert.equal(limited.headers.get("retry-after"), "60");
   assert.equal((await call("GET", "sites", { key: OTHER })).status, 200, "the other app has its own count");
 });
+
+test("the contract handed to the outside developer names exactly the routes that answer", async () => {
+  const { readFileSync } = await import("node:fs");
+  const spec = JSON.parse(readFileSync("docs/classes-api.openapi.json", "utf8")) as { paths: Record<string, Record<string, unknown>> };
+  assert.deepEqual(Object.entries(spec.paths).map(([path, methods]) => `${Object.keys(methods).join(",")} ${path}`).sort(),
+    ["get /classes", "get /instructors", "get /sites", "put /classes/{id}/instructor"]);
+  for (const path of Object.keys(spec.paths)) {
+    const route = path.slice(1).replace("{id}", "api-mon");
+    const response = path.includes("{id}") ? await call("PUT", route, { body: { date: MON, instructorId: null } }) : await call("GET", route);
+    assert.equal(response.status, 200, path);
+  }
+});

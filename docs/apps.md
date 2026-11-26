@@ -19,7 +19,7 @@ Swimmers, classes, short courses and assessments at the desk, and their set-up. 
 | Manage | also programmes, levels and classes; keep the short course list and put short courses on; upload the bank's monthly failure sheet, open closed payments again, and remove payments that aren't swimmers |
 | *Extra:* Can cancel classes | cancel today's sessions on the duty manager page and pass them to billing |
 
-Connects: class and short course commitments for Rota; the member directory and history for the Academy; site summaries; home items; the parent app's API; the classes API (`/api/classes/v1`), where another app of the centre's reads the timetable and plans a lesson's teacher ([D34](decisions.md)); short course places in "My bookings" on the Academy booking site.
+Connects: class and short course commitments for Rota; the member directory and history for the Academy; site summaries; home items; the parent app's API; the classes API (`/api/classes/v1`), where an outside app reads the timetable and plans a lesson's teacher ([D34](decisions.md)); short course places in "My bookings" on the Academy booking site.
 
 **Short courses** (`/short-courses`, on the Overview; the course list under Set up; D24): six- and eight-week courses at the pool, the gym or the studio. The desk books people from the swimmer records; the instructor takes the registers (Pool deck Teach, below). They keep their own tables for now; moving them onto programmes as an activity type, with their registers on the pool deck, is a later step.
 

@@ -1,0 +1,574 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Turnfin Classes API",
+    "version": "1.0.0",
+    "description": "Read LeisureWorld's swim school timetable and say who teaches a lesson. For another app's server: never call it from a browser (a request with an Origin header is refused). Send your key as a Bearer token. Up to 120 requests a minute per key. All times are clock times at the pool (Europe/Dublin). All responses use Cache-Control: no-store. Errors are { error: { code, message } }. The API only grows: fields and endpoints are added, never renamed or removed, so ignore fields you do not know."
+  },
+  "servers": [
+    {
+      "url": "https://turnfin.app/api/classes/v1"
+    }
+  ],
+  "security": [
+    {
+      "appKey": []
+    }
+  ],
+  "paths": {
+    "/sites": {
+      "get": {
+        "operationId": "listSites",
+        "summary": "The sites with classes",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "sites"
+                  ],
+                  "properties": {
+                    "sites": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Site"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED: the key is missing or wrong",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: more than 120 requests in a minute; wait for Retry-After seconds",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "UNAVAILABLE: the API is switched off",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/classes": {
+      "get": {
+        "operationId": "listClasses",
+        "summary": "Each lesson in the days asked for, by day then start time",
+        "description": "A class repeats weekly and keeps one id; each lesson is that class on one date. Cancelled lessons are left out.",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "First day, YYYY-MM-DD. Default: today at the pool."
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 31,
+              "default": 7
+            },
+            "description": "How many days from `from`."
+          },
+          {
+            "name": "site",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Only this site's classes (an id from /sites)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "from",
+                    "days",
+                    "classes"
+                  ],
+                  "properties": {
+                    "from": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "days": {
+                      "type": "integer"
+                    },
+                    "classes": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Lesson"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "INVALID_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED: the key is missing or wrong",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: more than 120 requests in a minute; wait for Retry-After seconds",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "UNAVAILABLE: the API is switched off",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/instructors": {
+      "get": {
+        "operationId": "listInstructors",
+        "summary": "The staff a class can be given to",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "instructors"
+                  ],
+                  "properties": {
+                    "instructors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Person"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED: the key is missing or wrong",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: more than 120 requests in a minute; wait for Retry-After seconds",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "UNAVAILABLE: the API is switched off",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/classes/{id}/instructor": {
+      "put": {
+        "operationId": "assignInstructor",
+        "summary": "Say who teaches one lesson",
+        "description": "Sets the instructor for that class on that date only. Sending it again with the same values changes nothing, so it is safe to retry. Staff can still change it in Turnfin afterwards; read /classes to see what stands.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The class's id from /classes."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Assignment"
+              },
+              "examples": {
+                "byId": {
+                  "value": {
+                    "date": "2026-12-07",
+                    "instructorId": "cmexample0001"
+                  }
+                },
+                "byName": {
+                  "value": {
+                    "date": "2026-12-07",
+                    "instructorName": "Alex Example"
+                  }
+                },
+                "nobody": {
+                  "value": {
+                    "date": "2026-12-07",
+                    "instructorId": null
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "class"
+                  ],
+                  "properties": {
+                    "class": {
+                      "$ref": "#/components/schemas/Lesson"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "INVALID_REQUEST: a bad date, or not exactly one of instructorId, instructorEmail, instructorName",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no such class on the timetable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "INSTRUCTOR_AMBIGUOUS: two people share that name, send instructorId. CANNOT_ASSIGN: the class does not run that day, is cancelled, or has already started; the message says which",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON_REQUIRED: send Content-Type: application/json",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INSTRUCTOR_NOT_FOUND: nobody who can teach matches; see /instructors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED: the key is missing or wrong",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: more than 120 requests in a minute; wait for Retry-After seconds",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "UNAVAILABLE: the API is switched off",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "appKey": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Your app's key, given to you by LeisureWorld. Keep it on your server."
+      }
+    },
+    "schemas": {
+      "Site": {
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "Person": {
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "Lesson": {
+        "type": "object",
+        "required": [
+          "id",
+          "date",
+          "day",
+          "start",
+          "end",
+          "durationMinutes",
+          "name",
+          "programme",
+          "level",
+          "location",
+          "site",
+          "instructor",
+          "started"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The class's id: the same every week. A lesson is identified by id and date together."
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "day": {
+            "type": "string",
+            "enum": [
+              "MONDAY",
+              "TUESDAY",
+              "WEDNESDAY",
+              "THURSDAY",
+              "FRIDAY",
+              "SATURDAY",
+              "SUNDAY"
+            ]
+          },
+          "start": {
+            "type": "string",
+            "description": "24-hour clock time at the pool, e.g. 15:10"
+          },
+          "end": {
+            "type": "string"
+          },
+          "durationMinutes": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "programme": {
+            "type": "string"
+          },
+          "level": {
+            "type": "string"
+          },
+          "location": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Where in the site, e.g. Learner pool"
+          },
+          "site": {
+            "$ref": "#/components/schemas/Site"
+          },
+          "instructor": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Person"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Who teaches it that day; null when nobody is chosen yet"
+          },
+          "started": {
+            "type": "boolean",
+            "description": "True once the lesson has started: its instructor can no longer be changed"
+          }
+        }
+      },
+      "Assignment": {
+        "type": "object",
+        "required": [
+          "date"
+        ],
+        "additionalProperties": false,
+        "description": "The date and exactly one of instructorId, instructorEmail or instructorName.",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "The lesson's date; the class must run on that weekday"
+          },
+          "instructorId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "An id from /instructors, or null to leave the lesson with nobody"
+          },
+          "instructorEmail": {
+            "type": "string",
+            "format": "email",
+            "description": "The person's work email"
+          },
+          "instructorName": {
+            "type": "string",
+            "description": "The person's full name exactly as /instructors gives it (capitals and extra spaces do not matter)"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

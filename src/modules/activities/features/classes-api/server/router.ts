@@ -4,7 +4,7 @@ import { assignInstructor } from "@/modules/activities/features/classes-api/serv
 import { apiSites, listInstructors, listLessons } from "@/modules/activities/features/classes-api/server/data";
 import { ClassesApiError, authenticateApp, classesResponse, idSchema, json, parseInput, rateLimit, requestIp } from "@/modules/activities/features/classes-api/server/http";
 
-/** /api/classes/v1: how another app of the centre's reads the swim school's timetable and says
+/** /api/classes/v1: how an outside app reads the swim school's timetable and says
  *  who teaches a lesson. Server to server: each app sends its own key as a Bearer token.
  *  See docs/architecture.md, Connected products.
  *
