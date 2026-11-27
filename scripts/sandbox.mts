@@ -181,6 +181,8 @@ const env = {
   ACADEMY_API_ALLOWED_ORIGINS: "http://localhost:3102", ACADEMY_EMAIL_DEV_LOG: "true",
   // Incidents' CCTV footage requests print their link here instead of emailing it.
   INCIDENTS_EMAIL_DEV_LOG: "true",
+  // Turnfin Courses (apps/courses, port 3103) against this sandbox: "Continue with Turnfin".
+  COURSES_URL: process.env.COURSES_URL ?? "http://courses.localhost:3103", COURSES_PASS_SECRET: "sandbox-only-courses-pass-secret-not-for-deployment",
 };
 const app = spawn("npx", ["next", "dev", "-p", String(PORTS.app)], { stdio: "inherit", env, shell: true });
 app.on("exit", (code) => process.exit(code ?? 0));

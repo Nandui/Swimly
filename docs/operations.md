@@ -166,13 +166,16 @@ The standalone app for `courses.turnfin.app` ([courses.md](courses.md)). Not dep
 - **Run it:** `npm ci` then `npm run dev` in `apps/courses` (port 3103), with `DATABASE_URL` in its own `.env` (`apps/courses/.env.example`). Against the sandbox, point it at the sandbox's main database and set `DATABASE_POOL_MAX=1`.
 - **Its database client** is generated from `prisma/schema` by the `courses` generator (`npm run generate`, also on install and build).
 - **Migrations** stay in `prisma/migrations` and are applied by Turnfin's build. Courses never migrates.
-- **Accounts:** none of its own. Staff sign in with their Turnfin email and password, and their role in Turnfin decides what they open ([courses.md](courses.md#sign-in-and-access)). In the sandbox, sign in as any sandbox person.
+- **Accounts:** none of its own. Staff sign in through **Continue with Turnfin**, and their role in Turnfin decides what they open ([courses.md](courses.md#sign-in-and-access)). It needs the same `COURSES_PASS_SECRET` in both projects, `COURSES_URL` in Turnfin and `TURNFIN_URL` in Courses; the sandbox sets Turnfin's side itself. With `TURNFIN_URL` unset, Courses asks for the Turnfin email and password instead.
 - **Checks:** `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`; the pull request check runs them as its own job.
 
 | Setting | Purpose |
 | --- | --- |
 | `DATABASE_URL` | Turnfin's main database (pooled). The same value as Turnfin's |
 | `DATABASE_POOL_MAX` | optional, as for Turnfin |
+| `TURNFIN_URL` | Courses: Turnfin's address, for Continue with Turnfin. Exact origin, https (http on localhost outside production) |
+| `COURSES_URL` | Turnfin: Courses' address, the only place a pass is ever sent. Same rule |
+| `COURSES_PASS_SECRET` | both: signs the pass. At least 32 random characters, its own, the same value in the two projects. Without it and the address, Turnfin's `/api/courses/pass` does not exist |
 
 ## Record management from the command line
 

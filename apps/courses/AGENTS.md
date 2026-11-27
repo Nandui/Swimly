@@ -15,7 +15,7 @@ Turnfin's rulebook ([../../AGENTS.md](../../AGENTS.md)) does **not** bind this a
 | Folder | Holds |
 | --- | --- |
 | `src/app` | routes: thin pages and layouts |
-| `src/access` | sign-in with Turnfin accounts, sessions, grants worked out from roles |
+| `src/access` | Continue with Turnfin (the pass), sessions, grants worked out from roles |
 | `src/data` | the database client, the log, dates in `Europe/Dublin` |
 | `src/<area>` | one area of work (desk, deck, courses and so on): its reads, writes, rules, screens and tests together |
 

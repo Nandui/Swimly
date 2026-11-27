@@ -43,8 +43,10 @@ It is written again from scratch. Turnfin's rules for apps (the six-part contrac
 **Staff keep their accounts and logins** (owner, 27 November 2026): instructors, receptionists, managers and administrators sign in to Courses with the Turnfin account they already have. Courses has no accounts of its own, and nobody is set up twice.
 
 - **Who you are** is your Turnfin person record (`users`). Courses reads it and never writes it. The course tables already record staff by that id (a class's instructor, who marked a register), so nothing needs linking.
-- **Sign-in** is your Turnfin email and password, checked against the same record. Courses then keeps its own session: a random token stored hashed in `courses_sessions`, sent as an `HttpOnly`, `Secure`, `SameSite=Lax` cookie for `courses.turnfin.app` only. It ends after 12 hours or 30 idle minutes, and five wrong passwords pause sign-in for 15 minutes (`courses_sign_ins`).
-- **Not built yet: Sign in with Google, and one sign-in for both.** Someone who only ever signs in to Turnfin with Google has no password to type here. The next step is **Continue with Turnfin**: Courses sends you to Turnfin, which signs you in the way it always does (password, Google, a work device's rules) and hands Courses a short-lived signed pass. Then being signed in to Turnfin is enough, and Courses needs no password form.
+- **Sign-in is Continue with Turnfin.** Courses asks for no password. Its sign-in page has one button, which sends the browser to Turnfin (`/api/courses/pass`). Turnfin signs the person in the way it always does (password, Sign in with Google, a work device's rules) or already knows who they are, then sends the browser back with a **pass**: the person's id, good for one minute, signed with a secret only the two share (`COURSES_PASS_SECRET`), and tied to a random state Courses left in that browser. Courses checks all of that and opens its own session. Signed in to Turnfin already, there is nothing to type.
+- **Its own session.** A random token stored hashed in `courses_sessions`, sent as an `HttpOnly`, `Secure`, `SameSite=Lax` cookie for `courses.turnfin.app` only. It ends after 12 hours or 30 idle minutes. Signing out of Courses ends that session only; Turnfin's sign-in is Turnfin's to end.
+- **Without Turnfin beside it** (local development with `TURNFIN_URL` unset), the sign-in page asks for the Turnfin email and password itself, and five wrong passwords pause it for 15 minutes (`courses_sign_ins`). Where Continue with Turnfin is set up, that form is off.
+- **On a shared work device**, switch in on Turnfin with your PIN first, then continue: the PIN screen does not yet send you back to Courses by itself.
 - **What you can do** comes from the role an administrator already gave you in Turnfin (Admin › Roles), read on every request, so a change there takes effect here at once. Deactivated in Turnfin is signed out here. Code asks for a grant, never a job title:
 
 | Grant | Opens | Given by the role's level in Turnfin |
@@ -90,7 +92,7 @@ Each step is its own pull request, checked on a preview. Old screens stay live i
 
 | Step | What | Needs the owner |
 | --- | --- | --- |
-| 1 | **Foundation**: the app, its tables, sign-in with Turnfin accounts, grants from roles, the log, checks in CI; then Continue with Turnfin | yes: the Vercel project and domain |
+| 1 | **Foundation**: the app, its tables, Continue with Turnfin, grants from roles, the log, checks in CI | yes: the Vercel project, the domain and the shared secret |
 | 2 | **The design**: mockups of the desk, the pool deck and a course page | yes: approving it |
 | 3 | **Desk**: swimmers, classes, places, waiting lists, assessments | |
 | 4 | **Pool deck**: today, registers, competencies, assessments | |
@@ -104,7 +106,7 @@ Each step is its own pull request, checked on a preview. Old screens stay live i
 
 Said plainly, against the pillars ([PRODUCT.md](../PRODUCT.md)):
 
-- **Simple, easy to use.** People, roles and passwords stay in one place. Until Continue with Turnfin is built, staff who use both type the same password once on each.
+- **Simple, easy to use.** People, roles and passwords stay in one place, and one sign-in covers both. Staff still move between two addresses.
 - **Easy to audit.** A change is in one of two logs, depending on where it was made.
 - **Change without breaking.** Rota and Plan depend on a network call where they had a function call. This was tried on 28 September 2026 and reversed ([D11](decisions.md)); the difference now is that only one boundary crosses the network and it fails closed.
 - **Modern.** Two designs and two sets of screens exist until step 9.

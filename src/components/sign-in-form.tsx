@@ -26,7 +26,7 @@ import { Input } from "@/components/ui/input";
  *  `devAdminName` arrives already decided by the server: the page only passes
  *  a name when the deployment is allowed a passwordless sign-in, so the client
  *  never carries the rule and cannot be talked into showing the button. */
-export function SignInForm({ devAdminName, sharedDeviceName = null, google = false, developer = false, initialError = null }: { devAdminName: string | null; sharedDeviceName?: string | null; google?: boolean; developer?: boolean; initialError?: string | null }) {
+export function SignInForm({ devAdminName, sharedDeviceName = null, google = false, developer = false, initialError = null, then = "/" }: { devAdminName: string | null; sharedDeviceName?: string | null; google?: boolean; developer?: boolean; initialError?: string | null; /** Where to go once signed in. Decided by the server (the sign-in page): the home page, or back to Turnfin Courses through its pass. */ then?: string }) {
   const withGoogle = google && !developer;
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -36,6 +36,8 @@ export function SignInForm({ devAdminName, sharedDeviceName = null, google = fal
 
   function land() {
     setError(null);
+    // Back to Turnfin Courses: a route that redirects to another site, so a full page load.
+    if (then !== "/") return window.location.assign(then);
     // The home page resolves the person's role and modules.
     router.push("/");
     router.refresh();
@@ -75,7 +77,7 @@ export function SignInForm({ devAdminName, sharedDeviceName = null, google = fal
     setError(null);
     startTransition(async () => {
       try {
-        await signIn("google", { redirectTo: "/" });
+        await signIn("google", { redirectTo: then });
       } catch {
         setError("Could not sign you in with Google. Try again.");
       }

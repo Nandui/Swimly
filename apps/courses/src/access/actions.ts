@@ -6,8 +6,10 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/data/db";
 import { log } from "@/data/log";
+import { cookieBase, openSession, STATE_COOKIE, STATE_SECONDS } from "./open-session";
+import { turnfinConfig } from "./pass";
 import { accountOf, PERSON, SESSION_COOKIE } from "./session";
-import { afterFailure, cleanEmail, hashToken, newToken, SESSION_HOURS } from "./tokens";
+import { afterFailure, cleanEmail, hashToken, newToken } from "./tokens";
 
 export type SignInState = { error: string } | undefined;
 
@@ -19,9 +21,22 @@ const Credentials = z.object({ email: z.string().min(3).max(200), password: z.st
 /** Compared against when nobody matches, so a wrong email takes as long as a wrong password. */
 let decoy: string | undefined;
 
-/** Sign in with the person's Turnfin email and password. Courses reads the account and never
- *  writes it: its own count of wrong passwords is in `courses_sign_ins`. */
+/** "Continue with Turnfin": off to Turnfin, which knows who is signed in, and back with a pass
+ *  (./pass.ts). The state ties the pass that returns to this browser. */
+export async function continueWithTurnfin(): Promise<void> {
+  const turnfin = turnfinConfig();
+  if (!turnfin) redirect("/sign-in");
+  const state = newToken();
+  (await cookies()).set(STATE_COOKIE, state, { ...cookieBase, maxAge: STATE_SECONDS });
+  redirect(`${turnfin.turnfinUrl}/api/courses/pass?state=${state}`);
+}
+
+/** Sign in with the person's Turnfin email and password, where Continue with Turnfin is not
+ *  set up (local development without Turnfin running). Where it is, there is one way in, so
+ *  Turnfin's own sign-in rules (Google, work devices) always apply. Courses reads the account
+ *  and never writes it: its own count of wrong passwords is in `courses_sign_ins`. */
 export async function signIn(_previous: SignInState, form: FormData): Promise<SignInState> {
+  if (turnfinConfig()) return { error: "Use Continue with Turnfin to sign in." };
   const parsed = Credentials.safeParse({ email: form.get("email"), password: form.get("password") });
   if (!parsed.success) return { error: "Enter your email and password." };
   const now = new Date();
@@ -49,24 +64,11 @@ export async function signIn(_previous: SignInState, form: FormData): Promise<Si
     return { error: REFUSED };
   }
 
-  const token = newToken();
-  const expiresAt = new Date(now.getTime() + SESSION_HOURS * 3_600_000);
-  const success = { failedSignIns: 0, lockedUntil: null, lastSignInAt: now };
-  await db.$transaction(async (tx) => {
-    await tx.coursesSignIn.upsert({ where: { userId: account.id }, update: success, create: { userId: account.id, ...success } });
-    await tx.coursesSession.create({ data: { userId: account.id, tokenHash: hashToken(token), expiresAt } });
-    await log(tx, { orgId: account.orgId, account, action: "person.signed_in", record: "person", recordId: account.id });
-  });
-  (await cookies()).set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    expires: expiresAt,
-  });
+  await openSession(account, "password");
   redirect("/");
 }
 
+/** Ends the Courses session on this browser. Turnfin's own sign-in is Turnfin's to end. */
 export async function signOut(): Promise<void> {
   const jar = await cookies();
   const token = jar.get(SESSION_COOKIE)?.value;
@@ -83,5 +85,5 @@ export async function signOut(): Promise<void> {
     }
     jar.delete(SESSION_COOKIE);
   }
-  redirect("/sign-in");
+  redirect("/sign-in?out=1");
 }
