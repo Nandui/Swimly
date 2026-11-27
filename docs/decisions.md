@@ -6,6 +6,12 @@ The decisions Turnfin 2.0 stands on, newest first. Each says what was decided, w
 
 ---
 
+### D34 · 27 November 2026 · Turnfin splits by subdomain, Courses first
+
+Turnfin's apps move to subdomains, starting with **Turnfin Courses** at `courses.turnfin.app`: swim classes, the pool deck, short courses, Academy courses and their reports as **one app, written again from scratch**. It is **fully standalone** (owner's choice): its own accounts and sign-in, its own access, its own design and its own code in `apps/courses`. It shares only the repository and the main database, where it **keeps the existing tables** and their rows. Earlier rules that hold it back (the app contract, the frame, levels, Turnfin Sheet) do not bind it.
+**Why:** the owner's words: "a proper split and a proper rewrite from scratch of the app, ignoring previously established stuff that would prevent us from being more effective or are restricting us".
+**Follows:** [courses.md](courses.md) holds the shape, the order and what it costs against the pillars. This is an exception to [D11](#d11--24-october-2026--a-platform-of-apps-in-one-deploy) for Courses; the apps still inside Turnfin keep D11 and every rule in AGENTS.md until their own split is decided. D24's remaining step (short courses as an activity type on `Programme`) is replaced by step 5 of courses.md. Nothing is switched off or removed in Turnfin until the owner says so, site by site.
+
 ### D33 · 17 November 2026 · Plan (test): what's on and duties become one list, Activities
 
 In Plan (test), everything that needs staff at a time is an **activity**: the pool or the desk being open, a lesson block, pool checks, closing down. **What's on** and a **duty given by itself** become this one list. An activity names **one kind of work**, how many people, where, from when to when, and the days it repeats. **Kinds of work** (today's duties: Lifeguard, Receptionist) stay as a short setup list, because the qualification and the department are written there once. A **booking** is its own kind of entry in the same list: it also says who booked it and a contact, the space it takes, how many are coming and a note for staff; its staffing is typed in on each booking, and it can name more than one kind of work. On the Day a booking is filled exactly as an activity is.
@@ -180,7 +186,7 @@ Turnfin 2.0 is the platform of apps (D11), jobs at places (D10) and a new look a
 
 Turnfin stays one codebase, one deploy and one sign-in: a platform with apps on top. Each app has the six-part contract (description, plug, front door, events, own data, own tests), talks to others only through it, and can be switched on per organisation and site. No splitting into separately deployed services.
 **Why:** a broken change must stay inside one app. Separate services move breakage into the network and were tried on 28 September 2026 and reversed.
-**Follows:** [architecture.md](architecture.md); the safety net comes first.
+**Follows:** [architecture.md](architecture.md); the safety net comes first. Courses is the exception, since [D34](#d34--27-november-2026--turnfin-splits-by-subdomain-courses-first).
 
 ### D10 · 24 October 2026 · Jobs at places
 

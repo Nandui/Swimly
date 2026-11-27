@@ -19,6 +19,7 @@ What is being built for 2.0, in order, and how each step is known to be done. Th
 | 7 | New apps | yes | yes: each new app |
 | 8 | Fewer front-of-house apps | yes | yes: each data copy and table drop |
 | 9 | Training sets up learning; Qualifications keeps qualifications | yes | yes: the rules change on Production |
+| 10 | Turnfin Courses, on its own subdomain | yes | yes: the design, the Vercel project, each site's switch |
 
 Step 1 comes first, because nothing else is safe without it. Step 5 can start as soon as step 1 is done and the design is approved, and runs alongside steps 2 to 4.
 
@@ -109,6 +110,12 @@ Training stops tracking compliance; a new app, Qualifications, keeps it ([D26](d
 
 **Done when** Qualifications keeps every certificate check, expiry and hour with nothing lost, Training has no expiry, certificate or compliance page, and a course finished in Turnfin Me adds its qualification for Qualifications to track.
 
+## 10. Turnfin Courses, on its own subdomain
+
+Swim classes, the pool deck, short courses, Academy courses and their reports leave Turnfin for one standalone app at `courses.turnfin.app`, written again from scratch on the same tables ([D34](decisions.md)). Its own steps, in order, are in [courses.md](courses.md#the-order). It replaces what was left of step 8.4.
+
+**Done when** every site works in Turnfin Courses, Classes, Pool deck, Analytics and Academy are gone from Turnfin, and Rota and Plan still show who is teaching when.
+
 ## Decisions the owner still holds
 
 These do not block steps 1 to 4.
@@ -120,7 +127,7 @@ These do not block steps 1 to 4.
 
 ## Not in 2.0
 
-- Splitting Turnfin into separately deployed services.
+- Splitting the apps that stay inside Turnfin into separately deployed services. Courses is the exception ([D34](decisions.md), step 10).
 - Regrouping the apps beyond step 8, or moving the swim school's pages under one path.
 - Department-scoped access. A job covers sites; a real department case starts as a filter inside that app.
 - A stored work-item table, permission bundles, workspaces, or any other sixth concept.
