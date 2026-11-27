@@ -10,7 +10,7 @@ Turnfin is **one Next.js app, one deploy, one sign-in**, built as a platform wit
 
 We do not split Turnfin into separately deployed services: that moves breakage into the network between them, multiplies deploys and logs, and slows every cross-app job (an incident that needs HR, a class Rota must cover). The contract keeps that door open without paying the price now.
 
-**The one exception is Turnfin Courses** ([D34](decisions.md)): swim classes, the pool deck, short courses, Academy courses and their reports are being rebuilt as a standalone app at `courses.turnfin.app` (`apps/courses`), sharing only this repository and the main database. Its shape is in [courses.md](courses.md). Until its switch, everything below still describes the live app.
+**The one exception is Turnfin Courses** ([D34](decisions.md)): swim classes, the pool deck, short courses, Academy courses and their reports are being rebuilt as a standalone app at `courses.turnfin.app` (`apps/courses`), sharing this repository, the main database and staff accounts. Its shape is in [courses.md](courses.md). Until its switch, everything below still describes the live app.
 
 ```mermaid
 flowchart TB

@@ -1,25 +1,47 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { grantsOf, may, siteFilter } from "./grants";
+import { GRANTS, grantsFor, may, siteFilter, type RoleFacts } from "./grants";
 
-test("a stored grant gives itself and what it includes", () => {
-  assert.deepEqual([...grantsOf(["lead"])].sort(), ["lead", "teach"]);
-  assert.deepEqual([...grantsOf(["manage"])].sort(), ["desk", "manage"]);
-  assert.deepEqual([...grantsOf(["desk"])], ["desk"]);
+const role = (levels: unknown, extras: string[] = [], isSuperadmin = false): RoleFacts => ({ levels, extras, isSuperadmin });
+const held = (facts: RoleFacts) => [...grantsFor(facts)].sort();
+
+test("a receptionist's role gives the desk", () => {
+  assert.deepEqual(held(role({ "swim-school": "desk", rota: "view", tasks: "do" })), ["desk"]);
 });
 
-test("an unknown stored grant is ignored", () => {
-  assert.deepEqual([...grantsOf(["desk", "superuser", ""])], ["desk"]);
+test("an instructor's role gives their own classes", () => {
+  assert.deepEqual(held(role({ "pool-deck": "teach" })), ["teach"]);
+  assert.deepEqual(held(role({ "pool-deck": "lead" })), ["lead", "teach"]);
 });
 
-test("nothing is given by default", () => {
-  const nobody = { grants: grantsOf([]), siteIds: [] };
-  assert.equal(may(nobody, "desk"), false);
-  assert.equal(may(nobody, "accounts", "site-a"), false);
+test("a higher level includes the one before it", () => {
+  assert.deepEqual(held(role({ "swim-school": "manage" })), ["desk", "manage"]);
+  assert.deepEqual(held(role({ academy: "manage" })), ["academy", "tutor"]);
 });
 
-test("a grant reaches only the account's sites", () => {
-  const desk = { grants: grantsOf(["desk"]), siteIds: ["site-a"] };
+test("the cancel tick gives cancelling, and nothing else does", () => {
+  assert.deepEqual(held(role({ "swim-school": "desk" }, ["swim-school.cancel-classes", "docs.approve"])), ["cancel", "desk"]);
+});
+
+test("an administrator and a superadmin hold everything", () => {
+  const all = Object.keys(GRANTS).sort();
+  assert.deepEqual(held(role({ admin: "manage" })), all);
+  assert.deepEqual(held(role(null, [], true)), all);
+});
+
+test("a role saved before short courses joined Classes still counts", () => {
+  assert.deepEqual(held(role({ "short-courses": "instructor" })), ["teach"]);
+});
+
+test("no role, other apps and unknown values give nothing", () => {
+  assert.deepEqual(held(role(null)), []);
+  assert.deepEqual(held(role({ rota: "manage", hr: "sites", admin: "setup" })), []);
+  assert.deepEqual(held(role({ "swim-school": "owner", "pool-deck": 3, toString: "desk" })), []);
+  assert.deepEqual(held(role(["swim-school"])), []);
+});
+
+test("a grant reaches only the person's sites", () => {
+  const desk = { grants: grantsFor(role({ "swim-school": "desk" })), siteIds: ["site-a"] };
   assert.equal(may(desk, "desk"), true);
   assert.equal(may(desk, "desk", "site-a"), true);
   assert.equal(may(desk, "desk", "site-b"), false);
@@ -27,8 +49,8 @@ test("a grant reaches only the account's sites", () => {
 });
 
 test("no sites listed means every site", () => {
-  const everywhere = { grants: grantsOf(["teach"]), siteIds: [] };
+  const everywhere = { grants: grantsFor(role({ "pool-deck": "teach" })), siteIds: [] };
   assert.equal(may(everywhere, "teach", "site-b"), true);
   assert.equal(siteFilter(everywhere), undefined);
-  assert.deepEqual(siteFilter({ grants: grantsOf([]), siteIds: ["site-a"] }), { in: ["site-a"] });
+  assert.deepEqual(siteFilter({ grants: new Set(), siteIds: ["site-a"] }), { in: ["site-a"] });
 });

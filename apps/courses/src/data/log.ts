@@ -4,7 +4,7 @@ import type { Tx } from "./db";
  *  neither exists without the other. */
 export type LogEntry = {
   orgId: string;
-  /** Who did it; null for a script, which names itself in `actorName`. */
+  /** Who did it (their Turnfin person id and name); null for a script, which names itself in `actorName`. */
   account: { id: string; name: string } | null;
   actorName?: string;
   /** `<thing>.<past-tense-verb>`. */
@@ -20,7 +20,7 @@ export async function log(tx: Tx, entry: LogEntry): Promise<void> {
   await tx.coursesLog.create({
     data: {
       orgId: entry.orgId,
-      accountId: entry.account?.id ?? null,
+      userId: entry.account?.id ?? null,
       actorName: entry.account?.name ?? entry.actorName ?? "System",
       action: entry.action,
       record: entry.record,

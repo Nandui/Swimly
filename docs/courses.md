@@ -15,7 +15,7 @@ One app for everything the centres teach and sell places on:
 | Reports | Analytics (same module) | swim school managers |
 | The parent app's API and the Academy booking site's API | `/api/parent/v1`, `/api/parent-admin/v1`, `/api/academy/v1` | the two connected products |
 
-It is written again from scratch. Turnfin's rules for apps (the six-part contract, the frame, the five-page limit, levels and extras, Turnfin Sheet) do not bind it. What still binds it is in [What does not change](#what-does-not-change).
+It is written again from scratch. Turnfin's rules for apps (the six-part contract, the frame, the five-page limit, Turnfin Sheet) do not bind it. Staff keep their Turnfin accounts and roles. What still binds it is in [What does not change](#what-does-not-change).
 
 ## What it shares, and what it does not
 
@@ -24,8 +24,8 @@ It is written again from scratch. Turnfin's rules for apps (the six-part contrac
 | Repository | yes: `apps/courses` | its own `package.json`, lint, tests and `AGENTS.md` |
 | Database | yes: the main database, and the tables it already has | new tables in `prisma/schema/courses.prisma`, prefixed `courses_` |
 | Deploy | no | its own Vercel project, `turnfin-courses`, root `apps/courses`, like Turnfin Me and the Academy site |
-| Accounts and sign-in | no | `courses_accounts`, its own session cookie on `courses.turnfin.app` |
-| Access | no | its own short list of grants per account |
+| Accounts | yes: staff keep their Turnfin account, password and role | its own session cookie on `courses.turnfin.app` |
+| Access | yes: the role an administrator gave the person in Turnfin | its own short list of grants, worked out from that role |
 | Design | no | its own, approved from mockups before any screen is built |
 | Code | nothing imported from `src/` | everything under `apps/courses/src` |
 
@@ -35,27 +35,31 @@ It is written again from scratch. Turnfin's rules for apps (the six-part contrac
 
 - **The tables keep their names and rows.** Courses takes over the tables in `activities.prisma`, `activities.short-courses.prisma` and `academy.prisma`. Nothing is copied. Until the switch, Turnfin's code and Courses read and write the same rows, so both can run at once.
 - **One migration history.** The database has one set of migrations, `prisma/migrations`, applied by Turnfin's production build. Courses adds to it and never runs migrations itself. Database changes still only add.
-- **Its own client.** Courses generates its own Prisma client from `prisma/schema` into `apps/courses/src/generated/prisma`. It queries only its own tables, plus `clubs` (sites, read only) and `users` (names for the person behind an account, read only). Lint refuses any other model.
-- **New tables** carry `orgId` and the `courses_` prefix: `courses_accounts`, `courses_sessions`, `courses_log` so far.
+- **Its own client.** Courses generates its own Prisma client from `prisma/schema` into `apps/courses/src/generated/prisma`. It queries only its own tables, and reads three of the platform's without ever writing them: `clubs` (sites), `users` (who is signing in, and names) and `staff_roles` (what their role opens). Lint refuses any other model, and any write to those three.
+- **New tables** carry `orgId` and the `courses_` prefix: `courses_sessions`, `courses_sign_ins`, `courses_log` so far.
 
-## Accounts, sign-in and access
+## Sign-in and access
 
-- **An account** (`CoursesAccount`) is an email, a name, a password, the sites it works at and its grants. Deactivate, never delete.
-- **The person behind it.** The existing tables record staff by their Turnfin person id (a class's instructor, who marked a register, who booked an assessment). Those columns stay, so an account that teaches or writes records is linked to that person record (`personId`). The link is identity only: Turnfin's password, role and levels are never read. A later step can add account columns beside the person columns and stop needing the link.
-- **Sign-in** is email and password, checked with bcrypt, with a random session token stored hashed in `courses_sessions` and sent as an `HttpOnly`, `Secure`, `SameSite=Lax` cookie for `courses.turnfin.app` only. Signing in to Turnfin does not sign you in here, and the other way round.
-- **Grants**, per account, at its sites. Code asks for a grant, never a job title:
+**Staff keep their accounts and logins** (owner, 27 November 2026): instructors, receptionists, managers and administrators sign in to Courses with the Turnfin account they already have. Courses has no accounts of its own, and nobody is set up twice.
 
-| Grant | Opens |
-| --- | --- |
-| `desk` | swimmers, places, moves, waiting lists, assessment and course bookings, failed payments |
-| `teach` | the pool deck for their own classes and courses |
-| `lead` | the pool deck for any class |
-| `tutor` | Academy courses: candidates, checks, payment, registers, results |
-| `manage` | programmes, classes, course lists, prices, uploads, reports |
-| `cancel` | cancelling today's sessions |
-| `accounts` | accounts and their grants |
+- **Who you are** is your Turnfin person record (`users`). Courses reads it and never writes it. The course tables already record staff by that id (a class's instructor, who marked a register), so nothing needs linking.
+- **Sign-in** is your Turnfin email and password, checked against the same record. Courses then keeps its own session: a random token stored hashed in `courses_sessions`, sent as an `HttpOnly`, `Secure`, `SameSite=Lax` cookie for `courses.turnfin.app` only. It ends after 12 hours or 30 idle minutes, and five wrong passwords pause sign-in for 15 minutes (`courses_sign_ins`).
+- **Not built yet: Sign in with Google, and one sign-in for both.** Someone who only ever signs in to Turnfin with Google has no password to type here. The next step is **Continue with Turnfin**: Courses sends you to Turnfin, which signs you in the way it always does (password, Google, a work device's rules) and hands Courses a short-lived signed pass. Then being signed in to Turnfin is enough, and Courses needs no password form.
+- **What you can do** comes from the role an administrator already gave you in Turnfin (Admin › Roles), read on every request, so a change there takes effect here at once. Deactivated in Turnfin is signed out here. Code asks for a grant, never a job title:
 
-- **The log.** Every change writes one row to `courses_log` in the same transaction: who, what, which record, when. Turnfin's activity log stops receiving course changes at the switch and stays readable.
+| Grant | Opens | Given by the role's level in Turnfin |
+| --- | --- | --- |
+| `desk` | swimmers, places, moves, waiting lists, assessment and course bookings, failed payments | Classes: Desk |
+| `manage` | programmes, classes, short course lists, prices, uploads, reports | Classes: Manage (includes `desk`) |
+| `cancel` | cancelling today's sessions | Classes: Can cancel classes |
+| `teach` | the pool deck for their own classes and courses | Pool deck: Teach |
+| `lead` | the pool deck for any class | Pool deck: Lead (includes `teach`) |
+| `tutor` | Academy courses: candidates, checks, payment, registers, results | Academy: Tutor |
+| `academy` | the Academy course list and putting courses on | Academy: Manage (includes `tutor`) |
+
+An administrator (Admin: Manage) or a superadmin holds every grant, as they hold Manage in every app. Grants apply at the sites the person works at (`users.siteIds`; none means every site). The mapping is `apps/courses/src/access/grants.ts`. The Classes, Pool deck and Academy levels stay on the role editor after those apps leave Turnfin, because they now say what a role opens in Courses.
+
+**The log.** Every change writes one row to `courses_log` in the same transaction: who, what, which record, when. Turnfin's activity log stops receiving course changes at the switch and stays readable.
 
 ## What Turnfin still needs from it
 
@@ -86,21 +90,21 @@ Each step is its own pull request, checked on a preview. Old screens stay live i
 
 | Step | What | Needs the owner |
 | --- | --- | --- |
-| 1 | **Foundation**: the app, its tables, accounts, sign-in, grants, the log, checks in CI | yes: the Vercel project and domain |
+| 1 | **Foundation**: the app, its tables, sign-in with Turnfin accounts, grants from roles, the log, checks in CI; then Continue with Turnfin | yes: the Vercel project and domain |
 | 2 | **The design**: mockups of the desk, the pool deck and a course page | yes: approving it |
 | 3 | **Desk**: swimmers, classes, places, waiting lists, assessments | |
 | 4 | **Pool deck**: today, registers, competencies, assessments | |
 | 5 | **Courses with dates**: short courses and Academy courses as one kind of thing, on their own tables | |
 | 6 | **Money and the day**: failed payments, cancellations, the duty page, reports | |
 | 7 | **APIs**: parent, parent-admin, Academy, and `/api/turnfin/v1` with Turnfin's plugs moved onto it | |
-| 8 | **The switch**, one site first: accounts made from today's staff by a script (dry-run until `--confirm`), Classes, Pool deck, Analytics and Academy switched off in Turnfin, old links redirected | yes: each site, and the script on Production |
+| 8 | **The switch**, one site first: Classes, Pool deck, Analytics and Academy switched off in Turnfin, old links redirected. Nobody needs a new account | yes: each site |
 | 9 | **Removal** of the old modules and routes from Turnfin, a month after the last site | yes |
 
 ## What this costs
 
 Said plainly, against the pillars ([PRODUCT.md](../PRODUCT.md)):
 
-- **Simple, easy to manage.** Staff who use both get two sign-ins, and a manager keeps a person in two places. "One sign-in and one set of records" is no longer true of courses.
+- **Simple, easy to use.** People, roles and passwords stay in one place. Until Continue with Turnfin is built, staff who use both type the same password once on each.
 - **Easy to audit.** A change is in one of two logs, depending on where it was made.
 - **Change without breaking.** Rota and Plan depend on a network call where they had a function call. This was tried on 28 September 2026 and reversed ([D11](decisions.md)); the difference now is that only one boundary crosses the network and it fails closed.
 - **Modern.** Two designs and two sets of screens exist until step 9.

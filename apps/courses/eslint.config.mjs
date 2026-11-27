@@ -5,11 +5,12 @@ import nextTs from "eslint-config-next/typescript";
 
 // Turnfin Courses stands alone (docs/courses.md). Two rules keep it that way:
 //   1. nothing is imported from Turnfin's code (../../src);
-//   2. the database client reaches only Courses' own tables, plus sites and people's names.
+//   2. the database client reaches only Courses' own tables, plus sites, people and their roles
+//      (read only: staff keep their Turnfin accounts, and Courses never changes them).
 const SCHEMA = new URL("../../prisma/schema/", import.meta.url);
 const OWNED = /^(courses|academy|activities(\..+)?)\.prisma$/;
-/** Platform tables Courses may read, never write: sites, and the person behind an account. */
-const READ_ONLY = ["club", "user"];
+/** Platform tables Courses may read, never write: sites, people and their roles. */
+const READ_ONLY = ["club", "user", "staffRole"];
 const delegate = (model) => model[0].toLowerCase() + model.slice(1);
 const foreign = readdirSync(SCHEMA)
   .filter((file) => file.endsWith(".prisma") && !OWNED.test(file))
@@ -21,7 +22,7 @@ export default defineConfig([
   ...nextVitals,
   ...nextTs,
   {
-    files: ["src/**/*.{ts,tsx}", "scripts/**/*.{ts,mts}"],
+    files: ["src/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-imports": ["error", {
         patterns: [
@@ -36,7 +37,7 @@ export default defineConfig([
         },
         {
           selector: `CallExpression[callee.property.name=/^(${WRITES})$/][callee.object.object.name=/^(db|tx)$/][callee.object.property.name=/^(${READ_ONLY.join("|")})$/]`,
-          message: "Courses reads sites and people's names; it never writes them.",
+          message: "Courses reads sites, people and roles; it never writes them.",
         },
       ],
     },

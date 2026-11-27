@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/data/db";
 import { log } from "@/data/log";
-import { SESSION_COOKIE } from "./session";
+import { accountOf, PERSON, SESSION_COOKIE } from "./session";
 import { afterFailure, cleanEmail, hashToken, newToken, SESSION_HOURS } from "./tokens";
 
 export type SignInState = { error: string } | undefined;
@@ -16,30 +16,34 @@ const REFUSED = "That email and password don't match. After several wrong tries,
 
 const Credentials = z.object({ email: z.string().min(3).max(200), password: z.string().min(1).max(200) });
 
-/** Compared against when no account matches, so a wrong email takes as long as a wrong password. */
+/** Compared against when nobody matches, so a wrong email takes as long as a wrong password. */
 let decoy: string | undefined;
 
+/** Sign in with the person's Turnfin email and password. Courses reads the account and never
+ *  writes it: its own count of wrong passwords is in `courses_sign_ins`. */
 export async function signIn(_previous: SignInState, form: FormData): Promise<SignInState> {
   const parsed = Credentials.safeParse({ email: form.get("email"), password: form.get("password") });
   if (!parsed.success) return { error: "Enter your email and password." };
-  const email = cleanEmail(parsed.data.email);
   const now = new Date();
 
-  const account = await db.coursesAccount.findUnique({
-    where: { email },
-    select: { id: true, orgId: true, name: true, passwordHash: true, isActive: true, failedSignIns: true, lockedUntil: true },
+  const person = await db.user.findUnique({
+    where: { email: cleanEmail(parsed.data.email) },
+    select: { ...PERSON, passwordHash: true },
   });
-  const matches = await bcrypt.compare(parsed.data.password, account?.passwordHash ?? (decoy ??= await bcrypt.hash(newToken(), 10)));
-  if (!account || !account.isActive) return { error: REFUSED };
-  if (account.lockedUntil && account.lockedUntil > now) return { error: REFUSED };
+  const matches = await bcrypt.compare(parsed.data.password, person?.passwordHash ?? (decoy ??= await bcrypt.hash(newToken(), 10)));
+  const account = person?.passwordHash ? accountOf(person) : null;
+  if (!account) return { error: REFUSED };
+
+  const guard = await db.coursesSignIn.findUnique({ where: { userId: account.id }, select: { failedSignIns: true, lockedUntil: true } });
+  if (guard?.lockedUntil && guard.lockedUntil > now) return { error: REFUSED };
 
   if (!matches) {
-    // A lock that has run out starts the count again.
-    const failure = afterFailure(account.lockedUntil ? 0 : account.failedSignIns, now);
+    // A pause that has run out starts the count again.
+    const failure = afterFailure(guard?.lockedUntil ? 0 : (guard?.failedSignIns ?? 0), now);
     await db.$transaction(async (tx) => {
-      await tx.coursesAccount.update({ where: { id: account.id }, data: failure });
+      await tx.coursesSignIn.upsert({ where: { userId: account.id }, update: failure, create: { userId: account.id, ...failure } });
       if (failure.lockedUntil) {
-        await log(tx, { orgId: account.orgId, account, action: "account.sign_in_paused", record: "account", recordId: account.id });
+        await log(tx, { orgId: account.orgId, account, action: "person.sign_in_paused", record: "person", recordId: account.id });
       }
     });
     return { error: REFUSED };
@@ -47,10 +51,11 @@ export async function signIn(_previous: SignInState, form: FormData): Promise<Si
 
   const token = newToken();
   const expiresAt = new Date(now.getTime() + SESSION_HOURS * 3_600_000);
+  const success = { failedSignIns: 0, lockedUntil: null, lastSignInAt: now };
   await db.$transaction(async (tx) => {
-    await tx.coursesAccount.update({ where: { id: account.id }, data: { failedSignIns: 0, lockedUntil: null, lastSignInAt: now } });
-    await tx.coursesSession.create({ data: { accountId: account.id, tokenHash: hashToken(token), expiresAt } });
-    await log(tx, { orgId: account.orgId, account, action: "account.signed_in", record: "account", recordId: account.id });
+    await tx.coursesSignIn.upsert({ where: { userId: account.id }, update: success, create: { userId: account.id, ...success } });
+    await tx.coursesSession.create({ data: { userId: account.id, tokenHash: hashToken(token), expiresAt } });
+    await log(tx, { orgId: account.orgId, account, action: "person.signed_in", record: "person", recordId: account.id });
   });
   (await cookies()).set(SESSION_COOKIE, token, {
     httpOnly: true,
@@ -66,15 +71,16 @@ export async function signOut(): Promise<void> {
   const jar = await cookies();
   const token = jar.get(SESSION_COOKIE)?.value;
   if (token) {
-    await db.$transaction(async (tx) => {
-      const session = await tx.coursesSession.findUnique({
-        where: { tokenHash: hashToken(token) },
-        select: { id: true, account: { select: { id: true, orgId: true, name: true } } },
+    const session = await db.coursesSession.findUnique({ where: { tokenHash: hashToken(token) }, select: { id: true, userId: true } });
+    if (session) {
+      const person = await db.user.findUnique({ where: { id: session.userId }, select: { id: true, name: true, orgId: true } });
+      await db.$transaction(async (tx) => {
+        await tx.coursesSession.delete({ where: { id: session.id } });
+        if (person?.orgId) {
+          await log(tx, { orgId: person.orgId, account: person, action: "person.signed_out", record: "person", recordId: person.id });
+        }
       });
-      if (!session) return;
-      await tx.coursesSession.delete({ where: { id: session.id } });
-      await log(tx, { orgId: session.account.orgId, account: session.account, action: "account.signed_out", record: "account", recordId: session.account.id });
-    });
+    }
     jar.delete(SESSION_COOKIE);
   }
   redirect("/sign-in");

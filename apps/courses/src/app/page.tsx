@@ -4,7 +4,7 @@ import { requireAccount } from "@/access/session";
 import { longDate } from "@/data/dates";
 import { todaysClasses } from "@/today/data";
 
-/** The first page: proof that an account signs in and reads today's classes from the
+/** The first page: proof that a person signs in with their Turnfin account and reads today's classes from the
  *  existing tables. The real Today arrives with the design (docs/courses.md, steps 2 to 4). */
 export default async function TodayPage() {
   const account = await requireAccount();
@@ -15,7 +15,7 @@ export default async function TodayPage() {
       <p>{longDate()} · signed in as {account.name}</p>
 
       {classes === null ? (
-        <p>Your account has nothing to open here yet. Ask whoever keeps the accounts to set what you can do.</p>
+        <p>Your role has nothing to open here yet. Ask an administrator to give your role Classes, Pool deck or Academy in Turnfin.</p>
       ) : classes.length === 0 ? (
         <p>No classes today.</p>
       ) : (

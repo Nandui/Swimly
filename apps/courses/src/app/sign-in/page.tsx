@@ -10,7 +10,7 @@ export default async function SignInPage() {
   return (
     <main>
       <h1>Turnfin Courses</h1>
-      <p>Sign in with your Turnfin Courses account. It is separate from your Turnfin sign-in.</p>
+      <p>Sign in with your Turnfin email and password.</p>
       <SignInForm />
     </main>
   );

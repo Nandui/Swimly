@@ -1,53 +1,34 @@
 // Turnfin Courses (apps/courses, docs/courses.md): the standalone app at courses.turnfin.app.
 // Its new tables. It also owns the tables in activities.prisma, activities.short-courses.prisma
 // and academy.prisma, shared with Turnfin's own modules until the switch (D34).
+// People sign in with their Turnfin account (users); these tables keep only its id.
 // No relations to the platform's tables: ids only.
 
-/// Someone who signs in to Turnfin Courses. Its own accounts: Turnfin's
-/// password, role and levels are never read.
-model CoursesAccount {
-  id            String    @id @default(cuid())
-  orgId         String
-  /// Lower case.
-  email         String    @unique
-  name          String
-  /// bcrypt.
-  passwordHash  String
-  /// The Turnfin person record (`users.id`) the existing course tables name
-  /// as instructor, marker or booker. Identity only. Null for an account
-  /// that never appears in those columns.
-  personId      String?   @unique
-  /// The sites this account works at. Empty means every site.
-  siteIds       String[]  @default([])
-  /// What the account may do at its sites (apps/courses/src/access/grants.ts).
-  grants        String[]  @default([])
-  /// Deactivate, never delete.
-  isActive      Boolean   @default(true)
-  /// Wrong passwords since the last success; too many lock sign-in for a while.
+/// Wrong passwords at Courses' sign-in, per person, so sign-in can pause after too many.
+/// Courses never writes the users table.
+model CoursesSignIn {
+  /// The person: users.id.
+  userId        String    @id
+  /// Wrong passwords since the last success.
   failedSignIns Int       @default(0)
   lockedUntil   DateTime?
   lastSignInAt  DateTime?
-  createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  sessions CoursesSession[]
-
-  @@index([orgId])
-  @@map("courses_accounts")
+  @@map("courses_sign_ins")
 }
 
 /// One signed-in browser. The cookie holds a random token; only its SHA-256 is stored.
 model CoursesSession {
   id         String   @id @default(cuid())
-  accountId  String
+  /// The person: users.id.
+  userId     String
   tokenHash  String   @unique
   createdAt  DateTime @default(now())
   lastSeenAt DateTime @default(now())
   expiresAt  DateTime
 
-  account CoursesAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
-
-  @@index([accountId])
+  @@index([userId])
   @@index([expiresAt])
   @@map("courses_sessions")
 }
@@ -57,11 +38,11 @@ model CoursesSession {
 model CoursesLog {
   id        String   @id @default(cuid())
   orgId     String
-  /// Null for a script.
-  accountId String?
-  /// Kept beside the id so the log reads the same after an account changes.
+  /// The person (users.id). Null for a script.
+  userId    String?
+  /// Kept beside the id so the log reads the same after a person's name changes.
   actorName String
-  /// `<thing>.<past-tense-verb>`, e.g. "account.signed_in".
+  /// `<thing>.<past-tense-verb>`, e.g. "person.signed_in".
   action    String
   /// The kind of record and its id, where the change was to one record.
   record    String?
@@ -72,6 +53,6 @@ model CoursesLog {
 
   @@index([orgId, createdAt])
   @@index([record, recordId])
-  @@index([accountId, createdAt])
+  @@index([userId, createdAt])
   @@map("courses_log")
 }

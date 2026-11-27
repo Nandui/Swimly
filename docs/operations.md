@@ -166,14 +166,13 @@ The standalone app for `courses.turnfin.app` ([courses.md](courses.md)). Not dep
 - **Run it:** `npm ci` then `npm run dev` in `apps/courses` (port 3103), with `DATABASE_URL` in its own `.env` (`apps/courses/.env.example`). Against the sandbox, point it at the sandbox's main database and set `DATABASE_POOL_MAX=1`.
 - **Its database client** is generated from `prisma/schema` by the `courses` generator (`npm run generate`, also on install and build).
 - **Migrations** stay in `prisma/migrations` and are applied by Turnfin's build. Courses never migrates.
-- **Accounts:** `npm run account -- --email … --name … --grants desk,teach [--sites …] [--person-email …]`, a dry run until `--confirm`. The password is read from `COURSES_ACCOUNT_PASSWORD`, never the command line. Against Production it needs the owner's yes.
+- **Accounts:** none of its own. Staff sign in with their Turnfin email and password, and their role in Turnfin decides what they open ([courses.md](courses.md#sign-in-and-access)). In the sandbox, sign in as any sandbox person.
 - **Checks:** `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`; the pull request check runs them as its own job.
 
 | Setting | Purpose |
 | --- | --- |
 | `DATABASE_URL` | Turnfin's main database (pooled). The same value as Turnfin's |
 | `DATABASE_POOL_MAX` | optional, as for Turnfin |
-| `COURSES_ACCOUNT_PASSWORD` | the account script only: the password to set. Never stored in a file |
 
 ## Record management from the command line
 
