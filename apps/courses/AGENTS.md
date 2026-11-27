@@ -7,7 +7,7 @@ Turnfin's rulebook ([../../AGENTS.md](../../AGENTS.md)) does **not** bind this a
 ## Standalone
 
 - Import nothing from `../../src`. Lint refuses it.
-- The database is reached only through `src/data/db.ts`. Courses queries its own tables (`courses.prisma`, `activities*.prisma`, `academy.prisma`) and reads `clubs`, `users` and `staff_roles` (staff keep their Turnfin accounts and roles) and `audit_logs` (the history of course records from before Courses kept its own log). Lint refuses any other table, and any write to those four.
+- The database is reached only through `src/data/db.ts`. Courses queries its own tables (`courses.prisma`, `activities*.prisma`, `academy.prisma`) and reads `clubs`, `users` and `staff_roles` (staff keep their Turnfin accounts and roles) and `audit_logs` (the history of course records from before Courses kept its own log). Lint refuses any other table, and any write to those four, except adding a row to `audit_logs` for a change made here ([courses.md](../../docs/courses.md#sign-in-and-access), the log).
 - Schema changes go in `../../prisma/schema` with a migration in `../../prisma/migrations`, and **only add**. Courses never runs migrations.
 
 ## Folders
@@ -18,11 +18,12 @@ Turnfin's rulebook ([../../AGENTS.md](../../AGENTS.md)) does **not** bind this a
 | `src/access` | Continue with Turnfin (the pass), sessions, grants worked out from roles |
 | `src/data` | the database client, the log, dates in `Europe/Dublin` |
 | `src/frame` | the frame every signed-in page uses, the search field, links to pages still in Turnfin |
+| `src/home`, `src/place` | the desk's home and its search; the waiting queue and placing a swimmer |
 | `src/<area>` | one area of work (desk, deck, courses and so on): its reads, writes, rules, screens and tests together |
 
 ## Writes
 
-A write authorises (a grant, at a site), validates, guards, writes and logs, with the write and its `courses_log` row in one transaction. Errors a person can fix are return values (`{ ok: false, error }`); throwing is for "this should not have been possible". Deactivate, never delete.
+A write authorises (a grant, at a site), validates, guards, writes and logs, with the write and its `courses_log` row in one transaction. A write to a table Turnfin's code also writes keeps Turnfin's guards, in Turnfin's order, with its locks (`src/place/actions.ts` is the worked example): read the Turnfin action first, and refuse here whatever it would stop to ask about. Errors a person can fix are return values (`{ ok: false, error }`); throwing is for "this should not have been possible". Deactivate, never delete.
 
 ## Access
 

@@ -1,4 +1,4 @@
-/** Who is waiting for a class place. Pure: the reads are in ./data.ts.
+/** Who is waiting for a class place. Pure: the reads are in ./queue.ts.
  *
  *  The rule is the swim school's own, carried over unchanged from Turnfin's "Awaiting
  *  enrolment" so the two agree while both run on the same records:
@@ -23,6 +23,8 @@ export type Reason = {
   studentId: string;
   siteId: string;
   programmeId: string;
+  /** The level they were placed at. */
+  levelId: string;
   /** The day they began waiting. */
   queuedOn: Date;
   /** Breaks ties between reasons on the same day: later wins. */
@@ -30,7 +32,7 @@ export type Reason = {
   places: readonly Place[];
 };
 
-export type WaitingListEntry = { studentId: string; programmeId: string };
+export type WaitingListEntry = { id: string; studentId: string; programmeId: string; createdAt: Date };
 
 export type WaitingInput = {
   reasons: readonly Reason[];
@@ -43,13 +45,26 @@ export type WaitingInput = {
   everAPlace: ReadonlySet<string>;
 };
 
-/** One key per swimmer and programme still waiting. */
-export function waiting(input: WaitingInput): Set<string> {
+/** One swimmer waiting in one programme. */
+export type Waiting = {
+  /** Stable for as long as they wait: the reason's id, or their first waiting-list entry's. */
+  id: string;
+  studentId: string;
+  /** The shared programme. */
+  programmeId: string;
+  /** The assessment or by-hand placement, when there is one: it says where and at what level. */
+  reason: Reason | null;
+  onWaitingList: boolean;
+  since: Date;
+};
+
+/** Everyone still waiting, longest wait first. */
+export function waitingQueue(input: WaitingInput): Waiting[] {
   const { programmeOf } = input;
   const latestFirst = [...input.reasons].sort((a, b) =>
     b.queuedOn.getTime() - a.queuedOn.getTime() || b.order[0] - a.order[0] || b.order[1] - a.order[1] || b.id.localeCompare(a.id));
   const seen = new Set<string>();
-  const keys = new Set<string>();
+  const queue = new Map<string, Waiting>();
   for (const reason of latestFirst) {
     const programme = programmeOf(reason.programmeId);
     const key = `${reason.studentId}:${programme}`;
@@ -62,10 +77,18 @@ export function waiting(input: WaitingInput): Set<string> {
       if (input.beganAsWaitingList.has(place.id) && !input.everAPlace.has(place.id)) return false;
       return place.startedOn >= reason.queuedOn || (place.endedOn !== null && place.endedOn >= reason.queuedOn);
     });
-    if (!placed) keys.add(key);
+    if (!placed) queue.set(key, { id: reason.id, studentId: reason.studentId, programmeId: programme, reason, onWaitingList: false, since: reason.queuedOn });
   }
-  for (const entry of input.waitingLists) keys.add(`${entry.studentId}:${programmeOf(entry.programmeId)}`);
-  return keys;
+  const oldestFirst = [...input.waitingLists].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime() || a.id.localeCompare(b.id));
+  for (const entry of oldestFirst) {
+    const programme = programmeOf(entry.programmeId);
+    const key = `${entry.studentId}:${programme}`;
+    const waiting = queue.get(key) ?? { id: entry.id, studentId: entry.studentId, programmeId: programme, reason: null, onWaitingList: true, since: entry.createdAt };
+    waiting.onWaitingList = true;
+    if (entry.createdAt < waiting.since) waiting.since = entry.createdAt;
+    queue.set(key, waiting);
+  }
+  return [...queue.values()].sort((a, b) => a.since.getTime() - b.since.getTime() || a.id.localeCompare(b.id));
 }
 
 /** Rows that can stand in for one another across sites, back to the one they all share. */
@@ -85,4 +108,30 @@ export function sharedRoots(rows: readonly { id: string; sharedWithId: string | 
     roots.set(row.id, current.id);
   }
   return (id) => roots.get(id) ?? id;
+}
+
+/** A level in its programme's order. */
+export type OrderedLevel = { id: string };
+
+/** Has this swimmer earned a place at the target level? The swim school's rule, unchanged:
+ *  a level they completed or are in already is earned; so is the first level; an assessment
+ *  earns its level and every one below; otherwise they must have completed the level before.
+ *  It looks only at the level before, so adding a level underneath a class un-earns nobody. */
+export function hasEarnedPlace(args: {
+  targetLevelId: string;
+  /** Live levels of the target's programme, in order. */
+  orderedLevels: readonly OrderedLevel[];
+  completedLevelIds: ReadonlySet<string>;
+  activeLevelIds: ReadonlySet<string>;
+  assessedLevelIds: ReadonlySet<string>;
+}): boolean {
+  const { targetLevelId, orderedLevels, completedLevelIds, activeLevelIds, assessedLevelIds } = args;
+  if (completedLevelIds.has(targetLevelId) || activeLevelIds.has(targetLevelId)) return true;
+  const index = orderedLevels.findIndex((level) => level.id === targetLevelId);
+  if (index <= 0) return true;
+  if (assessedLevelIds.size) {
+    const highest = Math.max(...orderedLevels.map((level, i) => (assessedLevelIds.has(level.id) ? i : -1)));
+    if (highest >= index) return true;
+  }
+  return completedLevelIds.has(orderedLevels[index - 1]!.id);
 }

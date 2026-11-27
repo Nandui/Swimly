@@ -12,6 +12,9 @@ const OWNED = /^(courses|academy|activities(\..+)?)\.prisma$/;
 /** Platform tables Courses may read, never write: sites, people, their roles, and the activity
  *  log, which holds the history of course records from before Courses kept its own. */
 const READ_ONLY = ["club", "user", "staffRole", "auditLog"];
+/** The one exception: Turnfin's activity log takes a new row for a change made here, while both
+ *  run on the same records, so its history and reports stay whole. Rows are added, never changed. */
+const MAY_ADD_TO = ["auditLog"];
 const delegate = (model) => model[0].toLowerCase() + model.slice(1);
 const foreign = readdirSync(SCHEMA)
   .filter((file) => file.endsWith(".prisma") && !OWNED.test(file))
@@ -37,8 +40,12 @@ export default defineConfig([
           message: "That table belongs to Turnfin, not to Courses (docs/courses.md, Data).",
         },
         {
-          selector: `CallExpression[callee.property.name=/^(${WRITES})$/][callee.object.object.name=/^(db|tx)$/][callee.object.property.name=/^(${READ_ONLY.join("|")})$/]`,
+          selector: `CallExpression[callee.property.name=/^(${WRITES})$/][callee.object.object.name=/^(db|tx)$/][callee.object.property.name=/^(${READ_ONLY.filter((name) => !MAY_ADD_TO.includes(name)).join("|")})$/]`,
           message: "Courses reads sites, people and roles; it never writes them.",
+        },
+        {
+          selector: `CallExpression[callee.property.name=/^(${WRITES.replace("create|", "")})$/][callee.object.object.name=/^(db|tx)$/][callee.object.property.name=/^(${MAY_ADD_TO.join("|")})$/]`,
+          message: "Courses adds rows to Turnfin's activity log; it never changes or removes them.",
         },
       ],
     },

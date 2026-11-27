@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { may } from "@/access/grants";
 import { requireAccount } from "@/access/session";
 import { hourIn, longDate } from "@/data/dates";
@@ -11,16 +12,16 @@ function greeting(name: string): string {
   return `Good ${part}, ${name.split(/\s+/)[0] ?? name}`;
 }
 
-/** One job: a number and a plain verb, and the whole tile opens it. Until Courses has its own
- *  page for the job it opens in Turnfin, on the same records. */
+/** One job: a number and a plain verb, and the whole tile opens it: its page here, or, until
+ *  Courses has one, its page in Turnfin on the same records. */
 function Tile({ job }: { job: Job }) {
-  const href = inTurnfin(job.path);
+  const href = job.turnfin ? inTurnfin(job.turnfin) : null;
   const body = (
     <>
       <span className="tc-tile-n">{job.count}</span>
       <span className="tc-tile-t">{job.title}</span>
       <span className="tc-tile-l">{job.count === 0 ? job.nothing : job.line}</span>
-      {href ? (
+      {job.here || href ? (
         <svg className="tc-tile-go" aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M5 12h14" />
           <path d="m13 6 6 6-6 6" />
@@ -29,6 +30,7 @@ function Tile({ job }: { job: Job }) {
     </>
   );
   const className = job.count === 0 ? "tc-tile tc-tile-0" : "tc-tile";
+  if (job.here) return <Link className={className} href={job.here}>{body}</Link>;
   return href ? <a className={className} href={href}>{body}</a> : <div className={className}>{body}</div>;
 }
 
