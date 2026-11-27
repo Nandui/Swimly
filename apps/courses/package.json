@@ -1,0 +1,38 @@
+{
+  "name": "turnfin-courses",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Turnfin Courses (courses.turnfin.app): swim classes, the pool deck, short courses and Academy courses. A standalone app on Turnfin's main database (docs/courses.md).",
+  "scripts": {
+    "dev": "next dev -p 3103",
+    "build": "prisma generate --generator courses && next build",
+    "start": "next start -p 3103",
+    "generate": "prisma generate --generator courses",
+    "postinstall": "prisma generate --generator courses",
+    "typecheck": "next typegen && tsc --noEmit",
+    "lint": "eslint",
+    "test": "tsx --test \"src/**/*.test.ts\"",
+    "account": "tsx scripts/account.mts"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "bcryptjs": "^3.0.3",
+    "next": "16.3.2",
+    "pg": "^8.23.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "dotenv": "^17.4.2",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.2",
+    "prisma": "^7.9.1",
+    "tsx": "^4.23.12",
+    "typescript": "^5"
+  }
+}

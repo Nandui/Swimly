@@ -39,3 +39,28 @@ jobs:
         env:
           DATABASE_URL: postgresql://check:check@127.0.0.1:5432/check
           AUTH_SECRET: placeholder-for-the-build-only-not-a-real-secret
+
+  # Turnfin Courses (apps/courses, docs/courses.md) is its own app with its own checks.
+  courses:
+    name: Courses, typecheck, lint, test and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/courses
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apps/courses/package-lock.json
+      # Also generates its database client from ../../prisma/schema (postinstall).
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      # No database is reached: every page is dynamic, so the build queries nothing.
+      - run: npx next build
+        env:
+          DATABASE_URL: postgresql://check:check@127.0.0.1:5432/check

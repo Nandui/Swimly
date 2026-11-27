@@ -1,0 +1,77 @@
+// Turnfin Courses (apps/courses, docs/courses.md): the standalone app at courses.turnfin.app.
+// Its new tables. It also owns the tables in activities.prisma, activities.short-courses.prisma
+// and academy.prisma, shared with Turnfin's own modules until the switch (D34).
+// No relations to the platform's tables: ids only.
+
+/// Someone who signs in to Turnfin Courses. Its own accounts: Turnfin's
+/// password, role and levels are never read.
+model CoursesAccount {
+  id            String    @id @default(cuid())
+  orgId         String
+  /// Lower case.
+  email         String    @unique
+  name          String
+  /// bcrypt.
+  passwordHash  String
+  /// The Turnfin person record (`users.id`) the existing course tables name
+  /// as instructor, marker or booker. Identity only. Null for an account
+  /// that never appears in those columns.
+  personId      String?   @unique
+  /// The sites this account works at. Empty means every site.
+  siteIds       String[]  @default([])
+  /// What the account may do at its sites (apps/courses/src/access/grants.ts).
+  grants        String[]  @default([])
+  /// Deactivate, never delete.
+  isActive      Boolean   @default(true)
+  /// Wrong passwords since the last success; too many lock sign-in for a while.
+  failedSignIns Int       @default(0)
+  lockedUntil   DateTime?
+  lastSignInAt  DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sessions CoursesSession[]
+
+  @@index([orgId])
+  @@map("courses_accounts")
+}
+
+/// One signed-in browser. The cookie holds a random token; only its SHA-256 is stored.
+model CoursesSession {
+  id         String   @id @default(cuid())
+  accountId  String
+  tokenHash  String   @unique
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  expiresAt  DateTime
+
+  account CoursesAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([expiresAt])
+  @@map("courses_sessions")
+}
+
+/// Every change made in Turnfin Courses: who, what, which record, when.
+/// Written in the same transaction as the change.
+model CoursesLog {
+  id        String   @id @default(cuid())
+  orgId     String
+  /// Null for a script.
+  accountId String?
+  /// Kept beside the id so the log reads the same after an account changes.
+  actorName String
+  /// `<thing>.<past-tense-verb>`, e.g. "account.signed_in".
+  action    String
+  /// The kind of record and its id, where the change was to one record.
+  record    String?
+  recordId  String?
+  siteId    String?
+  detail    Json?
+  createdAt DateTime @default(now())
+
+  @@index([orgId, createdAt])
+  @@index([record, recordId])
+  @@index([accountId, createdAt])
+  @@map("courses_log")
+}

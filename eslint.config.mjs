@@ -85,8 +85,11 @@ for (const file of readdirSync(schemaDir).filter((f) => f.endsWith(".prisma"))) 
   const models = [...readFileSync(new URL(file, schemaDir), "utf8").matchAll(/^model (\w+)/gm)].map((m) => m[1][0].toLowerCase() + m[1].slice(1));
   tablesByOwner[owner] = [...(tablesByOwner[owner] ?? []), ...models];
 }
+// Owners outside src: Turnfin Courses (apps/courses, docs/courses.md) is a standalone app on this
+// database with its own lint. Nothing in src queries its tables.
+const outsideOwners = ["courses"];
 for (const owner of Object.keys(tablesByOwner)) {
-  if (owner !== "core" && !moduleFiles[owner]) throw new Error(`prisma/schema/${owner}.prisma has no module in eslint.config.mjs.`);
+  if (owner !== "core" && !outsideOwners.includes(owner) && !moduleFiles[owner]) throw new Error(`prisma/schema/${owner}.prisma has no module in eslint.config.mjs.`);
 }
 const client = "/^(prisma|tx|db)$/";
 const tablesOf = (owners) => owners.flatMap((owner) => tablesByOwner[owner] ?? []);
@@ -96,13 +99,13 @@ const notTables = (owners, message) => {
 };
 const activitiesData = [
   ...notTables(["core"], "Activities never queries Core tables. Use src/lib/directory.ts (people, sites) or another Core function."),
-  ...notTables(Object.keys(otherModules), "Activities never queries another module's tables."),
+  ...notTables([...Object.keys(otherModules), ...outsideOwners], "Activities never queries another module's tables."),
   {
     selector: "Property[key.name=/^(include|select|where|orderBy)$/] Property[key.name=/^(instructor|club|markedBy|by|coverBy|assessedBy|confirmedBy|bookedBy)$/][value.type=/^(ObjectExpression|Literal)$/]",
     message: "Do not join Core tables (User, Club) from an Activities query. Select the id and add names with withSites/withStaff from src/lib/directory.ts.",
   },
 ];
-const coreData = notTables(Object.keys(moduleFiles), "Core never queries a module's tables. Register a contribution in src/modules/contributions.ts instead.");
+const coreData = notTables([...Object.keys(moduleFiles), ...outsideOwners], "Core never queries a module's tables. Register a contribution in src/modules/contributions.ts instead.");
 // Every module reads Core only through its functions, never its tables
 // (AGENTS.md, Data and writes): src/lib/directory.ts,
 // src/lib/qualifications.ts, src/lib/setup/activity-types.ts,
@@ -133,7 +136,7 @@ const coreJoins = (relations) => relations.length ? [{
   message: "Do not join Core tables from a module's query. Keep the id and ask Core's functions (src/lib/directory.ts and its neighbours) for names.",
 }] : [];
 const moduleData = (self) => [
-  ...notTables(Object.keys(moduleFiles).filter((id) => id !== self), "A module queries only its own tables and Core's. Ask the owning module through a seam (src/modules/contributions.ts)."),
+  ...notTables([...Object.keys(moduleFiles).filter((id) => id !== self), ...outsideOwners], "A module queries only its own tables and Core's. Ask the owning module through a seam (src/modules/contributions.ts)."),
   ...(coreThroughFunctions[self] ? [
     ...notTables(["core"], "This module reads Core through its functions (src/lib/directory.ts, src/lib/qualifications.ts, src/lib/setup/activity-types.ts, src/lib/people/records.ts, src/lib/policy), never Core tables."),
     ...coreJoins(coreThroughFunctions[self]),

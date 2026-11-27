@@ -18,6 +18,12 @@ generator client {
   output   = "../../src/generated/prisma"
 }
 
+// Turnfin Courses (apps/courses) is a standalone app on this database: its own copy of the client.
+generator courses {
+  provider = "prisma-client"
+  output   = "../../apps/courses/src/generated/prisma"
+}
+
 datasource db {
   provider = "postgresql"
 }
