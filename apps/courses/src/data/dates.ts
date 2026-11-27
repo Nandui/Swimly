@@ -24,3 +24,14 @@ export function clock(minutes: number): string {
   const m = minutes % 60;
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
+
+/** The hour of the day in Dublin, 0 to 23. */
+export function hourIn(now: Date = new Date()): number {
+  return Number(new Intl.DateTimeFormat("en-IE", { timeZone: ZONE, hour: "2-digit", hourCycle: "h23" }).format(now));
+}
+
+/** The calendar day in Dublin at this moment, as the date-only columns store it (midnight UTC). */
+export function dayOnly(now: Date = new Date()): Date {
+  const iso = new Intl.DateTimeFormat("en-CA", { timeZone: ZONE, year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+  return new Date(`${iso}T00:00:00.000Z`);
+}

@@ -7,7 +7,7 @@ Turnfin's rulebook ([../../AGENTS.md](../../AGENTS.md)) does **not** bind this a
 ## Standalone
 
 - Import nothing from `../../src`. Lint refuses it.
-- The database is reached only through `src/data/db.ts`. Courses queries its own tables (`courses.prisma`, `activities*.prisma`, `academy.prisma`) and reads `clubs`, `users` and `staff_roles`: staff keep their Turnfin accounts and roles. Lint refuses any other table, and any write to those three.
+- The database is reached only through `src/data/db.ts`. Courses queries its own tables (`courses.prisma`, `activities*.prisma`, `academy.prisma`) and reads `clubs`, `users` and `staff_roles` (staff keep their Turnfin accounts and roles) and `audit_logs` (the history of course records from before Courses kept its own log). Lint refuses any other table, and any write to those four.
 - Schema changes go in `../../prisma/schema` with a migration in `../../prisma/migrations`, and **only add**. Courses never runs migrations.
 
 ## Folders
@@ -17,6 +17,7 @@ Turnfin's rulebook ([../../AGENTS.md](../../AGENTS.md)) does **not** bind this a
 | `src/app` | routes: thin pages and layouts |
 | `src/access` | Continue with Turnfin (the pass), sessions, grants worked out from roles |
 | `src/data` | the database client, the log, dates in `Europe/Dublin` |
+| `src/frame` | the frame every signed-in page uses, the search field, links to pages still in Turnfin |
 | `src/<area>` | one area of work (desk, deck, courses and so on): its reads, writes, rules, screens and tests together |
 
 ## Writes
@@ -32,7 +33,15 @@ A write authorises (a grant, at a site), validates, guards, writes and logs, wit
 
 ## Screens
 
-The design is not chosen yet (courses.md, step 2). Until it is approved from mockups, screens are plain HTML with the one stylesheet `src/app/plain.css`: add no colours, fonts or components to it.
+The look is Turnfin Sheet ([../../DESIGN.md](../../DESIGN.md): its tokens, type, radii, states and accessibility rules) with Courses' own layout, approved from mockups on 27 November 2026 ([../../docs/courses.md](../../docs/courses.md#the-design)).
+
+- One stylesheet, `src/app/sheet.css`: every colour is a token named there, with its dark value. Nothing else writes a colour.
+- Every signed-in page is a `Frame` (`src/frame/frame.tsx`): the top bar and the page's header on the blue ground, its work on the white sheet. The top bar lists only pages that exist.
+- A page leads with what the person does there. The desk's home is the search and one tile per job, each a number and a plain verb: no lists, tags or second column beside them. When a screen feels busy, change its structure; do not add detail.
+- Colour means something: orange needs action now, green is done, red is serious. Always with a word.
+- 44px targets, a whole tile or row as the target, visible focus, and every state said in words: loading, empty, failed, saved.
+- A new screen is confirmed as a mockup first, and seen in the running app at phone, tablet and desktop widths, light and dark, before it is shown.
+- Until Courses has its own page for a job, the job opens in Turnfin (`src/frame/turnfin.ts`), on the same records.
 
 ## Checks
 

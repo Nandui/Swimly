@@ -5,6 +5,8 @@ import type { NextConfig } from "next";
  *  repository's Prisma schema (../../prisma/schema) at generate time only. */
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Development only: the sandbox opens Courses at courses.localhost, so its cookies are its own.
+  allowedDevOrigins: ["courses.localhost"],
   turbopack: { root: process.cwd() },
   outputFileTracingRoot: process.cwd(),
   async headers() {

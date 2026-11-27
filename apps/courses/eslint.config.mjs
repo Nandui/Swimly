@@ -9,8 +9,9 @@ import nextTs from "eslint-config-next/typescript";
 //      (read only: staff keep their Turnfin accounts, and Courses never changes them).
 const SCHEMA = new URL("../../prisma/schema/", import.meta.url);
 const OWNED = /^(courses|academy|activities(\..+)?)\.prisma$/;
-/** Platform tables Courses may read, never write: sites, people and their roles. */
-const READ_ONLY = ["club", "user", "staffRole"];
+/** Platform tables Courses may read, never write: sites, people, their roles, and the activity
+ *  log, which holds the history of course records from before Courses kept its own. */
+const READ_ONLY = ["club", "user", "staffRole", "auditLog"];
 const delegate = (model) => model[0].toLowerCase() + model.slice(1);
 const foreign = readdirSync(SCHEMA)
   .filter((file) => file.endsWith(".prisma") && !OWNED.test(file))

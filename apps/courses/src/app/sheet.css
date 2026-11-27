@@ -1,0 +1,667 @@
+/* Turnfin Courses: the Sheet look (../../../../DESIGN.md) with Courses' own layout:
+   a top bar on the blue ground instead of a sidebar, the greeting and the search on the
+   ground, and the work on one white page below. Approved from mockups, 27 November 2026.
+   Colours are named once here; nothing else in the app writes a colour. */
+:root {
+  color-scheme: light dark;
+  --ground: #0062b1;
+  --on-ground: #ffffff;
+  --on-ground-2: #ebf3fa;
+  --ground-fill: rgba(255, 255, 255, 0.14);
+  --sheet: #ffffff;
+  --surface: #f4f7fa;
+  --label: #101b27;
+  --label-2: #52657a;
+  --label-3: #9aa9b8;
+  --sep: #e8eef4;
+  --brand: #0062b1;
+  --brand-ink: #0062b1;
+  --brand-soft: #e8f1fa;
+  --neutral-soft: #eef3f8;
+  --neutral-ink: #3b5068;
+  --urgent-soft: #fff0e6;
+  --urgent-ink: #a8380a;
+  --done-soft: #e6f4ea;
+  --done-ink: #1d6b3a;
+  --serious-soft: #fde8e7;
+  --serious-ink: #b42318;
+  --field: #ffffff;
+  --shadow-sheet: 0 1px 2px rgba(0, 30, 60, 0.18), 0 18px 50px rgba(0, 30, 60, 0.28);
+  --shadow-selected: 0 2px 10px rgba(0, 0, 0, 0.15);
+  --shadow-float: 0 2px 6px rgba(0, 30, 60, 0.1), 0 12px 32px rgba(0, 30, 60, 0.18);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sheet: #0d151e;
+    --surface: #16202b;
+    --label: #eef3f8;
+    --label-2: #93a4b6;
+    --label-3: #5d6e80;
+    --sep: #1f2a36;
+    --brand-ink: #7cc0ff;
+    --brand-soft: #16273a;
+    --neutral-soft: #1a2532;
+    --neutral-ink: #c3cfdb;
+    --urgent-soft: #3a1d0e;
+    --urgent-ink: #ffab78;
+    --done-soft: #12301d;
+    --done-ink: #6fd08f;
+    --serious-soft: #3a1514;
+    --serious-ink: #ff8a80;
+    --field: #16202b;
+    --shadow-sheet: 0 18px 50px rgba(0, 0, 0, 0.45);
+    --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.5);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--ground);
+  color: var(--on-ground);
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--on-ground);
+  outline-offset: 2px;
+}
+
+.tc-sheet :focus-visible {
+  outline-color: var(--brand-ink);
+}
+
+.tc-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The ground: the blue frame, with the fin as its one texture. */
+.tc-ground {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tc-fin {
+  position: absolute;
+  right: -150px;
+  top: -250px;
+  width: 820px;
+  height: 820px;
+  background: #ffffff;
+  opacity: 0.1;
+  -webkit-mask: url(/brand/turnfin-fin-mask.png) center / contain no-repeat;
+  mask: url(/brand/turnfin-fin-mask.png) center / contain no-repeat;
+  pointer-events: none;
+}
+
+@media (prefers-contrast: more) {
+  .tc-fin {
+    display: none;
+  }
+}
+
+.tc-bar {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 26px;
+  padding: 16px 28px;
+}
+
+.tc-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--on-ground);
+  text-decoration: none;
+}
+
+.tc-logo {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.tc-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  flex: 1 1 200px;
+}
+
+.tc-nav a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 11px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--on-ground);
+  text-decoration: none;
+}
+
+.tc-nav a:hover {
+  background: var(--ground-fill);
+}
+
+.tc-nav a[aria-current] {
+  background: #ffffff;
+  color: #0062b1;
+  font-weight: 800;
+  box-shadow: var(--shadow-selected);
+}
+
+.tc-me {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tc-me-name {
+  display: block;
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.tc-me-where {
+  display: block;
+  font-size: 12.5px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--on-ground-2);
+  text-align: right;
+}
+
+.tc-avatar {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #0062b1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.tc-ground-button {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--ground-fill);
+  color: var(--on-ground);
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tc-ground-button:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* The header on the ground: the date, the title and, on Home, the search. */
+.tc-head {
+  position: relative;
+  padding: 22px 48px 34px;
+}
+
+.tc-eyebrow {
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 700;
+  color: var(--on-ground-2);
+}
+
+.tc-greeting {
+  margin: 6px 0 0;
+  font-size: 42px;
+  line-height: 44px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+
+.tc-title {
+  margin: 6px 0 0;
+  font-size: 34px;
+  line-height: 38px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.tc-meta {
+  margin: 4px 0 0;
+  color: var(--on-ground-2);
+}
+
+.tc-find {
+  margin-top: 22px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 780px;
+  height: 68px;
+  padding: 0 10px 0 22px;
+  border-radius: 18px;
+  background: var(--field);
+  color: var(--brand-ink);
+  box-shadow: var(--shadow-float);
+}
+
+.tc-find input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: none;
+  font: inherit;
+  font-size: 18px;
+  color: var(--label);
+}
+
+.tc-find input::placeholder {
+  color: var(--label-2);
+  opacity: 1;
+}
+
+.tc-find:focus-within {
+  outline: 2px solid var(--on-ground);
+  outline-offset: 2px;
+}
+
+.tc-find button {
+  flex: none;
+  height: 48px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--brand);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* The sheet: the one page the work sits on. */
+.tc-sheet {
+  position: relative;
+  flex: 1;
+  margin: 0 10px 10px;
+  padding: 36px 48px 44px;
+  border-radius: 22px;
+  background: var(--sheet);
+  color: var(--label);
+  box-shadow: var(--shadow-sheet);
+}
+
+.tc-sheet a {
+  color: var(--brand-ink);
+}
+
+.tc-note {
+  margin: 0;
+  color: var(--label-2);
+}
+
+.tc-section {
+  margin: 0 0 12px;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+/* Job tiles: one job each, a number and a plain verb. The whole tile is the target. */
+.tc-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.tc-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 216px;
+  padding: 28px 32px;
+  border-radius: 22px;
+  background: var(--surface);
+  color: var(--label);
+  text-decoration: none;
+}
+
+a.tc-tile:hover {
+  background: var(--brand-soft);
+}
+
+.tc-sheet a.tc-tile {
+  color: var(--label);
+}
+
+.tc-tile-n {
+  margin-bottom: auto;
+  font-size: 72px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--brand-ink);
+}
+
+.tc-tile-0 .tc-tile-n {
+  color: var(--label-2);
+}
+
+.tc-tile-t {
+  margin-top: 16px;
+  font-size: 26px;
+  line-height: 32px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.tc-tile-l {
+  font-size: 16px;
+  line-height: 22px;
+  color: var(--label-2);
+}
+
+.tc-tile-go {
+  position: absolute;
+  top: 28px;
+  right: 30px;
+  color: var(--brand-ink);
+}
+
+/* Rows: two lines and nothing boxed. */
+.tc-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tc-rows li + li {
+  border-top: 1px solid var(--sep);
+}
+
+.tc-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 64px;
+  padding: 8px 0;
+  text-decoration: none;
+}
+
+.tc-sheet a.tc-row {
+  color: var(--label);
+}
+
+a.tc-row:hover .tc-row-1 {
+  color: var(--brand-ink);
+}
+
+.tc-initials {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.tc-row-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.tc-row-1 {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.tc-row-2 {
+  display: block;
+  font-size: 13.5px;
+  line-height: 18px;
+  color: var(--label-2);
+}
+
+/* Sign-in: one small sheet on the ground. */
+.tc-door {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.tc-door-sheet {
+  width: 100%;
+  max-width: 440px;
+  padding: 36px 36px 40px;
+  border-radius: 22px;
+  background: var(--sheet);
+  color: var(--label);
+  box-shadow: var(--shadow-sheet);
+}
+
+.tc-door-sheet h1 {
+  margin: 18px 0 6px;
+  font-size: 30px;
+  line-height: 36px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.tc-door-sheet p {
+  margin: 0 0 18px;
+  color: var(--label-2);
+}
+
+.tc-field {
+  display: block;
+  margin: 0 0 14px;
+}
+
+.tc-field span {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13.5px;
+  line-height: 18px;
+  color: var(--label-2);
+}
+
+.tc-field input {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--label);
+  font: inherit;
+  font-size: 16px;
+}
+
+.tc-prominent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 52px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--brand);
+  color: #ffffff;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 98, 177, 0.3);
+}
+
+.tc-prominent:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.tc-alert {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--serious-soft);
+  color: var(--serious-ink);
+  font-weight: 700;
+}
+
+.tc-status {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--neutral-soft);
+  color: var(--neutral-ink);
+  font-weight: 700;
+}
+
+.tc-door-sheet .tc-alert,
+.tc-door-sheet .tc-status {
+  color: var(--neutral-ink);
+}
+
+.tc-door-sheet .tc-alert {
+  color: var(--serious-ink);
+}
+
+@media (max-width: 700px) {
+  .tc-bar {
+    padding: 12px 16px;
+  }
+
+  .tc-me-text {
+    display: none;
+  }
+
+  .tc-nav {
+    flex: 1 1 0;
+  }
+
+  .tc-head {
+    padding: 14px 16px 24px;
+  }
+
+  .tc-greeting {
+    font-size: 32px;
+    line-height: 36px;
+  }
+
+  .tc-title {
+    font-size: 30px;
+    line-height: 34px;
+  }
+
+  .tc-find {
+    height: 56px;
+    padding: 0 6px 0 16px;
+    border-radius: 16px;
+  }
+
+  .tc-find input {
+    font-size: 16px;
+  }
+
+  .tc-find button {
+    height: 44px;
+    padding: 0 14px;
+  }
+
+  .tc-sheet {
+    margin: 0;
+    padding: 22px 16px 28px;
+    border-radius: 28px 28px 0 0;
+  }
+
+  .tc-tiles {
+    gap: 12px;
+  }
+
+  .tc-tile {
+    min-height: 168px;
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .tc-tile-n {
+    font-size: 44px;
+  }
+
+  .tc-tile-t {
+    margin-top: 10px;
+    font-size: 17px;
+    line-height: 22px;
+  }
+
+  .tc-tile-l {
+    font-size: 13.5px;
+    line-height: 18px;
+  }
+
+  .tc-tile-go {
+    top: 16px;
+    right: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tc-tile,
+  .tc-nav a,
+  .tc-ground-button {
+    transition: background-color 150ms ease-out;
+  }
+}

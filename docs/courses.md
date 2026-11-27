@@ -35,7 +35,7 @@ It is written again from scratch. Turnfin's rules for apps (the six-part contrac
 
 - **The tables keep their names and rows.** Courses takes over the tables in `activities.prisma`, `activities.short-courses.prisma` and `academy.prisma`. Nothing is copied. Until the switch, Turnfin's code and Courses read and write the same rows, so both can run at once.
 - **One migration history.** The database has one set of migrations, `prisma/migrations`, applied by Turnfin's production build. Courses adds to it and never runs migrations itself. Database changes still only add.
-- **Its own client.** Courses generates its own Prisma client from `prisma/schema` into `apps/courses/src/generated/prisma`. It queries only its own tables, and reads three of the platform's without ever writing them: `clubs` (sites), `users` (who is signing in, and names) and `staff_roles` (what their role opens). Lint refuses any other model, and any write to those three.
+- **Its own client.** Courses generates its own Prisma client from `prisma/schema` into `apps/courses/src/generated/prisma`. It queries only its own tables, and reads four of the platform's without ever writing them: `clubs` (sites), `users` (who is signing in, and names), `staff_roles` (what their role opens) and `audit_logs` (the history of course records from before Courses kept its own log). Lint refuses any other model, and any write to those four.
 - **New tables** carry `orgId` and the `courses_` prefix: `courses_sessions`, `courses_sign_ins`, `courses_log` so far.
 
 ## Sign-in and access
@@ -62,6 +62,16 @@ It is written again from scratch. Turnfin's rules for apps (the six-part contrac
 An administrator (Admin: Manage) or a superadmin holds every grant, as they hold Manage in every app. Grants apply at the sites the person works at (`users.siteIds`; none means every site). The mapping is `apps/courses/src/access/grants.ts`. The Classes, Pool deck and Academy levels stay on the role editor after those apps leave Turnfin, because they now say what a role opens in Courses.
 
 **The log.** Every change writes one row to `courses_log` in the same transaction: who, what, which record, when. Turnfin's activity log stops receiving course changes at the switch and stays readable.
+
+## The design
+
+Courses wears **Turnfin Sheet** ([../DESIGN.md](../DESIGN.md)) with layouts of its own (owner, 27 November 2026). The mockups are on a design canvas: https://claude.ai/artifact/XMiLP1NCqQ55yr5gA54a5E.
+
+- **A top bar on the blue, not a sidebar.** The logo tile and "Courses", the pages, and the person at the right. The greeting or the page's title sits on the blue under it, and the work on one white page below.
+- **The desk's home is find first.** A large search on the blue (a swimmer, a parent or a member number), then one **tile per job**, each a number and a plain verb: Place a swimmer, Failed payments, Phone back, Parent updates. No lists, tags or second column beside them (two fuller versions were turned down as confusing). A tile with nothing waiting stays, with a 0 and "Nobody is waiting", so the tiles never move. A person sees only the tiles their role opens.
+- **Built:** the theme, the frame, sign-in, the home with live counts, and the search. **Drawn, not built:** a course with dates, and the pool deck register. **Not drawn yet:** a swimmer's page, the weekly classes, payments, reports.
+- **Until a job has its own page here, its tile opens the page in Turnfin**, on the same records, and a found swimmer opens their Turnfin page. Each link moves to Courses as its page is built.
+- The waiting count uses the swim school's own rule, carried over unchanged (`apps/courses/src/home/waiting.ts`). It counts across the person's sites, where Turnfin's page counts the one site they are working at.
 
 ## What Turnfin still needs from it
 
@@ -93,7 +103,7 @@ Each step is its own pull request, checked on a preview. Old screens stay live i
 | Step | What | Needs the owner |
 | --- | --- | --- |
 | 1 | **Foundation**: the app, its tables, Continue with Turnfin, grants from roles, the log, checks in CI | yes: the Vercel project, the domain and the shared secret |
-| 2 | **The design**: mockups of the desk, the pool deck and a course page | yes: approving it |
+| 2 | **The design**: mockups of the desk, the pool deck and a course page. The desk is approved and built; the other two are drawn | yes: approving each |
 | 3 | **Desk**: swimmers, classes, places, waiting lists, assessments | |
 | 4 | **Pool deck**: today, registers, competencies, assessments | |
 | 5 | **Courses with dates**: short courses and Academy courses as one kind of thing, on their own tables | |
