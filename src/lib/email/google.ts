@@ -44,6 +44,21 @@ function messageContent(content: GoogleEmailContent) {
   return multipart("related", [alternative, ...images]);
 }
 
+/** Google's short reason code, when it has the shape of one: `invalid_grant` from the token
+ *  endpoint, `RESOURCE_EXHAUSTED` from Gmail. Anything else (a message, an address) is dropped. */
+export function refusalCode(body: unknown): string | null {
+  const error = (body as { error?: unknown } | null)?.error;
+  const code = typeof error === "string" ? error : (error as { status?: unknown } | null)?.status;
+  return typeof code === "string" && /^[A-Za-z_]{1,40}$/.test(code) ? code : null;
+}
+
+/** Callers hide provider errors from people, because a response can carry credentials. So the
+ *  reason is logged here, as the step, the HTTP status and Google's reason code only. */
+async function logRefusal(step: "authorisation" | "send", response: Response) {
+  const code = refusalCode(await response.json().catch(() => null));
+  console.error(`Email not sent: Google refused the ${step} step (${response.status}${code ? `, ${code}` : ""})`);
+}
+
 export async function sendGoogleTextEmail(email: string, subject: string, text: string, config: GoogleEmailConfig) {
   return sendGoogleEmail(email, subject, { text }, config);
 }
@@ -66,7 +81,10 @@ export async function sendGoogleEmail(email: string, subject: string, content: G
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({ client_id: config.clientId, client_secret: config.clientSecret, refresh_token: config.refreshToken, grant_type: "refresh_token" }),
   });
-  if (!tokenResponse.ok) throw new Error("Email provider unavailable.");
+  if (!tokenResponse.ok) {
+    await logRefusal("authorisation", tokenResponse);
+    throw new Error("Email provider unavailable.");
+  }
   const token = z.object({ access_token: z.string().min(1).max(8192).regex(/^\S+$/), token_type: z.literal("Bearer"), scope: z.string().optional() }).safeParse(await tokenResponse.json());
   if (!token.success || (token.data.scope !== undefined && token.data.scope.trim() !== "https://www.googleapis.com/auth/gmail.send")) throw new Error("Email authorization unavailable.");
   const response = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
@@ -74,5 +92,9 @@ export async function sendGoogleEmail(email: string, subject: string, content: G
     headers: { Authorization: `Bearer ${token.data.access_token}`, "Content-Type": "application/json" },
     body: JSON.stringify({ raw: Buffer.from(message).toString("base64url") }),
   });
-  if (!response.ok || !z.object({ id: z.string().min(1) }).safeParse(await response.json()).success) throw new Error("Email submission failed.");
+  if (!response.ok) {
+    await logRefusal("send", response);
+    throw new Error("Email submission failed.");
+  }
+  if (!z.object({ id: z.string().min(1) }).safeParse(await response.json()).success) throw new Error("Email submission failed.");
 }

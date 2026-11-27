@@ -101,7 +101,7 @@ Set in Vercel per environment; locally in `.env` (copy `.env.example`). Secrets 
 
 | Setting | Purpose |
 | --- | --- |
-| `TURNFIN_EMAIL_FROM`, `TURNFIN_GOOGLE_CLIENT_ID`, `TURNFIN_GOOGLE_CLIENT_SECRET`, `TURNFIN_GOOGLE_REFRESH_TOKEN` | the platform's one sender (Gmail API, send-only scope); unset, it falls back to the `PARENT_*` sender |
+| `TURNFIN_EMAIL_FROM`, `TURNFIN_GOOGLE_CLIENT_ID`, `TURNFIN_GOOGLE_CLIENT_SECRET`, `TURNFIN_GOOGLE_REFRESH_TOKEN` | the platform's one sender (Gmail API, send-only scope); unset, it falls back to the `PARENT_*` sender. Changing the sending mailbox's password cancels the refresh token: every email then fails until the mailbox approves sending again and the new token is saved here. A refused email is logged as "Email not sent: Google refused the … step", with Google's status and reason code |
 | `REFUNDS_APP_URL`, `COINAGE_APP_URL` | Turnfin's address for links in Finance requests' refund and coinage emails |
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob, for Incidents footage; unset, uploads are off |
 | `ANTHROPIC_API_KEY` | Training's course drafting with Claude; unset, it is off |
