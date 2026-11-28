@@ -2,7 +2,7 @@
 
 **Purpose:** gets purchase orders from approved suppliers raised, approved by the right people and numbered.
 
-Its levels are in [docs/apps.md](../../../docs/apps.md).
+Its levels are in docs/apps.md.
 
 ## Features
 - `orders` — raise, change, send, approve or reject, cancel and print purchase orders, and email approved ones to the supplier after a test to yourself (`/purchasing`, `/purchasing/new`, `/purchasing/[id]`, `/purchasing/[id]/edit`, `/purchasing/[id]/email`), and the home-page counts.

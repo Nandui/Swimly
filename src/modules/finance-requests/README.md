@@ -2,7 +2,7 @@
 
 **Purpose:** moves a desk's request for money, a customer refund or coinage for a till, to a finance decision.
 
-Refunds and Coinage became this one app on 3 November 2026 ([D24](../../../docs/decisions.md)). Each kind keeps its own tables, flow and permissions for now; one `FinanceRequest` table with a detail table per kind is a later step. Its levels are in [docs/apps.md](../../../docs/apps.md#finance-requests).
+Refunds and Coinage became this one app on 3 November 2026 (D24). Each kind keeps its own tables, flow and permissions for now; one `FinanceRequest` table with a detail table per kind is a later step. Its levels are in docs/apps.md.
 
 ## Features
 - `refund-queue`: find, filter and count refund requests (`/refunds`), Home's counts, and the requests sent for the swim school's reception analytics.

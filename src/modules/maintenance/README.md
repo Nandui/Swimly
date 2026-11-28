@@ -2,7 +2,7 @@
 
 **Purpose:** follows what is broken at each site from the first report until it is fixed.
 
-Its levels are in [docs/apps.md](../../../docs/apps.md); the decision to add it is D14 in [docs/decisions.md](../../../docs/decisions.md). LeisureWorld's maintenance team works in **Trackplan**, their own tool. Turnfin never talks to Trackplan: it records only what staff type, namely whether a problem is already in Trackplan and, optionally, its Trackplan reference.
+Its levels are in docs/apps.md; the decision to add it is D14 in docs/decisions.md. LeisureWorld's maintenance team works in **Trackplan**, their own tool. Turnfin never talks to Trackplan: it records only what staff type, namely whether a problem is already in Trackplan and, optionally, its Trackplan reference.
 
 ## Features
 - `report`: the report form (`/maintenance/new`). Staff give the site, area and exactly where, what is broken, urgency, and whether it is out of use or could hurt someone ("Could hurt someone" makes it Urgent). They also answer "Is it already in Trackplan?" (Yes, No or Not sure, with an optional reference) and can add up to three photos. The form lists the open requests in the chosen area first, so a problem is not reported twice.

@@ -2,7 +2,7 @@
 
 **Purpose:** records every time CCTV footage is checked.
 
-Its levels are in [docs/apps.md](../../../docs/apps.md).
+Its levels are in docs/apps.md.
 
 ## Features
 - `viewings` — record a viewing, the log, one entry and its notes (`/cctv`, `/cctv/new`, `/cctv/[id]`); the home card.

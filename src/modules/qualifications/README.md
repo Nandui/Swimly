@@ -2,7 +2,7 @@
 
 **Purpose:** keeps the qualifications staff hold in date for the people a keeper covers.
 
-Its level is in [docs/apps.md](../../../docs/apps.md); why it exists is [D26](../../../docs/decisions.md). Its pages are at `/staff-qualifications`, because Admin's list of qualification types keeps `/qualifications`.
+Its level is in docs/apps.md; why it exists is D26. Its pages are at `/staff-qualifications`, because Admin's list of qualification types keeps `/qualifications`.
 
 ## Features
 - `expiring` — qualifications expired or expiring within 60 days, filtered by site and position, each with the course that renews it and **Assign the course**; and who has never held one their position needs (`/staff-qualifications`).

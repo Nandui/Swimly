@@ -2,7 +2,7 @@
 
 **Purpose:** rosters part-time pool staff (swim teachers and lifeguards) on their contracts, in two-week blocks.
 
-What it does and why is in [docs/staffing.md](../../../docs/staffing.md); its levels are in [docs/apps.md](../../../docs/apps.md).
+What it does and why is in docs/staffing.md; its levels are in docs/apps.md.
 
 ## Features
 - `blocks` — rota blocks (`/staffing`, `/staffing/blocks/[id]`): starting a block from the slots and the block before, putting people on places, publishing, acknowledgements.

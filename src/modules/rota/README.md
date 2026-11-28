@@ -2,7 +2,7 @@
 
 **Purpose:** plans who works where at each site, day by day.
 
-Its levels are in [docs/apps.md](../../../docs/apps.md).
+Its levels are in docs/apps.md.
 
 ## Features
 - `diary` — the Plan (`/rota`, `/rota/export`): the day's diary, rebuilt 20 October 2026. A pure model of the day (`model.ts`: needs that add up, holes with reasons, each person's day, who's where, the next change, who could fill a hole), its loader, its actions (`fillNeed`, `changeLine`, `removeLine`, `saveShift`, `removeShift`, `placeBreaks`), the screens and the week export.
