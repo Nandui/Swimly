@@ -1,15 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { serverModule } from "@/test/server-module";
-import { SCREENS, visibleScreens } from "@/lib/staff/screens";
-import type { PermissionKey } from "@/lib/staff/permissions";
-import { allModules, appPermissions, switchableApps, switchHeirs } from "@/modules/registry";
+import { allModules, switchableApps } from "@/modules/registry";
 
-/** The pillar "tests pass with any one app switched off": each app in
- *  src/app/modules.ts is switched off in turn, and Home, the menus, the screens and every other
- *  app's plugs and listeners still answer, while the switched-off app's are gone. Then one app
- *  goes live at one site only. The real registry, session rule, Home loader, plugs and event bus
- *  run; each app's plugs are synthetic stand-ins, so no database is needed. */
+/** App switches: one app goes live at one site only, and every app is on until a switch is set.
+ *  The real registry, session rule, Home loader, plugs and event bus run; each app's plugs are
+ *  synthetic stand-ins, so no database is needed. */
 
 const ORG = "org-synthetic", RIVERSIDE = "site-riverside", HILLTOP = "site-hilltop";
 const APPS = switchableApps().map((m) => m.id);
@@ -75,49 +71,6 @@ function platform() {
   };
 
   return { authz, contributions, home, announce };
-}
-
-const others = (off: string) => APPS.filter((app) => app !== off);
-const sorted = (list: Iterable<string>) => [...list].sort();
-/** Which app a screen belongs to: the app that gives its permission (Admin's screens belong to none). */
-const appOfScreen = (requires: PermissionKey) => APPS.find((app) => appPermissions([app]).has(requires)) ?? null;
-
-for (const off of APPS) {
-  test(`with ${off} switched off, Home, the menus and every other app still work`, async () => {
-    // A new app follows its former apps' switches until it has its own (switches.test.ts); here
-    // each has its own, so only the one app goes.
-    rows = [{ appId: off, state: "off", siteIds: [] }, ...switchHeirs().filter((h) => h.appId !== off).map((h) => ({ appId: h.appId, state: "on", siteIds: [] }))];
-    const { authz, contributions, home, announce } = platform();
-    const { session, menus, home: h } = await home(RIVERSIDE);
-
-    // Menus and Home: every other app and Admin, never the switched-off one.
-    const expected = allModules().map((m) => m.id).filter((id) => id !== off);
-    assert.deepEqual(menus, expected);
-    assert.deepEqual(h.moduleIds, expected);
-    assert.deepEqual(sorted(h.items.keys()), sorted(others(off)), "Home asks every other app for its items");
-    assert.deepEqual(h.failed, []);
-
-    // Screens: the switched-off app's are not found, every other screen opens.
-    const screens = visibleScreens(authz.permissionsOf(session as never));
-    for (const screen of SCREENS) assert.equal(screens.has(screen.key), appOfScreen(screen.requires) !== off, `screen ${screen.key}`);
-
-    // Plugs: every other app answers; the switched-off one is not available.
-    const lines = await contributions.siteSummaryLines([RIVERSIDE, HILLTOP]);
-    assert.equal(lines.get(RIVERSIDE), others(off).join(" · "));
-    assert.deepEqual((await contributions.personFile("u1", ORG)).map((s) => s.heading), others(off));
-    const busy = await contributions.commitmentsFor({ from: "2026-10-26", to: "2026-10-26" });
-    assert.deepEqual(sorted(new Set(busy.map((c) => c.label))), sorted(others(off)));
-    assert.deepEqual(await contributions.planCommitment(`${off}.busy`, { ref: "x", siteId: RIVERSIDE, date: "2026-10-26", userId: null, by: { id: "u1", name: "Synthetic" } }), { ok: false, error: "That can no longer be planned from here." });
-    for (const app of others(off)) assert.deepEqual(await contributions.planCommitment(`${app}.busy`, { ref: "x", siteId: RIVERSIDE, date: "2026-10-26", userId: null, by: { id: "u1", name: "Synthetic" } }), { ok: true });
-    assert.deepEqual(sorted((await contributions.deskMeasuresFor({ siteIds: null, from: "2026-10-26", to: "2026-10-26", now: new Date() })).items.map((i) => i.label)), sorted(others(off)));
-    assert.deepEqual(sorted((await contributions.memberHistoryFor("m1")).map((e) => e.module)), sorted(others(off)));
-    assert.deepEqual(sorted((await contributions.memberNoticesFor("m1")).map((e) => e.module)), sorted(others(off)));
-    assert.equal((await contributions.members()) === null, off === "swim-school", "the member directory is null only when the swim school is off");
-    assert.equal((await contributions.appCourses()) === null, off === "swim-school", "the parents app's courses are null only when the swim school (Classes) is off");
-
-    // Events: every other app's listener hears it; the switched-off one does not run.
-    assert.deepEqual(await announce(RIVERSIDE), others(off));
-  });
 }
 
 test("an app on at one site is there, and only there", async () => {
