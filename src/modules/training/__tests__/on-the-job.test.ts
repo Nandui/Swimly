@@ -9,7 +9,7 @@ import {
 
 /** Skills on the job (e-learning phase 5): practical
  *  checklists, learning paths and sessions with a register (in-service hours
- *  are Qualifications', D26). Pure rules first, then against a real in-memory Postgres. */
+ *  are Qualifications'). Pure rules first, then against a real in-memory Postgres. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
 let signOff: typeof import("../features/sign-off/server/actions");
 let paths: typeof import("../features/paths/server/actions");
@@ -194,7 +194,7 @@ test("a session's register completes its course for who came and records the qua
   assert.ok(!(await sessions.removeFromSession(noah.id)).ok, "someone on the register isn't just taken off");
 
   assert.deepEqual(await sessions.closeRegister(id), { ok: true, attended: 1 });
-  assert.equal(await db.trainingHours.count(), 0, "hours are logged in Qualifications (D26)");
+  assert.equal(await db.trainingHours.count(), 0, "hours are logged in Qualifications");
   const done = await db.trainingAssignment.findFirstOrThrow({ where: { userId: "riley", courseId: practical } });
   assert.equal(done.status, "COMPLETED");
   assert.ok(await db.qualification.findFirst({ where: { userId: "riley", typeId: "qt-life" } }));

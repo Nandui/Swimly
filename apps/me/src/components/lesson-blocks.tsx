@@ -18,7 +18,7 @@ import { apiFile } from "@/lib/api";
 /** The lesson page's record of finished activities: which, and how to mark one. */
 export const ActivityProgress = createContext<{
   done: ReadonlySet<string>; finish: (id: string) => void; storageKey: string;
-  /** For a Practice quiz and Hand in work placed in the text (D18): the lesson's own. */
+  /** For a Practice quiz and Hand in work placed in the text: the lesson's own. */
   lessonId: string; questions: LearnerQuestion[]; handIn: HandInInfo | null; open: boolean; reload: () => void;
 } | null>(null);
 

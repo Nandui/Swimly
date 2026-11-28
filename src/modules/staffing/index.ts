@@ -1,4 +1,4 @@
-/** Staffing's front door (docs/architecture.md, How apps talk): the only file other apps, the
+/** Staffing's front door: the only file other apps, the
  *  platform and the front may import. The status maps are here for the platform's tone check. */
 import {
   ACK_STATE_META, ATTENDANCE_META, BLOCK_STATE_META, COLLEGE_META, CONTRACT_KIND_META, EXAM_OUTCOME_META, FIT_META, HOURS_META, REQUEST_FLAG_META, SHIFT_STATUS_META,

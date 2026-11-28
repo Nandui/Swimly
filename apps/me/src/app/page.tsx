@@ -19,7 +19,7 @@ type Home = {
   refresher: number;
 };
 
-/** Home in the phone frame (DESIGN.md; the approved canvas's phone Home): what needs the person
+/** Home in the phone frame: what needs the person
  *  first, as one grouped list (the course they were part-way through, today's refresher, a review
  *  to acknowledge, training to do, reading due and certificates running out), then their next
  *  shifts. Training waiting for a manager's sign-off needs nothing from them, so it stays in

@@ -21,7 +21,7 @@ import { prisma } from "@/lib/prisma";
  *  picker that uses it already needs. Without it, any signed-in account (the
  *  pool deck included, whose only lookup is `/instructor/swimmers`) could list
  *  swimmers' dates of birth. Swimmers are shared, so the search still covers
- *  every site (docs/shared-sites.md). */
+ *  every site. */
 
 export type StudentHit = {
   id: string;

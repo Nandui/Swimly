@@ -11,7 +11,7 @@ export type ShortCoursesActor = { id: string; name: string; orgId: string | null
 
 export function shortCoursesAccess(session: Session): ShortCoursesActor | null {
   const actor = actorForSession(session);
-  // The desk books (read, Classes Desk); instructors take registers (run, Pool deck Teach, D24).
+  // The desk books (read, Classes Desk); instructors take registers (run, Pool deck Teach).
   const read = holdsAnywhere(actor, "short-courses.read"), run = holdsAnywhere(actor, "short-courses.run");
   if (!read && !run) return null;
   return {

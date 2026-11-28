@@ -3,7 +3,7 @@ import type { AttendanceStatus } from "@/generated/prisma/client";
 /** A swimmer's mark on the register before it is saved: unmarked until someone taps. */
 export type Marking = AttendanceStatus | null;
 
-/** The register pattern (DESIGN.md, The pool deck): one tap marks a swimmer here, a second marks
+/** The register pattern: one tap marks a swimmer here, a second marks
  *  them away, a third marks them late, and a fourth starts again at here. */
 const NEXT: Record<AttendanceStatus | "none", AttendanceStatus> = { none: "PRESENT", PRESENT: "ABSENT", ABSENT: "LATE", LATE: "PRESENT" };
 export function nextMark(current: Marking): AttendanceStatus {

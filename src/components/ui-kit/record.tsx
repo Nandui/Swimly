@@ -1,12 +1,12 @@
 import { Check, CircleHelp, X, type LucideIcon } from "lucide-react";
 
-/** A record's page in Turnfin Glass (DESIGN.md; Refunds and Coinage, after Incidents): what happens
+/** A record's page in Turnfin Glass: what happens
  *  next beside the record, the record as cards of label and value rows under section titles, and
  *  its history. These are the pieces; the app decides every word and lays them out in `.rec-layout`
  *  (kit.css): `.rec-next` beside `.rec-main`, `.rec-side` under it, one column on phones with the
  *  next action first. No business rules here. */
 
-/** A section: its title above its card (DESIGN.md, The page shell), a count, link or action at the
+/** A section: its title above its card, a count, link or action at the
  *  title's end, and `note`, one line on what the section holds. */
 export function RecordSection({ id, title, aside, note, children }: { id: string; title: React.ReactNode; aside?: React.ReactNode; note?: React.ReactNode; children: React.ReactNode }) {
   return (
@@ -23,7 +23,7 @@ export function RecordFact({ label, wide = false, children }: { label: string; w
   return <div className="rec-fact" data-wide={wide ? "" : undefined}><dt>{label}</dt><dd>{children}</dd></div>;
 }
 
-/** Label and value rows with hairlines between (DESIGN.md, Content: rows): from `items`, or from
+/** Label and value rows with hairlines between: from `items`, or from
  *  RecordFact children where rows come and go with the record. */
 export function RecordFacts({ items = [], children }: { items?: [label: string, value: React.ReactNode, wide?: boolean][]; children?: React.ReactNode }) {
   return (

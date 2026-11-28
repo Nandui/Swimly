@@ -3,7 +3,7 @@ import { filterAllows } from "@/lib/policy/engine";
 import { sitesFor, subjectsFor } from "@/lib/policy/session";
 import type { HrSql } from "@/modules/hr/shared/database";
 
-/** Reports waiting to be read (D22). They wait for the "Their sites" holders at
+/** Reports waiting to be read. They wait for the "Their sites" holders at
  *  the site they were filed from: a reader whose files reach only some sites.
  *  Readers of everyone (and superadmins) see reports on the file but are
  *  neither alerted nor clear the wait. */

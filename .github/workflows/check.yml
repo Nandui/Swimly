@@ -1,4 +1,4 @@
-# The safety net (docs/roadmap.md, step 1): every pull request to main must pass
+# The safety net: every pull request to main must pass
 # typecheck, lint, tests and a build before it merges. Nothing here has a secret or
 # reaches a database: the tests use isolated database and sign-in doubles, and the
 # build runs `next build` alone, never `npm run build`, which migrates.

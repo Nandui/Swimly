@@ -6,7 +6,7 @@ import { hrConfigured, hrDatabase } from "@/modules/hr/shared/database";
 import { unreadReports } from "@/modules/hr/shared/reports";
 
 /** HR on the home page: reports from managers on duty waiting for the centre
- *  managers of the site they came from (D22). A count only: the home page
+ *  managers of the site they came from. A count only: the home page
  *  never loads a report. One person's reports open their file; more open People. */
 export async function reportHomeItems(viewer: HomeViewer): Promise<HomeItem[]> {
   const held = expandPermissions(viewer.anywhere, { superadmin: viewer.isSuperadmin });

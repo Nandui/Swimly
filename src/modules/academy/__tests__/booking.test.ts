@@ -77,7 +77,7 @@ before(async () => {
   // One copy of the public-API kit, so every source's errors are the router's PublicApiError.
   const kit = serverModule("src/lib/public-api/http.ts", {});
   const withKit = { ...d, "@/lib/public-api/http": kit, "server-only": {} };
-  // Short course places booked under the email come through the email bookings plug (D24).
+  // Short course places booked under the email come through the email bookings plug.
   const shortCourses = serverModule<{ shortCourseEmailBookings: (email: string) => Promise<unknown[]> }>("src/modules/activities/features/short-courses/server/email-bookings.ts", withKit);
   router = serverModule("src/modules/academy/features/booking/server/router.ts", { ...withKit, "@/modules/contributions": { emailBookingsFor: shortCourses.shortCourseEmailBookings } });
   const session = () => ({ user: { id: "desk", name: "Desk B", orgId: ORG, isSuperadmin: false, roleName: "Role", permissions: state.permissions, primaryPermissions: state.permissions,

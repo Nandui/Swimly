@@ -1,6 +1,6 @@
-/* Turnfin Sheet, the 2.0 theme (DESIGN.md, decision D20): every token of the design, in light and
-   dark. This file holds the values; DESIGN.md says what each one is for. The file keeps the name and
-   the token names it had under Turnfin Glass (D13) while step 5 re-themes the kit, so every screen
+/* Turnfin Sheet, the 2.0 theme: every token of the design, in light and
+   dark. This file holds the values. The file keeps the name and
+   the token names it had under Turnfin Glass while step 5 re-themes the kit, so every screen
    follows at once. Colours use light-dark(), so they follow `color-scheme` (the device, or the
    person's choice in `data-theme` on <html>, globals.css). Shadows cannot, so their dark values sit
    under the dark selectors at the end. shadcn's --ui-* names (shadcn.css) point here. Copied byte
@@ -102,7 +102,7 @@
      text-* utilities below. */
   --font-text: var(--font-manrope, Manrope), system-ui, sans-serif;
   --font-display: var(--font-manrope, Manrope), system-ui, sans-serif;
-  /* The running sizes the kit's rules use (DESIGN.md, Space, size and radius; D15). */
+  /* The running sizes the kit's rules use. */
   --type-caption: 12px;
   --type-caption-leading: 16px;
   --type-body: 15px;
@@ -163,7 +163,7 @@
   --duration-banner: 3200ms;
 }
 
-/* Phones and tablets read rows and text at body size, 17px (DESIGN.md, Type). */
+/* Phones and tablets read rows and text at body size, 17px. */
 @media (max-width: 1099px) {
   :root { --type-body: 17px; --type-body-leading: 22px; }
 }
@@ -182,7 +182,7 @@ html[data-theme="dark"] {
   }
 }
 
-/* The type scale (DESIGN.md, Type). Numbers that line up or change add tabular-nums. */
+/* The type scale. Numbers that line up or change add tabular-nums. */
 @utility text-window-title { font-family: var(--font-display); font-size: 38px; line-height: 44px; font-weight: 800; letter-spacing: -0.03em; }
 @utility text-large-title { font-family: var(--font-display); font-size: 34px; line-height: 41px; font-weight: 800; letter-spacing: -0.03em; }
 @utility text-title-1 { font-family: var(--font-display); font-size: 28px; line-height: 34px; font-weight: 800; letter-spacing: -0.025em; }

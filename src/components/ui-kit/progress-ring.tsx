@@ -1,7 +1,7 @@
 import { Progress } from "@/components/shadcn/progress";
 import { progressOf } from "@/components/ui-kit/scale";
 
-/** How far through a set of things (DESIGN.md, ProgressRing): a green ring that fills as each
+/** How far through a set of things: a green ring that fills as each
  *  one is done, with the figure inside it ("5 of 8 here"). It is shadcn's Progress, drawn as a
  *  ring in kit.css, so screen readers hear the progress bar and its label; the figure inside is
  *  for the eye. The caller decides the words. */

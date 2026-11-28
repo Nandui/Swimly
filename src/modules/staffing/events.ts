@@ -1,2 +1,2 @@
-/** Events Staffing emits (docs/architecture.md, Events). None yet. */
+/** Events Staffing emits. None yet. */
 export {};

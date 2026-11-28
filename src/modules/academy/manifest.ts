@@ -2,9 +2,9 @@ import { Award } from "lucide-react";
 import type { ModuleManifest } from "@/modules/registry";
 
 /** How this module describes itself to the rest of Turnfin: its name, menu entry, levels and the
- *  permissions each level gives (docs/apps.md). Listed in src/app/modules.ts. Client-safe: menus
+ *  permissions each level gives. Listed in src/app/modules.ts. Client-safe: menus
  *  and the role editor read it. */
-// The Academy (D24, 2 November 2026): the lifeguard and swim teacher courses, its own app again in
+// The Academy (2 November 2026): the lifeguard and swim teacher courses, its own app again in
 // Team, with the Academy booking site's API. It joined Short courses on 15 October 2026 and left
 // it with its tables, so the swim school's desk levels never open it.
 export const academyModule: ModuleManifest = {

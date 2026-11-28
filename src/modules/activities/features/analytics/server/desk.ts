@@ -14,7 +14,7 @@ import { teacherKey, within } from "@/modules/activities/features/analytics/serv
  * without a database. */
 
 /** The modules whose work the desk does, by their log names. Short courses, Refunds and the Academy
- *  logged under their own names before D24 (3 November 2026), so the older names stay. */
+ *  logged under their own names before 3 November 2026, so the older names stay. */
 export const DESK_MODULES = ["Swim school", "Short courses", "Refunds", "Finance requests", "Academy"] as const;
 
 /** The kinds of desk work, in the order they are shown. Teaching (registers, ticks, starts) and set-up

@@ -19,7 +19,7 @@
 .glance {
   min-width: 0;
 }
-/* Chapters: one card each on the ground (DESIGN.md, Content), opened in place. */
+/* Chapters: one card each on the ground, opened in place. */
 .chapters {
   display: flex;
   flex-direction: column;

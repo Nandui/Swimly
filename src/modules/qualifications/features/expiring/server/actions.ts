@@ -6,7 +6,7 @@ import { isDateOnly, today } from "@/lib/format";
 import { qualificationRenewals } from "@/modules/contributions";
 import { requireQualificationsActor } from "@/modules/qualifications/shared/access";
 
-/** Assigns the course that renews an expiring qualification (D26), through the renewals plug:
+/** Assigns the course that renews an expiring qualification, through the renewals plug:
  *  Training's own assign checks `training.assign` for the person, writes and audits it. Due on the
  *  day the qualification expires, unless that has passed. */
 export async function assignRenewal(courseId: string, userId: string, expiresOn: string | null): Promise<ActionResult> {

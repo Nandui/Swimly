@@ -8,7 +8,7 @@ import '../../workspace/module-workspace.css';
 
 export const metadata: Metadata = { title: { default: "Coinage", template: TITLE_TEMPLATE } };
 
-/** Coinage requests in the Finance requests frame (D24); every page checks coinage access again. */
+/** Coinage requests in the Finance requests frame; every page checks coinage access again. */
 export default async function CoinageLayout({ children }: { children: ReactNode }) {
   await screenPage("coinage");
   const who = await financeActor();

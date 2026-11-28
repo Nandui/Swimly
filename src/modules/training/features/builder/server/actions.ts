@@ -168,7 +168,7 @@ const lessonSchema = z.object({
   minutes: z.number().int().min(1, "Minutes start at 1.").max(240, "Keep a lesson under 4 hours.").nullable(),
   /** A Scenario, Flashcards or Checklist lesson's own settings, as JSON text. */
   data: z.string().max(200_000, "This lesson is too long. Split it into two.").nullable().default(null),
-  /** Saved as a page: everything is in the text, put there with Add (D18). An
+  /** Saved as a page: everything is in the text, put there with Add. An
    *  older lesson becomes a page the first time it is saved from the builder. */
   page: z.boolean().default(false),
 });

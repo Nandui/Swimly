@@ -111,7 +111,7 @@ export default function LessonPage() {
   // Hand in work: nothing handed in yet, or sent back, holds Next; work waiting
   // for a trainer lets them move on without finishing this lesson.
   const submission = data?.handIn?.submission ?? null;
-  // A Hand in work lesson, or a page with Hand in work in it (D18).
+  // A Hand in work lesson, or a page with Hand in work in it.
   const handIn = !!data?.handIn;
   const handInWaiting = handIn && submission?.status === "SUBMITTED";
   const handInNeeded = !!data && handIn && data.open && !data.done && (!submission || submission.status === "RETURNED");

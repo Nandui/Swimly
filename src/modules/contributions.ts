@@ -23,7 +23,7 @@ import type { Prisma } from "@/generated/prisma/client";
  *  access export (everything held about a person, whatever is switched on). */
 
 /** Loads every module's registrations (the composition root) before a module reads another's,
- *  as the platform registry loads the app's module list (AGENTS.md, The app contract). Modules call
+ *  as the platform registry loads the app's module list. Modules call
  *  `personFile`, `subjectRecords`, `commitmentsFor` and `planCommitment` from here, so none of
  *  them imports the composition root; Core and front pages already load it through it. */
 let modulesLoading: Promise<unknown> | undefined;
@@ -402,7 +402,7 @@ export type Member = {
 /** A search result: enough to tell two people with the same name apart. */
 export type MemberHit = Pick<Member, "id" | "memberNumber" | "firstName" | "lastName" | "dateOfBirth" | "active" | "contactName">;
 /** A person who is not on the records yet. Empty strings mean "not given". */
-/** One search across the person's apps (D19; roadmap step 4): what each app can be searched
+/** One search across the person's apps: what each app can be searched
  *  for, such as the swim school's members. Pages and apps are matched in the frame itself, and
  *  people by the platform (src/lib/search). An app answers only with what this viewer may open,
  *  and shows the least that names each hit: a name and a short line, never contact or medical
@@ -497,8 +497,8 @@ export async function memberHistoryFor(memberId: string): Promise<MemberHistoryE
 
 /** One place booked under an email address, as the public see it in "My bookings" on the
  *  Academy booking site (owner decision, 8 October 2026). The Academy keeps the site's API and its
- *  own courses; another app adds the places it holds under that email through this plug (D24:
- *  short courses booked at the desk), so the Academy never reads its tables. Never staff names,
+ *  own courses; another app adds the places it holds under that email through this plug
+ *  (short courses booked at the desk), so the Academy never reads its tables. Never staff names,
  *  other people or notes. */
 export type EmailBooking = {
   id: string;
@@ -572,7 +572,7 @@ export async function memberNoticesFor(memberId: string): Promise<MemberNotice[]
 // Events
 // ---------------------------------------------------------------------------
 
-/** Announce an event once every module has registered its listeners (AGENTS.md, How apps talk), so a
+/** Announce an event once every module has registered its listeners, so a
  *  listener in a module the emitting page never loaded still hears it. Call it after the change
  *  is saved; a listener's failure is logged and never reaches the caller. A listener whose app is
  *  switched off at the event's site (its payload's `siteId`; anywhere, without one) does not run. */
@@ -692,7 +692,7 @@ export async function appCourses(): Promise<AppCourses | null> {
  *  whether they already have it open, and whether the reader may assign it to them. */
 export type QualificationRenewal = { courseId: string; title: string; assigned: boolean; canAssign: boolean };
 /** An app whose courses give qualifications (Training) says which of them renews each, and assigns
- *  one. The expiring list asks (D26); the app checks its own permission to assign, writes and
+ *  one. The expiring list asks; the app checks its own permission to assign, writes and
  *  audits, and never learns why it was asked. */
 export type QualificationRenewals = {
   /** The app it belongs to (its manifest id). */

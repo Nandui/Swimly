@@ -32,7 +32,7 @@ export async function saveBlock(input: BlockInput, id?: string): Promise<ActionR
   if (v.start < shift.startMinutes || v.end > shift.endMinutes) return fail(`Keep it inside the shift, ${clock(shift.startMinutes)} to ${clock(shift.endMinutes)}, or change the shift first.`);
   const duty = await prisma.planDuty.findFirst({ where: { id: v.dutyId, orgId: site.orgId, archivedAt: null }, include: { tasks: { orderBy: { sortOrder: "asc" } } } });
   if (!duty) return fail("That kind of work is no longer on the list.");
-  // Work belongs to an activity (D33): only a break stands by itself, and a block that already did.
+  // Work belongs to an activity: only a break stands by itself, and a block that already did.
   if (!v.sessionId) {
     const before = id ? await prisma.planBlock.findFirst({ where: { id, shiftId: shift.id }, select: { sessionId: true } }) : null;
     if (!mayStandAlone({ isBreak: duty.isBreak, before })) return fail("Choose the activity they are on. If it isn't on the list, a manager adds it in Setup.");

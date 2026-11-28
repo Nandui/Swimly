@@ -4,7 +4,7 @@ import { AuthorizationError, requireSession } from "@/lib/authz";
 import { holdsAnywhere } from "@/lib/policy/engine";
 import { actorForSession } from "@/lib/policy/session";
 
-/** Who may open Vouchers (docs/vouchers.md). A voucher is used at a site and a
+/** Who may open Vouchers. A voucher is used at a site and a
  *  batch names the sites that accept it, so pages and actions limit both to
  *  the sites the capability covers (`sitesFor`, `requireCapFor`); `manage`
  *  only decides which pages and buttons show. */

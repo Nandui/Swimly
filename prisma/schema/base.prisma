@@ -1,4 +1,4 @@
-// Turnfin database schema, split by area (see docs/architecture.md).
+// Turnfin database schema, split by area.
 // One database and one generated client; each file is owned by one area.
 
 // Swimly — the data layer.

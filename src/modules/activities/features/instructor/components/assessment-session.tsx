@@ -13,7 +13,7 @@ export function InstructorAssessmentSession({ session, backHref }: { session: Se
   const booked = session.bookings.filter(booking => HOLDS_A_PLACE.includes(booking.status));
   const notComing = session.bookings.filter(booking => !HOLDS_A_PLACE.includes(booking.status));
   const placed = booked.filter(booking => booking.outcomeLevel).length;
-  // "Swim School Assessment" is the club's own name for an untyped session (PRODUCT.md).
+  // "Swim School Assessment" is the club's own name for an untyped session.
   const title = session.type?.name ?? "Swim School Assessment";
   const facts = [
     formatShortDay(session.date),

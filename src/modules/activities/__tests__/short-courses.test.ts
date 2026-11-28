@@ -133,7 +133,7 @@ test("Instructor takes the register on the day; View cannot", async () => {
   assert.equal(await fixture.prisma.shortCourseAttendance.count({ where: { sessionId: session.id } }), 2);
 });
 
-test("an instructor with Pool deck Teach only sees and registers the courses they instruct, and never books (D24)", async () => {
+test("an instructor with Pool deck Teach only sees and registers the courses they instruct, and never books", async () => {
   const session = await fixture.prisma.shortCourseSession.findFirstOrThrow({ where: { courseId }, orderBy: { date: "asc" } });
   as("nora", [], [at(bishopstown, ["short-courses.run"])]);
   assert.equal((await data.shortCoursesHome()).current.some((c) => c.id === courseId), false, "Ray instructs it, not Nora");

@@ -7,7 +7,7 @@ import { trainingFile, trainingLearnerRecords, trainingOnTheJobRecords, training
 import { registersToClose } from "@/modules/training/features/sessions/server/data";
 import { signoffCount } from "@/modules/training/features/sign-off/server/data";
 
-/** Training's registration plug (AGENTS.md, The app contract), loaded by
+/** Training's registration plug, loaded by
  *  src/modules/server.ts: its home card, its part of a person's file, its
  *  records for HR's subject export and the course that renews a qualification. Its menu entry, levels and permissions are in manifest.ts. */
 
@@ -16,7 +16,7 @@ registerSubjectRecords({ key: "training", load: trainingRecords });
 registerSubjectRecords({ key: "trainingOnTheJob", load: trainingOnTheJobRecords });
 registerSubjectRecords({ key: "trainingLearner", load: trainingLearnerRecords });
 
-/** The course that renews a qualification, for Qualifications' expiring list (D26). Assigning goes
+/** The course that renews a qualification, for Qualifications' expiring list. Assigning goes
  *  through Training's own assign, which checks `training.assign` for the person. */
 registerQualificationRenewals({ app: "training", find: renewalCourses, assign: (courseId, userId, dueOn) => assignTraining(courseId, [userId], dueOn) });
 

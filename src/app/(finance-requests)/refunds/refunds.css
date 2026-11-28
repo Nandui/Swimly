@@ -1,4 +1,4 @@
-/* ── Refunds in Turnfin Glass (DESIGN.md) ─────────────────────────────────────────────────────
+/* ── Refunds in Turnfin Glass ─────────────────────────────────────────────────────
    The list is the kit's figure tiles (pc-stat-label, data-compact) as filters, search and filters
    on the ground, then the kit's grouped list. A request is a record page (ui-kit/record.tsx and
    kit.css, .rec-*). This file holds only what is Refunds' own: the request form and its bar,

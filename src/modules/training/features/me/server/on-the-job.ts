@@ -6,7 +6,7 @@ import { pathsOf, sessionsOf } from "@/modules/training/shared/on-the-job-reads"
 
 /** The signed-in person's own skills on the job (phase 5), for Turnfin Me:
  *  their learning paths and sessions, and what a trainer watches for on their
- *  practical. Only ever their own records. Their hours are Qualifications' (D26). */
+ *  practical. Only ever their own records. Their hours are Qualifications'. */
 
 export async function myPlan(userId: string) {
   const [paths, sessions, chart] = await Promise.all([pathsOf(userId), sessionsOf(userId), organisationChart()]);

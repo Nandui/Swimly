@@ -4,7 +4,7 @@ import { subjectsFor } from "@/lib/policy/session";
 import { prisma } from "@/lib/prisma";
 import { OPEN_TRAINING_STATUSES } from "@/modules/training/shared/constants";
 
-/** The course that gives each qualification, for Qualifications' expiring list (D26): for each
+/** The course that gives each qualification, for Qualifications' expiring list: for each
  *  person and qualification type, the live course that grants it, whether they already have it
  *  open, and whether the reader may assign it to them (`training.assign`). Null when no course
  *  gives that qualification. Training never sees why it is asked. */

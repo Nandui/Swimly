@@ -2,13 +2,6 @@
 
 Turnfin is the staff product for LeisureWorld's leisure centres: a platform of apps (Classes, Pool deck, Finance requests, Rota, Training, HR, Incidents, Purchasing and more) with one sign-in, where each person's job opens the apps they need and Home shows what is waiting for them. The repository's name, Swimly, is a working name only.
 
-## Start here
-
-1. [AGENTS.md](AGENTS.md): the limits that protect live data and the checks to run, for people and coding agents.
-2. [docs/operations.md](docs/operations.md): environments, databases, deploying and every setting.
-
-Version 3 is being planned. The product, design, architecture, roadmap and decision documents written for version 2.0 were removed on 28 November 2026; they are in this repository's history.
-
 ## What is in this repository
 
 | Folder | What |
@@ -24,6 +17,6 @@ The parent app is a separate repository ([swimly-public-app](https://github.com/
 
 ## Running it
 
-Node.js 24. Run `npm ci`, then `npm run sandbox` and open `http://localhost:3100`: Turnfin on throwaway databases with a fictional leisure group, never touching a real database. Everything else (your own database, previews, production, every command and setting) is in [docs/operations.md](docs/operations.md).
+Node.js 24. Run `npm ci`, then `npm run sandbox` and open `http://localhost:3100`: Turnfin on throwaway databases with a fictional leisure group, never touching a real database.
 
 Before pushing: `npm run typecheck`, `npm run lint` and `npm test`.

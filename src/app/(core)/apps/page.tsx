@@ -8,7 +8,7 @@ import { pageSession } from "@/lib/page-guards";
 
 export const metadata: Metadata = { title: "Apps" };
 
-/** Which apps are on, and where (docs/architecture.md, App switches): each app on everywhere,
+/** Which apps are on, and where: each app on everywhere,
  *  off, or on only at some sites. Superadmins only, so no role can give it; every change is in
  *  the activity log. Admin itself is always on and is not listed. */
 export default async function AppsPage() {

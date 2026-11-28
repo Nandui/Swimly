@@ -1,5 +1,5 @@
 /* Poolside Clear v2, Turnfin's pre-2.0 system rules, kept until the 2.0 kit replaces each part
-   (DESIGN.md, How it is built). Its colours and typeface are already Turnfin Glass: every --pc-*
+  . Its colours and typeface are already Turnfin Glass: every --pc-*
    colour below points at a token in glass.css. What is left here is the old shapes, sizes and
    rules: white 24px panels on the ground inside a rounded frame.
    Tokens and the system rules (type, controls, fields, badges, alerts, dialogs, focus) are
@@ -12,7 +12,7 @@
 
 .turnfin-app {
   /* The pre-2.0 names, pointed at the 2.0 tokens in glass.css, so every screen takes the 2.0
-     colours until the 2.0 kit rebuilds it (DESIGN.md, How it is built). Values live in glass.css. */
+     colours until the 2.0 kit rebuilds it. Values live in glass.css. */
   --pc-outer: var(--bg);
   --pc-canvas: var(--bg);
   --pc-frame-line: var(--sep);
@@ -82,7 +82,7 @@
   --pc-scrim: var(--scrim);
   --pc-ease: var(--ease);
 
-  /* Type, on the 2.0 scale (DESIGN.md, Type): caption; body-desk, which becomes body (17px) on
+  /* Type, on the 2.0 scale: caption; body-desk, which becomes body (17px) on
      phones and tablets; title-3 for section titles; the page title (the H1 is kit.css's); figure.
      Reading text in documents is 16px. docs.css and module CSS reference these tokens. */
   --pc-text-caption: 12px;
@@ -153,7 +153,7 @@
   --slate: var(--pc-ink-muted);
   --radius: 16px;
 }
-/* Phones and tablets read rows and text at body size, 17px (DESIGN.md, Type). */
+/* Phones and tablets read rows and text at body size, 17px. */
 @media (max-width: 1099px) {
   .turnfin-app { --pc-text-body: 17px; --pc-leading-body: 22px; }
 }

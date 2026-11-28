@@ -7,7 +7,7 @@ import {
   cleanDoc, docActivities, frozenOutline, lessonHandIn, lessonHasQuiz, lessonShows, pageFromLesson, publishProblems, readOutline, type DocNode, type LessonKind,
 } from "../shared/lessons";
 
-/** One place to put content in a lesson (owner decision D18, 30 October 2026):
+/** One place to put content in a lesson (owner decision, 30 October 2026):
  *  a new lesson is a page built with Add, the Practice quiz and Hand in work are
  *  blocks, and an older lesson becomes a page the first time it is saved. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;

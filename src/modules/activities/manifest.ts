@@ -2,12 +2,12 @@ import { ChartNoAxesCombined, Waves, WavesLadder } from "lucide-react";
 import type { ModuleManifest } from "@/modules/registry";
 
 /** How this module describes itself to the rest of Turnfin: its name, menu entry,
- *  levels and the permissions each level gives (docs/apps.md). Listed
+ *  levels and the permissions each level gives. Listed
  *  in src/app/modules.ts. Client-safe: menus and the role editor read it. */
 export const swimSchoolModule: ModuleManifest = {
   id: "swim-school",
   group: "front-of-house",
-  // Shown as Classes since D24 (3 November 2026): gym activities may follow, so the name is not
+  // Shown as Classes since 3 November 2026: gym activities may follow, so the name is not
   // about swimming. The id stays (stored roles and switches); the log name stays Swim school so
   // the activity log reads on. Swim school is the first activity type (src/modules/activities/shared/types.ts).
   name: "Classes",
@@ -33,7 +33,7 @@ export const swimSchoolModule: ModuleManifest = {
         permissions: ["classes.cancel", "billing.notify"],
       },
     ],
-    // Short courses joined (D24, owner default 3 November 2026): their View is Desk and their
+    // Short courses joined (owner default 3 November 2026): their View is Desk and their
     // Manage is Manage here; their Instructor is Pool deck Teach.
     formerly: [{ id: "short-courses", levels: { view: "desk", manage: "manage" } }],
   },
@@ -62,7 +62,7 @@ export const poolDeckModule: ModuleManifest = {
         permissions: ["attendance.markAny"],
       },
     ],
-    // Short courses' Instructor teaches on the pool deck now (D24).
+    // Short courses' Instructor teaches on the pool deck now.
     formerly: [{ id: "short-courses", levels: { run: "teach" } }],
   },
 };

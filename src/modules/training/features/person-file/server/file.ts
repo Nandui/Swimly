@@ -32,7 +32,7 @@ export async function trainingRecords(userId: string) {
 }
 
 /** Their sessions and learning paths (phase 5), for HR's subject export. Photo evidence is listed by name, not sent.
- *  Their in-service hours are Qualifications' records (D26). */
+ *  Their in-service hours are Qualifications' records. */
 export async function trainingOnTheJobRecords(userId: string) {
   const [sessions, paths, evidence] = await Promise.all([
     prisma.trainingSessionPlace.findMany({ where: { userId }, select: { status: true, addedByName: true, markedAt: true, session: { select: { title: true, startsAt: true, minutes: true, location: true, trainerName: true, cancelledAt: true } } } }),

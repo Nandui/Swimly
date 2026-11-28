@@ -29,8 +29,8 @@ export const LESSON_KIND_META = {
 export const isLessonKind = (value: unknown): value is LessonKind => LESSON_KINDS.includes(value as LessonKind);
 
 /** Lesson kinds that also go inside any lesson's text as an activity block, so
- *  one lesson can hold several things (owner decision D16, 29 October 2026).
- *  Since D18 (30 October 2026) a new lesson is a page and Add is the only way
+ *  one lesson can hold several things (owner decision, 29 October 2026).
+ *  Since 30 October 2026 a new lesson is a page and Add is the only way
  *  in: the Practice quiz and Hand in work are blocks too, one of each at most. */
 export const ACTIVITY_BLOCK_KINDS = ["CHECKLIST", "FLASHCARDS", "SORTING", "SCENARIO", "EXPLORE", "QUIZ", "ASSIGNMENT"] as const;
 /** Activities a lesson may hold only once: they belong to the lesson as a whole. */
@@ -591,7 +591,7 @@ export function lessonShows(lesson: Pick<OutlineLesson, "kind" | "body">): Lesso
 }
 
 /** An older lesson's fixed main part as the first block of a page, so every
- *  lesson can be built with Add (D18). Its text follows. Published versions
+ *  lesson can be built with Add. Its text follows. Published versions
  *  keep what they had; this only changes the draft the author opens. */
 export function pageFromLesson(lesson: Pick<OutlineLesson, "kind" | "body" | "videoUrl" | "fileId" | "data">, newId: () => string = () => crypto.randomUUID().replace(/-/g, "").slice(0, 8)): DocNode | null {
   const rest = lesson.body?.content ?? [];

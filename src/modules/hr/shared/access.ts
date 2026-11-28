@@ -10,7 +10,7 @@ import { actorForSession } from "@/lib/policy/session";
  *  superadmin flag), and each read also needs a recent password. Reading
  *  records or filing reports anywhere opens the workspace; every page then
  *  limits records to the people it covers. Someone who only files reports
- *  (HR Report, D22) reads no records. What is shared with you lives in Turnfin Me (the staff app). */
+ *  (HR Report) reads no records. What is shared with you lives in Turnfin Me (the staff app). */
 export type HrActor = {
   id: string;
   name: string;

@@ -16,7 +16,7 @@ export function trainingPages(who: Pick<TrainingActor, "signoff">): (ModulePage 
     { href: "/training/paths", label: "Learning paths", place: "setup" as const, icon: Route, description: "Courses in order for a new starter or a new role, assigned at once", match: (p) => p.startsWith("/training/paths") },
     { href: "/training/sessions", label: "Sessions", icon: CalendarDays, description: "Classroom and poolside training with places and a register", match: (p) => p.startsWith("/training/sessions") },
     // Checks the code on Training's own completion certificates; certificates people upload are
-    // checked in Qualifications (D26).
+    // checked in Qualifications.
     { href: "/training/check", label: "Check a certificate", under: "/training", icon: BadgeCheck, description: "Check the code on a certificate from Turnfin Me", match: (p) => p === "/training/check" },
     { href: "/training/rules", label: "Rules", place: "setup" as const, icon: ListChecks, description: "Who must take each course and how often; Turnfin assigns it", match: (p) => p === "/training/rules" },
   ];

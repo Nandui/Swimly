@@ -1,8 +1,7 @@
-/** The platform's one file check (docs/architecture.md, Platform services; D14). An upload is
+/** The platform's one file check. An upload is
  *  what its first bytes say it is, never what its name or the browser claims, and is refused in
  *  one plain sentence. The app decides which kinds it takes and how big, and keeps the bytes in
- *  its own tables. Maintenance's photos use it first; the other apps move onto it in roadmap
- *  step 4. Pure: no database, no storage. */
+ *  its own tables. Maintenance's photos use it first. Pure: no database, no storage. */
 
 export type FileKind = "photo" | "pdf";
 

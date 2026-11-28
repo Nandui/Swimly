@@ -28,10 +28,10 @@ const nextConfig: NextConfig = {
      *  cache, so a change you just made is never the thing being reused. */
     staleTimes: { dynamic: 30, static: 180 },
   },
-  /** Old links and bookmarks land on the same page in the app that holds it now (D24). */
+  /** Old links and bookmarks land on the same page in the app that holds it now. */
   async redirects() {
     return [
-      // Checking certificates, what is expiring and in-service hours left Training for Qualifications (D26).
+      // Checking certificates, what is expiring and in-service hours left Training for Qualifications.
       { source: "/training/expiring", destination: "/staff-qualifications", permanent: false },
       { source: "/training/certificates", destination: "/staff-qualifications/certificates", permanent: false },
       { source: "/training/certificates/:path*", destination: "/staff-qualifications/certificates/:path*", permanent: false },
@@ -41,7 +41,7 @@ const nextConfig: NextConfig = {
       // The Academy left Short courses for its own app, at /academy again.
       { source: "/short-courses/academy", destination: "/academy", permanent: false },
       { source: "/short-courses/academy/:path*", destination: "/academy/:path*", permanent: false },
-      // Refunds and Coinage became Finance requests (D24): their overviews are its one Overview.
+      // Refunds and Coinage became Finance requests: their overviews are its one Overview.
       { source: "/refunds/overview", destination: "/finance-requests", permanent: false },
       { source: "/coinage/overview", destination: "/finance-requests", permanent: false },
     ];

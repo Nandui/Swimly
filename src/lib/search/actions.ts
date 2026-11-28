@@ -7,7 +7,7 @@ import { modulesFor } from "@/modules/context";
 import { searchApps } from "@/modules/server";
 import type { SearchHit } from "@/modules/contributions";
 
-/** One search (D19; DESIGN.md, Search): the records behind a query, for the frame's search. People
+/** One search: the records behind a query, for the frame's search. People
  *  come from the platform, for those who manage staff (their names and job, linking to Admin ›
  *  Staff); everything else from the person's apps through `registerSearch`. Pages and apps are
  *  matched in the frame itself. Signed out, or under two letters, finds nothing. */

@@ -44,7 +44,7 @@ export async function renameShortCoursePlaces({ siteId, from, to }: AreaRename, 
   return moved.count + withLanes.length;
 }
 
-/** Short courses on the Pool deck's home card (D24: instructors take short course registers with
+/** Short courses on the Pool deck's home card (instructors take short course registers with
  *  Teach): registers to take today on the courses they instruct, and the way to the courses for
  *  someone the desk's level does not already take there. */
 export async function shortCourseRegisterItems(viewer: HomeViewer): Promise<HomeItem[]> {

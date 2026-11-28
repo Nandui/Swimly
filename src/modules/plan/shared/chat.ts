@@ -2,16 +2,16 @@ import "server-only";
 import { createSign, createVerify } from "node:crypto";
 import { z } from "zod";
 
-/** Plan (test)'s line to Google Chat (D31): post a card to a space as the Chat app, change it,
+/** Plan (test)'s line to Google Chat: post a card to a space as the Chat app, change it,
  *  list the spaces the app has been added to, and check that a request really comes from Google
  *  Chat. The app signs in as its service account (`PLAN_CHAT_CLIENT_EMAIL`,
  *  `PLAN_CHAT_PRIVATE_KEY`); Chat's requests are checked against the Cloud project number
  *  (`PLAN_CHAT_PROJECT_NUMBER`). Only how to talk to Chat lives here; what is said and when is
- *  the caller's. It moves to the platform when a second app needs it (AGENTS.md). */
+ *  the caller's. It moves to the platform when a second app needs it. */
 
 export type ChatConfig = { clientEmail: string; privateKey: string; projectNumber: string };
 
-/** The settings, or null while Google Chat is not set up (docs/operations.md). */
+/** The settings, or null while Google Chat is not set up. */
 export function chatConfig(env: Record<string, string | undefined> = process.env): ChatConfig | null {
   const clientEmail = env.PLAN_CHAT_CLIENT_EMAIL?.trim() ?? "";
   // Vercel keeps a key's line breaks as the two characters "\n".

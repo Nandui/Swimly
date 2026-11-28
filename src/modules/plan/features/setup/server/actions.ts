@@ -79,7 +79,7 @@ export async function archiveDuty(id: string): Promise<ActionResult> {
 }
 
 /** Add or change a session (an activity): where, when it repeats and the one kind of work it needs
- *  (D33), which can be made here with it. */
+ * , which can be made here with it. */
 export async function saveSession(input: SessionInput, id?: string): Promise<ActionResult> {
   const who = await requirePlanActor();
   const parsed = sessionSchema.safeParse(input);

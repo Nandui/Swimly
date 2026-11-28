@@ -1,6 +1,6 @@
 import type { PermissionKey } from "@/lib/staff/permissions";
 
-/** Where part of a role applies (docs/apps.md):
+/** Where part of a role applies:
  *  - `all`: everywhere in the organisation.
  *  - `site`: one site the person works at, and the people who work there.
  *  - `reports`: the people they manage, directly or indirectly (HR Report). */

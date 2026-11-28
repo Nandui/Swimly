@@ -40,7 +40,7 @@ export async function withdrawNote(id: string, reason: string): Promise<ActionRe
   const allowed = await allowedFor("hr.notes.write", note.subjectUserId);
   if (!allowed.ok) return fail(allowed.error);
   const { actor } = allowed;
-  // A reporter can't read their report back, so whoever writes notes on the file withdraws a wrong one (D22).
+  // A reporter can't read their report back, so whoever writes notes on the file withdraws a wrong one.
   if (note.authorId !== actor.id && !actor.superadmin && note.via !== "report") return fail("Only the author can withdraw a note.");
   await hrDatabase().transaction(async (tx) => {
     await tx.query(`UPDATE notes SET withdrawn_at=now(), withdrawn_reason=$2 WHERE id=$1 AND withdrawn_at IS NULL`, [id, why]);

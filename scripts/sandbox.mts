@@ -38,7 +38,7 @@ const mainUrl = await serve("main", PORTS.main, async (db) => {
   for (const folder of readdirSync("prisma/migrations").filter((name) => /^\d/.test(name)).sort()) {
     await db.exec(readFileSync(`prisma/migrations/${folder}/migration.sql`, "utf8"));
   }
-  // HR is the turnfin_hr schema in the main database (D23).
+  // HR is the turnfin_hr schema in the main database.
   for (const file of readdirSync("hr-database/migrations").sort()) await db.exec(readFileSync(`hr-database/migrations/${file}`, "utf8"));
   // HR's migrations set search_path on this one session; the rest of Turnfin lives in public.
   await db.exec("SET search_path = public");
@@ -62,7 +62,7 @@ const hash = await bcrypt.hash(SANDBOX_PASSWORD, 10);
 export const SANDBOX_PIN = "2580";
 const pinHash = await bcrypt.hash(SANDBOX_PIN, 10);
 const roles: Record<string, string> = {};
-// The roles from "How Turnfin works" (docs/apps.md), as levels.
+// The roles from "How Turnfin works", as levels.
 const levelRoles: { name: string; homeName: string; levels: Record<string, string>; extras?: string[]; system?: boolean }[] = [
   { name: "Admin", homeName: "Management", levels: { admin: "manage" }, system: true },
   { name: "Instructor", homeName: "Pool deck", levels: { "pool-deck": "teach" }, system: true },
@@ -113,7 +113,7 @@ for (const p of people) {
   if (p.manager) await prisma.user.update({ where: { id: p.id }, data: { managerId: p.manager } });
   for (const [i, departmentId] of p.departments.entries()) await prisma.userDepartment.create({ data: { userId: p.id, departmentId, isPrimary: i === 0 } });
 }
-// One role each (docs/apps.md): no extra roles.
+// One role each: no extra roles.
 const soon = new Date(); soon.setUTCDate(soon.getUTCDate() + 30);
 const past = new Date(); past.setUTCDate(past.getUTCDate() - 10);
 await prisma.qualification.createMany({ data: [

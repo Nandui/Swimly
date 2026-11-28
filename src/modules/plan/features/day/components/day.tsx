@@ -63,7 +63,7 @@ export function DayView({ data }: { data: PlanDayData }) {
     for (const x of g.gaps) {
       const key = `gap|${x.needKey}|${x.index}`;
       const what = `${dutyName(x.dutyId)} for ${x.label}`;
-      // "Asked in Google Chat: 2 can cover", for each open request on this need (D31).
+      // "Asked in Google Chat: 2 can cover", for each open request on this need.
       const asked = data.cover.filter((r) => r.needKey === x.needKey).map((r) => `Asked in Google Chat: ${offerLine(r.answers).toLowerCase()}`);
       blocks.push({ key, lane: `n|${g.key}`, start: x.start, end: x.end, kind: "gap", label: dutyName(x.dutyId), sub: `${x.short} short`, ariaLabel: [`${g.label} needs someone: ${what}, ${formatTimeRange(x.start, x.end)}, ${x.short} short`, ...asked].join(". ") });
       rows.push({ key, start: x.start, end: x.end, title: "Needs someone", hint: [what, `${x.short} short`, ...asked].join(" · "), tone: "orange", open: key });

@@ -180,7 +180,7 @@ export type TrainingReport = Awaited<ReturnType<typeof trainingReport>>;
 
 /** A person's audit pack: every course they were given with the version taught, each lesson they
  *  finished and when, every exam sitting, the practical sign-off, certificates and qualifications,
- *  sessions, and the audit trail behind it (in-service hours are Qualifications', D26). A 404 for anyone the reader does not cover. */
+ *  sessions, and the audit trail behind it (in-service hours are Qualifications'). A 404 for anyone the reader does not cover. */
 export async function personAuditPack(userId: string) {
   const who = await requireTrainingActor();
   const person = await staffMember(userId, who.orgId);

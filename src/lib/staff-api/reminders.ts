@@ -53,7 +53,7 @@ export async function runReminders(now = new Date()) {
   const config = meSettings();
   if (!config?.meUrl) return { sent: 0, skipped: "Turnfin Me is not enabled" };
   const on = today(now);
-  // A switched-off app sends no reminders (docs/architecture.md, App switches).
+  // A switched-off app sends no reminders.
   const items = [
     ...(await appOn("training") ? await trainingReminderItems(on) : []),
     ...await qualificationItems(on),

@@ -120,7 +120,7 @@ test("old roles convert without losing anything, and every gain is reported", ()
   const instructor = levelsFromAccess(["attendance.mark", "attendance.cover", "progression.complete"], ["instructor"]);
   assert.deepEqual(instructor.role.levels, { "pool-deck": "teach" });
   assert.deepEqual(instructor.losses, []);
-  assert.deepEqual(instructor.gains, ["assessments.run", "short-courses.run"], "assessments are run from the instructor view, and short course registers taken (D24)");
+  assert.deepEqual(instructor.gains, ["assessments.run", "short-courses.run"], "assessments are run from the instructor view, and short course registers taken");
   const viewer = levelsFromAccess([], ["calendar", "students"]);
   assert.deepEqual(viewer.role.levels, { "swim-school": "desk" }, "an old screen counts as the permission its page needs");
   assert.ok(viewer.gains.includes("students.manage"), "there is no read-only level, so the gains are listed for review");

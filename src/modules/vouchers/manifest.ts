@@ -2,9 +2,9 @@ import { Ticket } from "lucide-react";
 import type { ModuleManifest } from "@/modules/registry";
 
 /** How this module describes itself to the rest of Turnfin: its name, menu entry, levels and the
- *  permissions each level gives (docs/apps.md). Listed in src/app/modules.ts.
+ *  permissions each level gives. Listed in src/app/modules.ts.
  *  Client-safe: menus and the role editor read it. */
-// Vouchers (owner request, 12 November 2026, D30): the vouchers given to communities and
+// Vouchers (owner request, 12 November 2026): the vouchers given to communities and
 // organisations at times like Christmas, usually a family swim.
 export const vouchersModule: ModuleManifest = {
   id: "vouchers",

@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/shadcn/skeleton";
 
-/** Home's shape while its apps' lines load (DESIGN.md, States): the greeting and date line, the
+/** Home's shape while its apps' lines load: the greeting and date line, the
  *  day's card, then "Needs you" beside "Right now", as HomeView lays them out. Like `PageLoading`
  *  it costs no query and shows no spinner; the pulse stops under reduced motion. */
 export function HomeLoading() {

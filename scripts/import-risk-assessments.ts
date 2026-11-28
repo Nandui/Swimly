@@ -5,7 +5,7 @@ import { planImport, type ImportLookup, type OldRiskData } from "@/modules/risk/
 import { writeImport } from "@/modules/risk/features/import/server/write";
 
 /** Brings the risk assessments over from the standalone Risk Management app
- *  (github.com/Nandui/project-risk) into Turnfin's Risk assessments (D29).
+ *  (github.com/Nandui/project-risk) into Turnfin's Risk assessments.
  *
  *  It only ever READS the old database, named by RISK_SOURCE_DATABASE_URL, and writes to Turnfin's
  *  (DATABASE_URL). Each assessment comes with its hazards, reviews, review requests and history,

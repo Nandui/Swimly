@@ -7,7 +7,7 @@ export type FinanceView = "overview" | `refunds:${"requests" | "mine" | "drafts"
 
 /** Finance requests' pages, once: the page bar (FinanceShell) and its starter page are built from
  *  this list. Each kind's request views are views of one list, so each names the view it shows.
- *  Drafts nest under their kind, keeping the sidebar to five work pages (D19). A plain module (no
+ *  Drafts nest under their kind, keeping the sidebar to five work pages. A plain module (no
  *  "use client"), so a server page can read it. */
 export function financePages(who: Pick<FinanceActor, "id" | "refunds" | "coinage">): (ModulePage & { view: FinanceView })[] {
   const mine = encodeURIComponent(who.id);

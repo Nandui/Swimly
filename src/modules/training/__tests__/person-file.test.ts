@@ -50,5 +50,5 @@ test("HR's subject export gets every assignment, the on-the-job record and the l
   const learner = await file.trainingLearnerRecords("ava");
   assert.equal(learner.refresherDays.length, 1);
   assert.deepEqual([learner.notes, learner.feedback, learner.refresherCards], [[], [], []]);
-  assert.ok(!("hours" in onTheJob), "in-service hours are Qualifications' records (D26)");
+  assert.ok(!("hours" in onTheJob), "in-service hours are Qualifications' records");
 });

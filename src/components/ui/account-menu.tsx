@@ -29,7 +29,7 @@ export function AccountMenu({ name, showManageAccount = true, layout = "bar" }: 
   name: string;
   showManageAccount?: boolean;
   /** `bar`: the avatar in a toolbar. `sidebar`: initials, name and "role · site" at the foot of
-   *  the desktop sidebar (DESIGN.md, Sidebar), opening upwards. */
+   *  the desktop sidebar, opening upwards. */
   layout?: "bar" | "sidebar";
 }) {
   const [leaving, setLeaving] = useState(false);

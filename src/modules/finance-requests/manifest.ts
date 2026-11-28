@@ -2,9 +2,9 @@ import { ReceiptText } from "lucide-react";
 import type { ModuleManifest } from "@/modules/registry";
 
 /** How this module describes itself to the rest of Turnfin: its name, menu entry, levels and the
- *  permissions each level gives (docs/apps.md). Listed in src/app/modules.ts. Client-safe: menus
+ *  permissions each level gives. Listed in src/app/modules.ts. Client-safe: menus
  *  and the role editor read it. */
-// Finance requests (D24, 2 November 2026): Refunds and Coinage as one app. Reception asks; the
+// Finance requests (2 November 2026): Refunds and Coinage as one app. Reception asks; the
 // same finance team decides and pays or orders. Each kind keeps its own tables and permissions.
 export const financeRequestsModule: ModuleManifest = {
   id: "finance-requests",

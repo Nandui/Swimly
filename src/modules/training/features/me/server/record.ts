@@ -5,7 +5,7 @@ import { myTraining } from "@/modules/training/features/me/server/mine";
 
 /** My record (e-learning phase 6): every course they have had, with scores
  *  and certificates, their sessions and paths, for Turnfin Me to show, print
- *  and download (their hours come from Qualifications, D26). Only ever the signed-in person's own. */
+ *  and download (their hours come from Qualifications). Only ever the signed-in person's own. */
 export async function myRecord(userId: string) {
   const rows = await myTraining(userId);
   const ids = rows.map((r) => r.id);

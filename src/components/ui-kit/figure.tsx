@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 
-/** Figure tiles (DESIGN.md, Components: Figure): a row of big tabular numbers, each with its
+/** Figure tiles: a row of big tabular numbers, each with its
  *  label and symbol above and a one-line hint below. On the ground each tile is a bg-2 card; a
  *  tile that filters the page is a link and shows `current` when it is the open filter. Nothing
  *  here knows what is counted. */

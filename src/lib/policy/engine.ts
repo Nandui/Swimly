@@ -37,7 +37,7 @@ export function recentlyConfirmed(actor: Actor, now = Date.now()): boolean {
 }
 
 /** Restricted capabilities also need a fresh Google or password (not a PIN) session,
- *  except the few that read nothing (filing an HR report, D22). */
+ *  except the few that read nothing (filing an HR report). */
 export function needsStepUp(actor: Actor, cap: PermissionKey, now = Date.now()): boolean {
   if (!isRestrictedPermission(cap) || skipsStepUp(cap)) return false;
   return !recentlyConfirmed(actor, now);

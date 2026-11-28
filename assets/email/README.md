@@ -6,4 +6,4 @@ It retains the white LeisureWorld wordmark and swimming symbol, with no tagline.
 
 The sign-in email embeds this PNG using a Content-ID instead of a remote URL.
 Keep `next.config.ts`'s parent-API output tracing entry when moving this file.
-The sender's settings are in `docs/operations.md`.
+

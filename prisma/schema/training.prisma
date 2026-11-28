@@ -406,7 +406,7 @@ model TrainingSession {
   minutes              Int
   capacity             Int?
   trainerName          String    @default("")
-  /// Before D26: the qualification whose in-service hours attending counted
+  /// Before 3 November 2026: the qualification whose in-service hours attending counted
   /// towards. Hours are now logged in Qualifications; no longer set or read.
   hoursTypeId          String?
   note                 String    @default("")
