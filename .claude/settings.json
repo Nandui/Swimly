@@ -9,7 +9,7 @@
       "Bash(npx prisma generate:*)", "Bash(npx prisma validate:*)", "Bash(npx prisma format:*)",
       "Bash(npx prisma migrate status:*)", "Bash(npx prisma migrate diff:*)",
       "Bash(npx tsx --test:*)", "Bash(npx tsx scripts/sandbox:*)", "Bash(npx tsx scripts/check-env.ts:*)",
-      "Bash(npx tsx scripts/database.ts check:*)", "Bash(node scripts/lint/:*)", "Bash(node scripts/ui-rules/:*)",
+      "Bash(npx tsx scripts/database.ts check:*)",
       "Bash(npx playwright test:*)", "Bash(npx playwright show-report:*)",
       "Bash(npx vercel whoami:*)", "Bash(npx vercel link:*)", "Bash(npx vercel ls:*)", "Bash(npx vercel inspect:*)",
       "Bash(npx vercel logs:*)", "Bash(npx vercel projects ls:*)", "Bash(npx vercel domains ls:*)",

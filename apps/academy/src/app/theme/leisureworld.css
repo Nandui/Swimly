@@ -4,8 +4,7 @@
    the derived light and dark tokens follow the same recipe there. Nothing here is a new colour:
    when the parents app's palette changes, copy it across. This file only re-points Poolside's
    tokens (theme/poolside.css, Turnfin's copy) for body.turnfin-app.lw-brand, so every shadcn control,
-   panel, tag and notice follows without per-page work. scripts/lint/ui-rules.mjs allows colour
-   values here, as in poolside.css and shadcn.css. */
+   panel, tag and notice follows without per-page work. */
 :root {
   /* Owner-supplied Leisure Centre colour scales (parents app, shadcn.css). */
   --blue-900: #07345E;

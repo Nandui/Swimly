@@ -1,6 +1,5 @@
 /* Turnfin Me's own layout, in Turnfin Glass's phone frame. The tokens, the shadcn controls, the glass, the tab bar, the live
-   banner, lists, rows and tile icons come from the theme files, copies of Turnfin's
-   (scripts/lint/ui-rules.mjs checks they match). Colours here are only those tokens; status colour
+   banner, lists, rows and tile icons come from the theme files, copies of Turnfin's. Colours here are only those tokens; status colour
    comes from the metadata maps in src/lib/meta.ts, always with an icon. */
 .turnfin-app {
   /* Me only: a 16px reading size for documents and lessons (.doc). */
