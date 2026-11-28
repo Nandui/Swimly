@@ -4,7 +4,7 @@
    follows at once. Colours use light-dark(), so they follow `color-scheme` (the device, or the
    person's choice in `data-theme` on <html>, globals.css). Shadows cannot, so their dark values sit
    under the dark selectors at the end. shadcn's --ui-* names (shadcn.css) point here. Copied byte
-   for byte into Turnfin Me and the Academy site (scripts/lint/ui-rules.mjs). */
+   for byte into Turnfin Me and the Academy site. */
 :root {
   /* The ground: the logo's deep blue behind the frame (sidebar, phone header, tab bar), the same in
      both themes, with the fin as its only texture. Text on it is only on-ground or on-ground-2, which

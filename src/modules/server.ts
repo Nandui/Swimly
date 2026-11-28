@@ -1,7 +1,6 @@
 import "server-only";
-// The composition root for server-side module contributions: the one place
-// allowed to import every module, so Core pages can import this file instead
-// of any module directly (see the import boundaries in eslint.config.mjs).
+// Loads every module's server-side contributions, so Core pages can import this file instead
+// of any module directly.
 import "@/modules/activities/module";
 import "@/modules/finance-requests/module";
 import "@/modules/docs/module";

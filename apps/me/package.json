@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start -p 3101",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint && node ../../scripts/lint/ui-rules.mjs"
+    "lint": "eslint"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",

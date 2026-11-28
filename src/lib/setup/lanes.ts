@@ -3,8 +3,7 @@
  *  it has (Admin, Areas); a swim class, an assessment or a short course session that takes some
  *  of them saves them after the area, as it always has: "Main pool, lane 3", "Main pool, lanes 1
  *  to 3", "Main pool, lanes 1, 3 and 5". Naming none is the whole pool. Pure, so server, client
- *  and every module read it the same way (lanes.test.ts). No imports, so the UI kit may use it
- *  (eslint.config.mjs files it with the UI kit, as src/lib/utils.ts). */
+ *  and every module read it the same way (lanes.test.ts). No imports. */
 
 /** The most lanes an area may have. */
 export const MAX_LANES = 20;
