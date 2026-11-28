@@ -10,4 +10,4 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # The Academy booking site
 
-The Academy booking site is a connected product: the public books lifeguard and swim teacher courses here, reaching Turnfin only through `/api/academy/v1`. Turnfin's rules apply here in full: read [../../AGENTS.md](../../AGENTS.md) and [../../PRODUCT.md](../../PRODUCT.md) first. Its place in the system and its settings are in [../../docs/architecture.md](../../docs/architecture.md#connected-products) and [../../docs/operations.md](../../docs/operations.md).
+The public books lifeguard and swim teacher courses here. It reaches Turnfin only through `/api/academy/v1`. The limits in [../../AGENTS.md](../../AGENTS.md) hold here too.
