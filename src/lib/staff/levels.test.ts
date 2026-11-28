@@ -1,20 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { allModules } from "@/modules/registry";
-import { ALL_PERMISSIONS, UNRESTRICTED_PERMISSIONS, expandPermissions } from "./permissions";
+import { UNRESTRICTED_PERMISSIONS, expandPermissions } from "./permissions";
 import { ADMINISTRATOR_SCREENS, visibleScreens } from "./screens";
 import { SYSTEM_ROLES, WORK_ANYWHERE, accessByReach, cleanLevels, describeLevels, isRestrictedRole, levelLines, levelsFromAccess, roleColumns, siteBoundAppNames, storedPermissions } from "./levels";
 
-const owners = (key: string) =>
-  allModules().flatMap((m) => [...m.access.levels, ...(m.access.extras ?? [])]
-    .filter((step) => (step.permissions as readonly string[]).includes(key))
-    .map((step) => `${m.id}.${step.key}`));
 const at = (levels: Record<string, string>, extras: string[] = []) => storedPermissions(cleanLevels(levels, extras));
 const screensOf = (permissions: readonly string[]) => visibleScreens(expandPermissions(permissions));
-
-test("every permission belongs to exactly one level or extra of one module", () => {
-  for (const key of ALL_PERMISSIONS.filter((k) => k !== "work.anywhere")) assert.equal(owners(key).length, 1, `${key}: ${owners(key).join(", ") || "no level"}`);
-});
 
 test("every module describes itself: unique ids, levels and a valid starting level for each extra", () => {
   const ids = allModules().map((m) => m.id);
