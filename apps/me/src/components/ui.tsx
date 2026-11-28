@@ -33,7 +33,7 @@ export function EmptyRows({ children }: { children: ReactNode }) {
   return <ul className="pc-list"><li className="pc-row" data-muted>{children}</li></ul>;
 }
 
-/** A section as Turnfin Glass draws it (DESIGN.md, The page shell): its heading above the grouped
+/** A section as Turnfin Glass draws it: its heading above the grouped
  *  content, with a count or a quiet link at the end of the heading, never inside the card. Without
  *  a title it is a plain section named by `label`. */
 export function Section({ id, title, aside, label, className, children }: { id?: string; title?: ReactNode; aside?: ReactNode; label?: string; className?: string; children: ReactNode }) {

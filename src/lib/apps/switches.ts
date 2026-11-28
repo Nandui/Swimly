@@ -2,7 +2,7 @@ import { cache } from "react";
 import { operationContext } from "@/lib/operations/context";
 import { appPermissions, switchHeirs } from "@/modules/registry";
 
-/** App switches (docs/architecture.md, App switches): for each organisation, every app is on
+/** App switches: for each organisation, every app is on
  *  everywhere, off, or on only at some sites. This file is the one place that answers "is this
  *  app on here?"; the session, menus, Home, plugs, events, front doors and API routes all ask it,
  *  so no app checks its own switch. It knows apps only by their manifest ids and names none.
@@ -69,7 +69,7 @@ export function withAppSwitches<U extends SwitchableUser>(user: U, switches: App
   };
 }
 
-/** A new app that took over others (a manifest's `formerly` marked `switch`, D24) has no switch
+/** A new app that took over others (a manifest's `formerly` marked `switch`) has no switch
  *  of its own until a superadmin sets one. Until then it is on wherever any of its former apps was
  *  on, so a merge never hides work a site had on; it is off only where every former app was off.
  *  A former app with no row was on everywhere. An app's own row always wins. Pure. */

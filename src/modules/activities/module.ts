@@ -224,7 +224,7 @@ registerAreaRename({
  *  courses and the Academy search, read and add swimmers here, and keep only the id. */
 registerMemberDirectory(memberDirectory);
 
-/** "Payment failed" on the swimmer profile of anyone with a failed payment still open (D21). */
+/** "Payment failed" on the swimmer profile of anyone with a failed payment still open. */
 registerMemberNotices({ id: "payments.failed", app: "swim-school", list: memberPaymentNotices });
 
 /** Search finds swimmers by name or member number for those who can open Swimmers; the hit names
@@ -246,7 +246,7 @@ registerSearch({
  *  the Rota in their area, and Plan can choose the assessor. */
 registerCommitments({ id: ASSESSMENT_SESSIONS, app: "swim-school", list: assessmentCommitments, plan: planAssessor });
 
-/** Short courses, part of the swim school since D24 (3 November 2026), keep their own tables:
+/** Short courses, part of the swim school since 3 November 2026, keep their own tables:
  *  their sessions as commitments (the Rota shows them), area renames, the courses each swimmer
  *  has been booked on for their profile, the Pool courses shown in the parents app, and places
  *  booked under an email for "My bookings" on the Academy booking site. */

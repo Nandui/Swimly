@@ -2,8 +2,8 @@ import { CalendarRange } from "lucide-react";
 import type { ModuleManifest } from "@/modules/registry";
 
 /** How Staffing describes itself to the rest of Turnfin: its name, menu entry, levels and the
- *  permissions each level gives (docs/apps.md). Listed in src/app/modules.ts. Client-safe. */
-// Staffing (4 November 2026; lifeguards from 9 November): part-time pool staff, swim teachers and lifeguards, rostered on their contracts (docs/staffing.md).
+ *  permissions each level gives. Listed in src/app/modules.ts. Client-safe. */
+// Staffing (4 November 2026; lifeguards from 9 November): part-time pool staff, swim teachers and lifeguards, rostered on their contracts.
 export const staffingModule: ModuleManifest = {
   id: "staffing",
   group: "team",

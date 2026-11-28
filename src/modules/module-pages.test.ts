@@ -47,7 +47,7 @@ const APPS: [string, { href: string; label: string; place?: "setup"; under?: str
   ["Qualifications", qualificationsPages()],
 ];
 
-test("every app lists at most five work pages in the sidebar, then Set up; nested pages do not count, and a label-only folder counts once (DESIGN.md, D19)", () => {
+test("every app lists at most five work pages in the sidebar, then Set up; nested pages do not count, and a label-only folder counts once", () => {
   for (const [app, pages] of APPS) {
     const work = [...new Set(pages.filter((page) => !page.place && !page.under).map((page) => page.folder?.label ?? page.label))];
     assert.ok(work.length <= 5, `${app} lists ${work.length} work pages in the sidebar: ${work.join(", ")}. Move the rest under Set up or under a work page.`);
@@ -65,7 +65,7 @@ test("every page nested under another names a page of its own app, and is not al
   }
 });
 
-test("a page with pages under it names itself inside its folder, as its title is not a link (DESIGN.md)", () => {
+test("a page with pages under it names itself inside its folder, as its title is not a link", () => {
   for (const [app, pages] of APPS) {
     for (const page of pages.filter((p) => pages.some((s) => s.under === p.href))) {
       assert.ok(page.folderEntry && page.folderEntry !== page.label, `${app}: ${page.label} holds pages, so give it a folderEntry: its own name inside the ${page.label} folder`);

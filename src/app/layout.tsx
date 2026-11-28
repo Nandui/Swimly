@@ -12,7 +12,7 @@ import { DevelopmentRolePreview } from "@/components/staff/development-role-prev
 import { YourModulesProvider } from "@/components/workspace/your-modules";
 import { modulesFor } from "@/modules/context";
 import { getCurrentClub } from "@/lib/clubs/current";
-// Turnfin Glass (DESIGN.md): its tokens come in through globals.css (theme/glass.css), its kit
+// Turnfin Glass: its tokens come in through globals.css (theme/glass.css), its kit
 // and frame through theme/kit.css.
 import "./globals.css";
 import "./theme/kit.css";

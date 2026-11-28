@@ -10,11 +10,11 @@ import styles from "@/modules/activities/features/instructor/components/instruct
 
 type Club = { id: string; name: string };
 
-/** The pool deck in the shared frame (D19: one shell for every app), with its two pages, Classes
+/** The pool deck in the shared frame (one shell for every app), with its two pages, Classes
  *  and Swimmers, in the sidebar and the working site in the tools. A swim teacher who holds only
  *  the pool deck sees nothing else. Its swimmer lookup covers only the working site and shows
  *  medical notes only for swimmers the instructor teaches. With Teach's short course registers
- *  (D24), a third link opens the short courses they instruct. The deck's own wrapper keeps its
+ * , a third link opens the short courses they instruct. The deck's own wrapper keeps its
  *  controls thumb-sized at tablet widths. */
 export function InstructorShell({ children, who, club, clubs, shortCourses = false }: {
   children: ReactNode;

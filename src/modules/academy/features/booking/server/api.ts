@@ -124,7 +124,7 @@ export async function book(request: Request) {
 export async function myBookings(request: Request) {
   const email = await checkedEmail(request);
   // A short course booked at the desk under their email still shows: its app adds its places
-  // through the email bookings plug (D24).
+  // through the email bookings plug.
   const lists = await Promise.all([academyPublicCourses.bookingsFor(email), emailBookingsFor(email)]);
   const order = { "to-pay": 0, waiting: 1, booked: 2, done: 3, withdrawn: 4, cancelled: 5 } as const;
   const bookings = lists.flat().sort((a, b) => order[a.state] - order[b.state] || (a.firstDay ?? "").localeCompare(b.firstDay ?? ""));

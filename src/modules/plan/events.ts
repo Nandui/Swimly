@@ -1,2 +1,2 @@
-/** Events Plan (test) emits (AGENTS.md, How apps talk, docs/architecture.md). None yet. */
+/** Events Plan (test) emits. None yet. */
 export {};

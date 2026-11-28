@@ -13,7 +13,7 @@ import { groupFrameModules, useFrame } from '@/components/ui/frame';
 import { Glass } from '@/components/ui-kit/glass';
 import { SearchDialog } from '@/components/ui/search-dialog';
 
-/** A page of the open app (DESIGN.md, The frame and navigation; D19). Most pages are work pages,
+/** A page of the open app. Most pages are work pages,
  *  listed in the sidebar (five at most, checked by module-pages.test.ts). `setup` pages sit under
  *  the app's one Set up item, which only shows when the person may open one of them. Every other
  *  page sits `under` another and nests beneath it in the sidebar, like a folder, so every page
@@ -29,7 +29,7 @@ export type ModuleFolder = { label: string; icon?: LucideIcon };
 export type ModuleLink = { href: string; label: string; icon?: LucideIcon; active: boolean; place?: 'setup'; under?: string; folderEntry?: string; folder?: ModuleFolder };
 export type ModuleLinkGroup = { label: string; links: ModuleLink[] };
 
-/** The one frame every app opens in (DESIGN.md, The frame and navigation; D19). One level of
+/** The one frame every app opens in. One level of
  *  navigation is on screen at a time, and there are no top tabs:
  *  - On Home, the sidebar lists the person's apps. In an app, it drills in: "‹ Home", the app's
  *    name, its work pages, and Set up last. A person with exactly one app sees only its pages.
@@ -68,7 +68,7 @@ export function ModuleShell({ module, id, current = id, who, links = [], groups,
   const inline = useLargeTitle(`${id}-main`, topRef, pathname);
   const railCurrent = current === 'core' ? 'admin' : current;
   const app = railCurrent === 'home' ? null : { name: module, pages };
-  // One search (D19): Ctrl K or ⌘K anywhere in the frame, the sidebar's field, or the phone's circle.
+  // One search: Ctrl K or ⌘K anywhere in the frame, the sidebar's field, or the phone's circle.
   const [searching, setSearching] = useState(false);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -184,7 +184,7 @@ function useLargeTitle(mainId: string, top: RefObject<HTMLElement | null>, pathn
   return inline;
 }
 
-/** The sidebar (DESIGN.md, Sidebar; D19), on the ground. On Home: the logo and name, Home, then
+/** The sidebar, on the ground. On Home: the logo and name, Home, then
  *  each of the person's app groups as a heading ("Team", "Finance"…) with its apps under it. In an app it drills in: "‹ Home"
  *  (unless the app is the person's only one), the app's name, its work pages and its Set up
  *  pages under one item that opens in place. Help and the account sit at the foot. */
@@ -279,7 +279,7 @@ function Sidebar({ current, name, app, scopeNote, pathname, onSearch }: { curren
   );
 }
 
-/** Phones (DESIGN.md, Tab bar; D19): a white capsule with Home, the open app, which opens its
+/** Phones: a white capsule with Home, the open app, which opens its
  *  pages, and Apps, which lists every app under its group, and Help; search is a white circle
  *  beside it. A person with one app has no Home or Apps: the app's tab holds its pages. */
 function TabBar({ current, app, pathname, onSearch }: { current: string; app: OpenApp; pathname: string; onSearch: () => void }) {

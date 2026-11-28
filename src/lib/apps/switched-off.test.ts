@@ -5,7 +5,7 @@ import { SCREENS, visibleScreens } from "@/lib/staff/screens";
 import type { PermissionKey } from "@/lib/staff/permissions";
 import { allModules, appPermissions, switchableApps, switchHeirs } from "@/modules/registry";
 
-/** The pillar "tests pass with any one app switched off" (PRODUCT.md): each app in
+/** The pillar "tests pass with any one app switched off": each app in
  *  src/app/modules.ts is switched off in turn, and Home, the menus, the screens and every other
  *  app's plugs and listeners still answer, while the switched-off app's are gone. Then one app
  *  goes live at one site only. The real registry, session rule, Home loader, plugs and event bus

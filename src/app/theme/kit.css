@@ -1,4 +1,4 @@
-/* The 2.0 kit and frame (DESIGN.md): Turnfin Sheet, re-theming the kit built for Turnfin Glass.
+/* The 2.0 kit and frame: Turnfin Sheet, re-theming the kit built for Turnfin Glass.
    Tokens only (the values are in glass.css), so this file holds no colour of its own. */
 
 /* ── The ground rules: type, focus, fields, notices, toasts, rows, figure tiles, segments and the
@@ -239,7 +239,7 @@ body.turnfin-app { background: var(--bg); }
 .turnfin-app .pc-note[data-tone='danger'] { background: var(--red-soft); color: var(--red-ink); }
 .turnfin-app .pc-note[data-tone='danger'] :is(h2, h3, svg, .pc-row-hint) { color: inherit; }
 
-/* ── The material (DESIGN.md, The material). Liquid Glass, for the functional layer only:
+/* ── The material. Liquid Glass, for the functional layer only:
    the sidebar, toolbars, the tab bar, sheets, menus, inspectors. Never on content, never on glass.
    GlassRoot (ui-kit/glass.tsx) holds the lens filters and moves the pointer light. */
 .glass {
@@ -299,7 +299,7 @@ body.turnfin-app { background: var(--bg); }
   .glass { border: 1px solid CanvasText; }
 }
 
-/* ── Controls (DESIGN.md, Components). The shadcn primitives keep their Radix behaviour; the look
+/* ── Controls. The shadcn primitives keep their Radix behaviour; the look
    is here. Menu and popover triggers (Radix swaps their data-slot) are caught through
    .ui-motion-press, which only the shared Button sets. */
 
@@ -374,7 +374,7 @@ body.turnfin-app { background: var(--bg); }
 .turnfin-app [data-slot='native-select-wrapper'] { opacity: 1; }
 .turnfin-app :is([data-slot='input'], [data-slot='textarea'])[aria-invalid='true'] { background: var(--red-soft); box-shadow: inset 0 0 0 1px var(--red-ink); }
 .turnfin-app :is([data-slot='input'], [data-slot='textarea'])::placeholder { color: var(--label-2); }
-/* Field labels sit above the field in footnote, secondary ink (DESIGN.md, Forms). Choice labels
+/* Field labels sit above the field in footnote, secondary ink. Choice labels
    (checkbox, radio, template cards) read at body size. */
 .turnfin-app :is(label, legend:not(.sr-only), [data-slot='label']):not(:has([type='checkbox'], [type='radio'], [data-slot='checkbox'], [data-slot='radio-group-item'])) { font-size: 13px; line-height: 18px; font-weight: 500; color: var(--label-2); letter-spacing: 0; text-transform: none; }
 
@@ -419,7 +419,7 @@ body.turnfin-app { background: var(--bg); }
 .turnfin-app .ui-motion-press:is([data-slot='dialog-close'], [data-slot='sheet-close']):hover { background: var(--glass-sel); color: var(--label); }
 .turnfin-app :is([data-slot='dialog-title'], [data-slot='alert-dialog-title'], [data-slot='sheet-title']) { font-family: var(--font-display); font-size: 22px; line-height: 28px; font-weight: 700; letter-spacing: -0.018em; }
 
-/* ── Content (DESIGN.md, The page shell): opaque bg-2 cards with radius-card corners on the
+/* ── Content: opaque bg-2 cards with radius-card corners on the
    ground; inside them, rows separated by inset hairlines, never boxes inside boxes. Section
    titles are title-3. */
 .turnfin-app h2 { font-family: var(--font-display); font-weight: 650; letter-spacing: -0.015em; }
@@ -466,7 +466,7 @@ body.turnfin-app { background: var(--bg); }
 /* An empty state on the page itself sits on a bg-2 card. */
 .turnfin-app .tf-main [data-slot='empty']:not(:is([data-slot='card'], [data-slot='table-container'], [data-slot='item-group'], [role='dialog'], .pc-panel) [data-slot='empty']) { border: 0; border-radius: var(--radius-card); background: var(--bg-2); }
 
-/* A card of grouped rows (DESIGN.md, List): rows inside it part with an inset hairline, and a
+/* A card of grouped rows: rows inside it part with an inset hairline, and a
    section title sits above the card, not in it. */
 .turnfin-app .pc-list { display: flex; flex-direction: column; margin: 0; padding: 6px var(--space-3); border-radius: var(--radius-card); background: var(--bg-2); box-shadow: var(--shadow-card); list-style: none; }
 .turnfin-app :is(.pc-list > li > .pc-row, .pc-list > .pc-row) { width: auto; margin-inline: calc(-1 * var(--space-3)); padding-inline: var(--space-5); border-radius: 0; background: transparent; }
@@ -490,7 +490,7 @@ body.turnfin-app { background: var(--bg); }
 .turnfin-app .pc-row-hint[data-tone='orange'] { color: var(--orange-ink); font-weight: 550; }
 .turnfin-app .pc-row-value { margin-left: auto; color: var(--label-2); font-variant-numeric: tabular-nums; }
 
-/* The live dot (DESIGN.md, Live): the now dot breathes; Reduce motion stills it. */
+/* The live dot: the now dot breathes; Reduce motion stills it. */
 .turnfin-app .live-dot { position: relative; display: inline-block; flex: none; width: 7px; height: 7px; border-radius: var(--radius-capsule); background: var(--red); }
 .turnfin-app .live-dot::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--red); animation: live-breathe 2.4s var(--ease) infinite; }
 @keyframes live-breathe { 0% { transform: scale(1); opacity: 0.55; } 100% { transform: scale(3); opacity: 0; } }
@@ -603,7 +603,7 @@ body.turnfin-app { background: var(--bg); }
   .turnfin-app [data-slot='button'].day-tl-block { padding: 0; font-size: 0; }
 }
 
-/* The Inspector (DESIGN.md): glass, from the right on desktop, inset 10px with radius-inspector
+/* The Inspector: glass, from the right on desktop, inset 10px with radius-inspector
    corners and no dimming behind; on tablets and phones a glass sheet from the bottom with
    radius-sheet corners, up to two thirds of the height. */
 .turnfin-app [data-slot='sheet-content'].inspector { position: fixed; box-shadow: inset 0 1px 1px var(--glass-spec), inset 0 -1px 1px var(--glass-spec-2), inset 0 0 18px var(--glass-glow), inset 0 0 0 0.5px var(--glass-edge), var(--shadow-glass); gap: var(--space-1); padding: var(--space-4) var(--space-5) var(--space-5); background: var(--glass-fill); color: var(--label); }
@@ -625,7 +625,7 @@ body.turnfin-app { background: var(--bg); }
   .turnfin-app [data-slot='sheet-content'].inspector { background: var(--bg-2); -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
 
-/* ProgressRing (DESIGN.md): shadcn's Progress drawn as a green ring that fills on --spring, the
+/* ProgressRing: shadcn's Progress drawn as a green ring that fills on --spring, the
    share from a progress-at-* utility (scale.ts progressOf), the figure inside. */
 @property --progress-at { syntax: "<percentage>"; inherits: false; initial-value: 0%; }
 .turnfin-app .progress-ring-wrap { position: relative; display: inline-grid; flex: none; place-items: center; width: 108px; height: 108px; }
@@ -633,7 +633,7 @@ body.turnfin-app { background: var(--bg); }
 .turnfin-app [data-slot='progress'].progress-ring > [data-slot='progress-indicator'] { display: none; }
 .turnfin-app .progress-ring-figure { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; }
 
-/* The register (DESIGN.md, The pool deck): the ring and the marks in the head, then each swimmer
+/* The register: the ring and the marks in the head, then each swimmer
    as one 64px target (the kit's Button, its own capsule and size given way to the row's), and
    the mark on the trailing side as a word and a DoneMark: hollow until marked, green with a tick
    for present, orange for late, red for absent. */
@@ -672,12 +672,12 @@ body.turnfin-app { background: var(--bg); }
 }
 
 /* The tab bar minimises to the current tab while the page scrolls down, and comes back on the
-   way up (DESIGN.md, Phone). */
+   way up. */
 .turnfin-app .tf-bottom[data-minimised] { right: auto; }
 .turnfin-app .tf-bottom[data-minimised] > .tf-bottom-item:not([aria-current]) { display: none; }
 .turnfin-app .tf-bottom[data-minimised] > .tf-bottom-item[aria-current] { flex: none; min-width: 88px; }
 
-/* LiveBanner (DESIGN.md): phone confirmations grow as a black capsule at the top centre with a
+/* LiveBanner: phone confirmations grow as a black capsule at the top centre with a
    green tick, the sentence and one line more, then settle to a compact tick and the time. It is
    the kit's Button, its own fill given way to the stage; tapping it expands it again. */
 .turnfin-app .live-banner-slot { position: fixed; top: calc(8px + env(safe-area-inset-top)); left: 50%; z-index: 60; display: flex; justify-content: center; translate: -50% 0; pointer-events: none; }
@@ -733,7 +733,7 @@ body.turnfin-app { background: var(--bg); }
 .turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-row']:hover :is([data-slot='table-cell'], [data-slot='table-head']) { background: var(--bg-3); }
 .turnfin-app [data-slot='table']:not([data-layout='grid']) [data-slot='table-body'] [data-slot='table-head'] { height: auto; text-align: left; color: var(--label); font-size: var(--type-body); line-height: var(--type-body-leading); font-weight: 400; }
 
-/* ── The frame (DESIGN.md, The frame and navigation): ModuleShell, and the pool deck's and Help's
+/* ── The frame: ModuleShell, and the pool deck's and Help's
    own top bars. The ground is the logo's blue with the fin behind the frame; the work sits on the
    white sheet (the frame), inset 10px from the window on desktop and tablet and rising below the
    toolbar on phones. Desktop (1100px and wider) has the sidebar of apps on the ground; tablet
@@ -755,7 +755,7 @@ body.turnfin-app:has(> .tf-shell, > * > .tf-shell) { background: var(--ground); 
   height: 1100px;
   background: var(--on-ground);
   opacity: var(--fin-opacity);
-  /* A sharp 2560px silhouette of the logo, cropped as on the approved canvas (DESIGN.md, The fin),
+  /* A sharp 2560px silhouette of the logo, cropped as on the approved canvas,
      so the edge stays crisp on high-density screens. */
   -webkit-mask: url("/brand/turnfin-fin-mask.png") center / contain no-repeat;
   mask: url("/brand/turnfin-fin-mask.png") center / contain no-repeat;
@@ -838,7 +838,7 @@ body.turnfin-app:has(> .tf-shell, > * > .tf-shell) { background: var(--ground); 
 .turnfin-app .tf-tools > .workspace-preview-toggle[data-active='true'] { background: var(--accent-soft); color: var(--accent-ink); }
 .turnfin-app :is(.tf-bar-item, .tf-tools > :is([data-slot='button'], [data-slot='dropdown-menu-trigger'])):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-/* The page header (DESIGN.md, The page shell): one H1 per page, large-title on phones and tablets
+/* The page header: one H1 per page, large-title on phones and tablets
    and window-title on desktop, with a 17px secondary line beneath (PageHeader's description). */
 .turnfin-app h1 { font-family: var(--font-display); font-size: 34px; line-height: 41px; font-weight: 800; letter-spacing: -0.03em; }
 .turnfin-app [data-page-header] h1 + p { font-size: 17px; line-height: 22px; color: var(--label-2); }
@@ -872,7 +872,7 @@ body.turnfin-app:has(> .tf-shell, > * > .tf-shell) { background: var(--ground); 
 .turnfin-app .tf-side-item[aria-current] > svg { color: var(--ground); }
 .turnfin-app .tf-side-item:focus-visible { outline: 2px solid var(--on-ground); outline-offset: 2px; }
 .turnfin-app .tf-side-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* In an app (D19): "‹ Home", the app's name, its pages, then Set up, which opens in place. The
+/* In an app: "‹ Home", the app's name, its pages, then Set up, which opens in place. The
    list slides in from the side it came from as the person drills in or back out. */
 .turnfin-app .tf-side-back { color: var(--on-ground-2); font-weight: 600; }
 .turnfin-app .tf-side-back > svg { color: var(--on-ground-2); }
@@ -912,7 +912,7 @@ body.turnfin-app:has(> .tf-shell, > * > .tf-shell) { background: var(--ground); 
 .turnfin-app .tf-bottom-item:active { scale: var(--glass-press-scale); }
 .turnfin-app .tf-bottom-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 html:has(.tf-shell) { scroll-padding-bottom: 112px; }
-/* Search (D19): a field under the logo in the sidebar, and a white circle beside the phone tab
+/* Search: a field under the logo in the sidebar, and a white circle beside the phone tab
    bar. The tab bar and the circle float together in one wrapper. */
 .turnfin-app .tf-side .tf-side-search[data-variant] { display: flex; justify-content: flex-start; width: auto; min-height: 40px; flex: none; align-items: center; gap: var(--space-2); height: 40px; margin: 0 0 var(--space-2); padding: 0 var(--space-3); border: 0; border-radius: var(--radius-md); background: var(--ground-fill); color: var(--on-ground-2); font: inherit; font-size: 14px; font-weight: 600; text-align: left; cursor: pointer; transition: background-color var(--duration-fade) var(--ease); }
 .turnfin-app .tf-side .tf-side-search[data-variant]:hover { background: var(--on-ground); color: var(--ground); }
@@ -960,7 +960,7 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
   .turnfin-app .tf-frame { min-height: 100dvh; margin: 0; padding: 0 var(--space-5); border-radius: 0; background: transparent; box-shadow: none; }
   .turnfin-app .tf-main { margin-inline: calc(-1 * var(--space-5)); padding: var(--space-6) var(--space-5) var(--space-5); border-radius: var(--radius-sheet) var(--radius-sheet) 0 0; background: var(--sheet); }
   .turnfin-app .tf-shell:has(> .tf-bottom-wrap) > .tf-frame > .tf-main { padding-bottom: calc(var(--tf-bottom-space) + env(safe-area-inset-bottom)); }
-  /* The page's header sits on the ground (D19, DESIGN.md Phone): its title, line and actions in
+  /* The page's header sits on the ground: its title, line and actions in
      white, and the sheet's rounded top starts beneath it. A filled button turns white there, so it
      still stands out from the blue. */
   .turnfin-app .tf-shell:has(> .tf-bottom-wrap) [data-page-shell] > [data-page-header] { position: relative; margin: calc(-1 * var(--space-6)) calc(-1 * var(--space-5)) 0; padding: var(--space-1) var(--space-5) calc(var(--space-6) + var(--radius-sheet)); background: var(--ground); color: var(--on-ground); }
@@ -982,7 +982,7 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 @media (prefers-reduced-motion: reduce) {
   .turnfin-app :is(.tf-bar-item, .tf-side-item, .tf-bottom-item, .tf-tools > *) { transition: none; }
 }
-/* Phones, the app frame only (DESIGN.md, Phone): the toolbar is fixed to the top, with its room
+/* Phones, the app frame only: the toolbar is fixed to the top, with its room
    kept above the page, so it can fold to one row without moving the page under the finger (Safari
    does not anchor the scroll when a sticky bar changes height). Once the large title has scrolled
    under it (ModuleShell, useLargeTitle), the title shows inline in the
@@ -1005,7 +1005,7 @@ html:has(.tf-shell) { scroll-padding-bottom: 112px; }
 @media (prefers-reduced-motion: reduce) {
   .turnfin-app .tf-inline-title { animation: none; }
 }
-/* A record's page (ui-kit/record.tsx; DESIGN.md, after Incidents): the status and number over the
+/* A record's page (ui-kit/record.tsx): the status and number over the
    record's name; what happens next with its steps beside the record, tinted blue while the move is
    this person's; the record as opaque cards of label and value rows; the history down the side.
    One column on phones, the next action first. */

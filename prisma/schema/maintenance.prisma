@@ -1,4 +1,4 @@
-// Maintenance (owner, 26 October 2026, D14): what is broken at each site, from the first report
+// Maintenance (owner, 26 October 2026): what is broken at each site, from the first report
 // until it is fixed. The maintenance team works in Trackplan; Turnfin only keeps what staff type
 // about it (whether it is already there, and its reference) and never connects to it. Sites,
 // areas and people are Core's and read only through its functions, so the tables keep plain ids

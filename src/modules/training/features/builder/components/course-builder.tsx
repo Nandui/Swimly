@@ -244,7 +244,7 @@ function SectionDialog({ courseId, section }: { courseId: string; section?: { id
   );
 }
 
-/** A lesson starts as an empty page with just its name; Add puts everything in (D18). */
+/** A lesson starts as an empty page with just its name; Add puts everything in. */
 function AddLessonDialog({ sectionId, sectionTitle, onAdded }: { sectionId: string; sectionTitle: string; onAdded: (id: string) => void }) {
   return (
     <FormDialog
@@ -368,7 +368,7 @@ function LessonEditor({ courseId, lesson, files, onUploaded, canEdit, position, 
 }) {
   const router = useRouter();
   const { act, pending } = useAct();
-  // Every lesson is a page built with Add (D18). An older lesson opens with its
+  // Every lesson is a page built with Add. An older lesson opens with its
   // main part turned into the first block, and stays that way once saved.
   const converted = lesson.kind !== "READING";
   const [title, setTitle] = useState(lesson.title);

@@ -7,7 +7,7 @@ import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, C
 import { useFrame, type FrameSearchHit } from '@/components/ui/frame';
 import type { ModuleLink } from '@/components/ui/module-shell';
 
-/** The one search (D19; DESIGN.md, Search), opened from the sidebar's field, Ctrl K or the phone's
+/** The one search, opened from the sidebar's field, Ctrl K or the phone's
  *  search circle. It matches the person's apps and the open app's pages here, and asks the
  *  frame's search (the app hands it in) for people and records once two letters are typed. Each
  *  hit says what it is; opening one goes to its page, which checks permission again. */

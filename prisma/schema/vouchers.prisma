@@ -1,8 +1,8 @@
-// Vouchers (owner request, 12 November 2026, D30): at certain times of year, Christmas for one,
+// Vouchers (owner request, 12 November 2026): at certain times of year, Christmas for one,
 // the centre gives vouchers for a service (usually a family swim) to communities and
 // organisations. A batch is one gift to one of them; each voucher in it has its own code, printed
 // on it and used once at reception. Sites and staff are the platform's and read only through its
-// functions, so these tables keep plain ids and carry the module prefix (AGENTS.md, Data and writes).
+// functions, so these tables keep plain ids and carry the module prefix.
 
 /// One gift of vouchers to one community or organisation.
 model VoucherBatch {

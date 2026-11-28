@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/shadcn/button";
 import { heightOf, leftOf, stretchOf, topOf } from "@/components/ui-kit/scale";
 
-/** A block's look (DESIGN.md, DayTimeline): done in the quiet fill, on now in the fin blue, next in
+/** A block's look: done in the quiet fill, on now in the fin blue, next in
  *  grey, a gap to fill in orange, covered in green, a booking hatched, cancelled struck through.
  *  The words carry the meaning too; the colour only repeats it. */
 export type DayTimelineKind = "done" | "now" | "next" | "gap" | "ok" | "book" | "off";
@@ -38,7 +38,7 @@ export type DayTimelinePart = { start: number; end: number; label: string };
  *  and is drawn beneath it, in the order given; the lane it is under heads the group. */
 export type DayTimelineLane = { key: string; label: string; under?: string };
 
-/** The day as Calendar-style lanes of blocks with the red now line (DESIGN.md, DayTimeline). The
+/** The day as Calendar-style lanes of blocks with the red now line. The
  *  caller places it in a card with its title and decides every word; the kit only draws. Times are
  *  minutes after midnight, `from` to `to`; `now` outside that range draws no line. With
  *  `onSelect` (a client caller) every block is a button that hands back its key, for an

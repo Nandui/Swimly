@@ -308,7 +308,7 @@ export async function takeRegister(sessionId: string, present: z.input<typeof re
   const at = await courseFor(s.courseId, "short-courses.run");
   if (!at.ok) return fail(at.error);
   // An instructor (Pool deck Teach) takes the registers of the courses they instruct; anyone who
-  // also works the desk there (Classes Desk or Manage) takes any (D24; the pool deck's rule).
+  // also works the desk there (Classes Desk or Manage) takes any (the pool deck's rule).
   if (at.course.instructorId !== at.actor.id && !(await mayFor("short-courses.read", { siteId: at.site.id, orgId: at.site.orgId }))) {
     return fail("Only the course's instructor, or someone on the desk at this site, takes its register.");
   }

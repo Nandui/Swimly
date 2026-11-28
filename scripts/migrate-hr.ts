@@ -5,7 +5,7 @@ import { hrStorageConfig } from '../src/modules/hr/shared/storage-config';
 import { postgresConnectionString } from '../src/lib/postgres-connection';
 import { migrateHrSchema } from './lib/hr-storage';
 
-/** HR is the `turnfin_hr` schema in the main database (D23). Builds migrate it
+/** HR is the `turnfin_hr` schema in the main database. Builds migrate it
  *  wherever they migrate the main database (production, development previews). */
 async function main() {
   if (!databasePlan(process.env).migrate) {

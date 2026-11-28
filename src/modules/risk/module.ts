@@ -6,7 +6,7 @@ import { hazardsByIds, searchHazards } from "@/modules/risk/features/hazards/ser
 import { raiseFromIncident } from "@/modules/risk/features/reviews/server/from-incident";
 import { riskHomeItems } from "@/modules/risk/features/reviews/server/home";
 
-/** The registration plug of Risk assessments (AGENTS.md, The app contract), loaded by
+/** The registration plug of Risk assessments, loaded by
  *  src/modules/server.ts: the home card, what it holds about a person for the subject export in
  *  HR, area renames, the site's assessed hazards for other apps, and the event that raises a
  *  review request from an incident. Its menu entry, levels and permissions are in manifest.ts.

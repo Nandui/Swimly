@@ -4,7 +4,7 @@ import { DOC_STATUS_META, documentTypeLabels, formatDate, overdue, type Group, t
 import { Tag } from '@/components/ui-kit/tag';
 import { DocIcon } from '@/modules/docs/shared/components/ui';
 
-/** Documents as one grouped list (DESIGN.md, List): the type tile, the
+/** Documents as one grouped list: the type tile, the
  *  title over "reference · type · version · published · facilities", the status, a chevron. */
 export function DocumentList({
   documents,

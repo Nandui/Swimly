@@ -6,7 +6,7 @@ import { z } from "zod";
 import { addDaysIso, ageOn, dublinInstant, parseDateOnly } from "@/lib/format";
 import type { StatusMeta } from "@/lib/status";
 
-/** Staffing's rules, pure and client-safe (docs/staffing.md): the settings and their defaults, the
+/** Staffing's rules, pure and client-safe: the settings and their defaults, the
  *  status maps, semesters, block dates, call-off deadlines, the strike ladder, exam absence
  *  outcomes, swaps, acknowledgements and the warnings a person can carry on a shift.
  *

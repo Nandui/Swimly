@@ -10,7 +10,7 @@ import { searchEverything } from '@/lib/search/actions';
 import { allModules, MODULE_GROUPS } from '@/modules/registry';
 
 /** The signed-in person's modules, role and working site, set once by the
- *  root layout from their session (docs/architecture.md), so every frame
+ *  root layout from their session, so every frame
  *  offers the same modules and the account menu names the same role and site
  *  without a shell passing them. It fills the UI kit's frame context
  *  (src/components/ui/frame.tsx) with them, with signing out, changing the

@@ -8,8 +8,7 @@ import { formatTime, formatTimeRange, minutesNow } from "@/lib/format";
 import { HOME_SESSION_META } from "@/lib/home-meta";
 import type { HomeSession } from "@/modules/contributions";
 
-/** The time now at the centre, in minutes after midnight, moving with the clock (DESIGN.md,
- *  Live): the server's time when the page was made, then asked of the platform every 30
+/** The time now at the centre, in minutes after midnight, moving with the clock: the server's time when the page was made, then asked of the platform every 30
  *  seconds, so the now line and pill keep up. */
 export function useNow(initial: number) {
   const [now, setNow] = useState(initial);

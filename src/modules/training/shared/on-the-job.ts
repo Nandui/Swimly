@@ -1,6 +1,6 @@
 /** Skills on the job (e-learning phase 5): what a trainer
  *  watches for at a practical sign-off, and where someone is on a learning path
- *  (in-service hours are Qualifications', D26). Pure, so pages, actions and tests agree. */
+ *  (in-service hours are Qualifications'). Pure, so pages, actions and tests agree. */
 
 // ---------------------------------------------------------------------------
 // Practical checklists

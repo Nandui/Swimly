@@ -10,7 +10,7 @@ export const NOTE_VISIBILITY_META = {
 export type NoteVisibility = keyof typeof NOTE_VISIBILITY_META;
 export const NOTE_VISIBILITIES = Object.keys(NOTE_VISIBILITY_META) as NoteVisibility[];
 
-/** What a note is about (D22). Neutral tones: a kind sorts the file, it is never an alarm.
+/** What a note is about. Neutral tones: a kind sorts the file, it is never an alarm.
  *  Good work is the positive kind, so it reads green. */
 export const NOTE_KIND_META = {
   general: { label: "General", color: "gray", icon: StickyNote },

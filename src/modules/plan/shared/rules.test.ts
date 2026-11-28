@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { kindsOfWorkProblem, mayStandAlone, sessionSchema } from "./rules";
 
-/** D33's two rules: an activity names one kind of work, and work belongs to an activity. */
+/** Two rules: an activity names one kind of work, and work belongs to an activity. */
 
 test("a new activity names exactly one kind of work", () => {
   assert.equal(kindsOfWorkProblem(1, null), null);

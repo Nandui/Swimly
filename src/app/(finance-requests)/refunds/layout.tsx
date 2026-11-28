@@ -10,7 +10,7 @@ import './refunds.css';
 
 export const metadata: Metadata = { title: { default: "Refunds", template: TITLE_TEMPLATE } };
 
-/** Refund requests in the Finance requests frame (D24); every page checks refunds access again. */
+/** Refund requests in the Finance requests frame; every page checks refunds access again. */
 export default async function RefundLayout({ children }: { children: ReactNode }) {
   await screenPage("refunds");
   const who = await financeActor();

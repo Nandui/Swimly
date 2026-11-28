@@ -111,7 +111,7 @@ function Toolbar({ editor, disabled, openLink, openImage, openCheck, openVideo, 
 type AddChoice = { key: string; group: "Media" | "Activities"; label: string; help: string; icon: LucideIcon; disabled: boolean; video?: true; make?: () => BlockValue };
 
 /** Everything a lesson can hold, for the Add menu and an empty lesson's start grid
- *  (D18: Add is the only way to put content in a lesson). `kinds`: the activities already there. */
+ *  (Add is the only way to put content in a lesson). `kinds`: the activities already there. */
 function addChoices(kinds: string[]): AddChoice[] {
   const full = kinds.length >= MAX_ACTIVITY_BLOCKS;
   return [

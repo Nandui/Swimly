@@ -1,6 +1,4 @@
-/* Turnfin Me's own layout, in Turnfin Glass's phone frame (DESIGN.md; owner rules, 20 October 2026:
-   shadcn components only, no arbitrary values, no inline styles or new colours, every page in
-   PageShell and PageHeader). The tokens, the shadcn controls, the glass, the tab bar, the live
+/* Turnfin Me's own layout, in Turnfin Glass's phone frame. The tokens, the shadcn controls, the glass, the tab bar, the live
    banner, lists, rows and tile icons come from the theme files, copies of Turnfin's
    (scripts/lint/ui-rules.mjs checks they match). Colours here are only those tokens; status colour
    comes from the metadata maps in src/lib/meta.ts, always with an icon. */
@@ -19,7 +17,7 @@ body.turnfin-app { min-height: 100dvh; background: var(--bg); }
 .pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 .tabular { font-variant-numeric: tabular-nums; }
 
-/* Frame (DESIGN.md, Phone): the page with its large title, clear of the status bar; the glass bar
+/* Frame: the page with its large title, clear of the status bar; the glass bar
    with the inline title, which fades in once the large title scrolls under it; and the floating
    tab bar, all in one 720px column. */
 .frame { min-height: 100dvh; display: flex; flex-direction: column; }

@@ -126,7 +126,7 @@ export function useDayInspector(data: PlanDayData) {
       if (!gap) return null;
       // A class has one teacher for all of it; anything else can be filled in parts.
       const candidates = (data.candidates[`${need.key}#${picked.index}`] ?? []).filter((c) => need.kind !== "class" || c.whole);
-      // Asking staff who are not working then (D31): one open request for a stretch, its answers
+      // Asking staff who are not working then: one open request for a stretch, its answers
       // here, and Ask for the departments that can be asked (the duty's own, or any of mine).
       const request = openRequestFor(data.cover, need.key, gap);
       const dutyDepartment = duty(need.dutyId)?.departmentId ?? null;

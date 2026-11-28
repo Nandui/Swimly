@@ -12,7 +12,7 @@ import { formatTime, plural } from "@/lib/format";
 import type { ModuleManifest } from "@/modules/registry";
 import type { HomeItem, HomeSession } from "@/modules/contributions";
 
-/** Home is the work (DESIGN.md, The frame and navigation; D19): one "Needs you" list across the
+/** Home is the work: one "Needs you" list across the
  *  person's apps, places to cover first, each line naming its app; then Today: the figures, the
  *  site's day as lanes of classes, cover and bookings with the live time, and what starts next.
  *  The greeting and their job at their site, and New, the things they start from anywhere. Their apps are in the sidebar (the tab bar's

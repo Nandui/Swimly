@@ -13,7 +13,7 @@ type SessionOption = { id: string; title: string; start: number; end: number; du
 export type BlockDraft = { id?: string; shiftId: string; dutyId: string; sessionId: string | null; start: number; end: number; tasks: BlockTask[] };
 
 /** Put someone on an activity for part of their shift, with the positions they take and when; or
- *  change what they are on. Work belongs to an activity (D33), so the one choice is what they are
+ *  change what they are on. Work belongs to an activity, so the one choice is what they are
  *  on: an activity that is on that day (with its kind of work, when it names more than one), or a
  *  break. A block given to a kind of work by itself before the rule still opens, and can be moved
  *  to an activity from here. */

@@ -4,8 +4,7 @@ import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/shadcn/dropdown-menu";
 
-/** The department the Plan shows, as the fin-blue menu in the line under its title (DESIGN.md,
- *  Toolbar and page: "Pool department ⌄"). Each choice is a link, so the day and site stay. */
+/** The department the Plan shows, as the fin-blue menu in the line under its title. Each choice is a link, so the day and site stay. */
 export function DepartmentMenu({ current, items }: { current: string; items: { href: string; label: string; current: boolean }[] }) {
   return (
     <DropdownMenu>

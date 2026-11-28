@@ -76,7 +76,7 @@ const NEW_KIND = "new";
 const noKind = { name: "", departmentId: "" };
 
 /** Add or change an activity: where, when it repeats, the days it doesn't run, and the one kind of
- *  work it needs, with how many (D33). The kind of work can be made here, by name, when it is not
+ *  work it needs, with how many. The kind of work can be made here, by name, when it is not
  *  on the list yet. Activities on the same area add up, so a booking lists only the staff it adds.
  *  One made before the rule keeps its lines, and can lose them, but gains no more. */
 export function SessionDialog({ trigger, siteId, today, draft, areas, duties, departments }: {

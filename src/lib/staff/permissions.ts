@@ -1,7 +1,7 @@
 import type { Role } from "@/generated/prisma/client";
 
 /** Every permission the app has to give, and nothing else: the one access
- *  language (docs/architecture.md). A role's levels give permissions;
+ *  language. A role's levels give permissions;
  *  pages, menus and actions ask for a permission, never a level or a role.
  *
  *  This catalogue is **code, not data**. A permission exists because a page
@@ -585,7 +585,7 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "tasks.manage": ["tasks.review", "tasks.complete"],
   "academy.run": ["academy.read"],
   "academy.manage": ["academy.run", "academy.read"],
-  // Taking registers (Pool deck Teach, D24) is not booking: the desk books with Classes Desk.
+  // Taking registers (Pool deck Teach) is not booking: the desk books with Classes Desk.
   "short-courses.manage": ["short-courses.run", "short-courses.read"],
   "stock.count": ["stock.read"],
   "stock.manage": ["stock.count", "stock.read"],
@@ -608,7 +608,7 @@ const IMPLIES: Partial<Record<PermissionKey, PermissionKey[]>> = {
   "hr.details.write": ["hr.records.read"],
 };
 
-/** Restricted capabilities that read nothing, so need no fresh sign-in (D22). */
+/** Restricted capabilities that read nothing, so need no fresh sign-in. */
 export function skipsStepUp(key: string): boolean {
   const meta = PERMISSIONS.find((p) => p.key === key);
   return !!meta && "stepUp" in meta && meta.stepUp === false;

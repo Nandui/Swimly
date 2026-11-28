@@ -7,7 +7,7 @@ import { expandPermissions, type PermissionKey } from "@/lib/staff/permissions";
 import { accessByReach, cleanLevels } from "@/lib/staff/levels";
 import { hoursInWords, hoursProgress, windowStart } from "../shared/hours";
 
-/** Qualifications (D26) against a real in-memory Postgres: what is expiring for the people a
+/** Qualifications against a real in-memory Postgres: what is expiring for the people a
  *  keeper covers, with Training faked behind the renewals plug; in-service hours logged for others
  *  and never yourself; a person's own hours for Turnfin Me and HR's export. Invented people. */
 let fixture: Awaited<ReturnType<typeof isolatedPrisma>>;
@@ -77,7 +77,7 @@ before(async () => {
 });
 after(async () => { await fixture?.close(); });
 
-test("Training's Manage counts as Keep, so whoever checked certificates before D26 still does", () => {
+test("Training's Manage counts as Keep, so whoever checked certificates before 3 November 2026 still does", () => {
   const before = cleanLevels({ training: "manage" });
   assert.equal(before.levels.qualifications, "keep");
   assert.ok(accessByReach(before).sites.includes("qualifications.manage"));

@@ -2,7 +2,7 @@
 
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/shadcn/sheet";
 
-/** Detail without leaving the page (DESIGN.md, Inspector): a glass panel that slides in from the
+/** Detail without leaving the page: a glass panel that slides in from the
  *  right on desktop, over the page without dimming it, and a sheet that rises from the bottom on
  *  tablets and phones. A status tag over the title (`title-1`), one line under it, the content,
  *  then the actions at the foot. Radix keeps focus inside and returns it to the block that opened

@@ -2,7 +2,7 @@ import { Settings, type LucideIcon } from "lucide-react";
 import { modules } from "@/app/modules";
 import type { PermissionKey } from "@/lib/staff/permissions";
 
-/** Every module Turnfin offers, each described once (docs/apps.md).
+/** Every module Turnfin offers, each described once.
  *
  *  A module's description says everything the rest of Turnfin needs: its name,
  *  where it opens, its levels and the permissions each level gives. Menus, the
@@ -23,7 +23,7 @@ export type ModuleContext = {
 
 /** Where a level applies. Swim school, Training and Rota work at the sites
  *  a person works at; HR Report reaches the people they manage;
- *  everything else applies everywhere. See docs/apps.md. */
+ *  everything else applies everywhere. */
 export type Reach = "sites" | "team" | "everywhere";
 
 /** One step on a module's ladder. Levels are cumulative: a level gives its
@@ -57,7 +57,7 @@ type ModuleAccess = {
   extras?: readonly ModuleExtra[];
   /** Only a superadmin gives this module (HR). */
   restricted?: boolean;
-  /** Apps merged into this one, or the part of one it took over (D24). A role's stored level for
+  /** Apps merged into this one, or the part of one it took over. A role's stored level for
    *  one of them still counts here, through `levels`, and the higher level wins, until the role
    *  is next saved. One former app can feed several apps. */
   formerly?: readonly FormerApp[];
@@ -113,7 +113,7 @@ export type ModulePage = {
   icon: LucideIcon;
   /** One line on what the page is for, shown on the module's starter page. */
   description: string;
-  /** Where the frame lists it (DESIGN.md, The frame and navigation; D19): work pages (no place)
+  /** Where the frame lists it: work pages (no place)
    *  in the sidebar, five at most; `setup` under the app's one Set up item. */
   place?: "setup";
   /** A work page's sub-page: the href of the page it nests under in the sidebar, which opens like

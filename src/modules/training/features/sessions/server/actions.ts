@@ -158,7 +158,7 @@ export async function markPlace(placeId: string, status: "ATTENDED" | "ABSENT" |
 }
 
 /** Closes the register: when the session teaches a course, everyone who attended has that course
- *  completed and its qualification. In-service hours are logged in Qualifications (D26). */
+ *  completed and its qualification. In-service hours are logged in Qualifications. */
 export async function closeRegister(sessionId: string): Promise<{ ok: true; attended: number } | Extract<ActionResult, { ok: false }>> {
   const who = await requireTrainingActor();
   if (!who.signoff || !who.orgId) return fail("Closing a register needs the Sign off training permission.");

@@ -10,7 +10,7 @@ export default async function HomePage() {
   const home = await loadHome();
   // In the module bar's order (MODULE_GROUPS), so Home's lines follow the sidebar's.
   const modules = allModules().filter((m) => home.moduleIds.includes(m.id));
-  // One app, no list (D19): a person whose job opens exactly one app lands straight in it.
+  // One app, no list: a person whose job opens exactly one app lands straight in it.
   if (modules.length === 1) redirect(modules[0].href);
   const firstName = home.who.name.trim().split(/\s+/)[0] || home.who.name;
   return <HomeView firstName={firstName} roleName={home.homeName} siteName={home.siteName} today={home.today} now={home.now} modules={modules} items={home.items} failed={home.failed} meUrl={home.meUrl} />;

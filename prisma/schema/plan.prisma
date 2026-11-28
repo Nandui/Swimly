@@ -2,7 +2,7 @@
 // beside the old Rota, which stays as it is. A shift is a person at a site on a day; duty blocks
 // fill it; sessions are what's on and the duties they need; a gap is a needed place nobody fills.
 // Sites, departments, people and qualifications are Core's and read through its functions, so
-// these tables keep plain ids and carry the module prefix (AGENTS.md, Data and writes). Days are
+// these tables keep plain ids and carry the module prefix. Days are
 // the site's own dates as "YYYY-MM-DD"; times are minutes after midnight.
 
 /// Retired (owner, 2 November 2026): Plan reads Admin › Areas (Core's `SiteArea`), the one list
@@ -34,7 +34,7 @@ model PlanArea {
 }
 
 /// What a person does for a stretch of their shift: Lifeguard, Swim teacher, Reception, Break.
-/// "Duty", not "job": the platform's jobs are people's roles (docs/roadmap.md, step 3).
+/// "Duty", not "job": the platform's jobs are people's roles.
 model PlanDuty {
   id                  String    @id @default(cuid())
   orgId               String
@@ -220,7 +220,7 @@ model PlanOff {
 }
 
 /// Where a department's cover requests are posted at a site: one Google Chat space (owner, 12
-/// November 2026, D31). Without one, nobody can be asked for that department there.
+/// November 2026). Without one, nobody can be asked for that department there.
 model PlanChatSpace {
   id            String   @id @default(cuid())
   orgId         String
@@ -240,7 +240,7 @@ model PlanChatSpace {
   @@map("plan_chat_spaces")
 }
 
-/// A gap on the Day that staff are asked to cover (D31): what's on, the duty and the stretch, as
+/// A gap on the Day that staff are asked to cover: what's on, the duty and the stretch, as
 /// they read when asked. Staff offer; whoever plans the department chooses one, and Plan puts
 /// them on. It stops when someone is chosen or the asking is stopped.
 model PlanCoverRequest {

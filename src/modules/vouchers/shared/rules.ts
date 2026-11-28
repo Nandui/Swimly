@@ -1,7 +1,7 @@
 import { Ban, CircleCheck, Clock3, Hourglass, Ticket } from "lucide-react";
 import type { StatusMeta } from "@/lib/status";
 
-/** The Vouchers rules, pure so they are tested on their own (docs/vouchers.md). */
+/** The Vouchers rules, pure so they are tested on their own. */
 
 /** Where one voucher is. Tones come from here, never a call site. */
 export const VOUCHER_STATE_META = {

@@ -140,7 +140,7 @@ test("a practical waits for someone else's sign-off; it can be sent back, then s
   assert.ok(await fixture.prisma.auditLog.count({ where: { entity: "TrainingAssignment", action: "sign-off" } }) === 1);
 });
 
-test("the course that renews a qualification, for Qualifications' expiring list (D26)", async () => {
+test("the course that renews a qualification, for Qualifications' expiring list", async () => {
   as("liam", [], [TRAINER]);
   const renewal = await data.renewalCourses(ORG, [{ userId: "riley", typeId: "qt-rescue" }, { userId: "noah", typeId: "qt-rescue" }, { userId: "riley", typeId: "qt-none" }]);
   assert.deepEqual(renewal({ userId: "riley", typeId: "qt-rescue" }), { courseId: practical, title: "Pool rescue", assigned: true, canAssign: true }, "riley already has the practical open");

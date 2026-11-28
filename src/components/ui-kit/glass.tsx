@@ -3,7 +3,7 @@
 import { useEffect, type ComponentProps, type ElementType, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-/** Liquid Glass (DESIGN.md, The material), the one material for the functional layer: the
+/** Liquid Glass, the one material for the functional layer: the
  *  sidebar, toolbars, the tab bar, sheets, menus and inspectors. Never on content, never on glass.
  *  The look is `.glass` in src/app/theme/kit.css; pages never style glass themselves. */
 

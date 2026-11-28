@@ -10,7 +10,7 @@ import { OfflineBar, useOffline } from "@/components/offline";
 import { api, session } from "@/lib/api";
 import { clearAll } from "@/lib/offline";
 
-/** The tab bar holds four destinations (DESIGN.md, Phone): Home, Training, Shifts and More.
+/** The tab bar holds four destinations: Home, Training, Shifts and More.
  *  Reading is in More, and what is due shows on Home. */
 const TABS = [
   { href: "/", label: "Home", icon: House },
@@ -65,7 +65,7 @@ export function SignOut() {
   );
 }
 
-/** Every signed-in page in the phone frame (DESIGN.md, Phone): the page with its large title, a
+/** Every signed-in page in the phone frame: the page with its large title, a
  *  glass bar with the title inline once the large one scrolls away, and the glass tab bar, which
  *  minimises to the current tab while scrolling down and comes back on the way up. `title` is the
  *  page's name; it also names the browser tab. */

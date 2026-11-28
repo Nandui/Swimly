@@ -18,7 +18,7 @@ import { vouchersModule } from "@/modules/vouchers/manifest";
 import { trainingModule } from "@/modules/training/manifest";
 import { qualificationsModule } from "@/modules/qualifications/manifest";
 
-/** The one list of Turnfin's modules (AGENTS.md, The app contract). Core's registry
+/** The one list of Turnfin's modules. Core's registry
  *  (src/modules/registry.ts) builds menus, the home page and the role editor
  *  from it, adding Admin, which is Core's own. Lists show modules group by
  *  group; within a group, in this order. Each module's server plug, its

@@ -111,7 +111,7 @@ export default async function HrPersonPage({ params }: { params: Promise<{ id: s
                   <div className="pc-row-trail">
                     <Tag meta={NOTE_KIND_META[n.kind]} />
                     <Tag meta={NOTE_VISIBILITY_META[n.visibility]} />
-                    {/* A reporter can't read their report back, so whoever keeps the file withdraws a wrong one (D22). */}
+                    {/* A reporter can't read their report back, so whoever keeps the file withdraws a wrong one. */}
                     {data.canWriteNotes && (n.authorId === who.id || who.superadmin || n.via === "report") ? <WithdrawNote id={n.id} /> : null}
                   </div>
                 </li>

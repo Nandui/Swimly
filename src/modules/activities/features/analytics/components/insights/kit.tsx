@@ -118,7 +118,7 @@ export function ReportShell({ ctx, page, path, title, description, back, childre
 }
 
 /** A group of panels that answer one question, laid out as a bento grid. Each panel's title sits
- *  above its card (DESIGN.md, The page shell). */
+ *  above its card. */
 export function Section({ id, title, intro, children }: { id: string; title: string; intro?: React.ReactNode; children: React.ReactNode }) {
   return <section id={id} className="ins-section" aria-labelledby={`${id}-title`}>
     <header className="ins-section-head">

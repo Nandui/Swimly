@@ -264,7 +264,7 @@ test("the centre managers of the report's site see it under Needs you until one 
   assert.equal((await actions.withdrawNote(filed.id, "Synthetic: wrong person")).ok, true, "a reporter can't, so the file's keeper withdraws it");
 });
 
-test("HR is on whenever the main database is set (D23)", () => {
+test("HR is on whenever the main database is set", () => {
   const { hrConfigured } = serverModule<typeof import("@/modules/hr")>("src/modules/hr/shared/database.ts", { "server-only": {} });
   const saved = process.env.DATABASE_URL;
   try {

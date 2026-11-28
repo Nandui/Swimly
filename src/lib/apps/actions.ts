@@ -10,7 +10,7 @@ import { APP_SWITCH_STATES, describeSwitch, type AppSwitchState } from "@/lib/ap
 import { switchableApps } from "@/modules/registry";
 
 /** Switch an app on everywhere, off, or on only at some sites, for the superadmin's organisation
- *  (docs/architecture.md, App switches). Superadmins only: the flag, never a permission, so no
+ * . Superadmins only: the flag, never a permission, so no
  *  role can give it. The switch and its audit row are written together. */
 const switchSchema = z.object({
   appId: z.string().min(1).max(64),

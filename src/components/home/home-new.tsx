@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { ACTION_ICONS } from "@/components/home/home-parts";
 import type { HomeIcon } from "@/modules/contributions";
 
-/** Home's one prominent action (DESIGN.md, New): the things a person starts from anywhere, from
+/** Home's one prominent action: the things a person starts from anywhere, from
  *  every app they use (each app's quick actions on its home card). */
 export function HomeNew({ actions }: { actions: { key: string; label: string; href: string; icon?: HomeIcon }[] }) {
   return (

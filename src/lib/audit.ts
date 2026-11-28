@@ -51,10 +51,10 @@ export const MODULE_OF_ENTITY: Readonly<Record<string, string>> = {
   AssessmentType: "Swim school", AssessmentSession: "Swim school", AssessmentBooking: "Swim school",
   ParentAccount: "Swim school", ParentSignInChallenge: "Swim school", ParentChildAccess: "Swim school", ParentAccessRequest: "Swim school",
   ParentChangeRequest: "Swim school", ParentAssessmentPublication: "Swim school",
-  // Training, and Qualifications, which keeps the qualifications people hold and their hours (D26).
+  // Training, and Qualifications, which keeps the qualifications people hold and their hours.
   TrainingCourse: "Training", TrainingAssignment: "Training", TrainingRule: "Training", TrainingEvidence: "Training", TrainingPath: "Training", TrainingPathEnrolment: "Training", TrainingSession: "Training",
   TrainingHours: "Qualifications", TrainingHourTarget: "Qualifications", Qualification: "Qualifications", QualificationType: "Qualifications", QualificationEvidence: "Qualifications",
-  // Finance requests (Refunds and Coinage, D24) and Rota.
+  // Finance requests (Refunds and Coinage) and Rota.
   RefundRequest: "Finance requests", RefundNotification: "Finance requests",
   CoinageRequest: "Finance requests", CoinageNotification: "Finance requests",
   AcademyCourseType: "Academy", AcademyCourse: "Academy", AcademySession: "Academy", AcademyCandidate: "Academy", AcademyCall: "Academy",

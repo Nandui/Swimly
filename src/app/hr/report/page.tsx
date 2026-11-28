@@ -10,7 +10,7 @@ import { ReportDialog, reportablePeople } from "@/modules/hr/features/report";
 
 export const metadata: Metadata = { title: "Report" };
 
-/** Quick reports (D22). Names only, so no fresh sign-in: filing reads no HR record. */
+/** Quick reports. Names only, so no fresh sign-in: filing reads no HR record. */
 export default async function HrReportPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { q = "" } = await searchParams;
   const { who, people } = await reportablePeople(q).catch(() => notFound());

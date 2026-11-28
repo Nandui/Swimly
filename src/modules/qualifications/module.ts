@@ -5,7 +5,7 @@ import { certificateQueue } from "@/modules/qualifications/features/certificates
 import { expiringCount } from "@/modules/qualifications/features/expiring/server/data";
 import { hoursRecords } from "@/modules/qualifications/features/me/server/records";
 
-/** Qualifications' registration plug (AGENTS.md, The app contract), loaded by
+/** Qualifications' registration plug, loaded by
  *  src/modules/server.ts: its home card and a person's in-service hours for HR's subject export.
  *  Its menu entry, levels and permissions are in manifest.ts. */
 

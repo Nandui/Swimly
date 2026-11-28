@@ -69,7 +69,7 @@ export const sessionSchema = z.object({
   skipDays: z.array(day).max(60).default([]),
   note: z.string().trim().max(500).default(""),
   needs: z.array(z.object({ dutyId: id, count: z.number().int().min(1, "Each line needs at least one person.").max(20) })).max(10).default([]),
-  /** A kind of work made with the activity, in place of a line in `needs` (D33). */
+  /** A kind of work made with the activity, in place of a line in `needs`. */
   newDuty: z.object({
     name: z.string().trim().min(2, "Name the kind of work.").max(60),
     departmentId: optionalId,
@@ -81,7 +81,7 @@ export const sessionSchema = z.object({
   .refine((s) => new Set(s.needs.map((n) => n.dutyId)).size === s.needs.length, { message: "Name each kind of work once, with how many.", path: ["needs"] });
 export type SessionInput = z.input<typeof sessionSchema>;
 
-/** An activity names one kind of work (D33). `now` is how many it would name, `before` how many it
+/** An activity names one kind of work. `now` is how many it would name, `before` how many it
  *  named already (null for a new one): an activity made before the rule keeps its lines and can
  *  lose them, but never gains one. Returns what to tell the person, or null when it is fine. */
 export function kindsOfWorkProblem(now: number, before: number | null): string | null {
@@ -89,7 +89,7 @@ export function kindsOfWorkProblem(now: number, before: number | null): string |
   return now === 0 ? "Choose the kind of work it needs, and how many." : "An activity names one kind of work. For a second kind, add another activity.";
 }
 
-/** Work belongs to an activity (D33). Only a break stands by itself, and a block that already did
+/** Work belongs to an activity. Only a break stands by itself, and a block that already did
  *  before the rule, which can still be changed until it is moved to an activity. */
 export function mayStandAlone(input: { isBreak: boolean; before: { sessionId: string | null } | null }): boolean {
   return input.isBreak || input.before?.sessionId === null;

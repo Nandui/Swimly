@@ -16,7 +16,7 @@ export const ADMIN_GROUPS: { label: string; links: AdminPage[] }[] = [
   { label: "Places", links: [
     { key: "clubs", href: "/clubs", label: "Sites", icon: Building2, description: "The sites, their short codes, and which one this device works at" },
     { key: "areas", href: "/areas", label: "Areas", place: "setup", icon: MapPin, description: "Each site's pools, gym and reception, for the rota and swim classes" },
-    // Superadmins only: a flag, not a screen, so no role can give it (docs/architecture.md, App switches).
+    // Superadmins only: a flag, not a screen, so no role can give it.
     { key: "apps", href: "/apps", label: "Apps", place: "setup", icon: LayoutGrid, description: "Which apps are on, and at which sites" },
   ] },
   { label: "Work", links: [

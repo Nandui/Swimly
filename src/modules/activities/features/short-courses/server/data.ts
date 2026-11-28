@@ -70,7 +70,7 @@ async function toPhoneList(sites: Awaited<ReturnType<typeof sitesFor>>, orgId: s
 export async function shortCoursesHome() {
   const who = await requireShortCoursesActor();
   // The desk sees every course at its sites; an instructor (Pool deck Teach) only those they
-  // instruct, as the pool deck shows only their own classes (D24).
+  // instruct, as the pool deck shows only their own classes.
   const [booking, registers] = await Promise.all([sitesFor("short-courses.read"), sitesFor("short-courses.run")]);
   const on = today();
   const visible = { OR: [inSites(booking), { ...inSites(registers), instructorId: who.id }] };
@@ -121,7 +121,7 @@ export async function shortCourse(id: string) {
   const [course] = await withPeople([row]);
   const resource = { siteId: course.siteId, orgId: who.orgId };
   const [read, run, manage] = await Promise.all([mayFor("short-courses.read", resource), mayFor("short-courses.run", resource), mayFor("short-courses.manage", resource)]);
-  // An instructor without the desk's level opens only the courses they instruct (D24).
+  // An instructor without the desk's level opens only the courses they instruct.
   const instructs = run && course.instructorId === who.id;
   if (!read && !instructs) notFound();
   const on = today();

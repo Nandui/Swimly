@@ -1,7 +1,7 @@
 // Qualifications (main database). Its tables keep the names they had in
-// Training, so moving them here (D26) needed no migration.
+// Training, so moving them here needed no migration.
 
-/// In-service hours, logged in Qualifications. Rows from before D26 may come
+/// In-service hours, logged in Qualifications. Rows from before 3 November 2026 may come
 /// from a Training session's register (sessionId). Never deleted: removing one
 /// stamps removedAt.
 model TrainingHours {

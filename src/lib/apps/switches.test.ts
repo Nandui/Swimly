@@ -8,7 +8,7 @@ import { ALL_PERMISSIONS } from "@/lib/staff/permissions";
 import { appPermissions, switchableApps } from "@/modules/registry";
 import { appsOffAt, describeSwitch, switchedOn, withAppSwitches, withCarriedSwitches, type AppSwitches } from "./switches";
 
-/** App switches (docs/architecture.md, App switches): the rule, the session it shapes, and the
+/** App switches: the rule, the session it shapes, and the
  *  superadmin's screen that changes it. Sites and people are synthetic. */
 
 const RIVERSIDE = "site-riverside", HILLTOP = "site-hilltop";

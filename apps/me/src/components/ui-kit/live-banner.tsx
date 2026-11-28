@@ -5,7 +5,7 @@ import { Check } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { clockNow } from "@/lib/format";
 
-/** How long a banner stays expanded (DESIGN.md, `duration-banner`), then how long its compact tick
+/** How long a banner stays expanded, then how long its compact tick
  *  and time stay before it goes. */
 const EXPANDED_MS = 3200;
 const COMPACT_MS = 8000;
@@ -13,7 +13,7 @@ const COMPACT_MS = 8000;
 type Banner = { title: string; detail?: string; at: string };
 const ShowBanner = createContext<(title: string, detail?: string) => void>(() => {});
 
-/** Confirmations on the phone (DESIGN.md, LiveBanner): a black banner grows at the top centre with
+/** Confirmations on the phone: a black banner grows at the top centre with
  *  a green tick, the sentence and one line more, then settles to a compact tick and the time.
  *  Tapping it expands it again. It is `role="status"`, so the whole sentence is read once. Errors
  *  never come here: they stay where they happened. */

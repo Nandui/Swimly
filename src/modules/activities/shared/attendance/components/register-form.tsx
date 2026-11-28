@@ -78,7 +78,7 @@ export function RegisterForm(
   );
 }
 
-/** The register, as the approved Turnfin Glass canvas draws it (DESIGN.md, The pool deck): a
+/** The register, as the approved Turnfin Glass canvas draws it: a
  *  green ring with how many are here, how the marks stand and "All here"; then each swimmer as a
  *  64px row that is one target: one tap marks them here, a second away, a third late, always with
  *  the word beside the mark. A swimmer nobody has marked yet stays unmarked, and the save button

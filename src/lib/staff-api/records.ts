@@ -179,7 +179,7 @@ const practicalDto = (p: NonNullable<Awaited<ReturnType<typeof myPractical>>>) =
 });
 
 /** Their learning paths and sessions (phase 5), and their in-service hours from Qualifications
- *  (D26; none while it is switched off). */
+ *  (none while it is switched off). */
 export async function trainingPlan(identity: StaffIdentity) {
   const [plan, hours] = await Promise.all([myPlan(identity.user.id), hoursFor(identity)]);
   return {
@@ -596,7 +596,7 @@ export async function saveNotifications(request: Request, identity: StaffIdentit
 // Home: what needs the person, without any HR content
 // ---------------------------------------------------------------------------
 
-/** The app each part of this API reads (docs/architecture.md, App switches): a part whose app is
+/** The app each part of this API reads: a part whose app is
  *  switched off in the person's organisation answers "not available", as an unset one does. */
 function appOfRoute(route: string): string | null {
   const [first] = route.split("/");

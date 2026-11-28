@@ -9,7 +9,7 @@ const errors: string[] = [];
 const warnings: string[] = [];
 try { docsStorageConfig(process.env); }
 catch (error) { errors.push(error instanceof Error && error.name !== 'TypeError' ? error.message : 'Check the Docs database URLs.'); }
-// HR is the turnfin_hr schema in the main database (D23): nothing of its own to check.
+// HR is the turnfin_hr schema in the main database: nothing of its own to check.
 
 // Production and dev must not share a database; see src/lib/database-environment.ts.
 const plan = databasePlan(process.env);

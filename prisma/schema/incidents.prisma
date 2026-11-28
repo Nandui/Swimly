@@ -2,7 +2,7 @@
 // incidents and near misses at a site, reported by a duty manager or supervisor
 // (owner decision, 12 October 2026), triaged by the centre
 // or operations manager and, when serious, signed off by the operations manager.
-// Tables carry the module prefix (AGENTS.md, Data and writes).
+// Tables carry the module prefix.
 
 /// One report. The reporter's words are locked when it is submitted; later
 /// corrections are addenda in `IncidentEvent`.
@@ -415,7 +415,7 @@ model IncidentWellbeingUpdate {
 }
 
 /// A hazard from the site's risk assessments that whoever triages linked to the report (owner,
-/// 10 November 2026, D29). The hazard belongs to another app: this keeps its id, and its words
+/// 10 November 2026). The hazard belongs to another app: this keeps its id, and its words
 /// and where it opens as they were when it was linked. Hidden when removed.
 model IncidentHazardLink {
   id          String    @id @default(cuid())
