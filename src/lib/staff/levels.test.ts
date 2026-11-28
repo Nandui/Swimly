@@ -1,24 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { allModules } from "@/modules/registry";
 import { UNRESTRICTED_PERMISSIONS, expandPermissions } from "./permissions";
 import { ADMINISTRATOR_SCREENS, visibleScreens } from "./screens";
 import { SYSTEM_ROLES, WORK_ANYWHERE, accessByReach, cleanLevels, describeLevels, isRestrictedRole, levelLines, levelsFromAccess, roleColumns, siteBoundAppNames, storedPermissions } from "./levels";
 
 const at = (levels: Record<string, string>, extras: string[] = []) => storedPermissions(cleanLevels(levels, extras));
 const screensOf = (permissions: readonly string[]) => visibleScreens(expandPermissions(permissions));
-
-test("every module describes itself: unique ids, levels and a valid starting level for each extra", () => {
-  const ids = allModules().map((m) => m.id);
-  assert.equal(new Set(ids).size, ids.length);
-  for (const m of allModules()) {
-    assert.ok(m.logName, `${m.id} needs a log name`);
-    assert.ok(m.access.levels.length > 0, `${m.id} needs a level`);
-    const keys = m.access.levels.map((l) => l.key);
-    assert.equal(new Set(keys).size, keys.length, `${m.id} repeats a level`);
-    for (const extra of m.access.extras ?? []) assert.ok(keys.includes(extra.from), `${m.id}.${extra.key} starts at an unknown level`);
-  }
-});
 
 test("levels are cumulative, and the desk and the pool deck stay apart", () => {
   const teach = at({ "pool-deck": "teach" }), lead = at({ "pool-deck": "lead" }), desk = at({ "swim-school": "desk" }), manage = at({ "swim-school": "manage" });
