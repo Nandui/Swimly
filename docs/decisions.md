@@ -113,9 +113,9 @@ Managers on duty file a quick **report** about someone they line-manage: the per
 
 ### D20 · 1 November 2026 · Turnfin Sheet replaces Turnfin Glass
 
-The 2.0 design is **Turnfin Sheet**: the logo's blue (#0062B1) as the ground, the work on one white page that floats on it, the logo's fin drawn oversized in white on the blue as its only texture, Manrope type, and colour on the page only for needs action, done, serious and live. It replaces Turnfin Glass (D13), which the owner found confusing, not uniform, too like Apple, too grey and not a leisure centre. It was chosen from screenshot-checked mockups on the new frame (D19), after Depth, Pool tile, Pace clock and Night were tried (https://claude.ai/artifact/QmVi8aMcECQzQxNNrgEKe5).
+The 2.0 design is **Turnfin Sheet**: the logo's blue (#0062B1) as the ground, the work on one white page that floats on it, the logo's fin drawn oversized in white on the blue as its only texture, Manrope type, and colour on the page only for needs action, done, serious and live. It replaces Turnfin Glass (D13), which the owner found confusing, not uniform, too like Apple, too grey and not a leisure centre. It was chosen from screenshot-checked mockups on the new frame (D19), after Depth, Pool tile, Pace clock and Night were tried.
 **Why:** a premium, modern look that is unmistakably Turnfin, with one colour that belongs to the brand, one consistent page for every app, and controls that are clearly controls.
-**Follows:** [../DESIGN.md](../DESIGN.md) is the contract; the canvas's row D shows the approved screens. Roadmap step 5 re-themes the built Glass theme and kit to Sheet; the type and layout tokens of D15 keep their names. The Turnfin Glass design system artifact no longer describes the design.
+**Follows:** [../DESIGN.md](../DESIGN.md) is the contract; the canvas's row D shows the approved screens (https://claude.ai/artifact/QmVi8aMcECQzQxNNrgEKe5; the rejected rows were removed from it on 28 November 2026). Roadmap step 5 re-themes the built Glass theme and kit to Sheet; the type and layout tokens of D15 keep their names. The Turnfin Glass design system artifact was deleted on 28 November 2026.
 
 ### D19 · 1 November 2026 · The frame is worked out from the job
 
@@ -168,7 +168,7 @@ The platform's **one file check** (`src/lib/files`, roadmap step 4) starts here.
 
 The 2.0 design is **Turnfin Glass**: Apple's Liquid Glass and Human Interface Guidelines, brought to Turnfin's web app. A plain ground, opaque content, and glass only on the controls that float; colour only for selected, needs action, done, now and serious; springs and in-place feedback throughout. It was chosen from screenshot-checked, clickable mockups, after Poolside Clear refinements, editorial, colourful glass, Material 3 Expressive and Turnfin Live were tried.
 **Why:** staff need calm, legible screens that let them act where they are looking; it looks and feels premium enough to stand beside the apps people use every day.
-**Follows:** [../DESIGN.md](../DESIGN.md) is the contract (it replaces D9's placeholder). The design system (https://claude.ai/artifact/6Ex4VcQGtPRBheTqVtgWWM) shows it live; roadmap step 5 builds it.
+**Follows:** [../DESIGN.md](../DESIGN.md) is the contract (it replaces D9's placeholder). Roadmap step 5 builds it.
 
 ### D12 · 24 October 2026 · Turnfin 2.0 begins
 
