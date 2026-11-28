@@ -10,4 +10,4 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # Turnfin Me
 
-Turnfin Me is a connected product: each member of staff's own records on their phone, reaching Turnfin only through `/api/staff/v1`. Turnfin's rules apply here in full: read [../../AGENTS.md](../../AGENTS.md) and [../../PRODUCT.md](../../PRODUCT.md) first. Its place in the system and its settings are in [../../docs/architecture.md](../../docs/architecture.md#connected-products) and [../../docs/operations.md](../../docs/operations.md).
+Turnfin Me is each member of staff's own records on their phone. It reaches Turnfin only through `/api/staff/v1`. The limits in [../../AGENTS.md](../../AGENTS.md) hold here too.

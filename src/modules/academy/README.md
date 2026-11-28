@@ -2,7 +2,7 @@
 
 **Purpose:** runs the lifeguard and swim teacher courses the centres deliver to the public.
 
-The Academy joined Short courses on 15 October 2026 and became its own app again, in Team, on 3 November 2026 ([D24](../../../docs/decisions.md)). Its levels are in [docs/apps.md](../../../docs/apps.md#academy).
+The Academy joined Short courses on 15 October 2026 and became its own app again, in Team, on 3 November 2026 (D24). Its levels are in docs/apps.md.
 
 ## Features
 - `courses`: the courses at a person's sites, putting one on, its sessions, candidates, checks, payment, registers and results (`/academy`, `/academy/[id]`); its sessions for the Rota, Home's items and a member's Academy history.

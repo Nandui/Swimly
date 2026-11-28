@@ -2,7 +2,7 @@
 
 **Purpose:** tracks the vouchers given to communities and organisations.
 
-Its levels are in [docs/apps.md](../../../docs/apps.md#vouchers); why it exists is [D30](../../../docs/decisions.md).
+Its levels are in docs/apps.md; why it exists is D30.
 
 ## Features
 - `redeem` — check a voucher's code at the desk and mark it as used (`/vouchers`); put right a voucher marked as used by mistake, cancel one voucher; the home card.

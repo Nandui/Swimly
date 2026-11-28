@@ -2,7 +2,7 @@
 
 **Purpose:** counts the stock on the shelf at each site.
 
-Its levels are in [docs/apps.md](../../../docs/apps.md).
+Its levels are in docs/apps.md.
 
 ## Features
 - `counts` — start a count at a site, count on the sheet, submit, discard or delete it (`/stock`, `/stock/[id]`); the home card.

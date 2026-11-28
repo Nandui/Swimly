@@ -1,6 +1,6 @@
-# Turnfin 2.0: operations
+# Turnfin: operations
 
-Running Turnfin: environments, databases, deploying, scheduled jobs, every setting, the sandbox and the secured record-management workflow. The databases' place in the design is in [architecture.md](architecture.md#databases).
+Running Turnfin: environments, databases, deploying, scheduled jobs, every setting, the sandbox and the secured record-management workflow.
 
 ## Environments
 
@@ -107,7 +107,7 @@ Set in Vercel per environment; locally in `.env` (copy `.env.example`). Secrets 
 | `ANTHROPIC_API_KEY` | Training's course drafting with Claude; unset, it is off |
 | `INCIDENTS_EMAIL_DEV_LOG` | development only: print footage request emails instead of sending them |
 
-**Google Chat, for Plan (test)'s cover requests** ([D31](decisions.md))
+**Google Chat, for Plan (test)'s cover requests** (D31)
 
 | Setting | Purpose |
 | --- | --- |
@@ -174,6 +174,6 @@ For record work the user has authorised, without a browser or a Postgres passwor
 
 `npm run prod -- <script>` runs a script against production through one door: `scripts/prod.ts` reads only the ignored `.env.production.local` (the owner pastes the unpooled `swimly-db` connection string there once), names the target before running, and passes the connection on. Scripts are dry runs until `--confirm`; read the dry run first. Examples: `scripts/convert-roles-to-levels.ts`, `scripts/grant-superadmin.ts`.
 
-**Bringing over the old risk assessments** ([D29](decisions.md)): `scripts/import-risk-assessments.ts` reads the standalone Risk Management app's database, named by `RISK_SOURCE_DATABASE_URL` (read only; put it in `.env.production.local` beside production's connection, and remove it afterwards), and writes each assessment with its hazards, reviews, review requests and history. It matches old centres to sites by code then name, people by email and departments by name; names what it skips and why; keeps references and ids, so running it again adds only what is missing; and records the import in the name of the account given with `--as <email>`. Read the dry run first: `npm run prod -- scripts/import-risk-assessments.ts --as you@example.com`, then the same with `--confirm`.
+**Bringing over the old risk assessments** (D29): `scripts/import-risk-assessments.ts` reads the standalone Risk Management app's database, named by `RISK_SOURCE_DATABASE_URL` (read only; put it in `.env.production.local` beside production's connection, and remove it afterwards), and writes each assessment with its hazards, reviews, review requests and history. It matches old centres to sites by code then name, people by email and departments by name; names what it skips and why; keeps references and ids, so running it again adds only what is missing; and records the import in the name of the account given with `--as <email>`. Read the dry run first: `npm run prod -- scripts/import-risk-assessments.ts --as you@example.com`, then the same with `--confirm`.
 
 Never run migrations, seeds, imports or test writes against a real database to inspect or test the app, and never write test records to production. Keep real swimmer names, contacts and medical notes out of exports, artifacts and screenshots.

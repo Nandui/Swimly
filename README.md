@@ -1,12 +1,13 @@
 # Turnfin
 
-Turnfin is the staff product for LeisureWorld's leisure centres: a platform of apps (Classes, Pool deck, Finance requests, Rota, Training, HR, Incidents, Purchasing and more) with one sign-in, where each person's job opens the apps they need and Home shows what is waiting for them. This is **Turnfin 2.0**: the platform of apps, with a new design on the way. The repository's name, Swimly, is a working name only.
+Turnfin is the staff product for LeisureWorld's leisure centres: a platform of apps (Classes, Pool deck, Finance requests, Rota, Training, HR, Incidents, Purchasing and more) with one sign-in, where each person's job opens the apps they need and Home shows what is waiting for them. The repository's name, Swimly, is a working name only.
 
 ## Start here
 
-1. [PRODUCT.md](PRODUCT.md): what Turnfin is and the rules every decision is judged against.
-2. [AGENTS.md](AGENTS.md): how to work in this repository, for people and coding agents.
-3. [docs/README.md](docs/README.md): every other doc.
+1. [AGENTS.md](AGENTS.md): the limits that protect live data and the checks to run, for people and coding agents.
+2. [docs/operations.md](docs/operations.md): environments, databases, deploying and every setting.
+
+Version 3 is being planned. The product, design, architecture, roadmap and decision documents written for version 2.0 were removed on 28 November 2026; they are in this repository's history.
 
 ## What is in this repository
 

@@ -2,9 +2,9 @@
 
 **Purpose:** sets up learning for staff and delivers it.
 
-Checking certificates, what is expiring and in-service hours are Qualifications' ([D26](../../../docs/decisions.md)); the rest of D26 (course steps, Progress, no repeating rules or certificates) is roadmap step 9's second release.
+Checking certificates, what is expiring and in-service hours are Qualifications' (D26); the rest of D26 (course steps, Progress, no repeating rules or certificates) is roadmap step 9's second release.
 
-Its levels are in [docs/apps.md](../../../docs/apps.md).
+Its levels are in docs/apps.md.
 
 ## Features
 - `courses` — training courses: create, change settings, archive, and the qualification each grants (`/training/courses`).

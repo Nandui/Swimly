@@ -2,7 +2,7 @@
 
 **Purpose:** records accidents, incidents and near misses from the first report to a closed, locked record.
 
-Its levels are in [docs/apps.md](../../../docs/apps.md); the rules live in `shared/` and its tests.
+Its levels are in docs/apps.md; the rules live in `shared/` and its tests.
 
 ## Features
 - `report` — the two-minute report form, sending it (and the serious alerts), and adding to a report later (`/incidents/new`).

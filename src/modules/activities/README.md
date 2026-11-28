@@ -2,7 +2,7 @@
 
 **Purpose:** runs the centre's classes and courses for the people booked on them.
 
-It covers the menu entries Classes (the desk, `src/app/(activities)`; the app id stays `swim-school` and its log name Swim school), Pool deck (`src/app/(instructor)`) and Analytics, and the parent app's APIs. Classes was named Swim school until D24 (3 November 2026), when short courses joined it as its second kind of course. Its levels and the rules that protect swimmers' data are in [docs/apps.md](../../../docs/apps.md).
+It covers the menu entries Classes (the desk, `src/app/(activities)`; the app id stays `swim-school` and its log name Swim school), Pool deck (`src/app/(instructor)`) and Analytics, and the parent app's APIs. Classes was named Swim school until D24 (3 November 2026), when short courses joined it as its second kind of course. Its levels and the rules that protect swimmers' data are in docs/apps.md.
 
 ## Features
 - `students` — the swimmer directory, a swimmer's profile and history, adding swimmers and parent changes (`/students`).

@@ -2,7 +2,7 @@
 
 **Purpose:** keeps each site's risk assessments current, from a first draft to a signed-off record that is reviewed on time.
 
-Its levels are in [docs/apps.md](../../../docs/apps.md); the rules live in `shared/` and its tests. Brought over from the standalone Risk Management app ([D29](../../../docs/decisions.md)).
+Its levels are in docs/apps.md; the rules live in `shared/` and its tests. Brought over from the standalone Risk Management app (D29).
 
 ## Features
 - `assessments`: the lists (`/risk-assessments`), one assessment's page (`/risk-assessments/[id]`), starting a draft and changing its details (`/risk-assessments/new`, `/risk-assessments/[id]/edit`), and the moves on it: send for sign-off, sign off or withdraw (its owner), the executive sign-off (someone else, with that tick), archive and bring back (Manage). Also what the app holds about a person, and area renames.

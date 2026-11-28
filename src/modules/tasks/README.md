@@ -2,7 +2,7 @@
 
 **Purpose:** makes sure each site's daily, weekly and one-off checks are done, on time, with evidence.
 
-Its levels are in [docs/apps.md](../../../docs/apps.md).
+Its levels are in docs/apps.md.
 
 ## Features
 - `day` — a site's day: its tasks, doing one (checklist, readings, files), can't-complete and not-applicable, approving and reopening, comments, adding one by hand (`/tasks`, `/tasks/[id]`), and the home-page counts.
